@@ -1,0 +1,16 @@
+# The command that is executed when the run button is clicked.
+run = ["dhall", "--file", "repls/main.dhall"]
+
+# The default file opened in the editor.
+entrypoint = "repls/main.dhall"
+
+[languages.dhall]
+# The glob pattern to match files for this programming language
+pattern = "**/*.dhall"
+
+# LSP configuration for code intelligence
+[languages.dhall.languageServer]
+start = ["dhall-lsp-server"]
+
+[nix]
+channel = "stable-21_11"
