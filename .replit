@@ -12,5 +12,11 @@ pattern = "**/*.dhall"
 [languages.dhall.languageServer]
 start = ["dhall-lsp-server"]
 
+[languages.haskell]
+pattern = "**/*.hs"
+
+[languages.haskell.languageServer]
+start = ["haskell-language-server", "--lsp"]
+
 [nix]
 channel = "stable-21_11"
