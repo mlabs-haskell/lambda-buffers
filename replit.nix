@@ -10,6 +10,8 @@
           pkgs.text
         ]))
         pkgs.haskell-language-server      
-    ];
-  
+        
+        pkgs.protobuf
+        pkgs.haskellPackages.proto-lens-protoc
+    ];  
 }
