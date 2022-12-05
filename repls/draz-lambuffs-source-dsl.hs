@@ -4,7 +4,7 @@ module LambdaBuffers.Source where
 
 import Data.Foldable
 import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.Text (Text)
 
 type VarName = Text
@@ -18,9 +18,9 @@ data TypeRef = Local TyConName | Foreign ModuleName TyConName
 data Ty = TyVar VarName | TCon TKind | TApp Ty Ty | TyRef TypeRef
 
 data TyDef = TyDef
-  { tyDefName :: TyConName,
-    tyDefKind :: TKind,
-    tyDefBody :: TyBody
+  { tyDefName :: TyConName
+  , tyDefKind :: TKind
+  , tyDefBody :: TyBody
   }
 
 data FieldName = Text
@@ -34,20 +34,20 @@ data TyBody = Opaque | Sum (Map ConstrName Product)
 type ModuleName = Text
 
 data Module = Module
-  { moduleName :: ModuleName,
-    moduleDefs :: [TyDef],
-    moduleInstances :: [InstanceClause]
+  { moduleName :: ModuleName
+  , moduleDefs :: [TyDef]
+  , moduleInstances :: [InstanceClause]
   }
 
 data InstanceClause = InstanceClause
-  { icClassName :: Text,
-    icHead :: Ty,
-    icBody :: [Constraint]
+  { icClassName :: Text
+  , icHead :: Ty
+  , icBody :: [Constraint]
   }
 
 data Constraint = Constraint
-  { cClassName :: Text,
-    cArguments :: [Ty]
+  { cClassName :: Text
+  , cArguments :: [Ty]
   }
 
 opaque tyConName args = TyDef tyConName (TKind args) Opaque
@@ -79,32 +79,32 @@ jsonConstr = Constraint "JSON"
 -- | User defs
 myModule =
   Module
-    { moduleName = "MyModule",
-      moduleDefs =
-        [ opaque "Integer" [],
-          opaque "Set" ["a"],
-          opaque "Map" ["k", "v"],
-          dt "Maybe" ["a"] [("Just", prod [var "a"]), nullary "Nothing"],
-          dt
+    { moduleName = "MyModule"
+    , moduleDefs =
+        [ opaque "Integer" []
+        , opaque "Set" ["a"]
+        , opaque "Map" ["k", "v"]
+        , dt "Maybe" ["a"] [("Just", prod [var "a"]), nullary "Nothing"]
+        , dt
             "MyType"
             ["a", "b"]
             [("Foo", prod [ty "Maybe" `app` ty "Map" `app` var "a" `app` (ty "Set" `app` var "b")])]
-        ],
-      moduleInstances =
+        ]
+    , moduleInstances =
         [ jsonInstance (ty "Maybe" `app` var "a") [jsonConstr [var "a"]]
         ]
     }
 
 anotherModule =
   Module
-    { moduleName = "AnotherModule",
-      moduleDefs =
+    { moduleName = "AnotherModule"
+    , moduleDefs =
         [ dt
             "AnotherType"
             ["a", "b"]
             [("Bar", prod [ftyMyMod "Maybe" `app` ftyMyMod "Map" `app` var "a" `app` (ftyMyMod "Set" `app` var "b")])]
-        ],
-      moduleInstances =
+        ]
+    , moduleInstances =
         [ jsonInstance (ftyMyMod "Maybe" `app` var "a") [jsonConstr [var "a"]]
         ]
     }
