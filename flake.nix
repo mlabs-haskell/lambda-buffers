@@ -17,6 +17,7 @@
 
       # pre-commit-hooks.nix
       fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
+
       pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
         inherit fourmolu;
       });
@@ -25,7 +26,8 @@
         inherit (pre-commit-check) shellHook;
       };
 
-      renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
+      # Utilities
+      # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
     in
     rec {
       # Useful for nix repl
@@ -43,8 +45,7 @@
       };
 
       # nix flake check --impure --keep-going --allow-import-from-derivation
-      checks = renameAttrs (n: "check-${n}")
-        { inherit pre-commit-check; } // devShells // packages;
+      checks = { inherit pre-commit-check; } // devShells // packages;
 
     }
   );
