@@ -69,7 +69,7 @@
     hlint.enable = true;
     # TODO: Enable hunspell
     typos.enable = true;
-    markdownlint.enable = true;
+    # markdownlint.enable = true;
   };
 
   tools = { inherit fourmolu; };
