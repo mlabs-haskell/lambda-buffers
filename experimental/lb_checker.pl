@@ -57,15 +57,8 @@ ty_app @ fqty_kind_arity(fqty(Ctx, TyAppFun), Ar) \ check_fqty(fqty(Ctx, ty_app(
 lb_error(Err) <=> lb_errors([Err]).
 lb_errors(ErrsL), lb_errors(ErrsR) <=> append(ErrsL, ErrsR, Errs), lb_errors(Errs).
 
-:- chr_constraint check_xs/1, check_xs_/1, check_x/1.
-
-check_xs(Xs) ==> check_xs_(Xs).
-check_xs_([]) <=> true.
-check_xs_([X|Xs]) <=> check_x(X); check_xs_(Xs).
-
-check_x(X) ==> writeln(seen(X)).
-
 % Regular helper predicates
+
 collect_check_product_fqtys(Ctx, Tys, Checks) :-
     findall(
         check_product_fqty(FqTy),
@@ -89,6 +82,7 @@ ty_args_names(TyArgs, TyArgsNames) :-
         TyArgsNames
     ).
 
+% Run with: swipl -g "run_tests, halt" -f lb_checker.pl
 :- begin_tests(lb_checker).
 :- use_module(library(chr)).
 
