@@ -26,6 +26,12 @@
         inherit (pre-commit-check) shellHook;
       };
 
+      # Experimental env
+      experimentalDevShell = import ./experimental/build.nix {
+        inherit pkgs;
+        inherit (pre-commit-check) shellHook;
+      };
+
       # Utilities
       # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
     in
@@ -41,6 +47,7 @@
 
       devShells = rec {
         dev-pre-commit = pre-commit-devShell;
+        dev-experimental = experimentalDevShell;
         default = pre-commit-devShell;
       };
 

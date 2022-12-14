@@ -1,5 +1,7 @@
-{ pkgs }: {
-  deps = [
+{ pkgs, shellHook }:
+pkgs.mkShell {
+  name = "experimental-env";
+  buildInputs = [
     pkgs.haskellPackages.ghc
     pkgs.cowsay
     pkgs.dhall
@@ -13,5 +15,8 @@
 
     pkgs.protobuf
     pkgs.haskellPackages.proto-lens-protoc
+    pkgs.swiPrologWithGui
   ];
+
+  inherit shellHook;
 }
