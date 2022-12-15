@@ -65,7 +65,7 @@
     nix-linter.enable = true;
     # FIXME: Disabled b/c breaks inner stack project
     # cabal-fmt.enable = true;
-    fourmolu.enable = true;
+    # fourmolu.enable = true;
     shellcheck.enable = true;
     hlint.enable = true;
     # TODO: Enable hunspell

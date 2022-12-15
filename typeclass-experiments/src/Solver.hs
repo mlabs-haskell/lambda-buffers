@@ -16,11 +16,11 @@ import Types
 subV :: String -> Ty -> Ty -> Ty
 subV varNm t = \case
   var@(VarT v) -> if v == varNm then t else var
-  ListT x  -> subV varNm t x
-  x :* xs  -> subV varNm t x :* subV varNm t xs
+  ListT x -> subV varNm t x
+  x :* xs -> subV varNm t x :* subV varNm t xs
   MapT k v -> MapT (subV varNm t k) (subV varNm t v)
   ProdT xs -> ProdT (subV varNm t xs)
-  SumT xs  -> SumT (subV varNm t xs)
+  SumT xs -> SumT (subV varNm t xs)
   AppT t1 t2 -> AppT (subV varNm t t1) (subV varNm t t2)
   other -> other
 
