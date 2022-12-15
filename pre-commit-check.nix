@@ -63,7 +63,8 @@
   hooks = {
     nixpkgs-fmt.enable = true;
     nix-linter.enable = true;
-    cabal-fmt.enable = true;
+    # FIXME: Disabled b/c breaks inner stack project
+    # cabal-fmt.enable = true;
     fourmolu.enable = true;
     shellcheck.enable = true;
     hlint.enable = true;
