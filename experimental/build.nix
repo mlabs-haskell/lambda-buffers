@@ -1,9 +1,7 @@
-{ pkgs, shellHook }:
+{ pkgs, preCommitTools, shellHook }:
 pkgs.mkShell {
   name = "experimental-env";
   buildInputs = [
-    pkgs.haskellPackages.ghc
-    pkgs.cowsay
     pkgs.dhall
     pkgs.dhall-lsp-server
     pkgs.dhall-json
@@ -16,6 +14,11 @@ pkgs.mkShell {
     pkgs.protobuf
     pkgs.haskellPackages.proto-lens-protoc
     pkgs.swiPrologWithGui
+
+    preCommitTools.fourmolu
+    preCommitTools.typos
+    preCommitTools.cabal-fmt
+    preCommitTools.hlint
   ];
 
   inherit shellHook;
