@@ -41,6 +41,12 @@
         inherit (pre-commit-check) shellHook;
       };
 
+      # Docs env
+      protosDevShell = import ./lambda-buffers-proto/build.nix {
+        inherit pkgs preCommitTools;
+        inherit (pre-commit-check) shellHook;
+      };
+
       # Utilities
       # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
     in
@@ -58,6 +64,7 @@
         dev-pre-commit = pre-commit-devShell;
         dev-experimental = experimentalDevShell;
         dev-docs = docsDevShell;
+        dev-protos = protosDevShell;
         default = pre-commit-devShell;
       };
 
