@@ -22,13 +22,22 @@
         inherit fourmolu;
       });
 
+      preCommitTools = pre-commit-hooks.outputs.packages.${system};
+
       pre-commit-devShell = pkgs.mkShell {
+        name = "pre-commit-env";
         inherit (pre-commit-check) shellHook;
       };
 
       # Experimental env
       experimentalDevShell = import ./experimental/build.nix {
-        inherit pkgs;
+        inherit pkgs preCommitTools;
+        inherit (pre-commit-check) shellHook;
+      };
+
+      # Docs env
+      docsDevShell = import ./docs/build.nix {
+        inherit pkgs preCommitTools;
         inherit (pre-commit-check) shellHook;
       };
 
@@ -48,6 +57,7 @@
       devShells = rec {
         dev-pre-commit = pre-commit-devShell;
         dev-experimental = experimentalDevShell;
+        dev-docs = docsDevShell;
         default = pre-commit-devShell;
       };
 
