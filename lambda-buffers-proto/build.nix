@@ -1,4 +1,4 @@
-{ pkgs, _preCommitTools, shellHook }:
+{ pkgs, shellHook }:
 pkgs.mkShell {
   name = "protos-env";
   buildInputs = [

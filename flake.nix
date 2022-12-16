@@ -43,7 +43,7 @@
 
       # Docs env
       protosDevShell = import ./lambda-buffers-proto/build.nix {
-        inherit pkgs preCommitTools;
+        inherit pkgs;
         inherit (pre-commit-check) shellHook;
       };
 
