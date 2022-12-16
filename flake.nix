@@ -17,9 +17,10 @@
 
       # pre-commit-hooks.nix
       fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
+      protolint = pkgs.protolint;
 
       pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
-        inherit fourmolu;
+        inherit fourmolu protolint;
       });
 
       preCommitTools = pre-commit-hooks.outputs.packages.${system};

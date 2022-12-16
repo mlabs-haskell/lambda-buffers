@@ -1,4 +1,4 @@
-{ fourmolu }: {
+{ fourmolu, protolint }: {
   src = ./.;
   settings = {
     # FIXME: https://github.com/cachix/pre-commit-hooks.nix/issues/155
@@ -71,7 +71,14 @@
     typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
+    protolint = {
+      enable = true;
+      description = "Run protolint on all Google Protobuf files";
+      name = "protolint";
+      entry = "${protolint}/bin/protolint lint -fix";
+      files = "\\.proto$";
+    };
   };
 
-  tools = { inherit fourmolu; };
+  tools = { inherit fourmolu protolint; };
 }
