@@ -138,10 +138,9 @@ solve inScope c ty =
           Inst (Class _ []) _ -> []
           Inst (Class _ []) _ :<= _ -> []
           Inst (Class _ [s]) t -> [Inst s t]
-          inst@(Inst (Class n (s : ss)) t :<= is) ->
-            changeClass s inst : inferSuper (Inst (Class n ss) t :<= is)
-          _ -> error "boom"
-
+          {- -inst@(Inst (Class n (s : ss)) t :<= is) ->
+            changeClass s inst : inferSuper (Inst (Class n ss) t :<= is) -}
+          _ -> [] -- error "boom"
         changeClass :: Class -> Instance -> Instance
         changeClass cl (Inst _ t) = Inst cl t
         changeClass cl (Inst _ t :<= rest) = Inst cl t :<= changeClass cl rest
