@@ -1,0 +1,42 @@
+cabal-version:   3.0
+name:            lambdaBuffers-type-checker
+version:         0.1.0.0
+license:         MIT
+license-file:    LICENSE
+author:          Vlad P. Luchian
+maintainer:      cstmlcodes@gmail.com
+category:        Language
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common all
+  build-depends:
+    , base          ^>=4.15.1.0
+    , containers    >=0.6.6
+    , mtl           >=2.2.2
+    , transformers  >=0.5.6.2
+
+common warnings
+  ghc-options: -Wall
+
+library
+  import:           warnings
+  import:           all
+  exposed-modules:  TC
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+-- executable lambdaBuffers-type-checker
+--     import:           warnings
+--     import:           all    
+--     main-is:          Main.hs
+--     hs-source-dirs:   app
+--     default-language: Haskell2010
+
+test-suite lambdaBuffers-type-checker-test
+  import:           warnings
+  import:           all
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          Test.hs
