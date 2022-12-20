@@ -117,6 +117,7 @@ type Derive a =
   ) =>
   m a
 
+-- | Run derivation.
 runDerive' :: Type -> (Derivation, [Constraint])
 runDerive' t = either error id $ runExcept $ runWriterT $ evalStateT (runReaderT (derive t) defContext) (DC atoms)
 
@@ -168,18 +169,18 @@ getVariables = \case
 
 unify :: [Constraint] -> Unifier [Substitution]
 unify [] = pure []
-unify ((Constraint (l, r)) : xs) = case l of
+unify (constraint@(Constraint (l, r)) : xs) = case l of
   Kind -> case r of
     Kind -> unify xs
-    (_ :->: _) -> nope l r
+    (_ :->: _) -> nope constraint
     KVar v ->
       let sub = Substitution (v, Kind)
        in (sub :) <$> unify (sub `substituteIn` xs)
   x :->: y -> case r of
-    Kind -> nope l r
+    Kind -> nope constraint
     KVar v ->
       if v `appearsIn` l
-        then appearsErr l v
+        then appearsErr v l
         else
           let sub = Substitution (v, l)
            in (sub :) <$> unify (sub `substituteIn` xs)
@@ -196,14 +197,22 @@ unify ((Constraint (l, r)) : xs) = case l of
            in (sub :) <$> unify (sub `substituteIn` xs)
     _ -> unify $ Constraint (r, l) : xs
   where
-    nope lt rt = throwError $ unlines ["Cannot unify: ", show (pretty lt) <> " with " <> show (pretty rt)]
+    nope c = throwError $ unlines ["Cannot unify: " <> show (pretty c)]
+
     appearsErr var ty =
       throwError $
-        unlines
+        mconcat
           [ "Cannot unify: "
-          , show (hang 4 $ pretty $ show (pretty var) <> " with " <> show (pretty ty))
-          , "because: " <> show (pretty var) <> " appears in " <> show (pretty ty)
+          , show (pretty var)
+          , " with "
+          , show (pretty ty)
+          , ". "
+          , show (pretty var)
+          , " appears in: "
+          , show (pretty ty)
+          , "."
           ]
+
     appearsIn a ty = a `elem` getVariables ty
 
     substituteIn _ [] = []
@@ -216,7 +225,7 @@ applySubstitution s@(Substitution (a, t)) k = case k of
   KVar v -> if v == a then t else k
 
 runUnify :: [Constraint] -> Either UErr [Substitution]
-runUnify constraints = runExcept $ unify constraints
+runUnify = runExcept . unify
 
 substitute :: Substitution -> Derivation -> Derivation
 substitute s d = case d of
@@ -231,7 +240,9 @@ substitute s d = case d of
       xs -> Context ctx $ second (applySubstitution subs) <$> xs
 
 ----------------------------------------------------------------------------------
---  Testing functions
+-- Testing functions
+-- :fixme: add tests, not this.
+
 getType :: Type -> IO ()
 getType t = do
   let (d, c) = runDerive' t
@@ -247,11 +258,7 @@ getType t = do
   where
     go = foldl (flip substitute)
 
-testDerivation :: Type -> IO ()
-testDerivation t = do
-  let (d, _) = runDerive' t
-  print $ pretty d
-
+-- | Fresh atoms
 atoms :: [Atom]
 atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure [x, y]
 
