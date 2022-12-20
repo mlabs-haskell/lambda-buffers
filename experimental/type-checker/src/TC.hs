@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
+
 module TC (getType) where
 
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
@@ -24,6 +27,7 @@ data Kind
 instance Pretty Kind where
   pretty = \case
     Kind -> pretty "*"
+    ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> pretty "→" <+> pretty z
     x :->: y -> pretty x <+> pretty "→" <+> pretty y
     KVar a -> pretty a
 
@@ -72,13 +76,6 @@ data Derivation
   | Abstraction Judgement Derivation
   | Application Judgement Derivation Derivation
   deriving (Show, Eq)
-
--- Example terms
-tterm, tterm2, tterm3, tterm4 :: Type
-tterm = App (App (Abs "b" (App (Var "b") (Var "Int"))) (Var "Int")) (App (Var "Int") (Var "Int"))
-tterm2 = Var "Int"
-tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
-tterm4 = App (Abs "x" $ App (Var "x") (Var "Int")) (Var "Int")
 
 instance Pretty Derivation where
   pretty x = case x of
@@ -290,6 +287,35 @@ defContext =
         , ("Bool", Kind)
         , ("Map", Kind :->: Kind :->: Kind)
         , ("List", Kind :->: Kind)
+        , ("StateT", Kind :->: (Kind :->: Kind) :->: Kind :->: Kind)
         ]
     , addContext = []
     }
+
+-- >>> getType' tterm
+-- Cannot unify: * → b1 = *
+tterm = App (App (Abs "b" (App (Var "b") (Var "Int"))) (Var "Int")) (App (Var "Int") (Var "Int"))
+
+-- >>> getType tterm2
+-- Right Kind
+tterm2 = Var "Int"
+
+-- >>> getType tterm3
+-- Right (KVar "a1" :->: ((Kind :->: KVar "c1") :->: KVar "c1"))
+tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
+
+-- >>> getType tterm4
+-- Cannot unify: * → b1 = *
+tterm4 = App (Abs "x" $ App (Var "x") (Var "Int")) (Var "Int")
+
+-- >>> getType tterm5
+-- Right Kind
+tterm5 = App (App (Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))) (Var "Maybe")) (Var "Int")
+
+-- >>>  getType tterm6
+-- Right ((KVar "d1" :->: KVar "d1") :->: (KVar "d1" :->: KVar "d1"))
+tterm6 = Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))
+
+-- >>>  getType tterm7
+-- Right Kind
+tterm7 = App (App (App (Var "StateT") (Var "Int")) (Var "Maybe")) (Var "Int")
