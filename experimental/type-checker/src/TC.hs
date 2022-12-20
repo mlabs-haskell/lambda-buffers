@@ -73,6 +73,8 @@ data Derivation
   | Application Judgement Derivation Derivation
   deriving (Show, Eq)
 
+-- Example terms
+tterm, tterm2, tterm3, tterm4 :: Type
 tterm = App (App (Abs "b" (App (Var "b") (Var "Int"))) (Var "Int")) (App (Var "Int") (Var "Int"))
 tterm2 = Var "Int"
 tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
@@ -136,7 +138,7 @@ derive x = do
       pure $ Application (Judgement (c, x, v)) d1 d2
     Abs v t -> do
       newTy <- KVar <$> fresh
-      d <- local (\(Context c addC) -> Context c $ (v, newTy) : addC) (derive t)
+      d <- local (\(Context ctx addC) -> Context ctx $ (v, newTy) : addC) (derive t)
       let ty = getKind d
       freshT <- KVar <$> fresh
       tell [Constraint (freshT, newTy :->: ty)]
@@ -170,7 +172,9 @@ unify ((Constraint (l, r)) : xs) = case l of
   Kind -> case r of
     Kind -> unify xs
     (_ :->: _) -> nope l r
-    KVar v -> (Substitution (v, Kind) :) <$> unify xs
+    KVar v ->
+      let sub = Substitution (v, Kind)
+       in (sub :) <$> unify (sub `substituteIn` xs)
   x :->: y -> case r of
     Kind -> nope l r
     KVar v ->
@@ -185,28 +189,31 @@ unify ((Constraint (l, r)) : xs) = case l of
        in unify (c1 : c2 : xs)
   KVar a -> case r of
     KVar b ->
-      let sub = Substitution (a, r)
-       in (sub :) <$> unify (sub `substituteIn` xs)
+      if a == b
+        then unify xs
+        else
+          let sub = Substitution (a, r)
+           in (sub :) <$> unify (sub `substituteIn` xs)
     _ -> unify $ Constraint (r, l) : xs
   where
-    nope l r = throwError $ unlines ["Cannot unify: ", show (pretty l) <> " with " <> show (pretty r)]
-    appearsErr v r =
+    nope lt rt = throwError $ unlines ["Cannot unify: ", show (pretty lt) <> " with " <> show (pretty rt)]
+    appearsErr var ty =
       throwError $
         unlines
           [ "Cannot unify: "
-          , show (hang 4 $ pretty $ show (pretty v) <> " with " <> show (pretty r))
-          , "because: " <> show (pretty v) <> " appears in " <> show (pretty r)
+          , show (hang 4 $ pretty $ show (pretty var) <> " with " <> show (pretty ty))
+          , "because: " <> show (pretty var) <> " appears in " <> show (pretty ty)
           ]
-    appearsIn a l = a `elem` getVariables l
+    appearsIn a ty = a `elem` getVariables ty
 
-    substituteIn s [] = []
-    substituteIn s ((Constraint (l, r)) : xs) = Constraint (applySubstitution s l, applySubstitution s r) : substituteIn s xs
+    substituteIn _ [] = []
+    substituteIn s ((Constraint (lt, rt)) : cs) = Constraint (applySubstitution s lt, applySubstitution s rt) : substituteIn s cs
 
 applySubstitution :: Substitution -> Kind -> Kind
-applySubstitution s@(Substitution (a, t)) = \case
+applySubstitution s@(Substitution (a, t)) k = case k of
   Kind -> Kind
   l :->: r -> applySubstitution s l :->: applySubstitution s r
-  KVar v -> if v == a then t else KVar v
+  KVar v -> if v == a then t else k
 
 runUnify :: [Constraint] -> Either UErr [Substitution]
 runUnify constraints = runExcept $ unify constraints
@@ -219,14 +226,9 @@ substitute s d = case d of
   where
     applySubsToJudgement sub (Judgement (ctx, t, k)) = Judgement (applySubstitutionCtx s ctx, t, applySubstitution sub k)
 
-    applySubstitution sub@(Substitution (a, nt)) = \case
-      Kind -> Kind
-      l :->: r -> applySubstitution sub l :->: applySubstitution sub r
-      b@(KVar ab) -> if a == ab then nt else b
-
-    applySubstitutionCtx s c@(Context ctx addCtx) = case addCtx of
+    applySubstitutionCtx subs c@(Context ctx addCtx) = case addCtx of
       [] -> c
-      xs -> Context ctx $ second (applySubstitution s) <$> xs
+      xs -> Context ctx $ second (applySubstitution subs) <$> xs
 
 ----------------------------------------------------------------------------------
 --  Testing functions
@@ -247,7 +249,7 @@ getType t = do
 
 testDerivation :: Type -> IO ()
 testDerivation t = do
-  let (d, c) = runDerive' t
+  let (d, _) = runDerive' t
   print $ pretty d
 
 atoms :: [Atom]
@@ -263,6 +265,7 @@ defContext =
         , ("Int", Kind)
         , ("Bool", Kind)
         , ("Map", Kind :->: Kind :->: Kind)
+        , ("List", Kind :->: Kind)
         ]
     , addContext = []
     }
