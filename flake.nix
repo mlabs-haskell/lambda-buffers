@@ -19,31 +19,10 @@
       fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
 
       pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
-        inherit pkgs fourmolu;
+        inherit fourmolu;
       });
 
-      preCommitTools = pre-commit-hooks.outputs.packages.${system};
-
       pre-commit-devShell = pkgs.mkShell {
-        name = "pre-commit-env";
-        inherit (pre-commit-check) shellHook;
-      };
-
-      # Experimental env
-      experimentalDevShell = import ./experimental/build.nix {
-        inherit pkgs preCommitTools;
-        inherit (pre-commit-check) shellHook;
-      };
-
-      # Docs env
-      docsDevShell = import ./docs/build.nix {
-        inherit pkgs preCommitTools;
-        inherit (pre-commit-check) shellHook;
-      };
-
-      # Docs env
-      protosDevShell = import ./lambda-buffers-proto/build.nix {
-        inherit pkgs;
         inherit (pre-commit-check) shellHook;
       };
 
@@ -62,9 +41,6 @@
 
       devShells = rec {
         dev-pre-commit = pre-commit-devShell;
-        dev-experimental = experimentalDevShell;
-        dev-docs = docsDevShell;
-        dev-protos = protosDevShell;
         default = pre-commit-devShell;
       };
 
