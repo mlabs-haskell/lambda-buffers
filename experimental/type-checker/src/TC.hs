@@ -1,4 +1,4 @@
-module TC where
+module TC (getType) where
 
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.State (StateT, evalStateT)
@@ -117,6 +117,9 @@ type Derive a =
   ) =>
   m a
 
+runDerive :: Type -> Either DError (Derivation, [Constraint])
+runDerive t = runExcept $ runWriterT $ evalStateT (runReaderT (derive t) defContext) (DC atoms)
+
 -- | Run derivation.
 runDerive' :: Type -> (Derivation, [Constraint])
 runDerive' t = either error id $ runExcept $ runWriterT $ evalStateT (runReaderT (derive t) defContext) (DC atoms)
@@ -144,6 +147,13 @@ derive x = do
       freshT <- KVar <$> fresh
       tell [Constraint (freshT, newTy :->: ty)]
       pure $ Abstraction (Judgement (c, x, freshT)) d
+  where
+    fresh :: Derive Atom
+    fresh = do
+      (DC vs) <- get
+      case vs of
+        a : as -> put (DC as) >> pure a
+        [] -> throwError "Impossible ~ end of infinite stream"
 
 getBinding :: Atom -> Derive Kind
 getBinding t = do
@@ -243,8 +253,8 @@ substitute s d = case d of
 -- Testing functions
 -- :fixme: add tests, not this.
 
-getType :: Type -> IO ()
-getType t = do
+getType' :: Type -> IO ()
+getType' t = do
   let (d, c) = runDerive' t
   print $ pretty (d, c)
   putStrLn ""
@@ -257,6 +267,13 @@ getType t = do
   putStrLn $ show (pretty t) <> ":" <> (show . pretty $ getKind res)
   where
     go = foldl (flip substitute)
+
+getType :: Type -> Either UErr Kind
+getType t = do
+  (d, c) <- runDerive t
+  s <- runUnify c
+  let res = foldl (flip substitute) d s
+  pure $ getKind res
 
 -- | Fresh atoms
 atoms :: [Atom]
@@ -276,10 +293,3 @@ defContext =
         ]
     , addContext = []
     }
-
-fresh :: Derive Atom
-fresh = do
-  (DC vs) <- get
-  case vs of
-    [] -> throwError "Impossible ~ end of infinite stream"
-    x : xs -> put (DC xs) >> pure x
