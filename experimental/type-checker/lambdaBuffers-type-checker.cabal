@@ -11,10 +11,19 @@ extra-doc-files: CHANGELOG.md
 
 common all
   build-depends:
-    , base          ^>=4.15.1.0
-    , containers    >=0.6.6
-    , mtl           >=2.2.2
-    , transformers  >=0.5.6.2
+    , base           ^>=4.15.1.0
+    , containers     >=0.6.6
+    , mtl            >=2.2.2
+    , prettyprinter
+    , transformers   >=0.5.6.2
+
+  default-extensions:
+    DataKinds
+    FlexibleContexts
+    ImportQualifiedPost
+    LambdaCase
+    RankNTypes
+    ScopedTypeVariables
 
 common warnings
   ghc-options: -Wall
@@ -25,13 +34,6 @@ library
   exposed-modules:  TC
   hs-source-dirs:   src
   default-language: Haskell2010
-
--- executable lambdaBuffers-type-checker
---     import:           warnings
---     import:           all    
---     main-is:          Main.hs
---     hs-source-dirs:   app
---     default-language: Haskell2010
 
 test-suite lambdaBuffers-type-checker-test
   import:           warnings
