@@ -28,7 +28,7 @@
 
           pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
             inherit fourmolu;
-            protoHooks = pbnix-lib.preCommitHooks;
+            protoHooks = pbnix-lib.preCommitHooks { inherit pkgs; };
           });
 
           commonTools = {
@@ -37,7 +37,7 @@
             inherit fourmolu;
           };
 
-          pre-commit-devShell = pkgs.mkShell {
+          preCommitDevShell = pkgs.mkShell {
             name = "pre-commit-env";
             inherit (pre-commit-check) shellHook;
           };
@@ -84,12 +84,12 @@
           packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages;
 
           devShells = rec {
-            dev-pre-commit = pre-commit-devShell;
+            dev-pre-commit = preCommitDevShell;
             dev-experimental = experimentalDevShell;
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
-            default = pre-commit-devShell;
+            default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
