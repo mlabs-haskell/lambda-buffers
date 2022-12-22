@@ -38,3 +38,11 @@ Users are responsible for ensuring that all of the relevant instance declaration
 The constraint solver should also emit a helpful error message if a user attempts to declare an instance for an unsupported typeclass, or attempts to declare an instance that cannot be derived. Note that, due to the aforementioned restrictions on supported typeclasses - i.e. that they must be structurally derivable - it is conceptually possible to determine whether an instance _could_ be derived given other suitable instance declarations. We ought to be able to tell the user which intermediate instances they are missing in our error message. (NOTE: Introduce an example here to make this clearer)
 
 The constraint solver component of the compiler is conceptually separate from the rest of the compiler, and can be developed as a separate module.
+
+## CodeGen Component
+
+The previous section is ambiguous as to where the initial set of in-scope typeclass instances come from. There are two possible approaches:
+
+- 1) Every instance is hardcoded in the compiler component itself, and the codegen component must either support those hardcoded instances for each language or error out if it does not support them.
+
+- 2) Both the initial set of instances (which function as deriving rules) and the code generation tools for those instances are bundled together outside of the compiler or codegen components.
