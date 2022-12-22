@@ -25,6 +25,9 @@ let
         packages = {
           allComponent.doHoogle = true;
           allComponent.doHaddock = true;
+
+          # Enable strict compilation
+          allComponent.configureFlags = [ "-f-dev" ];
         };
       })
     ];

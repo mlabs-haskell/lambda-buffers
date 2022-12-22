@@ -18,14 +18,9 @@ flag dev
 
 common common-language
   ghc-options:
-    -Wall -Wcompat -Wincomplete-uni-patterns -Wunused-do-bind
-    -Wpartial-type-signatures -Wmissing-export-lists
-    -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wname-shadowing -Wunused-foralls -fprint-explicit-foralls
-    -fprint-explicit-kinds -fwarn-missing-import-lists
-    -Wredundant-constraints -Wmissing-export-lists
-    -Wmissing-deriving-strategies -Wname-shadowing -Wunused-packages
-    -Weverything
+    -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
+    -fwarn-missing-import-lists -Weverything -Wno-unsafe
+    -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
 
   if !flag(dev)
     ghc-options: -Werror
@@ -45,7 +40,6 @@ common common-language
     DeriveLift
     DeriveTraversable
     DerivingStrategies
-    DerivingVia
     DoAndIfThenElse
     EmptyCase
     EmptyDataDecls
@@ -57,7 +51,6 @@ common common-language
     FlexibleInstances
     ForeignFunctionInterface
     GADTSyntax
-    GeneralisedNewtypeDeriving
     HexFloatLiterals
     ImportQualifiedPost
     InstanceSigs
@@ -78,7 +71,6 @@ common common-language
     ScopedTypeVariables
     StandaloneDeriving
     StandaloneKindSignatures
-    TemplateHaskell
     TraditionalRecordSyntax
     TupleSections
     TypeApplications
@@ -93,7 +85,9 @@ executable lambda-buffers-compiler
   import:         common-language  
   main-is:        Main.hs
   build-depends:
-    , base
+    , base                        >=4.16
     , lambda-buffers-compiler-pb
+    , lens                        >=5.2
+    , proto-lens                  >=0.7
 
   hs-source-dirs: app
