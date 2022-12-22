@@ -5,7 +5,7 @@
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
-    protobufs-nix.url = "github:mlabs-haskell/protobufs.nix/bladyjoker/small-fixes";
+    protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
   };
 
@@ -27,7 +27,8 @@
           fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
 
           pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
-            inherit pkgs fourmolu;
+            inherit fourmolu;
+            protoHooks = pbnix-lib.preCommitHooks;
           });
 
           commonTools = {

@@ -5952,16 +5952,15 @@
         "protobuf": "protobuf"
       },
       "locked": {
-        "lastModified": 1671712312,
-        "narHash": "sha256-nXM69/oohPU6NCbaJe3/leowrnA+Qlknfc39Ng0eSCU=",
+        "lastModified": 1671726625,
+        "narHash": "sha256-6ruLBvoY7V3j1pcNLmxdtHcsUTpzR6YA+mTo8ioUH7w=",
         "owner": "mlabs-haskell",
         "repo": "protobufs.nix",
-        "rev": "00f687223571d59eb9e0ff3227d469f26b3ced47",
+        "rev": "87f19d1371515d9d205c75f4801c6e7efddbbd71",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "bladyjoker/small-fixes",
         "repo": "protobufs.nix",
         "type": "github"
       }
