@@ -1,13 +1,11 @@
-{ pkgs, pbnix-lib, shellHook }:
+{ pkgs, pbnix-lib, commonTools, shellHook }:
 {
-  protosDevShell = pkgs.mkShell {
+  devShell = pkgs.mkShell {
     name = "protos-env";
     buildInputs = [
       pkgs.protobuf
-      pkgs.protolint
-      pkgs.txtpbfmt
       pkgs.haskellPackages.proto-lens-protoc
-    ];
+    ] ++ builtins.attrValues commonTools;
 
     inherit shellHook;
   };

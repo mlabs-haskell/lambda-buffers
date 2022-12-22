@@ -1,8 +1,8 @@
-{ pkgs, preCommitTools, shellHook }:
+{ pkgs, commonTools, shellHook }:
 pkgs.mkShell {
   name = "docs-env";
 
-  packages = [ preCommitTools.markdownlint-cli preCommitTools.typos ];
+  packages = [ commonTools.markdownlint-cli commonTools.typos ];
 
   inherit shellHook;
 }

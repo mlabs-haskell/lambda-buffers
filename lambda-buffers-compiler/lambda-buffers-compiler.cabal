@@ -1,0 +1,99 @@
+cabal-version: 3.0
+name:          lambda-buffers-compiler
+version:       0.1.0.0
+synopsis:      Lambda Buffers compiler
+
+-- license:
+
+author:        MLabs LTD
+maintainer:    info@mlabs.city
+
+-- A copyright notice.
+-- copyright:
+-- category:
+
+flag dev
+  description: Enable non-strict compilation for development
+  manual:      True
+
+common common-language
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wunused-do-bind
+    -Wpartial-type-signatures -Wmissing-export-lists
+    -Wincomplete-record-updates -Wmissing-deriving-strategies
+    -Wname-shadowing -Wunused-foralls -fprint-explicit-foralls
+    -fprint-explicit-kinds -fwarn-missing-import-lists
+    -Wredundant-constraints -Wmissing-export-lists
+    -Wmissing-deriving-strategies -Wname-shadowing -Wunused-packages
+    -Weverything
+
+  if !flag(dev)
+    ghc-options: -Werror
+
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    DoAndIfThenElse
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    ExplicitNamespaces
+    FlexibleContexts
+    FlexibleInstances
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralisedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RelaxedPolyRec
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TemplateHaskell
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns
+
+  default-language:   Haskell2010
+
+executable lambda-buffers-compiler
+  import:         common-language  
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , lambda-buffers-compiler-pb
+
+  hs-source-dirs: app
