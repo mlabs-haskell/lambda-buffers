@@ -1,24 +1,29 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Solver where
 
 import Data.List (foldl')
 import Data.Set qualified as S
+import Data.Text (Text)
+import Data.Text qualified as T
 import Debug.Trace (trace)
-
 import Types
 
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the
    instantiation
 -}
-subV :: String -> Ty -> Ty -> Ty
+subV :: Text -> Ty -> Ty -> Ty
 subV varNm t = \case
   var@(VarT v) -> if v == varNm then t else var
-  ListT x -> subV varNm t x
+  List x -> List $ subV varNm t x
+  Maybe x -> Maybe $ subV varNm t x
   x :* xs -> subV varNm t x :* subV varNm t xs
-  MapT k v -> MapT (subV varNm t k) (subV varNm t v)
+  l := x -> subV varNm t l := subV varNm t x
+  Map k v -> Map (subV varNm t k) (subV varNm t v)
+  Either l r -> Either (subV varNm t l) (subV varNm t r)
   ProdT xs -> ProdT (subV varNm t xs)
   SumT xs -> SumT (subV varNm t xs)
   AppT t1 t2 -> AppT (subV varNm t t1) (subV varNm t t2)
@@ -41,11 +46,14 @@ subV varNm t = \case
    The second argument is the Ty representation of a type that we want to derive an instance for.
 -}
 matches :: Ty -> Ty -> Bool
-matches t1 t2 | t1 == t2 = True
+matches t1 t2 | t1 == t2 = True -- need the guard
 matches (VarT _) _ = True
-matches (ListT t1) (ListT t2) = matches t1 t2
+matches (List t1) (List t2) = matches t1 t2
+matches (Maybe t1) (Maybe t2) = matches t1 t2
 matches (x :* xs) (x' :* xs') = matches x x' && matches xs xs'
-matches (MapT k v) (MapT k' v') = matches k k' && matches v v'
+matches (l := t) (l' := t') = matches l l' && matches t t'
+matches (Map k v) (Map k' v') = matches k k' && matches v v'
+matches (Either l r) (Either l' r') = matches l l' && matches r r'
 matches (ProdT xs) (ProdT xs') = matches xs xs'
 matches (SumT xs) (SumT xs') = matches xs xs'
 matches (AppT t1 t2) (AppT t1' t2') = matches t1 t1' && matches t2 t2'
@@ -65,17 +73,20 @@ subst i ty = case i of
     mapTy (go (getSubs t ty)) is
   _ -> i
   where
-    go :: [(String, Ty)] -> Ty -> Ty
+    go :: [(Text, Ty)] -> Ty -> Ty
     go subs tty = foldl' (flip . uncurry $ subV) tty subs
 
 {- Given two types (which are hopefully structurally similar), gather a list of all substitutions
    from the TyVars in the first argument to the concrete types (hopefully!) in the second argument
 -}
-getSubs :: Ty -> Ty -> [(String, Ty)] -- should be a set, whatever
+getSubs :: Ty -> Ty -> [(Text, Ty)] -- should be a set, whatever
 getSubs (VarT s) t = [(s, t)]
-getSubs (ListT t) (ListT t') = getSubs t t'
+getSubs (List t) (List t') = getSubs t t'
+getSubs (Maybe t) (Maybe t') = getSubs t t'
 getSubs (x :* xs) (x' :* xs') = getSubs x x' <> getSubs xs xs'
-getSubs (MapT k v) (MapT k' v') = getSubs k k' <> getSubs v v'
+getSubs (l := t) (l' := t') = getSubs l l' <> getSubs t t'
+getSubs (Map k v) (Map k' v') = getSubs k k' <> getSubs v v'
+getSubs (Either l r) (Either l' r') = getSubs l l' <> getSubs r r'
 getSubs (ProdT xs) (ProdT xs') = getSubs xs xs'
 getSubs (SumT xs) (SumT xs') = getSubs xs xs'
 getSubs (AppT t1 t2) (AppT t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
@@ -138,14 +149,7 @@ solve inScope c ty =
           Inst (Class _ []) _ -> []
           Inst (Class _ []) _ :<= _ -> []
           Inst (Class _ [s]) t -> [Inst s t]
-          {- -inst@(Inst (Class n (s : ss)) t :<= is) ->
-            changeClass s inst : inferSuper (Inst (Class n ss) t :<= is) -}
           _ -> [] -- error "boom"
-        changeClass :: Class -> Instance -> Instance
-        changeClass cl (Inst _ t) = Inst cl t
-        changeClass cl (Inst _ t :<= rest) = Inst cl t :<= changeClass cl rest
-        changeClass _ _ = error "boom"
-
     matchHeads :: [Instance] -> [Instance]
     matchHeads xs = flip filter xs $ \case
       Inst c' t' -> c == c' && matches t' ty

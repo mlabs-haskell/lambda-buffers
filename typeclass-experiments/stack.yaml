@@ -17,8 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/4.yaml
+resolver: ghc-9.0.2
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -35,7 +34,28 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
+  - row-types-1.0.1.2@sha256:5c56e91d30b61f275eaee0d97b015d5332d95d7599e57582d6e62a43aa388087,2948
+  - constraints-0.13.3@sha256:46526e9fbcbd58802c23d3a7fd22c0a2c98c7a577e50fdd5080b237d30fbe01d,2396
+  - generic-lens-2.2.1.0@sha256:6843380740d66cb6bf8ebaaf29d307d2610580eb8303222ee51ada033eca273f,3895
+  - hashable-1.4.0.2@sha256:0cddd0229d1aac305ea0404409c0bbfab81f075817bd74b8b2929eff58333e55,5005
+  - profunctors-5.6.2@sha256:3d3685119243a7ebf984fa6af03299d156ab7674a432e2e15ecee2a4fd420fb6,2483
+  - unordered-containers-0.2.17.0@sha256:50d72c7945df6389d0bb683dea1c7529b28b26f8c632de186437d1e866af8cf8,3302
+  - base-orphans-0.8.6@sha256:eb6758d0160d607e0c45dbd6b196f515b9a589fd4f6d2f926929dd5d56282d37,3175
+  - bifunctors-5.5.11@sha256:cc425ee85aae56dba1123baf6fb3fa7abcd90782f26bb904eef14c7332ee85f6,3919
+  - comonad-5.0.8@sha256:1f1aabd73ec7f80f20cf078a748a60cd48d8e57277802fdf6a9ab3601a9b8f7e,3631
+  - contravariant-1.5.5@sha256:470ed0e040e879e2da4af1b2c8f94e199f6135852a8107858d5ae0a95365835f,3041
+  - distributive-0.6.2.1@sha256:0f99f5541cca04acf89b64432b03422b6408e830a8dff30e6c4334ef1a48680c,2996
+  - generic-lens-core-2.2.1.0@sha256:a7ee35db4a6e9ed736f6f772f7c05929c9f95995bcbcdc16d5c48daa8835a455,2941
+  - tagged-0.8.6.1@sha256:29c67d98a4404607f024750ab9c7210dadcbbef4e1944c48c52902f2071b2662,2874
+  - transformers-compat-0.7.1@sha256:873ef500790cae136d14b2e890da1fe4df963e372f21b1671fa3c6cdfb23b10f,5807
+  - type-equality-1@sha256:bb3a34a93ad02866763b325e889ea9f5aa31f7428e32dcaa1cf14015bd21b9cb,1597
+  - StateVar-1.2.2@sha256:3c022c00485fe165e3080d5da6b3ca9c9b02f62c5deebc584d1b3d1309ce673e,1673
+  - indexed-profunctors-0.1.1@sha256:363e1bcd89f8498a770ae783e8388fcce35e6515b4c38dca47327aad81196a7b,1063
+  - indexed-traversable-0.1.2@sha256:d66228887242f93ccb4fc7101a1e25a6560c8e4708f6e9ee1d3dd21901756c65,2519
+  - th-abstraction-0.4.3.0@sha256:db4b3b69398acd8a7c5c8cc8a962da55d65d05d44d5039b51bd3cb5fb3d8400f,2148
+
+
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
