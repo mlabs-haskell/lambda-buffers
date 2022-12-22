@@ -1,4 +1,4 @@
-{ _pkgs
+{ pkgs
 , haskell-nix
 , mlabs-tooling
 , compiler-nix-name
@@ -8,6 +8,7 @@
 , shellHook
 }:
 let
+  inherit pkgs;
   project = {
     src = ./.;
 
