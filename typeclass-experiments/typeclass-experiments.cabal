@@ -27,11 +27,15 @@ source-repository head
 
 library
   exposed-modules:
+    Common.Match
+    Common.SourceTy
+    Common.Types
+    Gen.Generator
+    Gen.Rust
     Instances
-    Solver
-    SourceTy
+    Resolve.Rules
+    Resolve.Solver
     Tests
-    Types
 
   other-modules:    Paths_typeclass_experiments
   hs-source-dirs:   src
@@ -41,10 +45,11 @@ library
     -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
 
   build-depends:
-      base        >=4.7 && <5
+      base          >=4.7 && <5
     , containers
     , row-types
     , text
+    , transformers
 
   default-language: Haskell2010
 

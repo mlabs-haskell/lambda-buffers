@@ -2,10 +2,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
 
-module Solver where
+module Resolve.Solver where
 
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State
 import Data.Bifunctor
 import Data.List (foldl')
 import Data.Maybe
@@ -15,8 +16,12 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Debug.Trace (trace)
-import SourceTy
-import Types
+
+import Common.Match
+import Common.SourceTy
+import Common.Types
+
+import Resolve.Rules
 
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the
@@ -40,43 +45,12 @@ subV varNm t = \case
 
 {- How this works:
 
-1. Find matching instance heads
+1. Find matching instance heads (See Common.Match)
 
 2. Perform substitution
 
 3. Resolve
 -}
-
-{- This is used as a predicate to filter instances (i.e. instance heads) which are structurally compatible
-   with the argument type.
-
-   The first argument is the inner Pat from an instance head.
-
-   The second argument is the Pat representation of a type that we want to derive an instance for.
--}
-matches :: Pat -> Pat -> Bool
-matches t1 t2 | t1 == t2 = True -- need the guard
-matches (VarP _) _ = True
-matches (List t1) (List t2) = matches t1 t2
-matches (Maybe t1) (Maybe t2) = matches t1 t2
-matches (x :* xs) (x' :* xs') = matches x x' && matches xs xs'
-matches (l := t) (l' := t') = matches l l' && matches t t'
-matches (Map k v) (Map k' v') = matches k k' && matches v v'
-matches (Either l r) (Either l' r') = matches l l' && matches r r'
-matches (ProdP xs) (ProdP xs') = matches xs xs'
-matches (RecP xs) (RecP xs') = matches xs xs'
-matches (SumP xs) (SumP xs') = matches xs xs'
-matches (AppP t1 t2) (AppP t1' t2') = matches t1 t1' && matches t2 t2'
-matches (RefP t1) (RefP t2) = matches t1 t2
-matches _ _ = False
-
-mkSimpleGen :: t -> Pat -> (Pat -> MatchResult) -> RuleGen t
-mkSimpleGen t p f = flip Rule p $ Gen go [] t
-  where
-    go px =
-      if matches p px
-        then f px
-        else Left $ MatchFailure p px
 
 {- Performs substitution on an entire instance (the first argument) given the
    concrete types from a Pat (the second argument).
@@ -112,70 +86,6 @@ getSubs (SumP xs) (SumP xs') = getSubs xs xs'
 getSubs (AppP t1 t2) (AppP t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
 getSubs (RefP t) (RefP t') = getSubs t t'
 getSubs _ _ = []
-
-data GenError
-  = PatternErr MatchFailure
-  | DeriveFail Pat
-  deriving (Show)
-
-for :: [a] -> (a -> b) -> [b]
-for = flip map
-
-genFromDefAndPrint :: Eq t => Set (RuleGen t) -> t -> TyDef -> IO ()
-genFromDefAndPrint rules t def = do
-  let DecP _ pat = defToDecl def
-  case generate rules t pat of
-    Left err -> print err
-    Right (_, t) -> T.putStrLn t
-
-runGen' :: Gen t -> Pat -> Either GenError Text
-runGen' g p = case runGen g p of
-  Left mf -> Left . PatternErr $ mf
-  Right res -> Right res
-
-generate ::
-  forall t.
-  Eq t =>
-  Set (RuleGen t) ->
-  t ->
-  Pat ->
-  Either GenError ([RuleGen t], Text)
-generate inScope t pat =
-  case flip subst pat <$> matchHeads inScope of
-    [] ->
-      if S.size allRules == S.size (dig allRules)
-        then Left $ DeriveFail pat
-        else generate allRules t pat
-    [r@(Rule f p)] -> ([r],) <$> runGen' f p
-    [r@(Rule f p) :<= is] -> do
-      results <- sequence $ for (iToList is) $ \case
-        Rule _ p'' -> generate allRules t p''
-        _ -> error "boom"
-      let nrs = foldl' (\as (xs, _) -> as <> xs) [] results
-          nrSet = S.toList $ S.fromList (r : nrs) <> allRules
-      (nrSet,) <$> runGen' f p
-    _ -> error "Multiple matches!"
-  where
-    alreadyDone = elem pat $ flip mapMaybe (S.toList inScope) $ \case
-      Rule _ p -> Just p
-      _ -> Nothing
-
-    allRules :: Set (RuleGen t)
-    allRules = dig inScope
-
-    dig :: Set (RuleGen t) -> Set (RuleGen t)
-    dig xs = inScope <> S.fromList (concatMap deep xs)
-      where
-        deep :: RuleGen t -> [RuleGen t]
-        deep = \case
-          Rule (Gen _ ds _) _ -> ds
-          -- Rule (Gen _ [] _) _ :<= _ -> []
-          _ -> [] -- error "boom"
-    matchHeads :: Set (RuleGen t) -> [RuleGen t]
-    matchHeads xs = flip filter (S.toList xs) $ \case
-      Rule g p' -> genID g == t && matches p' pat
-      Rule g p' :<= _ -> genID g == t && matches p' pat
-      _ -> False
 
 {- Given a list of instances (the initial scope), determines whether we can derive
    an instance of the Class argument for the Pat argument
