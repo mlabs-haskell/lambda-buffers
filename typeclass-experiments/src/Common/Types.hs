@@ -4,11 +4,11 @@
 
 module Common.Types where
 
-import Common.SourceTy qualified as Ty
+import qualified Common.SourceTy as Ty
 import Data.Bifunctor
 import Data.List
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.List.NonEmpty qualified as NE
+import qualified Data.List.NonEmpty  as NE
 import Data.Set (Set)
 import Data.Text (Text)
 

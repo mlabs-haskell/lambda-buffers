@@ -11,10 +11,10 @@ import Data.Bifunctor
 import Data.List (foldl')
 import Data.Maybe
 import Data.Set (Set)
-import Data.Set qualified as S
+import qualified Data.Set as S
 import Data.Text (Text)
-import Data.Text qualified as T
-import Data.Text.IO qualified as T
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Debug.Trace (trace)
 
 import Common.Match

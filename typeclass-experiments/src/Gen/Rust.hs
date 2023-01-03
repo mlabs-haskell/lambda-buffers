@@ -4,9 +4,9 @@
 module Gen.Rust where
 
 import Data.Set (Set)
-import Data.Set qualified as S
+import qualified Data.Set as S
 import Data.Text (Text)
-import Data.Text qualified as T
+import qualified Data.Text as T
 
 import Common.Types
 import Gen.Generator

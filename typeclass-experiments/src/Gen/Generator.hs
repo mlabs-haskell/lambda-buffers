@@ -3,9 +3,9 @@ module Gen.Generator where
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Data.Set (Set)
-import Data.Set qualified as S
+import qualified Data.Set as S
 import Data.Text (Text)
-import Data.Text.IO qualified as T
+import qualified Data.Text.IO as T
 
 import Common.Match
 import Common.SourceTy

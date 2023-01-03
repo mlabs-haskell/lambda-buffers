@@ -26,9 +26,9 @@ we end up abandoning the use of NonEmpty/etc.
 module Common.SourceTy where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.List.NonEmpty qualified as NE
+import qualified Data.List.NonEmpty  as NE
 import Data.Map (Map)
-import Data.Map qualified as Map
+import qualified Data.Map as Map
 import Data.Text (Text)
 
 type NEMap k v = NonEmpty (k, v)

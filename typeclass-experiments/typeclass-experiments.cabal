@@ -50,10 +50,9 @@ library
     , row-types
     , text
     , transformers
+    , prettyprinter
 
   default-language: Haskell2010
-
-  default-extensions: ImportQualifiedPost
 
 test-suite typeclass-experiments-test
   type:             exitcode-stdio-1.0
