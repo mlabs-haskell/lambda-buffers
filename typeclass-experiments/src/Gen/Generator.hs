@@ -11,6 +11,8 @@ import Common.Match
 import Common.SourceTy
 import Common.Types
 
+import Data.Kind
+
 data GenError
   = MatchFail Pat Pat
   | DeriveFail Pat
