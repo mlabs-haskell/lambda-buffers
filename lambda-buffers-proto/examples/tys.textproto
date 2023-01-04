@@ -1,0 +1,109 @@
+# proto-file: ../compiler.proto
+# proto-message: Tys
+
+# txtpbfmt tys.textproto
+
+# Haskell-like type expression: a
+ty: {
+  ty_var { var_name: { name: "a" } }
+}
+
+# Haskell-like type expression: Maybe a
+ty: {
+  ty_app: {
+    ty_func: {
+      ty_ref: {
+        local_ty_ref: {
+          ty_name: {
+            name: "Maybe"
+          }
+        }
+      }
+    }
+    ty_args: {
+      ty_var: {
+        var_name: {
+          name: "a"
+        }
+      }
+    }
+  }
+}
+
+# Haskell-like type expression: Maybe a
+ty: {
+  ty_app: {
+    ty_func: {
+      ty_ref: {
+        local_ty_ref: {
+          ty_name: {
+            name: "Maybe"
+          }
+        }
+      }
+    }
+    ty_args: {
+      ty_var: {
+        var_name: {
+          name: "a"
+        }
+      }
+    }
+  }
+}
+
+# Haskell-like type expression: (Either (Maybe a) (SomeType a))
+ty: {
+  ty_app: {
+    ty_func: {
+      ty_ref: {
+        local_ty_ref: {
+          ty_name: {
+            name: "Either"
+          }
+        }
+      }
+    }
+    ty_args: {
+      ty_app: {
+        ty_func: {
+          ty_ref: {
+            local_ty_ref: {
+              ty_name: {
+                name: "Maybe"
+              }
+            }
+          }
+        }
+        ty_args: {
+          ty_var: {
+            var_name: {
+              name: "a"
+            }
+          }
+        }
+      }
+    }
+
+    ty_args: {
+      ty_app: {
+        ty_func: {
+          ty_ref: {
+            local_ty_ref: {
+              ty_name: {
+                name: "SomeType"
+              }
+            }
+          }
+        }
+        ty_args: {
+          ty_var: {
+            var_name: {
+              name: "a"
+            }
+          }
+        }
+      }
+    }
+  }
+}

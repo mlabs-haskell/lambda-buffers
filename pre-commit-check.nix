@@ -1,4 +1,4 @@
-{ fourmolu }: {
+{ fourmolu, protoHooks }: {
   src = ./.;
   settings = {
     # FIXME: https://github.com/cachix/pre-commit-hooks.nix/issues/155
@@ -71,7 +71,7 @@
     typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
-  };
+  } // protoHooks;
 
   tools = { inherit fourmolu; };
 }

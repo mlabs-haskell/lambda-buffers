@@ -1,0 +1,369 @@
+// Run with: protoc --plugin=protoc-gen-haskell=`which proto-lens-protoc` \
+// --haskell_out=proto_out compiler.proto
+syntax = "proto3";
+
+package lambdabuffers.compiler;
+
+/* Frontend Source information
+
+Frontends are advised to include *source* information to denote how their
+*Source* content maps to the *Compiler Input*. It's essentially when reporting
+*Compiler errors back to the Frontend user.
+*/
+
+message SourceInfo {
+  string file = 1;
+  SourcePosition pos_from = 2;
+  SourcePosition pos_to = 3;
+}
+
+message SourcePosition {
+  int32 column = 1;
+  int32 row = 2;
+}
+
+/* Ty
+
+A type expression that ocurrs in bodies of type definitions:
+
+```haskell
+data Maybe a = Just a | Nothing
+                    .
+data Either a b = Left a | Right b
+                       .         .
+data SomeType a = Foo a (Maybe a) | Bar (Either (Maybe a) (SomeType a))
+                      . .........       ...............................
+```
+
+or in instance declarations:
+
+```haskell
+instance Eq (Maybe a)
+            .........
+instance Eq (SomeType Int)
+            ..............
+instance (Eq (Maybe a), Eq (SomeType a)) Eq (Either (Maybe a) (SomeType a))
+             .........     ............     ...............................
+```
+
+Check out examples/tys.textproto for examples.
+*/
+message Ty {
+  oneof ty {
+    TyVar ty_var = 1;
+    TyApp ty_app = 2;
+    TyRef ty_ref = 3;
+  }
+  SourceInfo source_info = 5;
+}
+
+message TyVar {
+  VarName var_name = 1;
+  SourceInfo source_info = 2;
+}
+
+message TyApp {
+  Ty ty_func = 1;
+  repeated Ty ty_args = 2;
+  SourceInfo source_info = 3;
+}
+
+message TyRef {
+  message Local {
+    TyName ty_name = 1;
+  }
+  message Foreign {
+    TyName ty_name = 1;
+    ModuleName module_name = 2;
+  }
+  oneof ty_ref {
+    Local local_ty_ref = 1;
+    Foreign foreign_ty_ref = 2;
+  }
+  SourceInfo source_info = 3;
+}
+
+message Tys {
+  repeated Ty ties = 1;
+}
+
+/* Names */
+
+// Regex [A-Z]+[A-Za-z0-9_]*
+message TyName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [A-Z]+[A-Za-z0-9_]*
+message ModuleName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [a-z]+
+message ArgName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [a-z]+
+message VarName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [A-Z]+[A-Za-z0-9_]*
+message ConstrName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [a-z]+[A-Za-z0-9_]*
+message FieldName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [A-Z]+[A-Za-z0-9_]*
+message ClassName {
+  string name = 1;
+  SourceInfo source_info = 2;
+}
+
+/* Type definitions
+
+A type definition consists of a type name, a type arguments and the body.
+
+For instance:
+
+```haskell
+data Either a b = Left a | Right b
+     tttttt a a   bbbbbbbbbbbbbbbb
+```
+
+- t - TyName
+- a - TyArg
+- b - TyBody
+
+One way to look at it is that a type definition introduces a named 'lambda
+abstraction' in the module scope.
+Concretely, `Either` can be considered a type lambda of kind `Type -> Type ->
+Type`.
+In fact, TyDefs are the only way to introduce such 'higher kinded' types.
+
+Once introduced in the module scope, TyDefs are referred to using TyRef term.
+*/
+message TyDef {
+  TyName ty_name = 1;
+  repeated TyArg ty_args = 2;
+  TyBody ty_body = 3;
+  SourceInfo source_info = 4;
+}
+
+/* Type arguments
+
+Type arguments and therefore type variables have kinds, for the purpose of
+Lambda Buffers, we only allow them the have kind `Type`.
+
+In the following type definition:
+
+```haskell
+Either a b = Left a | Right b
+```
+
+both TyArgs `a` and `b` can be assume to be of kind `Type` (zero arity).
+
+However, to allow for future evolution if ever necessary, we attach the Kind
+term to TyArgs, even though the Compiler will reject any TyArg that's not of
+kind `Type`. For instance:
+
+```haskell
+EitherF (f :: Type -> Type) (a :: Type) (b :: Type) = Left (f a) | Right (f b)
+```
+*/
+message TyArg {
+  ArgName arg_name = 1;
+  Kind arg_kind = 2;
+  SourceInfo source_info = 3;
+}
+
+/* Kinds
+
+Type kinds are quite simple in Lambda Buffers, all types (TyArg, TyVar, TyRef,
+TyApp) are either of kind `Type` or `Type -> Type` and `Type -> Type -> Type`
+etc.
+
+Because of that we can simply encode them using the notion of `arity` which
+represents a number of type arguments that have to be applied to a type of `Type
+-> Type -> .. -> Type` to get a `Type` (ie. fully applied function, fully
+saturated).
+
+Alternatively and generally, `Kind` term could be could be expressed as
+
+message Kind {
+  message KindName { string name = 1;}
+  message KindArrow { Kind left = 1; Kind right = 2;}
+  oneof kind {
+    KindName kind_name = 1;
+    KindArrow kind_arrow = 2;
+  }
+}
+*/
+message Kind {
+  oneof kind {
+    int32 arity = 1;
+  };
+  SourceInfo source_info = 2;
+}
+
+
+/* Type body
+
+Lambda Buffers type bodies are quite simple, they can either be:
+- `Opaque`, meaning we don't define its structure with Lambda Buffers but
+  leverage an existing ones in target languages,
+- `Sum of products` which corresponds to Haskell ADTs.
+*/
+message TyBody {
+  oneof ty_body {
+    Opaque opaque = 1;
+    Sum sum = 2;
+  };
+  SourceInfo source_info = 3;
+}
+
+/* Opaque type body
+
+A type that has an `Opaque` body represents a 'builtin' or a 'primitive' type
+that's handled by the semantics 'under the hood'. It's called 'opaque' to denote
+the fact that the Compiler has no knowledge of its structure, and relies that
+the necessary knowledge is implemented elsewhere. The Codegen modules for any
+target language have to be able to handle such types specifically, for instance:
+
+```haskell
+opaque Int32
+opaque Int64
+opaque Set a
+opaque Map k v
+```
+
+Codegen modules would have to implement support for such defined types, for
+example:
+- In Python `Set a` would map to `set()` from the standard library,
+- In Haskell `Set a` would map to `containers`.Data.Set.Set type.
+
+Every `Opaque` type has to be considered deliberately for each language
+environment targeted by Codegen modules.
+*/
+message Opaque {
+  SourceInfo source_info = 1;
+}
+
+/* Sum
+
+A type defined as a Sum type is just like a Haskell ADT and represents a sum of
+products, for example:
+
+```haskell
+data SomeType a b = A a b (Either a b) | B b a (Either b a)
+                    c pppppppppppppppp   c pppppppppppppppp
+```
+
+- c - denotes a ConstrName
+- p - denotes a Product
+
+A `Sum.Constructor` term describes a type of the 'constructor' function that
+when fully applied yields the parent type. For instance, the constructor `A` is
+a 'term function' of type `A :: a -> b -> Either a b -> SomeType a b`.
+*/
+message Sum {
+  message Constructor {
+    ConstrName constr_name = 1;
+    Product product = 2;
+  };
+  repeated Constructor constructors = 1;
+  SourceInfo source_info = 2;
+}
+
+/* Product
+
+```haskell
+data SomeType a b = A a b | B { fieldA :: a, fieldB :: b } | C
+                      ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
+```
+- t - denotes the Product.NTuple
+- r - denotes the Product.Record
+- e - denotes the Product.Empty
+*/
+message Product {
+  message Record {
+    message Field {
+      FieldName field_name = 1;
+      Ty field_ty = 2;
+    }
+    repeated Field fields = 1;
+    SourceInfo source_infog = 2;
+  }
+  message NTuple {
+    repeated Ty fields = 1;
+    SourceInfo source_info = 2;
+  }
+  message Empty {
+    SourceInfo source_info = 1;
+  }
+  oneof product {
+    Empty empty = 1;
+    Record record = 2;
+    NTuple ntuple = 3;
+  }
+  SourceInfo source_info = 4;
+}
+
+
+
+/* Type class definitions
+
+class (A a b, B c) <= C a b c
+*/
+message ClassDef {
+  ClassName class_name = 1;
+  repeated TyArg class_args = 2;
+  repeated Constraint supers = 3;
+  string documentation = 4;
+  SourceInfo source_info = 5;
+}
+
+message InstanceClause {
+  ClassName class_name = 1;
+  repeated Ty heads = 2;
+  repeated Constraint constraints = 3;
+  SourceInfo source_info = 4;
+}
+
+message Constraint {
+  ClassName class_name = 1;
+  repeated Ty arguments = 2;
+  SourceInfo source_info = 3;
+}
+
+/* Module
+
+A module encapsulates type, class and instance definitions.
+*/
+message Module {
+  ModuleName module_name = 1;
+  repeated TyDef type_defs = 2;
+  repeated ClassDef class_defs = 3;
+  repeated InstanceClause instances = 4;
+  SourceInfo source_info = 5;
+}
+
+/* Compiler Input
+
+Compiler Inputs is a fully self contained list of modules, the entire
+compilation closure.
+*/
+message CompilerInput {
+  repeated Module modules = 1;
+}

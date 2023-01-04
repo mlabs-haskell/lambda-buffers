@@ -1,4 +1,4 @@
-{ pkgs, preCommitTools, shellHook }:
+{ pkgs, commonTools, shellHook }:
 pkgs.mkShell {
   name = "experimental-env";
   buildInputs = [
@@ -14,12 +14,7 @@ pkgs.mkShell {
     pkgs.protobuf
     pkgs.haskellPackages.proto-lens-protoc
     pkgs.swiPrologWithGui
-
-    preCommitTools.fourmolu
-    preCommitTools.typos
-    preCommitTools.cabal-fmt
-    preCommitTools.hlint
-  ];
+  ] ++ builtins.attrValues commonTools;
 
   inherit shellHook;
 }
