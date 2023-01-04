@@ -102,20 +102,21 @@ freeVar' = lift . lift $ UVar <$> freeVar
 checkKind :: Ty -> KindCheckMonad KindTerm
 checkKind (TyVar s) = lookupVar s
 checkKind (TyApp tyFun tyArg) = do
-  -- checkKind(KtApp) :-
-  --  checkKind(KtFun),
-  --  checkKind(KtArg),
-  --  KtFun = arr(KtArg, ktApp).
+  -- ty_kind(Ctx, ty_app(TyFun, TyArg), KtApp) :-
+  --     ty_kind(Ctx, TyFun, KtFun),
+  --     ty_kind(Ctx, TyArg, KtArg),
+  --     KtFun = arr(KtArg, KtApp).
   ktFun <- checkKind tyFun
   ktArg <- checkKind tyArg
   ktApp <- freeVar'
   ktFun `unify'` kindArrow ktArg ktApp -- {KtFun, KtArg} ? KtFun = KtArg -> KtApp
   return ktApp
 checkKind (TyAbs varName tyBody) = do
-  -- checkKind(KtAbs) :-
-  --  KtVar = "*",
-  --  checkKind(KtBody),
-  --  KtAbs = arr(KtVar, ktBody).
+  -- ty_kind(ctx(Vars, Refs), ty_abs(VarName, TyBody), KtAbs) :-
+  --     KtVar = "*",
+  --     append([VarName-KtVar], Vars, Vars_),
+  --     ty_kind(ctx(Vars_, Refs), TyBody, KtBody),
+  --     KtAbs = arr(KtVar, KtBody).
   ktVar <- freeVar'
   ktVar `unify'` typeKind -- all vars are of kind *, KtVar = *
   ktBody <- extendVarEnv varName ktVar (checkKind tyBody)
