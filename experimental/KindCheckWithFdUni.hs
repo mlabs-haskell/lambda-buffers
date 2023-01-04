@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Unification where
+module KindCheckWithFdUni where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Exception (Exception, throw)
@@ -25,10 +25,26 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Test.HUnit (Test (TestCase, TestLabel, TestList), assertEqual, runTestTT)
 
+-- A toy Type expression
 data Ty = TyVar String | TyAbs String Ty | TyApp Ty Ty | TyRef String deriving (Eq, Show)
 
+-- A LB Kind is either a -> or *, but where KindRef "Type" == *
 data Kind a = KindRef String | KindArrow a a deriving (Eq, Functor, Foldable, Traversable)
 
+instance Show a => Show (Kind a) where
+  show (KindArrow l r) = "(" <> show l <> " -> " <> show r <> ")"
+  show (KindRef "Type") = "*"
+  show (KindRef refName) = refName
+
+-- fd-unification typeclass to define how 'one level' of a Kind is unified
+instance Unifiable Kind where
+  zipMatch :: Kind a -> Kind a -> Maybe (Kind (Either a (a, a)))
+  zipMatch (KindRef r :: Kind a) (KindRef r') = if r == r' then Just $ KindRef r else Nothing
+  zipMatch (KindArrow a b) (KindArrow a' b') = Just $ KindArrow (Right (a, a')) (Right (b, b'))
+  zipMatch _ _ = Nothing
+
+-- fd-unification wiring
+-- KindTerm that is being checked via unification
 type KindTerm = UTerm Kind IntVar
 
 instance Eq KindTerm where
@@ -36,55 +52,6 @@ instance Eq KindTerm where
   UTerm x == UTerm y = x == y
   UVar x == UVar y = x == y
   _ == _ = False
-
-instance Unifiable Kind where
-  zipMatch :: Kind a -> Kind a -> Maybe (Kind (Either a (a, a)))
-  zipMatch (KindRef r :: Kind a) (KindRef r') = if r == r' then Just $ KindRef r else Nothing
-  zipMatch (KindArrow a b) (KindArrow a' b') = Just $ KindArrow (Right (a, a')) (Right (b, b'))
-  zipMatch _ _ = Nothing
-
-type KindCheckBindingState = IntBindingState Kind
-type FallibleBindingMonad = ExceptT KindCheckFailure (IntBindingT Kind Identity)
-type KindCheckMonad = ReaderT KindCheckCtx (ExceptT KindCheckFailure (IntBindingT Kind Logic))
-
-type KindCheckCtx = (Map String KindTerm, Map String KindTerm)
-
-runKindCheck ::
-  KindCheckMonad a ->
-  Maybe (Either KindCheckFailure a, KindCheckBindingState)
-runKindCheck p = observeMaybe . runIntBindingT . runExceptT $ runReaderT p defContext
-
-observeMaybe :: Logic a -> Maybe a
-observeMaybe mx = runLogic mx (\a _ -> Just a) Nothing
-
-typeKind :: UTerm Kind v
-typeKind = UTerm (KindRef "Type")
-
-kindArrow :: UTerm Kind v -> UTerm Kind v -> UTerm Kind v
-kindArrow l r = UTerm (KindArrow l r)
-
-unify' :: KindTerm -> KindTerm -> KindCheckMonad KindTerm
-unify' l r = lift $ unify l r
-
-freeVar' :: KindCheckMonad KindTerm
-freeVar' = lift . lift $ UVar <$> freeVar
-
-kindTerm :: Ty -> KindCheckMonad KindTerm
-kindTerm (TyVar s) = lookupVar s
-kindTerm (TyApp tyFun tyArg) = do
-  ktFun <- kindTerm tyFun
-  ktArg <- kindTerm tyArg
-  ktRes <- freeVar'
-  ktFun `unify'` kindArrow ktArg ktRes -- {KtFun, KtArg} ? KtFun = KtArg -> KtRes
-  return ktRes
-kindTerm (TyAbs varName tyBody) = do
-  ktVar <- freeVar'
-  ktVar `unify'` typeKind -- all vars are of kind *, KtVar = *
-  ktBody <- extendVarEnv varName ktVar (kindTerm tyBody)
-  ktAbs <- freeVar'
-  ktAbs `unify'` kindArrow ktVar ktBody -- {KtVar, KtBody} ? KtAbs = KtVar -> KtBody
-  return ktAbs
-kindTerm (TyRef s) = lookupRef s
 
 data KindCheckFailure
   = OccursFailure IntVar KindTerm
@@ -100,27 +67,84 @@ instance Fallible Kind IntVar KindCheckFailure where
 
 instance Exception KindCheckFailure
 
+type KindCheckBindingState = IntBindingState Kind
+
+data KindCheckEnv = KCEnv
+  { variables :: Map String KindTerm
+  , refs :: Map String KindTerm
+  }
+  deriving (Show, Eq)
+
+type KindCheckMonad = ReaderT KindCheckEnv (ExceptT KindCheckFailure (IntBindingT Kind Logic))
+
+runKindCheck ::
+  KindCheckMonad a ->
+  Maybe (Either KindCheckFailure a, KindCheckBindingState)
+runKindCheck p = observeMaybe . runIntBindingT . runExceptT $ runReaderT p defKCEnv
+
+observeMaybe :: Logic a -> Maybe a
+observeMaybe mx = runLogic mx (\a _ -> Just a) Nothing
+
+-- Kind *
+typeKind :: UTerm Kind v
+typeKind = UTerm (KindRef "Type")
+
+-- Kind ->
+kindArrow :: UTerm Kind v -> UTerm Kind v -> UTerm Kind v
+kindArrow l r = UTerm (KindArrow l r)
+
+unify' :: KindTerm -> KindTerm -> KindCheckMonad KindTerm
+unify' l r = lift $ unify l r
+
+freeVar' :: KindCheckMonad KindTerm
+freeVar' = lift . lift $ UVar <$> freeVar
+
+checkKind :: Ty -> KindCheckMonad KindTerm
+checkKind (TyVar s) = lookupVar s
+checkKind (TyApp tyFun tyArg) = do
+  -- checkKind(KtApp) :-
+  --  checkKind(KtFun),
+  --  checkKind(KtArg),
+  --  KtFun = arr(KtArg, ktApp).
+  ktFun <- checkKind tyFun
+  ktArg <- checkKind tyArg
+  ktApp <- freeVar'
+  ktFun `unify'` kindArrow ktArg ktApp -- {KtFun, KtArg} ? KtFun = KtArg -> KtApp
+  return ktApp
+checkKind (TyAbs varName tyBody) = do
+  -- checkKind(KtAbs) :-
+  --  KtVar = "*",
+  --  checkKind(KtBody),
+  --  KtAbs = arr(KtVar, ktBody).
+  ktVar <- freeVar'
+  ktVar `unify'` typeKind -- all vars are of kind *, KtVar = *
+  ktBody <- extendVarEnv varName ktVar (checkKind tyBody)
+  ktAbs <- freeVar'
+  ktAbs `unify'` kindArrow ktVar ktBody -- {KtVar, KtBody} ? KtAbs = KtVar -> KtBody
+  return ktAbs
+checkKind (TyRef s) = lookupRef s
+
 lookupVar :: String -> KindCheckMonad KindTerm
 lookupVar varName = do
-  mb <- asks (Map.lookup varName . fst)
+  mb <- asks (Map.lookup varName . variables)
   case mb of
     Just t -> return t
     Nothing -> lift . throwE $ LookupVarFailure varName
 
 extendVarEnv :: String -> KindTerm -> KindCheckMonad a -> KindCheckMonad a
-extendVarEnv varName kt = local (first (Map.insert varName kt))
+extendVarEnv varName kt = local (\(KCEnv vs refs) -> KCEnv (Map.insert varName kt vs) refs)
 
 lookupRef :: String -> KindCheckMonad KindTerm
 lookupRef refName = do
-  mb <- asks (Map.lookup refName . snd)
+  mb <- asks (Map.lookup refName . refs)
   case mb of
     Just t -> return t
     Nothing -> lift . throwE $ LookupRefFailure refName
 
-defContext :: KindCheckCtx
-defContext =
-  ( Map.empty
-  , Map.fromList
+defKCEnv :: KindCheckEnv
+defKCEnv =
+  KCEnv Map.empty $
+    Map.fromList
       [ ("Either", typeKind `kindArrow` (typeKind `kindArrow` typeKind))
       , ("Maybe", typeKind `kindArrow` typeKind)
       , ("Tuple", typeKind `kindArrow` (typeKind `kindArrow` typeKind))
@@ -129,12 +153,6 @@ defContext =
       , ("Map", typeKind `kindArrow` (typeKind `kindArrow` typeKind))
       , ("List", typeKind `kindArrow` typeKind)
       ]
-  )
-
-instance Show a => Show (Kind a) where
-  show (KindArrow l r) = "(" <> show l <> " -> " <> show r <> ")"
-  show (KindRef "Type") = "*"
-  show (KindRef refName) = refName
 
 main :: IO ()
 main =
@@ -200,7 +218,7 @@ main =
     af s ty err = TestCase $ assertEqual s (go ty) (Left err)
 
     go :: Ty -> Either KindCheckFailure String
-    go ty = case runKindCheck $ kindTerm ty >>= (lift . applyBindings) of
+    go ty = case runKindCheck $ checkKind ty >>= (lift . applyBindings) of
       Nothing -> Left $ CheckFailure ""
       Just (e, _) -> case e of
         Left kcf -> Left kcf
