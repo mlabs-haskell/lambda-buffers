@@ -16,15 +16,16 @@ ty_kind(ctx(Vars, Refs), ty_abs(VarName, TyBody), KtAbs) :-
     KtAbs = arr(KtVar, KtBody).
 
 ty_kind(Ctx, ty_app(TyFun, TyArg), KtApp) :-
-    ty_kind(Ctx, TyFun, KtFun),
     ty_kind(Ctx, TyArg, KtArg),
+    ty_kind(Ctx, TyFun, KtFun),
     KtFun = arr(KtArg, KtApp).
+
 
 default_ctx(ctx(
                 [
                 ]
                 , [
+                    "Int"-"*",
                     "Maybe"-arr("*", "*"),
-                    "Either"-arr("*", arr("*", "*")),
-                    "Int"-"*"
+                    "Either"-arr("*", arr("*", "*"))
                 ])).
