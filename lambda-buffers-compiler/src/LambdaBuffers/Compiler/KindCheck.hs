@@ -1,4 +1,4 @@
-module LambdaBuffers.KindCheck (runKindCheck) where
+module LambdaBuffers.Compiler.KindCheck (runKindCheck) where
 
 import Control.Exception (Exception)
 import Control.Lens (Identity (runIdentity), (&), (.~), (^.))
@@ -36,16 +36,14 @@ import Proto.Compiler_Fields as ProtoFields (
   varName,
  )
 
--- A toy Type expression
--- type Ty :: Type
--- data Ty = TyVar String | TyAbs String Ty | TyApp Ty Ty | TyRef String deriving stock (Eq, Show)
-
 -- A LB Kind is either a -> or *, but where KindRef "Type" == *
+-- TODO: Add Kind to compiler.proto
 type Kind :: Type
 data Kind = KindRef String | KindArrow Kind Kind deriving stock (Eq)
 
 typeK :: Kind
 typeK = KindRef "Type"
+
 arrowK :: Kind -> Kind -> Kind
 arrowK = KindArrow
 
@@ -54,6 +52,7 @@ instance Show Kind where
   show (KindRef "Type") = "*"
   show (KindRef refName) = refName
 
+-- TODO: Add KindCheckFailure to compiler.proto
 type KindCheckFailure :: Type
 data KindCheckFailure
   = CheckFailure String
@@ -66,6 +65,8 @@ data KindCheckFailure
 
 instance Exception KindCheckFailure
 
+-- TODO: Extend with SourceInfo and Sum'Constructor information so we can emit errors with the entire env
+-- TODO: KindCheckEnvironment should also go to compiler.proto and the Frontend can use that for error reporting
 type KindCheckEnv :: Type
 data KindCheckEnv = KCEnv
   { variables :: Map Text Kind
@@ -134,7 +135,7 @@ instance TyKind Product where
           (r ^. fields)
           ( \f -> do
               k <- tyKind $ f ^. fieldTy
-              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a record must have kind *"
+              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a record must have kind *" -- TODO: Add separate error
           )
         return typeK
       Product'Ntuple n -> do
@@ -142,9 +143,9 @@ instance TyKind Product where
           (n ^. fields)
           ( \ty -> do
               k <- tyKind ty
-              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a tuple must have kind *"
+              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a tuple must have kind *" -- TODO: Add separate error
           )
-        return typeK
+        return typeK -- -- NOTE: Product bodies are * kinded
 
 instance TyKind Ty where
   tyKind ty = case ty ^. maybe'ty of
