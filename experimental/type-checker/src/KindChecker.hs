@@ -19,14 +19,14 @@ type Atom = String
 infixr 8 :->:
 
 data Kind
-  = Kind
+  = Type
   | Kind :->: Kind
   | KVar String
   deriving (Eq, Show)
 
 instance Pretty Kind where
   pretty = \case
-    Kind -> pretty "*"
+    Type -> pretty "*"
     ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> pretty "→" <+> pretty z
     x :->: y -> pretty x <+> pretty "→" <+> pretty y
     KVar a -> pretty a
@@ -179,7 +179,7 @@ type Unifier a = Except UErr a
 -- | Gets the variables of a type.
 getVariables :: Kind -> [Atom]
 getVariables = \case
-  Kind -> mempty
+  Type -> mempty
   x :->: y -> getVariables x <> getVariables y
   KVar x -> [x]
 
@@ -187,14 +187,14 @@ getVariables = \case
 unify :: [Constraint] -> Unifier [Substitution]
 unify [] = pure []
 unify (constraint@(Constraint (l, r)) : xs) = case l of
-  Kind -> case r of
-    Kind -> unify xs
+  Type -> case r of
+    Type -> unify xs
     (_ :->: _) -> nope constraint
     KVar v ->
-      let sub = Substitution (v, Kind)
+      let sub = Substitution (v, Type)
        in (sub :) <$> unify (sub `substituteIn` xs)
   x :->: y -> case r of
-    Kind -> nope constraint
+    Type -> nope constraint
     KVar v ->
       if v `appearsIn` l
         then appearsErr v l
@@ -238,7 +238,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
 -- | Applies substitutions to a kind.
 applySubstitution :: Substitution -> Kind -> Kind
 applySubstitution s@(Substitution (a, t)) k = case k of
-  Kind -> Kind
+  Type -> Type
   l :->: r -> applySubstitution s l :->: applySubstitution s r
   KVar v -> if v == a then t else k
 
@@ -298,14 +298,14 @@ defContext :: Context
 defContext =
   Context
     { context =
-        [ ("Either", Kind :->: Kind :->: Kind)
-        , ("Maybe", Kind :->: Kind)
-        , ("(,)", Kind :->: Kind :->: Kind)
-        , ("Int", Kind)
-        , ("Bool", Kind)
-        , ("Map", Kind :->: Kind :->: Kind)
-        , ("List", Kind :->: Kind)
-        , ("StateT", Kind :->: (Kind :->: Kind) :->: Kind :->: Kind)
+        [ ("Either", Type :->: Type :->: Type)
+        , ("Maybe", Type :->: Type)
+        , ("(,)", Type :->: Type :->: Type)
+        , ("Int", Type)
+        , ("Bool", Type)
+        , ("Map", Type :->: Type :->: Type)
+        , ("List", Type :->: Type)
+        , ("StateT", Type :->: (Type :->: Type) :->: Type :->: Type)
         ]
     , addContext = []
     }
@@ -315,11 +315,11 @@ defContext =
 tterm = App (App (Abs "b" (App (Var "b") (Var "Int"))) (Var "Int")) (App (Var "Int") (Var "Int"))
 
 -- >>> getType tterm2
--- Right Kind
+-- Right Type
 tterm2 = Var "Int"
 
 -- >>> getType tterm3
--- Right (KVar "a1" :->: ((Kind :->: KVar "c1") :->: KVar "c1"))
+-- Right (KVar "a1" :->: ((Type :->: KVar "c1") :->: KVar "c1"))
 tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
 
 -- >>> getType tterm4
@@ -327,7 +327,7 @@ tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
 tterm4 = App (Abs "x" $ App (Var "x") (Var "Int")) (Var "Int")
 
 -- >>> getType tterm5
--- Right Kind
+-- Right Type
 tterm5 = App (App (Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))) (Var "Maybe")) (Var "Int")
 
 -- >>>  getType tterm6
@@ -335,5 +335,5 @@ tterm5 = App (App (Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))) 
 tterm6 = Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))
 
 -- >>>  getType tterm7
--- Right Kind
+-- Right Type
 tterm7 = App (App (App (Var "StateT") (Var "Int")) (Var "Maybe")) (Var "Int")
