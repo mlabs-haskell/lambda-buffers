@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.KindCheck (runKindCheck) where
+module LambdaBuffers.Compiler.KindCheck (runKindCheck, tyDefKind) where
 
 import Control.Exception (Exception)
 import Control.Lens (Identity (runIdentity), (&), (.~), (^.))
@@ -14,7 +14,6 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Traversable (for)
-import GHC.Base qualified as GHC
 import Proto.Compiler (Opaque, Product, Product'Product (Product'Empty', Product'Ntuple, Product'Record'), Sum, Ty, Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar), TyAbs, TyApp, TyBody, TyBody'TyBody (TyBody'Opaque, TyBody'Sum), TyDef, TyRef, TyVar)
 import Proto.Compiler_Fields as ProtoFields (
   constructors,
@@ -85,75 +84,71 @@ applyK (KindRef _) args@(_ : _) = lift . throwE $ AppToManyArgs (length args)
 applyK k [] = return k
 applyK (KindArrow l r) (arg : args) = if l == arg then applyK r args else lift . throwE $ AppWrongArgKind l arg
 
-type TyKind :: Type -> GHC.Constraint
-class TyKind ty where
-  tyKind :: ty -> KindCheckMonad Kind
+tyDefKind :: TyDef -> KindCheckMonad Kind
+tyDefKind tyD = tyAbsKind $ tyD ^. tyAbs
 
-instance TyKind TyDef where
-  tyKind tyD = tyKind $ tyD ^. tyAbs
+tyAbsKind :: TyAbs -> KindCheckMonad Kind
+tyAbsKind tyAbs' = do
+  kBody <- extendVarEnv (tyAbs' ^. tyVars) (tyBodyKind $ tyAbs' ^. tyBody)
+  let k = foldl' (\kf _ -> arrowK typeK . kf) id (tyAbs' ^. tyVars)
+  return $ k kBody
 
-instance TyKind TyAbs where
-  tyKind tyAbs' = do
-    kBody <- extendVarEnv (tyAbs' ^. tyVars) (tyKind $ tyAbs' ^. tyBody)
-    let k = foldl' (\kf _ -> arrowK typeK . kf) id (tyAbs' ^. tyVars)
-    return $ k kBody
+tyAppKind :: TyApp -> KindCheckMonad Kind
+tyAppKind tyA = do
+  ktFun <- tyKind $ tyA ^. tyFunc
+  ktArgs <- for (tyA ^. tyArgs) tyKind
+  applyK ktFun ktArgs
 
-instance TyKind TyApp where
-  tyKind tyA = do
-    ktFun <- tyKind $ tyA ^. tyFunc
-    ktArgs <- for (tyA ^. tyArgs) tyKind
-    applyK ktFun ktArgs
+tyVarKind :: TyVar -> KindCheckMonad Kind
+tyVarKind tyV = lookupVar $ tyV ^. varName . name
 
-instance TyKind TyVar where
-  tyKind tyV = lookupVar $ tyV ^. varName . name
+tyRefKind :: TyRef -> KindCheckMonad Kind
+tyRefKind = lookupRef
 
-instance TyKind TyRef where
-  tyKind = lookupRef
+tyBodyKind :: TyBody -> KindCheckMonad Kind
+tyBodyKind tyB = case tyB ^. maybe'tyBody of
+  Nothing -> lift . throwE $ InvalidProto "Must have TyBody"
+  Just tyB' -> case tyB' of
+    TyBody'Opaque o -> tyBodyOpaqueKind o
+    TyBody'Sum s -> tyBodySumKind s
 
-instance TyKind TyBody where
-  tyKind tyB = case tyB ^. maybe'tyBody of
-    Nothing -> lift . throwE $ InvalidProto "Must have TyBody"
-    Just tyB' -> case tyB' of
-      TyBody'Opaque o -> tyKind o
-      TyBody'Sum s -> tyKind s
+tyBodyOpaqueKind :: Opaque -> KindCheckMonad Kind
+tyBodyOpaqueKind _ = return typeK -- NOTE: This could be configurable and thus could enable arbitrary kinded Opaques
 
-instance TyKind Opaque where
-  tyKind _ = return typeK -- NOTE: This could be configurable and thus could enable arbitrary kinded Opaques
+tyBodySumKind :: Sum -> KindCheckMonad Kind
+tyBodySumKind s = do
+  for_ (s ^. constructors) (\c -> tyProductKind $ c ^. ProtoFields.product)
+  return typeK -- NOTE: Sum bodies are * kinded
 
-instance TyKind Sum where
-  tyKind s = do
-    for_ (s ^. constructors) (\c -> tyKind $ c ^. ProtoFields.product)
-    return typeK -- NOTE: Sum bodies are * kinded
+tyProductKind :: Product -> KindCheckMonad Kind
+tyProductKind p = case p ^. maybe'product of
+  Nothing -> lift . throwE $ InvalidProto "Must have TyProduct"
+  Just p' -> case p' of
+    Product'Empty' _ -> return typeK
+    Product'Record' r -> do
+      for_
+        (r ^. fields)
+        ( \f -> do
+            k <- tyKind $ f ^. fieldTy
+            if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a record must have kind *" -- TODO: Add separate error
+        )
+      return typeK
+    Product'Ntuple n -> do
+      for_
+        (n ^. fields)
+        ( \ty -> do
+            k <- tyKind ty
+            if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a tuple must have kind *" -- TODO: Add separate error
+        )
+      return typeK -- -- NOTE: Product bodies are * kinded
 
-instance TyKind Product where
-  tyKind p = case p ^. maybe'product of
-    Nothing -> lift . throwE $ InvalidProto "Must have TyProduct"
-    Just p' -> case p' of
-      Product'Empty' _ -> return typeK
-      Product'Record' r -> do
-        for_
-          (r ^. fields)
-          ( \f -> do
-              k <- tyKind $ f ^. fieldTy
-              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a record must have kind *" -- TODO: Add separate error
-          )
-        return typeK
-      Product'Ntuple n -> do
-        for_
-          (n ^. fields)
-          ( \ty -> do
-              k <- tyKind ty
-              if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a tuple must have kind *" -- TODO: Add separate error
-          )
-        return typeK -- -- NOTE: Product bodies are * kinded
-
-instance TyKind Ty where
-  tyKind ty = case ty ^. maybe'ty of
-    Nothing -> lift . throwE $ InvalidProto "Must have either TyApp, TyVar or TyRef"
-    Just ty' -> case ty' of
-      Ty'TyVar tyV -> tyKind tyV
-      Ty'TyApp tyA -> tyKind tyA
-      Ty'TyRef tyR -> tyKind tyR
+tyKind :: Ty -> KindCheckMonad Kind
+tyKind ty = case ty ^. maybe'ty of
+  Nothing -> lift . throwE $ InvalidProto "Must have either TyApp, TyVar or TyRef"
+  Just ty' -> case ty' of
+    Ty'TyVar tyV -> tyVarKind tyV
+    Ty'TyApp tyA -> tyAppKind tyA
+    Ty'TyRef tyR -> tyRefKind tyR
 
 lookupVar :: Text -> KindCheckMonad Kind
 lookupVar v = do
