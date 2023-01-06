@@ -32,6 +32,7 @@ library
     Common.Types
     Gen.Generator
     Gen.Rust
+    Gen.PP
     Instances
     Resolve.Rules
     Resolve.Solver
@@ -52,6 +53,7 @@ library
     , transformers
     , prettyprinter
     , megaparsec
+    , mtl
 
   default-language: Haskell2010
 

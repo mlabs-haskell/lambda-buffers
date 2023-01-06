@@ -1,120 +1,103 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Gen.Rust where
 
-import Data.Set (Set)
+
 import qualified Data.Set as S
 import Data.Text (Text)
 import qualified Data.Text as T
-import Common.SourceTy (TyDef)
 
+import Common.SourceTy (TyDef)
 import Common.Types
-import Common.Match
 import Gen.Generator
-import Data.Bifunctor
 import Control.Applicative
 
 import Prettyprinter
+import Gen.PP
 
-type CodeGen = Parser () (Doc ())
+type RustGen c = Parser Rust c () (Doc ())
 
-(</>) :: Doc a -> Doc a -> Doc a
-a </> b = a <> line <> b
-
-rBraces :: Doc a -> Doc a
-rBraces d = "{" </> indent 2 d </> "}"
-
-mkRecField :: Text -> Doc a -> Doc a
-mkRecField l f = pretty l <> ":" <+> f
-
-rint :: CodeGen
+rint :: RustGen TypeDecl
 rint = match Int >> pure "i32"
 
-rstring :: CodeGen
+rstring :: RustGen TypeDecl
 rstring = match String >> pure "String"
 
-rbool :: CodeGen
+rbool :: RustGen TypeDecl
 rbool = match Bool >> pure "bool"
 
-rref :: CodeGen
+rref :: RustGen TypeDecl
 rref = do
   RefP (Name n) <- match (RefP _x)
   pure $ pretty n
 
-rvar :: CodeGen
+rvar :: RustGen TypeDecl
 rvar = do
   VarP n <- match  _x
   pure $ pretty n
 
-rMaybe :: CodeGen
-rMaybe = do
+rMaybe :: [RustGen TypeDecl] -> RustGen TypeDecl
+rMaybe ps = do
   Maybe x <- match (Maybe _x)
-  x' <- result tyArg x
+  x' <- result (tyArg ps) x
   pure $ "Option<" <> x' <> ">"
 
-rList :: CodeGen
-rList = do
+rList :: [RustGen TypeDecl] -> RustGen TypeDecl
+rList ps = do
   List x <- match (List _x)
-  x'     <- result tyArg x
+  x'     <- result (tyArg ps) x
   pure $ "Vec<" <> x' <> ">"
 
 -- this is wrong, fix later, correct version is somewhat tricky to write, think I need a special combinator
-rApp :: CodeGen
-rApp =  do
+rApp :: [RustGen TypeDecl] -> RustGen TypeDecl
+rApp ps =  do
   AppP p1 p2 <- match (AppP _a _x)
-  p1' <- result tyArg p1
-  p2' <- result tyArg p2
+  p1' <- result (tyArg ps) p1
+  p2' <- result (tyArg ps) p2
   pure $ p2' <> "<" <> p1' <> ">"
 
-tyArg :: CodeGen
-tyArg = rint
-     <|> rstring
-     <|> rbool
-     <|> rref
-     <|> rMaybe
-     <|> rList
-     <|> rApp
-     <|> rvar
 
-recField :: CodeGen
-recField = do
+tyArg :: [RustGen TypeDecl] -> RustGen TypeDecl
+tyArg ps = choice
+         $  ps
+         <> [ rMaybe (ps <> prims)
+            , rList (ps <> prims)
+            , rApp  (ps <> prims) ]
+         <> prims
+  where
+    prims = [rint, rbool, rstring, rref, rvar]
+
+recField :: [RustGen TypeDecl] -> RustGen TypeDecl
+recField ps = do
   Name n := x <- match (_l := _x)
-  x'          <- result tyArg x
-  pure $ mkRecField n x'
+  x'          <- result (tyArg ps) x
+  pure $ rRecField n x'
 
-rustBareType :: CodeGen
-rustBareType = do
+rustBareType :: [RustGen TypeDecl] -> RustGen TypeDecl
+rustBareType ps = do
   ProdP (x :* Nil) <- match (ProdP (_x :* Nil))
-  parens <$> result tyArg x
+  parens <$> result (tyArg ps) x
 
-rRecFields :: CodeGen
-rRecFields = rBraces . vcat . punctuate "," <$> someP recField
+rRecFields :: [RustGen TypeDecl] -> RustGen TypeDecl
+rRecFields ps = rBraces . vcat . punctuate "," <$> someP (recField ps)
 
-rTupleFields :: CodeGen
-rTupleFields = parens . hcat . punctuate "," <$> someP tyArg
+rTupleFields :: [RustGen TypeDecl] -> RustGen TypeDecl
+rTupleFields ps = parens . hcat . punctuate "," <$> someP (tyArg ps)
 
-rType :: CodeGen
-rType = do
+rType :: [RustGen TypeDecl] -> RustGen TypeDecl
+rType ps = do
   (tvars,Sum (Name tName) _ p) <- rustify
   case p of
-    t@(SumP (Name cstr := RecP fields :* Nil)) -> do
-      fields' <- result rRecFields fields
-      pure $ "struct"
-           <+> pretty cstr
-           <> tvars
-           <+> fields'
-           <> ";"
-           <> line
+    SumP (Name cstr := RecP fields :* Nil) -> do
+      fields' <- result (rRecFields ps) fields
+      pure $ structify cstr tvars fields'
 
-    t@(SumP (Name cstr := ProdP args :* Nil)) -> do
-      args' <- result rTupleFields args
-      pure $ "struct"
-           <+> pretty cstr
-           <>  tvars
-           <+> args'
-           <> ";"
-           <> line
+    SumP (Name cstr := ProdP args :* Nil) -> do
+      args' <- result (rTupleFields ps) args
+      pure $ structify cstr tvars args'
 
     SumP ts -> do
       cstrs <- rBraces . vcat . punctuate "," <$> result (manyP sumConstr) ts
@@ -123,21 +106,33 @@ rType = do
            <> tvars
            <+> cstrs
 
-    other -> error "invalid sum type"
+    _ -> error "invalid sum type"
  where
-   sumConstr :: CodeGen
+   sumConstr :: RustGen TypeDecl
    sumConstr = do
      (Name cName := body) <- match (_l := _x)
-     body' <- result (rustBareType <|> recConstr <|> tupleConstr) body
+     body' <- result (rustBareType ps <|> recConstr <|> tupleConstr) body
      pure $ pretty cName <+> body'
 
    recConstr = do
      RecP fields <- match (RecP _x)
-     result rRecFields fields
+     result (rRecFields ps) fields
 
    tupleConstr = do
      ProdP fields <- match (ProdP _x)
-     result rTupleFields fields
+     result (rTupleFields ps) fields
+
+   structify :: Text -> Doc a -> Doc a -> Doc a
+   structify cstr tvars fields
+     = "struct"
+     <+> pretty cstr
+     <> tvars
+     <+> fields
+     <> ";"
+     <> line
+
+rType' :: RustGen TypeDecl
+rType' = rType []
 
 {- this is all just stupid boilerplate for formatting type variables in a rust-ly way
    note: this is an artifact of the old approach, can be substantially simplified w/ the new one
@@ -153,7 +148,7 @@ getTyParams = \case
      DecP _ vs _      -> getTyParams vs
      (Name n) :* rest ->  n : getTyParams rest
      Nil              -> []
-     other            -> error "malformed list" -- fix later
+     _            -> error "malformed list" -- fix later
 
 rustifyParams :: S.Set Text -> Pat -> Pat
 rustifyParams tvs = \case
@@ -179,7 +174,7 @@ rustifyParams tvs = \case
  where
    go = rustifyParams tvs
 
-rustify :: Parser e (Doc a,Pat)
+rustify :: Parser Rust c  e (Doc a,Pat)
 rustify = P $ \inp -> case rustify' inp of
   (doc,pat) -> pure  ((doc,pat),Nil)
 
@@ -190,4 +185,4 @@ rustify' p = let tvars = getTyParams p
               in (params,sanitized)
 
 parseTest :: TyDef -> IO ()
-parseTest x = case parse rType $ defToPat x of {Left err -> print err; Right a -> putStrLn "" >> print a}
+parseTest x = case parse rType' $ defToPat x of {Left err -> print err; Right a -> putStrLn "" >> print a}

@@ -31,6 +31,7 @@
       "GADTSyntax"
       "GeneralisedNewtypeDeriving"
       "HexFloatLiterals"
+      "ImportQualifiedPost"
       "InstanceSigs"
       "KindSignatures"
       "LambdaCase"
