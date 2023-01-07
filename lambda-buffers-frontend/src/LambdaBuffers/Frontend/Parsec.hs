@@ -7,8 +7,9 @@ import Data.Kind (Type)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
-import Proto.Compiler (ConstrName, ModuleName, ModuleNamePart, Opaque, Product, SourceInfo, SourcePosition, Sum, Sum'Constructor, Ty, TyBody, TyName, VarName)
-import Proto.Compiler_Fields (column, constrName, constructors, fields, file, localTyRef, name, ntuple, opaque, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyFunc, tyName, tyRef, tyVar, varName)
+import Data.Text (Text)
+import Proto.Compiler (ConstrName, Kind'KIND_REF (Kind'BUILTIN_TYPE), ModuleName, ModuleNamePart, Product, SourceInfo, SourcePosition, Sum'Constructor, Ty, TyArg, TyBody, TyDef, TyName, VarName)
+import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, kindRef, localTyRef, name, ntuple, opaque, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, varName)
 import Proto.Compiler_Fields qualified as P
 import Text.Parsec (ParsecT, Stream, alphaNum, char, eof, getPosition, getState, label, lower, many, many1, optionMaybe, parserTrace, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, (<?>))
 import Text.Parsec.Char (upper)
@@ -36,9 +37,12 @@ parseTest' p input = do
     Right res -> do
       print res
 
+parseUpperCamelCase :: Stream s m Char => Parser s m Text
+parseUpperCamelCase = label' "UpperCamelCase" $ fromString <$> ((:) <$> upper <*> many alphaNum)
+
 parseModuleNamePart :: Stream s m Char => Parser s m ModuleNamePart
 parseModuleNamePart = withSourceInfo . label' "module part name" $ do
-  mpn <- fromString <$> ((:) <$> upper <*> many alphaNum)
+  mpn <- parseUpperCamelCase
   return $ defMessage & name .~ mpn
 
 parseModuleName :: Stream s m Char => Parser s m ModuleName
@@ -53,7 +57,7 @@ parseTyVarName = withSourceInfo . label' "type variable name" $ do
 
 parseTyRefName :: Stream s m Char => Parser s m TyName
 parseTyRefName = withSourceInfo . label' "type reference name" $ do
-  rn <- fromString <$> ((:) <$> upper <*> many alphaNum)
+  rn <- parseUpperCamelCase
   return $ defMessage & name .~ rn
 
 parseTyVar :: Stream s m Char => Parser s m Ty
@@ -134,7 +138,7 @@ parseProduct = do
       return $ defMessage & ntuple .~ defMessage
     Just _ -> do
       nt <- withSourceInfo . label' "type product" $ do
-        many space
+        _ <- many space
         tys <- parseTys
         return $ defMessage & fields .~ tys
       return $ defMessage & ntuple .~ nt
@@ -143,6 +147,30 @@ parseConstructorName :: Stream s m Char => Parser s m ConstrName
 parseConstructorName = withSourceInfo . label' "sum constructor name" $ do
   rn <- fromString <$> ((:) <$> upper <*> many alphaNum)
   return $ defMessage & name .~ rn
+
+parseTyDef :: Stream s m Char => Parser s m TyDef
+parseTyDef = withSourceInfo . label' "type definition" $ do
+  _ <- string "enum"
+  _ <- many1 space
+  tyN <- parseTyRefName
+  _ <- many1 space
+  args <- sepEndBy parseTyArg (many1 space)
+  _ <- char '='
+  _ <- many1 space
+  body <- parseTyBody
+  return $
+    defMessage
+      & tyName .~ tyN
+      & tyArgs .~ args
+      & tyBody .~ body
+
+parseTyArg :: Stream s m Char => ParsecT s ParseState m TyArg
+parseTyArg = withSourceInfo . label' "type argument" $ do
+  vn <- parseTyVarName
+  return $
+    defMessage
+      & argName .~ vn
+      & argKind . kindRef .~ Kind'BUILTIN_TYPE
 
 getSourcePosition :: Stream s m Char => Parser s m SourcePosition
 getSourcePosition = do

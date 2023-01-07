@@ -108,11 +108,6 @@ message ModuleNamePart {
 }
 
 // Regex [a-z]+
-message ArgName {
-  string name = 1;
-  SourceInfo source_info = 2;
-}
-
 // Regex [a-z]+
 message VarName {
   string name = 1;
@@ -189,7 +184,7 @@ EitherF (f :: Type -> Type) (a :: Type) (b :: Type) = Left (f a) | Right (f b)
 ```
 */
 message TyArg {
-  ArgName arg_name = 1;
+  VarName arg_name = 1;
   Kind arg_kind = 2;
   SourceInfo source_info = 3;
 }
@@ -204,23 +199,21 @@ Because of that we can simply encode them using the notion of `arity` which
 represents a number of type arguments that have to be applied to a type of `Type
 -> Type -> .. -> Type` to get a `Type` (ie. fully applied function, fully
 saturated).
-
-Alternatively and generally, `Kind` term could be could be expressed as
-
-message Kind {
-  message KindName { string name = 1;}
-  message KindArrow { Kind left = 1; Kind right = 2;}
-  oneof kind {
-    KindName kind_name = 1;
-    KindArrow kind_arrow = 2;
-  }
-}
 */
 message Kind {
-  oneof kind {
-    int32 arity = 1;
+  enum KindRef {
+    KIND_REF_UNSPECIFIED = 0;
+    KIND_REF_TYPE = 1;
   };
-  SourceInfo source_info = 2;
+  message KindArrow {
+    Kind left = 1;
+    Kind right = 2;
+  }
+  oneof kind {
+    KindRef kind_ref = 1;
+    KindArrow kind_arrow = 2;
+  };
+  SourceInfo source_info = 3;
 }
 
 
@@ -315,15 +308,11 @@ message Product {
     repeated Ty fields = 1;
     SourceInfo source_info = 2;
   }
-  message Empty {
-    SourceInfo source_info = 1;
-  }
   oneof product {
-    Empty empty = 1;
-    Record record = 2;
-    NTuple ntuple = 3;
+    Record record = 1;
+    NTuple ntuple = 2;
   }
-  SourceInfo source_info = 4;
+  SourceInfo source_info = 3;
 }
 
 
