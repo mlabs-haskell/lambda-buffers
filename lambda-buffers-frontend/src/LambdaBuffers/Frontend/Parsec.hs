@@ -7,9 +7,10 @@ import Data.Kind (Type)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
-import Proto.Compiler (ModuleName, ModuleNamePart, SourceInfo, SourcePosition, Ty, TyName, VarName)
-import Proto.Compiler_Fields (column, file, localTyRef, name, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyFunc, tyName, tyRef, tyVar, varName)
-import Text.Parsec (ParsecT, Stream, alphaNum, char, eof, getPosition, getState, label, lower, many, many1, parserTrace, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, try, (<?>))
+import Proto.Compiler (ConstrName, ModuleName, ModuleNamePart, Opaque, Product, SourceInfo, SourcePosition, Sum, Sum'Constructor, Ty, TyBody, TyName, VarName)
+import Proto.Compiler_Fields (column, constrName, constructors, fields, file, localTyRef, name, ntuple, opaque, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyFunc, tyName, tyRef, tyVar, varName)
+import Proto.Compiler_Fields qualified as P
+import Text.Parsec (ParsecT, Stream, alphaNum, char, eof, getPosition, getState, label, lower, many, many1, optionMaybe, parserTrace, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, (<?>))
 import Text.Parsec.Char (upper)
 
 -- parseModule :: Stream s m Char => ParsecT s u m Module
@@ -97,6 +98,51 @@ tysToTy tys = case tys of
       defMessage
         & tyApp . tyFunc .~ f
         & tyApp . tyArgs .~ as
+
+parseTyBody :: Stream s m Char => Parser s m TyBody
+parseTyBody = withSourceInfo . label' "type body" $ parseOpaqueBody <|> parseSumBody
+
+parseOpaqueBody :: Stream s m Char => Parser s m TyBody
+parseOpaqueBody = do
+  o <- withSourceInfo . label' "opaque type body" $ string "opaque" >> return defMessage
+  return $ defMessage & opaque .~ o
+
+parseSumBody :: Stream s m Char => Parser s m TyBody
+parseSumBody = do
+  s <- withSourceInfo . label' "sum type body" $ do
+    cs <-
+      sepBy
+        parseSumConstructor
+        (char '|' >> many1 space)
+    return $ defMessage & constructors .~ cs
+  return $ defMessage & P.sum .~ s
+
+parseSumConstructor :: Stream s m Char => Parser s m Sum'Constructor
+parseSumConstructor = label' "sum type constructor" $ do
+  cn <- parseConstructorName
+  p <- parseProduct
+  return $
+    defMessage
+      & constrName .~ cn
+      & P.product .~ p
+
+parseProduct :: Stream s m Char => Parser s m Product
+parseProduct = do
+  maySpace <- optionMaybe space
+  case maySpace of
+    Nothing -> withSourceInfo . label' "empty constructor" $ do
+      return $ defMessage & ntuple .~ defMessage
+    Just _ -> do
+      nt <- withSourceInfo . label' "type product" $ do
+        many space
+        tys <- parseTys
+        return $ defMessage & fields .~ tys
+      return $ defMessage & ntuple .~ nt
+
+parseConstructorName :: Stream s m Char => Parser s m ConstrName
+parseConstructorName = withSourceInfo . label' "sum constructor name" $ do
+  rn <- fromString <$> ((:) <$> upper <*> many alphaNum)
+  return $ defMessage & name .~ rn
 
 getSourcePosition :: Stream s m Char => Parser s m SourcePosition
 getSourcePosition = do
