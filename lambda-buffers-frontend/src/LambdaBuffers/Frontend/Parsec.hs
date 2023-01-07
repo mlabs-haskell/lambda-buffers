@@ -7,9 +7,8 @@ import Data.Kind (Type)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
-import Data.Text (Text)
-import Proto.Compiler (SourceInfo, SourcePosition, Ty)
-import Proto.Compiler_Fields (column, file, localTyRef, name, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyFunc, tyName, tyRef, tyVar, varName)
+import Proto.Compiler (ModuleName, ModuleNamePart, SourceInfo, SourcePosition, Ty, TyName, VarName)
+import Proto.Compiler_Fields (column, file, localTyRef, name, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyFunc, tyName, tyRef, tyVar, varName)
 import Text.Parsec (ParsecT, Stream, alphaNum, char, eof, getPosition, getState, label, lower, many, many1, parserTrace, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, try, (<?>))
 import Text.Parsec.Char (upper)
 
@@ -36,40 +35,52 @@ parseTest' p input = do
     Right res -> do
       print res
 
-parseModuleNamePart :: Stream s m Char => Parser s m Text
-parseModuleNamePart = fromString <$> ((:) <$> upper <*> many alphaNum) <?> "module name part"
+parseModuleNamePart :: Stream s m Char => Parser s m ModuleNamePart
+parseModuleNamePart = withSourceInfo . label' "module part name" $ do
+  mpn <- fromString <$> ((:) <$> upper <*> many alphaNum)
+  return $ defMessage & name .~ mpn
 
-parseModuleName :: Stream s m Char => Parser s m [Text]
-parseModuleName = sepBy parseModuleNamePart (char '.') <?> "module name"
+parseModuleName :: Stream s m Char => Parser s m ModuleName
+parseModuleName = withSourceInfo . label' "module name" $ do
+  mpns <- sepBy parseModuleNamePart (char '.')
+  return $ defMessage & parts .~ mpns
 
-parseTyVarName :: Stream s m Char => Parser s m Text
-parseTyVarName = fromString <$> many1 lower <?> "type variable name"
+parseTyVarName :: Stream s m Char => Parser s m VarName
+parseTyVarName = withSourceInfo . label' "type variable name" $ do
+  vn <- fromString <$> many1 lower
+  return $ defMessage & name .~ vn
 
-parseTyRefName :: Stream s m Char => Parser s m Text
-parseTyRefName = fromString <$> ((:) <$> upper <*> many alphaNum) <?> "type reference name"
-
-label' :: String -> Parser s m a -> Parser s m a
-label' l m = label m l
+parseTyRefName :: Stream s m Char => Parser s m TyName
+parseTyRefName = withSourceInfo . label' "type reference name" $ do
+  rn <- fromString <$> ((:) <$> upper <*> many alphaNum)
+  return $ defMessage & name .~ rn
 
 parseTyVar :: Stream s m Char => Parser s m Ty
-parseTyVar = withSourceInfo . label' "type variable" $ do
-  varN <- parseTyVarName
-  parserTrace $ "tyVar " <> show varN
-  return $ defMessage & tyVar . varName . name .~ varN
+parseTyVar = do
+  tyV <- withSourceInfo . label' "type variable" $ do
+    varN <- parseTyVarName
+    parserTrace $ "tyVar " <> show varN
+    return $ defMessage & varName .~ varN
+  return (defMessage & tyVar .~ tyV)
 
 -- TODO: Handle ForeignRefs
 parseTyRef :: Stream s m Char => Parser s m Ty
-parseTyRef = withSourceInfo . label' "type reference" $ do
-  refN <- parseTyRefName
-  parserTrace $ "tyRef " <> show refN
-  return $ defMessage & tyRef . localTyRef . tyName . name .~ refN
+parseTyRef = do
+  tyR <- withSourceInfo . label' "type reference" $ do
+    refN <- parseTyRefName
+    parserTrace $ "tyRef " <> show refN
+    return $ defMessage & localTyRef . tyName .~ refN
+  return $ defMessage & tyRef .~ tyR
 
 parseTy :: Stream s m Char => Parser s m Ty
-parseTy = (try parseTys >>= tysToTy) <?> "top level type expression"
+parseTy = withSourceInfo . label' "top level type expression" $ try parseTys >>= tysToTy
+
+parseTys :: Stream s m Char => Parser s m [Ty]
+parseTys = sepEndBy parseTy' (many1 space) <?> "type list"
 
 parseTy' :: Stream s m Char => Parser s m Ty
 parseTy' =
-  label' "non-top leve type expression" $
+  withSourceInfo . label' "non-top level type expression" $
     parseTyRef
       <|> parseTyVar
       <|> ( (char '(' >> many space)
@@ -77,13 +88,10 @@ parseTy' =
               <* (many space >> char ')')
           )
 
-parseTys :: Stream s m Char => Parser s m [Ty]
-parseTys = sepEndBy parseTy' (many1 space) <?> "type list"
-
 tysToTy :: [Ty] -> Parser s m Ty
 tysToTy tys = case tys of
   [] -> mzero
-  [f] -> return f
+  [ty] -> return ty
   f : as ->
     return $
       defMessage
@@ -117,3 +125,6 @@ withSourceInfo p = do
                       & posTo .~ pos'
                    )
       return xWithSourceInfo
+
+label' :: String -> Parser s m a -> Parser s m a
+label' l m = label m l

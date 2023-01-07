@@ -95,8 +95,14 @@ message TyName {
   SourceInfo source_info = 2;
 }
 
-// Regex [A-Z]+[A-Za-z0-9_]*
+// Regex (ModuleNamePart|.)+
 message ModuleName {
+  repeated ModuleNamePart parts = 1;
+  SourceInfo source_info = 2;
+}
+
+// Regex [A-Z]+[A-Za-z0-9_]*
+message ModuleNamePart {
   string name = 1;
   SourceInfo source_info = 2;
 }
