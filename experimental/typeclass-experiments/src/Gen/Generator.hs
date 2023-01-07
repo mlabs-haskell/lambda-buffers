@@ -35,7 +35,6 @@ instance TargetLang Haskell where
 
   toDoc = id
 
-
 -- adapted from https://serokell.io/blog/parser-combinators-in-haskell
 data Error e
   = EndOfInput
@@ -93,7 +92,7 @@ instance Eq e => Alternative (Parser l c e) where
 instance Eq e => MonadFail (Parser l c e) where
   fail _ = empty
 
-_k, _v, _a, _l, _x, _xs, _name, _vars, _nil :: Pat
+_k, _v, _a, _l, _x, _xs, _name, _vars, _nil, _body :: Pat
 _k    = VarP "kdasfadsfsadf3323232421413413413"
 _v    = VarP "vdsfasdfa3e4fewafewufioeoifioaefiowe"
 _a    = VarP "a3242432aefiosdjfioasdf32jior3j2oirj32io"
@@ -101,6 +100,7 @@ _l    = VarP "lasdfsdfj3ij319031j8381913j8138"
 _x    = VarP "x32fjio23io32jio3j2iof3ijo2fio32fio32"
 _xs   = VarP "xsadsfjdlsfji3i3298238893289j32j8923j89"
 _name = VarP "namedsafdsfhuisdhfuidshu3893283h8df398hdf321"
+_body = VarP "bodyadfjasidofjads08f8943j289234j89234j98fj38"
 _vars = VarP "varsdsfdasfjklsdafjilsdafjiasdio43io2903"
 _nil  = VarP "nildsfjosdjfiosdajfoi89321893y8914981398"
 
@@ -126,6 +126,12 @@ matchfail =  Left .  pure . MatchFailure
 
 only :: a -> Either [Error e] (a,Pat)
 only a = pure (a,Nil)
+
+unsafeToList :: Pat -> [Pat]
+unsafeToList = \case
+  (x :* xs) -> x : unsafeToList xs
+  Nil       -> []
+  other     -> error ("not a pattern list " <> show other)
 
 match :: Pat ->  Parser l c e Pat
 match targ = P $ \inp ->

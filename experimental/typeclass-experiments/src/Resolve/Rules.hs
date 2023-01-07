@@ -4,12 +4,17 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Resolve.Rules where
 
 import Common.Types
 import Gen.Generator
 import Data.Kind (Type)
+import Prettyprinter
+import Gen.PP
+import Data.Text (Text)
+import qualified Data.Map.Strict as M
 
 type InstanceGen l = Parser l InstanceDecl () (DSL l)
 
@@ -63,42 +68,62 @@ mapPat f = \case
   Rule c ty -> Rule c (f ty)
   i :<= is -> mapPat f i :<= map (\(C c p) -> C c (f p)) is
 
--- silly test class
+eq :: Class l
+eq = Class "Eq" []
 
-class Foo a where
-  foo :: a -> String
+eqScope :: [Instance l]
+eqScope = [
+   Rule eq Int
+ , Rule eq Bool
+ , Rule eq String
+ , Rule eq (List _x) :<= [C eq _x]
+ , Rule eq (Maybe _x) :<= [C eq _x]
+ -- These are structural rules that don't correspond to any particular existing generated code
+ , Rule eq Nil -- I'm not sure whether this really has any meaning
+ , Rule eq (_x :* _xs) :<= [C eq _x, C eq _xs]
+ , Rule eq (_l := _x) :<= [C eq _x]
+ , Rule eq (RecP _xs) :<= [C eq _xs]
+ , Rule eq (ProdP _xs) :<= [C eq _xs]
+ , Rule eq (SumP _xs) :<= [C eq _xs]
+ ]
 
-instance Foo Int where
-  foo i = "FOO(" <> show i <> ")"
+eqTyNoVars :: Instance l
+eqTyNoVars = Rule eq (Sum _name Nil _body) :<= [C eq _body]
 
-instance Foo String where
-  foo s = "FOO(" <> s <> ")"
+-- whyyyyyy isn't this in prelude
+for :: [a] -> (a -> b) -> [b]
+for = flip map
 
-instance Foo Bool where
-  foo b = "FOO(" <> show b <>  ")"
+eqTyNoVarsGen :: InstanceGen Rust
+eqTyNoVarsGen = do
+  Sum (Name _) Nil body <- match (Sum _name Nil _body)
+  case body of
+    SumP (Name cstr := RecP fields :* Nil) -> do
+      funBody <- hcat . punctuate " && " <$> result (someP genFieldEq) fields
+      let partialEq =  impl "PartialEq" cstr $ method2 "eq" "bool" funBody
+      pure $ partialEq </> eqInst cstr
 
-showC :: Class l
-showC = Class "Show" []
+    SumP (Name cstr := ProdP args :* Nil) -> do
+      let counted = zipWith const ([0..] :: [Int]) . unsafeToList $ args
+          funBody = hcat
+                    . punctuate " && "
+                    . for counted
+                    $ \(pretty -> ix) -> "self" <.> ix <+> "==" <+> "other" <.> ix
+          partialEq = impl "PartialEq" cstr $ method2 "eq" "bool" funBody
+      pure $ partialEq </> eqInst cstr
 
-fooC :: Class l
-fooC = Class "Foo" [showC]
+    -- SumP cstrs -> undefined
 
-fooInt, fooBool, fooString, fooList, fooMaybe, showInt, showBool, showString', showList' :: Instance Haskell
-fooInt  = Rule fooC Int
-fooBool = Rule fooC  Bool
-fooString = Rule fooC String
+    _ -> undefined
+ where
+   eqInst :: Text -> Doc a
+   eqInst nm = "impl Eq for" <+> pretty nm <+> "{}"
 
-showInt = Rule showC Int
-showBool = Rule showC Bool
-showString' = Rule showC String
+   genFieldEq :: Parser Rust c () (Doc ())
+   genFieldEq = do
+     (Name label' := _) <- match (_l := _x)
+     let label = pretty label'
+     pure $ "self" <.> label <+> "==" <+> "other" <.> label
 
-showList' = Rule showC (List _x) :<= [C showC _x]
-
-fooList = Rule fooC (List _x) :<= [C fooC _x]
-
-fooMaybe = Rule fooC (Maybe _x)  :<= [C fooC _x]
-
-showMaybe = Rule showC (Maybe _x) :<= [C showC _x]
-
-fooRules :: [Instance 'Haskell]
-fooRules = [fooInt,fooString,fooBool,fooList,showString',showList',showBool,showMaybe]
+eqGen :: M.Map (Instance Rust) (InstanceGen Rust)
+eqGen = M.fromList [(eqTyNoVars,eqTyNoVarsGen)]

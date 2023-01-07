@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-missing-export-lists #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 
 module Resolve.Solver where
 
@@ -25,8 +25,9 @@ import Common.Types
 
 import Resolve.Rules
 import Gen.Generator
-import Control.Monad.Trans.Except (ExceptT, throwE)
+import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
 import Data.Foldable (traverse_)
+import Prettyprinter
 
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the
@@ -46,6 +47,7 @@ subV varNm t = \case
   SumP xs -> SumP (subV varNm t xs)
   AppP t1 t2 -> AppP (subV varNm t t1) (subV varNm t t2)
   RefP x -> RefP (subV varNm t x)
+  DecP a b c -> DecP (subV varNm t a) (subV varNm t b) (subV varNm t c)
   other -> other
 
 {- Performs substitution on an entire instance (the first argument) given the
@@ -82,13 +84,15 @@ getSubs (RecP xs) (RecP xs') = getSubs xs xs'
 getSubs (SumP xs) (SumP xs') = getSubs xs xs'
 getSubs (AppP t1 t2) (AppP t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
 getSubs (RefP t) (RefP t') = getSubs t t'
+getSubs (DecP a b c) (DecP a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
 getSubs _ _ = []
 
 normalize :: Ord a => [a] -> [a]
 normalize = S.toList . S.fromList
 
 {- Given a list of instances (the initial scope), determines whether we can derive
-   an instance of the Class argument for the Pat argument
+   an instance of the Class argument for the Pat argument. A result of [] indicates that there are
+   no remaining subgoals and that the constraint has been solved.
 
    NOTE: At the moment this handles superclasses differently than you might expect -
          instead of assuming that the superclasses for all in-scope classes are defined,
@@ -133,7 +137,6 @@ solve inScope cst@(C c pat) =
       Rule c' t' -> c == c' && matches t' pat
       Rule c' t' :<= _ -> c == c' && matches t' pat
       _ -> False
-
     {-
 
     allInstances :: [Instance l]
@@ -193,29 +196,51 @@ Deriving algorithm:
 
 -}
 
-data TCError l
+data DeriveError l
  = NoGenerator (Constraint l)
  | GenError (Constraint l)
+ | ConstraintFail [Constraint l]
  | MultipleMatchingGenerators (Constraint l) [Instance l] deriving (Show, Eq)
 
-data TCState (l :: Lang) = TCState {
+
+type GenTable l = Map (Instance l) (InstanceGen l)
+
+data DeriveState (l :: Lang) = DeriveState {
   scope      :: [Instance l],
-  generators :: Map (Instance l) (InstanceGen l),
+  generators :: GenTable l,
   output     :: [DSL l]
 }
 
-type DeriveM l a = ExceptT (TCError l) (State (TCState l)) a
+type DeriveM l a = ExceptT (DeriveError l) (State (DeriveState l)) a
 
+simplify :: Rule a l -> Rule a l
+simplify = \case
+  r@(Rule _ _) -> r
+  (r :<= _)    -> r
+
+{- NOTE: Right now this recursively derives and generates code for all of the necessary constraints.
+         If you want to change that so that it only derives the present constraint, comment out ***1*** and
+         replace the body of the do-block before ***2*** with the commented code in ***2***
+
+         ***2*** tries to derive all of the (substituted) constraints on the matching rule instance (which is the key)
+         in the GenTable. That might not be very useful because the substituted constraints on the rule instance will
+         usually refer to a structural subcomponent of a type decl which cannot be meaningfully generated
+         (though I'm not sure if this will always be the case).
+
+         ***1*** tries to derive all of the subgoal constraints needed for `cst`, which is in fact very useful.
+
+-}
 derive :: forall (l :: Lang)
         . TargetLang l
        => Constraint l
        -> DeriveM l  ()  -- switch from String to something better
 derive cst@(C _ cp) = do
-  TCState{..} <- get
+  DeriveState{..} <- get
   case solve scope cst of
    [] -> pure ()
    xs -> do
-     traverse_ derive xs
+     -- have to filter or it will loop forever b/c if `solve` can't solve cst then cst will always be an elem of the result
+     traverse_ derive $ filter (/= cst) xs -- ***1***
      (genRule, generator) <- findMatchingGen
      case genRule of
        Rule _ _ -> processGen genRule generator
@@ -223,12 +248,20 @@ derive cst@(C _ cp) = do
        _ :<= iConstraints -> do
          traverse_ derive iConstraints
          processGen genRule generator
+
+         {- ***2***
+         (DeriveState sc _ _) <- get
+         case concat $ traverse (solve sc) iConstraints of
+           [] -> processGen genRule generator
+           others -> throwE $ ConstraintFail others
+         -}
  where
    processGen :: Instance l -> InstanceGen l -> DeriveM l ()
    processGen genRule generator = case parse generator cp of
      Left _    -> throwE $ GenError cst
-     Right dsl -> modify' $ \(TCState sc ge out) ->
-       TCState (genRule:sc) ge (dsl:out)
+     Right dsl -> modify' $ \(DeriveState sc ge out) ->
+       -- we simplify a (r :<= cs) constraint b/c at this point we know that `cs` has been derived or solved
+       DeriveState (simplify genRule:sc) ge (dsl:out)
 
    findMatchingGen :: DeriveM l (Instance l, InstanceGen l)
    findMatchingGen = do
@@ -238,6 +271,25 @@ derive cst@(C _ cp) = do
        [(gPat,gen)] -> pure (subst gPat cp,gen)
        others       -> throwE $ MultipleMatchingGenerators cst (map fst others)
 
+runDerive :: forall (l :: Lang)
+           . TargetLang l
+          => GenTable l
+          -> [Instance l]
+          -> Constraint l
+          -> Either (DeriveError l) [DSL l]
+runDerive gens scope c = case runState (runExceptT $ derive c) st of
+   (Left e,_) -> Left e
+   (Right (), res) -> Right $ output res
+  where
+    st = DeriveState scope gens []
+
+runDerive' :: forall (l :: Lang)
+              . (TargetLang l, DSL l ~ Doc ())
+             => Map (Instance l) (InstanceGen l)
+             -> [Instance l]
+             -> Constraint l
+             -> IO ()
+runDerive' g sc c = either print (print . vcat) $ runDerive g sc c
 
 {- for debugging -}
 pTrace :: forall a b. Show a => String -> a -> b -> b
