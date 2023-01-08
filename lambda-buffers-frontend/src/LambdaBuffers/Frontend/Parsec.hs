@@ -11,7 +11,7 @@ import Data.Text (Text)
 import Proto.Compiler (ConstrName, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, Product, SourceInfo, SourcePosition, Sum'Constructor, Ty, TyArg, TyBody, TyDef, TyName, VarName)
 import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, kindRef, localTyRef, moduleName, name, ntuple, opaque, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
-import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, getState, label, lower, many, many1, optionMaybe, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, (<?>))
+import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, getState, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, (<?>))
 import Text.Parsec.Char (upper)
 
 type ParseState :: Type
@@ -177,10 +177,12 @@ parseTyArg = withSourceInfo . label' "type argument" $ do
       & argKind . kindRef .~ Kind'KIND_REF_TYPE
 
 lineSpace :: Stream s m Char => Parser s m ()
-lineSpace = label' "line space" $ void $ char ' ' <|> char '\t'
+lineSpace = label' "line space" $ void $ try $ do
+  optional endOfLine
+  char ' ' <|> char '\t'
 
 lbNewLine :: Stream s m Char => Parser s m ()
-lbNewLine = label' "lb new line" $ void $ endOfLine >> many lineSpace
+lbNewLine = label' "lb new line" $ void endOfLine
 
 parseModule :: Stream s m Char => Parser s m Module
 parseModule = do
@@ -188,8 +190,8 @@ parseModule = do
   _ <- many1 lineSpace
   modName <- parseModuleName
   _ <- many lineSpace
-  _ <- many1 endOfLine
-  tyDs <- sepEndBy parseTyDef (many1 lbNewLine)
+  _ <- many1 lbNewLine
+  tyDs <- sepBy parseTyDef (many1 lbNewLine)
   _ <- many space
   return $
     defMessage
