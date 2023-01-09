@@ -1,17 +1,12 @@
 module LambdaBuffers.Frontend.Parsec where
 
 import Control.Applicative (Alternative ((<|>)))
-import Control.Lens ((&), (.~))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
-import Data.ProtoLens (Message (defMessage))
-import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
-import Proto.Compiler (ConstrName, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, Product, SourceInfo, SourcePosition, Sum'Constructor, Ty, TyArg, TyBody, TyDef, TyName, VarName)
-import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, kindRef, localTyRef, moduleName, name, ntuple, opaque, parts, posFrom, posTo, row, sourceInfo, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
-import Proto.Compiler_Fields qualified as P
-import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, getState, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, (<?>))
+import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
+import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 import Text.Parsec.Char (upper)
 
 type ParseState :: Type
@@ -35,49 +30,40 @@ parseUpperCamelCase :: Stream s m Char => Parser s m Text
 parseUpperCamelCase = label' "UpperCamelCase" $ fromString <$> ((:) <$> upper <*> many alphaNum)
 
 parseModuleNamePart :: Stream s m Char => Parser s m ModuleNamePart
-parseModuleNamePart = withSourceInfo . label' "module part name" $ do
-  mpn <- parseUpperCamelCase
-  return $ defMessage & name .~ mpn
+parseModuleNamePart = withSourceInfo . label' "module part name" $ ModuleNamePart <$> parseUpperCamelCase
 
 parseModuleName :: Stream s m Char => Parser s m ModuleName
-parseModuleName = withSourceInfo . label' "module name" $ do
-  mpns <- sepBy parseModuleNamePart (char '.')
-  return $ defMessage & parts .~ mpns
+parseModuleName = withSourceInfo . label' "module name" $ ModuleName <$> sepBy (try parseModuleNamePart) (try $ char '.')
 
 parseTyVarName :: Stream s m Char => Parser s m VarName
-parseTyVarName = withSourceInfo . label' "type variable name" $ do
-  vn <- fromString <$> many1 lower
-  return $ defMessage & name .~ vn
+parseTyVarName = withSourceInfo . label' "type variable name" $ VarName . fromString <$> many1 lower
 
-parseTyRefName :: Stream s m Char => Parser s m TyName
-parseTyRefName = withSourceInfo . label' "type reference name" $ do
-  rn <- parseUpperCamelCase
-  return $ defMessage & name .~ rn
+parseTyName :: Stream s m Char => Parser s m TyName
+parseTyName = withSourceInfo . label' "type name" $ TyName <$> parseUpperCamelCase
+
+parseModuleAlias :: Stream s m Char => Parser s m ModuleAlias
+parseModuleAlias = withSourceInfo . label' "module alias" $ ModuleAlias <$> parseUpperCamelCase
+
+parseTyRef' :: Stream s m Char => Parser s m TyRef
+parseTyRef' = withSourceInfo . label' "type reference" $ do
+  mayAlias <- optionMaybe (try $ parseModuleAlias <* char '.')
+  TyRef mayAlias <$> parseTyName
 
 parseTyVar :: Stream s m Char => Parser s m Ty
-parseTyVar = do
-  tyV <- withSourceInfo . label' "type variable" $ do
-    varN <- parseTyVarName
-    return $ defMessage & varName .~ varN
-  return (defMessage & tyVar .~ tyV)
+parseTyVar = withSourceInfo . label' "type variable" $ TyVar <$> parseTyVarName
 
--- TODO: Handle ForeignRefs
 parseTyRef :: Stream s m Char => Parser s m Ty
-parseTyRef = do
-  tyR <- withSourceInfo . label' "type reference" $ do
-    refN <- parseTyRefName
-    return $ defMessage & localTyRef . tyName .~ refN
-  return $ defMessage & tyRef .~ tyR
+parseTyRef = withSourceInfo . label' "type reference" $ TyRef' <$> parseTyRef'
 
 parseTy :: Stream s m Char => Parser s m Ty
-parseTy = withSourceInfo . label' "top level type expression" $ try parseTys >>= tysToTy
+parseTy = label' "top level type expression" $ try parseTys >>= tysToTy
 
 parseTys :: Stream s m Char => Parser s m [Ty]
-parseTys = sepEndBy parseTy' (many1 lineSpace) <?> "type list"
+parseTys = label' "type list" $ sepEndBy parseTy' (many1 lineSpace)
 
 parseTy' :: Stream s m Char => Parser s m Ty
 parseTy' =
-  withSourceInfo . label' "non-top level type expression" $
+  label' "non-top level type expression" $
     parseTyRef
       <|> parseTyVar
       <|> ( (char '(' >> many lineSpace)
@@ -85,52 +71,35 @@ parseTy' =
               <* (many lineSpace >> char ')')
           )
 
-tysToTy :: [Ty] -> Parser s m Ty
-tysToTy tys = case tys of
+tysToTy :: Stream s m Char => [Ty] -> Parser s m Ty
+tysToTy tys = withSourceInfo $ case tys of
   [] -> mzero
-  [ty] -> return ty
-  f : as ->
-    return $
-      defMessage
-        & tyApp . tyFunc .~ f
-        & tyApp . tyArgs .~ as
+  [ty] -> return $ const ty
+  f : as -> return $ TyApp f as
 
 parseSumBody :: Stream s m Char => Parser s m TyBody
-parseSumBody = do
-  s <- withSourceInfo . label' "sum type body" $ do
-    cs <-
-      sepBy
-        parseSumConstructor
-        (char '|' >> many1 lineSpace)
-    return $ defMessage & constructors .~ cs
-  return $ defMessage & P.sum .~ s
+parseSumBody = withSourceInfo . label' "sum type body" $ do
+  cs <-
+    sepBy
+      parseSumConstructor
+      (char '|' >> many1 lineSpace)
+  return $ Sum cs
 
-parseSumConstructor :: Stream s m Char => Parser s m Sum'Constructor
-parseSumConstructor = label' "sum type constructor" $ do
-  cn <- parseConstructorName
-  p <- parseProduct
-  return $
-    defMessage
-      & constrName .~ cn
-      & P.product .~ p
+parseSumConstructor :: Stream s m Char => Parser s m Constructor
+parseSumConstructor = withSourceInfo . label' "sum type constructor" $ Constructor <$> parseConstructorName <*> parseProduct
 
 parseProduct :: Stream s m Char => Parser s m Product
 parseProduct = do
   maySpace <- optionMaybe lineSpace
   case maySpace of
     Nothing -> withSourceInfo . label' "empty constructor" $ do
-      return $ defMessage & ntuple .~ defMessage
-    Just _ -> do
-      nt <- withSourceInfo . label' "type product" $ do
-        _ <- many lineSpace
-        tys <- parseTys
-        return $ defMessage & fields .~ tys
-      return $ defMessage & ntuple .~ nt
+      return $ Product []
+    Just _ -> withSourceInfo . label' "type product" $ do
+      _ <- many lineSpace
+      Product <$> parseTys
 
 parseConstructorName :: Stream s m Char => Parser s m ConstrName
-parseConstructorName = withSourceInfo . label' "sum constructor name" $ do
-  rn <- parseUpperCamelCase
-  return $ defMessage & name .~ rn
+parseConstructorName = withSourceInfo . label' "sum constructor name" $ ConstrName <$> parseUpperCamelCase
 
 parseTyDef :: Stream s m Char => Parser s m TyDef
 parseTyDef = label' "type definition" $ parseSumTyDef <|> parseOpaqueTyDef
@@ -139,42 +108,30 @@ parseSumTyDef :: Stream s m Char => Parser s m TyDef
 parseSumTyDef = withSourceInfo . label' "sum type definition" $ do
   _ <- string "sum"
   _ <- many1 lineSpace
-  tyN <- parseTyRefName
+  tyN <- parseTyName
   _ <- many1 lineSpace
   args <- sepEndBy parseTyArg (many1 lineSpace)
   _ <- char '='
   _ <- many1 lineSpace
-  body <- parseSumBody
-  return $
-    defMessage
-      & tyName .~ tyN
-      & tyArgs .~ args
-      & tyBody .~ body
+  TyDef tyN args <$> parseSumBody
 
 parseOpaqueTyDef :: Stream s m Char => Parser s m TyDef
 parseOpaqueTyDef = withSourceInfo . label' "opaque type definition" $ do
   _ <- string "opaque"
   _ <- many1 lineSpace
-  tyN <- parseTyRefName
+  tyN <- parseTyName
   maySpace <- optionMaybe lineSpace
   args <- case maySpace of
     Nothing -> many lineSpace >> return []
     Just _ -> do
       _ <- many lineSpace
       sepBy parseTyArg (many1 lineSpace)
-  return $
-    defMessage
-      & tyName .~ tyN
-      & tyArgs .~ args
-      & tyBody . opaque .~ defMessage
+  return $ TyDef tyN args Opaque
 
 parseTyArg :: Stream s m Char => Parser s m TyArg
 parseTyArg = withSourceInfo . label' "type argument" $ do
-  vn <- parseTyVarName
-  return $
-    defMessage
-      & argName .~ vn
-      & argKind . kindRef .~ Kind'KIND_REF_TYPE
+  VarName vn _ <- parseTyVarName
+  return $ TyArg vn
 
 lineSpace :: Stream s m Char => Parser s m ()
 lineSpace = label' "line space" $ void $ try $ do
@@ -185,7 +142,7 @@ lbNewLine :: Stream s m Char => Parser s m ()
 lbNewLine = label' "lb new line" $ void endOfLine
 
 parseModule :: Stream s m Char => Parser s m Module
-parseModule = do
+parseModule = withSourceInfo . label' "module definition" $ do
   _ <- string "module"
   _ <- many1 lineSpace
   modName <- parseModuleName
@@ -193,38 +150,20 @@ parseModule = do
   _ <- many1 lbNewLine
   tyDs <- sepBy parseTyDef (many1 lbNewLine)
   _ <- many space
-  return $
-    defMessage
-      & moduleName .~ modName
-      & typeDefs .~ tyDs
+  return $ Module modName [] tyDs
 
-getSourcePosition :: Stream s m Char => Parser s m SourcePosition
+getSourcePosition :: Stream s m Char => Parser s m SourcePos
 getSourcePosition = do
   pos <- getPosition
-  return $
-    defMessage
-      & column .~ (fromIntegral . sourceColumn $ pos)
-      & row .~ (fromIntegral . sourceLine $ pos)
+  return $ SourcePos (sourceLine pos) (sourceColumn pos)
 
-withSourceInfo :: HasField a "sourceInfo" SourceInfo => Stream s m Char => Parser s m a -> Parser s m a
+withSourceInfo :: Stream s m Char => Parser s m (SourceInfo -> a) -> Parser s m a
 withSourceInfo p = do
-  PS debug <- getState
-  if not debug
-    then p
-    else do
-      pos <- getSourcePosition
-      x <- p
-      pos' <- getSourcePosition
-      filename <- fromString . sourceName <$> getPosition
-      let xWithSourceInfo =
-            x
-              & sourceInfo
-                .~ ( defMessage
-                      & file .~ filename
-                      & posFrom .~ pos
-                      & posTo .~ pos'
-                   )
-      return xWithSourceInfo
+  pos <- getSourcePosition
+  x <- p
+  pos' <- getSourcePosition
+  filename <- fromString . sourceName <$> getPosition
+  return $ x $ SourceInfo filename pos pos'
 
 label' :: String -> Parser s m a -> Parser s m a
 label' l m = label m l

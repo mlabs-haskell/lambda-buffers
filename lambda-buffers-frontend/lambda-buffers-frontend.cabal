@@ -21,6 +21,7 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-missing-kind-signatures
 
   if !flag(dev)
     ghc-options: -Werror
@@ -92,4 +93,6 @@ library
     , text                        >=1.2
 
   hs-source-dirs: src
-  other-modules:  LambdaBuffers.Frontend.Parsec
+  other-modules:
+    LambdaBuffers.Frontend.Parsec
+    LambdaBuffers.Frontend.Syntax
