@@ -12,7 +12,7 @@ let
   project = {
     src = ./.;
 
-    name = "lambda-buffers-compiler";
+    name = "lambda-buffers-frontend";
 
     inherit compiler-nix-name index-state;
 
