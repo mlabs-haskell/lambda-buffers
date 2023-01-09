@@ -28,7 +28,7 @@ data Import = Import
   { importQualified :: Bool
   , moduleName :: ModuleName
   , imported :: [TyName]
-  , alias :: ModuleAlias
+  , alias :: Maybe ModuleAlias
   , importSourceInfo :: SourceInfo
   }
   deriving stock (Eq, Show)

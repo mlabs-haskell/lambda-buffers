@@ -1,11 +1,12 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseTest') where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseTest', parseImport) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
+import Data.Maybe (fromMaybe, isJust)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
-import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
+import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
 import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 import Text.Parsec.Char (upper)
 
@@ -15,14 +16,16 @@ type ParseState = ()
 type Parser :: Type -> (Type -> Type) -> Type -> Type
 type Parser s m a = ParsecT s ParseState m a
 
-parseTest' :: (Stream s IO Char, Show a) => Parser s IO a -> s -> IO ()
+parseTest' :: (Stream s IO Char, Show a) => Parser s IO a -> s -> IO (Either String a)
 parseTest' p input = do
   resOrErr <- runParserT (p <* eof) () "test" input
   case resOrErr of
     Left err -> do
       print err
+      return $ Left $ show err
     Right res -> do
       print res
+      return $ Right res
 
 parseUpperCamelCase :: Stream s m Char => Parser s m Text
 parseUpperCamelCase = label' "UpperCamelCase" $ fromString <$> ((:) <$> upper <*> many alphaNum)
@@ -143,9 +146,52 @@ parseModule = withSourceInfo . label' "module definition" $ do
   modName <- parseModuleName
   _ <- many lineSpace
   _ <- many1 lbNewLine
+  imports <- sepEndBy parseImport (many1 lbNewLine)
   tyDs <- sepBy parseTyDef (many1 lbNewLine)
   _ <- many space
-  return $ Module modName [] tyDs
+  return $ Module modName imports tyDs
+
+lineSpaces1 :: Stream s m Char => Parser s m ()
+lineSpaces1 = void $ try $ many1 lineSpace
+
+lineSpaces :: Stream s m Char => Parser s m ()
+lineSpaces = void $ try $ many lineSpace
+
+parseImport :: Stream s m Char => Parser s m Import
+parseImport = withSourceInfo . label' "import statement" $ do
+  _ <- string "import" >> lineSpaces1
+  isQual <- isJust <$> optionMaybe (string "qualified" >> lineSpaces1)
+  modName <- parseModuleName
+  may <-
+    optionMaybe
+      ( do
+          lineSpace
+          mayModAlias <- optionMaybe (lineSpaces >> string "as" >> lineSpaces1 *> parseModuleAlias)
+          mayTyNs <-
+            optionMaybe
+              ( do
+                  lineSpaces >> char '(' >> lineSpaces
+                  tyNs <- sepEndBy parseTyName (char ',' >> lineSpaces)
+                  _ <- char ')'
+                  return tyNs
+              )
+          return (mayModAlias, mayTyNs)
+      )
+  case may of
+    Nothing ->
+      return $
+        Import
+          isQual
+          modName
+          []
+          Nothing
+    Just (mayModAlias, mayTyNs) ->
+      return $
+        Import
+          isQual
+          modName
+          (fromMaybe [] mayTyNs)
+          mayModAlias
 
 getSourcePosition :: Stream s m Char => Parser s m SourcePos
 getSourcePosition = do
