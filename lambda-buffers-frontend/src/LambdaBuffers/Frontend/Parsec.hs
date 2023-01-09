@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.Parsec where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseTest') where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
@@ -10,16 +10,14 @@ import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition
 import Text.Parsec.Char (upper)
 
 type ParseState :: Type
-newtype ParseState = PS
-  { includeSourceInfo :: Bool
-  }
+type ParseState = ()
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
 type Parser s m a = ParsecT s ParseState m a
 
 parseTest' :: (Stream s IO Char, Show a) => Parser s IO a -> s -> IO ()
 parseTest' p input = do
-  resOrErr <- runParserT (p <* eof) (PS False) "test" input
+  resOrErr <- runParserT (p <* eof) () "test" input
   case resOrErr of
     Left err -> do
       print err
@@ -55,15 +53,12 @@ parseTyVar = withSourceInfo . label' "type variable" $ TyVar <$> parseTyVarName
 parseTyRef :: Stream s m Char => Parser s m Ty
 parseTyRef = withSourceInfo . label' "type reference" $ TyRef' <$> parseTyRef'
 
-parseTy :: Stream s m Char => Parser s m Ty
-parseTy = label' "top level type expression" $ try parseTys >>= tysToTy
-
 parseTys :: Stream s m Char => Parser s m [Ty]
 parseTys = label' "type list" $ sepEndBy parseTy' (many1 lineSpace)
 
 parseTy' :: Stream s m Char => Parser s m Ty
 parseTy' =
-  label' "non-top level type expression" $
+  label' "type expression" $
     parseTyRef
       <|> parseTyVar
       <|> ( (char '(' >> many lineSpace)
