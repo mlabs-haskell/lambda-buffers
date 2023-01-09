@@ -1,58 +1,38 @@
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
+
 module LambdaBuffers.Compiler.KindCheck (runKindCheck, tyDefKind) where
 
 import Control.Exception (Exception)
-import Control.Lens (Identity (runIdentity), (&), (.~), (^.))
-import Control.Monad.Cont (MonadTrans (lift))
-import Control.Monad.Except (Except, runExceptT)
-import Control.Monad.Reader (ReaderT (runReaderT), asks)
-import Control.Monad.Trans.Except (throwE)
-import Control.Monad.Trans.Reader (local)
-import Data.Foldable (Foldable (foldl'), for_)
-import Data.Kind (Type)
-import Data.Map (Map)
-import Data.Map qualified as Map
-import Data.ProtoLens (Message (defMessage))
-import Data.Text (Text)
-import Data.Traversable (for)
-import Proto.Compiler (Opaque, Product, Product'Product (Product'Empty', Product'Ntuple, Product'Record'), Sum, Ty, Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar), TyAbs, TyApp, TyBody, TyBody'TyBody (TyBody'Opaque, TyBody'Sum), TyDef, TyRef, TyVar)
+import Control.Lens (Getter, Identity (runIdentity), makeLenses, to, view, (^.))
+import Control.Monad.Freer (Eff, interpret)
+import Control.Monad.Freer.Error (Error, throwError)
+import Control.Monad.Freer.State (get, modify)
+import Control.Monad.Freer.TH (makeEffect)
+import Data.String ()
+import Data.Text (Text, unpack)
+import LambdaBuffers.Compiler.KindCheck.Inference (
+  Atom,
+  Context (context),
+  DeriveEff,
+  DeriveM,
+  Kind (Type, (:->:)),
+  Type (Abs),
+  infer,
+ )
+
+import Proto.Compiler (TyBody'TyBody (TyBody'Opaque, TyBody'Sum), TyDef, TyRef)
 import Proto.Compiler_Fields as ProtoFields (
-  constructors,
-  fieldTy,
-  fields,
-  foreignTyRef,
-  maybe'product,
-  maybe'ty,
   maybe'tyBody,
-  moduleName,
   name,
-  product,
   tyAbs,
-  tyArgs,
   tyBody,
-  tyFunc,
   tyName,
   tyVars,
   varName,
  )
 
--- A LB Kind is either a -> or *, but where KindRef "Type" == *
--- TODO: Add Kind to compiler.proto
-type Kind :: Type
-data Kind = KindRef String | KindArrow Kind Kind deriving stock (Eq)
-
-typeK :: Kind
-typeK = KindRef "Type"
-
-arrowK :: Kind -> Kind -> Kind
-arrowK = KindArrow
-
-instance Show Kind where
-  show (KindArrow l r) = "(" <> show l <> " -> " <> show r <> ")"
-  show (KindRef "Type") = "*"
-  show (KindRef refName) = refName
-
--- TODO: Add KindCheckFailure to compiler.proto
-type KindCheckFailure :: Type
 data KindCheckFailure
   = CheckFailure String
   | LookupVarFailure Text
@@ -64,29 +44,88 @@ data KindCheckFailure
 
 instance Exception KindCheckFailure
 
--- TODO: Extend with SourceInfo and Sum'Constructor information so we can emit errors with the entire env
--- TODO: KindCheckEnvironment should also go to compiler.proto and the Frontend can use that for error reporting
-type KindCheckEnv :: Type
-data KindCheckEnv = KCEnv
-  { variables :: Map Text Kind
-  , refs :: Map TyRef Kind
+type KindCheckMonad a = Identity a
+
+runKindCheck :: KindCheckMonad Kind -> Either KindCheckFailure Kind
+runKindCheck p = undefined -- runIdentity . runExceptT $ runReaderT p defKCEnv
+
+data TypeDefinition = TypeDefinition
+  { _td'name :: String
+  , _td'variables :: [String]
+  , _td'constructors :: [(Atom, Type)]
   }
   deriving stock (Show, Eq)
 
-type KindCheckMonad :: Type -> Type
-type KindCheckMonad = ReaderT KindCheckEnv (Except KindCheckFailure)
+makeLenses 'TypeDefinition
 
-runKindCheck :: KindCheckMonad Kind -> Either KindCheckFailure Kind
-runKindCheck p = runIdentity . runExceptT $ runReaderT p defKCEnv
+data KindCheck a where
+  Check :: Type -> KindCheck Kind
+  AddToContext :: (Atom, Kind) -> KindCheck ()
+  CheckError :: KindCheckFailure -> KindCheck ()
 
-applyK :: Kind -> [Kind] -> KindCheckMonad Kind
-applyK (KindRef _) args@(_ : _) = lift . throwE $ AppToManyArgs (length args)
-applyK k [] = return k
-applyK (KindArrow l r) (arg : args) = if l == arg then applyK r args else lift . throwE $ AppWrongArgKind l arg
+makeEffect ''KindCheck
 
-tyDefKind :: TyDef -> KindCheckMonad Kind
-tyDefKind tyD = tyAbsKind $ tyD ^. tyAbs
+type KindChecker a = DeriveM a
 
+runKindCheck' :: Eff (KindCheck ': Error KindCheckFailure ': DeriveEff) a -> Eff (Error KindCheckFailure ': DeriveEff) a
+runKindCheck' = interpret f
+  where
+    f :: KindCheck a -> Eff (Error KindCheckFailure ': DeriveEff) a
+    f = \case
+      Check t -> do
+        ctx <- get @Context
+        case infer ctx t of
+          Right k -> pure k
+          Left e -> throwError $ CheckFailure $ show e
+      AddToContext def ->
+        modify @Context (\ctx -> ctx {context = def : context ctx})
+      CheckError e -> throwError e
+
+-- | Kind Check one definition - against the already type checked definitions.
+kindCheckDef :: TyDef -> Eff '[KindCheck] [Kind]
+kindCheckDef tDef = do
+  let lhs = tDef ^. defToType . getLHS
+  let rhs = tDef ^. defToType . getRHS
+  addToContext lhs
+  traverse (check . snd) rhs
+
+-- Getting to localise potential API changes in the protos file.
+defToType :: Getter TyDef TypeDefinition
+defToType = to getter
+  where
+    getter :: TyDef -> TypeDefinition
+    getter td =
+      TypeDefinition
+        { _td'name = td ^. tyName . name . to unpack
+        , _td'variables = view (varName . name . to unpack) <$> (td ^. tyAbs . tyVars)
+        , _td'constructors = go (td ^. tyAbs . tyBody . maybe'tyBody)
+        }
+
+    go = \case
+      Just x -> case x of
+        TyBody'Opaque o -> []
+        TyBody'Sum s -> []
+      Nothing -> error ":FIXME:"
+
+getLHS :: Getter TypeDefinition (Atom, Kind)
+getLHS = to getter
+  where
+    getter td = (td ^. td'name, foldr (:->:) Type tV)
+      where
+        tV = Type <$ (td ^. td'variables)
+
+getRHS :: Getter TypeDefinition [(Atom, Type)]
+getRHS = to getter
+  where
+    getter td = undefined
+      where
+        tv :: Type -> Type
+        tv = foldr1 (.) $ Abs <$> (td ^. td'variables)
+
+tyDefKind :: TyDef -> TypeDefinition
+tyDefKind = view defToType
+
+{-
 tyAbsKind :: TyAbs -> KindCheckMonad Kind
 tyAbsKind tyAbs' = do
   kBody <- extendVarEnv (tyAbs' ^. tyVars) (tyBodyKind $ tyAbs' ^. tyBody)
@@ -257,3 +296,4 @@ defKCEnv =
 --       Just (e, _) -> case e of
 --         Left kcf -> Left kcf
 --         Right ut -> Right $ show ut
+-}

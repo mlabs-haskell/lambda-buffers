@@ -84,13 +84,18 @@ common common-language
 
 library
   import:         common-language
-  other-modules:  LambdaBuffers.Compiler.KindCheck
+  other-modules:
+    LambdaBuffers.Compiler.KindCheck
+    LambdaBuffers.Compiler.KindCheck.Inference
+
   build-depends:
     , base                        >=4.16
     , containers                  >=0.6
+    , freer-simple                >=1.2
     , lambda-buffers-compiler-pb
     , lens                        >=5.2
     , mtl                         >=2.2
+    , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , text                        >=1.2
     , transformers                >=0.5
