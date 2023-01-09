@@ -1,0 +1,5 @@
+module B
+
+import A
+
+sum B a = F (A a)

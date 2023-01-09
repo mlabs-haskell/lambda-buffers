@@ -18,15 +18,24 @@ module LambdaBuffers.Frontend.Syntax (
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
+  testSourceInfo,
 ) where
 
-import Data.Text (Text)
+import Data.Foldable (Foldable (fold))
+import Data.List qualified as List
+import Data.Text (Text, intercalate)
 
-data Module = Module ModuleName [Import] [TyDef] SourceInfo deriving stock (Eq, Show)
+data Module = Module
+  { moduleName :: ModuleName
+  , moduleImports :: [Import]
+  , moduleTyDefs :: [TyDef]
+  , moduleSourceInfog :: SourceInfo
+  }
+  deriving stock (Eq, Show)
 
 data Import = Import
   { importQualified :: Bool
-  , moduleName :: ModuleName
+  , importModuleName :: ModuleName
   , imported :: [TyName]
   , alias :: Maybe ModuleAlias
   , importSourceInfo :: SourceInfo
@@ -58,8 +67,10 @@ data Product = Product [Ty] SourceInfo deriving stock (Eq, Show)
 
 data TyArg = TyArg Text SourceInfo deriving stock (Eq, Show)
 
-data ModuleName = ModuleName [ModuleNamePart] SourceInfo deriving stock (Eq, Show)
-data ModuleNamePart = ModuleNamePart Text SourceInfo deriving stock (Eq, Show)
+data ModuleName = ModuleName [ModuleNamePart] SourceInfo deriving stock (Eq, Ord)
+instance Show ModuleName where
+  show (ModuleName parts _) = show $ intercalate "." [p | ModuleNamePart p _ <- parts]
+data ModuleNamePart = ModuleNamePart Text SourceInfo deriving stock (Eq, Ord, Show)
 data ModuleAlias = ModuleAlias Text SourceInfo deriving stock (Eq, Show)
 data VarName = VarName Text SourceInfo deriving stock (Eq, Show)
 data TyName = TyName Text SourceInfo deriving stock (Eq, Show)
@@ -73,7 +84,7 @@ data SourceInfo = SourceInfo
   , from :: SourcePos
   , to :: SourcePos
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Ord)
 
 instance Show SourceInfo where
   show (SourceInfo filename pos pos') = show filename <> ":" <> "(" <> show pos <> ")-(" <> show pos' <> ")"
@@ -82,7 +93,10 @@ data SourcePos = SourcePos
   { row :: Int
   , column :: Int
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Ord)
 
 instance Show SourcePos where
   show (SourcePos r c) = show r <> ":" <> show c
+
+testSourceInfo :: SourceInfo
+testSourceInfo = SourceInfo "test" (SourcePos 0 0) (SourcePos 0 0)

@@ -1,0 +1,26 @@
+module
+  Test
+
+import A
+import qualified B
+import A.B
+import qualified A.B
+import C (A,B)
+import qualified C (A,B)
+import C as D (A,B)
+import C as D ()
+import C as D
+import C (X,Y)
+
+sum
+  Maybe
+    a =
+      Just a
+      |
+      Nothing
+
+sum Either a b = Left a | Right b
+
+sum List a = Nil | List a (List a)
+
+opaque Int a
