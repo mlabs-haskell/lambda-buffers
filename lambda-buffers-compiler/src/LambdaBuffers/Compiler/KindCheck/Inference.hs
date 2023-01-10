@@ -1,16 +1,29 @@
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
+{-# OPTIONS_GHC -Wno-missing-local-signatures #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module LambdaBuffers.Compiler.KindCheck.Inference (getType, Kind (..), Context (..), Atom, Type (..), infer, DeriveM, DeriveEff) where
+module LambdaBuffers.Compiler.KindCheck.Inference (
+  getType,
+  Kind (..),
+  Context (..),
+  Atom,
+  Type (..),
+  infer,
+  DeriveM,
+  DeriveEff,
+  DError,
+) where
 
 import Data.Bifunctor (Bifunctor (second))
 
 import Control.Monad.Freer
-
 import Control.Monad.Freer.Error
+import Control.Monad.Freer.Reader
 import Control.Monad.Freer.State
+import Control.Monad.Freer.Writer
 
 import Control.Lens (Getter, to, (^.))
 
@@ -63,6 +76,12 @@ instance Pretty Context where
     where
       setPretty :: [(Atom, Kind)] -> Doc ann
       setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> pretty @String ":" <+> pretty t)
+
+instance Semigroup Context where
+  (Context a1 b1) <> (Context a2 b2) = Context (a1 <> a2) (b1 <> b2)
+
+instance Monoid Context where
+  mempty = Context mempty mempty
 
 -- | Utility to unify the two.
 getAllContext :: Context -> [(Atom, Kind)]
@@ -120,9 +139,9 @@ type DeriveM a = Eff DeriveEff a
 type Derive a =
   forall effs.
   Members
-    '[ State Context
+    '[ Reader Context
      , State DerivationContext
-     , State [Constraint]
+     , Writer [Constraint]
      , Error DError
      ]
     effs =>
@@ -138,7 +157,7 @@ runDerive' t = either (error.show) id $ runDerive t
 
 -- | Run derivation builder - not unified yet.
 runDerive'' :: Context -> Type -> Either DError (Derivation, [Constraint])
-runDerive'' ctx t = run $ runError $ runState [] $ evalState (DC atoms) $ evalState ctx (derive t)
+runDerive'' ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReader ctx (derive t)
 
 infer :: Context -> Type -> Either DError Kind
 infer ctx t = do
@@ -150,7 +169,7 @@ infer ctx t = do
 -- | Creates the derivation
 derive :: Type -> Derive Derivation
 derive x = do
-  c <- get
+  c <- ask
   case x of
     Var at -> do
       v <- getBinding at
@@ -178,23 +197,12 @@ derive x = do
         a : as -> put (DC as) >> pure a
         [] -> throwError $ ImpossibleErr "End of infinite stream"
 
-    local :: forall effs s a. Member (State s) effs => (s -> s) -> Eff effs a -> Eff effs a
-    local f act = do
-      initialState <- get @s
-      modify f
-      res <- act
-      put initialState
-      pure res
-
-    tell :: forall effs s. (Member (State s) effs, Monoid s) => s -> Eff effs ()
-    tell s = modify (s <>)
-
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
 -}
 getBinding :: Atom -> Derive Kind
 getBinding t = do
-  ctx <- gets getAllContext
+  ctx <- asks getAllContext
   case t `lookup` ctx of
     Just x -> pure x
     Nothing -> throwError $ UnboundTermErr $ show (pretty t)
@@ -348,6 +356,8 @@ defContext =
         , ("Map", Type :->: Type :->: Type)
         , ("List", Type :->: Type)
         , ("StateT", Type :->: (Type :->: Type) :->: Type :->: Type)
+        , ("Opaque", Type)
+        , ("Voie", Type)
         ]
     , addContext = []
     }

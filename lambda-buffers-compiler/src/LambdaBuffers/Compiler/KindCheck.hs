@@ -1,13 +1,17 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module LambdaBuffers.Compiler.KindCheck (runKindCheck, tyDefKind) where
+module LambdaBuffers.Compiler.KindCheck (runKindCheck) where
 
 import Control.Exception (Exception)
-import Control.Lens (Getter, Identity (runIdentity), makeLenses, to, view, (^.))
-import Control.Monad.Freer (Eff, interpret)
-import Control.Monad.Freer.Error (Error, throwError)
+import Control.Lens (Getter, Identity (runIdentity), folded, folding, makeLenses, mapped, to, view, (&), (.~), (^.), (^..), _Just)
+import Control.Monad.Freer (Eff, Members, interpret, run)
+import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.State (get, modify)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.String ()
@@ -15,17 +19,42 @@ import Data.Text (Text, unpack)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   Atom,
   Context (context),
+  DError,
   DeriveEff,
   DeriveM,
   Kind (Type, (:->:)),
-  Type (Abs),
+  Type (..),
   infer,
  )
 
-import Proto.Compiler (TyBody'TyBody (TyBody'Opaque, TyBody'Sum), TyDef, TyRef)
-import Proto.Compiler_Fields as ProtoFields (
+import Control.Monad (void)
+import Data.Foldable (traverse_)
+import Data.Traversable (for)
+import Proto.Compiler (
+  ConstrName,
+  Product,
+  Product'NTuple,
+  Product'Product (Product'Empty', Product'Ntuple, Product'Record'),
+  Product'Record,
+  Sum,
+  Sum'Constructor,
+  Ty,
+  Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar),
+  TyApp,
+  TyBody'TyBody (TyBody'Opaque, TyBody'Sum),
+  TyDef,
+  TyRef,
+ )
+import Proto.Compiler_Fields as PF (
+  constrName,
+  constructors,
+  fields,
+  maybe'empty,
+  maybe'product,
+  maybe'ty,
   maybe'tyBody,
   name,
+  product,
   tyAbs,
   tyBody,
   tyName,
@@ -33,6 +62,10 @@ import Proto.Compiler_Fields as ProtoFields (
   varName,
  )
 
+--------------------------------------------------------------------------------
+-- Types
+
+-- | Kind Check failure types.
 data KindCheckFailure
   = CheckFailure String
   | LookupVarFailure Text
@@ -44,51 +77,117 @@ data KindCheckFailure
 
 instance Exception KindCheckFailure
 
-type KindCheckMonad a = Identity a
-
-runKindCheck :: KindCheckMonad Kind -> Either KindCheckFailure Kind
-runKindCheck p = undefined -- runIdentity . runExceptT $ runReaderT p defKCEnv
-
+-- | Validated Type Definition.
 data TypeDefinition = TypeDefinition
   { _td'name :: String
   , _td'variables :: [String]
-  , _td'constructors :: [(Atom, Type)]
+  , _td'sop :: Type
   }
   deriving stock (Show, Eq)
 
 makeLenses 'TypeDefinition
 
 data KindCheck a where
-  Check :: Type -> KindCheck Kind
-  AddToContext :: (Atom, Kind) -> KindCheck ()
-  CheckError :: KindCheckFailure -> KindCheck ()
+  ValidateInput :: [TyDef] -> KindCheck [TypeDefinition]
+  CreateContext :: [TypeDefinition] -> KindCheck Context
+  KindCheck :: Context -> TypeDefinition -> KindCheck Kind
 
 makeEffect ''KindCheck
 
-type KindChecker a = DeriveM a
+type KindCheckFailEff = '[Error KindCheckFailure]
+type KindCheckEff = KindCheck ': KindCheckFailEff
 
-runKindCheck' :: Eff (KindCheck ': Error KindCheckFailure ': DeriveEff) a -> Eff (Error KindCheckFailure ': DeriveEff) a
-runKindCheck' = interpret f
+--------------------------------------------------------------------------------
+-- API
+
+-- | Main Kind Checking function
+runKindCheck :: [TyDef] -> Either KindCheckFailure ()
+runKindCheck tDefs = void $ run $ runError $ runKindCheckEff $ kindCheckDefs tDefs
   where
-    f :: KindCheck a -> Eff (Error KindCheckFailure ': DeriveEff) a
-    f = \case
-      Check t -> do
-        ctx <- get @Context
-        case infer ctx t of
-          Right k -> pure k
-          Left e -> throwError $ CheckFailure $ show e
-      AddToContext def ->
-        modify @Context (\ctx -> ctx {context = def : context ctx})
-      CheckError e -> throwError e
+    -- Strategy for kind checking.
+    kindCheckDefs :: [TyDef] -> Eff KindCheckEff ()
+    kindCheckDefs tyDefs = do
+      validTDef <- validateInput tyDefs
+      ctx <- createContext validTDef
+      traverse_ (kindCheck ctx) validTDef
 
--- | Kind Check one definition - against the already type checked definitions.
-kindCheckDef :: TyDef -> Eff '[KindCheck] [Kind]
-kindCheckDef tDef = do
-  let lhs = tDef ^. defToType . getLHS
-  let rhs = tDef ^. defToType . getRHS
-  addToContext lhs
-  traverse (check . snd) rhs
+    -- Interpreting the effect.
+    runKindCheckEff :: Eff KindCheckEff a -> Eff '[Error KindCheckFailure] a
+    runKindCheckEff = interpret $
+      \case
+        ValidateInput tDs -> validateTyDef `traverse` tDs
+        CreateContext tDs -> mconcat <$> makeContext `traverse` tDs
+        KindCheck ctx tD -> either convertError pure $ infer ctx (toTerms tD)
 
+    -- Error converter. :fixme:
+    convertError :: forall a. DError -> Eff KindCheckFailEff a
+    convertError e = throwError $ CheckFailure $ show e
+
+--------------------------------------------------------------------------------
+-- Implementations
+
+validateTyDef :: TyDef -> Eff KindCheckFailEff TypeDefinition
+validateTyDef tD = do
+  sop <- go (tD ^. tyAbs . tyBody . maybe'tyBody)
+  pure $
+    TypeDefinition
+      { _td'name = tD ^. tyName . name . to unpack
+      , _td'variables = view (varName . name . to unpack) <$> (tD ^. tyAbs . tyVars)
+      , _td'sop = sop
+      }
+  where
+    go = \case
+      Just (TyBody'Opaque _) -> pure $ Var "Opaque"
+      Just (TyBody'Sum sumB) -> sumToType sumB
+      Nothing -> throwError $ InvalidProto "Type Definition must have a body"
+
+sumToType :: Sum -> Eff KindCheckFailEff Type
+sumToType sumT = do
+  let _constrNames :: [String] = sumT ^.. constructors . folded . constrName . name . to unpack
+      products :: [Maybe Product'Product] = sumT ^.. constructors . folded . PF.product . maybe'product
+  sumTRes <-
+    for
+      products
+      $ \case
+        Just (Product'Empty' _) -> pure $ Var "()"
+        Just (Product'Ntuple nt) -> nTupleToType nt
+        Just (Product'Record' re) -> recordToType re
+        Nothing -> throwError $ InvalidProto "Every constructor should have a product defining it"
+
+  -- :fixme: needs to be tested
+  pure $ foldr ($) (Var "Void") $ fmap (App . App (Var "Either")) sumTRes
+
+nTupleToType :: Product'NTuple -> Eff KindCheckFailEff Type
+nTupleToType nt = do
+  let fs :: [Ty] = nt ^. fields
+  prodT <- tyToType `traverse` fs
+  -- :fixme: needs to be tested
+  pure $ foldr ($) (Var "()") $ fmap (App . App (Var "(,)")) prodT
+
+tyToType :: Ty -> Eff KindCheckFailEff Type
+tyToType ty = do
+  case ty ^. maybe'ty of
+    Just (Ty'TyVar v) -> pure $ Var (v ^. varName . name . to unpack)
+    Just (Ty'TyApp app) -> tyAppToType app
+    Just (Ty'TyRef _) -> undefined
+    Nothing -> throwError $ InvalidProto "Type is not defined"
+
+tyAppToType :: TyApp -> Eff KindCheckFailEff Type
+tyAppToType = undefined
+
+recordToType :: Product'Record -> Eff KindCheckFailEff Type
+recordToType = undefined
+
+makeContext :: TypeDefinition -> Eff KindCheckFailEff Context
+makeContext = undefined
+
+toTerms :: TypeDefinition -> Type
+toTerms = undefined
+
+tyRefToType :: TyRef -> Eff KindCheckFailEff Type
+tyRefToType = undefined
+
+{-
 -- Getting to localise potential API changes in the protos file.
 defToType :: Getter TyDef TypeDefinition
 defToType = to getter
@@ -103,9 +202,19 @@ defToType = to getter
 
     go = \case
       Just x -> case x of
-        TyBody'Opaque o -> []
-        TyBody'Sum s -> []
-      Nothing -> error ":FIXME:"
+        TyBody'Opaque _ -> [] -- we do not need to TC Opaques?
+        TyBody'Sum s ->
+          let constrs = s ^. constructors
+          in fmap (\e -> (,)
+                    (e ^. constrName . name . to unpack)
+                    (productToType (e ^. PF.product . maybe'product))
+                  ) constrs
+      Nothing -> error ":FIXME: handle errors"
+      where
+        productToType :: Maybe Product'Product -> Type
+        productToType = \case
+          Just x -> case x of
+            Product'Empty' _ -> Type
 
 getLHS :: Getter TypeDefinition (Atom, Kind)
 getLHS = to getter
@@ -121,179 +230,4 @@ getRHS = to getter
       where
         tv :: Type -> Type
         tv = foldr1 (.) $ Abs <$> (td ^. td'variables)
-
-tyDefKind :: TyDef -> TypeDefinition
-tyDefKind = view defToType
-
-{-
-tyAbsKind :: TyAbs -> KindCheckMonad Kind
-tyAbsKind tyAbs' = do
-  kBody <- extendVarEnv (tyAbs' ^. tyVars) (tyBodyKind $ tyAbs' ^. tyBody)
-  let k = foldl' (\kf _ -> arrowK typeK . kf) id (tyAbs' ^. tyVars)
-  return $ k kBody
-
-tyAppKind :: TyApp -> KindCheckMonad Kind
-tyAppKind tyA = do
-  ktFun <- tyKind $ tyA ^. tyFunc
-  ktArgs <- for (tyA ^. tyArgs) tyKind
-  applyK ktFun ktArgs
-
-tyVarKind :: TyVar -> KindCheckMonad Kind
-tyVarKind tyV = lookupVar $ tyV ^. varName . name
-
-tyRefKind :: TyRef -> KindCheckMonad Kind
-tyRefKind = lookupRef
-
-tyBodyKind :: TyBody -> KindCheckMonad Kind
-tyBodyKind tyB = case tyB ^. maybe'tyBody of
-  Nothing -> lift . throwE $ InvalidProto "Must have TyBody"
-  Just tyB' -> case tyB' of
-    TyBody'Opaque o -> tyBodyOpaqueKind o
-    TyBody'Sum s -> tyBodySumKind s
-
-tyBodyOpaqueKind :: Opaque -> KindCheckMonad Kind
-tyBodyOpaqueKind _ = return typeK -- NOTE: This could be configurable and thus could enable arbitrary kinded Opaques
-
-tyBodySumKind :: Sum -> KindCheckMonad Kind
-tyBodySumKind s = do
-  for_ (s ^. constructors) (\c -> tyProductKind $ c ^. ProtoFields.product)
-  return typeK -- NOTE: Sum bodies are * kinded
-
-tyProductKind :: Product -> KindCheckMonad Kind
-tyProductKind p = case p ^. maybe'product of
-  Nothing -> lift . throwE $ InvalidProto "Must have TyProduct"
-  Just p' -> case p' of
-    Product'Empty' _ -> return typeK
-    Product'Record' r -> do
-      for_
-        (r ^. fields)
-        ( \f -> do
-            k <- tyKind $ f ^. fieldTy
-            if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a record must have kind *" -- TODO: Add separate error
-        )
-      return typeK
-    Product'Ntuple n -> do
-      for_
-        (n ^. fields)
-        ( \ty -> do
-            k <- tyKind ty
-            if k == typeK then return () else lift . throwE $ CheckFailure "All fields in a tuple must have kind *" -- TODO: Add separate error
-        )
-      return typeK -- -- NOTE: Product bodies are * kinded
-
-tyKind :: Ty -> KindCheckMonad Kind
-tyKind ty = case ty ^. maybe'ty of
-  Nothing -> lift . throwE $ InvalidProto "Must have either TyApp, TyVar or TyRef"
-  Just ty' -> case ty' of
-    Ty'TyVar tyV -> tyVarKind tyV
-    Ty'TyApp tyA -> tyAppKind tyA
-    Ty'TyRef tyR -> tyRefKind tyR
-
-lookupVar :: Text -> KindCheckMonad Kind
-lookupVar v = do
-  mb <- asks (Map.lookup v . variables)
-  case mb of
-    Just t -> return t
-    Nothing -> lift . throwE $ LookupVarFailure v
-
-extendVarEnv :: [TyVar] -> KindCheckMonad a -> KindCheckMonad a
-extendVarEnv vars = local (\(KCEnv vs refs) -> KCEnv (insertVars vs) refs)
-  where
-    insertVars vs = foldr (\tyV envVars -> Map.insert (tyV ^. varName . name) typeK envVars) vs vars
-
-lookupRef :: TyRef -> KindCheckMonad Kind
-lookupRef r = do
-  mb <- asks (Map.lookup r . refs)
-  case mb of
-    Just t -> return t
-    Nothing -> lift . throwE $ LookupRefFailure r
-
-defKCEnv :: KindCheckEnv
-defKCEnv =
-  KCEnv Map.empty $
-    Map.fromList
-      [ (lbPreludeRef "Either", typeK `arrowK` (typeK `arrowK` typeK))
-      , (lbPreludeRef "Maybe", typeK `arrowK` typeK)
-      , (lbPreludeRef "Tuple", typeK `arrowK` (typeK `arrowK` typeK))
-      , (lbPreludeRef "Int", typeK)
-      , (lbPreludeRef "Bool", typeK)
-      , (lbPreludeRef "Map", typeK `arrowK` (typeK `arrowK` typeK))
-      , (lbPreludeRef "List", typeK `arrowK` typeK)
-      ]
-  where
-    lbPreludeRef :: Text -> TyRef
-    lbPreludeRef tyN =
-      defMessage
-        & foreignTyRef . moduleName . name .~ "Prelude"
-        & foreignTyRef . tyName . name .~ tyN
-
--- main :: IO ()
--- main =
---   void $
---     runTestTT $
---       TestList
---         [ TestLabel "should succeed" $
---             TestList
---               [ ae "\\s -> Maybe s :: * -> *" (TyAbs "s" (TyApp (TyRef "Maybe") (TyVar "s"))) "(* -> *)"
---               , ae "\\s -> Maybe :: * -> (* -> *)" (TyAbs "s" (TyRef "Maybe")) "(* -> (* -> *))"
---               , ae "Maybe Int :: *" (TyApp (TyRef "Maybe") (TyRef "Int")) "*"
---               , ae "\\s -> s :: * -> *" (TyAbs "s" (TyVar "s")) "(* -> *)"
---               , ae
---                   "\\a b -> Either a b :: * -> *"
---                   ( TyAbs
---                       "a"
---                       ( TyAbs
---                           "b"
---                           ( TyApp
---                               (TyApp (TyRef "Either") (TyVar "a"))
---                               (TyVar "b")
---                           )
---                       )
---                   )
---                   "(* -> (* -> *))"
---               , ae
---                   "\\a b -> Either :: * -> * -> (* -> * -> *)"
---                   ( TyAbs
---                       "a"
---                       ( TyAbs
---                           "b"
---                           (TyRef "Either")
---                       )
---                   )
---                   "(* -> (* -> (* -> (* -> *))))"
---               , ae
---                   "\\a b -> Either (Maybe a) (Maybe b):: * -> * -> *"
---                   ( TyAbs
---                       "a"
---                       ( TyAbs
---                           "b"
---                           ( TyApp
---                               ( TyApp
---                                   (TyRef "Either")
---                                   (TyApp (TyRef "Maybe") (TyVar "a"))
---                               )
---                               (TyApp (TyRef "Maybe") (TyVar "b"))
---                           )
---                       )
---                   )
---                   "(* -> (* -> *))"
---               ]
---         , TestLabel "should fail" $
---             TestList
---               [ af "\\s -> Maybe a" (TyAbs "s" (TyApp (TyRef "Maybe") (TyVar "a"))) (LookupVarFailure "a")
---               , af "\\s -> Naybe s" (TyAbs "s" (TyApp (TyRef "Naybe") (TyVar "s"))) (LookupRefFailure "Naybe")
---               , af "\\s -> s s" (TyAbs "s" (TyApp (TyVar "s") (TyVar "s"))) (LookupRefFailure "Naybe") -- TODO
---               ]
---         ]
---   where
---     ae s ty k = TestCase $ assertEqual s (go ty) (Right k)
-
---     af s ty err = TestCase $ assertEqual s (go ty) (Left err)
-
---     go :: Ty -> Either KindCheckFailure String
---     go ty = case runKindCheck $ checkKind ty >>= (lift . applyBindings) of
---       Nothing -> Left $ CheckFailure ""
---       Just (e, _) -> case e of
---         Left kcf -> Left kcf
---         Right ut -> Right $ show ut
 -}
