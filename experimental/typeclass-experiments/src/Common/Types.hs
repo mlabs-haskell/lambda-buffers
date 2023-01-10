@@ -181,3 +181,14 @@ defToPat Ty.TyDef {..} = DecP (Name tyDefName) vars $ case tyDefBody of
       Ty.TP2 p2 -> case p2 of
         Ty.TMap -> _map
         Ty.TEither -> _either
+
+-- misc utilities, break out into a Utils module if this grows too much
+
+-- whyyyyyy isn't this in prelude
+for :: [a] -> (a -> b) -> [b]
+for = flip map
+
+safeHead :: [a] -> Maybe a
+safeHead = \case
+  [] -> Nothing
+  (x:_) -> Just x

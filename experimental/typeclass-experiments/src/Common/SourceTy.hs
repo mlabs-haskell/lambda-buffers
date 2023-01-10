@@ -1,19 +1,6 @@
-{- This is my take on what our proto *should* look like.
-
-Everything that operates on this can easily be adapted to operate on something similar, but
-it will make many functions partial or introduce the need for additional error handling if
-we end up abandoning the use of NonEmpty/etc.
-
--}
 {-# LANGUAGE LambdaCase #-}
-{- This is my take on what our proto *should* look like.
-
-Everything that operates on this can easily be adapted to operate on something similar, but
-it will make many functions partial or introduce the need for additional error handling if
-we end up abandoning the use of NonEmpty/etc.
-
--}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {- This is my take on what our proto *should* look like.
 
 Everything that operates on this can easily be adapted to operate on something similar, but
@@ -21,14 +8,9 @@ it will make many functions partial or introduce the need for additional error h
 we end up abandoning the use of NonEmpty/etc.
 
 -}
-{-# LANGUAGE PatternSynonyms #-}
-
 module Common.SourceTy where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty  as NE
-import Data.Map (Map)
-import qualified Data.Map as Map
 import Data.Text (Text)
 
 type NEMap k v = NonEmpty (k, v)
@@ -129,7 +111,7 @@ testRec =
   TyDef
     { tyDefName = "TestStruct"
     , tyDefKind = TKind []
-    , tyDefBody = Sum (("Test", myRec) :| [])
+    , tyDefBody = Sum (("TestStruct", myRec) :| [])
     }
   where
     myRec :: Product
@@ -151,9 +133,10 @@ testSum =
   TyDef "TestSum" (TKind []) $
     Sum $
       toNE
-        [ "TestConstr1" *= recBody
-        , "TestConstr2" *= prodBody
-        , "TestConstr3" *= Product (toNE [PInt])
+        [ "RecConstr" *= recBody
+        , "ProdConstrMany" *= prodBody
+        , "ProdConstr1" *= Product (toNE [PInt])
+        , "Prod0Const0" *= Empty
         ]
   where
     prodBody = Product $ toNE [PBool, PInt, PMaybe `TApp` PInt]
@@ -164,6 +147,7 @@ testSum =
           , "intField" *= PInt
           , "maybeInt" *= PMaybe @ PInt
           ]
+
 
 testSumVars :: TyDef
 testSumVars =

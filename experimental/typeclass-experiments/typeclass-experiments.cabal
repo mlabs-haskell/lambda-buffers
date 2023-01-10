@@ -31,11 +31,13 @@ library
     Common.SourceTy
     Common.Types
     Gen.Generator
-    Gen.Rust
     Gen.PP
     Instances
     Resolve.Rules
-    Resolve.Solver
+    Resolve.Solve
+    Resolve.Derive
+    Gen.RustGen.RustTy
+    Gen.RustGen.Instances.Eq
     Tests
 
   other-modules:    Paths_typeclass_experiments

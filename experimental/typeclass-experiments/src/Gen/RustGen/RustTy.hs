@@ -3,7 +3,7 @@
 {-# LANGUAGE DataKinds  #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
-module Gen.Rust where
+module Gen.RustGen.RustTy where
 
 
 import qualified Data.Set as S
@@ -97,7 +97,7 @@ rType ps = do
 
     SumP (Name cstr := ProdP args :* Nil) -> do
       args' <- result (rTupleFields ps) args
-      pure $ structify cstr tvars args'
+      pure $ structify cstr tvars args' <> ";" -- weirdly tuple structs, but ONLY tuple structs, end w/ a semicolon. bad design rust!
 
     SumP ts -> do
       cstrs <- rBraces . vcat . punctuate "," <$> result (manyP sumConstr) ts
@@ -111,8 +111,10 @@ rType ps = do
    sumConstr :: RustGen TypeDecl
    sumConstr = do
      (Name cName := body) <- match (_l := _x)
-     body' <- result (rustBareType ps <|> recConstr <|> tupleConstr) body
+     body' <- result (rustBareType ps <|> recConstr <|> tupleConstr <|> nullary) body
      pure $ pretty cName <+> body'
+
+   nullary = match Nil >> pure ""
 
    recConstr = do
      RecP fields <- match (RecP _x)
@@ -128,7 +130,6 @@ rType ps = do
      <+> pretty cstr
      <> tvars
      <+> fields
-     <> ";"
      <> line
 
 rType' :: RustGen TypeDecl

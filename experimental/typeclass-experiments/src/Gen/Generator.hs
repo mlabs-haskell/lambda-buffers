@@ -54,6 +54,11 @@ parse p pat = case runParser p pat of
   Left errs -> Left errs
   Right (x,_) -> pure x
 
+parse' :: forall (l :: Lang) c e
+        . (TargetLang l, DSL l ~ Doc ())
+       => Parser l c e (DSL l) -> Pat -> Either [Error e] (Doc ())
+parse' = parse
+
 instance Functor (Parser l c e) where
   fmap f (P p) = P $ \inp -> case p inp of
     Left err -> Left err

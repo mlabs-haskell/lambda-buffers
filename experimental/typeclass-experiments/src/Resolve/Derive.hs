@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -8,151 +8,25 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
+module Resolve.Derive where
 
-module Resolve.Solver where
-
-import Data.List (foldl')
-import Data.Text (Text)
-import Debug.Trace (trace)
-import qualified Data.Set as S
+import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
+import Data.Foldable (traverse_)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Control.Monad.State.Class
 import Control.Monad.State
 
-import Common.Match
-import Common.Types
-
-import Resolve.Rules
-import Gen.Generator
-import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
-import Data.Foldable (traverse_)
 import Prettyprinter
 
-{- Variable substitution. Given a string that represents a variable name,
-   and a type to instantiate variables with that name to, performs the
-   instantiation
--}
-subV :: Text -> Pat -> Pat -> Pat
-subV varNm t = \case
-  var@(VarP v) -> if v == varNm then t else var
-  List x -> List $ subV varNm t x
-  Maybe x -> Maybe $ subV varNm t x
-  x :* xs -> subV varNm t x :* subV varNm t xs
-  l := x -> subV varNm t l := subV varNm t x
-  Map k v -> Map (subV varNm t k) (subV varNm t v)
-  Either l r -> Either (subV varNm t l) (subV varNm t r)
-  ProdP xs -> ProdP (subV varNm t xs)
-  RecP xs -> RecP (subV varNm t xs)
-  SumP xs -> SumP (subV varNm t xs)
-  AppP t1 t2 -> AppP (subV varNm t t1) (subV varNm t t2)
-  RefP x -> RefP (subV varNm t x)
-  DecP a b c -> DecP (subV varNm t a) (subV varNm t b) (subV varNm t c)
-  other -> other
+import Debug.Trace (trace)
 
-{- Performs substitution on an entire instance (the first argument) given the
-   concrete types from a Pat (the second argument).
+import Common.Types
 
-   Note that ONLY PatVars which occur in the Instance *HEAD* are replaced, though they
-   are replaced in the instance superclasses as well (if they occur there).
--}
-subst :: Rule l a -> Pat -> Rule l a
-subst i ty = case i of
-  (Rule c t) ->
-    let t' = go (getSubs t ty) t
-    in Rule c t'
-  is@(Rule _ t :<= _) ->
-    mapPat (go (getSubs t ty)) is
-  _ -> i
-  where
-    go :: [(Text, Pat)] -> Pat -> Pat
-    go subs tty = foldl' (flip . uncurry $ subV) tty subs
+import Resolve.Solve
+import Resolve.Rules
+import Gen.Generator
 
-{- Given two types (which are hopefully structurally similar), gather a list of all substitutions
-   from the PatVars in the first argument to the concrete types (hopefully!) in the second argument
--}
-getSubs :: Pat -> Pat -> [(Text, Pat)] -- should be a set, whatever
-getSubs (VarP s) t = [(s, t)]
-getSubs (List t) (List t') = getSubs t t'
-getSubs (Maybe t) (Maybe t') = getSubs t t'
-getSubs (x :* xs) (x' :* xs') = getSubs x x' <> getSubs xs xs'
-getSubs (l := t) (l' := t') = getSubs l l' <> getSubs t t'
-getSubs (Map k v) (Map k' v') = getSubs k k' <> getSubs v v'
-getSubs (Either l r) (Either l' r') = getSubs l l' <> getSubs r r'
-getSubs (ProdP xs) (ProdP xs') = getSubs xs xs'
-getSubs (RecP xs) (RecP xs') = getSubs xs xs'
-getSubs (SumP xs) (SumP xs') = getSubs xs xs'
-getSubs (AppP t1 t2) (AppP t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
-getSubs (RefP t) (RefP t') = getSubs t t'
-getSubs (DecP a b c) (DecP a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
-getSubs _ _ = []
-
-normalize :: Ord a => [a] -> [a]
-normalize = S.toList . S.fromList
-
-{- Given a list of instances (the initial scope), determines whether we can derive
-   an instance of the Class argument for the Pat argument. A result of [] indicates that there are
-   no remaining subgoals and that the constraint has been solved.
-
-   NOTE: At the moment this handles superclasses differently than you might expect -
-         instead of assuming that the superclasses for all in-scope classes are defined,
-         we check that those constraints can be solved before affirmatively judging that the
-         target constraint has been solved. I *think* that makes sense in this context (whereas in Haskell
-         it doesn't b/c it's *impossible* to have `instance Foo X` if the definition of Foo is
-         `class Bar y => Foo y` without an `instance Bar X`)
-
-   TODO: This needs *extensive* testing, which is somewhat complicated to implement.
--}
-solve :: forall (l :: Lang).
-  [Instance l] -> -- all instances in scope. WE ASSUME THESE HAVE ALREADY BEEN GENERATED, SOMEWHERE
-  Constraint l ->
-  [Constraint l] -- can we derive an instance given the rules passed in?
-solve inScope cst@(C c pat) =
-  case flip subst pat <$> matchHeads inScope of
-    [] -> [cst] {-
-          -- NOTE: If we uncomment this and the commented out functions in the `where` clause,
-          --       this handles superclasses the way haskell does
-          if addSupers allInstances == allInstances
-          then [cst]
-          else solve allInstances cst -}
-
-    [Rule _ p] -> case supers c of
-      [] -> []
-      xs ->  normalize . concat $ traverse (solve inScope . flip C p) xs
-
-    [Rule _ _  :<= is] -> case normalize $ goConstraints is of
-      [] -> normalize . concat $ traverse (solve inScope . flip C pat) (supers c)
-      xs -> xs
-
-    xs -> error  ("Multiple matches, coherence broken: " <> show xs) -- TODO: Use sets instead of lists so this is impossible
-  where
-    goConstraints :: [Constraint l] ->   [Constraint l]
-    goConstraints []  =  []
-    goConstraints (cx : rest)  =
-      let xs = solve inScope cx
-      in xs <> goConstraints rest
-
-    matchHeads :: [Instance l] -> [Instance l]
-    matchHeads xs = flip filter xs $ \case
-      Rule c' t' -> c == c' && matches t' pat
-      Rule c' t' :<= _ -> c == c' && matches t' pat
-      _ -> False
-    {-
-
-    allInstances :: [Instance l]
-    allInstances = addSupers inScope
-
-    addSupers :: [Instance l] -> [Instance l]
-    addSupers xs = normalize . (xs <>) $ flip concatMap xs $ \case
-          Rule (Class _ sups) t ->  map (`Rule` t) sups
-          _                     -> []
-    -}
-
-matchInstance :: Constraint l -> Instance l -> Bool
-matchInstance (C cc cp) = \case
-  Rule c p       -> cc == c && matches p cp
-  Rule c p :<= _ -> cc == c && matches p cp
-  _              -> False
 
 {- The typeclass machinery should perform two tasks when it encounters an instance declaration for a given type:
 
@@ -202,8 +76,15 @@ data DeriveError l
  | ConstraintFail [Constraint l]
  | MultipleMatchingGenerators (Constraint l) [Instance l] deriving (Show, Eq)
 
-
 type GenTable l = Map (Instance l) (InstanceGen l)
+
+newtype Assumptions (l :: Lang) = Assumptions  [Constraint l]
+
+noAssumptions :: Assumptions l
+noAssumptions = Assumptions []
+
+assume :: [Constraint l] -> [Instance l]
+assume cs = for cs $ \(C c t) -> C c t :<= []
 
 data DeriveState (l :: Lang) = DeriveState {
   scope      :: [Instance l],
@@ -211,12 +92,13 @@ data DeriveState (l :: Lang) = DeriveState {
   output     :: [DSL l]
 }
 
+splitInstance :: Instance l -> (Constraint l, [Constraint l])
+splitInstance (C c t :<= is) = (C c t, is)
+
 type DeriveM l a = ExceptT (DeriveError l) (State (DeriveState l)) a
 
 simplify :: Rule a l -> Rule a l
-simplify = \case
-  r@(Rule _ _) -> r
-  (r :<= _)    -> r
+simplify (C c t :<= _)= C c t :<= []
 
 {- NOTE: Right now this recursively derives and generates code for all of the necessary constraints.
          If you want to change that so that it only derives the present constraint, comment out ***1*** and
@@ -228,25 +110,26 @@ simplify = \case
          (though I'm not sure if this will always be the case).
 
          ***1*** tries to derive all of the subgoal constraints needed for `cst`, which is in fact very useful.
-
 -}
 derive :: forall (l :: Lang)
         . TargetLang l
-       => Constraint l
+       => Assumptions l {- Constraints which are assumed to hold locally for the purposes of code generation. Needed to handle type variables in user defined constrained instances, e.g. instance (C a, C b) => C (Foo a b) -}
+       -> Constraint l
        -> DeriveM l  ()  -- switch from String to something better
-derive cst@(C _ cp) = do
+derive axs@(Assumptions as) cst@(C _ cp) = do
+  let given = assume as
   DeriveState{..} <- get
-  case solve scope cst of
+  case solve (given <> scope) cst of
    [] -> pure ()
    xs -> do
      -- have to filter or it will loop forever b/c if `solve` can't solve cst then cst will always be an elem of the result
-     traverse_ derive $ filter (/= cst) xs -- ***1***
+     traverse_ (derive axs) $ filter (/= cst) xs -- ***1***
      (genRule, generator) <- findMatchingGen
      case genRule of
-       Rule _ _ -> processGen genRule generator
+       C _ _ :<= [] -> processGen genRule generator
 
        _ :<= iConstraints -> do
-         traverse_ derive iConstraints
+         traverse_ (derive axs) iConstraints
          processGen genRule generator
 
          {- ***2***
@@ -272,24 +155,25 @@ derive cst@(C _ cp) = do
        others       -> throwE $ MultipleMatchingGenerators cst (map fst others)
 
 runDerive :: forall (l :: Lang)
-           . TargetLang l
+           . (TargetLang l, DSL l ~ Doc ())
           => GenTable l
           -> [Instance l]
-          -> Constraint l
-          -> Either (DeriveError l) [DSL l]
-runDerive gens scope c = case runState (runExceptT $ derive c) st of
+          -> Instance l -- Constraint l
+          -> Either (DeriveError l) [Doc ()]
+runDerive gens scope inst  = case runState (runExceptT $ derive (Assumptions cs) c) st of
    (Left e,_) -> Left e
    (Right (), res) -> Right $ output res
   where
+    (c,cs) = splitInstance inst
     st = DeriveState scope gens []
 
 runDerive' :: forall (l :: Lang)
               . (TargetLang l, DSL l ~ Doc ())
              => Map (Instance l) (InstanceGen l)
              -> [Instance l]
-             -> Constraint l
+             -> Instance l
              -> IO ()
-runDerive' g sc c = either print (print . vcat) $ runDerive g sc c
+runDerive' g sc inst = either print (print . vcat) $ runDerive g sc inst
 
 {- for debugging -}
 pTrace :: forall a b. Show a => String -> a -> b -> b
