@@ -58,7 +58,7 @@ eqTyNoVarsGen = do
   Sum (Name tName) Nil body <- match (Sum _name Nil _body)
   case body of
 
-    SumP (Name cstr := RecP fields :* Nil) -> do
+    SumP ((Name cstr := RecP fields) :* Nil) -> do
       funBody <- hcat . punctuate " && " <$> result (someP genFieldEq) fields
       let partialEq =  impl "PartialEq" cstr $ method2 "eq" "bool" funBody
       pure $ partialEq </> eqInst cstr
