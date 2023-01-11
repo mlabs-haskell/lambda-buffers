@@ -16,7 +16,7 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
   DeriveM,
   DeriveEff,
-  InferErr,
+  InferErr (..),
   context,
   addContext,
 ) where

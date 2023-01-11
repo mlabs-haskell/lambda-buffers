@@ -22,7 +22,7 @@ module LambdaBuffers.Compiler.KindCheck (
 import Control.Exception (Exception)
 import Control.Lens (Getter, Identity (runIdentity), folded, folding, makeLenses, mapped, to, view, (&), (.~), (^.), (^..), _Just)
 import Control.Monad.Freer (Eff, Members, interpret, run)
-import Control.Monad.Freer.Error (Error, runError, throwError)
+import Control.Monad.Freer.Error (Error, catchError, runError, throwError)
 import Control.Monad.Freer.State (get, modify)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.String ()
@@ -95,6 +95,7 @@ data KindCheckFailure
   | InvalidProto Text
   | AppNoArgs -- No args
   | InvalidType
+  | InferenceFailed TypeDefinition InferErr
   deriving stock (Show, Eq)
 
 instance Exception KindCheckFailure
@@ -126,36 +127,33 @@ type KindCheckEff = KindCheck ': KindCheckFailEff
 runKindCheck :: [TyDef] -> Either KindCheckFailure ()
 runKindCheck tDefs = void $ run $ runError $ interpretKindCheck $ kindCheckDefs tDefs
 
---------------------------------------------------------------------------------
--- Implementations
+runKindCheckEff :: Eff KindCheckEff a -> Either KindCheckFailure a
+runKindCheckEff = run . runError . interpretKindCheck
 
--- Interpreting the effect.
+--------------------------------------------------------------------------------
+-- Strategy
 
 -- | Strategy for kind checking.
 kindCheckDefs :: [TyDef] -> Eff KindCheckEff ()
-kindCheckDefs tyDefs = do
-  validTDef <- validateInput tyDefs
-  ctx <- createContext validTDef
-  traverse_ (kindCheck ctx) validTDef
+kindCheckDefs tyDefs = validateInput tyDefs >>= void . kindCheckType
 
 kindCheckType :: [TypeDefinition] -> Eff KindCheckEff [Kind]
-kindCheckType validTs = do
-  ctx <- createContext validTs
-  traverse (kindCheck ctx) validTs
+kindCheckType validTDef = do
+  ctx <- createContext validTDef
+  traverse (kindCheck ctx) validTDef
 
 interpretKindCheck :: Eff KindCheckEff a -> Eff '[Error KindCheckFailure] a
 interpretKindCheck = interpret $
   \case
     ValidateInput tDs -> validateTyDef `traverse` tDs
     CreateContext tDs -> mconcat <$> makeContext `traverse` tDs
-    KindCheck ctx tD -> either convertError pure $ infer ctx (tD ^. td'sop)
+    KindCheck ctx tD -> either (convertError tD) pure $ infer ctx (tD ^. td'sop)
   where
-    -- Error converter. :fixme:
-    convertError :: forall a. InferErr -> Eff KindCheckFailEff a
-    convertError e = throwError $ CheckFailure $ show e
+    convertError :: forall a. TypeDefinition -> InferErr -> Eff KindCheckFailEff a
+    convertError td = throwError . InferenceFailed td
 
-runKindCheckEff :: Eff KindCheckEff a -> Either KindCheckFailure a
-runKindCheckEff = run . runError . interpretKindCheck
+--------------------------------------------------------------------------------
+-- Implementation
 
 validateTyDef :: TyDef -> Eff KindCheckFailEff TypeDefinition
 validateTyDef tD = do

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Test.KindCheck (test) where
 
 import LambdaBuffers.Compiler.KindCheck
@@ -6,7 +8,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 test :: TestTree
-test = testGroup "KindChecker Tests" [t1, t2, t3, t4]
+test = testGroup "KindChecker Tests" [t1, t2, t3, t4, t5]
 
 runKC :: [TypeDefinition] -> Either KindCheckFailure [Kind]
 runKC = runKindCheckEff . kindCheckType
@@ -26,6 +28,20 @@ t3 =
 t4 =
   testCase "Maybe and a term containing a maybe work correctly." $
     runKC [tdT1, tdMaybe, tdT2] @?= Right [Type :->: Type, Type :->: Type, Type :->: Type]
+
+t5 =
+  testCase "Bad Type is caught and reported." $
+    runKC [tdMaybe, tdBT0]
+      @?= Left
+        ( InferenceFailed
+            ( TypeDefinition
+                { _td'name = "T"
+                , _td'variables = []
+                , _td'sop = App (Var "Maybe") (Var "Maybe")
+                }
+            )
+            (ImpossibleUnificationErr "Cannot unify: * = * \8594 *\n")
+        )
 
 --------------------------------------------------------------------------------
 -- Manual type definitions.
@@ -55,4 +71,12 @@ tdT2 =
     { _td'name = "T2"
     , _td'variables = ["a"]
     , _td'sop = Abs "a" $ App (Var "T") (App (Var "Maybe") (Var "a"))
+    }
+
+-- T2 ~ T = T Maybe Maybe
+tdBT0 =
+  TypeDefinition
+    { _td'name = "T"
+    , _td'variables = []
+    , _td'sop = App (Var "Maybe") (Var "Maybe")
     }
