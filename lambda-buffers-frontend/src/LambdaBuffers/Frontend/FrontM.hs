@@ -1,10 +1,10 @@
-module LambdaBuffers.Frontend.ModuleResolution (processImport, runFrontM, processFile) where
+module LambdaBuffers.Frontend.FrontM (runFrontM) where
 
 import Control.Monad (foldM, when)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.State.Strict (MonadIO (liftIO), MonadTrans (lift), StateT (runStateT), gets, modify)
 import Control.Monad.Trans.Except (throwE)
-import Control.Monad.Trans.Reader (ReaderT (runReaderT), ask, asks, local)
+import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, local)
 import Data.Foldable (for_)
 import Data.Kind (Type)
 import Data.List (isSuffixOf)
@@ -16,40 +16,38 @@ import Data.Set qualified as Set
 import Data.Text (Text, unpack)
 import Data.Text.IO qualified as Text
 import Data.Traversable (for)
-import Debug.Trace (trace)
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody), TyName (TyName), TyRef (TyRef))
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Strip (strip), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody), TyName, TyRef (TyRef))
 import System.Directory (findFiles)
 import System.FilePath (joinPath)
 import Text.Parsec (ParseError)
 
-data ImportRead = ImportRead
-  { current :: ModuleName
-  , visited :: [ModuleName]
+data FrontRead = FrontRead
+  { current :: ModuleName SourceInfo
+  , visited :: [ModuleName ()]
   , importPaths :: [FilePath]
   }
   deriving stock (Eq, Show)
 
-newtype ImportState = ImportState
-  { importedModules :: Map ModuleName Module
-  }
-  deriving stock (Eq, Show)
+newtype FrontState = FrontState
+  { importedModules :: Map (ModuleName ()) (Module SourceInfo)
+  } -- deriving stock (Eq, Show)
 
-type Symbol = (Maybe SModuleAlias, STyName)
-type Scope = Map Symbol ModuleName
+type Symbol = TyRef ()
+type Scope = Map Symbol (ModuleName SourceInfo)
 
-data ImportErr
-  = ModuleNotFound ModuleName [FilePath]
-  | MultipleModulesFound ModuleName [FilePath]
-  | ImportCycleFound ModuleName ModuleName [ModuleName]
+data FrontErr
+  = ModuleNotFound (ModuleName SourceInfo) [FilePath]
+  | MultipleModulesFound (ModuleName SourceInfo) [FilePath]
+  | ImportCycleFound (ModuleName SourceInfo) (ModuleName ()) [ModuleName ()]
   | ModuleParseError FilePath ParseError
-  | ImportedNotFound ModuleName ModuleName TyName (Set TyName)
-  | InvalidModuleFilepath ModuleName FilePath FilePath
-  | SymbolAlreadyImported ModuleName Import (Maybe SModuleAlias, STyName) ModuleName
-  | TyRefNotFound ModuleName TyRef Scope
+  | ImportedNotFound (ModuleName SourceInfo) (ModuleName SourceInfo) (TyName SourceInfo) (Set (TyName SourceInfo))
+  | InvalidModuleFilepath (ModuleName SourceInfo) FilePath FilePath
+  | SymbolAlreadyImported (ModuleName SourceInfo) (Import SourceInfo) Symbol (ModuleName SourceInfo)
+  | TyRefNotFound (ModuleName SourceInfo) (TyRef SourceInfo) Scope
   deriving stock (Eq)
 
-instance Show ImportErr where
+instance Show FrontErr where
   show (ModuleNotFound mn impPaths) = "Module " <> show mn <> " not found in import paths " <> show impPaths
   show (MultipleModulesFound mn conflictingPaths) = "Module " <> show mn <> " found in multiple files " <> show conflictingPaths
   show (ImportCycleFound current mn visited) = "Module " <> show current <> " tried to load module " <> show mn <> " which constitutes a cycle " <> show visited
@@ -59,38 +57,38 @@ instance Show ImportErr where
   show (SymbolAlreadyImported current imp sym alreadyInModuleName) = "Module " <> show current <> " imports a symbol " <> show sym <> " in the import statement " <> show imp <> " but the same symbol was already imported by " <> show alreadyInModuleName
   show (TyRefNotFound current tyR scope) = "Module " <> show current <> " references a type " <> show tyR <> " that wasn't found in the module scope " <> show scope
 
-type ImportM = ReaderT ImportRead (StateT ImportState (ExceptT ImportErr IO))
+type FrontM = ReaderT FrontRead (StateT FrontState (ExceptT FrontErr IO))
 
-runFrontM :: [FilePath] -> FilePath -> IO (Either ImportErr (Map ModuleName Module))
+runFrontM :: [FilePath] -> FilePath -> IO (Either FrontErr (Map (ModuleName ()) (Module SourceInfo)))
 runFrontM importPaths modFp = do
-  let stM = runReaderT (processFile modFp) (ImportRead (ModuleName [] undefined) [] importPaths)
-      exM = runStateT stM (ImportState Map.empty)
+  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] undefined) [] importPaths)
+      exM = runStateT stM (FrontState Map.empty)
       ioM = runExceptT exM
   fmap (importedModules . snd) <$> ioM
 
-moduleNameToFilepath :: ModuleName -> FilePath
-moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <> ".lbf"
-
-throwE' :: forall {a :: Type}. ImportErr -> ImportM a
+throwE' :: forall {a :: Type}. FrontErr -> FrontM a
 throwE' = lift . lift . throwE
 
-checkCycle :: ModuleName -> ImportM ()
+moduleNameToFilepath :: ModuleName info -> FilePath
+moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <> ".lbf"
+
+checkCycle :: ModuleName () -> FrontM ()
 checkCycle modName = do
   ms <- asks visited
   cm <- asks current
-  when (show modName `elem` (show <$> ms)) $ throwE' $ ImportCycleFound cm modName ms
+  when (modName `elem` ms) $ throwE' $ ImportCycleFound cm modName ms
 
-parseModule :: FilePath -> Text -> ImportM Module
+parseModule :: FilePath -> Text -> FrontM (Module SourceInfo)
 parseModule modFp modContent = do
   modOrErr <- liftIO $ Parsec.runParser Parsec.parseModule modFp modContent
   case modOrErr of
     Left err -> throwE' $ ModuleParseError modFp err
     Right m -> return m
 
-readModule :: ModuleName -> ImportM Module
+readModule :: ModuleName SourceInfo -> FrontM (Module SourceInfo)
 readModule modName = do
   ims <- gets importedModules
-  case Map.lookup modName ims of
+  case Map.lookup (strip modName) ims of
     Nothing -> do
       ips <- asks importPaths
       found <- liftIO $ findFiles ips (moduleNameToFilepath modName)
@@ -105,23 +103,28 @@ readModule modName = do
         modFps -> throwE' $ MultipleModulesFound modName modFps
     Just m -> return m
 
-processFile :: FilePath -> ImportM Module
+processFile :: FilePath -> FrontM (Module SourceInfo)
 processFile modFp = do
   modContent <- liftIO $ Text.readFile modFp
   m <- parseModule modFp modContent
   checkModuleName modFp (moduleName m)
   processModule m
 
-processModule :: Module -> ImportM Module
-processModule m = local (\ir -> ir {current = moduleName m, visited = current ir : visited ir}) $ do
-  r <- ask
-  liftIO $ trace (show r) (return ())
-  scope <- processImports m
-  checkReferences scope m
-  _ <- lift $ modify (ImportState . Map.insert (moduleName m) m . importedModules)
-  return m
+processModule :: Module SourceInfo -> FrontM (Module SourceInfo)
+processModule m = local
+  ( \ir ->
+      ir
+        { current = moduleName m
+        , visited = (strip . current $ ir) : visited ir
+        }
+  )
+  $ do
+    scope <- processImports m
+    checkReferences scope m
+    _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) m . importedModules)
+    return m
 
-checkReferences :: Map (Maybe SModuleAlias, STyName) ModuleName -> Module -> ImportM ()
+checkReferences :: Scope -> Module SourceInfo -> FrontM ()
 checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
   where
     checkBody (Sum cs _) = for_ cs checkConstructor
@@ -131,21 +134,21 @@ checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
 
     checkTy (TyApp tyF tyAs _) = checkTy tyF >> for_ tyAs checkTy
     checkTy (TyVar _ _) = return ()
-    checkTy (TyRef' tyR@(TyRef mayModAlias tyN _) _) =
-      if Map.member (fromModuleAlias <$> mayModAlias, fromTyName tyN) scope
+    checkTy (TyRef' tyR _) =
+      if Map.member (strip tyR) scope
         then return ()
         else do
           cm <- asks current
           throwE' $ TyRefNotFound cm tyR scope
 
-checkModuleName :: FilePath -> ModuleName -> ImportM ()
+checkModuleName :: FilePath -> ModuleName SourceInfo -> FrontM ()
 checkModuleName fp mn =
   let suffix = moduleNameToFilepath mn
    in if suffix `isSuffixOf` fp
         then return ()
         else throwE' $ InvalidModuleFilepath mn fp suffix
 
-processImports :: Module -> ImportM (Map (Maybe SModuleAlias, STyName) ModuleName)
+processImports :: Module SourceInfo -> FrontM Scope
 processImports m =
   foldM
     ( \totalScope imp -> do
@@ -163,49 +166,36 @@ processImports m =
     Map.empty
     (moduleImports m)
 
-processImport :: Import -> ImportM (Set (Maybe SModuleAlias, STyName))
+processImport :: Import SourceInfo -> FrontM (Set Symbol)
 processImport imp = do
-  liftIO $ trace (show imp) (return ())
   let modNameToImport = importModuleName imp
-  checkCycle modNameToImport
+  checkCycle (strip modNameToImport)
   im <- readModule modNameToImport >>= processModule
   collectImportedScope imp im
 
-newtype STyName = STyName Text deriving stock (Eq, Ord, Show)
-fromTyName :: TyName -> STyName
-fromTyName (TyName tn _) = STyName tn
-
-newtype SModuleAlias = SModuleAlias [Text] deriving stock (Eq, Ord, Show)
-
-fromModuleAlias :: ModuleAlias -> SModuleAlias
-fromModuleAlias (ModuleAlias mn _) = SModuleAlias . fromModuleName $ mn
-
-fromModuleName :: ModuleName -> [Text]
-fromModuleName (ModuleName ps _) = [p | ModuleNamePart p _ <- ps]
-
-collectImportedScope :: Import -> Module -> ImportM (Set (Maybe SModuleAlias, STyName))
+collectImportedScope :: Import SourceInfo -> Module SourceInfo -> FrontM (Set Symbol)
 collectImportedScope (Import isQual modName mayImports mayAlias _) m =
   let availableTyNs = [tyN | (TyDef tyN _ _ _) <- moduleTyDefs m]
       availableTyNs' = Set.fromList availableTyNs
       importedTyNs = fromMaybe availableTyNs mayImports
-      availableSTyNs = Set.fromList $ fromTyName <$> availableTyNs
+      availableSTyNs = Set.fromList $ strip <$> availableTyNs
    in foldM
         ( \total tyN ->
-            let sTyN = fromTyName tyN
-             in if Set.member sTyN availableSTyNs
+            let styN = strip tyN
+             in if Set.member styN availableSTyNs
                   then return . Set.union total . Set.fromList $
                     case mayAlias of
                       Nothing ->
                         if isQual
-                          then [(Just . SModuleAlias . fromModuleName $ modName, sTyN)]
-                          else [(Just . SModuleAlias . fromModuleName $ modName, sTyN), (Nothing, sTyN)]
+                          then [TyRef (Just $ ModuleAlias (strip modName) ()) styN ()]
+                          else [TyRef (Just $ ModuleAlias (strip modName) ()) styN (), TyRef Nothing styN ()]
                       Just al ->
                         if isQual
-                          then [(Just . fromModuleAlias $ al, sTyN)]
-                          else [(Just . fromModuleAlias $ al, sTyN), (Nothing, sTyN)]
+                          then [TyRef (Just . strip $ al) styN ()]
+                          else [TyRef (Just . strip $ al) styN (), TyRef Nothing styN ()]
                   else do
-                    currModName <- asks current
-                    throwE' $ ImportedNotFound currModName modName tyN availableTyNs'
+                    cm <- asks current
+                    throwE' $ ImportedNotFound cm modName tyN availableTyNs'
         )
         Set.empty
         importedTyNs
