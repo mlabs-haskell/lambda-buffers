@@ -1,5 +1,5 @@
 module B
 
-import A
+import A (A)
 
-sum B a = F (A a)
+sum B a = F (A a) | A b c

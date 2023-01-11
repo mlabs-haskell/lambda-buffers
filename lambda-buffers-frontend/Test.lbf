@@ -3,8 +3,8 @@ module
 
 import A
 import qualified B
-import A.B
-import qualified A.B
+import G.A
+import qualified G.A
 import C (A,B)
 import qualified C (A,B)
 import C as D (A,B)

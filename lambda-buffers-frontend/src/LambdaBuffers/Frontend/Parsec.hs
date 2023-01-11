@@ -1,20 +1,20 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseTest', parseImport) where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseTest', parseImport, runParser) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
-import Data.Maybe (fromMaybe, isJust)
+import Data.Maybe (isJust)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
 import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
-import Text.Parsec (ParsecT, Stream, alphaNum, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
+import Text.Parsec (ParseError, ParsecT, SourceName, Stream, alphaNum, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 import Text.Parsec.Char (upper)
 
-type ParseState :: Type
-type ParseState = ()
-
 type Parser :: Type -> (Type -> Type) -> Type -> Type
-type Parser s m a = ParsecT s ParseState m a
+type Parser s m a = ParsecT s () m a
+
+runParser :: (Stream s IO Char) => Parser s IO a -> SourceName -> s -> IO (Either ParseError a)
+runParser p = runParserT (p <* eof) ()
 
 parseTest' :: (Stream s IO Char, Show a) => Parser s IO a -> s -> IO (Either String a)
 parseTest' p input = do
@@ -42,12 +42,19 @@ parseTyVarName = withSourceInfo . label' "type variable name" $ VarName . fromSt
 parseTyName :: Stream s m Char => Parser s m TyName
 parseTyName = withSourceInfo . label' "type name" $ TyName <$> parseUpperCamelCase
 
-parseModuleAlias :: Stream s m Char => Parser s m ModuleAlias
-parseModuleAlias = withSourceInfo . label' "module alias" $ ModuleAlias <$> parseUpperCamelCase
+parseModuleAliasInRef :: Stream s m Char => Parser s m ModuleAlias
+parseModuleAliasInRef =
+  withSourceInfo . label' "module alias in type reference" $
+    ModuleAlias <$> do
+      ps <- many1 (try (parseModuleNamePart <* char '.'))
+      withSourceInfo . return $ ModuleName ps
+
+parseModuleAliasInImport :: Stream s m Char => Parser s m ModuleAlias
+parseModuleAliasInImport = withSourceInfo . label' "module alias in module import" $ ModuleAlias <$> parseModuleName
 
 parseTyRef' :: Stream s m Char => Parser s m TyRef
 parseTyRef' = withSourceInfo . label' "type reference" $ do
-  mayAlias <- optionMaybe (try $ parseModuleAlias <* char '.')
+  mayAlias <- optionMaybe parseModuleAliasInRef
   TyRef mayAlias <$> parseTyName
 
 parseTyVar :: Stream s m Char => Parser s m Ty
@@ -57,16 +64,16 @@ parseTyRef :: Stream s m Char => Parser s m Ty
 parseTyRef = withSourceInfo . label' "type reference" $ TyRef' <$> parseTyRef'
 
 parseTys :: Stream s m Char => Parser s m [Ty]
-parseTys = label' "type list" $ sepEndBy parseTy' (many1 lineSpace)
+parseTys = label' "type list" $ sepEndBy parseTy' lineSpaces1
 
 parseTy' :: Stream s m Char => Parser s m Ty
 parseTy' =
   label' "type expression" $
     parseTyRef
       <|> parseTyVar
-      <|> ( (char '(' >> many lineSpace)
+      <|> ( (char '(' >> lineSpaces)
               *> (try parseTys >>= tysToTy)
-              <* (many lineSpace >> char ')')
+              <* (lineSpaces >> char ')')
           )
 
 tysToTy :: Stream s m Char => [Ty] -> Parser s m Ty
@@ -80,7 +87,7 @@ parseSumBody = withSourceInfo . label' "sum type body" $ do
   cs <-
     sepBy
       parseSumConstructor
-      (char '|' >> many1 lineSpace)
+      (char '|' >> lineSpaces1)
   return $ Sum cs
 
 parseSumConstructor :: Stream s m Char => Parser s m Constructor
@@ -93,7 +100,7 @@ parseProduct = do
     Nothing -> withSourceInfo . label' "empty constructor" $ do
       return $ Product []
     Just _ -> withSourceInfo . label' "type product" $ do
-      _ <- many lineSpace
+      _ <- lineSpaces
       Product <$> parseTys
 
 parseConstructorName :: Stream s m Char => Parser s m ConstrName
@@ -105,25 +112,25 @@ parseTyDef = label' "type definition" $ parseSumTyDef <|> parseOpaqueTyDef
 parseSumTyDef :: Stream s m Char => Parser s m TyDef
 parseSumTyDef = withSourceInfo . label' "sum type definition" $ do
   _ <- string "sum"
-  _ <- many1 lineSpace
+  _ <- lineSpaces1
   tyN <- parseTyName
-  _ <- many1 lineSpace
-  args <- sepEndBy parseTyArg (many1 lineSpace)
+  _ <- lineSpaces1
+  args <- sepEndBy parseTyArg lineSpaces1
   _ <- char '='
-  _ <- many1 lineSpace
+  _ <- lineSpaces1
   TyDef tyN args <$> parseSumBody
 
 parseOpaqueTyDef :: Stream s m Char => Parser s m TyDef
 parseOpaqueTyDef = withSourceInfo . label' "opaque type definition" $ do
   _ <- string "opaque"
-  _ <- many1 lineSpace
+  _ <- lineSpaces1
   tyN <- parseTyName
   maySpace <- optionMaybe lineSpace
   args <- case maySpace of
-    Nothing -> many lineSpace >> return []
+    Nothing -> lineSpaces >> return []
     Just _ -> do
-      _ <- many lineSpace
-      sepBy parseTyArg (many1 lineSpace)
+      _ <- lineSpaces
+      sepBy parseTyArg lineSpaces1
   return $ TyDef tyN args Opaque
 
 parseTyArg :: Stream s m Char => Parser s m TyArg
@@ -131,31 +138,17 @@ parseTyArg = withSourceInfo . label' "type argument" $ do
   VarName vn _ <- parseTyVarName
   return $ TyArg vn
 
-lineSpace :: Stream s m Char => Parser s m ()
-lineSpace = label' "line space" $ void $ try $ do
-  optional endOfLine
-  char ' ' <|> char '\t'
-
-lbNewLine :: Stream s m Char => Parser s m ()
-lbNewLine = label' "lb new line" $ void endOfLine
-
 parseModule :: Stream s m Char => Parser s m Module
 parseModule = withSourceInfo . label' "module definition" $ do
   _ <- string "module"
-  _ <- many1 lineSpace
+  _ <- lineSpaces1
   modName <- parseModuleName
-  _ <- many lineSpace
+  _ <- lineSpaces
   _ <- many1 lbNewLine
   imports <- sepEndBy parseImport (many1 lbNewLine)
   tyDs <- sepBy parseTyDef (many1 lbNewLine)
   _ <- many space
   return $ Module modName imports tyDs
-
-lineSpaces1 :: Stream s m Char => Parser s m ()
-lineSpaces1 = void $ try $ many1 lineSpace
-
-lineSpaces :: Stream s m Char => Parser s m ()
-lineSpaces = void $ try $ many lineSpace
 
 parseImport :: Stream s m Char => Parser s m Import
 parseImport = withSourceInfo . label' "import statement" $ do
@@ -166,7 +159,7 @@ parseImport = withSourceInfo . label' "import statement" $ do
     optionMaybe
       ( do
           lineSpace
-          mayModAlias <- optionMaybe (lineSpaces >> string "as" >> lineSpaces1 *> parseModuleAlias)
+          mayModAlias <- optionMaybe (lineSpaces >> string "as" >> lineSpaces1 *> parseModuleAliasInImport)
           mayTyNs <-
             optionMaybe
               ( do
@@ -183,15 +176,29 @@ parseImport = withSourceInfo . label' "import statement" $ do
         Import
           isQual
           modName
-          []
+          Nothing
           Nothing
     Just (mayModAlias, mayTyNs) ->
       return $
         Import
           isQual
           modName
-          (fromMaybe [] mayTyNs)
+          mayTyNs
           mayModAlias
+
+lbNewLine :: Stream s m Char => Parser s m ()
+lbNewLine = label' "lb new line" $ void endOfLine
+
+lineSpace :: Stream s m Char => Parser s m ()
+lineSpace = label' "line space" $ void $ try $ do
+  optional endOfLine
+  char ' ' <|> char '\t'
+
+lineSpaces1 :: Stream s m Char => Parser s m ()
+lineSpaces1 = void $ try $ many1 lineSpace
+
+lineSpaces :: Stream s m Char => Parser s m ()
+lineSpaces = void $ try $ many lineSpace
 
 getSourcePosition :: Stream s m Char => Parser s m SourcePos
 getSourcePosition = do

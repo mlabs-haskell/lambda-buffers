@@ -21,7 +21,7 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
-    -Wno-missing-kind-signatures
+    -Wno-missing-kind-signatures -Wno-all-missed-specializations
 
   if !flag(dev)
     ghc-options: -Werror
