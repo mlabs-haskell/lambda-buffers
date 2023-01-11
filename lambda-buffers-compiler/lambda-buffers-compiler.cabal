@@ -82,28 +82,33 @@ common common-language
 
   default-language:   Haskell2010
 
+common dependencies
+  build-depends:
+    , base        >=4.16
+    , lens        >=5.2
+    , proto-lens  >=0.7
+
 library
   import:         common-language
+  import:         dependencies
+  build-depends:
+    , containers                  >=0.6
+    , freer-simple                >=1.2
+    , lambda-buffers-compiler-pb
+    , mtl                         >=2.2
+    , prettyprinter               >=1.7
+    , text                        >=1.2
+    , transformers                >=0.5
+
   other-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Inference
 
-  build-depends:
-    , base                        >=4.16
-    , containers                  >=0.6
-    , freer-simple                >=1.2
-    , lambda-buffers-compiler-pb
-    , lens                        >=5.2
-    , mtl                         >=2.2
-    , prettyprinter               >=1.7
-    , proto-lens                  >=0.7
-    , text                        >=1.2
-    , transformers                >=0.5
-
   hs-source-dirs: src
 
 executable lambda-buffers-compiler
-  import:         common-language  
+  import:         common-language
+  import:         dependencies
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
@@ -112,3 +117,20 @@ executable lambda-buffers-compiler
     , proto-lens                  >=0.7
 
   hs-source-dirs: app
+
+test-suite tests
+  import:         common-language
+  import:         dependencies
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , containers
+    , hedgehog
+    , QuickCheck
+    , tasty
+    , tasty-expected-failure
+    , tasty-hedgehog
+    , tasty-hunit
+    , tasty-quickcheck
+    , transformers
