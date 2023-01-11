@@ -30,9 +30,9 @@ import Data.Text (Text, unpack)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   Atom,
   Context,
-  DError,
   DeriveEff,
   DeriveM,
+  InferErr,
   Kind (Type, (:->:)),
   Type (..),
   context,
@@ -151,7 +151,7 @@ interpretKindCheck = interpret $
     KindCheck ctx tD -> either convertError pure $ infer ctx (tD ^. td'sop)
   where
     -- Error converter. :fixme:
-    convertError :: forall a. DError -> Eff KindCheckFailEff a
+    convertError :: forall a. InferErr -> Eff KindCheckFailEff a
     convertError e = throwError $ CheckFailure $ show e
 
 runKindCheckEff :: Eff KindCheckEff a -> Either KindCheckFailure a

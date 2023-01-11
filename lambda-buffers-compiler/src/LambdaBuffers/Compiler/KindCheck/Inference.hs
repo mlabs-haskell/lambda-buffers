@@ -3,6 +3,7 @@
 {-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
 {-# OPTIONS_GHC -Wno-missing-local-signatures #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# OPTIONS_GHC -Wno-monomorphism-restriction #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
@@ -15,14 +16,12 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
   DeriveM,
   DeriveEff,
-  DError,
+  InferErr,
   context,
   addContext,
 ) where
 
 import Data.Bifunctor (Bifunctor (second))
-
-import Debug.Trace
 
 import Control.Monad.Freer
 import Control.Monad.Freer.Error
@@ -115,7 +114,7 @@ instance Pretty Derivation where
       dNest :: forall a b c. (Pretty a, Pretty b) => a -> [b] -> Doc c
       dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> pretty @String "∧" <> space) (pretty <$> ds))
 
-data DError
+data InferErr
   = Misc String
   | ImpossibleErr String
   | UnboundTermErr String
@@ -139,7 +138,7 @@ newtype DerivationContext = DC
   { freshVarStream :: [Atom]
   }
 
-type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error DError]
+type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error InferErr]
 
 type DeriveM a = Eff DeriveEff a
 
@@ -149,26 +148,29 @@ type Derive a =
     '[ Reader Context
      , State DerivationContext
      , Writer [Constraint]
-     , Error DError
+     , Error InferErr
      ]
     effs =>
   Eff effs a
 
+--------------------------------------------------------------------------------
+-- Runners
+
 -- | Run derivation builder - not unified yet.
-runDerive :: Type -> Either DError (Derivation, [Constraint])
-runDerive = runDerive'' defContext
+runDerive'' :: Type -> Either InferErr (Derivation, [Constraint])
+runDerive'' = runDerive testingContext
 
 -- | Run derivation - throw error.
 runDerive' :: Type -> (Derivation, [Constraint])
-runDerive' t = either (error.show) id $ runDerive t
+runDerive' t = either (error.show) id $ runDerive'' t
 
 -- | Run derivation builder - not unified yet.
-runDerive'' :: Context -> Type -> Either DError (Derivation, [Constraint])
-runDerive'' ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReader ctx (derive t)
+runDerive :: Context -> Type -> Either InferErr (Derivation, [Constraint])
+runDerive ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReader ctx (derive t)
 
-infer :: Context -> Type -> Either DError Kind
+infer :: Context -> Type -> Either InferErr Kind
 infer ctx t = do
-  (d, c) <- runDerive'' (defTerms <> ctx) t
+  (d, c) <- runDerive (defTerms <> ctx) t
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. topKind
@@ -181,6 +183,9 @@ infer ctx t = do
              , ("Void", Type)
              , ("(,)", Type :->: Type :->: Type)
              ]
+
+--------------------------------------------------------------------------------
+-- Implementation
 
 -- | Creates the derivation
 derive :: Type -> Derive Derivation
@@ -232,10 +237,8 @@ topKind = to f
       Abstraction (Judgement (_, _, k)) _ -> k
       Application (Judgement (_, _, k)) _ _ -> k
 
-type UErr = DError
-
 -- | Unification monad.
-type Unifier a = forall effs. Member (Error UErr) effs => Eff effs a
+type Unifier a = forall effs. Member (Error InferErr) effs => Eff effs a
 
 -- | Gets the variables of a type.
 getVariables :: Kind -> [Atom]
@@ -243,6 +246,9 @@ getVariables = \case
   Type -> mempty
   x :->: y -> getVariables x <> getVariables y
   KVar x -> [x]
+
+--------------------------------------------------------------------------------
+-- Unification
 
 -- | Unifies constraints and creates substitutions.
 unify :: [Constraint] -> Unifier [Substitution]
@@ -305,11 +311,11 @@ applySubstitution s@(Substitution (a, t)) k = case k of
   KVar v -> if v == a then t else k
 
 -- | Runs the unifier.
-runUnify :: forall effs. [Constraint] -> Eff effs (Either UErr [Substitution])
+runUnify :: forall effs. [Constraint] -> Eff effs (Either InferErr [Substitution])
 runUnify = runError . unify
 
 -- | Runs the unifier.
-runUnify' :: [Constraint] -> Either UErr [Substitution]
+runUnify' :: [Constraint] -> Either InferErr [Substitution]
 runUnify' = run . runError . unify
 
 {- | Applies substitutions to all the types in the Derivation, and the
@@ -328,9 +334,9 @@ substitute s d = case d of
       xs -> Context ctx $ second (applySubstitution subs) <$> xs
 
 -- | Given a term (and the default context) - gives a Kind.
-getType :: Type -> Either UErr Kind
+getType :: Type -> Either InferErr Kind
 getType t = do
-  (d, c) <- runDerive t
+  (d, c) <- runDerive'' t
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. topKind
@@ -360,8 +366,8 @@ atoms :: [Atom]
 atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure [x, y]
 
 -- | Default context -- for testing.
-defContext :: Context
-defContext =
+testingContext :: Context
+testingContext =
   Context
     { _context =
         [ ("Either", Type :->: Type :->: Type)
