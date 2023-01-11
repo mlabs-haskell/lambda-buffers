@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
 {-# OPTIONS_GHC -Wno-missing-local-signatures #-}
@@ -15,6 +16,8 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   DeriveM,
   DeriveEff,
   DError,
+  context,
+  addContext,
 ) where
 
 import Data.Bifunctor (Bifunctor (second))
@@ -25,7 +28,7 @@ import Control.Monad.Freer.Reader
 import Control.Monad.Freer.State
 import Control.Monad.Freer.Writer
 
-import Control.Lens (Getter, to, (^.))
+import Control.Lens (Getter, makeLenses, to, (^.))
 
 import Prettyprinter
 
@@ -64,13 +67,15 @@ instance Pretty Type where
         Abs a t1 -> parens $ pretty @String "λ" <> pretty a <> pretty @String "." <> show' t1
 
 data Context = Context
-  { context :: [(Atom, Kind)]
-  , addContext :: [(Atom, Kind)]
+  { _context :: [(Atom, Kind)]
+  , _addContext :: [(Atom, Kind)]
   }
   deriving stock (Show, Eq)
 
+makeLenses ''Context
+
 instance Pretty Context where
-  pretty c = case addContext c of
+  pretty c = case c ^. addContext of
     [] -> pretty @String "Γ"
     ctx -> pretty @String "Γ" <+> pretty @String "∪" <+> braces (setPretty ctx)
     where
@@ -85,7 +90,7 @@ instance Monoid Context where
 
 -- | Utility to unify the two.
 getAllContext :: Context -> [(Atom, Kind)]
-getAllContext c = context c <> addContext c
+getAllContext c = c ^. context <> c ^. addContext
 
 newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
   deriving stock (Show, Eq)
@@ -347,7 +352,7 @@ atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure [x, y]
 defContext :: Context
 defContext =
   Context
-    { context =
+    { _context =
         [ ("Either", Type :->: Type :->: Type)
         , ("Maybe", Type :->: Type)
         , ("(,)", Type :->: Type :->: Type)
@@ -359,7 +364,7 @@ defContext =
         , ("Opaque", Type)
         , ("Voie", Type)
         ]
-    , addContext = []
+    , _addContext = []
     }
 
 -- >>> getType' tterm

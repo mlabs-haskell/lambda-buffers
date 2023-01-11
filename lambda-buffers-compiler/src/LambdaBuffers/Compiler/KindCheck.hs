@@ -6,6 +6,9 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
+{- | Note: At the moment the Kind Checker disregrads multiple Modules for
+simplicity of testing and developing. This will be changed ASAP.
+-}
 module LambdaBuffers.Compiler.KindCheck (runKindCheck) where
 
 import Control.Exception (Exception)
@@ -18,12 +21,13 @@ import Data.String ()
 import Data.Text (Text, unpack)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   Atom,
-  Context (context),
+  Context,
   DError,
   DeriveEff,
   DeriveM,
   Kind (Type, (:->:)),
   Type (..),
+  context,
   infer,
  )
 
@@ -36,27 +40,35 @@ import Proto.Compiler (
   Product'NTuple,
   Product'Product (Product'Empty', Product'Ntuple, Product'Record'),
   Product'Record,
+  Product'Record'Field,
   Sum,
   Sum'Constructor,
   Ty,
   Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar),
   TyApp,
+  TyBody,
   TyBody'TyBody (TyBody'Opaque, TyBody'Sum),
   TyDef,
   TyRef,
+  TyRef'TyRef (TyRef'ForeignTyRef, TyRef'LocalTyRef),
  )
 import Proto.Compiler_Fields as PF (
   constrName,
   constructors,
+  fieldTy,
   fields,
   maybe'empty,
   maybe'product,
   maybe'ty,
   maybe'tyBody,
+  maybe'tyRef,
+  moduleName,
   name,
   product,
   tyAbs,
+  tyArgs,
   tyBody,
+  tyFunc,
   tyName,
   tyVars,
   varName,
@@ -73,6 +85,8 @@ data KindCheckFailure
   | AppWrongArgKind Kind Kind -- Expected Kind got Kind
   | AppToManyArgs Int
   | InvalidProto Text
+  | AppNoArgs -- No args
+  | InvalidType
   deriving stock (Show, Eq)
 
 instance Exception KindCheckFailure
@@ -117,7 +131,7 @@ runKindCheck tDefs = void $ run $ runError $ runKindCheckEff $ kindCheckDefs tDe
       \case
         ValidateInput tDs -> validateTyDef `traverse` tDs
         CreateContext tDs -> mconcat <$> makeContext `traverse` tDs
-        KindCheck ctx tD -> either convertError pure $ infer ctx (toTerms tD)
+        KindCheck ctx tD -> either convertError pure $ infer ctx (tD ^. td'sop)
 
     -- Error converter. :fixme:
     convertError :: forall a. DError -> Eff KindCheckFailEff a
@@ -128,18 +142,27 @@ runKindCheck tDefs = void $ run $ runError $ runKindCheckEff $ kindCheckDefs tDe
 
 validateTyDef :: TyDef -> Eff KindCheckFailEff TypeDefinition
 validateTyDef tD = do
+  let vars = tD ^.. tyAbs . tyVars . folded . varName . name . to unpack
   sop <- go (tD ^. tyAbs . tyBody . maybe'tyBody)
   pure $
     TypeDefinition
       { _td'name = tD ^. tyName . name . to unpack
-      , _td'variables = view (varName . name . to unpack) <$> (tD ^. tyAbs . tyVars)
-      , _td'sop = sop
+      , _td'variables = vars
+      , _td'sop = foldVars vars sop
       }
   where
     go = \case
-      Just (TyBody'Opaque _) -> pure $ Var "Opaque"
-      Just (TyBody'Sum sumB) -> sumToType sumB
+      Just body -> tyBodyToType body
       Nothing -> throwError $ InvalidProto "Type Definition must have a body"
+
+    foldVars vs ts = case vs of
+      [] -> ts
+      x : xs -> Abs x (foldVars xs ts)
+
+tyBodyToType :: TyBody'TyBody -> Eff KindCheckFailEff Type
+tyBodyToType = \case
+  TyBody'Opaque _ -> pure $ Var "Opaque"
+  TyBody'Sum sumB -> sumToType sumB
 
 sumToType :: Sum -> Eff KindCheckFailEff Type
 sumToType sumT = do
@@ -153,81 +176,61 @@ sumToType sumT = do
         Just (Product'Ntuple nt) -> nTupleToType nt
         Just (Product'Record' re) -> recordToType re
         Nothing -> throwError $ InvalidProto "Every constructor should have a product defining it"
-
-  -- :fixme: needs to be tested
-  pure $ foldr ($) (Var "Void") $ fmap (App . App (Var "Either")) sumTRes
+  foldWithEither sumTRes
 
 nTupleToType :: Product'NTuple -> Eff KindCheckFailEff Type
 nTupleToType nt = do
   let fs :: [Ty] = nt ^. fields
   prodT <- tyToType `traverse` fs
-  -- :fixme: needs to be tested
-  pure $ foldr ($) (Var "()") $ fmap (App . App (Var "(,)")) prodT
+  foldWithTuple prodT
+
+recordToType :: Product'Record -> Eff KindCheckFailEff Type
+recordToType rcrd = do
+  let x :: [Ty] = rcrd ^.. fields . folded . fieldTy
+  tC <- tyToType `traverse` x
+  foldWithTuple tC
+
+-- old version: foldr ($) (Var "()") . fmap (App . App (Var "(,)"))
+foldWithTuple :: [Type] -> Eff KindCheckFailEff Type
+foldWithTuple = foldWithBinaryOp $ App . App (Var "(,)")
+
+-- old version foldr ($) (Var "Void") . fmap (App . App (Var "Either"))
+foldWithEither :: [Type] -> Eff KindCheckFailEff Type
+foldWithEither = foldWithBinaryOp $ App . App (Var "Either")
+
+-- | Generic way of folding.
+foldWithBinaryOp :: (Type -> Type -> Type) -> [Type] -> Eff KindCheckFailEff Type
+foldWithBinaryOp op = \case
+  [] -> throwError InvalidType
+  [x] -> pure x
+  x : xs -> op x <$> foldWithTuple xs
 
 tyToType :: Ty -> Eff KindCheckFailEff Type
 tyToType ty = do
   case ty ^. maybe'ty of
     Just (Ty'TyVar v) -> pure $ Var (v ^. varName . name . to unpack)
     Just (Ty'TyApp app) -> tyAppToType app
-    Just (Ty'TyRef _) -> undefined
+    Just (Ty'TyRef ref) -> tyRefToType ref
     Nothing -> throwError $ InvalidProto "Type is not defined"
 
 tyAppToType :: TyApp -> Eff KindCheckFailEff Type
-tyAppToType = undefined
-
-recordToType :: Product'Record -> Eff KindCheckFailEff Type
-recordToType = undefined
+tyAppToType tApp = do
+  fC <- tyToType (tApp ^. tyFunc)
+  fArgsC <- tyToType `traverse` (tApp ^. tyArgs)
+  case fArgsC of
+    [] -> throwError AppNoArgs
+    _ -> pure $ appF fC fArgsC
+  where
+    appF t [] = t
+    appF t (x : xs) = appF (App t x) xs
 
 makeContext :: TypeDefinition -> Eff KindCheckFailEff Context
-makeContext = undefined
-
-toTerms :: TypeDefinition -> Type
-toTerms = undefined
+makeContext td =
+  pure $ mempty & context .~ [(td ^. td'name, Type)]
 
 tyRefToType :: TyRef -> Eff KindCheckFailEff Type
-tyRefToType = undefined
-
-{-
--- Getting to localise potential API changes in the protos file.
-defToType :: Getter TyDef TypeDefinition
-defToType = to getter
-  where
-    getter :: TyDef -> TypeDefinition
-    getter td =
-      TypeDefinition
-        { _td'name = td ^. tyName . name . to unpack
-        , _td'variables = view (varName . name . to unpack) <$> (td ^. tyAbs . tyVars)
-        , _td'constructors = go (td ^. tyAbs . tyBody . maybe'tyBody)
-        }
-
-    go = \case
-      Just x -> case x of
-        TyBody'Opaque _ -> [] -- we do not need to TC Opaques?
-        TyBody'Sum s ->
-          let constrs = s ^. constructors
-          in fmap (\e -> (,)
-                    (e ^. constrName . name . to unpack)
-                    (productToType (e ^. PF.product . maybe'product))
-                  ) constrs
-      Nothing -> error ":FIXME: handle errors"
-      where
-        productToType :: Maybe Product'Product -> Type
-        productToType = \case
-          Just x -> case x of
-            Product'Empty' _ -> Type
-
-getLHS :: Getter TypeDefinition (Atom, Kind)
-getLHS = to getter
-  where
-    getter td = (td ^. td'name, foldr (:->:) Type tV)
-      where
-        tV = Type <$ (td ^. td'variables)
-
-getRHS :: Getter TypeDefinition [(Atom, Type)]
-getRHS = to getter
-  where
-    getter td = undefined
-      where
-        tv :: Type -> Type
-        tv = foldr1 (.) $ Abs <$> (td ^. td'variables)
--}
+tyRefToType tR = do
+  case tR ^. maybe'tyRef of
+    Just (TyRef'LocalTyRef t) -> pure $ Var $ t ^. tyName . name . to unpack
+    Just (TyRef'ForeignTyRef t) -> pure $ Var $ (t ^. moduleName . name . to unpack) <> "." <> (t ^. tyName . name . to unpack)
+    Nothing -> throwError $ InvalidProto "TyRef Cannot be empty"
