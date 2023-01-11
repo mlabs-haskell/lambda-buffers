@@ -379,7 +379,7 @@ testingContext =
         , ("List", Type :->: Type)
         , ("StateT", Type :->: (Type :->: Type) :->: Type :->: Type)
         , ("Opaque", Type)
-        , ("Voie", Type)
+        , ("Void", Type)
         ]
     , _addContext = []
     }
