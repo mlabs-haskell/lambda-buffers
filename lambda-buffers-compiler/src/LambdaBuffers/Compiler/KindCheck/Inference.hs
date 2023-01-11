@@ -22,13 +22,15 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 
 import Data.Bifunctor (Bifunctor (second))
 
+import Debug.Trace
+
 import Control.Monad.Freer
 import Control.Monad.Freer.Error
 import Control.Monad.Freer.Reader
 import Control.Monad.Freer.State
 import Control.Monad.Freer.Writer
 
-import Control.Lens (Getter, makeLenses, to, (^.))
+import Control.Lens (Getter, makeLenses, to, (&), (.~), (^.))
 
 import Prettyprinter
 
@@ -166,10 +168,19 @@ runDerive'' ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReade
 
 infer :: Context -> Type -> Either DError Kind
 infer ctx t = do
-  (d, c) <- runDerive'' ctx t
+  (d, c) <- runDerive'' (defTerms <> ctx) t
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. topKind
+  where
+    defTerms =
+      mempty
+        & context
+          .~ [ ("Either", Type :->: Type :->: Type)
+             , ("()", Type)
+             , ("Void", Type)
+             , ("(,)", Type :->: Type :->: Type)
+             ]
 
 -- | Creates the derivation
 derive :: Type -> Derive Derivation

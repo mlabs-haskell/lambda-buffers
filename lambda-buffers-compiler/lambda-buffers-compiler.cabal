@@ -89,8 +89,8 @@ common dependencies
     , proto-lens  >=0.7
 
 library
-  import:         common-language
-  import:         dependencies
+  import:          common-language
+  import:          dependencies
   build-depends:
     , containers                  >=0.6
     , freer-simple                >=1.2
@@ -100,11 +100,11 @@ library
     , text                        >=1.2
     , transformers                >=0.5
 
-  other-modules:
+  exposed-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Inference
 
-  hs-source-dirs: src
+  hs-source-dirs:  src
 
 executable lambda-buffers-compiler
   import:         common-language
@@ -127,6 +127,7 @@ test-suite tests
   build-depends:
     , containers
     , hedgehog
+    , lambda-buffers-compiler
     , QuickCheck
     , tasty
     , tasty-expected-failure
@@ -134,3 +135,5 @@ test-suite tests
     , tasty-hunit
     , tasty-quickcheck
     , transformers
+
+  other-modules:  Test.KindCheck
