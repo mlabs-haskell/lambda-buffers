@@ -17,8 +17,8 @@ compile opts = do
   errOrMod <- runFrontM (opts ^. importPaths) (opts ^. moduleFilepath)
   case errOrMod of
     Left err -> do
-      print "Frontend error"
+      putStrLn "Frontend error"
       print err
     Right mods -> do
-      print "OK"
+      putStrLn "OK"
       print $ "Compiler closure contains the following modules" <> show (Map.keys mods)

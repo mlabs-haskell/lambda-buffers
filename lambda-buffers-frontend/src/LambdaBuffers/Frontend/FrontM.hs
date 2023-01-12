@@ -1,6 +1,6 @@
 module LambdaBuffers.Frontend.FrontM (runFrontM) where
 
-import Control.Monad (foldM, when)
+import Control.Monad (foldM, void, when)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.State.Strict (MonadIO (liftIO), MonadTrans (lift), StateT (runStateT), gets, modify)
 import Control.Monad.Trans.Except (throwE)
@@ -17,7 +17,7 @@ import Data.Text (Text, unpack)
 import Data.Text.IO qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Strip (strip), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody), TyName, TyRef (TyRef))
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName, TyRef (TyRef))
 import System.Directory (findFiles)
 import System.FilePath (joinPath)
 import Text.Parsec (ParseError)
@@ -41,10 +41,13 @@ data FrontErr
   | MultipleModulesFound (ModuleName SourceInfo) [FilePath]
   | ImportCycleFound (ModuleName SourceInfo) (ModuleName ()) [ModuleName ()]
   | ModuleParseError FilePath ParseError
-  | ImportedNotFound (ModuleName SourceInfo) (ModuleName SourceInfo) (TyName SourceInfo) (Set (TyName SourceInfo))
+  | -- | File name does not match module name
+    ImportedNotFound (ModuleName SourceInfo) (ModuleName SourceInfo) (TyName SourceInfo) (Set (TyName SourceInfo))
   | InvalidModuleFilepath (ModuleName SourceInfo) FilePath FilePath
   | SymbolAlreadyImported (ModuleName SourceInfo) (Import SourceInfo) Symbol (ModuleName SourceInfo)
   | TyRefNotFound (ModuleName SourceInfo) (TyRef SourceInfo) Scope
+  | DuplicateTyDef (ModuleName SourceInfo) (TyDef SourceInfo)
+  | TyDefNameConflict (ModuleName SourceInfo) (TyDef SourceInfo) (ModuleName SourceInfo)
   deriving stock (Eq)
 
 instance Show FrontErr where
@@ -56,6 +59,8 @@ instance Show FrontErr where
   show (InvalidModuleFilepath mn gotModFp wantedFpSuffix) = "Module " <> show mn <> " loaded from a file path " <> gotModFp <> " but the file path must have the (module name derived) suffix " <> wantedFpSuffix
   show (SymbolAlreadyImported current imp sym alreadyInModuleName) = "Module " <> show current <> " imports a symbol " <> show sym <> " in the import statement " <> show imp <> " but the same symbol was already imported by " <> show alreadyInModuleName
   show (TyRefNotFound current tyR scope) = "Module " <> show current <> " references a type " <> show tyR <> " that wasn't found in the module scope " <> show scope
+  show (DuplicateTyDef _current tyDef) = show (tyDefInfo tyDef) <> ": " <> "Duplicate type definition with the name " <> show (tyName tyDef)
+  show (TyDefNameConflict _current tyDef im) = show (tyDefInfo tyDef) <> ": " <> "Type name " <> show (tyName tyDef) <> " conflicts with a type name imported from " <> show im
 
 type FrontM = ReaderT FrontRead (StateT FrontState (ExceptT FrontErr IO))
 
@@ -84,6 +89,9 @@ parseModule modFp modContent = do
   case modOrErr of
     Left err -> throwE' $ ModuleParseError modFp err
     Right m -> return m
+
+strip :: Functor f => f a -> f ()
+strip = void
 
 readModule :: ModuleName SourceInfo -> FrontM (Module SourceInfo)
 readModule modName = do
@@ -119,8 +127,9 @@ processModule m = local
         }
   )
   $ do
-    scope <- processImports m
-    checkReferences scope m
+    importedScope <- processImports m
+    localScope <- collectLocalScope m importedScope
+    checkReferences (localScope <> importedScope) m
     _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) m . importedModules)
     return m
 
@@ -199,3 +208,21 @@ collectImportedScope (Import isQual modName mayImports mayAlias _) m =
         )
         Set.empty
         importedTyNs
+
+collectLocalScope :: Module SourceInfo -> Scope -> FrontM Scope
+collectLocalScope m importedScope =
+  foldM
+    ( \totalScope tyDef@(TyDef tn _ _ _) -> do
+        let tyR = TyRef Nothing (strip tn) ()
+        case Map.lookup tyR totalScope of
+          Nothing -> case Map.lookup tyR importedScope of
+            Nothing -> return $ Map.insert tyR (moduleName m) totalScope
+            Just im -> do
+              cm <- asks current
+              throwE' $ TyDefNameConflict cm tyDef im
+          Just _ -> do
+            cm <- asks current
+            throwE' $ DuplicateTyDef cm tyDef
+    )
+    Map.empty
+    (moduleTyDefs m)
