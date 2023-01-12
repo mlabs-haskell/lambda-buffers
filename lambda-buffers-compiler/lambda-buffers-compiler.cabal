@@ -91,3 +91,41 @@ executable lambda-buffers-compiler
     , proto-lens                  >=0.7
 
   hs-source-dirs: app
+
+library
+  import:         common-language
+  exposed-modules:
+    Common.Match
+    Common.SourceTy
+    Common.Types
+    Gen.Generator
+    Gen.PP
+    Instances
+    Resolve.Rules
+    Resolve.Solve
+    Resolve.Derive
+    Gen.RustGen.RustTy
+    Gen.RustGen.Instances.Eq
+
+    ProtoCompat.ProtoCompat
+    Tests
+
+  hs-source-dirs:   typeclass-experiments/src
+  ghc-options:
+    -Wall -Wcompat -Widentities -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wmissing-export-lists
+    -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+
+  build-depends:
+      base          >=4.7 && <5
+    , containers
+    , row-types
+    , text
+    , transformers
+    , prettyprinter
+    , megaparsec
+    , mtl
+    , lambda-buffers-compiler-pb
+    , proto-lens
+    , generic-lens
+    , lens
