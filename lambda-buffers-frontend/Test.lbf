@@ -5,12 +5,9 @@ import A
 import qualified B
 import G.A
 import qualified G.A
-import C (A,B)
 import qualified C (A,B)
-import C as D (A,B)
-import C as D ()
-import C as D
-import C (X,Y)
+import qualified C as D (A,B)
+import qualified C as D ()
 
 sum
   Maybe

@@ -16,6 +16,7 @@ import Options.Applicative (
   metavar,
   prefs,
   progDesc,
+  short,
   showHelpOnEmpty,
   showHelpOnError,
   strOption,
@@ -29,12 +30,21 @@ importPathP :: Parser FilePath
 importPathP =
   strOption
     ( long "import-path"
+        <> short 'i'
         <> metavar "FILEPATH"
         <> help "Directory to look for LambdaBuffer Module source files (.lbf)"
     )
 
 compileOptsP :: Parser CompileOpts
-compileOptsP = CompileOpts <$> many importPathP
+compileOptsP =
+  CompileOpts
+    <$> many importPathP
+    <*> strOption
+      ( long "file"
+          <> short 'f'
+          <> metavar "FILEPATH"
+          <> help "LambdaBuffers file to compile"
+      )
 
 optionsP :: Parser Command
 optionsP =
