@@ -1,14 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-missing-import-lists #-}
-{-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
-{-# OPTIONS_GHC -Wno-missing-local-signatures #-}
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
-{-# OPTIONS_GHC -Wno-monomorphism-restriction #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
+-- This pragma^ is needed due to redundant constraint in Getter.
 module LambdaBuffers.Compiler.KindCheck.Inference (
-  getType,
   Kind (..),
   Context (..),
   Atom,
@@ -23,34 +16,51 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 
 import Data.Bifunctor (Bifunctor (second))
 
-import Control.Monad.Freer
-import Control.Monad.Freer.Error
-import Control.Monad.Freer.Reader
-import Control.Monad.Freer.State
-import Control.Monad.Freer.Writer
+import Control.Monad.Freer (Eff, Member, Members, run)
+import Control.Monad.Freer.Error (Error, runError, throwError)
+import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
+import Control.Monad.Freer.State (State, evalState, get, put)
+import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 
 import Control.Lens (Getter, makeLenses, to, (&), (.~), (^.))
 
-import Prettyprinter
+import Prettyprinter (
+  Doc,
+  Pretty (pretty),
+  braces,
+  comma,
+  encloseSep,
+  hang,
+  hsep,
+  lbracket,
+  line,
+  parens,
+  punctuate,
+  rbracket,
+  space,
+  (<+>),
+ )
 
 type Atom = String
+type Var = String
+
 infixr 8 :->:
 
 data Kind
   = Type
   | Kind :->: Kind
-  | KVar String
+  | KVar Atom
   deriving stock (Eq, Show)
 
 instance Pretty Kind where
   pretty = \case
-    Type -> pretty @String "*"
-    ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> pretty @String "→" <+> pretty z
-    x :->: y -> pretty x <+> pretty @String "→" <+> pretty y
+    Type -> "*"
+    ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> "→" <+> pretty z
+    x :->: y -> pretty x <+> "→" <+> pretty y
     KVar a -> pretty a
 
 data Type
-  = Var Atom
+  = Var Var
   | App Type Type
   | Abs String Type
   deriving stock (Eq, Show)
@@ -58,14 +68,14 @@ data Type
 instance Pretty Type where
   pretty = \case
     Var a -> pretty a
-    App t1 t2 -> show' t1 <> pretty @String " " <> show' t2
-    Abs a t1 -> pretty @String "λ" <> pretty a <> pretty @String "." <> pretty t1
+    App t1 t2 -> show' t1 <> " " <> show' t2
+    Abs a t1 -> "λ" <> pretty a <> "." <> pretty t1
     where
       show' :: Type -> Doc ann
       show' = \case
         Var a -> pretty a
         App t1 t2 -> parens $ show' t1 <+> show' t2
-        Abs a t1 -> parens $ pretty @String "λ" <> pretty a <> pretty @String "." <> show' t1
+        Abs a t1 -> parens $ "λ" <> pretty a <> "." <> show' t1
 
 data Context = Context
   { _context :: [(Atom, Kind)]
@@ -77,11 +87,11 @@ makeLenses ''Context
 
 instance Pretty Context where
   pretty c = case c ^. addContext of
-    [] -> pretty @String "Γ"
-    ctx -> pretty @String "Γ" <+> pretty @String "∪" <+> braces (setPretty ctx)
+    [] -> "Γ"
+    ctx -> "Γ" <+> "∪" <+> braces (setPretty ctx)
     where
       setPretty :: [(Atom, Kind)] -> Doc ann
-      setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> pretty @String ":" <+> pretty t)
+      setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> ":" <+> pretty t)
 
 instance Semigroup Context where
   (Context a1 b1) <> (Context a2 b2) = Context (a1 <> a2) (b1 <> b2)
@@ -97,7 +107,7 @@ newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
   deriving stock (Show, Eq)
 
 instance Pretty Judgement where
-  pretty (Judgement (c, t, k)) = pretty c <> pretty @String " ⊢ " <> pretty t <+> pretty @String ":" <+> pretty k
+  pretty (Judgement (c, t, k)) = pretty c <> " ⊢ " <> pretty t <+> ":" <+> pretty k
 
 data Derivation
   = Axiom Judgement
@@ -112,7 +122,7 @@ instance Pretty Derivation where
     Application j d1 d2 -> dNest j [d1, d2]
     where
       dNest :: forall a b c. (Pretty a, Pretty b) => a -> [b] -> Doc c
-      dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> pretty @String "∧" <> space) (pretty <$> ds))
+      dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> "∧" <> space) (pretty <$> ds))
 
 data InferErr
   = Misc String
@@ -126,16 +136,16 @@ newtype Constraint = Constraint (Kind, Kind)
   deriving stock (Show, Eq)
 
 instance Pretty Constraint where
-  pretty (Constraint (t1, t2)) = pretty t1 <+> pretty @String "=" <+> pretty t2
+  pretty (Constraint (t1, t2)) = pretty t1 <+> "=" <+> pretty t2
 
 newtype Substitution = Substitution {getSubstitution :: (Atom, Kind)}
   deriving stock (Show, Eq)
 
 instance Pretty Substitution where
-  pretty (Substitution (a, k)) = pretty a <+> pretty @String "↦" <+> pretty k
+  pretty (Substitution (a, k)) = pretty a <+> "↦" <+> pretty k
 
 newtype DerivationContext = DC
-  { freshVarStream :: [Atom]
+  { _freshVarStream :: [Atom]
   }
 
 type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error InferErr]
@@ -155,14 +165,6 @@ type Derive a =
 
 --------------------------------------------------------------------------------
 -- Runners
-
--- | Run derivation builder - not unified yet.
-runDerive'' :: Type -> Either InferErr (Derivation, [Constraint])
-runDerive'' = runDerive testingContext
-
--- | Run derivation - throw error.
-runDerive' :: Type -> (Derivation, [Constraint])
-runDerive' t = either (error.show) id $ runDerive'' t
 
 -- | Run derivation builder - not unified yet.
 runDerive :: Context -> Type -> Either InferErr (Derivation, [Constraint])
@@ -281,8 +283,10 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
            in (sub :) <$> unify (sub `substituteIn` xs)
     _ -> unify $ Constraint (r, l) : xs
   where
+    nope :: forall eff b a. (Member (Error InferErr) eff, Pretty b) => b -> Eff eff a
     nope c = throwError $ ImpossibleUnificationErr $ unlines ["Cannot unify: " <> show (pretty c)]
 
+    appearsErr :: forall eff a. Member (Error InferErr) eff => String -> Kind -> Eff eff a
     appearsErr var ty =
       throwError $
         RecursiveSubstitutionErr $
@@ -311,10 +315,6 @@ applySubstitution s@(Substitution (a, t)) k = case k of
   KVar v -> if v == a then t else k
 
 -- | Runs the unifier.
-runUnify :: forall effs. [Constraint] -> Eff effs (Either InferErr [Substitution])
-runUnify = runError . unify
-
--- | Runs the unifier.
 runUnify' :: [Constraint] -> Either InferErr [Substitution]
 runUnify' = run . runError . unify
 
@@ -333,81 +333,8 @@ substitute s d = case d of
       [] -> c
       xs -> Context ctx $ second (applySubstitution subs) <$> xs
 
--- | Given a term (and the default context) - gives a Kind.
-getType :: Type -> Either InferErr Kind
-getType t = do
-  (d, c) <- runDerive'' t
-  s <- runUnify' c
-  let res = foldl (flip substitute) d s
-  pure $ res ^. topKind
-
-----------------------------------------------------------------------------------
--- Testing functions
--- :fixme: add tests, not this.
-
--- | For testing.
-getType' :: Type -> IO ()
-getType' t = do
-  let (d, c) = runDerive' t
-  print $ pretty (d, c)
-  putStrLn ""
-  let s = either (error.show) id $ runUnify' c
-  print $ pretty s
-  putStrLn ""
-  let res = go d s
-  print $ pretty res
-  putStrLn ""
-  putStrLn $ show (pretty t) <> ":" <> (show . pretty $ res ^. topKind)
-  where
-    go = foldl (flip substitute)
+-- :fixme: not avoiding any clashes
 
 -- | Fresh atoms
 atoms :: [Atom]
 atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure [x, y]
-
--- | Default context -- for testing.
-testingContext :: Context
-testingContext =
-  Context
-    { _context =
-        [ ("Either", Type :->: Type :->: Type)
-        , ("Maybe", Type :->: Type)
-        , ("(,)", Type :->: Type :->: Type)
-        , ("Int", Type)
-        , ("Bool", Type)
-        , ("Map", Type :->: Type :->: Type)
-        , ("List", Type :->: Type)
-        , ("StateT", Type :->: (Type :->: Type) :->: Type :->: Type)
-        , ("Opaque", Type)
-        , ("Void", Type)
-        ]
-    , _addContext = []
-    }
-
--- >>> getType' tterm
--- Cannot unify: * → b1 = *
-tterm = App (App (Abs "b" (App (Var "b") (Var "Int"))) (Var "Int")) (App (Var "Int") (Var "Int"))
-
--- >>> getType tterm2
--- Right Type
-tterm2 = Var "Int"
-
--- >>> getType tterm3
--- Right (KVar "a1" :->: ((Type :->: KVar "c1") :->: KVar "c1"))
-tterm3 = Abs "y" $ Abs "x" $ App (Var "x") (Var "Int")
-
--- >>> getType tterm4
--- Cannot unify: * → b1 = *
-tterm4 = App (Abs "x" $ App (Var "x") (Var "Int")) (Var "Int")
-
--- >>> getType tterm5
--- Right Type
-tterm5 = App (App (Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))) (Var "Maybe")) (Var "Int")
-
--- >>>  getType tterm6
--- Right ((KVar "d1" :->: KVar "d1") :->: (KVar "d1" :->: KVar "d1"))
-tterm6 = Abs "F" $ Abs "a" $ App (Var "F") (App (Var "F") (Var "a"))
-
--- >>>  getType tterm7
--- Right Type
-tterm7 = App (App (App (Var "StateT") (Var "Int")) (Var "Maybe")) (Var "Int")

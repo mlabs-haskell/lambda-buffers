@@ -1,13 +1,7 @@
-{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-{-# OPTIONS_GHC -Wno-missing-import-lists #-}
-{-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-{- | Note: At the moment the Kind Checker disregrads multiple Modules for
-simplicity of testing and developing. This will be changed ASAP.
+{- | Note: At the moment the Kind Checker disregards multiple Modules for
+simplicity of testing and developing. This will be changed ASAP. :fixme:
 -}
 module LambdaBuffers.Compiler.KindCheck (
   KindCheckFailure (..),
@@ -20,41 +14,30 @@ module LambdaBuffers.Compiler.KindCheck (
 ) where
 
 import Control.Exception (Exception)
-import Control.Lens (Getter, Identity (runIdentity), folded, folding, makeLenses, mapped, to, view, (&), (.~), (^.), (^..), _Just)
-import Control.Monad.Freer (Eff, Members, interpret, run)
-import Control.Monad.Freer.Error (Error, catchError, runError, throwError)
-import Control.Monad.Freer.State (get, modify)
+import Control.Lens (folded, makeLenses, to, (&), (.~), (^.), (^..))
+import Control.Monad.Freer (Eff, interpret, run)
+import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.TH (makeEffect)
-import Data.String ()
 import Data.Text (Text, unpack)
 import LambdaBuffers.Compiler.KindCheck.Inference (
-  Atom,
   Context,
-  DeriveEff,
-  DeriveM,
   InferErr,
   Kind (Type, (:->:)),
-  Type (..),
+  Type (Abs, App, Var),
   context,
   infer,
  )
 
 import Control.Monad (void)
-import Data.Foldable (traverse_)
 import Data.Traversable (for)
 import Proto.Compiler (
-  ConstrName,
-  Product,
   Product'NTuple,
   Product'Product (Product'Empty', Product'Ntuple, Product'Record'),
   Product'Record,
-  Product'Record'Field,
   Sum,
-  Sum'Constructor,
   Ty,
   Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar),
   TyApp,
-  TyBody,
   TyBody'TyBody (TyBody'Opaque, TyBody'Sum),
   TyDef,
   TyRef,
@@ -65,7 +48,6 @@ import Proto.Compiler_Fields as PF (
   constructors,
   fieldTy,
   fields,
-  maybe'empty,
   maybe'product,
   maybe'ty,
   maybe'tyBody,
@@ -100,7 +82,9 @@ data KindCheckFailure
 
 instance Exception KindCheckFailure
 
--- | Validated Type Definition.
+{- | Validated Type Definition.
+ :fixme: Add to compiler.proto
+-}
 data TypeDefinition = TypeDefinition
   { _td'name :: String
   , _td'variables :: [String]
