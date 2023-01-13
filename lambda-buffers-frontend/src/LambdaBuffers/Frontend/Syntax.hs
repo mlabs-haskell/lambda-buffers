@@ -18,10 +18,8 @@ module LambdaBuffers.Frontend.Syntax (
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
-  testSourceInfo,
 ) where
 
-import Data.List qualified as List
 import Data.Text (Text)
 
 data Module info = Module
@@ -39,7 +37,7 @@ data Import info = Import
   , alias :: Maybe (ModuleAlias info)
   , importInfo :: info
   }
-  deriving stock (Eq, Ord, Functor, Foldable, Traversable)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data Ty info
   = TyVar (VarName info) info
@@ -70,13 +68,13 @@ data ModuleName info = ModuleName [ModuleNamePart info] info deriving stock (Eq,
 
 data ModuleNamePart info = ModuleNamePart Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data ModuleAlias info = ModuleAlias (ModuleName info) info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+data ModuleAlias info = ModuleAlias (ModuleName info) info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data VarName info = VarName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+data VarName info = VarName Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data TyName info = TyName Text info deriving stock (Eq, Ord, Functor, Foldable, Traversable)
+data TyName info = TyName Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data TyRef info = TyRef (Maybe (ModuleAlias info)) (TyName info) info deriving stock (Eq, Ord, Functor, Foldable, Traversable)
+data TyRef info = TyRef (Maybe (ModuleAlias info)) (TyName info) info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data ConstrName info = ConstrName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
@@ -103,19 +101,3 @@ data SourcePos = SourcePos
 
 instance Show SourcePos where
   show (SourcePos r c) = show r <> ":" <> show c
-
-testSourceInfo :: SourceInfo
-testSourceInfo = SourceInfo "test" (SourcePos 0 0) (SourcePos 0 0)
-
--- Instances
-
-instance Show info => Show (Import info) where
-  show im = "import " <> if importQualified im then "qualified " else " " <> show (importModuleName im) <> maybe "" (\al -> " as " <> show al) (alias im) <> maybe "" (\imps -> " (" <> List.intercalate "," (show <$> imps) <> ")") (imported im) <> show (importInfo im)
-
-instance Show info => Show (TyName info) where
-  show (TyName tn _) = show tn
-
-instance Show info => Show (TyRef info) where
-  show (TyRef mayModAlias tyN _) = case mayModAlias of
-    Nothing -> show tyN
-    Just ma -> show ma <> "." <> show tyN

@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseTest', parseImport, runParser) where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
@@ -15,17 +15,6 @@ type Parser s m a = ParsecT s () m a
 
 runParser :: (Stream s IO Char) => Parser s IO a -> SourceName -> s -> IO (Either ParseError a)
 runParser p = runParserT (p <* eof) ()
-
-parseTest' :: (Stream s IO Char, Show a) => Parser s IO a -> s -> IO (Either String a)
-parseTest' p input = do
-  resOrErr <- runParserT (p <* eof) () "test" input
-  case resOrErr of
-    Left err -> do
-      print err
-      return $ Left $ show err
-    Right res -> do
-      print res
-      return $ Right res
 
 parseUpperCamelCase :: Stream s m Char => Parser s m Text
 parseUpperCamelCase = label' "UpperCamelCase" $ fromString <$> ((:) <$> upper <*> many alphaNum)
