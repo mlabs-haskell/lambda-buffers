@@ -27,7 +27,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          allComponent.configureFlags = [ "-f-dev" ];
+          lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
         };
       })
     ];
