@@ -8,6 +8,8 @@ pkgs.mkShell {
 
     (pkgs.haskellPackages.ghcWithPackages (pkgs: [
       pkgs.text
+      pkgs.unification-fd
+      pkgs.HUnit
     ]))
     pkgs.haskell-language-server
 
