@@ -1,0 +1,4 @@
+module B
+
+sum A = MkA
+sum B = MkB

@@ -1,3 +1,0 @@
-module A
-
-sum A a = B a | C a a

@@ -16,8 +16,10 @@ import Data.Set qualified as Set
 import Data.Text (Text, unpack)
 import Data.Text.IO qualified as Text
 import Data.Traversable (for)
+import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName, TyRef (TyRef))
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef))
+import Prettyprinter (Pretty (pretty), (<+>))
 import System.Directory (findFiles)
 import System.FilePath (joinPath)
 import Text.Parsec (ParseError)
@@ -31,18 +33,18 @@ data FrontRead = FrontRead
 
 newtype FrontState = FrontState
   { importedModules :: Map (ModuleName ()) (Module SourceInfo)
-  } -- deriving stock (Eq, Show)
+  }
+  deriving stock (Eq, Show)
 
 type Symbol = TyRef ()
 type Scope = Map Symbol (ModuleName SourceInfo)
 
 data FrontErr
-  = ModuleNotFound (ModuleName SourceInfo) [FilePath]
-  | MultipleModulesFound (ModuleName SourceInfo) [FilePath]
-  | ImportCycleFound (ModuleName SourceInfo) (ModuleName ()) [ModuleName ()]
+  = ModuleNotFound (ModuleName SourceInfo) (Import SourceInfo) [FilePath]
+  | MultipleModulesFound (ModuleName SourceInfo) (Import SourceInfo) [FilePath]
+  | ImportCycleFound (ModuleName SourceInfo) (Import SourceInfo) [ModuleName ()]
   | ModuleParseError FilePath ParseError
-  | -- | File name does not match module name
-    ImportedNotFound (ModuleName SourceInfo) (ModuleName SourceInfo) (TyName SourceInfo) (Set (TyName SourceInfo))
+  | ImportedNotFound (ModuleName SourceInfo) (ModuleName SourceInfo) (TyName SourceInfo) (Set (TyName SourceInfo))
   | InvalidModuleFilepath (ModuleName SourceInfo) FilePath FilePath
   | SymbolAlreadyImported (ModuleName SourceInfo) (Import SourceInfo) Symbol (ModuleName SourceInfo)
   | TyRefNotFound (ModuleName SourceInfo) (TyRef SourceInfo) Scope
@@ -51,16 +53,16 @@ data FrontErr
   deriving stock (Eq)
 
 instance Show FrontErr where
-  show (ModuleNotFound mn impPaths) = "Module " <> show mn <> " not found in import paths " <> show impPaths
-  show (MultipleModulesFound mn conflictingPaths) = "Module " <> show mn <> " found in multiple files " <> show conflictingPaths
-  show (ImportCycleFound current mn visited) = "Module " <> show current <> " tried to load module " <> show mn <> " which constitutes a cycle " <> show visited
-  show (ModuleParseError fp err) = "Module in file " <> show fp <> " failed to parse with: " <> show err
-  show (ImportedNotFound current mn tn available) = "Module " <> show current <> " tried to load type: " <> show tn <> " but none was found in " <> show mn <> ", did you mean one of " <> show available
-  show (InvalidModuleFilepath mn gotModFp wantedFpSuffix) = "Module " <> show mn <> " loaded from a file path " <> gotModFp <> " but the file path must have the (module name derived) suffix " <> wantedFpSuffix
-  show (SymbolAlreadyImported current imp sym alreadyInModuleName) = "Module " <> show current <> " imports a symbol " <> show sym <> " in the import statement " <> show imp <> " but the same symbol was already imported by " <> show alreadyInModuleName
-  show (TyRefNotFound current tyR scope) = "Module " <> show current <> " references a type " <> show tyR <> " that wasn't found in the module scope " <> show scope
-  show (DuplicateTyDef _current tyDef) = show (tyDefInfo tyDef) <> ": " <> "Duplicate type definition with the name " <> show (tyName tyDef)
-  show (TyDefNameConflict _current tyDef im) = show (tyDefInfo tyDef) <> ": " <> "Type name " <> show (tyName tyDef) <> " conflicts with a type name imported from " <> show im
+  show (ModuleNotFound _cm imp impPaths) = show $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
+  show (MultipleModulesFound _cm imp conflictingPaths) = show $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
+  show (ImportCycleFound _cm imp visited) = show $ pretty (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
+  show (ModuleParseError _fp err) = show $ pretty err
+  show (ImportedNotFound _cm mn tn@(TyName _ info) available) = show $ pretty info <+> "Type" <+> pretty tn <+> "not found in module" <+> pretty mn <+> ", did you mean one of" <+> pretty (Set.toList available)
+  show (InvalidModuleFilepath mn@(ModuleName _ info) gotModFp wantedFpSuffix) = show $ pretty info <+> "File name" <+> pretty gotModFp <+> "doesn't match module name" <+> pretty mn <+> "expected" <+> pretty wantedFpSuffix
+  show (SymbolAlreadyImported _cm imp sym alreadyInModuleName) = show $ pretty (importInfo imp) <+> "Symbol" <+> pretty sym <+> "already imported from module" <+> pretty alreadyInModuleName
+  show (TyRefNotFound _cm tyR@(TyRef _ _ info) scope) = show $ pretty info <+> ": Type " <> pretty tyR <+> "not found in the module's scope" <+> (pretty . Map.keys $ scope)
+  show (DuplicateTyDef _cm tyDef) = show $ pretty (tyDefInfo tyDef) <+> "Duplicate type definition with the name" <+> pretty (tyName tyDef)
+  show (TyDefNameConflict _cm tyDef imn) = show $ pretty (tyDefInfo tyDef) <+> "Type name" <+> pretty (tyName tyDef) <+> "conflicts with an imported type name from module" <+> pretty imn
 
 type FrontM = ReaderT FrontRead (StateT FrontState (ExceptT FrontErr IO))
 
@@ -77,11 +79,11 @@ throwE' = lift . lift . throwE
 moduleNameToFilepath :: ModuleName info -> FilePath
 moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <> ".lbf"
 
-checkCycle :: ModuleName () -> FrontM ()
-checkCycle modName = do
+checkCycle :: Import SourceInfo -> FrontM ()
+checkCycle imp = do
   ms <- asks visited
   cm <- asks current
-  when (modName `elem` ms) $ throwE' $ ImportCycleFound cm modName ms
+  when ((strip . importModuleName $ imp) `elem` ms) $ throwE' $ ImportCycleFound cm imp ms
 
 parseModule :: FilePath -> Text -> FrontM (Module SourceInfo)
 parseModule modFp modContent = do
@@ -93,22 +95,27 @@ parseModule modFp modContent = do
 strip :: Functor f => f a -> f ()
 strip = void
 
-readModule :: ModuleName SourceInfo -> FrontM (Module SourceInfo)
-readModule modName = do
+importModule :: Import SourceInfo -> FrontM (Module SourceInfo)
+importModule imp = do
+  let modName = importModuleName imp
   ims <- gets importedModules
   case Map.lookup (strip modName) ims of
     Nothing -> do
       ips <- asks importPaths
       found <- liftIO $ findFiles ips (moduleNameToFilepath modName)
       case found of
-        [] -> throwE' $ ModuleNotFound modName ips
+        [] -> do
+          cm <- asks current
+          throwE' $ ModuleNotFound cm imp ips
         [modFp] -> do
           modContent <- liftIO $ Text.readFile modFp
           modOrErr <- liftIO $ Parsec.runParser Parsec.parseModule modFp modContent
           case modOrErr of
             Left err -> throwE' $ ModuleParseError modFp err
             Right m -> return m
-        modFps -> throwE' $ MultipleModulesFound modName modFps
+        modFps -> do
+          cm <- asks current
+          throwE' $ MultipleModulesFound cm imp modFps
     Just m -> return m
 
 processFile :: FilePath -> FrontM (Module SourceInfo)
@@ -177,9 +184,8 @@ processImports m =
 
 processImport :: Import SourceInfo -> FrontM (Set Symbol)
 processImport imp = do
-  let modNameToImport = importModuleName imp
-  checkCycle (strip modNameToImport)
-  im <- readModule modNameToImport >>= processModule
+  checkCycle imp
+  im <- importModule imp >>= processModule
   collectImportedScope imp im
 
 collectImportedScope :: Import SourceInfo -> Module SourceInfo -> FrontM (Set Symbol)

@@ -1,9 +1,0 @@
-module C
-
-import D
-
-sum C = F
-
-sum A = F
-
-sum B = F
