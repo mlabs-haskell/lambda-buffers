@@ -26,6 +26,9 @@
           # pre-commit-hooks.nix
           fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
 
+          # pre-commit-hooks.nix
+          apply-refact = pkgs.haskellPackages.apply-refact;
+
           pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
             inherit fourmolu;
             protoHooks = pbnix-lib.preCommitHooks { inherit pkgs; };
@@ -35,6 +38,7 @@
             inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt nix-linter cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
             inherit (pkgs) protolint txtpbfmt;
             inherit fourmolu;
+            inherit apply-refact;
           };
 
           preCommitDevShell = pkgs.mkShell {

@@ -8,10 +8,6 @@ synopsis:      Lambda Buffers compiler
 author:        MLabs LTD
 maintainer:    info@mlabs.city
 
--- A copyright notice.
--- copyright:
--- category:
-
 flag dev
   description: Enable non-strict compilation for development
   manual:      True
@@ -21,6 +17,7 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-all-missed-specialisations -Wno-missing-kind-signatures
 
   if !flag(dev)
     ghc-options: -Werror
@@ -71,6 +68,7 @@ common common-language
     ScopedTypeVariables
     StandaloneDeriving
     StandaloneKindSignatures
+    TemplateHaskell
     TraditionalRecordSyntax
     TupleSections
     TypeApplications
@@ -81,13 +79,57 @@ common common-language
 
   default-language:   Haskell2010
 
+common common-dependencies
+  build-depends:
+    , base          >=4.16
+    , containers    >=0.6
+    , lens          >=5.2
+    , proto-lens    >=0.7
+    , text          >=1.2
+    , transformers  >=0.5
+
+library
+  import:          common-language
+  import:          common-dependencies
+  build-depends:
+    , containers                  >=0.6
+    , freer-simple                >=1.2
+    , lambda-buffers-compiler-pb  >=0.1.0.0
+    , mtl                         >=2.2
+    , prettyprinter               >=1.7
+
+  exposed-modules:
+    LambdaBuffers.Compiler.KindCheck
+    LambdaBuffers.Compiler.KindCheck.Inference
+
+  hs-source-dirs:  src
+
 executable lambda-buffers-compiler
-  import:         common-language  
+  import:         common-language
+  import:         common-dependencies
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
-    , lambda-buffers-compiler-pb
+    , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , proto-lens                  >=0.7
 
   hs-source-dirs: app
+
+test-suite tests
+  import:         common-language
+  import:         common-dependencies
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , hedgehog                 >=1
+    , lambda-buffers-compiler
+    , QuickCheck               >=2
+    , tasty                    >=1.4
+    , tasty-expected-failure   >=0.12
+    , tasty-hedgehog           >=1.4
+    , tasty-hunit              >=0.10
+    , tasty-quickcheck         >=0.10
+
+  other-modules:  Test.KindCheck

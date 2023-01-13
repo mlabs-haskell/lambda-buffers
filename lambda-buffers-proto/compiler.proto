@@ -62,6 +62,13 @@ message TyVar {
   SourceInfo source_info = 2;
 }
 
+// Only available in TyDef context and not Ty
+message TyAbs {
+  repeated TyVar ty_vars = 1;
+  TyBody ty_body = 2;
+  SourceInfo source_info = 3;
+}
+
 message TyApp {
   Ty ty_func = 1;
   repeated Ty ty_args = 2;
@@ -157,9 +164,8 @@ Once introduced in the module scope, TyDefs are referred to using TyRef term.
 */
 message TyDef {
   TyName ty_name = 1;
-  repeated TyArg ty_args = 2;
-  TyBody ty_body = 3;
-  SourceInfo source_info = 4;
+  TyAbs ty_abs = 2;
+  SourceInfo source_info = 3;
 }
 
 /* Type arguments
