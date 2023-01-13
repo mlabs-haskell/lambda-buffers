@@ -106,11 +106,12 @@ library
 executable lambda-buffers-frontend-cli
   import:         common-language
   build-depends:
-    , base                     >=4.16
-    , containers               >=0.6
+    , base                        >=4.16
+    , containers                  >=0.6
+    , lambda-buffers-compiler-pb  >=0.1
     , lambda-buffers-frontend
-    , lens                     >=5.2
-    , optparse-applicative     >=0.17
+    , lens                        >=5.2
+    , optparse-applicative        >=0.17
     , prettyprinter
 
   hs-source-dirs: app

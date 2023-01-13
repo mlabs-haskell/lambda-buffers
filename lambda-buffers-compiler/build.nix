@@ -40,10 +40,6 @@ let
 
       nativeBuildInputs = builtins.attrValues commonTools;
 
-      additional = ps: [
-        ps.lambda-buffers-compiler-pb
-      ];
-
       tools = {
         cabal = { };
         haskell-language-server = { };

@@ -5,6 +5,7 @@ import Data.Map qualified as Map
 import LambdaBuffers.Frontend.FrontM (runFrontM)
 import LambdaBuffers.Frontend.PPrint ()
 import Prettyprinter (Pretty (pretty))
+import Proto.Compiler ()
 
 data CompileOpts = CompileOpts
   { _importPaths :: [FilePath]
