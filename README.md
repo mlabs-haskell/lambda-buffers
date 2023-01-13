@@ -4,6 +4,8 @@
 
 ## Documentation
 
+- [compiler](./docs/compiler.md)
+
 ## Getting started
 
 ### Installing Nix
