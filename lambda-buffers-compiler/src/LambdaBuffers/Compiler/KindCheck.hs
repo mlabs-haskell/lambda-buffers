@@ -18,7 +18,7 @@ import Control.Lens (folded, makeLenses, to, (&), (.~), (^.), (^..))
 import Control.Monad.Freer (Eff, interpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.TH (makeEffect)
-import Data.Text (Text, unpack)
+import Data.Text (Text, intercalate, unpack)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   Context,
   InferErr,
@@ -32,7 +32,7 @@ import Control.Monad (void)
 import Data.Traversable (for)
 import Proto.Compiler (
   Product'NTuple,
-  Product'Product (Product'Empty', Product'Ntuple, Product'Record'),
+  Product'Product (Product'Ntuple, Product'Record'),
   Product'Record,
   Sum,
   Ty,
@@ -54,6 +54,7 @@ import Proto.Compiler_Fields as PF (
   maybe'tyRef,
   moduleName,
   name,
+  parts,
   product,
   tyAbs,
   tyArgs,
@@ -171,7 +172,6 @@ sumToType sumT = do
     for
       products
       $ \case
-        Just (Product'Empty' _) -> pure $ Var "()"
         Just (Product'Ntuple nt) -> nTupleToType nt
         Just (Product'Record' re) -> recordToType re
         Nothing -> throwError $ InvalidProto "Every constructor should have a product defining it"
@@ -236,5 +236,5 @@ tyRefToType :: TyRef -> Eff KindCheckFailEff Type
 tyRefToType tR = do
   case tR ^. maybe'tyRef of
     Just (TyRef'LocalTyRef t) -> pure $ Var $ t ^. tyName . name . to unpack
-    Just (TyRef'ForeignTyRef t) -> pure $ Var $ (t ^. moduleName . name . to unpack) <> "." <> (t ^. tyName . name . to unpack)
+    Just (TyRef'ForeignTyRef t) -> pure $ Var $ (t ^. moduleName . parts . to (\ps -> unpack $ intercalate "." [p ^. name | p <- ps])) <> "." <> (t ^. tyName . name . to unpack)
     Nothing -> throwError $ InvalidProto "TyRef Cannot be empty"

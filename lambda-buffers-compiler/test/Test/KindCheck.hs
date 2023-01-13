@@ -2,10 +2,19 @@
 
 module Test.KindCheck (test) where
 
-import LambdaBuffers.Compiler.KindCheck
-import LambdaBuffers.Compiler.KindCheck.Inference
-import Test.Tasty
-import Test.Tasty.HUnit
+import LambdaBuffers.Compiler.KindCheck (
+  KindCheckFailure (InferenceFailed),
+  TypeDefinition (TypeDefinition, _td'name, _td'sop, _td'variables),
+  kindCheckType,
+  runKindCheckEff,
+ )
+import LambdaBuffers.Compiler.KindCheck.Inference (
+  InferErr (ImpossibleUnificationErr),
+  Kind (Type, (:->:)),
+  Type (Abs, App, Var),
+ )
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase, (@?=))
 
 test :: TestTree
 test = testGroup "KindChecker Tests" [t1, t2, t3, t4, t5]
