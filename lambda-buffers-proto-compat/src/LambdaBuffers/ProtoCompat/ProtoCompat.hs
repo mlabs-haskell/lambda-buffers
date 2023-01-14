@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
 {-# OPTIONS_GHC -Wno-missing-deriving-strategies #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-module ProtoCompat.ProtoCompat where
+module LambdaBuffers.ProtoCompat.ProtoCompat where
 
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import Data.Text (Text)

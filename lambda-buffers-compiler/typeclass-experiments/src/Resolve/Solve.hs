@@ -48,7 +48,7 @@ subV varNm t = \case
    Note that ONLY PatVars which occur in the Instance *HEAD* are replaced, though they
    are replaced in the instance superclasses as well (if they occur there).
 -}
-subst :: Rule l a -> Pat -> Rule l a
+subst :: Rule l -> Pat -> Rule l
 subst cst@(C _ t :<= _) ty = mapPat (go (getSubs t ty)) cst
   where
     go :: [(Text, Pat)] -> Pat -> Pat

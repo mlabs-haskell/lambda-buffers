@@ -73,6 +73,13 @@
           };
           compilerFlake = compilerBuild.compilerHsNixProj.flake { };
 
+          protoCompatBuild = import ./lambda-buffers-proto-compat/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+            inherit (protosBuild) compilerHsPb;
+            inherit (pre-commit-check) shellHook;
+          };
+          protoCompatFlake = protoCompatBuild.hsNixProj.flake { };
+
           # Utilities
           # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
@@ -88,6 +95,7 @@
             dev-experimental = experimentalDevShell;
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
+            dev-proto-compat = protoCompatFlake.devShell;
             dev-compiler = compilerFlake.devShell;
             default = preCommitDevShell;
           };

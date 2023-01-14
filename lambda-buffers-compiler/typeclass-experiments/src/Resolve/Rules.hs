@@ -33,16 +33,16 @@ data Class (l :: Lang) = Class
 
 data Constraint l = C (Class l) Pat deriving (Show, Eq, Ord)
 
-data Rule (l :: Lang) (a :: Type) where
-  (:<=) :: Constraint l -> [Constraint l] -> Rule l a -- P :<= P means: if Q applies then P applies
+data Rule (l :: Lang)  where
+  (:<=) :: Constraint l -> [Constraint l] -> Rule l
   deriving (Show, Eq, Ord)
 infixl 7 :<=
 
-type Instance l = Rule l (Class l)
+type Instance l = Rule l
 
 {- Map over the Pats inside of an Rule
 -}
-mapPat :: (Pat -> Pat) -> Rule l a -> Rule l a
+mapPat :: (Pat -> Pat) -> Rule l -> Rule l
 mapPat f (C c ty :<= is) = C c (f ty) :<=  map (\(C c p) -> C c (f p)) is
 
 -- just playing around
