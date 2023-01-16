@@ -16,17 +16,17 @@ Similarly, the _Compiler Output_ is also a _proto_ that is then consumed by
 _Codegen_ modules, able to be written in any programming environment capable of
 communicating via Google Protocol Buffers.
 
-## Checking type definitions
+## Checking Type Definitions
 
 The primary purpose of the compiler is to typecheck the schemata that users
 define via the _Frontend_. The schemata terms are ADT declarations and their
 types are kinds.
 
-Currently the schema language supports:
+Currently the schema language _Compiler_ supports:
 
- 1. types (such as `Int` or `Bool`),
+ 1. type terms of kind `Type` (such as `Int` or `Bool`),
 
- 2. and type functions (such as `Maybe` or `Either`).
+ 2. and type function terms of kind `Type → Type` (such as `Maybe` or `Either`).
 
 There are future plans to expand this to Higher Kinded Types (such as `MaybeT`,
 `StateT` etc.) - subject to research into _Codegen_ of such types in the target
@@ -37,28 +37,27 @@ Schemata terms must be monomorphically kinded, with polymorphic kinds defaulting
 to monomorphic ones. For example `Phantom a = Phantom` would resolve to the
 monomorphic kind `Type → Type` rather than the polymorphic kind `∀a. a → Type`.
 
-<!-- cstml comments: Is this true? I think it's an Aim not a requirement?
-:todo: -->
+## Checking Type Cardinality
 
-In addition to typechecking, the compiler must  perform a special check for
-recursive types: It must validate that a recursive type is inhabited (or
-inhabitable). The purpose of this check is to ensure that any schema which
-passes validation is (in principle) a schema for which type definitions and
-typeclass "instances" (which may be simple functions in languages without
-typeclass support) can be generated. As an example, the compiler should reject
-types such as `data F a = F (F a)`, which is uninhabited.
+In addition to typechecking, the compiler could perform a special check for
+recursive types, namely: a check to see if a recursive type is inhabited. The
+purpose of this check is to ensure that any schema which passes validation is
+(in principle) a schema for which type definitions and typeclass "instances"
+(which may be simple functions in languages without typeclass support) can be
+generated. As an example, the compiler should be able to reject types such as
+`data F a = F (F a)`, which is uninhabited. This is an additional feature that
+we're currently reviewing.
 
-<!-- cstml comments: Is this true? Seems as though this should fail
-parsing. :todo: -->
+## Normalising Type Definitions
 
-(Provisional:) Finally, the compiler should _normalize_ expressions as far as it
-is able to. For example, it may be possible to define a data type in the schema
-language in a form similar to: `data G a = G ((Either) ((Maybe) a) Int)`, where
-the parentheses indicate application. Ideally, this would be normalized to `data
-G a = G (Either (Maybe a) Int)` to result in cleaner (and more performant) code
-generation.
+Finally, the compiler should be able to _normalise_ expressions. For example, it
+may be possible to define a data type in the schema language in a form similar
+to: `data G a = G ((Either) ((Maybe) a) Int)`, where the bracketing indicates
+the order of application within the term. The example term would normalise to
+`data G a = G (Either (Maybe a) Int)` - resulting in a cleaner (and more
+performant) code generation.
 
-## Checking type class definitions and instance clauses
+## Checking Typeclass Definitions and Instance Clauses
 
 The _Compiler_ should, if possible, ensure that all instance declarations for
 schemata are derivable using hard-coded derivation axioms. Because the checks
@@ -69,3 +68,6 @@ when the design of the typeclass system has been fleshed out more.
 ## Unsolved Problems
 
 - [ ] How do we represent recursive types in our lambda calculus AST?
+
+- [ ] How would cardinality checking be integrated within our current checking
+      strategy?
