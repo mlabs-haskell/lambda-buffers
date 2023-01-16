@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.FrontM (runFrontM, FrontErr (..), parseModule) where
+module LambdaBuffers.Frontend.FrontM (runFrontend, FrontendError (..), parseModule) where
 
 import Control.Monad (foldM, void, when)
 import Control.Monad.Except (ExceptT, runExceptT)
@@ -6,7 +6,6 @@ import Control.Monad.State.Strict (MonadIO (liftIO), MonadTrans (lift), StateT (
 import Control.Monad.Trans.Except (throwE)
 import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, local)
 import Data.Foldable (for_)
-import Data.Kind (Type)
 import Data.List (isSuffixOf)
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -22,7 +21,7 @@ import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import,
 import Prettyprinter (Doc, LayoutOptions (layoutPageWidth), PageWidth (Unbounded), Pretty (pretty), defaultLayoutOptions, layoutPretty, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 import System.Directory (findFiles)
-import System.FilePath (joinPath)
+import System.FilePath (joinPath, (<.>))
 import Text.Parsec (ParseError)
 
 data FrontRead = FrontRead
@@ -40,7 +39,7 @@ newtype FrontState = FrontState
 type Symbol = TyRef ()
 type Scope = Map Symbol (ModuleName SourceInfo)
 
-data FrontErr
+data FrontendError
   = ModuleNotFound (ModuleName SourceInfo) (Import SourceInfo) [FilePath]
   | MultipleModulesFound (ModuleName SourceInfo) (Import SourceInfo) [FilePath]
   | ImportCycleFound (ModuleName SourceInfo) (Import SourceInfo) [ModuleName ()]
@@ -56,7 +55,7 @@ data FrontErr
 showOneLine :: Doc a -> String
 showOneLine d = (renderShowS . layoutPretty (defaultLayoutOptions {layoutPageWidth = Unbounded}) $ d) ""
 
-instance Show FrontErr where
+instance Show FrontendError where
   show (ModuleNotFound _cm imp impPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
   show (MultipleModulesFound _cm imp conflictingPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
   show (ImportCycleFound _cm imp visited) = showOneLine $ pretty (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
@@ -68,28 +67,28 @@ instance Show FrontErr where
   show (DuplicateTyDef _cm tyDef) = showOneLine $ pretty (tyDefInfo tyDef) <+> "Duplicate type definition with the name" <+> pretty (tyName tyDef)
   show (TyDefNameConflict _cm tyDef imn) = showOneLine $ pretty (tyDefInfo tyDef) <+> "Type name" <+> pretty (tyName tyDef) <+> "conflicts with an imported type name from module" <+> pretty imn
 
-type FrontM = ReaderT FrontRead (StateT FrontState (ExceptT FrontErr IO))
+type FrontendT m a = MonadIO m => ReaderT FrontRead (StateT FrontState (ExceptT FrontendError m)) a
 
-runFrontM :: [FilePath] -> FilePath -> IO (Either FrontErr (Map (ModuleName ()) (Module SourceInfo)))
-runFrontM importPaths modFp = do
+runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError (Map (ModuleName ()) (Module SourceInfo)))
+runFrontend importPaths modFp = do
   let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] undefined) [] importPaths)
-      exM = runStateT stM (FrontState Map.empty)
+      exM = runStateT stM (FrontState mempty)
       ioM = runExceptT exM
   fmap (importedModules . snd) <$> ioM
 
-throwE' :: forall {a :: Type}. FrontErr -> FrontM a
+throwE' :: FrontendError -> FrontendT m a
 throwE' = lift . lift . throwE
 
 moduleNameToFilepath :: ModuleName info -> FilePath
-moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <> ".lbf"
+moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <.> "lbf"
 
-checkCycle :: Import SourceInfo -> FrontM ()
+checkCycle :: Import SourceInfo -> FrontendT m ()
 checkCycle imp = do
   ms <- asks visited
   cm <- asks current
   when ((strip . importModuleName $ imp) `elem` ms) $ throwE' $ ImportCycleFound cm imp ms
 
-parseModule :: FilePath -> Text -> FrontM (Module SourceInfo)
+parseModule :: FilePath -> Text -> FrontendT m (Module SourceInfo)
 parseModule modFp modContent = do
   modOrErr <- liftIO $ Parsec.runParser Parsec.parseModule modFp modContent
   case modOrErr of
@@ -99,7 +98,7 @@ parseModule modFp modContent = do
 strip :: Functor f => f a -> f ()
 strip = void
 
-importModule :: Import SourceInfo -> FrontM (Module SourceInfo)
+importModule :: Import SourceInfo -> FrontendT m (Module SourceInfo)
 importModule imp = do
   let modName = importModuleName imp
   ims <- gets importedModules
@@ -122,14 +121,14 @@ importModule imp = do
           throwE' $ MultipleModulesFound cm imp modFps
     Just m -> return m
 
-processFile :: FilePath -> FrontM (Module SourceInfo)
+processFile :: FilePath -> FrontendT m (Module SourceInfo)
 processFile modFp = do
   modContent <- liftIO $ Text.readFile modFp
   m <- parseModule modFp modContent
   checkModuleName modFp (moduleName m)
   processModule m
 
-processModule :: Module SourceInfo -> FrontM (Module SourceInfo)
+processModule :: Module SourceInfo -> FrontendT m (Module SourceInfo)
 processModule m = local
   ( \ir ->
       ir
@@ -144,7 +143,7 @@ processModule m = local
     _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) m . importedModules)
     return m
 
-checkReferences :: Scope -> Module SourceInfo -> FrontM ()
+checkReferences :: Scope -> Module SourceInfo -> FrontendT m ()
 checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
   where
     checkBody (Sum cs _) = for_ cs checkConstructor
@@ -161,14 +160,14 @@ checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
           cm <- asks current
           throwE' $ TyRefNotFound cm tyR scope
 
-checkModuleName :: FilePath -> ModuleName SourceInfo -> FrontM ()
+checkModuleName :: FilePath -> ModuleName SourceInfo -> FrontendT m ()
 checkModuleName fp mn =
   let suffix = moduleNameToFilepath mn
    in if suffix `isSuffixOf` fp
         then return ()
         else throwE' $ InvalidModuleFilepath mn fp suffix
 
-processImports :: Module SourceInfo -> FrontM Scope
+processImports :: Module SourceInfo -> FrontendT m Scope
 processImports m =
   foldM
     ( \totalScope imp -> do
@@ -183,16 +182,16 @@ processImports m =
           totalScope
           scope
     )
-    Map.empty
+    mempty
     (moduleImports m)
 
-processImport :: Import SourceInfo -> FrontM (Set Symbol)
+processImport :: Import SourceInfo -> FrontendT m (Set Symbol)
 processImport imp = do
   checkCycle imp
   im <- importModule imp >>= processModule
   collectImportedScope imp im
 
-collectImportedScope :: Import SourceInfo -> Module SourceInfo -> FrontM (Set Symbol)
+collectImportedScope :: Import SourceInfo -> Module SourceInfo -> FrontendT m (Set Symbol)
 collectImportedScope (Import isQual modName mayImports mayAlias _) m =
   let availableTyNs = [tyN | (TyDef tyN _ _ _) <- moduleTyDefs m]
       availableTyNs' = Set.fromList availableTyNs
@@ -219,7 +218,7 @@ collectImportedScope (Import isQual modName mayImports mayAlias _) m =
         Set.empty
         importedTyNs
 
-collectLocalScope :: Module SourceInfo -> Scope -> FrontM Scope
+collectLocalScope :: Module SourceInfo -> Scope -> FrontendT m Scope
 collectLocalScope m importedScope =
   foldM
     ( \totalScope tyDef@(TyDef tn _ _ _) -> do
@@ -234,5 +233,5 @@ collectLocalScope m importedScope =
             cm <- asks current
             throwE' $ DuplicateTyDef cm tyDef
     )
-    Map.empty
+    mempty
     (moduleTyDefs m)

@@ -22,6 +22,7 @@ module LambdaBuffers.Frontend.Syntax (
 
 import Data.Text (Text)
 
+-- | Syntax DSL
 data Module info = Module
   { moduleName :: ModuleName info
   , moduleImports :: [Import info]
@@ -82,22 +83,16 @@ data FieldName info = FieldName Text info deriving stock (Show, Eq, Ord, Functor
 
 data ClassName info = ClassName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
--- Source information
+-- | Source information
 data SourceInfo = SourceInfo
   { filename :: Text
   , from :: SourcePos
   , to :: SourcePos
   }
-  deriving stock (Eq, Ord)
-
-instance Show SourceInfo where
-  show (SourceInfo filename pos pos') = show filename <> ":" <> "(" <> show pos <> ")-(" <> show pos' <> ")"
+  deriving stock (Eq, Ord, Show)
 
 data SourcePos = SourcePos
   { row :: Int
   , column :: Int
   }
-  deriving stock (Eq, Ord)
-
-instance Show SourcePos where
-  show (SourcePos r c) = show r <> ":" <> show c
+  deriving stock (Eq, Ord, Show)

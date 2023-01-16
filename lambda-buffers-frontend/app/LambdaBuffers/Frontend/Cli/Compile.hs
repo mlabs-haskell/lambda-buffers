@@ -2,7 +2,7 @@ module LambdaBuffers.Frontend.Cli.Compile (CompileOpts (..), compile) where
 
 import Control.Lens (makeLenses, (^.))
 import Data.Map qualified as Map
-import LambdaBuffers.Frontend.FrontM (runFrontM)
+import LambdaBuffers.Frontend.FrontM (runFrontend)
 import LambdaBuffers.Frontend.PPrint ()
 import Prettyprinter (Pretty (pretty))
 import Proto.Compiler ()
@@ -15,9 +15,10 @@ data CompileOpts = CompileOpts
 
 makeLenses ''CompileOpts
 
+-- | Compile a filepath containing a LambdaBuffers module
 compile :: CompileOpts -> IO ()
 compile opts = do
-  errOrMod <- runFrontM (opts ^. importPaths) (opts ^. moduleFilepath)
+  errOrMod <- runFrontend (opts ^. importPaths) (opts ^. moduleFilepath)
   case errOrMod of
     Left err -> print err
     Right mods -> do

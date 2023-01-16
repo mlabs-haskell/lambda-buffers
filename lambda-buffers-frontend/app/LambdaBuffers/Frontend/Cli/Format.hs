@@ -15,6 +15,7 @@ data FormatOpts = FormatOpts
 
 makeLenses ''FormatOpts
 
+-- | Format a LambdaBuffers file
 format :: FormatOpts -> IO ()
 format opts = do
   modContent <- Text.readFile (opts ^. moduleFilepath)
