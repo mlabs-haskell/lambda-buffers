@@ -1,5 +1,9 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
+{- |
+Module      : LambdaBuffers.Frontend.PPrint
+Description : Pretty printing implementation of the LambdaBuffers.Frontend.Syntax types used for formatting
+-}
 module LambdaBuffers.Frontend.PPrint () where
 
 import Data.List (sort)

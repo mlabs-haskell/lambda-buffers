@@ -69,6 +69,7 @@ instance Show FrontendError where
 
 type FrontendT m a = MonadIO m => ReaderT FrontRead (StateT FrontState (ExceptT FrontendError m)) a
 
+-- | Run a Frontend compilation action on a "lbf" file, return the entire compilation closure or a frontend error.
 runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError (Map (ModuleName ()) (Module SourceInfo)))
 runFrontend importPaths modFp = do
   let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] undefined) [] importPaths)
@@ -88,6 +89,7 @@ checkCycle imp = do
   cm <- asks current
   when ((strip . importModuleName $ imp) `elem` ms) $ throwE' $ ImportCycleFound cm imp ms
 
+-- | Parse a LambdaBuffers modules with a specified filename (for reporting) and content.
 parseModule :: FilePath -> Text -> FrontendT m (Module SourceInfo)
 parseModule modFp modContent = do
   modOrErr <- liftIO $ Parsec.runParser Parsec.parseModule modFp modContent

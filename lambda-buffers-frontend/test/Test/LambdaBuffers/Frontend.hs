@@ -20,6 +20,7 @@ tests resourcesFp =
     , frontendSuccessTests resourcesFp
     ]
 
+-- FIXME(bladyjoker): Seems like all the SourceInfo positions are off by one.
 frontendErrorTests :: FilePath -> TestTree
 frontendErrorTests resourcesFp =
   testGroup
@@ -104,7 +105,7 @@ frontendSuccessTests resourcesFp =
         errOrMod <- runFrontend [workDir] fileIn
         assertSuccess ["A", "A.B", "B", "C", "Test"] errOrMod
     , testGroup
-        "Formatting"
+        "Formatting" -- TODO(bladyjoker): Add Equality check on compiled inputs (Set semantics on imports, ty defs etc)
         [ testCase "BadFormat.lbf compiles" $ do
             let workDir = resourcesFp </> "formatting"
                 fileIn = workDir </> "BadFormat.lbf"
