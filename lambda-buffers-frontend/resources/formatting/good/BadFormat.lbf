@@ -1,0 +1,25 @@
+module BadFormat
+
+import qualified A (X,Y,Z) as B
+
+sum Maybe a = Just a | Nothing
+
+sum Either a b = Left a | Right b
+
+sum List a = Nil | List a (List a)
+
+opaque Int a
+
+opaque Bytes
+
+sum Foo a = MkFoo B.X B.Y (B.Z (B.X a) a)
+             | A a a a a a
+             | B
+             | C
+             | D
+             | E
+             | A
+             | B
+             | C
+             | D
+             | E

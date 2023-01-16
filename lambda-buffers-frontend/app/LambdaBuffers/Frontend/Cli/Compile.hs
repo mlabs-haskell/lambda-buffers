@@ -22,4 +22,4 @@ compile opts = do
     Left err -> print err
     Right mods -> do
       putStrLn "OK"
-      putStrLn $ "Compiler closure contains the following modules: " <> (show . pretty $ Map.keys mods)
+      putStrLn $ "Compiler closure contains the following modules: " <> (show . pretty . Map.elems $ mods)

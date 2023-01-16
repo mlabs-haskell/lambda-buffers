@@ -113,10 +113,13 @@ executable lambda-buffers-frontend-cli
     , lens                        >=5.2
     , optparse-applicative        >=0.17
     , prettyprinter               >=1.7
+    , text                        >=1.2
 
   hs-source-dirs: app
   main-is:        Main.hs
-  other-modules:  LambdaBuffers.Frontend.Cli.Compile
+  other-modules:
+    LambdaBuffers.Frontend.Cli.Compile
+    LambdaBuffers.Frontend.Cli.Format
 
 test-suite tests
   import:         common-language
