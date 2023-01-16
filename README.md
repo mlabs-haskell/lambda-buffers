@@ -4,7 +4,7 @@
 
 ## Documentation
 
-- [compiler](./docs/compiler.md)
+- [Compiler](./docs/compiler.md)
 
 ## Getting started
 
