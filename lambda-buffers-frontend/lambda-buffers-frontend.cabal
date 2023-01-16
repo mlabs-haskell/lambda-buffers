@@ -117,3 +117,16 @@ executable lambda-buffers-frontend-cli
   hs-source-dirs: app
   main-is:        Main.hs
   other-modules:  LambdaBuffers.Frontend.Cli.Compile
+
+test-suite tests
+  import:         common-language
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , base                     >=4.16
+    , lambda-buffers-frontend
+    , tasty                    >=1.4
+    , tasty-hunit              >=0.10
+
+  other-modules:  Test.LambdaBuffers.Frontend.Parsec
