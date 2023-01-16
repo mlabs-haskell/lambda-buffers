@@ -3,18 +3,21 @@ module Test.LambdaBuffers.Frontend (tests) where
 import Test.Tasty (TestTree, testGroup)
 
 import Data.Map (Map)
+import Data.Map qualified as Map
+import Data.Set qualified as Set
 import LambdaBuffers.Frontend.FrontM (FrontErr, runFrontM)
 import LambdaBuffers.Frontend.Parsec ()
 import LambdaBuffers.Frontend.Syntax (Module, ModuleName, SourceInfo)
+import Prettyprinter (Pretty (pretty))
 import System.FilePath ((</>))
 import Test.Tasty.HUnit (Assertion, assertFailure, testCase, (@?=))
 
 tests :: FilePath -> TestTree
 tests resourcesFp =
   testGroup
-    "LambdaBuffers.Frontend.Parsec"
-    [ testCase "dummy" (True @?= True)
-    , frontendErrorTests resourcesFp
+    "LambdaBuffers.Frontend"
+    [ frontendErrorTests resourcesFp
+    , frontendSuccessTests resourcesFp
     ]
 
 frontendErrorTests :: FilePath -> TestTree
@@ -86,3 +89,18 @@ frontendErrorTests resourcesFp =
 assertError :: String -> Either FrontErr (Map (ModuleName ()) (Module SourceInfo)) -> Assertion
 assertError expected (Left frErr) = expected @?= show frErr
 assertError _ (Right _) = assertFailure "Expected to fail but succeeded"
+
+assertSuccess :: [String] -> Either FrontErr (Map (ModuleName ()) (Module SourceInfo)) -> Assertion
+assertSuccess _ (Left _) = assertFailure "Expected to succeed but failed"
+assertSuccess expected (Right mods) = Set.fromList expected @?= Set.fromList (show . pretty <$> Map.keys mods)
+
+frontendSuccessTests :: FilePath -> TestTree
+frontendSuccessTests resourcesFp =
+  testGroup
+    "Frontend success tests"
+    [ testCase "Good" $ do
+        let workDir = resourcesFp </> "good"
+            fileIn = workDir </> "Test.lbf"
+        errOrMod <- runFrontM [workDir] fileIn
+        assertSuccess ["A", "A.B", "B", "C", "Test"] errOrMod
+    ]

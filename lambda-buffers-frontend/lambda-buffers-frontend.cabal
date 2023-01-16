@@ -92,7 +92,7 @@ library
     , filepath       >=1.4
     , mtl            >=2.2
     , parsec         >=3.1
-    , prettyprinter
+    , prettyprinter  >=1.7
     , text           >=1.2
     , transformers   >=0.5
 
@@ -112,7 +112,7 @@ executable lambda-buffers-frontend-cli
     , lambda-buffers-frontend
     , lens                        >=5.2
     , optparse-applicative        >=0.17
-    , prettyprinter
+    , prettyprinter               >=1.7
 
   hs-source-dirs: app
   main-is:        Main.hs
@@ -128,6 +128,7 @@ test-suite tests
     , containers               >=0.6
     , filepath                 >=1.4
     , lambda-buffers-frontend
+    , prettyprinter            >=1.7
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
 

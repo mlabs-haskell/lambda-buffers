@@ -135,7 +135,7 @@ parseModule = withSourceInfo . label' "module definition" $ do
   _ <- lineSpaces
   _ <- many1 lbNewLine
   imports <- sepEndBy parseImport (many1 lbNewLine)
-  tyDs <- sepBy parseTyDef (many1 lbNewLine)
+  tyDs <- sepEndBy parseTyDef (many1 lbNewLine)
   _ <- many space
   return $ Module modName imports tyDs
 
@@ -160,20 +160,8 @@ parseImport = withSourceInfo . label' "import statement" $ do
           return (mayModAlias, mayTyNs)
       )
   case may of
-    Nothing ->
-      return $
-        Import
-          isQual
-          modName
-          Nothing
-          Nothing
-    Just (mayModAlias, mayTyNs) ->
-      return $
-        Import
-          isQual
-          modName
-          mayTyNs
-          mayModAlias
+    Nothing -> return $ Import isQual modName Nothing Nothing
+    Just (mayModAlias, mayTyNs) -> return $ Import isQual modName mayTyNs mayModAlias
 
 lbNewLine :: Stream s m Char => Parser s m ()
 lbNewLine = label' "lb new line" $ void endOfLine
