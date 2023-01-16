@@ -91,7 +91,7 @@ assertError expected (Left frErr) = expected @?= show frErr
 assertError _ (Right _) = assertFailure "Expected to fail but succeeded"
 
 assertSuccess :: [String] -> Either FrontendError (Map (ModuleName ()) (Module SourceInfo)) -> Assertion
-assertSuccess _ (Left _) = assertFailure "Expected to succeed but failed"
+assertSuccess _ (Left err) = assertFailure $ "Expected to succeed but failed with: " <> show err
 assertSuccess expected (Right mods) = Set.fromList expected @?= Set.fromList (show . pretty <$> Map.keys mods)
 
 frontendSuccessTests :: FilePath -> TestTree
@@ -103,4 +103,17 @@ frontendSuccessTests resourcesFp =
             fileIn = workDir </> "Test.lbf"
         errOrMod <- runFrontend [workDir] fileIn
         assertSuccess ["A", "A.B", "B", "C", "Test"] errOrMod
+    , testGroup
+        "Formatting"
+        [ testCase "BadFormat.lbf compiles" $ do
+            let workDir = resourcesFp </> "formatting"
+                fileIn = workDir </> "BadFormat.lbf"
+            errOrMod <- runFrontend [workDir] fileIn
+            assertSuccess ["A", "BadFormat"] errOrMod
+        , testCase "good/BadFormat.lbf also compiles" $ do
+            let workDir = resourcesFp </> "formatting" </> "good"
+                fileIn = workDir </> "BadFormat.lbf"
+            errOrMod' <- runFrontend [workDir] fileIn
+            assertSuccess ["A", "BadFormat"] errOrMod'
+        ]
     ]

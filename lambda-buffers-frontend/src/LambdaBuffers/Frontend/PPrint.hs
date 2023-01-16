@@ -37,12 +37,12 @@ instance Pretty info => Pretty (Import info) where
     "import"
       <> (if isQ then space <> "qualified" else "")
       <+> pretty imn
-        <> case maySyms of
-          Nothing -> ""
-          Just syms -> space <> encloseSep lparen rparen comma (pretty <$> syms)
         <> case mayAl of
           Nothing -> ""
           Just al -> space <> "as" <+> pretty al
+        <> case maySyms of
+          Nothing -> ""
+          Just syms -> space <> encloseSep lparen rparen comma (pretty <$> syms)
 
 instance Pretty info => Pretty (TyDef info) where
   pretty (TyDef tn args body@(Sum _ _) _info) = group $ "sum" <+> pretty tn <+> hsep (pretty <$> args) <+> equals <+> pretty body

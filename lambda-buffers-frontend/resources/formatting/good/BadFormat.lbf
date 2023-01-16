@@ -1,6 +1,6 @@
 module BadFormat
 
-import qualified A (X,Y,Z) as B
+import qualified A as B (X,Y,Z)
 
 sum Maybe a = Just a | Nothing
 
