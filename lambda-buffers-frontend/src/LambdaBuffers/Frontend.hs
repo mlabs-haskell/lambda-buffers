@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.FrontM (runFrontend, FrontendError (..), parseModule) where
+module LambdaBuffers.Frontend (runFrontend, FrontendError (..), parseModule) where
 
 import Control.Monad (foldM, void, when)
 import Control.Monad.Except (ExceptT, runExceptT)

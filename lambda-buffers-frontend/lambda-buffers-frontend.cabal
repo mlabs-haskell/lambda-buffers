@@ -98,7 +98,7 @@ library
 
   hs-source-dirs:  src
   exposed-modules:
-    LambdaBuffers.Frontend.FrontM
+    LambdaBuffers.Frontend
     LambdaBuffers.Frontend.Parsec
     LambdaBuffers.Frontend.PPrint
     LambdaBuffers.Frontend.Syntax

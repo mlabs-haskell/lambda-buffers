@@ -5,7 +5,7 @@ import Test.Tasty (TestTree, testGroup)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set qualified as Set
-import LambdaBuffers.Frontend.FrontM (FrontendError, runFrontend)
+import LambdaBuffers.Frontend (FrontendError, runFrontend)
 import LambdaBuffers.Frontend.Parsec ()
 import LambdaBuffers.Frontend.Syntax (Module, ModuleName, SourceInfo)
 import Prettyprinter (Pretty (pretty))

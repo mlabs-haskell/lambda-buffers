@@ -2,7 +2,7 @@ module LambdaBuffers.Frontend.Cli.Compile (CompileOpts (..), compile) where
 
 import Control.Lens (makeLenses, (^.))
 import Data.Map qualified as Map
-import LambdaBuffers.Frontend.FrontM (runFrontend)
+import LambdaBuffers.Frontend (runFrontend)
 import LambdaBuffers.Frontend.PPrint ()
 import Prettyprinter (Pretty (pretty))
 import Proto.Compiler ()
