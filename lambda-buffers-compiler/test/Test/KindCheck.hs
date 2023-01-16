@@ -1,36 +1,48 @@
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
-
 module Test.KindCheck (test) where
 
-import LambdaBuffers.Compiler.KindCheck
-import LambdaBuffers.Compiler.KindCheck.Inference
-import Test.Tasty
-import Test.Tasty.HUnit
+import LambdaBuffers.Compiler.KindCheck (
+  KindCheckFailure (InferenceFailed),
+  TypeDefinition (TypeDefinition, _td'name, _td'sop, _td'variables),
+  kindCheckType,
+  runKindCheckEff,
+ )
+import LambdaBuffers.Compiler.KindCheck.Inference (
+  InferErr (ImpossibleUnificationErr),
+  Kind (Type, (:->:)),
+  Type (Abs, App, Var),
+ )
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase, (@?=))
 
 test :: TestTree
-test = testGroup "KindChecker Tests" [t1, t2, t3, t4, t5]
+test = testGroup "KindChecker tests" [t1, t2, t3, t4, t5]
 
 runKC :: [TypeDefinition] -> Either KindCheckFailure [Kind]
 runKC = runKindCheckEff . kindCheckType
 
+t1 :: TestTree
 t1 =
-  testCase "No Definition, No Kinds." $
+  testCase "No Definition, No Kinds" $
     runKC [] @?= Right []
 
+t2 :: TestTree
 t2 =
-  testCase "Maybe has the correct Kind." $
+  testCase "Maybe has the correct Kind" $
     runKC [tdMaybe] @?= Right [Type :->: Type]
 
+t3 :: TestTree
 t3 =
-  testCase "Maybe works correctly when used as a type." $
+  testCase "Maybe works correctly when used as a type" $
     runKC [tdT1, tdMaybe] @?= Right [Type :->: Type, Type :->: Type]
 
+t4 :: TestTree
 t4 =
-  testCase "Maybe and a term containing a maybe work correctly." $
+  testCase "Maybe and a term containing a maybe work correctly" $
     runKC [tdT1, tdMaybe, tdT2] @?= Right [Type :->: Type, Type :->: Type, Type :->: Type]
 
+t5 :: TestTree
 t5 =
-  testCase "Bad Type is caught and reported." $
+  testCase "Bad Type is caught and reported" $
     runKC [tdMaybe, tdBT0]
       @?= Left
         ( InferenceFailed
@@ -46,6 +58,7 @@ t5 =
 --------------------------------------------------------------------------------
 -- Manual type definitions.
 
+tdMaybe :: TypeDefinition
 tdMaybe =
   TypeDefinition
     { _td'name = "Maybe"
@@ -58,6 +71,7 @@ tdMaybe =
     }
 
 -- T1 ~ T a = T Maybe (Maybe a)
+tdT1 :: TypeDefinition
 tdT1 =
   TypeDefinition
     { _td'name = "T"
@@ -66,6 +80,7 @@ tdT1 =
     }
 
 -- T2 ~ T a = T Maybe (Maybe a)
+tdT2 :: TypeDefinition
 tdT2 =
   TypeDefinition
     { _td'name = "T2"
@@ -74,6 +89,7 @@ tdT2 =
     }
 
 -- T2 ~ T = T Maybe Maybe
+tdBT0 :: TypeDefinition
 tdBT0 =
   TypeDefinition
     { _td'name = "T"

@@ -1,0 +1,30 @@
+module Test
+
+import A
+
+import qualified B
+
+import qualified A.B
+import qualified A.B as AB
+
+import qualified C (A)
+import qualified C as D (A)
+import qualified C as D ()
+
+sum Maybe a = Just a | Nothing
+
+sum Either a b = Left a | Right b
+
+sum List a = Nil | List a (List a)
+
+opaque Int a
+opaque Bytes
+
+sum Foo a = MkFoo
+    A
+    A.A
+    B.A
+    A.B.A
+    AB.A
+    C.A
+    D.A

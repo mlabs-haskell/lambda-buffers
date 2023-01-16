@@ -75,7 +75,14 @@
             inherit (protosBuild) compilerHsPb;
             inherit (pre-commit-check) shellHook;
           };
-          compilerFlake = compilerBuild.compilerHsNixProj.flake { };
+          compilerFlake = compilerBuild.hsNixProj.flake { };
+
+          frontendBuild = import ./lambda-buffers-frontend/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+            inherit (protosBuild) compilerHsPb;
+            inherit (pre-commit-check) shellHook;
+          };
+          frontendFlake = frontendBuild.hsNixProj.flake { };
 
           # Utilities
           # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -85,7 +92,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -93,6 +100,7 @@
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
+            dev-frontend = frontendFlake.devShell;
             default = preCommitDevShell;
           };
 

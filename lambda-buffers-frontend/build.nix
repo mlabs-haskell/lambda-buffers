@@ -12,7 +12,7 @@ let
   project = {
     src = ./.;
 
-    name = "lambda-buffers-compiler";
+    name = "lambda-buffers-frontend";
 
     inherit compiler-nix-name index-state;
 
@@ -27,7 +27,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+          lambda-buffers-frontend.configureFlags = [ "-f-dev" ];
         };
       })
     ];

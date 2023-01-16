@@ -1,0 +1,6 @@
+module A
+
+import B
+import C
+
+sum A = MkA WhereIsThisType
