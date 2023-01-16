@@ -125,8 +125,10 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base                     >=4.16
+    , containers               >=0.6
+    , filepath                 >=1.4
     , lambda-buffers-frontend
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
 
-  other-modules:  Test.LambdaBuffers.Frontend.Parsec
+  other-modules:  Test.LambdaBuffers.Frontend

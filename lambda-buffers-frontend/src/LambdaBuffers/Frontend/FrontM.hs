@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.FrontM (runFrontM) where
+module LambdaBuffers.Frontend.FrontM (runFrontM, FrontErr (..)) where
 
 import Control.Monad (foldM, void, when)
 import Control.Monad.Except (ExceptT, runExceptT)
@@ -19,7 +19,8 @@ import Data.Traversable (for)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
 import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef))
-import Prettyprinter (Pretty (pretty), (<+>))
+import Prettyprinter (Doc, LayoutOptions (layoutPageWidth), PageWidth (Unbounded), Pretty (pretty), defaultLayoutOptions, layoutPretty, (<+>))
+import Prettyprinter.Render.String (renderShowS)
 import System.Directory (findFiles)
 import System.FilePath (joinPath)
 import Text.Parsec (ParseError)
@@ -52,17 +53,20 @@ data FrontErr
   | TyDefNameConflict (ModuleName SourceInfo) (TyDef SourceInfo) (ModuleName SourceInfo)
   deriving stock (Eq)
 
+showOneLine :: Doc a -> String
+showOneLine d = (renderShowS . layoutPretty (defaultLayoutOptions {layoutPageWidth = Unbounded}) $ d) ""
+
 instance Show FrontErr where
-  show (ModuleNotFound _cm imp impPaths) = show $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
-  show (MultipleModulesFound _cm imp conflictingPaths) = show $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
-  show (ImportCycleFound _cm imp visited) = show $ pretty (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
-  show (ModuleParseError _fp err) = show $ pretty err
-  show (ImportedNotFound _cm mn tn@(TyName _ info) available) = show $ pretty info <+> "Type" <+> pretty tn <+> "not found in module" <+> pretty mn <+> ", did you mean one of" <+> pretty (Set.toList available)
-  show (InvalidModuleFilepath mn@(ModuleName _ info) gotModFp wantedFpSuffix) = show $ pretty info <+> "File name" <+> pretty gotModFp <+> "doesn't match module name" <+> pretty mn <+> "expected" <+> pretty wantedFpSuffix
-  show (SymbolAlreadyImported _cm imp sym alreadyInModuleName) = show $ pretty (importInfo imp) <+> "Symbol" <+> pretty sym <+> "already imported from module" <+> pretty alreadyInModuleName
-  show (TyRefNotFound _cm tyR@(TyRef _ _ info) scope) = show $ pretty info <+> ": Type " <> pretty tyR <+> "not found in the module's scope" <+> (pretty . Map.keys $ scope)
-  show (DuplicateTyDef _cm tyDef) = show $ pretty (tyDefInfo tyDef) <+> "Duplicate type definition with the name" <+> pretty (tyName tyDef)
-  show (TyDefNameConflict _cm tyDef imn) = show $ pretty (tyDefInfo tyDef) <+> "Type name" <+> pretty (tyName tyDef) <+> "conflicts with an imported type name from module" <+> pretty imn
+  show (ModuleNotFound _cm imp impPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
+  show (MultipleModulesFound _cm imp conflictingPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
+  show (ImportCycleFound _cm imp visited) = showOneLine $ pretty (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
+  show (ModuleParseError _fp err) = showOneLine $ pretty err
+  show (ImportedNotFound _cm mn tn@(TyName _ info) available) = showOneLine $ pretty info <+> "Type" <+> pretty tn <+> "not found in module" <+> pretty mn <> ", did you mean one of" <+> pretty (Set.toList available)
+  show (InvalidModuleFilepath mn@(ModuleName _ info) gotModFp wantedFpSuffix) = showOneLine $ pretty info <+> "File name" <+> pretty gotModFp <+> "doesn't match module name" <+> pretty mn <+> "expected" <+> pretty wantedFpSuffix
+  show (SymbolAlreadyImported _cm imp sym alreadyInModuleName) = showOneLine $ pretty (importInfo imp) <+> "Symbol" <+> pretty sym <+> "already imported from module" <+> pretty alreadyInModuleName
+  show (TyRefNotFound _cm tyR@(TyRef _ _ info) scope) = showOneLine $ pretty info <+> "Type " <> pretty tyR <+> "not found in the module's scope" <+> (pretty . Map.keys $ scope)
+  show (DuplicateTyDef _cm tyDef) = showOneLine $ pretty (tyDefInfo tyDef) <+> "Duplicate type definition with the name" <+> pretty (tyName tyDef)
+  show (TyDefNameConflict _cm tyDef imn) = showOneLine $ pretty (tyDefInfo tyDef) <+> "Type name" <+> pretty (tyName tyDef) <+> "conflicts with an imported type name from module" <+> pretty imn
 
 type FrontM = ReaderT FrontRead (StateT FrontState (ExceptT FrontErr IO))
 
