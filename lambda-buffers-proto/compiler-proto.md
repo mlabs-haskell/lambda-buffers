@@ -49,8 +49,7 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## compiler.proto
-Run with: protoc --plugin=protoc-gen-haskell=`which proto-lens-protoc` \
---haskell_out=proto_out compiler.proto
+
 
 
 <a name="lambdabuffers-compiler-ClassDef"></a>
@@ -382,14 +381,18 @@ ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
 <a name="lambdabuffers-compiler-SourceInfo"></a>
 
 ### SourceInfo
+Frontend Source information
 
+Frontends are advised to include *source* information to denote how their
+Source* content maps to the *Compiler Input*. It&#39;s essential when reporting
+Compiler* errors back to the Frontend.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| file | [string](#string) |  |  |
-| pos_from | [SourcePosition](#lambdabuffers-compiler-SourcePosition) |  |  |
-| pos_to | [SourcePosition](#lambdabuffers-compiler-SourcePosition) |  |  |
+| file | [string](#string) |  | A filename denoting the Source file. |
+| pos_from | [SourcePosition](#lambdabuffers-compiler-SourcePosition) |  | Starting position in Source. |
+| pos_to | [SourcePosition](#lambdabuffers-compiler-SourcePosition) |  | End position in Source. |
 
 
 

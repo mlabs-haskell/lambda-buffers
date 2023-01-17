@@ -1,5 +1,3 @@
-// Run with: protoc --plugin=protoc-gen-haskell=`which proto-lens-protoc` \
-// --haskell_out=proto_out compiler.proto
 syntax = "proto3";
 
 package lambdabuffers.compiler;
@@ -7,13 +5,15 @@ package lambdabuffers.compiler;
 /* Frontend Source information
 
 Frontends are advised to include *source* information to denote how their
-*Source* content maps to the *Compiler Input*. It's essentially when reporting
-*Compiler errors back to the Frontend user.
+*Source* content maps to the *Compiler Input*. It's essential when reporting
+*Compiler* errors back to the Frontend.
 */
-
 message SourceInfo {
+  // A filename denoting the Source file.
   string file = 1;
+  // Starting position in Source.
   SourcePosition pos_from = 2;
+  // End position in Source.
   SourcePosition pos_to = 3;
 }
 
