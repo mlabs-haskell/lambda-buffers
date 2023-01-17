@@ -73,8 +73,8 @@ message TyVar {
 /* Type abstraction
 
 A type expression that introduces type abstractions (ie. type functions). This
-type term can only be introduced in the context of a [type definition](@ref
-TyDef).
+type term can only be introduced in the context of a
+[type definition](@ref TyDef).
 */
 message TyAbs {
   // List of type variables.
