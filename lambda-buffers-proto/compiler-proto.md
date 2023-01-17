@@ -383,7 +383,7 @@ ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
 ### SourceInfo
 Frontend Source information
 
-Frontends are advised to include *source* information to denote how their
+Frontends are advised to include *Source* information to denote how their
 Source* content maps to the *Compiler Input*. It&#39;s essential when reporting
 Compiler* errors back to the Frontend.
 
@@ -402,13 +402,13 @@ Compiler* errors back to the Frontend.
 <a name="lambdabuffers-compiler-SourcePosition"></a>
 
 ### SourcePosition
-
+Position in Source
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| column | [int32](#int32) |  |  |
-| row | [int32](#int32) |  |  |
+| column | [int32](#int32) |  | Column index in the Source. |
+| row | [int32](#int32) |  | Row index in the Source. |
 
 
 
@@ -465,39 +465,37 @@ a &#39;term function&#39; of type `A :: a -&gt; b -&gt; Either a b -&gt; SomeTyp
 <a name="lambdabuffers-compiler-Ty"></a>
 
 ### Ty
-Ty
+Type term
 
-A type expression that ocurrs in bodies of type definitions:
+A type expression that ocurrs in bodies of type definitions (message TyDef):
 
-```haskell
-data Maybe a = Just a | Nothing
-.
-data Either a b = Left a | Right b
-.         .
-data SomeType a = Foo a (Maybe a) | Bar (Either (Maybe a) (SomeType a))
-. .........       ...............................
+```lbf
+sum Maybe a = Just a | Nothing
+
+sum Either a b = Left a | Right b
+
+sum SomeType a = Foo a (Maybe a) | Bar (Either (Maybe a) (SomeType a))
 ```
 
 or in instance declarations:
 
-```haskell
+```lbf
 instance Eq (Maybe a)
-.........
+
 instance Eq (SomeType Int)
-..............
+
 instance (Eq (Maybe a), Eq (SomeType a)) Eq (Either (Maybe a) (SomeType a))
-.........     ............     ...............................
 ```
 
-Check out examples/tys.textproto for examples.
+Check out [examples](examples/tys.textproto).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_var | [TyVar](#lambdabuffers-compiler-TyVar) |  |  |
-| ty_app | [TyApp](#lambdabuffers-compiler-TyApp) |  |  |
-| ty_ref | [TyRef](#lambdabuffers-compiler-TyRef) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| ty_var | [TyVar](#lambdabuffers-compiler-TyVar) |  | A type variable. |
+| ty_app | [TyApp](#lambdabuffers-compiler-TyApp) |  | A type application. |
+| ty_ref | [TyRef](#lambdabuffers-compiler-TyRef) |  | A type reference. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -507,14 +505,17 @@ Check out examples/tys.textproto for examples.
 <a name="lambdabuffers-compiler-TyAbs"></a>
 
 ### TyAbs
-Only available in TyDef context and not Ty
+Type abstraction
+
+A type expression that introduces type abstractions (ie. type functions).
+This type term can only be introduced in the context of a [type definition](@ref TyDef).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_vars | [TyVar](#lambdabuffers-compiler-TyVar) | repeated |  |
-| ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| ty_vars | [TyVar](#lambdabuffers-compiler-TyVar) | repeated | List of type variables. |
+| ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | Type body. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -524,14 +525,16 @@ Only available in TyDef context and not Ty
 <a name="lambdabuffers-compiler-TyApp"></a>
 
 ### TyApp
+Type application
 
+A type expression that applies a type abstraction to another type term.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_func | [Ty](#lambdabuffers-compiler-Ty) |  |  |
-| ty_args | [Ty](#lambdabuffers-compiler-Ty) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| ty_func | [Ty](#lambdabuffers-compiler-Ty) |  | Type function. TODO(bladyjoker): Rename to ty_abs? |
+| ty_args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Arguments to apply. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -653,7 +656,9 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 <a name="lambdabuffers-compiler-TyRef"></a>
 
 ### TyRef
+Type reference
 
+A type expression that denotes a reference to a type available declared locally or in foreign modules.
 
 
 | Field | Type | Label | Description |
@@ -701,13 +706,13 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 <a name="lambdabuffers-compiler-TyVar"></a>
 
 ### TyVar
-
+Type variable
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| var_name | [VarName](#lambdabuffers-compiler-VarName) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| var_name | [VarName](#lambdabuffers-compiler-VarName) |  | Variable name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 

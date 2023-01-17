@@ -4,7 +4,7 @@ package lambdabuffers.compiler;
 
 /* Frontend Source information
 
-Frontends are advised to include *source* information to denote how their
+Frontends are advised to include *Source* information to denote how their
 *Source* content maps to the *Compiler Input*. It's essential when reporting
 *Compiler* errors back to the Frontend.
 */
@@ -17,64 +17,92 @@ message SourceInfo {
   SourcePosition pos_to = 3;
 }
 
+/* Position in Source */
 message SourcePosition {
+  // Column index in the Source.
   int32 column = 1;
+  // Row index in the Source.
   int32 row = 2;
 }
 
-/* Ty
+/* Type term
 
-A type expression that ocurrs in bodies of type definitions:
+A type expression that ocurrs in bodies of type definitions (message TyDef):
 
-```haskell
-data Maybe a = Just a | Nothing
-                    .
-data Either a b = Left a | Right b
-                       .         .
-data SomeType a = Foo a (Maybe a) | Bar (Either (Maybe a) (SomeType a))
-                      . .........       ...............................
+```lbf
+sum Maybe a = Just a | Nothing
+
+sum Either a b = Left a | Right b
+
+sum SomeType a = Foo a (Maybe a) | Bar (Either (Maybe a) (SomeType a))
 ```
 
 or in instance declarations:
 
-```haskell
+```lbf
 instance Eq (Maybe a)
-            .........
+
 instance Eq (SomeType Int)
-            ..............
+
 instance (Eq (Maybe a), Eq (SomeType a)) Eq (Either (Maybe a) (SomeType a))
-             .........     ............     ...............................
 ```
 
-Check out examples/tys.textproto for examples.
+Check out [examples](examples/tys.textproto).
 */
 message Ty {
   oneof ty {
+    // A type variable.
     TyVar ty_var = 1;
+    // A type application.
     TyApp ty_app = 2;
+    // A type reference.
     TyRef ty_ref = 3;
   }
+  // Source information.
   SourceInfo source_info = 5;
 }
 
+/* Type variable */
 message TyVar {
+  // Variable name.
   VarName var_name = 1;
+  // Source information.
   SourceInfo source_info = 2;
 }
 
-// Only available in TyDef context and not Ty
+/* Type abstraction
+
+A type expression that introduces type abstractions (ie. type functions). This
+type term can only be introduced in the context of a [type definition](@ref
+TyDef).
+*/
 message TyAbs {
+  // List of type variables.
   repeated TyVar ty_vars = 1;
+  // Type body.
   TyBody ty_body = 2;
+  // Source information.
   SourceInfo source_info = 3;
 }
 
+/* Type application
+
+A type expression that applies a type abstraction to another type term.
+*/
 message TyApp {
+  // Type function. TODO(bladyjoker): Rename to ty_abs?
   Ty ty_func = 1;
+  // Arguments to apply.
   repeated Ty ty_args = 2;
+  // Source information.
   SourceInfo source_info = 3;
 }
 
+/* Type reference
+
+A type expression that denotes a reference to a type available declared locally
+or in foreign modules.
+*/
 message TyRef {
   message Local {
     TyName ty_name = 1;
