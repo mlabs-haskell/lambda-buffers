@@ -55,18 +55,34 @@
 <a name="lambdabuffers-compiler-ClassDef"></a>
 
 ### ClassDef
-Type class definitions
+Type class definition
 
-class (A a b, B c) &lt;= C a b c
+LambdaBuffers use type classes to talk about the various &#39;meanings&#39; or
+&#39;semantics&#39; we want to associate with the types in LambdaBuffers schemata.
+
+For instance, most types can have `Eq` semantics, meaning they can be compared
+with equality. Other can have `Json` semantics, meaning they have some encoding
+in the Json format.
+
+Using type classes and instance declarations, much like in Haskell, users can
+specify the &#39;meaning&#39; of each type they declare.
+
+Note that for each type class introduced, the entire Codegen machinery must be
+updated to support said type class. In other words, it doesn&#39;t come for free and
+for each new type class, a Codegen support must be implemented for Opaque types
+used and for generic structural rules to enable generic support for user derived
+types.
+
+TODO(bladyjoker): Cleanup and reformulate with Sean.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  |  |
-| class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated |  |
-| supers | [Constraint](#lambdabuffers-compiler-Constraint) | repeated |  |
-| documentation | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
+| class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Type class arguments. Currently the Compiler only accepts single parameter type class declarations. |
+| supers | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Superclass constraints. |
+| documentation | [string](#string) |  | Documentation elaborating on the type class. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -76,13 +92,13 @@ class (A a b, B c) &lt;= C a b c
 <a name="lambdabuffers-compiler-ClassName"></a>
 
 ### ClassName
-Regex [A-Z]&#43;[A-Za-z0-9_]*
+Type class name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [A-Z]&#43;[A-Za-z0-9_]* |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -110,13 +126,13 @@ compilation closure.
 <a name="lambdabuffers-compiler-ConstrName"></a>
 
 ### ConstrName
-Regex [A-Z]&#43;[A-Za-z0-9_]*
+Sum type constructor name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [A-Z]&#43;[A-Za-z0-9_]* |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -126,14 +142,14 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 <a name="lambdabuffers-compiler-Constraint"></a>
 
 ### Constraint
-
+Constraint expression
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  |  |
-| arguments | [Ty](#lambdabuffers-compiler-Ty) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Name of the type class. |
+| arguments | [Ty](#lambdabuffers-compiler-Ty) | repeated | Constraint arguments. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -143,13 +159,13 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 <a name="lambdabuffers-compiler-FieldName"></a>
 
 ### FieldName
-Regex [a-z]&#43;[A-Za-z0-9_]*
+Record type field name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [a-z]&#43;[A-Za-z0-9_]* |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -159,15 +175,17 @@ Regex [a-z]&#43;[A-Za-z0-9_]*
 <a name="lambdabuffers-compiler-InstanceClause"></a>
 
 ### InstanceClause
+Type class instances
 
+Instance clauses enable users to specify &#39;semantic&#39; rules for their types.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  |  |
-| heads | [Ty](#lambdabuffers-compiler-Ty) | repeated |  |
-| constraints | [Constraint](#lambdabuffers-compiler-Constraint) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
+| heads | [Ty](#lambdabuffers-compiler-Ty) | repeated | Head of the instance clause. Currently, the Compiler only accepts single parameter type classes. |
+| constraints | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Body of the rule, conjunction of constraints. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -179,21 +197,17 @@ Regex [a-z]&#43;[A-Za-z0-9_]*
 ### Kind
 Kinds
 
-Type kinds are quite simple in Lambda Buffers, all types (TyArg, TyVar, TyRef,
-TyApp) are either of kind `Type` or `Type -&gt; Type` and `Type -&gt; Type -&gt; Type`
+A type of a type is called a &#39;kind&#39;.
+In Lambda Buffers, all type terms, namely TyArg, TyVar, TyRef, TyApp and TyAbs,
+are either of kind `Type` or `Type -&gt; Type` and `Type -&gt; Type -&gt; Type`
 etc.
-
-Because of that we can simply encode them using the notion of `arity` which
-represents a number of type arguments that have to be applied to a type of `Type
--&gt; Type -&gt; .. -&gt; Type` to get a `Type` (ie. fully applied function, fully
-saturated).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | kind_ref | [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef) |  |  |
 | kind_arrow | [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -203,7 +217,7 @@ saturated).
 <a name="lambdabuffers-compiler-Kind-KindArrow"></a>
 
 ### Kind.KindArrow
-
+A kind arrow.
 
 
 | Field | Type | Label | Description |
@@ -226,11 +240,11 @@ A module encapsulates type, class and instance definitions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
-| type_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated |  |
-| class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated |  |
-| instances | [InstanceClause](#lambdabuffers-compiler-InstanceClause) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module name. |
+| type_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated | Type definitions. |
+| class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated | Type class definitions. |
+| instances | [InstanceClause](#lambdabuffers-compiler-InstanceClause) | repeated | Type class instance clauses. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -240,13 +254,13 @@ A module encapsulates type, class and instance definitions.
 <a name="lambdabuffers-compiler-ModuleName"></a>
 
 ### ModuleName
-Regex (ModuleNamePart|.)&#43;
+Module name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| parts | [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| parts | [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart) | repeated | Parts of the module name denoting a hierarchichal namespace. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -256,13 +270,13 @@ Regex (ModuleNamePart|.)&#43;
 <a name="lambdabuffers-compiler-ModuleNamePart"></a>
 
 ### ModuleNamePart
-Regex [A-Z]&#43;[A-Za-z0-9_]*
+Module name part
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [A-Z]&#43;[A-Za-z0-9_]* |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Sounrce information. |
 
 
 
@@ -274,18 +288,12 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 ### Opaque
 Opaque type body
 
-A type that has an `Opaque` body represents a &#39;builtin&#39; or a &#39;primitive&#39; type
+A type that has an `Opaque` body represents a &#39;built-in&#39; or a &#39;primitive&#39; type
 that&#39;s handled by the semantics &#39;under the hood&#39;. It&#39;s called &#39;opaque&#39; to denote
 the fact that the Compiler has no knowledge of its structure, and relies that
 the necessary knowledge is implemented elsewhere. The Codegen modules for any
-target language have to be able to handle such types specifically, for instance:
-
-```haskell
-opaque Int32
-opaque Int64
-opaque Set a
-opaque Map k v
-```
+target language have to be able to handle such types specifically and map to
+existing value level representations and corresponding types.
 
 Codegen modules would have to implement support for such defined types, for
 example:
@@ -295,10 +303,12 @@ example:
 Every `Opaque` type has to be considered deliberately for each language
 environment targeted by Codegen modules.
 
+TODO(bladyjoker): Consider attaching explicit Kind terms to Opaques.
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -310,20 +320,20 @@ environment targeted by Codegen modules.
 ### Product
 Product
 
-```haskell
-data SomeType a b = A a b | B { fieldA :: a, fieldB :: b } | C
-ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
-```
-- t - denotes the Product.NTuple
-- r - denotes the Product.Record
-- e - denotes the Product.Empty
+It&#39;s a built-in type term that exists enclosed within a [type abstraction](@ref
+TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
+expression.
+
+It exists in two flavors, either a Record or a NTuple.
+
+TODO(bladyjoker): Separate into Tuple and Record.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | record | [Product.Record](#lambdabuffers-compiler-Product-Record) |  |  |
 | ntuple | [Product.NTuple](#lambdabuffers-compiler-Product-NTuple) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -333,13 +343,13 @@ ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
 <a name="lambdabuffers-compiler-Product-NTuple"></a>
 
 ### Product.NTuple
-
+A tuple type expression.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| fields | [Ty](#lambdabuffers-compiler-Ty) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| fields | [Ty](#lambdabuffers-compiler-Ty) | repeated | Fields in a tuple are types. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -349,13 +359,13 @@ ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
 <a name="lambdabuffers-compiler-Product-Record"></a>
 
 ### Product.Record
-
+A record type expression.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| fields | [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field) | repeated |  |
-| source_infog | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| fields | [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field) | repeated | Record fields. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -365,13 +375,13 @@ ttt     rrrrrrrrrrrrrrrrrrrrrrrrrrrr    e
 <a name="lambdabuffers-compiler-Product-Record-Field"></a>
 
 ### Product.Record.Field
-
+Field in a record type.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| field_name | [FieldName](#lambdabuffers-compiler-FieldName) |  |  |
-| field_ty | [Ty](#lambdabuffers-compiler-Ty) |  |  |
+| field_name | [FieldName](#lambdabuffers-compiler-FieldName) |  | Record field name. |
+| field_ty | [Ty](#lambdabuffers-compiler-Ty) |  | Field type. |
 
 
 
@@ -420,26 +430,38 @@ Position in Source
 ### Sum
 Sum
 
-A type defined as a Sum type is just like a Haskell ADT and represents a sum of
-products, for example:
+It&#39;s a built-in type term that exists enclosed within a [type abstraction](@ref
+TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
+expression.
+
+A type defined as a Sum type is just like a Haskell algebraic data type and
+represents a sum of products.
+
+It can essentially be expressed as `Either` type enriched with [constructor
+name](@ref ConstrName) information.
 
 ```haskell
-data SomeType a b = A a b (Either a b) | B b a (Either b a)
-c pppppppppppppppp   c pppppppppppppppp
+
+data Foo a b = Bar | Baz a | Bax b
+
+-- corresponds to
+
+type ConstrName = String
+type Foo_ a b = Either
+((), ConstrName)
+(Either
+(a, ConstrName)
+(b, ConstrName)
+)
 ```
 
-- c - denotes a ConstrName
-- p - denotes a Product
-
-A `Sum.Constructor` term describes a type of the &#39;constructor&#39; function that
-when fully applied yields the parent type. For instance, the constructor `A` is
-a &#39;term function&#39; of type `A :: a -&gt; b -&gt; Either a b -&gt; SomeType a b`.
+TODO(bladyjoker): Cleanup.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| constructors | [Sum.Constructor](#lambdabuffers-compiler-Sum-Constructor) | repeated |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| constructors | [Sum.Constructor](#lambdabuffers-compiler-Sum-Constructor) | repeated | Sum type constructors. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -449,13 +471,13 @@ a &#39;term function&#39; of type `A :: a -&gt; b -&gt; Either a b -&gt; SomeTyp
 <a name="lambdabuffers-compiler-Sum-Constructor"></a>
 
 ### Sum.Constructor
-
+Constructor of a Sum type is a Product type term.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| constr_name | [ConstrName](#lambdabuffers-compiler-ConstrName) |  |  |
-| product | [Product](#lambdabuffers-compiler-Product) |  |  |
+| constr_name | [ConstrName](#lambdabuffers-compiler-ConstrName) |  | Constructor name. |
+| product | [Product](#lambdabuffers-compiler-Product) |  | TODO(bladyjoker): Replace with ConstructorBody that&#39;s either Tuple or Record. Product type term. |
 
 
 
@@ -507,8 +529,9 @@ Check out [examples](examples/tys.textproto).
 ### TyAbs
 Type abstraction
 
-A type expression that introduces type abstractions (ie. type functions).
-This type term can only be introduced in the context of a [type definition](@ref TyDef).
+A type expression that introduces type abstractions (ie. type functions). This
+type term can only be introduced in the context of a
+[type definition](@ref TyDef).
 
 
 | Field | Type | Label | Description |
@@ -527,7 +550,7 @@ This type term can only be introduced in the context of a [type definition](@ref
 ### TyApp
 Type application
 
-A type expression that applies a type abstraction to another type term.
+A type expression that applies a type abstraction to a list of arguments.
 
 
 | Field | Type | Label | Description |
@@ -546,31 +569,24 @@ A type expression that applies a type abstraction to another type term.
 ### TyArg
 Type arguments
 
-Type arguments and therefore type variables have kinds, for the purpose of
-Lambda Buffers, we only allow them the have kind `Type`.
+Arguments in type abstractions.
 
-In the following type definition:
-
-```haskell
-Either a b = Left a | Right b
-```
-
-both TyArgs `a` and `b` can be assume to be of kind `Type` (zero arity).
+Type arguments and therefore type variables have kinds, the Compiler only
+accepts `Type` kinded type arguments ans therefore type variables.
 
 However, to allow for future evolution if ever necessary, we attach the Kind
-term to TyArgs, even though the Compiler will reject any TyArg that&#39;s not of
-kind `Type`. For instance:
+term to type arguments, even though the Compiler will reject any TyArg that&#39;s
+not of kind `Type`.
 
-```haskell
-EitherF (f :: Type -&gt; Type) (a :: Type) (b :: Type) = Left (f a) | Right (f b)
-```
+Note, this effectively means that lambda Buffers doesn&#39;t support higher-kinded
+types (ie. HKT).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| arg_name | [VarName](#lambdabuffers-compiler-VarName) |  |  |
-| arg_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| arg_name | [VarName](#lambdabuffers-compiler-VarName) |  | Argument name corresponds to variable names. |
+| arg_kind | [Kind](#lambdabuffers-compiler-Kind) |  | Argument kind. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -582,17 +598,17 @@ EitherF (f :: Type -&gt; Type) (a :: Type) (b :: Type) = Left (f a) | Right (f b
 ### TyBody
 Type body
 
-Lambda Buffers type bodies are quite simple, they can either be:
-- `Opaque`, meaning we don&#39;t define its structure with Lambda Buffers but
-leverage an existing ones in target languages,
-- `Sum of products` which corresponds to Haskell ADTs.
+Lambda Buffers type bodies are enriched type terms that can only be specified in
+[type abstraction terms](@ref TyAbs).
+
+TODO: Add Tuple and Record type bodies.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | opaque | [Opaque](#lambdabuffers-compiler-Opaque) |  |  |
 | sum | [Sum](#lambdabuffers-compiler-Sum) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -602,35 +618,27 @@ leverage an existing ones in target languages,
 <a name="lambdabuffers-compiler-TyDef"></a>
 
 ### TyDef
-Type definitions
+Type definition
 
-A type definition consists of a type name, a type arguments and the body.
+A type definition consists of a type name and its associated type term.
 
-For instance:
+One way to look at it is that a type definition introduces a named &#39;type
+abstraction&#39; in the module scope. Concretely, `Either` can be considered a type
+lambda of kind `Type -&gt; Type -&gt; Type`.
 
-```haskell
-data Either a b = Left a | Right b
-tttttt a a   bbbbbbbbbbbbbbbb
-```
+In fact, type definitions are the only way to introduce such types.
 
-- t - TyName
-- a - TyArg
-- b - TyBody
-
-One way to look at it is that a type definition introduces a named &#39;lambda
-abstraction&#39; in the module scope.
-Concretely, `Either` can be considered a type lambda of kind `Type -&gt; Type -&gt;
-Type`.
-In fact, TyDefs are the only way to introduce such &#39;higher kinded&#39; types.
-
-Once introduced in the module scope, TyDefs are referred to using TyRef term.
+Once introduced in the module scope, type definitions are referred to using
+[TyRef](@ref TyRef) term.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Type name. |
+| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type term.
+
+TODO(bladyjoker): Turn into a oneOf TyAbs | Ty |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -640,13 +648,13 @@ Once introduced in the module scope, TyDefs are referred to using TyRef term.
 <a name="lambdabuffers-compiler-TyName"></a>
 
 ### TyName
-Regex [A-Z]&#43;[A-Za-z0-9_]*
+Type name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [A-Z]&#43;[A-Za-z0-9_]* |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -658,14 +666,15 @@ Regex [A-Z]&#43;[A-Za-z0-9_]*
 ### TyRef
 Type reference
 
-A type expression that denotes a reference to a type available declared locally or in foreign modules.
+A type expression that denotes a reference to a type available that&#39;s declared
+locally or in foreign modules.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | local_ty_ref | [TyRef.Local](#lambdabuffers-compiler-TyRef-Local) |  |  |
 | foreign_ty_ref | [TyRef.Foreign](#lambdabuffers-compiler-TyRef-Foreign) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -675,13 +684,13 @@ A type expression that denotes a reference to a type available declared locally 
 <a name="lambdabuffers-compiler-TyRef-Foreign"></a>
 
 ### TyRef.Foreign
-
+Foreign type reference.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Foreign module type name. |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Foreign module name. |
 
 
 
@@ -691,12 +700,12 @@ A type expression that denotes a reference to a type available declared locally 
 <a name="lambdabuffers-compiler-TyRef-Local"></a>
 
 ### TyRef.Local
-
+Local type reference.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Local module type name. |
 
 
 
@@ -722,7 +731,7 @@ Type variable
 <a name="lambdabuffers-compiler-Tys"></a>
 
 ### Tys
-
+A list of type expressions useful for debugging
 
 
 | Field | Type | Label | Description |
@@ -737,14 +746,13 @@ Type variable
 <a name="lambdabuffers-compiler-VarName"></a>
 
 ### VarName
-Regex [a-z]&#43;
-Regex [a-z]&#43;
+Type variable name
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  |  |
+| name | [string](#string) |  | Name ::= [a-z]&#43; |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -756,12 +764,12 @@ Regex [a-z]&#43;
 <a name="lambdabuffers-compiler-Kind-KindRef"></a>
 
 ### Kind.KindRef
-
+A built-in kind.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| KIND_REF_UNSPECIFIED | 0 |  |
-| KIND_REF_TYPE | 1 |  |
+| KIND_REF_UNSPECIFIED | 0 | Unspecified kind SHOULD be inferred by the Compiler. |
+| KIND_REF_TYPE | 1 | A `Type` kind (also know as `*` in Haskell) built-in. |
 
 
  
