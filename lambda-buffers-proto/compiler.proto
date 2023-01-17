@@ -397,7 +397,7 @@ LambdaBuffers use type classes to talk about the various 'meanings' or
 'semantics' we want to associate with the types in LambdaBuffers schemata.
 
 For instance, most types can have `Eq` semantics, meaning they can be compared
-with equality. Other can have `Json` semantics, meaning they have some encoding
+for equality. Other can have `Json` semantics, meaning they have some encoding
 in the Json format.
 
 Using type classes and instance declarations, much like in Haskell, users can
@@ -405,7 +405,8 @@ specify the 'meaning' of each type they declare.
 
 Note that for each type class introduced, the entire Codegen machinery must be
 updated to support said type class. In other words, it doesn't come for free and
-for each new type class, a Codegen support must be implemented for Opaque types
+for each new type class, a Codegen support must be implemented for [opaque](@ref
+Opaque) types
 used and for generic structural rules to enable generic support for user derived
 types.
 
@@ -470,9 +471,10 @@ message Module {
 
 /* Compiler Input
 
-Compiler Inputs is a fully self contained list of modules, the entire
-compilation closure.
+Compiler Input is a fully self contained list of modules, the entire
+compilation closure needed by the Compiler to perform its task.
 */
 message CompilerInput {
+  // Modules to compile.
   repeated Module modules = 1;
 }

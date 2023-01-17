@@ -60,10 +60,47 @@ performant) code generation.
 ## Checking Typeclass Definitions and Instance Clauses
 
 The _Compiler_ should, if possible, ensure that all instance declarations for
-schemata are derivable using hard-coded derivation axioms. Because the checks
-relevant to validating type class instances ough to be entirely separate from
-the checks enumerated above, they can be worked on separately at a later date
-when the design of the typeclass system has been fleshed out more.
+schemata are derivable using hard-coded derivation axioms.
+
+Other schema languages support generating type definitions in many languages
+from a single definition in the schema language. One key feature that sets
+LambdaBuffers apart from these alternatives is support for
+[_typeclasses_](https://en.wikipedia.org/wiki/Type_class), which enable the
+generation of [ad-hoc polymorphic
+functions](https://en.wikipedia.org/wiki/Ad_hoc_polymorphism) that operate on
+types generated from LambdaBuffers schemata.
+
+LambdaBuffers schema language doesn't allow users to specify typeclass instance
+implementations themselves. Users, instead, will write _instance clauses_ as
+part of the schema definition, and the LambdaBuffers code generator will derive
+these declared instances when generating code.
+
+Two important consequences of this design decision are:
+
+1) _All instances must be derived structurally_. As an example, consider the
+arbitrary product type `data P a b = P a b`. The semantics of the generated
+instance (i.e. the behavior of the generated code) must be determinable from the
+_structure of the type_ - that it is a product - and the instances for its
+arguments `a` and `b`, and by those features alone. (Since `a` and `b` are type
+variables here, writing a direct instance for any interesting class is likely
+impossible, so LambdaBuffers supports constrained instances such as `instance (C
+a, C b) => C (P a b)`)
+
+2) _All instances must be uniform across supported languages_. Because the
+LambdaBuffers codegen component (and _not_ the user) is responsible for
+generating instances, we must ensure that the codegen component is suitably
+equipped to generate instances in each language that exhibit behavior which is,
+to the greatest extent possible, equivalent to the behavior of generated
+instances in any other language. We _must_ have an extensive test quite to
+verify uniform behavior of generated instances.
+
+In languages with a typeclass system (Haskell, PureScript) or equivalent (Rust's
+Traits), we will utilize the existing system and _should_ (to the extent that
+doing so is feasible) utilize existing typeclasses and instances from commonly
+used or standard libraries. In languages lacking a type system that is
+sufficiently rich to express typeclass relations, we will generate instances
+using idiomatic language features. (The details will depend on the particular
+language.)
 
 ## Unsolved Problems
 
