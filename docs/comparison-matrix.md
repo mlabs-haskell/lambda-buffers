@@ -31,6 +31,7 @@ Legend:
 | Language specification                                 | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
 | Backwards compatibility strategy                       | 🟢                | 🔴           | 🔴              | 🔴                 | 🔴       | 🔴           |
 
+:todo: add chapter elaborating on each feature
 ## References 
 
 - https://json-schema.org/implementations.html
