@@ -24,7 +24,7 @@ Legend:
 | Codegen support                                        | 🟢 (Excellent)    | 🟢 (Average) | 🟢 (Excellent)  | 🟡                 | 🟢 (Bad) | 🟢 (Average) |
 | DevOps tooling - build system integration              | 🟢                | 🔴           | ❔              | 🟡                 | 🔴       | 🔴           |
 | Documentation tooling                                  | 🟢                | ❔           | 🟢              | 🔵                 | 🔴       | ❔           |
-| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🔵                 | 🔴       | 🔴           |
+| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Documentation tooling                                  | 🟢                | 🔴           | 🟢              | 🔵                 | 🔴       | ❔           |
 | Language checker API                                   | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Codegen API                                            | 🟢                | 🟢           | 🔴              | 🟢                 | 🔴       | 🔴           |
