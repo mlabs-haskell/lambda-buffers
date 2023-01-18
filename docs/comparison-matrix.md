@@ -8,41 +8,24 @@ Legend:
 - 🟡 In development
 - 🔵 Potential future feature
 - 🔴 Not currently available
+- ❔ Not clear
 
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| **Feature**                      | **Protocol Buffers** | **ADL** | **JSON Schema** | **Lambda Buffers** |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Sum Types                        | 🟢                   | 🟢      | 🟢              | 🟢                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Record Types                     |                      |         |                 | 🟢                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Product Types                    |                      |         |                 | 🟢                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Recursive Types                  |                      |         |                 | 🟢                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Types as single source of truth  |                      |         |                 | 🟢                 |
-| by many backeds to generate type |                      |         |                 |                    |
-| definitions in target languages. |                      |         |                 |                    |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Generate markdown or html using  |                      |         |                 | 🔵                 |
-| type definitions.                |                      |         |                 |                    |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Formatting tool.                 |                      |         |                 | 🔵                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Opaque types support.            |                      |         |                 | 🟢                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Modular design and decoupled .   | 🟢                   |         |                 | 🟢                 |
-| components allow for easy        |                      |         |                 |                    |
-| interfacing and  building on top |                      |         |                 |                    |
-| of the components                |                      |         |                 |                    |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-| Backwards compatibility          |                      |         |                 | 🔵                 |
-|----------------------------------|----------------------|---------|-----------------|--------------------|
-|                                  |                      |         |                 |                    |
-
-
-
-
+| **Feature**                                      | **Proto Buffers** | **ADL** | **JSON Schema** | **Lambda Buffers** | **CDDL** | **ASN.1** |
+|--------------------------------------------------|-------------------|---------|-----------------|--------------------|----------|-----------|
+| Sum Types                                        | 🟢                | 🟢      | 🔴              | 🟢                 |          |           |
+| Record Types                                     | 🟢                |         |                 | 🟢                 |          |           |
+| Product Types                                    | 🟢                | 🟢      | 🟢              | 🟢                 |          |           |
+| Recursive Types                                  |                   |         |                 | 🟢                 |          |           |
+| Type functions                                   | 🔴                | 🔴      | 🔴              | 🟢                 |          |           |
+| One type schema for many languages.              |                   |         |                 | 🟢                 |          |           |
+| Generate markdown or html using type definitions |                   |         |                 | 🔵                 |          |           |
+| Formatting tool                                  |                   |         |                 | 🔵                 |          |           |
+| Opaque types support                             |                   |         |                 | 🟢                 |          |           |
+| Modular design and decoupled internal components | 🟢                | 🔴      | 🔴              | 🟢                 |          |           |
+| Backwards compatibility                          | 🟢                |         |                 | 🔵                 |          |           |
+| Unification based Kind checking.                 |                   |         |                 | 🟢                 |          |           |
+| Type annotations                                 |                   |         |                 | 🔵                 |          |           |
+|                                                  |                   |         |                 |                    |          |           |
 
 ## Google Protocol Buffers
 
@@ -53,13 +36,6 @@ Legend:
 
 - Recursive types.
 
-### Currently Missing Feature
-
-- Documentation generation - generate markdown or html documentation from the
--type definitions.
-
-- Formatting tool.
-
 ### Additional Features
 
 - Can specify type functions.
@@ -68,7 +44,7 @@ Legend:
 
 - Type class instances are checked by the Compiler.
 
-- Unification based Kind checking.
+- 
 
 ### Additional Features Considered
 
