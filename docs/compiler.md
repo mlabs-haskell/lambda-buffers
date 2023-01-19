@@ -34,7 +34,7 @@ The first step the Compiler performs is _kind checking and inference_ on [type
 definitions](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-TyDef)
 provided by the _Frontend_ and otherwise raises [kind checking errors](missing-link).
 
-When successful, the Compiler outputs a [CompilerOutput](missing-link) that
+When successful, the Compiler outputs a [Compiler Output](missing-link) that
 annotates each [type
 term](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Ty) with
 [kind](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Kind)
@@ -113,7 +113,7 @@ impossible, so LambdaBuffers supports constrained instances such as `instance (C
 a, C b) => C (P a b)`)
 
 2) _All instances must be uniform across supported languages_. Because the
-LambdaBuffers codegen component (and _not_ the user) is responsible for
+LambdaBuffers _Codegen_ component (and _not_ the user) is responsible for
 generating instances, we must ensure that the codegen component is suitably
 equipped to generate instances in each language that exhibit behavior which is,
 to the greatest extent possible, equivalent to the behavior of generated
@@ -127,6 +127,53 @@ used or standard libraries. In languages lacking a type system that is
 sufficiently rich to express typeclass relations, we will generate instances
 using idiomatic language features. (The details will depend on the particular
 language.)
+
+## Kind Checker
+
+The kind checker is designed around a simply typed lambda calculus type system
+with inference via unification (_John Alan Robinson's_ unification algorithm is
+being currently used). We've also introduced a `let` binding rule that allows
+later additions to the typing context. The typing rules are the following:
+
+```text
+ x : σ ∈ Γ
+----------- [Variable]
+ Γ ⊢ x : σ
+
+  
+      Γ,x:σ ⊢ e:τ
+------------------------ [Abstraction]
+ Γ ⊢ (λ x:σ. e):(σ → τ)
+
+
+Γ ⊢ x:(σ → τ)    Γ ⊢ y:σ
+------------------------- [Application]
+       Γ ⊢ x y : τ
+
+
+Γ ⊢ e₁:σ    Γ, e₁ : σ ⊢ e₂:τ
+----------------------------- [Let]
+   Γ ⊢ let x = e₁ in e₂ : τ
+```
+
+The type checking strategy is as follows:
+
+1. A context is built from the type definitions. Type variables which are not
+   annotated with any further kind information are defaulted to be of kind
+   `Type`.
+
+2. The RHS of the type terms are converted into their _Sums of Products_
+   canonical represantion. The variables from the left hand side of the term
+   are introduced to the right hand side as abstractions.
+
+3. The derivation for each term is built.
+
+4. Then the unification tries to find a solution.
+
+Terms for which unification cannot find a consistent derivation are deemed
+incorrect and a kind checking error is thrown. Note that currently all of the
+inferred kinds have a restriction to be monomorphic - therefore no free or
+universally quantified variables can appear in the final kind signature.
 
 ## Unsolved Problems
 
