@@ -2,7 +2,7 @@
 
 ## Introduction
 
-_LambdaBuffers_ is a schema language (similar to ProtoBuffers, ADL, ASN.1, JSON Schema, etc) and associated code generation toolkit. The goal of this project is to provide developers tools to define algebraic data types in a language-agnostic format such that shared data types can be declared in one place while maintaining compatibility across a plethora of supported languages.
+_LambdaBuffers_ is a schema language (similar to ProtoBuffers, ADL, ASN.1, JSON Schema, etc.) and associated code generation toolkit. The goal of this project is to provide developers tools to define algebraic data types in a language-agnostic format such that shared data types can be declared in one place while maintaining compatibility across a plethora of supported languages.
 
 Users may refer to the [comparison matrix](./docs/comparison-matrix.md) for an in-depth comparison of LambdaBuffers' features against the feature-set of other popular schema-languages.
 
