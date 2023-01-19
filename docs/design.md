@@ -25,7 +25,7 @@ costs to the business and unsustainable technical debt.
 3. Extensibility to new types,
 4. Extensibility to new semantics,
 5. Universally consistent semantics,
-6. Modular architecture with APIs for each component.
+6. Modular API architecture.
 
 ### Expressive types
 
@@ -128,4 +128,29 @@ LambdaBuffers doesn't provide a way to formally ensure such consistency,
 however, a comprehensive test suite could be developed to make sure new code
 generation modules are indeed implemented correctly.
 
-### Modular architecture with APIs for each component
+### Modular API architecture
+
+Well scoped architecture components and established API based boundaries between
+them facilitates sustainable development in the
+long term.
+
+LambdaBuffers establishes three separate components of the architecture, namely
+*Frontend*, *Compiler* and *Codegen**.
+
+*Frontend* is a user facing component that features a way to input, specify or
+otherwise construct application types. *Frontend* also orchestrates the overall
+work that includes the *Compiler* and *Codegen*, invoking each of these
+components as required by different workflows the *Frontend* supports.
+LambdaBuffers officially supports a *Frontend* component implementation that
+features a text based language for specifying LambdaBuffers types. However,
+because of the modular API architecture approach, a *Frontend* can be
+implemented in any language and in any fashion as long as they are able to
+interface with the *Compiler* and *Codegen* components.
+
+The *Compiler* is a key component that is made available via the *Compiler
+Input* specified via [Google Protocol Buffers](https://protobuf.dev/). It
+performs all the necessary checks to ensure that the naming, type definitions
+and their declared semantics are indeed valid.
+
+The *Codegen* component consumes the *Compiler Output* that contains all the
+information necessary to perform valid and robust code generation.
