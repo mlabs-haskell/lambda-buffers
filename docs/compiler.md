@@ -48,11 +48,10 @@ Currently, the _Compiler_ accepts:
 
  1. type terms of kind `Type` (such as `Int` or `Bool`),
 
- 2. and type function terms of kind `Type → Type` (such as `Maybe` or `Either`).
+ 2. type function terms of kind `Type → Type` (such as `Maybe` or `Either` - though note that type functions are not "first class" in the sense that they cannot be passed as arguments to other type functions).
 
 There are future plans to expand this to Higher Kinded Types (such as `MaybeT`,
-`StateT` etc.) - subject to research into _Codegen_ of such types in the target
-languages.
+`StateT` etc - i.e. types parameterized on type function terms) - subject to research into _Codegen_ of such types in the target languages.
 
 _Compiler_ does support recursive types.
 
@@ -97,7 +96,7 @@ generation of [ad-hoc polymorphic
 functions](https://en.wikipedia.org/wiki/Ad_hoc_polymorphism) that operate on
 types generated from LambdaBuffers schemata.
 
-LambdaBuffers schema language doesn't allow users to specify typeclass instance
+The LambdaBuffers schema language doesn't allow users to specify typeclass instance
 implementations themselves. Users, instead, will write _instance clauses_ as
 part of the schema definition, and the LambdaBuffers code generator will derive
 these declared instances when generating code.
