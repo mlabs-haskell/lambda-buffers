@@ -7,22 +7,22 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes #-}
 
-module Gen.RustGen.Instances.Eq where
+module LambdaBuffers.Gen.RustGen.Instances.Eq where
 
+import Control.Applicative
 import Data.Text (Text)
-import Prettyprinter
 import qualified Data.Map as M
 
-import Gen.PP
+import Prettyprinter
 
-import Common.Types
+import LambdaBuffers.Gen.PP
+import LambdaBuffers.Common.Types
+import LambdaBuffers.Common.SourceTy (TyDef)
+import LambdaBuffers.Resolve.Derive (runDerive)
+import LambdaBuffers.Gen.RustGen.RustTy
+import LambdaBuffers.Gen.Generator
+import LambdaBuffers.Resolve.Rules
 
-import Gen.Generator
-import Resolve.Rules
-import Control.Applicative
-import Common.SourceTy (TyDef)
-import Resolve.Derive (runDerive)
-import Gen.RustGen.RustTy
 --for testing
 
 eq :: Class l

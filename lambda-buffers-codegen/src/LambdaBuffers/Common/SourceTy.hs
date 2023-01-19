@@ -8,7 +8,7 @@ it will make many functions partial or introduce the need for additional error h
 we end up abandoning the use of NonEmpty/etc.
 
 -}
-module Common.SourceTy where
+module LambdaBuffers.Common.SourceTy where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Text (Text)

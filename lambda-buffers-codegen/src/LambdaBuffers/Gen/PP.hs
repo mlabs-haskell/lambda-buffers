@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Gen.PP where
+module LambdaBuffers.Gen.PP where
 
 import Prettyprinter
 import Data.Text (Text)

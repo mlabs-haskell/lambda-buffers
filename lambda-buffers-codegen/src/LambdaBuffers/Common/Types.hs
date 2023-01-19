@@ -2,14 +2,14 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecordWildCards, OverloadedStrings #-}
 
-module Common.Types where
+module LambdaBuffers.Common.Types where
 
-import qualified Common.SourceTy as Ty
+import qualified LambdaBuffers.Common.SourceTy as Ty
 import Data.Bifunctor
 import qualified Data.List.NonEmpty  as NE
 import Data.Text (Text)
 
-{- A simple ADT to represent types (i.e. the terms of our schema language).
+{- A simple ADT to represent patterns
 
 We can also use this to represent patterns by using PatVars in compound types.
 

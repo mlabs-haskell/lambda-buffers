@@ -2,14 +2,15 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DataKinds, PolyKinds, GADTs, RankNTypes, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, AllowAmbiguousTypes #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 
-module Gen.Generator where
+module LambdaBuffers.Gen.Generator where
 
 import Data.List ( nub, foldl' )
-import Common.Match
-import Common.Types
 import Control.Applicative (Alternative(..))
 import Data.Kind
 import Prettyprinter (Doc)
+
+import LambdaBuffers.Common.Match
+import LambdaBuffers.Common.Types
 
 data Lang where
   Rust :: Lang

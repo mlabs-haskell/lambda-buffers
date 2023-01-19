@@ -9,17 +9,16 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 
-module Resolve.Solve where
+module LambdaBuffers.Resolve.Solve where
 
 import Data.List (foldl', sortBy)
 import Data.Text (Text)
 import qualified Data.Set as S
 
-import Common.Match
-import Common.Types
-
-import Resolve.Rules
-import Gen.Generator
+import LambdaBuffers.Common.Match
+import LambdaBuffers.Common.Types
+import LambdaBuffers.Resolve.Rules
+import LambdaBuffers.Gen.Generator
 
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the

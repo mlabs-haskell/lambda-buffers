@@ -6,11 +6,12 @@
 {-# LANGUAGE GADTs #-}
 
 
-module Resolve.Rules where
+module LambdaBuffers.Resolve.Rules where
 
-import Common.Types
-import Gen.Generator
 import Data.Kind (Type)
+
+import LambdaBuffers.Common.Types
+import LambdaBuffers.Gen.Generator
 
 type InstanceGen l = Parser l InstanceDecl () (DSL l)
 

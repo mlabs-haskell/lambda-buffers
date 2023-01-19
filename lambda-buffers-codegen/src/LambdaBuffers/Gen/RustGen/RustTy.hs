@@ -3,20 +3,19 @@
 {-# LANGUAGE DataKinds  #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
-module Gen.RustGen.RustTy where
-
+module LambdaBuffers.Gen.RustGen.RustTy where
 
 import qualified Data.Set as S
 import Data.Text (Text)
 import qualified Data.Text as T
-
-import Common.SourceTy (TyDef)
-import Common.Types
-import Gen.Generator
 import Control.Applicative
 
 import Prettyprinter
-import Gen.PP
+
+import LambdaBuffers.Gen.PP
+import LambdaBuffers.Common.SourceTy (TyDef)
+import LambdaBuffers.Common.Types
+import LambdaBuffers.Gen.Generator
 
 type RustGen c = Parser Rust c () (Doc ())
 
