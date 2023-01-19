@@ -32,9 +32,9 @@ documentation](../lambda-buffers-proto/compiler-proto.md) for more information.
 
 The first step the Compiler performs is _kind checking and inference_ on [type
 definitions](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-TyDef)
-provided by the _Frontend_ and otherwise raises [kind checking errors](missing-link).
+provided by the _Frontend_ and otherwise raises [kind checking errors](#missing-link).
 
-When successful, the Compiler outputs a [Compiler Output](missing-link) that
+When successful, the Compiler outputs a [Compiler Output](#missing-link) that
 annotates each [type
 term](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Ty) with
 [kind](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Kind)
@@ -140,7 +140,7 @@ later additions to the typing context. The typing rules are the following:
 ----------- [Variable]
  Γ ⊢ x : σ
 
-  
+
       Γ,x:σ ⊢ e:τ
 ------------------------ [Abstraction]
  Γ ⊢ (λ x:σ. e):(σ → τ)
@@ -177,7 +177,7 @@ universally quantified variables can appear in the final kind signature.
 
 ## Unsolved Problems
 
-- [ ] How do we represent recursive types in our lambda calculus AST?
-
 - [ ] How would cardinality checking be integrated within our current checking
       strategy?
+
+## Missing link
