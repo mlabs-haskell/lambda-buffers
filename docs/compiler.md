@@ -8,9 +8,9 @@ provided by the _Frontend_ ensuring that supplied type, class and instance
 clause definitions are valid or otherwise communicate any error conditions
 determined during processing.
 
-The end goal of the _Compiler_
-is to ensure that the _Codegen_ component is capable of processing the _Compiler
-Output_ by providing correct and complete information.
+The end goal of the _Compiler_ is to ensure that the _Codegen_ component is
+capable of processing the _Compiler Output_ by providing correct and complete
+information.
 
 ## _Compiler_ interface
 
@@ -48,12 +48,15 @@ Currently, the _Compiler_ accepts:
 
  1. type terms of kind `Type` (such as `Int` or `Bool`),
 
- 2. type function terms of kind `Type → Type` (such as `Maybe` or `Either` - though note that type functions are not "first class" in the sense that they cannot be passed as arguments to other type functions).
+ 2. type function terms of kind `Type → Type` (such as `Maybe` or `Either` -
+    though note that type functions are not "first class" in the sense that they
+    cannot be passed as arguments to other type functions).
 
 There are future plans to expand this to Higher Kinded Types (such as `MaybeT`,
-`StateT` etc - i.e. types parameterized on type function terms) - subject to research into _Codegen_ of such types in the target languages.
+`StateT` etc - i.e. types parameterized on type function terms) - subject to
+research into _Codegen_ of such types in the target languages.
 
-_Compiler_ does support recursive types.
+The _Compiler_ supports recursive types.
 
 All LambdaBuffers [type
 variables](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-TyArg)
@@ -68,8 +71,9 @@ types to determine their cardinality. This is especially useful to catch and
 report on _non inhabited_ types that users might define.
 
 For example, `data F a = F (F a)` declares a _non-inhabited recurisve type_ that
-can't be constructed. LambdaBuffers Compiler SHOULD reject such types as they
-can't possibly be constructed and generated typeclass instances would in turn be ill-defined.
+can't be constructed. LambdaBuffers Compiler _SHOULD_ reject such types as they
+can't possibly be constructed and generated typeclass instances would in turn be
+ill-defined.
 
 This problem is equivalent to a problem of [calculating graph
 components](https://en.wikipedia.org/wiki/Component_(graph_theory)).
@@ -176,8 +180,6 @@ inferred kinds have a restriction to be monomorphic - therefore no free or
 universally quantified variables can appear in the final kind signature.
 
 ## Unsolved Problems
-
-- [ ] How do we represent recursive types in our lambda calculus AST?
 
 - [ ] How would cardinality checking be integrated within our current checking
       strategy?

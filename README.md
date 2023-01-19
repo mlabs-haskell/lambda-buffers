@@ -15,11 +15,11 @@ popular schema-languages.
 At a glance, you may wish to choose LambdaBuffers instead of one of its
 competitors if your project requires:
 
- 1. _Parameterized Data Types_: Unlike ProtoBuffers or JSON Schema,
-    LambdaBuffers allows users to define algebraic data types which take type
-    variable arguments. If your project's domain is most accurately represented
-    by parameterized data types. LamdaBuffers may be a good choice for your
-    needs.
+ 1. _Parameterized Data Types_ (aka. type functions): Unlike ProtoBuffers or
+    JSON Schema, LambdaBuffers allows users to define algebraic data types which
+    take type variable arguments. If your project's domain is most accurately
+    represented by parameterized data types, LamdaBuffers may be a good choice
+    for your needs.
 
  2. _Opaque Types_: Almost every competing schema language provides users a
     fixed set of builtin or primitive types, which are handled in a special
