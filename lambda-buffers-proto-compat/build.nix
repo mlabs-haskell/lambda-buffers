@@ -17,7 +17,7 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      (builtins.toString compilerHsPb)
+      "${compilerHsPb}"
     ];
 
     modules = [

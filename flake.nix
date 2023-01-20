@@ -84,6 +84,7 @@
             inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
             inherit (protosBuild) compilerHsPb;
             inherit (pre-commit-check) shellHook;
+            protoCompat = ./lambda-buffers-proto-compat;
           };
           codegenFlake = codegenBuild.hsNixProj.flake { };
 
@@ -95,7 +96,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // protoCompatFlake.packages // codegenFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;

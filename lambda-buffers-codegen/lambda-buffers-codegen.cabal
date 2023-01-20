@@ -91,9 +91,9 @@ library
     , lens
     , generic-lens
     , proto-lens
-    , proto-compat
     , containers
     , lambda-buffers-compiler-pb
+    , lambda-buffers-proto-compat
 
   hs-source-dirs:  src
   exposed-modules:
@@ -106,4 +106,4 @@ library
     LambdaBuffers.Resolve.Rules
     LambdaBuffers.Resolve.Solve
     LambdaBuffers.Gen.RustGen.Instances.Eq
-    LambdaBuffers.Gen.RustGen.RustTY
+    LambdaBuffers.Gen.RustGen.RustTy

@@ -4,6 +4,7 @@
 , compiler-nix-name
 , index-state
 , compilerHsPb
+, protoCompat
 , commonTools
 , shellHook
 }:
@@ -17,7 +18,8 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      (builtins.toString compilerHsPb)
+      "${compilerHsPb}"
+      "${protoCompat}"
     ];
 
     modules = [
