@@ -1,6 +1,6 @@
 <!-- markdownlint-disable-file -->
 
-# Comparison Matrix 
+# Comparison Matrix
 
 Legend:
 
@@ -11,7 +11,7 @@ Legend:
 - ❔ Not clear
 
 | **Feature**                                            | **Proto Buffers** | **ADL**      | **JSON Schema** | **Lambda Buffers** | **CDDL** | **ASN.1**    |
-|--------------------------------------------------------+-------------------+--------------+-----------------+--------------------+----------+--------------|
+|--------------------------------------------------------|-------------------|--------------|-----------------|--------------------|----------|--------------|
 | Sum types                                              | 🟢                | 🟢           | 🔴              | 🟢                 | 🟢       | 🟢           |
 | Record types                                           | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
 | Product types                                          | 🔴                | 🔴           | 🔴              | 🟢                 | ❔       | 🔴           |
@@ -31,39 +31,59 @@ Legend:
 | Language specification                                 | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
 | Backwards compatibility strategy                       | 🟢                | 🔴           | 🔴              | 🔴                 | 🔴       | 🔴           |
 
-## Features
+## Descriptions
 
-### Sum types
+### Sum Types
 
-A type that can take on several different forms, also referred to as a *tagged
-union* or a *variant* (see https://en.wikipedia.org/wiki/Tagged_union).
+Types of the form `Time = Present | Past | Future`, which allow a type do be
+constructed by one of many variants. Think Rust's `enums`.
 
-An example sum type definition in Haskell
+### Product Types
 
-```haskell
+Types of the form `Person = MkPerson Age Name`, where `MkPerson` is of Kind
+`Type->Type->Type`. Product types combine multiple elements into one data type
+without tagging the elements.
 
-data Either a b = Left a | Right b
-```
-### Record types
+### Record Types
 
-A record type is essentially a product type where each field is accompanied by a
-field name (https://en.wikipedia.org/wiki/Product_type)
+Types of the form `Person = MkPerson { age :: Age, name :: Name }`. Record types
+are similar to `structs` in most programming languages.
 
-### Product types
+### Recursive Types
 
-A product type is a tuple of types.
+Recursive types are defined by the presence of the LHS type in its RHS
+definition. A classic example is:
 
-### Recursive types
-
-Recursive types are types that are defined in terms of themselves.
-
-```haskell
-
-data List a = Nil | Cons a (List a)
-data Tree a = Leaf a | Branch (Tree a) (Tree a)
+```text
+List a = Nil | Cons a (List a)
+^^^^^^                 ^^^^^^
 ```
 
-## References 
+### Type Functions (Generics)
+
+Type functions allow for the introduction of type variables in the LHS definition
+of the term - creating a parametrised type definition. The classic example is
+`Maybe a` which is the equivalento of `Option <A>` in rust:
+
+```text
+Maybe a = Nothing | Just a
+```
+
+Using the above type definition we can now define another type that uses `Maybe`
+and instantiates it to use `Integer`
+
+```text
+Time_Saved_via_LambdaBuffers = Maybe Integer
+```
+
+### Type Annotations / Constraints
+
+:FIXME: @Drazen
+
+### Add New Built-in Types
+
+## References
+
 
 - https://json-schema.org/implementations.html
 - https://www.rfc-editor.org/rfc/rfc8610
