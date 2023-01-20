@@ -1,4 +1,4 @@
-# LambdaBuffers command line interface
+# LambdaBuffers Command Line Interface
 
 LambdaBuffers consists of three runtime command line interface components:
 

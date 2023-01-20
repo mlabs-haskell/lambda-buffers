@@ -1,10 +1,10 @@
-# LambdaBuffers design
+# LambdaBuffers Design
 
 The goal of the LambdaBuffers project is to enable software developers to
 specify their application types in a common format that can be conveniently
 shared and their values effectively communicated across language barriers.
 
-## Problem statement
+## Problem Statement
 
 Software projects that span multiple language environments often interact in a
 sub-optimal manner. Significant effort is spent in making application messages
@@ -27,7 +27,7 @@ costs to the business and unsustainable technical debt.
 5. Universally consistent semantics,
 6. Modular API architecture.
 
-### Expressive types
+### Expressive Types
 
 Application types that users can define should be expressive enough to
 facilitate type driven domain modeling and to express application
@@ -43,7 +43,7 @@ parameterized, effectively enabling generic types. LambdaBuffers also supports
 recursive type definitions, which allow users to succinctly define elegant and
 expressive data structures.
 
-### Expressive semantics annotation
+### Expressive Semantics Annotation
 
 Enabling users to manage the *semantics* associated with their types is
 essential for adapting LambdaBuffers to a variety of different domains and use
@@ -82,7 +82,7 @@ document for a given type class.
 For each new type class declared, code generation tooling must be updated to
 handle the new type class.
 
-### Extensible to new types
+### Extensible to New Types
 
 Enabling users to introduce new *built-in* types allows LambdaBuffers to be
 adapted in many different domains and use cases.
@@ -105,7 +105,7 @@ equipped with rich libraries that work with them. Redefining them *ab ovo* would
 be counterproductive as users would have to re-implement and reinvent the rich
 support for such types.
 
-### Extensible to new semantics
+### Extensible to New Semantics
 
 Enabling users to introduce new *type semantics* facilitates LambdaBuffers to be
 adapted in many different domains and use cases.
@@ -134,7 +134,7 @@ provide code generation modules for a set of officially supported language
 environments. However, modular design will hopefully facilitate community
 contributions in a sustainable fashion.
 
-### Universally consistent semantics
+### Universally Consistent Semantics
 
 The types specified by users must be handled in a compatible manner across
 language environments. This is a critical requirement that underpins this
@@ -150,7 +150,7 @@ LambdaBuffers does not provide a way to formally verify consistency across langu
 however, a comprehensive test suite will be developed to ensure that new code
 generation modules are indeed implemented correctly.
 
-### Modular API architecture
+### Modular API Architecture
 
 LambdaBuffers establishes three separate components of the architecture, namely
 *Frontend*, *Compiler* and *Codegen**.

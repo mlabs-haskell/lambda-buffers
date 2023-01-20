@@ -43,7 +43,11 @@ competitors if your project requires:
 
 ## Documentation
 
-- [Compiler](./docs/compiler.md)
+- [Design](./docs/design.md),
+- [Compiler](./docs/compiler.md),
+- [Codegen](./docs/codegen.md),
+- [Comparison matrix](./docs/comparison-matrix.md),
+- [User feedback](.docs/feedback)
 
 ## Getting started
 

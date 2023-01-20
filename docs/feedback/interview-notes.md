@@ -14,7 +14,7 @@
 1. Introduction - what is Lambda Buffers and what is Lambda Buffers' aim.
 2. Interviews
 
-## Meeting minutes
+## Meeting Minutes
 
 1. Drazen introduces what Lambda Buffers is, and how it relates to the target languages. Points touched on:
     1. Tooling

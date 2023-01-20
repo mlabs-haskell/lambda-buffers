@@ -1,4 +1,4 @@
-# LambdaBuffers _Compiler_ Spec & Design
+# LambdaBuffers Compiler
 
 The _Compiler_ component sits between the _Frontend_ component and the code
 generation component named _Codegen_. The purpose of the _Compiler_ is to
@@ -12,7 +12,7 @@ The end goal of the _Compiler_ is to ensure that the _Codegen_ component is
 capable of processing the _Compiler Output_ by providing correct and complete
 information.
 
-## _Compiler_ interface
+## Compiler Interface
 
 The _Compiler_ operates on the _Compiler Input_ message specified in the
 [compiler.proto](../lambda-buffers-proto/compiler.proto) [Google Protocol
@@ -28,7 +28,7 @@ communicating via [Google Protocol Buffers](https://protobuf.dev/).
 Refer to the [Compiler Proto
 documentation](../lambda-buffers-proto/compiler-proto.md) for more information.
 
-## Checking type definitions (kind checking)
+## Checking Type Definitions
 
 The first step the Compiler performs is _kind checking and inference_ on [type
 definitions](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-TyDef)
@@ -40,9 +40,9 @@ term](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Ty) with
 [kind](../lambda-buffers-proto/compiler-proto.md#lambdabuffers-compiler-Kind)
 information.
 
-In standard _type checking_ terminology LambdaBuffers terms are [abstract data
+In standard _type checking_ terminology LambdaBuffers 'terms' are [abstract data
 type](https://en.wikipedia.org/wiki/Abstract_data_type) declarations and their
-types are kinds.
+'types' are _kinds_.
 
 Currently, the _Compiler_ accepts:
 
@@ -64,75 +64,7 @@ terms must be monomorphically kinded, with polymorphic kinds defaulting to
 monomorphic ones. For example `Phantom a = Phantom` would resolve to the
 monomorphic kind `Type → Type` rather than the polymorphic kind `∀a. a → Type`.
 
-## Checking type cardinality
-
-In addition to _kind checking_, the Compiler could perform a special check for
-types to determine their cardinality. This is especially useful to catch and
-report on _non inhabited_ types that users might define.
-
-For example, `data F a = F (F a)` declares a _non-inhabited recursive type_ that
-can't be constructed. LambdaBuffers Compiler _SHOULD_ reject such types as they
-can't possibly be constructed and generated typeclass instances would in turn be
-ill-defined.
-
-This problem is equivalent to a problem of [calculating graph
-components](https://en.wikipedia.org/wiki/Component_(graph_theory)).
-
-## Normalizing type definitions
-
-Finally, the compiler should be able to _normalize_ expressions. For example, it
-may be possible to define a data type in the schema language in a form similar
-to: `data G a = G ((Either) ((Maybe) a) Int)`, where the bracketing indicates
-the order of application within the term. The example term would normalize to
-`data G a = G (Either (Maybe a) Int)` - resulting in a cleaner (and more
-performant) code generation.
-
-## Checking typeclass definitions and instance clauses
-
-The _Compiler_ should, if possible, ensure that all instance declarations for
-schemata are derivable using hard-coded derivation axioms.
-
-Other schema languages support generating type definitions in many languages
-from a single definition in the schema language. One key feature that sets
-LambdaBuffers apart from these alternatives is support for
-[_typeclasses_](https://en.wikipedia.org/wiki/Type_class), which enable the
-generation of [ad-hoc polymorphic
-functions](https://en.wikipedia.org/wiki/Ad_hoc_polymorphism) that operate on
-types generated from LambdaBuffers schemata.
-
-The LambdaBuffers schema language doesn't allow users to specify typeclass instance
-implementations themselves. Users, instead, will write _instance clauses_ as
-part of the schema definition, and the LambdaBuffers code generator will derive
-these declared instances when generating code.
-
-Two important consequences of this design decision are:
-
-1) _All instances must be derived structurally_. As an example, consider the
-arbitrary product type `data P a b = P a b`. The semantics of the generated
-instance (i.e. the behavior of the generated code) must be determinable from the
-_structure of the type_ - that it is a product - and the instances for its
-arguments `a` and `b`, and by those features alone. (Since `a` and `b` are type
-variables here, writing a direct instance for any interesting class is likely
-impossible, so LambdaBuffers supports constrained instances such as `instance (C
-a, C b) => C (P a b)`)
-
-2) _All instances must be uniform across supported languages_. Because the
-LambdaBuffers _Codegen_ component (and _not_ the user) is responsible for
-generating instances, we must ensure that the codegen component is suitably
-equipped to generate instances in each language that exhibit behavior which is,
-to the greatest extent possible, equivalent to the behavior of generated
-instances in any other language. We _must_ have an extensive test quite to
-verify uniform behavior of generated instances.
-
-In languages with a typeclass system (Haskell, PureScript) or equivalent (Rust's
-Traits), we will utilize the existing system and _should_ (to the extent that
-doing so is feasible) utilize existing typeclasses and instances from commonly
-used or standard libraries. In languages lacking a type system that is
-sufficiently rich to express typeclass relations, we will generate instances
-using idiomatic language features. (The details will depend on the particular
-language.)
-
-## Kind Checker
+### Kind Checker
 
 The kind checker is designed around a simply typed lambda calculus type system
 with inference via unification (_John Alan Robinson's_ unification algorithm is
@@ -179,9 +111,72 @@ incorrect and a kind checking error is thrown. Note that currently all of the
 inferred kinds have a restriction to be monomorphic - therefore no free or
 universally quantified variables can appear in the final kind signature.
 
-## Unsolved Problems
+## Checking Type Cardinality
 
-- [ ] How would cardinality checking be integrated within our current checking
-      strategy?
+In addition to _kind checking_, the Compiler could perform a special check for
+types to determine their cardinality. This is especially useful to catch and
+report on _non inhabited_ types that users might define.
+
+For example, `data F a = F (F a)` declares a _non-inhabited recursive type_ that
+can't be constructed. LambdaBuffers Compiler _SHOULD_ reject such types as they
+can't possibly be constructed and generated typeclass instances would in turn be
+ill-defined.
+
+This problem is equivalent to a problem of [calculating graph
+components](https://en.wikipedia.org/wiki/Component_(graph_theory)).
+
+## Normalizing Type Definitions
+
+Finally, the compiler should be able to _normalize_ expressions. For example, it
+may be possible to define a data type in the schema language in a form similar
+to: `data G a = G ((Either) ((Maybe) a) Int)`, where the bracketing indicates
+the order of application within the term. The example term would normalize to
+`data G a = G (Either (Maybe a) Int)` - resulting in a cleaner (and more
+performant) code generation.
+
+## Checking Typeclass Definitions and Instance Clauses
+
+The _Compiler_ should, if possible, ensure that all instance declarations for
+schemata are derivable using hard-coded derivation axioms.
+
+Other schema languages support generating type definitions in many languages
+from a single definition in the schema language. One key feature that sets
+LambdaBuffers apart from these alternatives is support for
+[_typeclasses_](https://en.wikipedia.org/wiki/Type_class), which enable the
+generation of [ad-hoc polymorphic
+functions](https://en.wikipedia.org/wiki/Ad_hoc_polymorphism) that operate on
+types generated from LambdaBuffers schemata.
+
+The LambdaBuffers schema language doesn't allow users to specify typeclass instance
+implementations themselves. Users, instead, will write _instance clauses_ as
+part of the schema definition, and the LambdaBuffers code generator will derive
+these declared instances when generating code.
+
+Two important consequences of this design decision are:
+
+1) _All instances must be derived structurally_. As an example, consider the
+arbitrary product type `data P a b = P a b`. The semantics of the generated
+instance (i.e. the behavior of the generated code) must be determinable from the
+_structure of the type_ - that it is a product - and the instances for its
+arguments `a` and `b`, and by those features alone. (Since `a` and `b` are type
+variables here, writing a direct instance for any interesting class is likely
+impossible, so LambdaBuffers supports constrained instances such as `instance (C
+a, C b) => C (P a b)`)
+
+2) _All instances must be uniform across supported languages_. Because the
+LambdaBuffers _Codegen_ component (and _not_ the user) is responsible for
+generating instances, we must ensure that the codegen component is suitably
+equipped to generate instances in each language that exhibit behavior which is,
+to the greatest extent possible, equivalent to the behavior of generated
+instances in any other language. We _must_ have an extensive test quite to
+verify uniform behavior of generated instances.
+
+In languages with a typeclass system (Haskell, PureScript) or equivalent (Rust's
+Traits), we will utilize the existing system and _should_ (to the extent that
+doing so is feasible) utilize existing typeclasses and instances from commonly
+used or standard libraries. In languages lacking a type system that is
+sufficiently rich to express typeclass relations, we will generate instances
+using idiomatic language features. (The details will depend on the particular
+language.)
 
 ## Missing link
