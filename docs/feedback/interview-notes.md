@@ -37,7 +37,7 @@
     7. Question about any advice for the project.
         1. R. would like it to be seamless. R. mentions:
             1. Auto generate modules
-            2. pre-comit hooks
+            2. pre-commit hooks
             3. itterate quickly
             4. Nix integration is very important
             5. Not running commands.

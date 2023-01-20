@@ -166,4 +166,7 @@ performs all the necessary checks to ensure that the naming, type definitions
 and their declared semantics are indeed valid.
 
 The *Codegen* component consumes the *Compiler Output* that contains all the
-information necessary to perform valid and robust code generation.
+information necessary to perform valid and robust code generation. *Frontend*
+communicates with the *Codegen* to understand its *Capabilities*, enabling each
+*Codegen* module to gradually build up support for desired opaque types and
+declared semantics.
