@@ -1,6 +1,6 @@
 <!-- markdownlint-disable-file -->
 
-# Comparison Matrix 
+# Comparison Matrix
 
 Legend:
 
@@ -11,7 +11,7 @@ Legend:
 - ❔ Not clear
 
 | **Feature**                                            | **Proto Buffers** | **ADL**      | **JSON Schema** | **Lambda Buffers** | **CDDL** | **ASN.1**    |
-|--------------------------------------------------------+-------------------+--------------+-----------------+--------------------+----------+--------------|
+|--------------------------------------------------------|-------------------|--------------|-----------------|--------------------|----------|--------------|
 | Sum types                                              | 🟢                | 🟢           | 🔴              | 🟢                 | 🟢       | 🟢           |
 | Record types                                           | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
 | Product types                                          | 🔴                | 🔴           | 🔴              | 🟢                 | ❔       | 🔴           |
@@ -23,47 +23,115 @@ Legend:
 | Manage type semantics (at language level)              | 🔴                | 🔴           | 🔴              | 🟢                 | 🔴       | 🔴           |
 | Codegen support                                        | 🟢 (Excellent)    | 🟢 (Average) | 🟢 (Excellent)  | 🟡                 | 🟢 (Bad) | 🟢 (Average) |
 | DevOps tooling - build system integration              | 🟢                | 🔴           | ❔              | 🟡                 | 🔴       | 🔴           |
-| Documentation tooling                                  | 🟢                | ❔           | 🟢              | 🔵                 | 🔴       | ❔           |
-| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Documentation tooling                                  | 🟢                | 🔴           | 🟢              | 🔵                 | 🔴       | ❔           |
+| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Language checker API                                   | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Codegen API                                            | 🟢                | 🟢           | 🔴              | 🟢                 | 🔴       | 🔴           |
 | Language specification                                 | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
 | Backwards compatibility strategy                       | 🟢                | 🔴           | 🔴              | 🔴                 | 🔴       | 🔴           |
 
-## Features
+## Descriptions
 
-### Sum types
+### Sum Types
 
-A type that can take on several different forms, also referred to as a *tagged
-union* or a *variant* (see https://en.wikipedia.org/wiki/Tagged_union).
+Types of the form `Time = Present | Past | Future`, which allow a type do be
+constructed by one of many variants. Think Rust's `enums`.
 
-An example sum type definition in Haskell
+### Product Types
 
-```haskell
+Types of the form `Person = MkPerson Age Name`, where `MkPerson` is of Kind
+`Type->Type->Type`. Product types combine multiple elements into one data type
+without tagging the elements.
 
-data Either a b = Left a | Right b
-```
-### Record types
+### Record Types
 
-A record type is essentially a product type where each field is accompanied by a
-field name (https://en.wikipedia.org/wiki/Product_type)
+Types of the form `Person = MkPerson { age :: Age, name :: Name }`. Record types
+are similar to `structs` in most programming languages.
 
-### Product types
+### Recursive Types
 
-A product type is a tuple of types.
+Recursive types are defined by the presence of the LHS type in its RHS
+definition. A classic example is:
 
-### Recursive types
-
-Recursive types are types that are defined in terms of themselves.
-
-```haskell
-
-data List a = Nil | Cons a (List a)
-data Tree a = Leaf a | Branch (Tree a) (Tree a)
+```text
+List a = Nil | Cons a (List a)
+^^^^^^                 ^^^^^^
 ```
 
-## References 
+### Parameterized Types (Generics)
+
+Type functions allow for the introduction of type variables in the LHS definition
+of the term - creating a parametrised type definition. The classic example is
+`Maybe a` which is the equivalento of `Option <A>` in rust:
+
+```text
+Maybe a = Nothing | Just a
+```
+
+Using the above type definition we can now define another type that uses `Maybe`
+and instantiates it to use `Integer`
+
+```text
+Time_Saved_via_LambdaBuffers = Maybe Integer
+```
+
+### Type Annotations / Constraints
+
+There exists a system of constraining or further annotating types - enriching
+the type's specification.
+
+### Add New Built-in Types
+
+Refer to [design document](design.md#extensible-to-new-types).
+
+### Add New Type Semantics
+
+Refer to the [design document](design.md#extensible-to-new-semantics).
+
+### Manage Type Semantics (at Language Level)
+
+Refer to the [design document](design.md#expressive-semantics-annotation)..
+
+### Codegen Support
+
+Codegen support relates to the language being able to generate types for other
+programming languages.
+
+### DevOps Tooling - Build System Integration
+
+The framework/language provides a seamless way of integrating with normal build
+tools and systems (eg. Bazel, Nix, etc.).
+
+### Documentation Tooling
+
+The language can generate human readable documentation in an easy to share and
+view format. For example HTML, or Markdown.
+
+### Formatting, Linting, and Development Environment Tools
+
+Tools that allow formatting, linting, and automating standardisation of the
+language specific files.
+
+### Language Checker API
+
+The language checker component exposes an API to interface with itself in a
+language agnostic manner.
+
+### Codegen API 
+
+The language codegen component exposes an API to interface with itself in a
+language agnostic manner.
+
+### Language Specification
+
+There exists a well defined language specification document. 
+
+### Backwards Compatibility Strategy
+
+The language makes certain backwards compatibility guarantees between versions of
+the same type definition.
+
+## References
 
 - https://json-schema.org/implementations.html
 - https://www.rfc-editor.org/rfc/rfc8610
