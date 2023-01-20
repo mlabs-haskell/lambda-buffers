@@ -23,9 +23,8 @@ Legend:
 | Manage type semantics (at language level)              | 🔴                | 🔴           | 🔴              | 🟢                 | 🔴       | 🔴           |
 | Codegen support                                        | 🟢 (Excellent)    | 🟢 (Average) | 🟢 (Excellent)  | 🟡                 | 🟢 (Bad) | 🟢 (Average) |
 | DevOps tooling - build system integration              | 🟢                | 🔴           | ❔              | 🟡                 | 🔴       | 🔴           |
-| Documentation tooling                                  | 🟢                | ❔           | 🟢              | 🔵                 | 🔴       | ❔           |
-| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Documentation tooling                                  | 🟢                | 🔴           | 🟢              | 🔵                 | 🔴       | ❔           |
+| Formatting, linting, and development environment tools | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Language checker API                                   | 🟢                | 🔴           | 🟢              | 🟢                 | 🔴       | 🔴           |
 | Codegen API                                            | 🟢                | 🟢           | 🔴              | 🟢                 | 🔴       | 🔴           |
 | Language specification                                 | 🟢                | 🟢           | 🟢              | 🟢                 | 🟢       | 🟢           |
@@ -78,7 +77,8 @@ Time_Saved_via_LambdaBuffers = Maybe Integer
 
 ### Type Annotations / Constraints
 
-:FIXME: @Drazen
+There exists a system of constraining or further annotating types - enriching
+the type's specification.
 
 ### Add New Built-in Types
 
@@ -88,13 +88,48 @@ Refer to [./design](./design.md) - section `### Extensibility to new types`.
 
 Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
 
-### Manage type semantics (at language level)
+### Manage Type Semantics (at Language Level)
 
 Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
 
-### Codegen support
+### Codegen Support
 
+Codegen support relates to the language being able to generate types for other
+programming languages.
 
+### DevOps Tooling - Build System Integration
+
+The framework/language provides a seamless way of integrating with normal build
+tools and systems (eg. Bazel, Nix, etc.).
+
+### Documentation Tooling
+
+The language can generate human readable documentation in an easy to share and
+view format. For example HTML, or Markdown.
+
+### Formatting, Linting, and Development Environment Tools
+
+Tools that allow formatting, linting, and automating standardisation of the
+language specific files.
+
+### Language Checker API
+
+The language checker component exposes an API to interface with itself in a
+language agnostic manner.
+
+### Codegen API 
+
+The language codegen component exposes an API to interface with itself in a
+language agnostic manner.
+
+### Language Specification
+
+There exists a well defined language specification document. 
+
+### Backwards Compatibility Strategy
+
+The language makes certain backwards compatibility guarantees between versions of
+the same type definition.
 
 ## References
 
