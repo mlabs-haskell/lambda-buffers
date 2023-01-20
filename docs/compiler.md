@@ -70,7 +70,7 @@ In addition to _kind checking_, the Compiler could perform a special check for
 types to determine their cardinality. This is especially useful to catch and
 report on _non inhabited_ types that users might define.
 
-For example, `data F a = F (F a)` declares a _non-inhabited recurisve type_ that
+For example, `data F a = F (F a)` declares a _non-inhabited recursive type_ that
 can't be constructed. LambdaBuffers Compiler _SHOULD_ reject such types as they
 can't possibly be constructed and generated typeclass instances would in turn be
 ill-defined.
@@ -78,12 +78,12 @@ ill-defined.
 This problem is equivalent to a problem of [calculating graph
 components](https://en.wikipedia.org/wiki/Component_(graph_theory)).
 
-## Normalising type definitions
+## Normalizing type definitions
 
-Finally, the compiler should be able to _normalise_ expressions. For example, it
+Finally, the compiler should be able to _normalize_ expressions. For example, it
 may be possible to define a data type in the schema language in a form similar
 to: `data G a = G ((Either) ((Maybe) a) Int)`, where the bracketing indicates
-the order of application within the term. The example term would normalise to
+the order of application within the term. The example term would normalize to
 `data G a = G (Either (Maybe a) Int)` - resulting in a cleaner (and more
 performant) code generation.
 
@@ -167,7 +167,7 @@ The type checking strategy is as follows:
    `Type`.
 
 2. The RHS of the type terms are converted into their _Sums of Products_
-   canonical represantion. The variables from the left hand side of the term
+   canonical representation. The variables from the left hand side of the term
    are introduced to the right hand side as abstractions.
 
 3. The derivation for each term is built.

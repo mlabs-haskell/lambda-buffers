@@ -22,8 +22,8 @@ costs to the business and unsustainable technical debt.
 
 1. Expressive types,
 2. Expressive semantics annotation,
-3. Extensibility to new types,
-4. Extensibility to new semantics,
+3. Extensible to new types,
+4. Extensible to new semantics,
 5. Universally consistent semantics,
 6. Modular API architecture.
 
@@ -39,55 +39,60 @@ elegant type composition. Such types are well studied and widely used in
 functional programming languages such as Haskell.
 
 LambdaBuffers supports first class sum, product and record types. Types can be
-parametrized, effectively enabling generic types. LambdaBuffers also supports
+parameterized, effectively enabling generic types. LambdaBuffers also supports
 recursive type definitions, which allow users to succinctly define elegant and
 expressive data structures.
 
 ### Expressive semantics annotation
 
 Enabling users to manage the *semantics* associated with their types is
-essential for adapting LambdaBuffers to a variety of different domains and use cases.
+essential for adapting LambdaBuffers to a variety of different domains and use
+cases.
 
-While most existing schema systems only facilitate type declarations in a variety of languages,
-LambdaBuffers takes a further step and provides users with the capability to manage the
-*semantics* of the types defined in schemata by indicating which basic operations and
-functions a type ought to support.
+While most existing schema systems only facilitate type declarations in a
+variety of languages, LambdaBuffers takes a further step and provides users with
+the capability to manage the *semantics* of the types defined in schemata by
+indicating which basic operations and functions a type ought to support.
 
-For example, suppose a user would like some types to support certain encodings (e.g.
-JSON or CBOR). In order to support a particular encoding, functions that serialize
-and deserialize the types are needed in the target language(s). Another example: Users
-may wish to declare that certain types are numeric - i.e. that values of these types can
-be added, subtracted or multiplied in a given target language. Most types could
-be declared to support an equality relation, which requires a function that can check
-values for equality in the target language(s).
+For example, suppose a user would like some types to support certain encoding
+(e.g. JSON or CBOR). In order to support a particular encoding, functions that
+serialize and deserialize the types are needed in the target language(s).
+Another example: Users may wish to declare that certain types are numeric - i.e.
+that values of these types can be added, subtracted or multiplied in a given
+target language. Most types could be declared to support an equality relation,
+which requires a function that can check values for equality in the target
+language(s).
 
-In order to provide users the capability to manage the *semantics* of the types they define,
-LambdaBuffers supports [type classes](https://en.wikipedia.org/wiki/Type_class),
-also known as *type constraints*. Type classes are a well-established mechanism for
-supporting ad hoc polymorphism, backed by a large amount of academic research and
-widely used in functional programming languages such as Haskell, PureScript, and
-(albeit under a different name) Rust.
+In order to provide users the capability to manage the *semantics* of the types
+they define, LambdaBuffers supports [type
+classes](https://en.wikipedia.org/wiki/Type_class), also known as *type
+constraints*. Type classes are a well-established mechanism for supporting ad
+hoc polymorphism, backed by a large amount of academic research and widely used
+in functional programming languages such as Haskell, PureScript, and (albeit
+under a different name) Rust.
 
-One essential difference between LambdaBuffers type classes and type classes as implemented in
-Haskell/PureScript/Rust is that LambdaBuffers does not allow users to declare the implementation
-of type class instances. Instead, users declare *instance clauses* for their types which
-signify the *semantics* (i.e. functions, methods) they wish to be generated generated
-in the target language. All implementation are generated uniformly as elaborated in the specification document for a given type class.
+One essential difference between LambdaBuffers type classes and type classes as
+implemented in Haskell/PureScript/Rust is that LambdaBuffers does not allow
+users to declare the implementation of type class instances. Instead, users
+declare *instance clauses* for their types which signify the *semantics* (i.e.
+functions, methods) they wish to be generated in the target language. All
+implementation are generated uniformly as elaborated in the specification
+document for a given type class.
 
 For each new type class declared, code generation tooling must be updated to
 handle the new type class.
 
-### Extensibility to new types
+### Extensible to new types
 
 Enabling users to introduce new *built-in* types allows LambdaBuffers to be
 adapted in many different domains and use cases.
 
-These types have special treament *under the hood* and are generally mapped onto
+These types have special treatment *under the hood* and are generally mapped onto
 existing types and their value representations in the targeted language
 environments. For example, a primitive `Int` type in the LambdaBuffers schema
-language may be mapped to `Int` in Haskell and `i32` in Rust. Primitive parameterized
-types are also possible: A primitive `Maybe` type might be mapped to `Maybe` in Haskell
-and to `Option<_>` in Rust.
+language may be mapped to `Int` in Haskell and `i32` in Rust. Primitive
+parameterized types are also possible: A primitive `Maybe` type might be mapped
+to `Maybe` in Haskell and to `Option<_>` in Rust.
 
 LambdaBuffers supports [opaque
 types](https://en.wikipedia.org/wiki/Opaque_data_type) to provide users with the
@@ -97,21 +102,21 @@ Example opaque types include various integer types, sequence types, text types,
 sets, maps and other semantically richer data types. Generally, such types are
 already well-defined and widely used in various language environments and come
 equipped with rich libraries that work with them. Redefining them *ab ovo* would
-be counterproductive as users would have to reimplement and reinvent the rich
+be counterproductive as users would have to re-implement and reinvent the rich
 support for such types.
 
-### Extensibility to new semantics
+### Extensible to new semantics
 
 Enabling users to introduce new *type semantics* facilitates LambdaBuffers to be
 adapted in many different domains and use cases.
 
 In LambdaBuffers, introducing new *type semantics* works by first declaring a
-*type class*, which is simply the name of the class bundled with any superclasses
-(should they exist). Next, specification document that elaborates how
-instances are to be generated for members of the class must be created, taking care to
-ensure that instances are always generated uniformly. Finally, a code generation
-module for the class must be written that mplements compliant code generation
-for different target languages.
+*type class*, which is simply the name of the class bundled with any
+super-classes (should they exist). Next, specification document that elaborates
+how instances are to be generated for members of the class must be created,
+taking care to ensure that instances are always generated uniformly. Finally, a
+code generation module for the class must be written that implements compliant
+code generation for different target languages.
 
 Concretely, serialization has special treatment in most technologies in this
 space, however in LambdaBuffers, this is just a new type class.
