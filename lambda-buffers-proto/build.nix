@@ -5,6 +5,7 @@
     buildInputs = [
       pkgs.protobuf
       pkgs.haskellPackages.proto-lens-protoc
+      pkgs.protoc-gen-doc
     ] ++ builtins.attrValues commonTools;
 
     inherit shellHook;

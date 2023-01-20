@@ -47,7 +47,7 @@ compileOptsP =
       ( long "file"
           <> short 'f'
           <> metavar "FILEPATH"
-          <> help "LambdaBuffers file to compile"
+          <> help "LambdaBuffers file (.lbf) to compile"
       )
 
 formatOptsP :: Parser FormatOpts
