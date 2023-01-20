@@ -85,7 +85,7 @@
           frontendFlake = frontendBuild.hsNixProj.flake { };
 
           # Utilities
-          # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
+          renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
         rec {
           # Useful for nix repl
@@ -105,7 +105,7 @@
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages;
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks);
 
         }
       ) // {
