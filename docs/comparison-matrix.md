@@ -82,6 +82,20 @@ Time_Saved_via_LambdaBuffers = Maybe Integer
 
 ### Add New Built-in Types
 
+Refer to [./design](./design.md) - section `### Extensibility to new types`.
+
+### Add New Type Semantics
+
+Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
+
+### Manage type semantics (at language level)
+
+Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
+
+### Codegen support
+
+
+
 ## References
 
 
