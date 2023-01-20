@@ -58,7 +58,7 @@ List a = Nil | Cons a (List a)
 ^^^^^^                 ^^^^^^
 ```
 
-### Type Functions (Generics)
+### Parameterized Types (Generics)
 
 Type functions allow for the introduction of type variables in the LHS definition
 of the term - creating a parametrised type definition. The classic example is
@@ -82,11 +82,11 @@ the type's specification.
 
 ### Add New Built-in Types
 
-Refer to [./design](./design.md) - section `### Extensibility to new types`.
+Refer to [design document](design.md#extensible-to-new-types).
 
 ### Add New Type Semantics
 
-Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
+Refer to the [design document](design.md#extensible-to-new-semantics).
 
 ### Manage Type Semantics (at Language Level)
 
@@ -132,7 +132,6 @@ The language makes certain backwards compatibility guarantees between versions o
 the same type definition.
 
 ## References
-
 
 - https://json-schema.org/implementations.html
 - https://www.rfc-editor.org/rfc/rfc8610
