@@ -90,7 +90,7 @@ Refer to the [design document](design.md#extensible-to-new-semantics).
 
 ### Manage Type Semantics (at Language Level)
 
-Refer to [./design](./design.md) - section `### Extensibility to new semantics`.
+Refer to the [design document](design.md#expressive-semantics-annotation)..
 
 ### Codegen Support
 
