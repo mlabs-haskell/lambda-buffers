@@ -68,7 +68,7 @@
     shellcheck.enable = true;
     hlint.enable = true;
     # TODO: Enable hunspell
-    typos.enable = true;
+    #typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
   } // protoHooks;
