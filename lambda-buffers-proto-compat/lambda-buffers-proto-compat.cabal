@@ -92,8 +92,11 @@ library
     , lens
     , generic-lens
     , proto-lens
+    , template-haskell
+    , th-abstraction
     , lambda-buffers-compiler-pb
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.ProtoCompat.ProtoCompat
+    LambdaBuffers.ProtoCompat.TH
