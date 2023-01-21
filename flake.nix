@@ -96,7 +96,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // protoCompatFlake.packages // codegenFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
