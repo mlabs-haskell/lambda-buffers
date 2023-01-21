@@ -13,7 +13,6 @@ import Control.Applicative
 import Prettyprinter
 
 import LambdaBuffers.Gen.PP
-import LambdaBuffers.Common.SourceTy (TyDef)
 import LambdaBuffers.Common.Types
 import LambdaBuffers.Gen.Generator
 
@@ -184,5 +183,7 @@ rustify' p = let tvars = getTyParams p
                  params    = fmtParams . map T.toTitle $ tvars
               in (params,sanitized)
 
+{-
 parseTest :: TyDef -> IO ()
 parseTest x = case parse rType' $ defToPat x of {Left err -> print err; Right a -> putStrLn "" >> print a}
+-}

@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes #-}
+{-# LANGUAGE ScopedTypeVariables, AllowAmbiguousTypes #-}
 
 module LambdaBuffers.Gen.RustGen.Instances.Eq where
 
@@ -17,9 +17,6 @@ import Prettyprinter
 
 import LambdaBuffers.Gen.PP
 import LambdaBuffers.Common.Types
-import LambdaBuffers.Common.SourceTy (TyDef)
-import LambdaBuffers.Resolve.Derive (runDerive)
-import LambdaBuffers.Gen.RustGen.RustTy
 import LambdaBuffers.Gen.Generator
 import LambdaBuffers.Resolve.Rules
 
@@ -79,6 +76,7 @@ eqTyNoVarsGen = do
 
     _ -> undefined
  where
+   failMatch :: forall a. Doc a
    failMatch = rWildCase "false"
 
    eqInst :: Text -> Doc a
@@ -89,6 +87,8 @@ eqTyNoVarsGen = do
      where
        qualify :: Text  -> Doc a
        qualify d = pretty tName <> "::" <> pretty d
+
+       goRecord, goNullary, goProduct :: forall {c :: GenComponent}. Parser 'Rust c () (Doc ())
 
        goNullary = do
          (Name n :=  Nil) <- match (_l := _x)
@@ -126,7 +126,7 @@ eqTyNoVarsGen = do
 eqGen :: M.Map (Instance Rust) (InstanceGen Rust)
 eqGen = M.fromList [(eqTyNoVars,eqTyNoVarsGen)]
 
-
+{-
 genTypesAndEqInstances :: (DSL Rust ~ Doc ()) => [TyDef] -> IO ()
 genTypesAndEqInstances defs = case mapM (parse' @Rust  rType' . defToPat) defs of
   Left err     -> print err
@@ -137,3 +137,4 @@ genTypesAndEqInstances defs = case mapM (parse' @Rust  rType' . defToPat) defs o
       in print final
  where
    defs' = map defToPat defs
+-}

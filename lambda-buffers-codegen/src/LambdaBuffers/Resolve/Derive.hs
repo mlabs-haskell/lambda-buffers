@@ -96,7 +96,7 @@ splitInstance (C c t :<= is) = (C c t, is)
 
 type DeriveM l a = ExceptT (DeriveError l) (State (DeriveState l)) a
 
-simplify :: Rule a l -> Rule a l
+simplify :: Rule l -> Rule l
 simplify (C c t :<= _)= C c t :<= []
 
 {- NOTE: Right now this recursively derives and generates code for all of the necessary constraints.

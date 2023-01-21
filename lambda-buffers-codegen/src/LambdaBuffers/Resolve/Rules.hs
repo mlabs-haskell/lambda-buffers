@@ -12,6 +12,7 @@ import Data.Kind (Type)
 
 import LambdaBuffers.Common.Types
 import LambdaBuffers.Gen.Generator
+import Data.Text (Text)
 
 type InstanceGen l = Parser l InstanceDecl () (DSL l)
 
@@ -19,9 +20,9 @@ nullGen :: InstanceGen Haskell
 nullGen = match _x >> pure ""
 
 data Class (l :: Lang) = Class
-  { name   :: String
+  { name   :: Text
   , supers :: [Class l]
-  } deriving (Show, Eq, Ord)
+  } deriving stock (Show, Eq, Ord)
 
 {- A type which represents instances. Can be either a single simple instance or
    a complex instance with its instance constraints. We can use the instance constraint

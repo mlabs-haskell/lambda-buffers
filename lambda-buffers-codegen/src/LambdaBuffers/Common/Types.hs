@@ -1,10 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module LambdaBuffers.Common.Types where
 
-import qualified LambdaBuffers.Common.SourceTy as Ty
 import Data.Bifunctor
 import qualified Data.List.NonEmpty  as NE
 import Data.Text (Text)
@@ -20,6 +19,7 @@ do something without using a billion language extensions, and some nonsense is t
 data Pat
   = {- extremely stupid, unfortunately necessary -}
     Name Text
+  | Opaque
   | {- Lists (constructed from Nil and :*) with bare types are used to
        encode products (where a list of length n encodes an n-tuple)
 
@@ -144,43 +144,7 @@ toSum = SumP . foldr (:*) Nil
 
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}
-defToPat :: Ty.TyDef -> Pat
-defToPat Ty.TyDef {..} = DecP (Name tyDefName) vars $ case tyDefBody of
-  Ty.Sum constrs -> toSum . NE.toList . fmap goConstr $ constrs
-  where
-    collectFreeTyVars (Ty.TKind xs) = foldr (\x acc -> Name x :* acc) Nil xs
 
-    vars = collectFreeTyVars tyDefKind
-
-    goConstr :: (Ty.ConstrName, Ty.Product) -> Pat
-    goConstr (n, p) = Name n := goProduct p
-
-    goProduct :: Ty.Product -> Pat
-    goProduct = \case
-      Ty.Empty -> Nil
-      Ty.Record rMap -> toRec . NE.toList . fmap (uncurry (:=) . bimap Name goPat) $ rMap
-      Ty.Product pList -> toProd . NE.toList . fmap goPat $ pList
-
-    goPat :: Ty.SourceTy -> Pat
-    goPat = \case
-      Ty.TyVar t -> VarP t
-      Ty.TApp a b -> AppP (goPat a) (goPat b)
-      Ty.PrimT prim -> goPrim prim
-      Ty.TyRef ref -> case ref of
-        Ty.Local t -> RefP (Name t)
-        _ -> undefined -- dunno what to do here. Imports should be resolved by this stage?
-    goPrim :: Ty.TyPrim -> Pat
-    goPrim = \case
-      Ty.TP0 p0 -> case p0 of
-        Ty.TInt -> Int
-        Ty.TBool -> Bool
-        Ty.TString -> String
-      Ty.TP1 p1 -> case p1 of
-        Ty.TMaybe -> _maybe
-        Ty.TList -> _list
-      Ty.TP2 p2 -> case p2 of
-        Ty.TMap -> _map
-        Ty.TEither -> _either
 
 -- misc utilities, break out into a Utils module if this grows too much
 

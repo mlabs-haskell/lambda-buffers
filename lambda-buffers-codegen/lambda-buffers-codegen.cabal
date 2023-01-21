@@ -92,13 +92,15 @@ library
     , generic-lens
     , proto-lens
     , containers
+    , prettyprinter
+    , mtl
     , lambda-buffers-compiler-pb
     , lambda-buffers-proto-compat
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Common.Match
-    LambdaBuffers.Common.SourceTy
+    LambdaBuffers.Common.Compat
     LambdaBuffers.Common.Types
     LambdaBuffers.Gen.Generator
     LambdaBuffers.Gen.PP
