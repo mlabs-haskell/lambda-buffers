@@ -33,17 +33,17 @@ data SourceInfo = SourceInfo {
   file    :: Text,
   posFrom :: SourcePosition,
   posTo   :: SourcePosition
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data SourcePosition = SourcePosition {
   column :: Int,
   row    :: Int
-} deriving (Show , Eq, Generic)
+} deriving (Show , Eq, Ord, Generic)
 
 -- for our purposes we really only need a single name type
 data LBName
   = LBName {name :: Text, sourceInfo :: SourceInfo}
-     deriving (Show, Eq, Generic)
+     deriving (Show, Eq, Ord, Generic)
 
 type TyName     = LBName
 type ConstrName = LBName
@@ -60,88 +60,88 @@ type Kind = Natural
 data TyVar = TyVar {
   varName :: VarName,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyInner
-  = TyVarI   TyVar
+  = TyVarI TyVar
   | TyAppI TyApp
   | TyRefI TyRef
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 data Ty = Ty {
   ty :: TyInner,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyApp = TyApp {
  tyFunc     :: Ty,
  tyArgs     :: NonEmpty Ty,
  sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data ForeignRef = ForeignRef {
   tyName :: TyName,
   moduleName :: ModuleName
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyRefInner
   = LocalI TyName
   | ForeignI ForeignRef
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 data TyRef = TyRef {
   tyRef :: TyRefInner,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyDef = TyDef {
   tyName     :: TyName,
   tyArgs     :: [TyArg],
   tyBody     :: TyBody,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyArg = TyArg {
  argName :: ArgName,
  argKind :: Kind,
  sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data TyBodyInner
   = OpaqueI SourceInfo
   | SumI Sum
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 data TyBody = TyBody {
   tyBody :: TyBodyInner,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data Constructor = Constructor {
   constrName :: ConstrName,
   product    :: Product
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data Sum = Sum {
   constructors :: NonEmpty Constructor,
   sourceInfo   :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data Field = Field {
   fieldName :: FieldName,
   fieldTy   :: Ty
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data ProductInner
   = EmptyI
   | RecordI (NonEmpty Field)
   | TupleI [Ty]
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 data Product = Product {
   product :: ProductInner,
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data ClassDef = ClassDef {
   className     :: ClassName,
@@ -149,20 +149,20 @@ data ClassDef = ClassDef {
   supers        :: [Constraint],
   documentation :: Text,
   sourceInfo    :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data InstanceClause = InstanceClause {
   className   :: ClassName,
   head        :: Ty,
   constraints :: [Constraint],
   sourceInfo  :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data Constraint = Constraint {
   className :: ClassName,
   argument  :: Ty, -- n.b. see previous n.b., for now constraints are monadic
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 data Module = Module {
   moduleName :: ModuleName,
@@ -170,10 +170,10 @@ data Module = Module {
   classDefs  :: [ClassDef],
   instances  :: [InstanceClause],
   sourceInfo :: SourceInfo
-} deriving (Show, Eq, Generic)
+} deriving (Show, Eq, Ord, Generic)
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 data FromProtoErr
   = MultipleInstanceHeads ClassName [Ty] SourceInfo
@@ -187,8 +187,8 @@ data FromProtoErr
   | EmptySumBody SourceInfo
   | EmptyName SourceInfo
   | NegativeArity ArgName SourceInfo
-  | OneOfNotSet Text  SourceInfo -- catchall
-  deriving (Show, Eq, Generic)
+  | OneOfNotSet Text SourceInfo -- catchall
+  deriving (Show, Eq, Ord, Generic)
 
 class IsMessage (proto :: Type) (good :: Type) where
   fromProto :: proto -> Either FromProtoErr good
