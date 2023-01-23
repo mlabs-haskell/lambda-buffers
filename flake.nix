@@ -26,9 +26,6 @@
           # pre-commit-hooks.nix
           fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
 
-          # pre-commit-hooks.nix
-          apply-refact = pkgs.haskellPackages.apply-refact;
-
           pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
             inherit fourmolu;
             protoHooks = pbnix-lib.preCommitHooks { inherit pkgs; };
@@ -38,7 +35,6 @@
             inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt nix-linter cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
             inherit (pkgs) protolint txtpbfmt;
             inherit fourmolu;
-            inherit apply-refact;
           };
 
           preCommitDevShell = pkgs.mkShell {
@@ -75,37 +71,55 @@
             inherit (protosBuild) compilerHsPb;
             inherit (pre-commit-check) shellHook;
           };
-          compilerFlake = compilerBuild.hsNixProj.flake { };
+          compilerFlake = compilerBuild.compilerHsNixProj.flake { };
 
-          frontendBuild = import ./lambda-buffers-frontend/build.nix {
+          # Common build
+          commonBuild = import ./lambda-buffers-common/build.nix {
             inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
             inherit (protosBuild) compilerHsPb;
             inherit (pre-commit-check) shellHook;
           };
-          frontendFlake = frontendBuild.hsNixProj.flake { };
+          commonFlake = commonBuild.compilerHsNixProj.flake { };
+
+          protoCompatBuild = import ./lambda-buffers-proto-compat/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+            inherit (protosBuild) compilerHsPb;
+            inherit (pre-commit-check) shellHook;
+          };
+          protoCompatFlake = protoCompatBuild.hsNixProj.flake { };
+
+          codegenBuild = import ./lambda-buffers-codegen/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+            inherit (protosBuild) compilerHsPb;
+            inherit (pre-commit-check) shellHook;
+            protoCompat = ./lambda-buffers-proto-compat;
+          };
+          codegenFlake = codegenBuild.hsNixProj.flake { };
 
           # Utilities
-          renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
+          # INFO: Will need this; renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
         rec {
           # Useful for nix repl
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
             dev-experimental = experimentalDevShell;
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
+            dev-proto-compat = protoCompatFlake.devShell;
+            dev-codegen = codegenFlake.devShell;
+            dev-common = commonFlake.devShell;
             dev-compiler = compilerFlake.devShell;
-            dev-frontend = frontendFlake.devShell;
             default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages;
 
         }
       ) // {
