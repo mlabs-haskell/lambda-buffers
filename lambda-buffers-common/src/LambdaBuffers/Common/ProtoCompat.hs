@@ -4,11 +4,8 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# OPTIONS_GHC -Wno-missing-deriving-strategies #-}
-{-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Common.ProtoCompat where
+module LambdaBuffers.Common.ProtoCompat () where
 
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
@@ -19,7 +16,6 @@ import Data.ProtoLens (defMessage)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics (Generic)
-import GHC.Natural (Natural)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
@@ -37,21 +33,33 @@ data SourceInfo = SourceInfo
   , posFrom :: SourcePosition
   , posTo :: SourcePosition
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data SourcePosition = SourcePosition
   { column :: Int
   , row :: Int
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 -- for our purposes we really only need a single name type
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 type TyName = LBName
 type ConstrName = LBName
-type ModuleName = LBName
+
+data ModuleName = ModuleName
+  { parts :: [ModuleNamePart]
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
+data ModuleNamePart = ModuleNamePart
+  { name :: Text
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
 type ArgName = LBName
 type VarName = LBName
 type FieldName = LBName
@@ -59,105 +67,128 @@ type ClassName = LBName
 
 -- NOTE: Theoretically this could overflow when converting back to Int32, but if you have an arity > 2147483647
 --       then you deserve the resulting errors
-type Kind = Natural
+data Kind = Kind
+  { kind :: KindType
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
+data KindType
+  = KindRef KindRefType
+  | KindArrow
+      { left :: Kind
+      , right :: Kind
+      }
+  deriving stock (Show, Eq, Ord, Generic)
+
+data KindRefType
+  = Unspecified
+  | Type
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyVar = TyVar
   { varName :: VarName
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyInner
   = TyVarI TyVar
   | TyAppI TyApp
   | TyRefI TyRef
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Ty = Ty
   { ty :: TyInner
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyApp = TyApp
   { tyFunc :: Ty
   , tyArgs :: NonEmpty Ty
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data ForeignRef = ForeignRef
   { tyName :: TyName
   , moduleName :: ModuleName
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyRefInner
   = LocalI TyName
   | ForeignI ForeignRef
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyRef = TyRef
   { tyRef :: TyRefInner
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyDef = TyDef
   { tyName :: TyName
-  , tyArgs :: [TyArg]
+  , tyAbs :: TyAbs
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
+data TyAbs = TyAbs
+  { tyVars :: [TyVar]
   , tyBody :: TyBody
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyArg = TyArg
-  { argName :: ArgName
+  { argName :: VarName
   , argKind :: Kind
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyBodyInner
   = OpaqueI SourceInfo
   | SumI Sum
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data TyBody = TyBody
   { tyBody :: TyBodyInner
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Constructor = Constructor
   { constrName :: ConstrName
   , product :: Product
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Sum = Sum
   { constructors :: NonEmpty Constructor
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Field = Field
   { fieldName :: FieldName
   , fieldTy :: Ty
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data ProductInner
   = EmptyI
   | RecordI (NonEmpty Field)
   | TupleI [Ty]
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Product = Product
   { product :: ProductInner
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data ClassDef = ClassDef
   { className :: ClassName
@@ -166,7 +197,7 @@ data ClassDef = ClassDef
   , documentation :: Text
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data InstanceClause = InstanceClause
   { className :: ClassName
@@ -174,14 +205,14 @@ data InstanceClause = InstanceClause
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Constraint = Constraint
   { className :: ClassName
   , argument :: Ty -- n.b. see previous n.b., for now constraints are monadic
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data Module = Module
   { moduleName :: ModuleName
@@ -190,10 +221,10 @@ data Module = Module
   , instances :: [InstanceClause]
   , sourceInfo :: SourceInfo
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 data FromProtoErr
   = MultipleInstanceHeads ClassName [Ty] SourceInfo
@@ -208,7 +239,7 @@ data FromProtoErr
   | EmptyName SourceInfo
   | NegativeArity ArgName SourceInfo
   | OneOfNotSet Text SourceInfo -- catchall
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 class IsMessage (proto :: Type) (good :: Type) where
   fromProto :: proto -> Either FromProtoErr good
@@ -290,6 +321,8 @@ instance IsMessage P.Ty Ty where
         TyAppI ta -> P.tyApp .~ toProto ta
         TyRefI tr -> P.tyRef .~ toProto tr
 
+instance IsMessage P.ModuleName ModuleName
+
 instance IsMessage P.TyRef TyRef where
   fromProto tr = do
     si <- fromProto $ tr ^. P.sourceInfo
@@ -323,32 +356,36 @@ instance IsMessage P.TyRef TyRef where
 instance IsMessage P.TyDef TyDef where
   fromProto td = do
     tnm <- fromProto $ td ^. P.tyName
-    targs <- traverse fromProto $ td ^. P.tyArgs
-    tbod <- fromProto $ td ^. P.tyBody
+    tyabs <- fromProto $ td ^. P.tyAbs
     si <- fromProto $ td ^. P.sourceInfo
-    pure $ TyDef tnm targs tbod si
+    pure $ TyDef tnm tyabs si
 
-  toProto (TyDef tnm targs tbod si) =
+  toProto (TyDef tnm tyabs si) =
     defMessage
       & P.tyName .~ toProto tnm
-      & P.tyArgs .~ (toProto <$> targs)
-      & P.tyBody .~ toProto tbod
+      & P.tyAbs .~ toProto tyabs
       & P.sourceInfo .~ toProto si
+
+instance IsMessage P.TyAbs TyAbs where
+  fromProto ta = do
+    tyvars <- traverse fromProto $ ta ^. P.tyVars
+    tybody <- fromProto $ ta ^. P.tyBody
+    si <- fromProto $ ta ^. P.sourceInfo
+    pure $ TyAbs tyvars tybody si
+
+instance IsMessage P.Kind Kind
 
 instance IsMessage P.TyArg TyArg where
   fromProto ta = do
     argnm <- fromProto $ ta ^. P.argName
     si <- fromProto $ ta ^. P.sourceInfo
-    kind <-
-      note (NegativeArity argnm si) $
-        let k = ta ^. (P.argKind . P.arity)
-         in if k < 0 then Nothing else Just (fromIntegral k)
+    kind <- fromProto $ ta ^. P.argKind
     pure $ TyArg argnm kind si
 
-  toProto (TyArg argnm kind si) =
+  toProto (TyArg argnm argkind si) =
     defMessage
       & P.argName .~ toProto argnm
-      & P.argKind .~ (defMessage & P.arity .~ fromIntegral kind)
+      & P.argKind .~ toProto argkind
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyBody TyBody where
@@ -398,8 +435,6 @@ instance IsMessage P.Product Product where
     case p ^. P.maybe'product of
       Nothing -> Left $ OneOfNotSet "product" si
       Just x -> case x of
-        P.Product'Empty' _ -> do
-          pure $ Product EmptyI si
         P.Product'Record' r -> do
           fields' <- r ^. (P.fields . traversing fromProto)
           fields <- note (EmptyRecordBody si) $ nonEmpty fields'
@@ -415,13 +450,12 @@ instance IsMessage P.Product Product where
           & P.sourceInfo .~ toProto si
           & case inner of
             TupleI args -> P.ntuple .~ (defMessage & P.fields .~ (toProto <$> args))
-            EmptyI -> P.empty .~ (defMessage & P.sourceInfo .~ toProto si)
             RecordI fs ->
               let fields = toProto <$> toList fs
                in P.record
                     .~ ( defMessage
                           & P.fields .~ fields
-                          & P.sourceInfog .~ si'
+                          & P.sourceInfo .~ si'
                        )
 
 instance IsMessage P.Product'Record'Field Field where
@@ -552,17 +586,6 @@ instance IsMessage P.ConstrName LBName where
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.ModuleName LBName where
-  fromProto n = do
-    si <- fromProto $ n ^. P.sourceInfo
-    nm <- (\x -> if T.null x then Left $ EmptyName si else Right x) (n ^. P.name)
-    pure $ LBName nm si
-
-  toProto (LBName tn si) =
-    defMessage
-      & P.name .~ tn
-      & P.sourceInfo .~ toProto si
-
-instance IsMessage P.ArgName LBName where
   fromProto n = do
     si <- fromProto $ n ^. P.sourceInfo
     nm <- (\x -> if T.null x then Left $ EmptyName si else Right x) (n ^. P.name)
