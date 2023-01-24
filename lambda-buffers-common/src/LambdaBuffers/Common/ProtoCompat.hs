@@ -64,8 +64,6 @@ data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
--- NOTE: Theoretically this could overflow when converting back to Int32, but if you have an arity > 2147483647
---       then you deserve the resulting errors
 data Kind = Kind
   { kind :: KindType
   , sourceInfo :: SourceInfo
@@ -188,7 +186,7 @@ data Product = Product
 
 data ClassDef = ClassDef
   { className :: ClassName
-  , classArgs :: TyArg -- n.b. MPTC support is complicated and likely can't be implemented for V1
+  , classArgs :: TyArg
   , supers :: [Constraint]
   , documentation :: Text
   , sourceInfo :: SourceInfo
@@ -205,7 +203,7 @@ data InstanceClause = InstanceClause
 
 data Constraint = Constraint
   { className :: ClassName
-  , argument :: Ty -- n.b. see previous n.b., for now constraints are monadic
+  , argument :: Ty
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
