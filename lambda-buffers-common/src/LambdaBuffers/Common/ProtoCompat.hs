@@ -41,25 +41,28 @@ data SourcePosition = SourcePosition
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-type TyName = LBName
-type ConstrName = LBName
-
-data ModuleName = ModuleName
-  { parts :: [ModuleNamePart]
-  , sourceInfo :: SourceInfo
-  }
+data TyName = TyName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data ModuleNamePart = ModuleNamePart
-  { name :: Text
-  , sourceInfo :: SourceInfo
-  }
+data ConstrName = ConstrName {name :: Text, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+
+data ModuleName = ModuleName {parts :: [ModuleNamePart], sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+
+data ModuleNamePart = ModuleNamePart {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 type ArgName = LBName
-type VarName = LBName
-type FieldName = LBName
-type ClassName = LBName
+
+data VarName = VarName {name :: Text, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+
+data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+
+data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
 
 -- NOTE: Theoretically this could overflow when converting back to Int32, but if you have an arity > 2147483647
 --       then you deserve the resulting errors
@@ -267,6 +270,61 @@ instance IsMessage P.SourceInfo SourceInfo where
       & P.file .~ (si ^. #file)
       & P.posFrom .~ toProto (si ^. #posFrom)
       & P.posTo .~ toProto (si ^. #posTo)
+
+instance IsMessage P.FieldName FieldName where
+  fromProto v = do
+    n <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    pure $ FieldName n si
+
+  toProto (FieldName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.ConstrName ConstrName where
+  fromProto v = do
+    n <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    pure $ ConstrName n si
+
+  toProto (ConstrName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.TyName TyName where
+  fromProto v = do
+    n <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    pure $ TyName n si
+
+  toProto (TyName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.ClassName ClassName where
+  fromProto v = do
+    n <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    pure $ ClassName n si
+
+  toProto (ClassName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.VarName VarName where
+  fromProto v = do
+    n <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    pure $ VarName n si
+
+  toProto (VarName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
 
 {-
     Ty & Components
