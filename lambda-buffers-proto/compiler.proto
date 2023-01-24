@@ -79,7 +79,7 @@ type term can only be introduced in the context of a
 */
 message TyAbs {
   // List of type variables.
-  repeated TyArg ty_vars = 1;
+  repeated TyArg ty_args = 1;
   // Type body.
   TyBody ty_body = 2;
   // Source information.
