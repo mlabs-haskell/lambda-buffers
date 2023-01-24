@@ -46,6 +46,8 @@ goCtors cis = do
      RecordConstructor lbls -> do
        let recfields = ne .zipWith (curry goRecField) lbls $ ci ^. #constructorFields
        [e| Constructor $(lbName cnm) (Product (RecordI $recfields) $si) |]
+
+     InfixConstructor -> fail "infix constructors are not supported!"
     where
       cnm = ci ^. #constructorName
 
