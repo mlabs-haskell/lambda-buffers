@@ -1,9 +1,5 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 
 module LambdaBuffers.Common.ProtoCompat () where
 
