@@ -75,15 +75,12 @@ data Kind = Kind
 
 data KindType
   = KindRef KindRefType
-  | KindArrow
-      { left :: Kind
-      , right :: Kind
-      }
+  | KindArrow Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
 
 data KindRefType
-  = Unspecified
-  | Type
+  = KUnspecified
+  | KType
   deriving stock (Show, Eq, Ord, Generic)
 
 data TyVar = TyVar
@@ -237,6 +234,7 @@ data FromProtoErr
   | EmptyRecordBody SourceInfo -- Ideally we should catch & rethrow this and the next one when we have access to the tyname
   | EmptySumBody SourceInfo
   | EmptyName SourceInfo
+  | EmptyField
   | NegativeArity ArgName SourceInfo
   | OneOfNotSet Text SourceInfo -- catchall
   deriving stock (Show, Eq, Ord, Generic)
@@ -321,8 +319,6 @@ instance IsMessage P.Ty Ty where
         TyAppI ta -> P.tyApp .~ toProto ta
         TyRefI tr -> P.tyRef .~ toProto tr
 
-instance IsMessage P.ModuleName ModuleName
-
 instance IsMessage P.TyRef TyRef where
   fromProto tr = do
     si <- fromProto $ tr ^. P.sourceInfo
@@ -373,7 +369,40 @@ instance IsMessage P.TyAbs TyAbs where
     si <- fromProto $ ta ^. P.sourceInfo
     pure $ TyAbs tyvars tybody si
 
-instance IsMessage P.Kind Kind
+  toProto (TyAbs tyvars tyabs si) =
+    defMessage
+      & P.tyVars .~ (toProto <$> tyvars)
+      & P.tyBody .~ toProto tyabs
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.Kind'KindRef KindRefType where
+  fromProto = \case
+    P.Kind'KIND_REF_TYPE -> pure KType
+    P.Kind'KIND_REF_UNSPECIFIED -> pure KUnspecified
+    P.Kind'KindRef'Unrecognized _ -> undefined -- FIXME
+
+  toProto = \case
+    KType -> P.Kind'KIND_REF_TYPE
+    KUnspecified -> P.Kind'KIND_REF_UNSPECIFIED
+
+instance IsMessage P.Kind Kind where
+  fromProto k = do
+    si <- fromProto $ k ^. P.sourceInfo
+    kt <- case k ^. P.maybe'kind of
+      Just (P.Kind'KindRef r) -> KindRef <$> fromProto r
+      Just (P.Kind'KindArrow' arr) -> KindArrow <$> fromProto (arr ^. P.left) <*> fromProto (arr ^. P.right)
+      _ -> Left EmptyField
+    pure $ Kind kt si
+
+  toProto (Kind (KindArrow l r) si) = do
+    defMessage
+      & P.kindArrow . P.left .~ toProto l
+      & P.kindArrow . P.right .~ toProto r
+      & P.sourceInfo .~ toProto si
+  toProto (Kind (KindRef r) si) = do
+    defMessage
+      & P.kindRef .~ toProto r
+      & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyArg TyArg where
   fromProto ta = do
@@ -457,6 +486,7 @@ instance IsMessage P.Product Product where
                           & P.fields .~ fields
                           & P.sourceInfo .~ si'
                        )
+            EmptyI -> undefined -- FIXME
 
 instance IsMessage P.Product'Record'Field Field where
   fromProto f = do
@@ -585,15 +615,30 @@ instance IsMessage P.ConstrName LBName where
       & P.name .~ tn
       & P.sourceInfo .~ toProto si
 
-instance IsMessage P.ModuleName LBName where
-  fromProto n = do
-    si <- fromProto $ n ^. P.sourceInfo
-    nm <- (\x -> if T.null x then Left $ EmptyName si else Right x) (n ^. P.name)
-    pure $ LBName nm si
+instance IsMessage Text Text where
+  fromProto = pure
+  toProto = id
 
-  toProto (LBName tn si) =
+instance IsMessage P.ModuleNamePart ModuleNamePart where
+  fromProto mnp = do
+    nm <- fromProto $ mnp ^. P.name
+    si <- fromProto $ mnp ^. P.sourceInfo
+    pure $ ModuleNamePart nm si
+
+  toProto (ModuleNamePart nm si) =
     defMessage
-      & P.name .~ tn
+      & P.name .~ nm
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.ModuleName ModuleName where
+  fromProto mn = do
+    si <- fromProto $ mn ^. P.sourceInfo
+    parts <- traverse fromProto $ mn ^. P.parts
+    pure $ ModuleName parts si
+
+  toProto (ModuleName parts si) =
+    defMessage
+      & P.parts .~ (toProto <$> parts)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.VarName LBName where
