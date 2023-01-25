@@ -64,6 +64,7 @@ common common-language
     PolyKinds
     PostfixOperators
     RankNTypes
+    RecordWildCards
     RelaxedPolyRec
     ScopedTypeVariables
     StandaloneDeriving
@@ -83,6 +84,7 @@ library
   import:          common-language
   build-depends:
     , base                        >=4.16
+    , containers                  >=0.6.5.1
     , freer-simple                >=1.2
     , lambda-buffers-common       >=0.1.0.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
@@ -92,7 +94,10 @@ library
 
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
+    LambdaBuffers.Compiler.KindCheck.Atom
+    LambdaBuffers.Compiler.KindCheck.Context
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.KindCheck.Kind
 
   hs-source-dirs:  src
 
