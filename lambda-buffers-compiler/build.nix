@@ -5,6 +5,7 @@
 , index-state
 , compilerHsPb
 , commonTools
+, lambda-buffers-common
 , shellHook
 }:
 let
@@ -17,7 +18,8 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      (builtins.toString compilerHsPb)
+      "${compilerHsPb}"
+      "${lambda-buffers-common}"
     ];
 
     modules = [
