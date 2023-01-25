@@ -4,7 +4,7 @@
 , compiler-nix-name
 , index-state
 , compilerHsPb
-, protoCompat
+, lbCommon
 , commonTools
 , shellHook
 }:
@@ -19,7 +19,7 @@ let
 
     extraHackage = [
       "${compilerHsPb}"
-      "${protoCompat}"
+      "${lbCommon}"
     ];
 
     modules = [

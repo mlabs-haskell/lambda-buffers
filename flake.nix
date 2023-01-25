@@ -91,6 +91,15 @@
           frontendBuild = buildAbstraction ./lambda-buffers-frontend/build.nix;
           frontendFlake = flakeAbstraction frontendBuild;
 
+          # Codegen Build
+          codegenBuild = import ./lambda-buffers-codegen/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+            inherit (protosBuild) compilerHsPb;
+            inherit (pre-commit-check) shellHook;
+            lbCommon = ./lambda-buffers-common;
+          };
+          codegenFlake = codegenBuild.hsNixProj.flake { };
+
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
@@ -107,6 +116,7 @@
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
+            dev-codegen = codegenFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-common = commonFlake.devShell;
             default = commonFlake.devShell;

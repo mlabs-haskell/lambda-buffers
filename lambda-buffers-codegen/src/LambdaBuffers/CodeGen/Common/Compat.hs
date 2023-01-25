@@ -1,17 +1,10 @@
 {-# LANGUAGE  OverloadedLabels #-}
 
-{- This is my take on what our proto *should* look like.
+module LambdaBuffers.CodeGen.Common.Compat  where
 
-Everything that operates on this can easily be adapted to operate on something similar, but
-it will make many functions partial or introduce the need for additional error handling if
-we end up abandoning the use of NonEmpty/etc.
-
--}
-module LambdaBuffers.Common.Compat  where
-
-import LambdaBuffers.Resolve.Rules
-import LambdaBuffers.Common.Types
-import qualified LambdaBuffers.ProtoCompat.ProtoCompat as Ty
+import LambdaBuffers.CodeGen.Resolve.Rules
+import LambdaBuffers.CodeGen.Common.Types
+import qualified LambdaBuffers.Common.ProtoCompat as Ty
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE
 import Control.Monad.State
@@ -32,7 +25,7 @@ type NameSpaced = State ForeignRefs
 -}
 
 defToPat :: Ty.TyDef -> NameSpaced Pat
-defToPat (Ty.TyDef tName tArgs tBody _) = DecP (Name $ tName ^. #name) vars <$> case tBody ^. #tyBody of
+defToPat (Ty.TyDef tName (Ty.TyAbs tArgs tBody _) _) = DecP (Name $ tName ^. #name) vars <$> case tBody of
   Ty.SumI constrs -> toSum . NE.toList <$>  traverse  goConstr (constrs ^. #constructors)
   Ty.OpaqueI _ -> pure Opaque
   where
@@ -45,24 +38,23 @@ defToPat (Ty.TyDef tName tArgs tBody _) = DecP (Name $ tName ^. #name) vars <$> 
     goConstr (Ty.Constructor n p) = goProduct p >>= \prod -> pure $ Name (n ^. #name) := prod
 
     goProduct :: Ty.Product -> NameSpaced Pat
-    goProduct p = case p ^. #product of
-      Ty.EmptyI -> pure Nil
-      Ty.RecordI rMap -> toRec  . NE.toList <$> traverse goField  rMap
-      Ty.TupleI pList -> toProd <$> traverse  tyToPat pList
+    goProduct = \case
+      Ty.RecordI (Ty.Record rMap _) -> toRec  . NE.toList <$> traverse goField  rMap
+      Ty.TupleI (Ty.Tuple pList _)  -> toProd <$> traverse  tyToPat pList
 
     goField :: Ty.Field -> NameSpaced Pat
     goField (Ty.Field n v) = tyToPat v >>= \val -> pure $ Name (n ^. #name) := val
 
 tyToPat :: Ty.Ty -> NameSpaced Pat
-tyToPat tty = case tty ^. #ty of
+tyToPat = \case
   Ty.TyVarI t   -> pure $ VarP (t ^. #varName . #name)
   Ty.TyAppI tapp -> do
     fun <- tyToPat $ tapp ^. #tyFunc
     ps  <- traverse tyToPat $ tapp ^. #tyArgs
     pure $ appToPat fun ps
-  Ty.TyRefI ref -> case ref ^. #tyRef of
-    Ty.LocalI t -> pure . RefP . Name $ t ^. #name
-    Ty.ForeignI (Ty.ForeignRef tn mn) -> do
+  Ty.TyRefI ref -> case ref of
+    Ty.LocalI (Ty.LocalRef tn _) -> pure . RefP . Name $ tn ^. #name
+    Ty.ForeignI (Ty.ForeignRef tn mn _) -> do
       modify' (M.insert tn mn)
       pure . RefP . Name $ (tn ^. #name)
 

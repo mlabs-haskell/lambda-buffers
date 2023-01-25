@@ -1,18 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
-{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 
 
-module LambdaBuffers.Resolve.Rules where
+module LambdaBuffers.CodeGen.Resolve.Rules where
 
 import Data.Kind (Type)
-
-import LambdaBuffers.Common.Types
-import LambdaBuffers.Gen.Generator
 import Data.Text (Text)
+
+import LambdaBuffers.CodeGen.Common.Types
+import LambdaBuffers.CodeGen.Gen.Generator
+
 
 type InstanceGen l = Parser l InstanceDecl () (DSL l)
 

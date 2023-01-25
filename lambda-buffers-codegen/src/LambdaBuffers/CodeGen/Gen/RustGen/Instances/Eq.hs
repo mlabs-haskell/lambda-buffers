@@ -7,7 +7,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables, AllowAmbiguousTypes #-}
 
-module LambdaBuffers.Gen.RustGen.Instances.Eq where
+module LambdaBuffers.CodeGen.Gen.RustGen.Instances.Eq where
 
 import Control.Applicative
 import Data.Text (Text)
@@ -15,10 +15,10 @@ import qualified Data.Map as M
 
 import Prettyprinter
 
-import LambdaBuffers.Gen.PP
-import LambdaBuffers.Common.Types
-import LambdaBuffers.Gen.Generator
-import LambdaBuffers.Resolve.Rules
+import LambdaBuffers.CodeGen.Gen.PP
+import LambdaBuffers.CodeGen.Common.Types
+import LambdaBuffers.CodeGen.Gen.Generator
+import LambdaBuffers.CodeGen.Resolve.Rules
 
 --for testing
 

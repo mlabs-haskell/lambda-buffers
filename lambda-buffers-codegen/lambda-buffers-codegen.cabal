@@ -21,6 +21,7 @@ common common-language
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
     -Wno-missing-kind-signatures -Wno-all-missed-specializations
+    -Wno-unticked-promoted-constructors
 
   if !flag(dev)
     ghc-options: -Werror
@@ -95,17 +96,17 @@ library
     , prettyprinter
     , mtl
     , lambda-buffers-compiler-pb
-    , lambda-buffers-proto-compat
+    , lambda-buffers-common
 
   hs-source-dirs:  src
   exposed-modules:
-    LambdaBuffers.Common.Match
-    LambdaBuffers.Common.Compat
-    LambdaBuffers.Common.Types
-    LambdaBuffers.Gen.Generator
-    LambdaBuffers.Gen.PP
-    LambdaBuffers.Resolve.Derive
-    LambdaBuffers.Resolve.Rules
-    LambdaBuffers.Resolve.Solve
-    LambdaBuffers.Gen.RustGen.Instances.Eq
-    LambdaBuffers.Gen.RustGen.RustTy
+    LambdaBuffers.CodeGen.Common.Match
+    LambdaBuffers.CodeGen.Common.Compat
+    LambdaBuffers.CodeGen.Common.Types
+    LambdaBuffers.CodeGen.Gen.Generator
+    LambdaBuffers.CodeGen.Gen.PP
+    LambdaBuffers.CodeGen.Resolve.Derive
+    LambdaBuffers.CodeGen.Resolve.Rules
+    LambdaBuffers.CodeGen.Resolve.Solve
+    LambdaBuffers.CodeGen.Gen.RustGen.Instances.Eq
+    LambdaBuffers.CodeGen.Gen.RustGen.RustTy

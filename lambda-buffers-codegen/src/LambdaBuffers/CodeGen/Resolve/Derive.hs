@@ -8,7 +8,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Resolve.Derive where
+module LambdaBuffers.CodeGen.Resolve.Derive where
 
 import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
 import Data.Foldable (traverse_)
@@ -21,10 +21,10 @@ import Prettyprinter
 
 import Debug.Trace (trace)
 
-import LambdaBuffers.Common.Types
-import LambdaBuffers.Resolve.Solve
-import LambdaBuffers.Resolve.Rules
-import LambdaBuffers.Gen.Generator
+import LambdaBuffers.CodeGen.Common.Types
+import LambdaBuffers.CodeGen.Resolve.Solve
+import LambdaBuffers.CodeGen.Resolve.Rules
+import LambdaBuffers.CodeGen.Gen.Generator
 
 
 {- The typeclass machinery should perform two tasks when it encounters an instance declaration for a given type:

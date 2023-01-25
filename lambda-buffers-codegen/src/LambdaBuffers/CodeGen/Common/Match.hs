@@ -1,6 +1,6 @@
-module LambdaBuffers.Common.Match where
+module LambdaBuffers.CodeGen.Common.Match where
 
-import LambdaBuffers.Common.Types
+import LambdaBuffers.CodeGen.Common.Types
 
 {- This is used as a predicate to filter instances or Gens which are structurally compatible
    with the argument type.

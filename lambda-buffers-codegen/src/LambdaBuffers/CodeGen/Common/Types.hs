@@ -2,7 +2,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module LambdaBuffers.Common.Types where
+module LambdaBuffers.CodeGen.Common.Types where
 
 import Data.Bifunctor
 import qualified Data.List.NonEmpty  as NE
