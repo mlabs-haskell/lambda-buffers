@@ -115,7 +115,7 @@
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-common = commonFlake.devShell;
-            default = commonFlake.devShell;
+            default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
