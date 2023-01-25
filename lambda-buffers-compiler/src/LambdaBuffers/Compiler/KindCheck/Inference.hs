@@ -16,92 +16,35 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 
 import Data.Bifunctor (Bifunctor (second))
 
+import LambdaBuffers.Compiler.KindCheck.Atom
+import LambdaBuffers.Compiler.KindCheck.Context
+import LambdaBuffers.Compiler.KindCheck.Kind
+import LambdaBuffers.Compiler.KindCheck.Type
+
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 
-import Control.Lens (Getter, makeLenses, to, (&), (.~), (^.))
+import Data.String (fromString)
+import Data.Text qualified as T
+
+import Control.Lens (Getter, to, (&), (.~), (^.))
+import Data.Map qualified as M
 
 import Prettyprinter (
   Doc,
   Pretty (pretty),
-  braces,
-  comma,
   encloseSep,
   hang,
-  hsep,
   lbracket,
   line,
   parens,
-  punctuate,
   rbracket,
   space,
   (<+>),
  )
-
-type Atom = String
-type Var = String
-
-infixr 8 :->:
-
-data Kind
-  = Type
-  | Kind :->: Kind
-  | KVar Atom
-  deriving stock (Eq, Show)
-
-instance Pretty Kind where
-  pretty = \case
-    Type -> "*"
-    ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> "→" <+> pretty z
-    x :->: y -> pretty x <+> "→" <+> pretty y
-    KVar a -> pretty a
-
-data Type
-  = Var Var
-  | App Type Type
-  | Abs String Type
-  deriving stock (Eq, Show)
-
-instance Pretty Type where
-  pretty = \case
-    Var a -> pretty a
-    App t1 t2 -> show' t1 <> " " <> show' t2
-    Abs a t1 -> "λ" <> pretty a <> "." <> pretty t1
-    where
-      show' :: Type -> Doc ann
-      show' = \case
-        Var a -> pretty a
-        App t1 t2 -> parens $ show' t1 <+> show' t2
-        Abs a t1 -> parens $ "λ" <> pretty a <> "." <> show' t1
-
-data Context = Context
-  { _context :: [(Atom, Kind)]
-  , _addContext :: [(Atom, Kind)]
-  }
-  deriving stock (Show, Eq)
-
-makeLenses ''Context
-
-instance Pretty Context where
-  pretty c = case c ^. addContext of
-    [] -> "Γ"
-    ctx -> "Γ" <+> "∪" <+> braces (setPretty ctx)
-    where
-      setPretty :: [(Atom, Kind)] -> Doc ann
-      setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> ":" <+> pretty t)
-
-instance Semigroup Context where
-  (Context a1 b1) <> (Context a2 b2) = Context (a1 <> a2) (b1 <> b2)
-
-instance Monoid Context where
-  mempty = Context mempty mempty
-
--- | Utility to unify the two.
-getAllContext :: Context -> [(Atom, Kind)]
-getAllContext c = c ^. context <> c ^. addContext
 
 newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
   deriving stock (Show, Eq)
@@ -125,11 +68,11 @@ instance Pretty Derivation where
       dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> "∧" <> space) (pretty <$> ds))
 
 data InferErr
-  = Misc String
-  | ImpossibleErr String
-  | UnboundTermErr String
-  | ImpossibleUnificationErr String
-  | RecursiveSubstitutionErr String
+  = Misc T.Text
+  | ImpossibleErr T.Text
+  | UnboundTermErr T.Text
+  | ImpossibleUnificationErr T.Text
+  | RecursiveSubstitutionErr T.Text
   deriving stock (Show, Eq)
 
 newtype Constraint = Constraint (Kind, Kind)
@@ -180,11 +123,12 @@ infer ctx t = do
     defTerms =
       mempty
         & context
-          .~ [ ("Either", Type :->: Type :->: Type)
-             , ("()", Type)
-             , ("Void", Type)
-             , ("(,)", Type :->: Type :->: Type)
-             ]
+          .~ M.fromList
+            [ ("Σ", Type :->: Type :->: Type)
+            , ("Π", Type :->: Type :->: Type)
+            , ("𝟙", Type)
+            , ("𝟘", Type)
+            ]
 
 --------------------------------------------------------------------------------
 -- Implementation
@@ -207,7 +151,7 @@ derive x = do
       pure $ Application (Judgement (c, x, v)) d1 d2
     Abs v t -> do
       newTy <- KVar <$> fresh
-      d <- local (\(Context ctx addC) -> Context ctx $ (v, newTy) : addC) (derive t)
+      d <- local (\(Context ctx addC) -> Context ctx $ M.insert v newTy addC) (derive t)
       let ty = d ^. topKind
       freshT <- KVar <$> fresh
       tell [Constraint (freshT, newTy :->: ty)]
@@ -226,9 +170,9 @@ derive x = do
 getBinding :: Atom -> Derive Kind
 getBinding t = do
   ctx <- asks getAllContext
-  case t `lookup` ctx of
+  case ctx M.!? t of
     Just x -> pure x
-    Nothing -> throwError $ UnboundTermErr $ show (pretty t)
+    Nothing -> throwError $ UnboundTermErr $ (T.pack . show . pretty) t
 
 -- | Gets kind from a derivation.
 topKind :: Getter Derivation Kind
@@ -284,21 +228,21 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
     _ -> unify $ Constraint (r, l) : xs
   where
     nope :: forall eff b a. (Member (Error InferErr) eff, Pretty b) => b -> Eff eff a
-    nope c = throwError $ ImpossibleUnificationErr $ unlines ["Cannot unify: " <> show (pretty c)]
+    nope c = throwError . ImpossibleUnificationErr . T.unlines $ ["Cannot unify: " <> (T.pack . show . pretty) c]
 
-    appearsErr :: forall eff a. Member (Error InferErr) eff => String -> Kind -> Eff eff a
+    appearsErr :: forall eff a. Member (Error InferErr) eff => T.Text -> Kind -> Eff eff a
     appearsErr var ty =
       throwError $
         RecursiveSubstitutionErr $
           mconcat
             [ "Cannot unify: "
-            , show (pretty var)
+            , T.pack . show . pretty $ var
             , " with "
-            , show (pretty ty)
+            , T.pack . show . pretty $ ty
             , ". "
-            , show (pretty var)
+            , T.pack . show . pretty $ var
             , " appears in: "
-            , show (pretty ty)
+            , T.pack . show . pretty $ ty
             , "."
             ]
 
@@ -329,12 +273,12 @@ substitute s d = case d of
   where
     applySubsToJudgement sub (Judgement (ctx, t, k)) = Judgement (applySubstitutionCtx s ctx, t, applySubstitution sub k)
 
-    applySubstitutionCtx subs c@(Context ctx addCtx) = case addCtx of
+    applySubstitutionCtx subs c@(Context ctx addCtx) = case M.toList addCtx of
       [] -> c
-      xs -> Context ctx $ second (applySubstitution subs) <$> xs
+      xs -> Context ctx $ M.fromList $ second (applySubstitution subs) <$> xs
 
 -- :fixme: not avoiding any clashes
 
 -- | Fresh atoms
 atoms :: [Atom]
-atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure [x, y]
+atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure . fromString $ [x, y]
