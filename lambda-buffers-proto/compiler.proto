@@ -59,8 +59,6 @@ message Ty {
     // A type reference.
     TyRef ty_ref = 3;
   }
-  // Source information.
-  SourceInfo source_info = 5;
 }
 
 /* Type variable */
@@ -79,7 +77,7 @@ type term can only be introduced in the context of a
 */
 message TyAbs {
   // List of type variables.
-  repeated TyVar ty_vars = 1;
+  repeated TyArg ty_args = 1;
   // Type body.
   TyBody ty_body = 2;
   // Source information.
@@ -109,6 +107,8 @@ message TyRef {
   message Local {
     // Local module type name.
     TyName ty_name = 1;
+    // Source information.
+    SourceInfo source_info = 2;
   }
   // Foreign type reference.
   message Foreign {
@@ -116,14 +116,14 @@ message TyRef {
     TyName ty_name = 1;
     // Foreign module name.
     ModuleName module_name = 2;
+    // Source information.
+    SourceInfo source_info = 3;
   }
   // Local or a foreign type reference.
   oneof ty_ref {
     Local local_ty_ref = 1;
     Foreign foreign_ty_ref = 2;
   }
-  // Source information.
-  SourceInfo source_info = 3;
 }
 
 // A list of type expressions useful for debugging
@@ -153,7 +153,7 @@ message ModuleName {
 message ModuleNamePart {
   // Name ::= [A-Z]+[A-Za-z0-9_]*
   string name = 1;
-  // Sounrce information.
+  // Source information.
   SourceInfo source_info = 2;
 }
 
@@ -277,8 +277,6 @@ message TyBody {
     Opaque opaque = 1;
     Sum sum = 2;
   };
-  // Source information.
-  SourceInfo source_info = 3;
 }
 
 /* Opaque type body
@@ -387,8 +385,6 @@ message Product {
     Record record = 1;
     NTuple ntuple = 2;
   }
-  // Source information.
-  SourceInfo source_info = 3;
 }
 
 /* Type class definition
