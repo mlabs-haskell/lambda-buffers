@@ -16,48 +16,31 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 
 import Data.Bifunctor (Bifunctor (second))
 
+import LambdaBuffers.Compiler.KindCheck.Atom
+import LambdaBuffers.Compiler.KindCheck.Context
+import LambdaBuffers.Compiler.KindCheck.Kind
+
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 
-import Control.Lens (Getter, makeLenses, to, (&), (.~), (^.))
+import Control.Lens (Getter, to, (&), (.~), (^.))
+import Data.Map qualified as M
 
 import Prettyprinter (
   Doc,
   Pretty (pretty),
-  braces,
-  comma,
   encloseSep,
   hang,
-  hsep,
   lbracket,
   line,
   parens,
-  punctuate,
   rbracket,
   space,
   (<+>),
  )
-
-type Atom = String
-type Var = String
-
-infixr 8 :->:
-
-data Kind
-  = Type
-  | Kind :->: Kind
-  | KVar Atom
-  deriving stock (Eq, Show)
-
-instance Pretty Kind where
-  pretty = \case
-    Type -> "*"
-    ((x :->: y) :->: z) -> parens (pretty $ x :->: y) <+> "→" <+> pretty z
-    x :->: y -> pretty x <+> "→" <+> pretty y
-    KVar a -> pretty a
 
 data Type
   = Var Var
@@ -76,32 +59,6 @@ instance Pretty Type where
         Var a -> pretty a
         App t1 t2 -> parens $ show' t1 <+> show' t2
         Abs a t1 -> parens $ "λ" <> pretty a <> "." <> show' t1
-
-data Context = Context
-  { _context :: [(Atom, Kind)]
-  , _addContext :: [(Atom, Kind)]
-  }
-  deriving stock (Show, Eq)
-
-makeLenses ''Context
-
-instance Pretty Context where
-  pretty c = case c ^. addContext of
-    [] -> "Γ"
-    ctx -> "Γ" <+> "∪" <+> braces (setPretty ctx)
-    where
-      setPretty :: [(Atom, Kind)] -> Doc ann
-      setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> ":" <+> pretty t)
-
-instance Semigroup Context where
-  (Context a1 b1) <> (Context a2 b2) = Context (a1 <> a2) (b1 <> b2)
-
-instance Monoid Context where
-  mempty = Context mempty mempty
-
--- | Utility to unify the two.
-getAllContext :: Context -> [(Atom, Kind)]
-getAllContext c = c ^. context <> c ^. addContext
 
 newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
   deriving stock (Show, Eq)
@@ -180,11 +137,12 @@ infer ctx t = do
     defTerms =
       mempty
         & context
-          .~ [ ("Either", Type :->: Type :->: Type)
-             , ("()", Type)
-             , ("Void", Type)
-             , ("(,)", Type :->: Type :->: Type)
-             ]
+          .~ M.fromList
+            [ ("Either", Type :->: Type :->: Type)
+            , ("()", Type)
+            , ("Void", Type)
+            , ("(,)", Type :->: Type :->: Type)
+            ]
 
 --------------------------------------------------------------------------------
 -- Implementation
@@ -207,7 +165,7 @@ derive x = do
       pure $ Application (Judgement (c, x, v)) d1 d2
     Abs v t -> do
       newTy <- KVar <$> fresh
-      d <- local (\(Context ctx addC) -> Context ctx $ (v, newTy) : addC) (derive t)
+      d <- local (\(Context ctx addC) -> Context ctx $ M.insert v newTy addC) (derive t)
       let ty = d ^. topKind
       freshT <- KVar <$> fresh
       tell [Constraint (freshT, newTy :->: ty)]
@@ -226,7 +184,7 @@ derive x = do
 getBinding :: Atom -> Derive Kind
 getBinding t = do
   ctx <- asks getAllContext
-  case t `lookup` ctx of
+  case ctx M.!? t of
     Just x -> pure x
     Nothing -> throwError $ UnboundTermErr $ show (pretty t)
 
@@ -329,9 +287,9 @@ substitute s d = case d of
   where
     applySubsToJudgement sub (Judgement (ctx, t, k)) = Judgement (applySubstitutionCtx s ctx, t, applySubstitution sub k)
 
-    applySubstitutionCtx subs c@(Context ctx addCtx) = case addCtx of
+    applySubstitutionCtx subs c@(Context ctx addCtx) = case M.toList addCtx of
       [] -> c
-      xs -> Context ctx $ second (applySubstitution subs) <$> xs
+      xs -> Context ctx $ M.fromList $ second (applySubstitution subs) <$> xs
 
 -- :fixme: not avoiding any clashes
 

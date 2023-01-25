@@ -73,10 +73,16 @@ data ModuleNamePart = ModuleNamePart {name :: Text, sourceInfo :: SourceInfo}
 data VarName = VarName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
+data FieldName = FieldName
+  { name :: Text
+  , sourceInfo :: SourceInfo
+  }
   deriving stock (Show, Eq, Ord, Generic)
 
-data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
+data ClassName = ClassName
+  { name :: Text
+  , sourceInfo :: SourceInfo
+  }
   deriving stock (Show, Eq, Ord, Generic)
 
 data Kind = Kind
