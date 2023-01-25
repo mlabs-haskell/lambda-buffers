@@ -89,9 +89,20 @@ library
     , generic-lens                >=2.2.1.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
+    , megaparsec
+    , pretty-simple
     , proto-lens                  >=0.7
+    , template-haskell
     , text                        >=1.2
     , th-abstraction              >=0.4.5.0
     , transformers                >=0.5
 
-  exposed-modules: LambdaBuffers.Common.ProtoCompat
+  other-modules:
+    LambdaBuffers.Common.ProtoCompat.IsMessage
+    LambdaBuffers.Common.ProtoCompat.NameLike
+    LambdaBuffers.Common.ProtoCompat.NameValidation
+    LambdaBuffers.Common.ProtoCompat.Types
+
+  exposed-modules:
+    LambdaBuffers.Common.ProtoCompat
+    LambdaBuffers.Common.TH
