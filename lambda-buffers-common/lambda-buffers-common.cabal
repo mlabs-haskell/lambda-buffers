@@ -1,0 +1,108 @@
+cabal-version:   3.4
+name:            lambda-buffers-common
+version:         0.1.0.0
+synopsis:        Common resources.
+
+-- license:
+
+author:          MLabs LTD
+maintainer:      info@mlabs.city
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+flag dev
+  description: Enable non-strict compilation for development
+  manual:      True
+
+common common-language
+  ghc-options:
+    -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
+    -fwarn-missing-import-lists -Weverything -Wno-unsafe
+    -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-all-missed-specialisations -Wno-missing-kind-signatures
+
+  if !flag(dev)
+    ghc-options: -Werror
+
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DoAndIfThenElse
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    ExplicitNamespaces
+    FlexibleContexts
+    FlexibleInstances
+    ForeignFunctionInterface
+    GADTSyntax
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RelaxedPolyRec
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TemplateHaskell
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns
+
+  default-language:   GHC2021
+
+library
+  import:          common-language
+  hs-source-dirs:  src
+  build-depends:
+    , base                        >=4.16
+    , generic-lens                >=2.2.1.0
+    , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lens                        >=5.2
+    , megaparsec
+    , pretty-simple
+    , proto-lens                  >=0.7
+    , template-haskell
+    , text                        >=1.2
+    , th-abstraction              >=0.4.5.0
+    , transformers                >=0.5
+
+  other-modules:
+    LambdaBuffers.Common.ProtoCompat.IsMessage
+    LambdaBuffers.Common.ProtoCompat.NameLike
+    LambdaBuffers.Common.ProtoCompat.NameValidation
+    LambdaBuffers.Common.ProtoCompat.Types
+
+  exposed-modules:
+    LambdaBuffers.Common.ProtoCompat
+    LambdaBuffers.Common.TH

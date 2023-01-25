@@ -1,0 +1,3 @@
+module B
+
+sum B = MkB

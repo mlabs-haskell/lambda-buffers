@@ -8,10 +8,6 @@ synopsis:      Lambda Buffers compiler
 author:        MLabs LTD
 maintainer:    info@mlabs.city
 
--- A copyright notice.
--- copyright:
--- category:
-
 flag dev
   description: Enable non-strict compilation for development
   manual:      True
@@ -21,6 +17,7 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-all-missed-specialisations -Wno-missing-kind-signatures
 
   if !flag(dev)
     ghc-options: -Werror
@@ -71,6 +68,7 @@ common common-language
     ScopedTypeVariables
     StandaloneDeriving
     StandaloneKindSignatures
+    TemplateHaskell
     TraditionalRecordSyntax
     TupleSections
     TypeApplications
@@ -81,49 +79,42 @@ common common-language
 
   default-language:   Haskell2010
 
-executable lambda-buffers-compiler
-  import:         common-language  
+library
+  import:          common-language
+  build-depends:
+    , base                        >=4.16
+    , freer-simple                >=1.2
+    , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lens                        >=5.2
+    , prettyprinter               >=1.7
+    , text                        >=1.2
+
+  exposed-modules:
+    LambdaBuffers.Compiler.KindCheck
+    LambdaBuffers.Compiler.KindCheck.Inference
+
+  hs-source-dirs:  src
+
+executable lambda-buffers-compiler-cli
+  import:         common-language
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
-    , lambda-buffers-compiler-pb
+    , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , proto-lens                  >=0.7
 
   hs-source-dirs: app
 
-library
+test-suite tests
   import:         common-language
-  exposed-modules:
-    Common.Match
-    Common.SourceTy
-    Common.Types
-    Gen.Generator
-    Gen.PP
-    Instances
-    Resolve.Rules
-    Resolve.Solve
-    Resolve.Derive
-    Gen.RustGen.RustTy
-    Gen.RustGen.Instances.Eq
-    Tests
-
-  hs-source-dirs:   typeclass-experiments/src
-  ghc-options:
-    -Wall -Wcompat -Widentities -Wincomplete-record-updates
-    -Wincomplete-uni-patterns -Wmissing-export-lists
-    -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
   build-depends:
-      base          >=4.7 && <5
-    , containers
-    , row-types
-    , text
-    , transformers
-    , prettyprinter
-    , megaparsec
-    , mtl
-    , lambda-buffers-compiler-pb
-    , proto-lens
-    , generic-lens
-    , lens
+    , base                     >=4.16
+    , lambda-buffers-compiler
+    , tasty                    >=1.4
+    , tasty-hunit              >=0.10
+
+  other-modules:  Test.KindCheck

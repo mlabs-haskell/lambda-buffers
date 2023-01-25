@@ -1,2 +1,6 @@
 [default.extend-words]
 substituters = "substituters"
+
+[type.pdf]
+extend-glob = ["*.pdf"]
+check-file = false

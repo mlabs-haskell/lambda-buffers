@@ -27,7 +27,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          allComponent.configureFlags = [ "-f-dev" ];
+          lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
         };
       })
     ];
@@ -39,10 +39,6 @@ let
       exactDeps = true;
 
       nativeBuildInputs = builtins.attrValues commonTools;
-
-      additional = ps: [
-        ps.lambda-buffers-compiler-pb
-      ];
 
       tools = {
         cabal = { };
@@ -59,7 +55,7 @@ let
   };
 in
 {
-  compilerHsNixProj = haskell-nix.cabalProject' [
+  hsNixProj = haskell-nix.cabalProject' [
     mlabs-tooling.lib.mkHackageMod
     project
   ];
