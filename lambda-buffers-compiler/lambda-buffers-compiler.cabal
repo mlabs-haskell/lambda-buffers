@@ -83,7 +83,9 @@ library
   import:          common-language
   build-depends:
     , base                        >=4.16
+    , containers
     , freer-simple                >=1.2
+    , lambda-buffers-common
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , prettyprinter               >=1.7
@@ -92,6 +94,7 @@ library
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.TypeClassCheck
 
   hs-source-dirs:  src
 
