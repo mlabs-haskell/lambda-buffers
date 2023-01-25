@@ -84,6 +84,7 @@ library
   build-depends:
     , base                        >=4.16
     , freer-simple                >=1.2
+    , lambda-buffers-common       >=0.1.0.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , prettyprinter               >=1.7
