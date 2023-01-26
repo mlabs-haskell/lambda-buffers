@@ -80,13 +80,17 @@ common common-language
 
   default-language:   Haskell2010
 
+common common-imports
+  build-depends:
+    , base                   >=4.16
+    , lambda-buffers-common  >=0.1.0.0
+
 library
   import:          common-language
+  import:          common-imports
   build-depends:
-    , base                        >=4.16
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
-    , lambda-buffers-common       >=0.1.0.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , prettyprinter               >=1.7
@@ -104,9 +108,9 @@ library
 
 executable lambda-buffers-compiler-cli
   import:         common-language
+  import:         common-imports
   main-is:        Main.hs
   build-depends:
-    , base                        >=4.16
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , proto-lens                  >=0.7
@@ -115,11 +119,11 @@ executable lambda-buffers-compiler-cli
 
 test-suite tests
   import:         common-language
+  import:         common-imports
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base                     >=4.16
     , lambda-buffers-compiler
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
