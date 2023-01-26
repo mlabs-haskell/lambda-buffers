@@ -107,11 +107,14 @@ executable lambda-buffers-compiler-cli
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
+    , containers                  >=0.6
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
+    , optparse-applicative        >=0.17
     , proto-lens                  >=0.7
 
   hs-source-dirs: app
+  other-modules:  LambdaBuffers.Compiler.Cli.Compile
 
 test-suite tests
   import:         common-language
