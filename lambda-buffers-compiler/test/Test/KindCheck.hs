@@ -5,6 +5,7 @@ module Test.KindCheck (test) where
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
 import LambdaBuffers.Common.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.KindCheck (
+  check,
   foldWithProduct,
   foldWithSum,
  )
@@ -13,12 +14,16 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 
 test :: TestTree
-test = testGroup "KindChecker tests" [testFolds] -- [t1, t2, t3, t4, t5]
+test = testGroup "Compiler tests" [testCheck, testFolds]
 
 --------------------------------------------------------------------------------
 -- Module tests
 
-testCompilerInput = P.CompilerInput []
+testCheck = testGroup "KindChecker Tests" [trivialKCTest]
+
+trivialKCTest =
+  testCase "Empty CompInput should check." $
+    check (P.CompilerInput []) @?= Right ()
 
 --------------------------------------------------------------------------------
 -- Fold tests

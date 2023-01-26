@@ -91,6 +91,16 @@ data KindCheck a where
   CheckKindConsistency :: P.TyDef -> Context -> Kind -> KindCheck Kind
 makeEffect ''KindCheck
 
+--------------------------------------------------------------------------------
+
+runCheck :: Eff (Check ': '[]) a -> Either KindCheckFailure a
+runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
+
+check :: P.CompilerInput -> Either KindCheckFailure ()
+check = runCheck . kCheck
+
+--------------------------------------------------------------------------------
+
 type Transform x y = forall effs {a}. Eff (x ': effs) a -> Eff (y ': effs) a
 
 -- Transformation strategies
@@ -120,12 +130,6 @@ runKindCheck = reinterpret $ \case
   KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
   InferTypeKind ctx ty -> either (\_ -> throwError InvalidType) pure $ infer ctx ty
   CheckKindConsistency def ctx k -> resolveKindConsistency def ctx k
-
-runCheck :: Eff (Check ': '[]) a -> Either KindCheckFailure a
-runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
-
-check :: P.CompilerInput -> Either KindCheckFailure ()
-check = runCheck . kCheck
 
 -- Resolvers
 
