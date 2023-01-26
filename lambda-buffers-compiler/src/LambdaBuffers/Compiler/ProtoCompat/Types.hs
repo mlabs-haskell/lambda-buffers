@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module LambdaBuffers.Common.ProtoCompat.Types (
+module LambdaBuffers.Compiler.ProtoCompat.Types (
   SourceInfo (..),
   SourcePosition (..),
   LBName (..),
@@ -54,7 +54,7 @@ data SourcePosition = SourcePosition
   }
   deriving stock (Show, Eq, Ord, Generic)
 
--- I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
+-- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 

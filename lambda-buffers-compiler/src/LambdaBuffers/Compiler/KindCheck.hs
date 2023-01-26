@@ -3,8 +3,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{- | Note: At the moment the Kind Checker disregards multiple Modules for
-simplicity of testing and developing. This will be changed ASAP. :fixme:
+{- | FIXME(cstml): At the moment the Kind Checker disregards multiple Modules for
+simplicity of testing and developing. This will be changed ASAP.
 -}
 module LambdaBuffers.Compiler.KindCheck (
   KindCheckFailure (..),
@@ -29,13 +29,45 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
  )
 
-import Control.Monad
-import Control.Monad.Freer
-import LambdaBuffers.Common.ProtoCompat qualified as P
-
-import Data.Foldable
-
+import Control.Monad (void)
+import Control.Monad.Freer (Eff)
 import Data.Map qualified as M
+import Data.Traversable (for)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
+import Proto.Compiler (
+  Product'NTuple,
+  Product'Product (Product'Ntuple, Product'Record'),
+  Product'Record,
+  Sum,
+  Ty,
+  Ty'Ty (Ty'TyApp, Ty'TyRef, Ty'TyVar),
+  TyApp,
+  TyBody'TyBody (TyBody'Opaque, TyBody'Sum),
+  TyDef,
+  TyRef,
+  TyRef'TyRef (TyRef'ForeignTyRef, TyRef'LocalTyRef),
+ )
+import Proto.Compiler_Fields as PF (
+  argName,
+  constrName,
+  constructors,
+  fieldTy,
+  fields,
+  maybe'product,
+  maybe'ty,
+  maybe'tyBody,
+  maybe'tyRef,
+  moduleName,
+  name,
+  parts,
+  product,
+  tyAbs,
+  tyArgs,
+  tyBody,
+  tyFunc,
+  tyName,
+  varName,
+ )
 
 --------------------------------------------------------------------------------
 -- Types
@@ -199,7 +231,7 @@ interpretKindCheck = interpret $
 
 validateTyDef :: TyDef -> Eff KindCheckFailEff TypeDefinition
 validateTyDef tD = do
-  let vars = tD ^.. tyAbs . tyVars . folded . varName . name . to unpack
+  let vars = tD ^.. tyAbs . tyArgs . folded . argName . name . to unpack
   sop <- go (tD ^. tyAbs . tyBody . maybe'tyBody)
   pure $
     TypeDefinition

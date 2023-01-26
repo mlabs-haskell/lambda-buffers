@@ -5,7 +5,6 @@
 , index-state
 , compilerHsPb
 , commonTools
-, lambda-buffers-common
 , shellHook
 }:
 let
@@ -19,7 +18,6 @@ let
 
     extraHackage = [
       "${compilerHsPb}"
-      "${lambda-buffers-common}"
     ];
 
     modules = [

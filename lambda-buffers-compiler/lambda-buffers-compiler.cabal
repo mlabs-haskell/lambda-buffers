@@ -86,11 +86,13 @@ library
     , base                        >=4.16
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
-    , generic-lens
-    , lambda-buffers-common       >=0.1.0.0
+    , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
+    , mtl                         >=2.2
+    , parsec                      >=3.1
     , prettyprinter               >=1.7
+    , proto-lens                  >=0.7
     , text                        >=1.2
 
   exposed-modules:
@@ -98,6 +100,10 @@ library
     LambdaBuffers.Compiler.KindCheck.Atom
     LambdaBuffers.Compiler.KindCheck.Context
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.KindCheck.Kind
+    LambdaBuffers.Compiler.NamingCheck
+    LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
 
   hs-source-dirs:  src
@@ -107,11 +113,16 @@ executable lambda-buffers-compiler-cli
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
+    , bytestring                  >=0.11
+    , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
+    , optparse-applicative        >=0.17
     , proto-lens                  >=0.7
+    , text                        >=1.2
 
   hs-source-dirs: app
+  other-modules:  LambdaBuffers.Compiler.Cli.Compile
 
 test-suite tests
   import:         common-language

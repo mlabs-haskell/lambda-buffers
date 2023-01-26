@@ -81,20 +81,21 @@
           flakeAbstraction = component-name: component-name.hsNixProj.flake { };
 
           # Compiler Build
-          compilerBuild = buildAbstraction {
-            import-location = ./lambda-buffers-compiler/build.nix;
-            additional = {
-              lambda-buffers-common = ./lambda-buffers-common;
-            };
-          };
+          compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
           compilerFlake = flakeAbstraction compilerBuild;
 
-          # Common Build
-          commonBuild = buildAbstraction { import-location = ./lambda-buffers-common/build.nix; };
-          commonFlake = flakeAbstraction commonBuild;
+          # Extras Build
+          extrasBuild = buildAbstraction {
+            import-location = ./lambda-buffers-extras/build.nix;
+            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
+          };
+          extrasFlake = flakeAbstraction extrasBuild;
 
           # Frontend Build
-          frontendBuild = buildAbstraction { import-location = ./lambda-buffers-frontend/build.nix; };
+          frontendBuild = buildAbstraction {
+            import-location = ./lambda-buffers-frontend/build.nix;
+            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
+          };
           frontendFlake = flakeAbstraction frontendBuild;
 
           # Utilities
@@ -105,7 +106,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // commonFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // extrasFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -114,12 +115,12 @@
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
-            dev-common = commonFlake.devShell;
+            dev-common = extrasFlake.devShell;
             default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks // commonFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks // extrasFlake.checks);
 
         }
       ) // {
