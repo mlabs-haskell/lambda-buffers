@@ -92,7 +92,10 @@
           extrasFlake = flakeAbstraction extrasBuild;
 
           # Frontend Build
-          frontendBuild = buildAbstraction { import-location = ./lambda-buffers-frontend/build.nix; };
+          frontendBuild = buildAbstraction {
+            import-location = ./lambda-buffers-frontend/build.nix;
+            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
+          };
           frontendFlake = flakeAbstraction frontendBuild;
 
           # Utilities

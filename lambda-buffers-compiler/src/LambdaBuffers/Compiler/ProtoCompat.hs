@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLabels #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..)) where
 
@@ -57,6 +58,7 @@ note e = \case
   Nothing -> Left e
   Just a -> Right a
 
+-- FIXME(bladyjoker): This emits a missing Functor constraint @gnumonik
 -- something like this probably exists in lens but i can't find it
 traversing :: (Traversable t, Applicative f) => (a -> f b) -> Getter (t a) (f (t b))
 traversing f = to $ \ta -> traverse f ta
@@ -74,6 +76,7 @@ class IsMessage (proto :: Type) (good :: Type) where
 throwNamingError :: Either NamingError b -> Either FromProtoErr b
 throwNamingError = either (Left . NamingError) return
 
+-- TODO(bladyjoker): Revisit and make part of compiler.proto
 data ProtoError
   = MultipleInstanceHeads ClassName [Ty] SourceInfo
   | NoInstanceHead ClassName SourceInfo
