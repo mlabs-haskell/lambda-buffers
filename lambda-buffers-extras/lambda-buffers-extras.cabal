@@ -1,7 +1,7 @@
 cabal-version:   3.4
-name:            lambda-buffers-common
+name:            lambda-buffers-extras
 version:         0.1.0.0
-synopsis:        Common resources.
+synopsis:        LambdaBuffers extras
 
 -- license:
 
@@ -85,24 +85,12 @@ library
   import:          common-language
   hs-source-dirs:  src
   build-depends:
-    , base                        >=4.16
-    , generic-lens                >=2.2.1.0
-    , lambda-buffers-compiler-pb  >=0.1.0.0
-    , lens                        >=5.2
-    , megaparsec                  >=9.3
-    , pretty-simple               >=4.1
-    , proto-lens                  >=0.7
-    , template-haskell            >=2.18
-    , text                        >=1.2
-    , th-abstraction              >=0.4.5.0
-    , transformers                >=0.5
+    , base                     >=4.16
+    , generic-lens             >=2.2.1.0
+    , lambda-buffers-compiler
+    , lens                     >=5.2
+    , template-haskell         >=2.18
+    , text                     >=1.2
+    , th-abstraction           >=0.4.5.0
 
-  other-modules:
-    LambdaBuffers.Common.ProtoCompat.IsMessage
-    LambdaBuffers.Common.ProtoCompat.NameLike
-    LambdaBuffers.Common.ProtoCompat.NameValidation
-    LambdaBuffers.Common.ProtoCompat.Types
-
-  exposed-modules:
-    LambdaBuffers.Common.ProtoCompat
-    LambdaBuffers.Common.TH
+  exposed-modules: LambdaBuffers.Extras.TH
