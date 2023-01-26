@@ -9,20 +9,7 @@ import Data.List (foldl')
 import Data.Map qualified as M
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types (
-  ClassDef (ClassDef),
-  ClassName (ClassName),
-  Constraint (Constraint),
-  Kind (Kind),
-  KindRefType (KType),
-  KindType (KindRef),
-  LocalRef (LocalRef),
-  SourceInfo (SourceInfo),
-  SourcePosition (SourcePosition),
-  Ty (TyRefI),
-  TyArg (TyArg),
-  TyName (TyName),
-  TyRef (LocalI),
-  VarName (VarName),
+  ClassDef (),
  )
 import Prettyprinter (
   Doc,
