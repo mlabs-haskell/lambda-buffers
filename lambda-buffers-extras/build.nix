@@ -4,6 +4,7 @@
 , compiler-nix-name
 , index-state
 , compilerHsPb
+, lambda-buffers-compiler
 , commonTools
 , shellHook
 }:
@@ -12,12 +13,13 @@ let
   project = {
     src = ./.;
 
-    name = "lambda-buffers-compiler";
+    name = "lambda-buffers-extras";
 
     inherit compiler-nix-name index-state;
 
     extraHackage = [
       "${compilerHsPb}"
+      "${lambda-buffers-compiler}"
     ];
 
     modules = [
@@ -27,7 +29,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+          lambda-buffers-extras.configureFlags = [ "-f-dev" ];
         };
       })
     ];

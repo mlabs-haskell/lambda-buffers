@@ -66,23 +66,37 @@
             inherit (pre-commit-check) shellHook;
           };
 
-          # Compiler build
           index-state = "2022-12-01T00:00:00Z";
           compiler-nix-name = "ghc924";
 
-          compilerBuild = import ./lambda-buffers-compiler/build.nix {
-            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-            inherit (protosBuild) compilerHsPb;
-            inherit (pre-commit-check) shellHook;
-          };
-          compilerFlake = compilerBuild.hsNixProj.flake { };
+          # Common build abstraction for the components.
+          buildAbstraction = { import-location, additional ? { } }:
+            import import-location ({
+              inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+              inherit (protosBuild) compilerHsPb;
+              inherit (pre-commit-check) shellHook;
+            } // additional);
 
-          frontendBuild = import ./lambda-buffers-frontend/build.nix {
-            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-            inherit (protosBuild) compilerHsPb;
-            inherit (pre-commit-check) shellHook;
+          # Common Flake abstraction for the components.
+          flakeAbstraction = component-name: component-name.hsNixProj.flake { };
+
+          # Compiler Build
+          compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
+          compilerFlake = flakeAbstraction compilerBuild;
+
+          # Extras Build
+          extrasBuild = buildAbstraction {
+            import-location = ./lambda-buffers-extras/build.nix;
+            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
           };
-          frontendFlake = frontendBuild.hsNixProj.flake { };
+          extrasFlake = flakeAbstraction extrasBuild;
+
+          # Frontend Build
+          frontendBuild = buildAbstraction {
+            import-location = ./lambda-buffers-frontend/build.nix;
+            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
+          };
+          frontendFlake = flakeAbstraction frontendBuild;
 
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -92,7 +106,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // extrasFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -101,11 +115,12 @@
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
+            dev-common = extrasFlake.devShell;
             default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks // extrasFlake.checks);
 
         }
       ) // {

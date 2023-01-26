@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-{- | Note: At the moment the Kind Checker disregards multiple Modules for
-simplicity of testing and developing. This will be changed ASAP. :fixme:
+{- | FIXME(cstml): At the moment the Kind Checker disregards multiple Modules for
+simplicity of testing and developing. This will be changed ASAP.
 -}
 module LambdaBuffers.Compiler.KindCheck (
   KindCheckFailure (..),
@@ -44,6 +44,7 @@ import Proto.Compiler (
   TyRef'TyRef (TyRef'ForeignTyRef, TyRef'LocalTyRef),
  )
 import Proto.Compiler_Fields as PF (
+  argName,
   constrName,
   constructors,
   fieldTy,
@@ -61,7 +62,6 @@ import Proto.Compiler_Fields as PF (
   tyBody,
   tyFunc,
   tyName,
-  tyVars,
   varName,
  )
 
@@ -142,7 +142,7 @@ interpretKindCheck = interpret $
 
 validateTyDef :: TyDef -> Eff KindCheckFailEff TypeDefinition
 validateTyDef tD = do
-  let vars = tD ^.. tyAbs . tyVars . folded . varName . name . to unpack
+  let vars = tD ^.. tyAbs . tyArgs . folded . argName . name . to unpack
   sop <- go (tD ^. tyAbs . tyBody . maybe'tyBody)
   pure $
     TypeDefinition
