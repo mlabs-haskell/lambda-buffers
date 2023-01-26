@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..)) where
+module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..)) where
 
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
