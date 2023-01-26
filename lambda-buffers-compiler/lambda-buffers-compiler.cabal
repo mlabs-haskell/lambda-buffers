@@ -86,6 +86,7 @@ library
     , base                        >=4.16
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
+    , generic-lens
     , lambda-buffers-common       >=0.1.0.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
