@@ -189,6 +189,23 @@ message ClassName {
   SourceInfo source_info = 2;
 }
 
+/* Naming error message */
+message NamingError {
+  enum NameType {
+    NAME_TYPE_UNSPECIFIED = 0;
+    NAME_TYPE_MODULE = 1;
+    NAME_TYPE_TYPE = 2;
+    NAME_TYPE_VAR = 3;
+    NAME_TYPE_CONSTR = 4;
+    NAME_TYPE_FIELD = 5;
+    NAME_TYPE_CLASS = 6;
+  };
+  // Type of name.
+  NameType name_type = 1;
+  // Source information.
+  SourceInfo source_info = 2;
+}
+
 /* Type definition
 
 A type definition consists of a type name and its associated type term.

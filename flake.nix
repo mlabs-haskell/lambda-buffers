@@ -81,12 +81,7 @@
           flakeAbstraction = component-name: component-name.hsNixProj.flake { };
 
           # Compiler Build
-          compilerBuild = buildAbstraction {
-            import-location = ./lambda-buffers-compiler/build.nix;
-            additional = {
-              lambda-buffers-common = ./lambda-buffers-common;
-            };
-          };
+          compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
           compilerFlake = flakeAbstraction compilerBuild;
 
           # Common Build

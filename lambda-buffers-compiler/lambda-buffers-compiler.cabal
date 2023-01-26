@@ -84,15 +84,21 @@ library
   build-depends:
     , base                        >=4.16
     , freer-simple                >=1.2
-    , lambda-buffers-common       >=0.1.0.0
+    , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
+    , mtl                         >=2.2
+    , parsec                      >=3.1
     , prettyprinter               >=1.7
+    , proto-lens                  >=0.7
     , text                        >=1.2
 
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.NamingCheck
+    LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.Types
 
   hs-source-dirs:  src
 

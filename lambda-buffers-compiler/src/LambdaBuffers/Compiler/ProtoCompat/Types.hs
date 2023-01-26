@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module LambdaBuffers.Common.ProtoCompat.Types (
+module LambdaBuffers.Compiler.ProtoCompat.Types (
   SourceInfo (..),
   SourcePosition (..),
   LBName (..),

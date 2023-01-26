@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLabels #-}
 
-module LambdaBuffers.Common.ProtoCompat.IsMessage (IsMessage (..)) where
+module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..)) where
 
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
@@ -13,15 +13,9 @@ import GHC.Generics (Generic)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-import LambdaBuffers.Common.ProtoCompat.NameValidation (
-  NameValidator,
-  classname,
-  constrname,
-  fieldname,
-  tyname,
-  varname,
- )
-import LambdaBuffers.Common.ProtoCompat.Types (
+import Data.Text qualified as Text
+import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
+import LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (ClassDef),
   ClassName (ClassName),
   CompilerInput (CompilerInput),
@@ -56,7 +50,7 @@ import LambdaBuffers.Common.ProtoCompat.Types (
   TyVar (TyVar),
   VarName (VarName),
  )
-import Text.Megaparsec (parseMaybe)
+import Proto.Compiler (NamingError)
 
 note :: e -> Maybe a -> Either e a
 note e = \case
@@ -64,10 +58,23 @@ note e = \case
   Just a -> Right a
 
 -- something like this probably exists in lens but i can't find it
-traversing :: (Applicative f, Traversable t) => (a -> f b) -> Getter (t a) (f (t b))
+traversing :: (Traversable t, Applicative f) => (a -> f b) -> Getter (t a) (f (t b))
 traversing f = to $ \ta -> traverse f ta
 
 data FromProtoErr
+  = ProtoError ProtoError
+  | NamingError NamingError
+  deriving stock (Show, Eq, Ord, Generic)
+
+class IsMessage (proto :: Type) (good :: Type) where
+  fromProto :: proto -> Either FromProtoErr good
+
+  toProto :: good -> proto
+
+throwNamingError :: Either NamingError b -> Either FromProtoErr b
+throwNamingError = either (Left . NamingError) return
+
+data ProtoError
   = MultipleInstanceHeads ClassName [Ty] SourceInfo
   | NoInstanceHead ClassName SourceInfo
   | NoConstraintArgs ClassName SourceInfo
@@ -80,16 +87,11 @@ data FromProtoErr
   | EmptyName SourceInfo
   | EmptyField
   | OneOfNotSet Text
-  | BadName Text SourceInfo
-  deriving stock (Show, Eq, Ord, Generic)
+  | UnrecognizedKindRefEnum Text
+  deriving stock (Show, Eq, Ord)
 
-checkName :: NameValidator -> SourceInfo -> Text -> Either FromProtoErr Text
-checkName v si txt = note (BadName txt si) $ parseMaybe v txt
-
-class IsMessage (proto :: Type) (good :: Type) where
-  fromProto :: proto -> Either FromProtoErr good
-
-  toProto :: good -> proto
+throwProtoError :: ProtoError -> Either FromProtoErr b
+throwProtoError = Left . ProtoError
 
 {-
     SourceInfo
@@ -121,10 +123,8 @@ instance IsMessage P.SourceInfo SourceInfo where
 
 instance IsMessage P.FieldName FieldName where
   fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName fieldname si n'
-    pure $ FieldName n si
+    throwNamingError $ checkFieldName v
+    FieldName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
 
   toProto (FieldName n si) =
     defMessage
@@ -133,10 +133,8 @@ instance IsMessage P.FieldName FieldName where
 
 instance IsMessage P.ConstrName ConstrName where
   fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName constrname si n'
-    pure $ ConstrName n si
+    throwNamingError $ checkConstrName v
+    ConstrName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
 
   toProto (ConstrName n si) =
     defMessage
@@ -145,10 +143,8 @@ instance IsMessage P.ConstrName ConstrName where
 
 instance IsMessage P.TyName TyName where
   fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName tyname si n'
-    pure $ TyName n si
+    throwNamingError $ checkTyName v
+    TyName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
 
   toProto (TyName n si) =
     defMessage
@@ -157,10 +153,8 @@ instance IsMessage P.TyName TyName where
 
 instance IsMessage P.ClassName ClassName where
   fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName classname si n'
-    pure $ ClassName n si
+    throwNamingError $ checkClassName v
+    ClassName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
 
   toProto (ClassName n si) =
     defMessage
@@ -169,10 +163,8 @@ instance IsMessage P.ClassName ClassName where
 
 instance IsMessage P.VarName VarName where
   fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName varname si n'
-    pure $ VarName n si
+    throwNamingError $ checkVarName v
+    VarName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
 
   toProto (VarName n si) =
     defMessage
@@ -199,7 +191,7 @@ instance IsMessage P.TyApp TyApp where
     tf <- fromProto $ ta ^. P.tyFunc
     si <- fromProto $ ta ^. P.sourceInfo
     targs' <- ta ^. (P.tyArgs . traversing fromProto)
-    targs <- note (NoTyAppArgs si) $ nonEmpty targs'
+    targs <- note (ProtoError $ NoTyAppArgs si) $ nonEmpty targs'
     pure $ TyApp tf targs si
 
   toProto (TyApp tf args si) =
@@ -210,7 +202,7 @@ instance IsMessage P.TyApp TyApp where
 
 instance IsMessage P.Ty Ty where
   fromProto ti = case ti ^. P.maybe'ty of
-    Nothing -> Left $ OneOfNotSet "ty"
+    Nothing -> throwProtoError $ OneOfNotSet "ty"
     Just x -> case x of
       P.Ty'TyVar tv -> TyVarI <$> fromProto tv
       P.Ty'TyApp ta -> TyAppI <$> fromProto ta
@@ -247,7 +239,7 @@ instance IsMessage P.TyRef'Foreign ForeignRef where
 
 instance IsMessage P.TyRef TyRef where
   fromProto tr = case tr ^. P.maybe'tyRef of
-    Nothing -> Left $ OneOfNotSet "ty_ref"
+    Nothing -> throwProtoError $ OneOfNotSet "ty_ref"
     Just x -> case x of
       P.TyRef'LocalTyRef lr -> LocalI <$> fromProto lr
       P.TyRef'ForeignTyRef f -> ForeignI <$> fromProto f
@@ -290,7 +282,7 @@ instance IsMessage P.Kind'KindRef KindRefType where
   fromProto = \case
     P.Kind'KIND_REF_TYPE -> pure KType
     P.Kind'KIND_REF_UNSPECIFIED -> pure KUnspecified
-    P.Kind'KindRef'Unrecognized _ -> undefined -- FIXME
+    P.Kind'KindRef'Unrecognized v -> throwProtoError $ UnrecognizedKindRefEnum (Text.pack . show $ v)
 
   toProto = \case
     KType -> P.Kind'KIND_REF_TYPE
@@ -300,9 +292,10 @@ instance IsMessage P.Kind Kind where
   fromProto k = do
     si <- fromProto $ k ^. P.sourceInfo
     kt <- case k ^. P.maybe'kind of
-      Just (P.Kind'KindRef r) -> KindRef <$> fromProto r
-      Just (P.Kind'KindArrow' arr) -> KindArrow <$> fromProto (arr ^. P.left) <*> fromProto (arr ^. P.right)
-      _ -> Left EmptyField
+      Nothing -> throwProtoError $ OneOfNotSet "ty_ref"
+      Just k' -> case k' of
+        P.Kind'KindRef r -> KindRef <$> fromProto r
+        P.Kind'KindArrow' arr -> KindArrow <$> fromProto (arr ^. P.left) <*> fromProto (arr ^. P.right)
     pure $ Kind kt si
 
   toProto (Kind (KindArrow l r) si) = do
@@ -330,7 +323,7 @@ instance IsMessage P.TyArg TyArg where
 
 instance IsMessage P.TyBody TyBody where
   fromProto tb = case tb ^. P.maybe'tyBody of
-    Nothing -> Left $ OneOfNotSet "tyBody"
+    Nothing -> throwProtoError $ OneOfNotSet "tyBody"
     Just x -> case x of
       P.TyBody'Opaque opq -> OpaqueI <$> fromProto (opq ^. P.sourceInfo)
       P.TyBody'Sum sumI -> SumI <$> fromProto sumI
@@ -345,7 +338,7 @@ instance IsMessage P.Sum Sum where
   fromProto s = do
     si <- fromProto $ s ^. P.sourceInfo
     ctors' <- s ^. (P.constructors . traversing fromProto)
-    ctors <- note (EmptySumBody si) $ nonEmpty ctors'
+    ctors <- note (ProtoError $ EmptySumBody si) $ nonEmpty ctors'
     pure $ Sum ctors si
 
   toProto (Sum ctors si) =
@@ -368,7 +361,7 @@ instance IsMessage P.Product'Record Record where
   fromProto r = do
     fs' <- traverse fromProto $ r ^. P.fields
     si <- fromProto $ r ^. P.sourceInfo
-    fs <- note (EmptyRecordBody si) $ nonEmpty fs'
+    fs <- note (ProtoError $ EmptyRecordBody si) $ nonEmpty fs'
     pure $ Record fs si
 
   toProto (Record fs si) =
@@ -389,7 +382,7 @@ instance IsMessage P.Product'NTuple Tuple where
 
 instance IsMessage P.Product Product where
   fromProto p = case p ^. P.maybe'product of
-    Nothing -> Left $ OneOfNotSet "product"
+    Nothing -> throwProtoError $ OneOfNotSet "product"
     Just x -> case x of
       --- wrong, fix
       P.Product'Record' r -> do
@@ -424,9 +417,9 @@ instance IsMessage P.ClassDef ClassDef where
     cnm <- fromProto $ cd ^. P.className
     cargs <- traverse fromProto $ cd ^. P.classArgs
     carg <- case cargs of
-      [] -> Left $ NoClassArgs cnm si
+      [] -> throwProtoError $ NoClassArgs cnm si
       [x] -> Right x
-      _ -> Left $ MultipleClassArgs cnm si
+      _ -> throwProtoError $ MultipleClassArgs cnm si
     sups <- traverse fromProto $ cd ^. P.supers
     let doc = cd ^. P.documentation
     pure $ ClassDef cnm carg sups doc si
@@ -446,9 +439,9 @@ instance IsMessage P.InstanceClause InstanceClause where
     csts <- traverse fromProto $ ic ^. P.constraints
     hds <- ic ^. (P.heads . traversing fromProto)
     hd <- case hds of
-      [] -> Left $ NoInstanceHead cnm si
+      [] -> throwProtoError $ NoInstanceHead cnm si
       [x] -> Right x
-      xs -> Left $ MultipleInstanceHeads cnm xs si
+      xs -> throwProtoError $ MultipleInstanceHeads cnm xs si
     pure $ InstanceClause cnm hd csts si
 
   toProto (InstanceClause cnm hd csts si) =
@@ -464,9 +457,9 @@ instance IsMessage P.Constraint Constraint where
     cnm <- fromProto $ c ^. P.className
     args <- c ^. (P.arguments . traversing fromProto)
     arg <- case args of
-      [] -> Left $ NoConstraintArgs cnm si
+      [] -> throwProtoError $ NoConstraintArgs cnm si
       [x] -> Right x
-      xs -> Left $ MultipleConstraintArgs cnm xs si
+      xs -> throwProtoError $ MultipleConstraintArgs cnm xs si
     pure $ Constraint cnm arg si
 
   toProto (Constraint cnm arg si) =
