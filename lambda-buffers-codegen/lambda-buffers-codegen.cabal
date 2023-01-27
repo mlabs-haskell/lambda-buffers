@@ -110,3 +110,4 @@ library
     LambdaBuffers.CodeGen.Resolve.Solve
     LambdaBuffers.CodeGen.Gen.RustGen.Instances.Eq
     LambdaBuffers.CodeGen.Gen.RustGen.RustTy
+    LambdaBuffers.CodeGen

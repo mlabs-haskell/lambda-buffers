@@ -8,10 +8,10 @@ import Control.Lens (Iso', iso, (^.))
 import Data.Generics.Labels (Field')
 import Data.Text (Text)
 import LambdaBuffers.Common.ProtoCompat.Types (
-  ClassName (ClassName),
   ConstrName (ConstrName),
   FieldName (FieldName),
   LBName (LBName),
+  ClassName (ClassName),
   ModuleNamePart (ModuleNamePart),
   SourceInfo,
   TyName (TyName),

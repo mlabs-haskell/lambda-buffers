@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-missing-import-lists #-} -- annoying
 module LambdaBuffers.Common.ProtoCompat (module X) where
 
 import LambdaBuffers.Common.ProtoCompat.IsMessage as X

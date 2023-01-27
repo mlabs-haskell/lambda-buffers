@@ -3,23 +3,46 @@
 module LambdaBuffers.CodeGen.Common.Compat  where
 
 import LambdaBuffers.CodeGen.Resolve.Rules
+    ( Class(Class, name), Constraint(..), Instance, Rule((:<=)) )
 import LambdaBuffers.CodeGen.Common.Types
+    ( toProd,
+      toRec,
+      toSum,
+      Pat(AppP, (:*), Nil, (:=), DecP, Opaque, VarP, RefP, Name) )
 import qualified LambdaBuffers.Common.ProtoCompat as Ty
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE
-import Control.Monad.State
+import Control.Monad.State ( foldM, modify', evalState, State )
 import qualified Data.Map as M
-import Control.Lens ( (^.) )
-import Data.Generics.Labels ()
+import Control.Lens ( (^.), view, set, over )
+import Data.Generics.Labels (Field')
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Data.List (foldl')
 import qualified Data.Set as S
+import LambdaBuffers.Common.ProtoCompat (coerceName)
+import Control.Monad.Trans.Except ( ExceptT )
+import Control.Monad.Except ( MonadError(throwError) )
+import Data.Bifunctor (Bifunctor(bimap))
+import Control.Monad.Trans.Class
+import Control.Monad.State.Class
+import Data.Functor ((<&>))
 
-type ForeignRefs = M.Map Ty.TyName Ty.ModuleName
+type ForeignRefs = M.Map Ty.LBName Ty.ModuleName
 
 type NameSpaced = State ForeignRefs
 
+si :: Ty.SourceInfo
+si = Ty.SourceInfo "" (Ty.SourcePosition 0 0) (Ty.SourcePosition 0 0)
+-- need to initialize the sourceInfo field in both the keys and the values
+sanitizeRefs :: ForeignRefs -> ForeignRefs
+sanitizeRefs = M.fromList . map (bimap f goR) . M.toList
+  where
+    f :: forall s. Field' "sourceInfo" s Ty.SourceInfo => s -> s
+    f = set #sourceInfo si
+
+    goR :: Ty.ModuleName -> Ty.ModuleName
+    goR = over #parts (map f) . f
 {-
     TyDefs
 -}
@@ -39,7 +62,7 @@ defToPat (Ty.TyDef tName (Ty.TyAbs tArgs tBody _) _) = DecP (Name $ tName ^. #na
 
     goProduct :: Ty.Product -> NameSpaced Pat
     goProduct = \case
-      Ty.RecordI (Ty.Record rMap _) -> toRec  . NE.toList <$> traverse goField  rMap
+      Ty.RecordI (Ty.Record rMap _) -> toRec  . NE.toList <$> traverse goField rMap
       Ty.TupleI (Ty.Tuple pList _)  -> toProd <$> traverse  tyToPat pList
 
     goField :: Ty.Field -> NameSpaced Pat
@@ -55,7 +78,7 @@ tyToPat = \case
   Ty.TyRefI ref -> case ref of
     Ty.LocalI (Ty.LocalRef tn _) -> pure . RefP . Name $ tn ^. #name
     Ty.ForeignI (Ty.ForeignRef tn mn _) -> do
-      modify' (M.insert tn mn)
+      modify' (M.insert (coerceName tn) mn)
       pure . RefP . Name $ (tn ^. #name)
 
 appToPat :: Pat -> NonEmpty Pat -> Pat
@@ -63,10 +86,6 @@ appToPat fun (p :| ps) = case NE.nonEmpty ps of
       Nothing   -> AppP fun p
       Just rest -> AppP fun p `appToPat` rest
 
--- ignore namespacing, for converting types in an instance head or context to patterns.
--- TODO: Make sure ignoring namespacing is actually OK there...
-tyToPat' :: Ty.Ty -> Pat
-tyToPat' = flip evalState M.empty . tyToPat
 
 {-
     Classes
@@ -74,37 +93,64 @@ tyToPat' = flip evalState M.empty . tyToPat
     NOTE: We discard the arguments to the class and the arguments to the superclasses
           In the absence of MPTCs this should be an acceptable form of eta reduction
 
+    NOTE: Actually previous note is probably wrong, this only allows for "direct superclasses"
+          like (C a, D a) => E a. Or maybe it's not wrong? Without MPTCs, the only thing that
+          wouldn't be direct is something like (C a, D a, E f) => G (f a b), but ATM we don't
+          support type variables that represent kinds other than Star, so this should be
+          good enough *for now*
+
     NOTE: MUST BE CHECKED FOR SUPERCLASS CYCLES OR WILL LOOP FOREVER
 -}
 
 -- could use a tuple but this makes the signatures more readable
-data ClassInfo = ClassInfo {ciName :: Text, ciSupers :: [Text]}
+data ClassInfo = ClassInfo {ciName :: Text, ciSupers :: [Ty.TyRef]}
   deriving stock (Show, Eq, Ord, Generic)
 
-getClasses  :: [Ty.ClassDef] -> S.Set (Class l)
+type Classes l = S.Set (Class l)
+
+addRef :: forall n m
+        . (Ty.NameLike n, MonadState ForeignRefs m)
+       => n
+       -> Ty.ModuleName
+       -> m ()
+addRef n mn = modify' (M.insert (coerceName n) mn)
+
+-- utility
+foldMWithKey :: Monad m => (b -> k -> a -> m b) -> b -> M.Map k a -> m b
+foldMWithKey f b m = foldM (uncurry . f) b (M.toList m)
+
+getClasses  :: [Ty.ClassDef] -> NameSpaced (Classes l)
 getClasses = resolveSupers . mkClassGraph . fmap defToClassInfo
   where
     defToClassInfo :: Ty.ClassDef -> ClassInfo
     defToClassInfo cd
       = ClassInfo (cd ^. #className . #name)
-        $ map (\x -> x ^. #className . #name) (cd ^. #supers)
+        $ map (\x -> x ^. #classRef) (cd ^. #supers)
 
-    mkClassGraph :: [ClassInfo] -> M.Map Text [Text]
+    mkClassGraph :: [ClassInfo] -> M.Map Text [Ty.TyRef]
     mkClassGraph = foldl' (\acc (ClassInfo nm sups) -> M.insert nm sups acc) M.empty
 
-    resolveSupers :: M.Map Text [Text] -> S.Set (Class l)
-    resolveSupers cg = M.foldlWithKey go S.empty cg
+    resolveSupers :: M.Map Text [Ty.TyRef] -> NameSpaced (Classes l)
+    resolveSupers cg = foldMWithKey  go S.empty cg
       where
-        go :: S.Set (Class l) -> Text -> [Text] -> S.Set (Class l)
-        go acc cname sups = S.insert cls acc
+        go :: S.Set (Class l) -> Text -> [Ty.TyRef] -> NameSpaced (Classes l)
+        go acc cname sups = cls <&> flip S.insert acc
           where
-            cls :: Class l
-            cls = Class cname (collectSups <$> sups)
+            cls :: NameSpaced (Class l)
+            cls = traverse collectSups sups <&> Class cname
 
-            collectSups :: Text -> Class l
-            collectSups cn = Class cn $ case M.lookup cn cg of
-              Nothing -> []
-              Just xs -> collectSups <$> xs
+            collectSups :: Ty.TyRef -> NameSpaced (Class l)
+            collectSups cn =  case cn of
+              Ty.LocalI (Ty.LocalRef (view #name -> nm) _) ->  case M.lookup nm cg of
+               Nothing -> pure $ Class nm []
+               Just xs -> traverse collectSups xs <&> Class nm
+              Ty.ForeignI (Ty.ForeignRef nm  mnm _) -> do
+                modify' (M.insert (coerceName nm) mnm)
+                case M.lookup (nm ^. #name) cg of
+                 Nothing -> pure $ Class (nm ^. #name) []
+                 Just xs -> do
+                   suprs <- traverse collectSups xs
+                   pure $ Class (nm ^. #name) suprs
 {-
     Instances
 
@@ -113,23 +159,39 @@ getClasses = resolveSupers . mkClassGraph . fmap defToClassInfo
 
 type Instances l = S.Set (Instance l)
 
-data InstanceError l = UnknownClass Ty.ClassName Ty.SourceInfo
+data InstanceError  = UnknownClass Ty.TyRef Ty.SourceInfo
+
+type InstanceM = ExceptT InstanceError NameSpaced
 
 toClassTable :: S.Set (Class l) -> M.Map Text (Class l)
 toClassTable = foldl' (\acc c -> M.insert (name c) c acc) M.empty
 
-getInstances :: forall l. M.Map Text (Class l) -> [Ty.InstanceClause] -> Either (InstanceError l) (Instances l)
+getInstances :: forall l. M.Map Text (Class l) -> [Ty.InstanceClause] -> InstanceM (Instances l)
 getInstances ctable  = foldM go S.empty
   where
-    go :: S.Set (Instance l) -> Ty.InstanceClause -> Either (InstanceError l) (Instances l)
-    go acc (Ty.InstanceClause cn h csts si) = case M.lookup (cn ^. #name) ctable of
-      Nothing  -> Left $ UnknownClass cn si
-      Just cls -> do
-        let p = tyToPat' h
-        cs <- traverse goConstraint csts
-        pure . flip  S.insert acc $ C cls p :<= cs
+    go :: S.Set (Instance l) -> Ty.InstanceClause -> InstanceM (Instances l)
+    go acc (Ty.InstanceClause cn h csts si') = case cn of
+      Ty.LocalI (Ty.LocalRef nm  _) -> case M.lookup (nm ^. #name) ctable of
+        Nothing  -> throwError $ UnknownClass cn si'
+        Just cls -> do
+          p <- lift $ tyToPat h
+          cs <- traverse goConstraint csts
+          pure . flip  S.insert acc $ C cls p :<= cs
+      Ty.ForeignI (Ty.ForeignRef nm mn _) -> case M.lookup (nm ^. #name) ctable of
+        Nothing  -> throwError $  UnknownClass cn si
+        Just cls -> do
+          modify' $ M.insert (coerceName nm) mn
+          p <- lift $  tyToPat h
+          cs <- traverse goConstraint csts
+          pure . flip  S.insert acc $ C cls p :<= cs
 
-    goConstraint :: Ty.Constraint -> Either (InstanceError l) (Constraint l)
-    goConstraint (Ty.Constraint cn arg si) = case M.lookup (cn ^. #name) ctable of
-      Nothing   -> Left $ UnknownClass cn si
-      Just cls  -> Right $ C cls (tyToPat' arg)
+    goConstraint :: Ty.Constraint -> InstanceM  (Constraint l)
+    goConstraint (Ty.Constraint cn arg si') = case cn of
+      Ty.LocalI (Ty.LocalRef (view #name -> nm) _) -> case M.lookup nm ctable of
+        Nothing   -> throwError $ UnknownClass cn si'
+        Just cls  -> lift (tyToPat arg) <&>  C cls
+      Ty.ForeignI (Ty.ForeignRef nm mn _) -> case M.lookup (nm ^. #name) ctable of
+        Nothing -> throwError $ UnknownClass cn si
+        Just cls -> do
+          modify' $ M.insert (coerceName nm)  mn
+          lift (tyToPat arg) <&> C cls

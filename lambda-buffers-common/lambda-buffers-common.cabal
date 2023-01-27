@@ -90,12 +90,10 @@ library
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , megaparsec
-    , pretty-simple
     , proto-lens                  >=0.7
     , template-haskell
     , text                        >=1.2
     , th-abstraction              >=0.4.5.0
-    , transformers                >=0.5
 
   other-modules:
     LambdaBuffers.Common.ProtoCompat.IsMessage

@@ -25,7 +25,6 @@ import LambdaBuffers.Common.ProtoCompat.NameValidation (
  )
 import LambdaBuffers.Common.ProtoCompat.Types (
   ClassDef (ClassDef),
-  ClassName (ClassName),
   CompilerInput (CompilerInput),
   ConstrName (ConstrName),
   Constraint (Constraint),
@@ -56,7 +55,7 @@ import LambdaBuffers.Common.ProtoCompat.Types (
   TyName (TyName),
   TyRef (ForeignI, LocalI),
   TyVar (TyVar),
-  VarName (VarName),
+  VarName (VarName), ClassName (ClassName),
  )
 import Text.Megaparsec (parseMaybe)
 
@@ -70,10 +69,10 @@ traversing :: (Applicative f, Traversable t) => (a -> f b) -> Getter (t a) (f (t
 traversing f = to $ \ta -> traverse f ta
 
 data FromProtoErr
-  = MultipleInstanceHeads ClassName [Ty] SourceInfo
-  | NoInstanceHead ClassName SourceInfo
-  | NoConstraintArgs ClassName SourceInfo
-  | MultipleConstraintArgs ClassName [Ty] SourceInfo
+  = MultipleInstanceHeads TyRef [Ty] SourceInfo
+  | NoInstanceHead TyRef SourceInfo
+  | NoConstraintArgs TyRef SourceInfo
+  | MultipleConstraintArgs TyRef [Ty] SourceInfo
   | NoClassArgs ClassName SourceInfo
   | MultipleClassArgs ClassName SourceInfo
   | NoTyAppArgs SourceInfo
@@ -158,18 +157,6 @@ instance IsMessage P.TyName TyName where
       & P.name .~ toProto n
       & P.sourceInfo .~ toProto si
 
-instance IsMessage P.ClassName ClassName where
-  fromProto v = do
-    n' <- fromProto $ v ^. P.name
-    si <- fromProto $ v ^. P.sourceInfo
-    n <- checkName classname si n'
-    pure $ ClassName n si
-
-  toProto (ClassName n si) =
-    defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
-
 instance IsMessage P.VarName VarName where
   fromProto v = do
     n' <- fromProto $ v ^. P.name
@@ -182,6 +169,17 @@ instance IsMessage P.VarName VarName where
       & P.name .~ toProto n
       & P.sourceInfo .~ toProto si
 
+instance IsMessage P.ClassName ClassName where
+  fromProto v = do
+    n' <- fromProto $ v ^. P.name
+    si <- fromProto $ v ^. P.sourceInfo
+    n <- checkName varname si n'
+    pure $ ClassName n si
+
+  toProto (ClassName n si) =
+    defMessage
+      & P.name .~ toProto n
+      & P.sourceInfo .~ toProto si
 {-
     Ty & Components
 -}
@@ -445,7 +443,7 @@ instance IsMessage P.ClassDef ClassDef where
 instance IsMessage P.InstanceClause InstanceClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
-    cnm <- fromProto $ ic ^. P.className
+    cnm <- fromProto $ ic ^. P.classRef
     csts <- traverse fromProto $ ic ^. P.constraints
     hds <- ic ^. (P.heads . traversing fromProto)
     hd <- case hds of
@@ -456,7 +454,7 @@ instance IsMessage P.InstanceClause InstanceClause where
 
   toProto (InstanceClause cnm hd csts si) =
     defMessage
-      & P.className .~ toProto cnm
+      & P.classRef .~ toProto cnm
       & P.heads .~ pure (toProto hd)
       & P.constraints .~ (toProto <$> csts)
       & P.sourceInfo .~ toProto si
@@ -464,7 +462,7 @@ instance IsMessage P.InstanceClause InstanceClause where
 instance IsMessage P.Constraint Constraint where
   fromProto c = do
     si <- fromProto $ c ^. P.sourceInfo
-    cnm <- fromProto $ c ^. P.className
+    cnm <- fromProto $ c ^. P.classRef
     args <- c ^. (P.arguments . traversing fromProto)
     arg <- case args of
       [] -> Left $ NoConstraintArgs cnm si
@@ -474,7 +472,7 @@ instance IsMessage P.Constraint Constraint where
 
   toProto (Constraint cnm arg si) =
     defMessage
-      & P.className .~ toProto cnm
+      & P.classRef .~ toProto cnm
       & P.arguments .~ pure (toProto arg)
       & P.sourceInfo .~ toProto si
 

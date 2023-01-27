@@ -10,7 +10,7 @@ module LambdaBuffers.Common.ProtoCompat.Types (
   ModuleNamePart (..),
   VarName (..),
   FieldName (..),
-  ClassName (..),
+  ClassName(..),
   Kind (..),
   KindType (..),
   KindRefType (..),
@@ -203,7 +203,7 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
 
 data InstanceClause = InstanceClause
-  { className :: ClassName
+  { classRef :: TyRef
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
@@ -211,7 +211,7 @@ data InstanceClause = InstanceClause
   deriving stock (Show, Eq, Ord, Generic)
 
 data Constraint = Constraint
-  { className :: ClassName
+  { classRef :: TyRef
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
