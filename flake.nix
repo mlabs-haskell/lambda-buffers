@@ -70,25 +70,31 @@
           compiler-nix-name = "ghc924";
 
           # Common build abstraction for the components.
-          buildAbstraction = import-location: import import-location {
-            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-            inherit (protosBuild) compilerHsPb;
-            inherit (pre-commit-check) shellHook;
-          };
+          buildAbstraction = { import-location, additional ? { } }:
+            import import-location ({
+              inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
+              inherit (protosBuild) compilerHsPb;
+              inherit (pre-commit-check) shellHook;
+            } // additional);
 
           # Common Flake abstraction for the components.
           flakeAbstraction = component-name: component-name.hsNixProj.flake { };
 
           # Compiler Build
-          compilerBuild = buildAbstraction ./lambda-buffers-compiler/build.nix;
+          compilerBuild = buildAbstraction {
+            import-location = ./lambda-buffers-compiler/build.nix;
+            additional = {
+              lambda-buffers-common = ./lambda-buffers-common;
+            };
+          };
           compilerFlake = flakeAbstraction compilerBuild;
 
           # Common Build
-          commonBuild = buildAbstraction ./lambda-buffers-common/build.nix;
+          commonBuild = buildAbstraction { import-location = ./lambda-buffers-common/build.nix; };
           commonFlake = flakeAbstraction commonBuild;
 
           # Frontend Build
-          frontendBuild = buildAbstraction ./lambda-buffers-frontend/build.nix;
+          frontendBuild = buildAbstraction { import-location = ./lambda-buffers-frontend/build.nix; };
           frontendFlake = flakeAbstraction frontendBuild;
 
           # Codegen Build
@@ -108,7 +114,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // commonFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -123,7 +129,7 @@
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks // commonFlake.checks);
 
         }
       ) // {
