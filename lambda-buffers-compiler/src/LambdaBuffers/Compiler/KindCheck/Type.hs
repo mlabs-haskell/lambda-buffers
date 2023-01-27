@@ -1,7 +1,7 @@
-module LambdaBuffers.Compiler.KindCheck.Type where
+module LambdaBuffers.Compiler.KindCheck.Type (Type (Var, Abs, App)) where
 
-import LambdaBuffers.Compiler.KindCheck.Atom
-import Prettyprinter
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Var)
+import Prettyprinter (Doc, Pretty (pretty), parens, (<+>))
 
 data Type
   = Var Var

@@ -1,7 +1,7 @@
-module LambdaBuffers.Compiler.KindCheck.Kind where
+module LambdaBuffers.Compiler.KindCheck.Kind (Kind (Type, (:->:), KVar)) where
 
-import LambdaBuffers.Compiler.KindCheck.Atom
-import Prettyprinter
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
+import Prettyprinter (Pretty (pretty), parens, (<+>))
 
 infixr 8 :->:
 

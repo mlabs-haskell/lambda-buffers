@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLabels #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X) where
@@ -20,41 +21,6 @@ import Proto.Compiler_Fields qualified as P
 
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
-import LambdaBuffers.Compiler.ProtoCompat.Types (
-  ClassDef (ClassDef),
-  ClassName (ClassName),
-  CompilerInput (CompilerInput),
-  ConstrName (ConstrName),
-  Constraint (Constraint),
-  Constructor (Constructor),
-  Field (Field),
-  FieldName (FieldName),
-  ForeignRef (ForeignRef),
-  InstanceClause (InstanceClause),
-  Kind (Kind),
-  KindRefType (KType, KUnspecified),
-  KindType (KindArrow, KindRef),
-  LocalRef (LocalRef),
-  Module (Module),
-  ModuleName (ModuleName),
-  ModuleNamePart (ModuleNamePart),
-  Product (RecordI, TupleI),
-  Record (Record),
-  SourceInfo (SourceInfo),
-  SourcePosition (SourcePosition),
-  Sum (Sum),
-  Tuple (Tuple),
-  Ty (TyAppI, TyRefI, TyVarI),
-  TyAbs (TyAbs),
-  TyApp (TyApp),
-  TyArg (TyArg),
-  TyBody (OpaqueI, SumI),
-  TyDef (TyDef),
-  TyName (TyName),
-  TyRef (ForeignI, LocalI),
-  TyVar (TyVar),
-  VarName (VarName),
- )
 import Proto.Compiler (NamingError)
 
 note :: e -> Maybe a -> Either e a

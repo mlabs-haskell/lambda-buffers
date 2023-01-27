@@ -16,10 +16,10 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 
 import Data.Bifunctor (Bifunctor (second))
 
-import LambdaBuffers.Compiler.KindCheck.Atom
-import LambdaBuffers.Compiler.KindCheck.Context
-import LambdaBuffers.Compiler.KindCheck.Kind
-import LambdaBuffers.Compiler.KindCheck.Type
+import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var))
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
 
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -40,7 +40,6 @@ import Prettyprinter (
   hang,
   lbracket,
   line,
-  parens,
   rbracket,
   space,
   (<+>),

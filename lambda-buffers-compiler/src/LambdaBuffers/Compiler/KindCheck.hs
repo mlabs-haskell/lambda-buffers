@@ -122,8 +122,8 @@ localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
   KCTypeDefinition mname ctx tydef -> do
     kindFromTyDef mname tydef >>= inferTypeKind ctx >>= checkKindConsistency tydef ctx
-  KCClassInstance ctx instClause -> error "FIXME"
-  KCClass ctx classDef -> error "Fixme"
+  KCClassInstance _ctx _instClause -> error "FIXME(cstml)"
+  KCClass _ctx _classDef -> error "FIXME(cstml)"
 
 runKindCheck :: Eff '[KindCheck] a -> Eff '[Err] a
 runKindCheck = reinterpret $ \case
@@ -133,7 +133,8 @@ runKindCheck = reinterpret $ \case
 
 -- Resolvers
 
-resolveKindConsistency tydef ctx k = undefined
+resolveKindConsistency :: forall effs. P.TyDef -> Context -> Kind -> Eff effs Kind
+resolveKindConsistency _tydef _ctx _k = error "FIXME(cstml)"
 
 resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
 resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
@@ -254,7 +255,6 @@ ty2Type = \case
 
 tyVar2Type ::
   forall eff.
-  Members '[] eff =>
   P.TyVar ->
   Eff eff Type
 tyVar2Type tv = pure . Var $ (tv ^. #varName . #name)
@@ -289,7 +289,6 @@ localTyRef2Type ltr = do
 
 foreignTyRef2Type ::
   forall eff.
-  Members '[] eff =>
   P.ForeignRef ->
   Eff eff Type
 foreignTyRef2Type ftr = do

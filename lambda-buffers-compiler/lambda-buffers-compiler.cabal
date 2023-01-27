@@ -100,11 +100,11 @@ library
 
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
-    LambdaBuffers.Compiler.KindCheck.Atom
     LambdaBuffers.Compiler.KindCheck.Context
     LambdaBuffers.Compiler.KindCheck.Inference
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
+    LambdaBuffers.Compiler.KindCheck.Variable
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.Types

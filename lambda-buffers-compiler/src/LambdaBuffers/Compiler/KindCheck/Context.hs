@@ -1,10 +1,18 @@
-module LambdaBuffers.Compiler.KindCheck.Context where
+module LambdaBuffers.Compiler.KindCheck.Context (Context (Context), context, addContext, getAllContext) where
 
-import Control.Lens hiding (Context)
+import Control.Lens (makeLenses, (^.))
 import Data.Map qualified as M
-import LambdaBuffers.Compiler.KindCheck.Atom
-import LambdaBuffers.Compiler.KindCheck.Kind
-import Prettyprinter
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind)
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
+import Prettyprinter (
+  Doc,
+  Pretty (pretty),
+  braces,
+  comma,
+  hsep,
+  punctuate,
+  (<+>),
+ )
 
 data Context = Context
   { _context :: M.Map Atom Kind
