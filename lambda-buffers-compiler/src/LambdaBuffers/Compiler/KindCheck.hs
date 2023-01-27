@@ -3,8 +3,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{- | Note: At the moment the Kind Checker disregards multiple Modules for
-simplicity of testing and developing. This will be changed ASAP. :fixme:
+{- | FIXME(cstml): At the moment the Kind Checker disregards multiple Modules for
+simplicity of testing and developing. This will be changed ASAP.
 -}
 module LambdaBuffers.Compiler.KindCheck (
   KindCheckFailure (..),
@@ -35,8 +35,8 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Members, reinterpret, run)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
-import LambdaBuffers.Common.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
+import LambdaBuffers.Compiler.ProtoCompat qualified as P
 
 import Data.Foldable (traverse_)
 import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))

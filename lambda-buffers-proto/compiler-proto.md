@@ -16,6 +16,7 @@
     - [Module](#lambdabuffers-compiler-Module)
     - [ModuleName](#lambdabuffers-compiler-ModuleName)
     - [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart)
+    - [NamingError](#lambdabuffers-compiler-NamingError)
     - [Opaque](#lambdabuffers-compiler-Opaque)
     - [Product](#lambdabuffers-compiler-Product)
     - [Product.NTuple](#lambdabuffers-compiler-Product-NTuple)
@@ -40,6 +41,7 @@
     - [VarName](#lambdabuffers-compiler-VarName)
   
     - [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef)
+    - [NamingError.NameType](#lambdabuffers-compiler-NamingError-NameType)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -61,7 +63,7 @@ LambdaBuffers use type classes to talk about the various &#39;meanings&#39; or
 &#39;semantics&#39; we want to associate with the types in LambdaBuffers schemata.
 
 For instance, most types can have `Eq` semantics, meaning they can be compared
-with equality. Other can have `Json` semantics, meaning they have some encoding
+for equality. Other can have `Json` semantics, meaning they have some encoding
 in the Json format.
 
 Using type classes and instance declarations, much like in Haskell, users can
@@ -69,7 +71,8 @@ specify the &#39;meaning&#39; of each type they declare.
 
 Note that for each type class introduced, the entire Codegen machinery must be
 updated to support said type class. In other words, it doesn&#39;t come for free and
-for each new type class, a Codegen support must be implemented for Opaque types
+for each new type class, a Codegen support must be implemented for [opaque](@ref
+Opaque) types
 used and for generic structural rules to enable generic support for user derived
 types.
 
@@ -110,13 +113,13 @@ Type class name
 ### CompilerInput
 Compiler Input
 
-Compiler Inputs is a fully self contained list of modules, the entire
-compilation closure.
+Compiler Input is a fully self contained list of modules, the entire
+compilation closure needed by the Compiler to perform its task.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| modules | [Module](#lambdabuffers-compiler-Module) | repeated |  |
+| modules | [Module](#lambdabuffers-compiler-Module) | repeated | Modules to compile. |
 
 
 
@@ -276,7 +279,23 @@ Module name part
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | Name ::= [A-Z]&#43;[A-Za-z0-9_]* |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Sounrce information. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-NamingError"></a>
+
+### NamingError
+Naming error message
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name_type | [NamingError.NameType](#lambdabuffers-compiler-NamingError-NameType) |  | Type of name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -333,7 +352,6 @@ TODO(bladyjoker): Separate into Tuple and Record.
 | ----- | ---- | ----- | ----------- |
 | record | [Product.Record](#lambdabuffers-compiler-Product-Record) |  |  |
 | ntuple | [Product.NTuple](#lambdabuffers-compiler-Product-NTuple) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -517,7 +535,6 @@ Check out [examples](examples/tys.textproto).
 | ty_var | [TyVar](#lambdabuffers-compiler-TyVar) |  | A type variable. |
 | ty_app | [TyApp](#lambdabuffers-compiler-TyApp) |  | A type application. |
 | ty_ref | [TyRef](#lambdabuffers-compiler-TyRef) |  | A type reference. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -536,7 +553,7 @@ type term can only be introduced in the context of a
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_vars | [TyVar](#lambdabuffers-compiler-TyVar) | repeated | List of type variables. |
+| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | List of type variables. |
 | ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | Type body. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
@@ -608,7 +625,6 @@ TODO: Add Tuple and Record type bodies.
 | ----- | ---- | ----- | ----------- |
 | opaque | [Opaque](#lambdabuffers-compiler-Opaque) |  |  |
 | sum | [Sum](#lambdabuffers-compiler-Sum) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -674,7 +690,6 @@ locally or in foreign modules.
 | ----- | ---- | ----- | ----------- |
 | local_ty_ref | [TyRef.Local](#lambdabuffers-compiler-TyRef-Local) |  |  |
 | foreign_ty_ref | [TyRef.Foreign](#lambdabuffers-compiler-TyRef-Foreign) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -691,6 +706,7 @@ Foreign type reference.
 | ----- | ---- | ----- | ----------- |
 | ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Foreign module type name. |
 | module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Foreign module name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -706,6 +722,7 @@ Local type reference.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Local module type name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -770,6 +787,23 @@ A built-in kind.
 | ---- | ------ | ----------- |
 | KIND_REF_UNSPECIFIED | 0 | Unspecified kind SHOULD be inferred by the Compiler. |
 | KIND_REF_TYPE | 1 | A `Type` kind (also know as `*` in Haskell) built-in. |
+
+
+
+<a name="lambdabuffers-compiler-NamingError-NameType"></a>
+
+### NamingError.NameType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NAME_TYPE_UNSPECIFIED | 0 |  |
+| NAME_TYPE_MODULE | 1 |  |
+| NAME_TYPE_TYPE | 2 |  |
+| NAME_TYPE_VAR | 3 |  |
+| NAME_TYPE_CONSTR | 4 |  |
+| NAME_TYPE_FIELD | 5 |  |
+| NAME_TYPE_CLASS | 6 |  |
 
 
  

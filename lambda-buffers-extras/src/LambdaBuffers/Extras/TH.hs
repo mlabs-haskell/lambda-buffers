@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-partial-fields #-}
 
-module LambdaBuffers.Common.TH (
+module LambdaBuffers.Extras.TH (
   mkLBTypes,
   mkLBType,
   -- for testing / looking at in GHCI
@@ -17,8 +17,7 @@ import Control.Lens ((^.))
 import Data.Generics.Labels ()
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Text qualified as T
-import LambdaBuffers.Common.ProtoCompat.NameLike (coerceName)
-import LambdaBuffers.Common.ProtoCompat.Types (
+import LambdaBuffers.Compiler.ProtoCompat.Types (
   Constructor (Constructor),
   Field (Field),
   Kind (Kind),

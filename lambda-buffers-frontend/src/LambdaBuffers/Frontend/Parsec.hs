@@ -5,10 +5,9 @@ import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.String (IsString (fromString))
-import Data.Text (Text)
+import LambdaBuffers.Compiler.NamingCheck (pConstrName, pModuleNamePart, pTyName)
 import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
-import Text.Parsec (ParseError, ParsecT, SourceName, Stream, alphaNum, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
-import Text.Parsec.Char (upper)
+import Text.Parsec (ParseError, ParsecT, SourceName, Stream, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
 type Parser s m a = ParsecT s () m a
@@ -16,11 +15,8 @@ type Parser s m a = ParsecT s () m a
 runParser :: (Stream s IO Char) => Parser s IO a -> SourceName -> s -> IO (Either ParseError a)
 runParser p = runParserT (p <* eof) ()
 
-parseUpperCamelCase :: Stream s m Char => Parser s m Text
-parseUpperCamelCase = label' "UpperCamelCase" $ fromString <$> ((:) <$> upper <*> many alphaNum)
-
 parseModuleNamePart :: Stream s m Char => Parser s m (ModuleNamePart SourceInfo)
-parseModuleNamePart = withSourceInfo . label' "module part name" $ ModuleNamePart <$> parseUpperCamelCase
+parseModuleNamePart = withSourceInfo . label' "module part name" $ ModuleNamePart <$> pModuleNamePart
 
 parseModuleName :: Stream s m Char => Parser s m (ModuleName SourceInfo)
 parseModuleName = withSourceInfo . label' "module name" $ ModuleName <$> sepBy (try parseModuleNamePart) (try $ char '.')
@@ -29,7 +25,7 @@ parseTyVarName :: Stream s m Char => Parser s m (VarName SourceInfo)
 parseTyVarName = withSourceInfo . label' "type variable name" $ VarName . fromString <$> many1 lower
 
 parseTyName :: Stream s m Char => Parser s m (TyName SourceInfo)
-parseTyName = withSourceInfo . label' "type name" $ TyName <$> parseUpperCamelCase
+parseTyName = withSourceInfo . label' "type name" $ TyName <$> pTyName
 
 parseModuleAliasInRef :: Stream s m Char => Parser s m (ModuleAlias SourceInfo)
 parseModuleAliasInRef =
@@ -93,7 +89,7 @@ parseProduct = do
       Product <$> parseTys
 
 parseConstructorName :: Stream s m Char => Parser s m (ConstrName SourceInfo)
-parseConstructorName = withSourceInfo . label' "sum constructor name" $ ConstrName <$> parseUpperCamelCase
+parseConstructorName = withSourceInfo . label' "sum constructor name" $ ConstrName <$> pConstrName
 
 parseTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
 parseTyDef = label' "type definition" $ parseSumTyDef <|> parseOpaqueTyDef
