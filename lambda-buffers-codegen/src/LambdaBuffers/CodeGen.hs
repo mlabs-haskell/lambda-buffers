@@ -1,28 +1,28 @@
-{-# LANGUAGE  OverloadedLabels #-}
-
 module LambdaBuffers.CodeGen where
 
-import LambdaBuffers.CodeGen.Common.Types ( for, Pat )
-import LambdaBuffers.CodeGen.Resolve.Solve
-import LambdaBuffers.CodeGen.Resolve.Rules
-import LambdaBuffers.CodeGen.Gen.Generator
-import LambdaBuffers.CodeGen.Common.Compat
-import LambdaBuffers.CodeGen.Resolve.Derive
-import qualified LambdaBuffers.Common.ProtoCompat as P
+{- outdated
+import LambdaBuffers.Common.TypeClass.Pat ( for, Pat )
+import LambdaBuffers.Common.TypeClass.Solve
+import LambdaBuffers.Common.TypeClass.Rules
+import LambdaBuffers.Common.TypeClass.Compat
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import LambdaBuffers.CodeGen.Generator
+import LambdaBuffers.CodeGen.Derive
+
 import Control.Monad.State
 import Control.Lens
 import Data.Text (Text)
 import Control.Monad.Trans.Except (runExceptT)
 
+import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified LambdaBuffers.Common.ProtoCompat as P
 
-data ModuleBuilder l = ModuleBuilder {
+data ModuleBuilder = ModuleBuilder {
   mbName      :: P.ModuleName,
   mbDefs      :: [(Pat,P.SourceInfo)], -- Patterns representing types from the module tagged w/ their source location for error reporting
-  mbInstances :: Instances l,          -- just the instances from the module
-  mbClasses   :: Classes l,            -- just the classes from the module
+  mbInstances :: Instances,          -- just the instances from the module
+  mbClasses   :: Classes,            -- just the classes from the module
   mbImports   :: [P.ModuleName],
   mbRefs      :: ForeignRefs           -- will probably need this at some point?
 }
@@ -37,7 +37,7 @@ mkModuleBuilder (P.CompilerInput inp) = traverse (secondPass . firstPass) inp
   where
     -- FIXME(gnumonik): Ugh this is bad. Two classes defined w/ the same name in diff modules will break things.
     --                  I think the only way to fix this is to change the proto somehow, not sure how atm
-    allClasses :: M.Map Text (Class l)
+    allClasses :: M.Map Text Class
     allClasses  = S.foldl' (\acc c@(Class nm _) -> M.insert nm c acc) M.empty
                   . mconcat
                   . flip evalState M.empty
@@ -58,3 +58,4 @@ mkModuleBuilder (P.CompilerInput inp) = traverse (secondPass . firstPass) inp
      where
       deps :: ForeignRefs -> [P.ModuleName]
       deps = S.toList . S.fromList . M.elems . sanitizeRefs
+-}

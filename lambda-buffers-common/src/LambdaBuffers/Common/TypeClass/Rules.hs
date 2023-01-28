@@ -10,7 +10,6 @@ import Data.Kind (Type)
 import Data.Text (Text)
 
 import LambdaBuffers.Common.TypeClass.Pat
-import LambdaBuffers.CodeGen.Gen.Generator
 
 data Class  = Class
   { name   :: Text

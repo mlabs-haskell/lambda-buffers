@@ -7,7 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.CodeGen.Resolve.Derive where
+module LambdaBuffers.CodeGen.Derive where
 
 import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
 import Data.Foldable (traverse_)
@@ -69,9 +69,10 @@ Deriving algorithm:
 
 data DeriveError
  = NoGenerator Constraint
- | GenError Constraint
+ | GenError Constraint  -- should wrap an error from a generator (once i figure out what those will be)
  | ConstraintFail [Constraint]
- | MultipleMatchingGenerators Constraint [Instance] deriving (Show, Eq)
+ | MultipleMatchingGenerators Constraint [Instance]
+ deriving stock (Show, Eq)
 
 type GenTable l = Map Instance (InstanceGen l)
 
@@ -92,7 +93,7 @@ data DeriveState (l :: Lang) = DeriveState {
 splitInstance :: Instance -> (Constraint, [Constraint])
 splitInstance (C c t :<= is) = (C c t, is)
 
-type DeriveM l a = ExceptT (DeriveError l) (State (DeriveState l)) a
+type DeriveM l a = ExceptT DeriveError (State (DeriveState l)) a
 
 simplify :: Rule -> Rule
 simplify (C c t :<= _)= C c t :<= []
@@ -136,8 +137,8 @@ derive axs@(Assumptions as) cst@(C _ cp) = do
            others -> throwE $ ConstraintFail others
          -}
  where
-   processGen :: Instance -> InstanceGen -> DeriveM ()
-   processGen genRule generator = case parse generator cp of
+   processGen :: Instance -> InstanceGen l -> DeriveM l ()
+   processGen genRule generator = case gen generator cp of
      Left _    -> throwE $ GenError cst
      Right dsl -> modify' $ \(DeriveState sc ge out) ->
        -- we simplify a (r :<= cs) constraint b/c at this point we know that `cs` has been derived or solved
@@ -148,7 +149,7 @@ derive axs@(Assumptions as) cst@(C _ cp) = do
      gs  <- gets (M.toList . generators)
      case filter (matchInstance cst . fst) gs of
        []           -> throwE $ NoGenerator cst
-       [(gPat,gen)] -> pure (subst gPat cp,gen)
+       [(gPat,g)] -> pure (subst gPat cp,g)
        others       -> throwE $ MultipleMatchingGenerators cst (map fst others)
 
 runDerive :: forall (l :: Lang)

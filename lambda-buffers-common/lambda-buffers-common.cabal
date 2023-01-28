@@ -86,26 +86,24 @@ library
   hs-source-dirs:  src
   build-depends:
     , base                        >=4.16
+    , containers
     , generic-lens                >=2.2.1.0
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lens                        >=5.2
     , megaparsec
+    , mtl
+    , prettyprinter
     , proto-lens                  >=0.7
     , template-haskell
     , text                        >=1.2
     , th-abstraction              >=0.4.5.0
+    , transformers
 
   other-modules:
     LambdaBuffers.Common.ProtoCompat.IsMessage
     LambdaBuffers.Common.ProtoCompat.NameLike
     LambdaBuffers.Common.ProtoCompat.NameValidation
     LambdaBuffers.Common.ProtoCompat.Types
-
-    LambdaBuffers.Common.TypeClass.Compat
-    LambdaBuffers.Common.TypeClass.Match
-    LambdaBuffers.Common.TypeClass.Rules
-    LambdaBuffers.Common.TypeClass.Solve
-    LambdaBuffers.Common.TypeClass.Pat
 
   exposed-modules:
     LambdaBuffers.Common.ProtoCompat

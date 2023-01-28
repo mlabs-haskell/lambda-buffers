@@ -16,7 +16,7 @@ import Data.Generics.Labels ()
 import Prettyprinter
 
 import LambdaBuffers.Common.TypeClass.Match
-import LambdaBuffers.Common.TypeClass.Types
+import LambdaBuffers.Common.TypeClass.Pat
 import LambdaBuffers.Common.TypeClass.Rules
 import LambdaBuffers.Common.TypeClass.Compat (defToPat')
 import LambdaBuffers.Common.TH (mkLBTypes)
@@ -199,6 +199,6 @@ expandInstances tyScope clsScope targ
    go cst@(C cls (RefP (Name nm))) = case M.lookup nm tyScope of
      Nothing -> [cst :<= []] --error $ "no type named " <> T.unpack nm <> " in scope"
      Just p  -> expandInstances tyScope clsScope (C cls p)
-   go other (C cls p)= case filter (/= other) $ solve structRules other of
+   go other = case filter (/= other) $ solve structRules other of
      [] -> [other :<= []]
      more -> (other :<= []) : concatMap (expandInstances tyScope clsScope) more

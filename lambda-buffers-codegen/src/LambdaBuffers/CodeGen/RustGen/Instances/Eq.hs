@@ -8,16 +8,17 @@
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module LambdaBuffers.CodeGen.RustGen.Instances.Eq where
 
-import Control.Applicative
-import Data.Text (Text)
-import qualified Data.Map as M
-
-import Prettyprinter
-
 import LambdaBuffers.CodeGen.PP
 import LambdaBuffers.Common.TypeClass.Pat
 import LambdaBuffers.Common.TypeClass.Rules
 import LambdaBuffers.CodeGen.Generator
+
+import Control.Applicative
+import Data.Text (Text)
+import Prettyprinter
+
+import qualified Data.Map as M
+
 --for testing
 
 eq :: Class
@@ -43,7 +44,7 @@ eqScope = [
 eqTyNoVars :: Instance
 eqTyNoVars = C eq (Sum _name Nil _body) :<= [C eq _body]
 
-fieldName :: Parser Rust c () (Doc ())
+fieldName :: Gen Rust c () (Doc ())
 fieldName = do
   (Name n := _) <- match (_l := _x)
   pure . pretty $ n
@@ -80,13 +81,13 @@ eqTyNoVarsGen = do
    eqInst :: Text -> Doc a
    eqInst nm = "impl Eq for" <+> pretty nm <+> "{}"
 
-   goEnum :: Text -> Parser Rust c () (Doc ())
+   goEnum :: Text -> Gen Rust c () (Doc ())
    goEnum tName = goNullary <|> goRecord  <|> goProduct
      where
        qualify :: Text  -> Doc a
        qualify d = pretty tName <> "::" <> pretty d
 
-       goRecord, goNullary, goProduct :: forall {c :: GenComponent}. Parser 'Rust c () (Doc ())
+       goRecord, goNullary, goProduct :: forall {c :: GenComponent}. Gen 'Rust c () (Doc ())
 
        goNullary = do
          (Name n :=  Nil) <- match (_l := _x)
@@ -115,7 +116,7 @@ eqTyNoVarsGen = do
                     rCase (qualify n <> otherFields) fieldMatches,
                     failMatch ]
 
-   genFieldEq :: Parser Rust c () (Doc ())
+   genFieldEq :: Gen Rust c () (Doc ())
    genFieldEq = do
      (Name label' := _) <- match (_l := _x)
      let label = pretty label'

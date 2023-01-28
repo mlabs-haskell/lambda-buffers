@@ -10,7 +10,7 @@ import LambdaBuffers.Common.TypeClass.Pat
       toSum,
       Pat(AppP, (:*), Nil, (:=), DecP, Opaque, VarP, RefP, Name) )
 import qualified LambdaBuffers.Common.ProtoCompat as P
-import LambdaBuffers.Common.NameLike (coerceName)
+import LambdaBuffers.Common.ProtoCompat.NameLike (coerceName)
 
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE
@@ -136,13 +136,13 @@ getClasses = resolveSupers . mkClassGraph . fmap defToClassInfo
     resolveSupers :: M.Map Text [P.TyRef] -> NameSpaced Classes
     resolveSupers cg = foldMWithKey  go S.empty cg
       where
-        go :: S.Set (Class l) -> Text -> [P.TyRef] -> NameSpaced Classes
+        go :: Classes -> Text -> [P.TyRef] -> NameSpaced Classes
         go acc cname sups = cls <&> flip S.insert acc
           where
-            cls :: NameSpaced (Class l)
+            cls :: NameSpaced Class
             cls = traverse collectSups sups <&> Class cname
 
-            collectSups :: P.TyRef -> NameSpaced (Class l)
+            collectSups :: P.TyRef -> NameSpaced Class
             collectSups cn =  case cn of
               P.LocalI (P.LocalRef (view #name -> nm) _) ->  case M.lookup nm cg of
                Nothing -> pure $ Class nm []

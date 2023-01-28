@@ -17,9 +17,12 @@ data Lang where
   PureScript :: Lang
   Haskell :: Lang
   Plutarch :: Lang
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
-data GenComponent = TypeDecl | InstanceDecl
+data GenComponent
+  = TypeDecl
+  | InstanceDecl
+  | ImportDecl
 
 class TargetLang (l :: Lang) where
   type DSL l :: Type -- can change to something else later
@@ -43,29 +46,29 @@ data Error e
   | CustomError e
   | Boom String
   | Empty
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
-newtype Parser :: Lang -> GenComponent -> Type -> Type -> Type where
+newtype Gen :: Lang -> GenComponent -> Type -> Type -> Type where
   P :: forall (l :: Lang) (c :: GenComponent) (e :: Type) (a :: Type)
-     . {runParser :: Pat -> Either [Error e] (a, Pat)}
-    -> Parser l c e a
+     . {runGen :: Pat -> Either [Error e] (a, Pat)}
+    -> Gen l c e a
 
-parse ::  Parser l c e (DSL l) -> Pat -> Either [Error e] (DSL l)
-parse p pat = case runParser p pat of
+gen ::  Gen l c e (DSL l) -> Pat -> Either [Error e] (DSL l)
+gen p pat = case runGen p pat of
   Left errs -> Left errs
   Right (x,_) -> pure x
 
-parse' :: forall (l :: Lang) c e
-        . (TargetLang l, DSL l ~ Doc ())
-       => Parser l c e (DSL l) -> Pat -> Either [Error e] (Doc ())
-parse' = parse
+gen' :: forall (l :: Lang) c e
+        . ( DSL l ~ Doc ())
+       =>Gen l c e (DSL l) -> Pat -> Either [Error e] (Doc ())
+gen' = gen
 
-instance Functor (Parser l c e) where
+instance Functor (Gen l c e) where
   fmap f (P p) = P $ \inp -> case p inp of
     Left err -> Left err
     Right (out,rest) -> Right (f out, rest)
 
-instance Applicative (Parser l c e) where
+instance Applicative (Gen l c e) where
   pure a = P $ \inp -> Right (a,inp)
 
   P f <*> P p = P $ \inp -> case f inp of
@@ -74,7 +77,7 @@ instance Applicative (Parser l c e) where
       Left err -> Left err
       Right (out,rest') -> Right (f' out, rest')
 
-instance Monad (Parser l c e) where
+instance Monad (Gen l c e) where
   return = pure
 
   (P p) >>= k = P $ \inp ->
@@ -84,7 +87,7 @@ instance Monad (Parser l c e) where
         let P p'= k out
         in p' rest
 
-instance Eq e => Alternative (Parser l c e) where
+instance Eq e => Alternative (Gen l c e) where
   empty = P $ \_ -> Left [Empty]
 
   P l <|> P r = P $ \inp ->
@@ -95,30 +98,19 @@ instance Eq e => Alternative (Parser l c e) where
       Right (out,rest) -> Right (out,rest)
 
 -- on one hand this is bad. on the other hand, it is good
-instance Eq e => MonadFail (Parser l c e) where
+instance Eq e => MonadFail (Gen l c e) where
   fail _ = empty
 
-_k, _v, _a, _l, _x, _xs, _name, _vars, _nil, _body :: Pat
-_k    = VarP "kdasfadsfsadf3323232421413413413"
-_v    = VarP "vdsfasdfa3e4fewafewufioeoifioaefiowe"
-_a    = VarP "a3242432aefiosdjfioasdf32jior3j2oirj32io"
-_l    = VarP "lasdfsdfj3ij319031j8381913j8138"
-_x    = VarP "x32fjio23io32jio3j2iof3ijo2fio32fio32"
-_xs   = VarP "xsadsfjdlsfji3i3298238893289j32j8923j89"
-_name = VarP "namedsafdsfhuisdhfuidshu3893283h8df398hdf321"
-_body = VarP "bodyadfjasidofjads08f8943j289234j89234j98fj38"
-_vars = VarP "varsdsfdasfjklsdafjilsdafjiasdio43io2903"
-_nil  = VarP "nildsfjosdjfiosdajfoi89321893y8914981398"
+type InstanceGen l = Gen l InstanceDecl () (DSL l)
 
-
-someP :: Eq e => Parser l c e a -> Parser l c e [a]
+someP :: Eq e => Gen l c e a -> Gen l c e [a]
 someP p = do
    x :* xs <- match (_x :* _xs)
    x'  <- result p x
    xs' <- result (manyP p) xs
    pure $ x' : xs'
 
-manyP :: Eq e => Parser l c e a -> Parser l c e [a]
+manyP :: Eq e => Gen l c e a -> Gen l c e [a]
 manyP p = match _x >>= \case
   (x :* xs) -> do
     x'  <- result p x
@@ -139,14 +131,14 @@ unsafeToList = \case
   Nil       -> []
   other     -> error ("not a pattern list " <> show other)
 
-match :: Pat ->  Parser l c e Pat
+match :: Pat ->  Gen l c e Pat
 match targ = P $ \inp ->
   if matches targ inp
   then pure (inp,Nil)
   else Left [MatchFailure inp]
 
-choice :: Eq e => [Parser l c e a] -> Parser l c e a
+choice :: Eq e => [Gen l c e a] -> Gen l c e a
 choice = foldl' (<|>) (fail "No matching TyArg generators!")
 
-result :: Parser l c e a -> Pat -> Parser l c e a
-result p pat = P $ \_ -> runParser p pat
+result :: Gen l c e a -> Pat -> Gen l c e a
+result p pat = P $ \_ -> runGen p pat

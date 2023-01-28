@@ -3,20 +3,21 @@
 {-# LANGUAGE DataKinds  #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
-module LambdaBuffers.CodeGen.Gen.RustGen.RustTy where
+
+module LambdaBuffers.CodeGen.RustGen.RustTy where
+
+import LambdaBuffers.CodeGen.Generator
+import LambdaBuffers.CodeGen.PP
+
+import LambdaBuffers.Common.TypeClass.Pat
 
 import qualified Data.Set as S
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Applicative
-
 import Prettyprinter
 
-import LambdaBuffers.CodeGen.Gen.PP
-import LambdaBuffers.CodeGen.Common.Types
-import LambdaBuffers.CodeGen.Gen.Generator
-
-type RustGen c = Parser Rust c () (Doc ())
+type RustGen c = Gen  Rust c () (Doc ())
 
 rint :: RustGen TypeDecl
 rint = match Int >> pure "i32"
@@ -173,7 +174,7 @@ rustifyParams tvs = \case
  where
    go = rustifyParams tvs
 
-rustify :: Parser Rust c  e (Doc a,Pat)
+rustify :: Gen Rust c  e (Doc a,Pat)
 rustify = P $ \inp -> case rustify' inp of
   (doc,pat) -> pure  ((doc,pat),Nil)
 
