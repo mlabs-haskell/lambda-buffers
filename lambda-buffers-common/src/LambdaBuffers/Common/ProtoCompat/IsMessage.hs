@@ -487,14 +487,16 @@ instance IsMessage P.Module Module where
     cdefs <- traverse fromProto $ m ^. P.classDefs
     insts <- traverse fromProto $ m ^. P.instances
     si <- fromProto $ m ^. P.sourceInfo
-    pure $ Module mnm tdefs cdefs insts si
+    impts <- traverse fromProto $ m ^. P.imports
+    pure $ Module mnm tdefs cdefs insts impts si
 
-  toProto (Module mnm tdefs cdefs insts si) =
+  toProto (Module mnm tdefs cdefs insts impts si) =
     defMessage
       & P.moduleName .~ toProto mnm
       & P.typeDefs .~ (toProto <$> tdefs)
       & P.classDefs .~ (toProto <$> cdefs)
       & P.instances .~ (toProto <$> insts)
+      & P.imports   .~ (toProto <$> impts)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.CompilerInput CompilerInput where

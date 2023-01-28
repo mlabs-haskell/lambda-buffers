@@ -222,6 +222,7 @@ data Module = Module
   , typeDefs :: [TyDef]
   , classDefs :: [ClassDef]
   , instances :: [InstanceClause]
+  , imports    :: [ModuleName]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
