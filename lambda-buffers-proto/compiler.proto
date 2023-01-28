@@ -461,8 +461,10 @@ message Module {
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
+  // Imports / parent modules (primarily for instances)
+  repeated ModuleName imports = 5;
   // Source information.
-  SourceInfo source_info = 5;
+  SourceInfo source_info = 6;
 }
 
 /* Compiler Input
