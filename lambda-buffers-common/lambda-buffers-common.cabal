@@ -101,6 +101,17 @@ library
     LambdaBuffers.Common.ProtoCompat.NameValidation
     LambdaBuffers.Common.ProtoCompat.Types
 
+    LambdaBuffers.Common.TypeClass.Compat
+    LambdaBuffers.Common.TypeClass.Match
+    LambdaBuffers.Common.TypeClass.Rules
+    LambdaBuffers.Common.TypeClass.Solve
+    LambdaBuffers.Common.TypeClass.Pat
+
   exposed-modules:
     LambdaBuffers.Common.ProtoCompat
     LambdaBuffers.Common.TH
+    LambdaBuffers.Common.TypeClass.Compat
+    LambdaBuffers.Common.TypeClass.Match
+    LambdaBuffers.Common.TypeClass.Rules
+    LambdaBuffers.Common.TypeClass.Solve
+    LambdaBuffers.Common.TypeClass.Pat

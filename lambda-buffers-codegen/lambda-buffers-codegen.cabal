@@ -100,14 +100,9 @@ library
 
   hs-source-dirs:  src
   exposed-modules:
-    LambdaBuffers.CodeGen.Common.Match
-    LambdaBuffers.CodeGen.Common.Compat
-    LambdaBuffers.CodeGen.Common.Types
-    LambdaBuffers.CodeGen.Gen.Generator
-    LambdaBuffers.CodeGen.Gen.PP
-    LambdaBuffers.CodeGen.Resolve.Derive
-    LambdaBuffers.CodeGen.Resolve.Rules
-    LambdaBuffers.CodeGen.Resolve.Solve
-    LambdaBuffers.CodeGen.Gen.RustGen.Instances.Eq
-    LambdaBuffers.CodeGen.Gen.RustGen.RustTy
+    LambdaBuffers.CodeGen.Generator
+    LambdaBuffers.CodeGen.PP
+    LambdaBuffers.CodeGen.Derive
+    LambdaBuffers.CodeGen.RustGen.Instances.Eq
+    LambdaBuffers.CodeGen.RustGen.RustTy
     LambdaBuffers.CodeGen

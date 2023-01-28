@@ -1,25 +1,31 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, OverloadedLabels #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds, TypeFamilies #-}
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 
-module LambdaBuffers.CodeGen.Resolve.Solve where
+module LambdaBuffers.Common.TypeClass.Solve where
 
 import Data.List (foldl', sortBy)
 import Data.Text (Text)
+import Control.Lens.Operators ((^.))
+import Data.Generics.Labels ()
+import Prettyprinter
+
+import LambdaBuffers.Common.TypeClass.Match
+import LambdaBuffers.Common.TypeClass.Types
+import LambdaBuffers.Common.TypeClass.Rules
+import LambdaBuffers.Common.TypeClass.Compat (defToPat')
+import LambdaBuffers.Common.TH (mkLBTypes)
+
 import qualified Data.Set as S
+import qualified Data.Map as M
+import qualified Data.Text as T
 
-import LambdaBuffers.CodeGen.Common.Match
-import LambdaBuffers.CodeGen.Common.Types
-import LambdaBuffers.CodeGen.Resolve.Rules
-import LambdaBuffers.CodeGen.Gen.Generator
-
+import qualified LambdaBuffers.Common.ProtoCompat as P
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the
    instantiation
@@ -47,7 +53,7 @@ subV varNm t = \case
    Note that ONLY PatVars which occur in the Instance *HEAD* are replaced, though they
    are replaced in the instance superclasses as well (if they occur there).
 -}
-subst :: Rule l -> Pat -> Rule l
+subst :: Rule -> Pat -> Rule
 subst cst@(C _ t :<= _) ty = mapPat (go (getSubs t ty)) cst
   where
     go :: [(Text, Pat)] -> Pat -> Pat
@@ -107,10 +113,10 @@ mostSpecificInstance p ps = case sortOnSpecificity p ps of
 
    TODO: This needs *extensive* testing, which is somewhat complicated to implement.
 -}
-solve :: forall (l :: Lang).
-  [Instance l] -> -- all instances in scope. WE ASSUME THESE HAVE ALREADY BEEN GENERATED, SOMEWHERE
-  Constraint l ->
-  [Constraint l]
+solve ::
+  [Instance] -> -- all instances in scope. WE ASSUME THESE HAVE ALREADY BEEN GENERATED, SOMEWHERE
+  Constraint ->
+  [Constraint]
 solve inScope cst@(C c pat) =
   case flip subst pat <$> matchHeads inScope of
     [] -> [cst]
@@ -125,14 +131,74 @@ solve inScope cst@(C c pat) =
 
     xs -> error  ("Multiple matches, coherence broken: " <> show xs) -- TODO: Use specificity stuff to eliminate this branch
   where
-    goConstraints :: [Constraint l] ->   [Constraint l]
+    goConstraints :: [Constraint] ->   [Constraint]
     goConstraints []  =  []
     goConstraints (cx : rest)  =
       let xs = solve inScope cx
       in xs <> goConstraints rest
 
-    matchHeads :: [Instance l] -> [Instance l]
+    matchHeads :: [Instance] -> [Instance]
     matchHeads xs = flip filter xs $ \(C c' t' :<= _) ->  c == c' && matches t' pat
 
-matchInstance :: Constraint l -> Instance l -> Bool
+--output is too damn hard to read
+prettyClass :: Class -> Doc ()
+prettyClass (Class nm []) = pretty nm
+prettyClass (Class nm sups) = pretty nm <+> "<=" <+> hcat (map prettyClass sups)
+
+prettyConstraint :: Constraint -> Doc ()
+prettyConstraint (C cls p) = "C" <+> parens (prettyClass cls) <+> viaShow p
+
+prettyInstance :: Instance -> Doc ()
+prettyInstance (c :<= cs) = prettyConstraint c <+> "<=" <+> list (prettyConstraint <$> cs)
+
+matchInstance :: Constraint -> Instance -> Bool
 matchInstance (C cc cp) (C c p :<= _) = cc == c && matches p cp
+
+classA, classB, classC :: Class
+classA = Class "A" []
+classB = Class "B" [classA]
+classC = Class "C" [classB]
+
+mkManyStructuralRules :: [Class] -> [Instance]
+mkManyStructuralRules = concatMap mkStructuralRules
+
+mkStructuralRules :: Class -> [Instance]
+mkStructuralRules c =
+  [ C c Nil :<= [] -- I'm not sure whether this really has any meaning
+  , C c (_x :* _xs) :<= [C c _x, C c _xs]
+  , C c (_l := _x) :<= [C c _x]
+  , C c (RecP _xs) :<= [C c _xs]
+  , C c (ProdP _xs) :<= [C c _xs]
+  , C c (SumP _xs) :<= [C c _xs]
+  , C c (DecP _name _vars _body) :<= [C c _body]
+ ]
+
+data Bop = Bop
+
+data Baz = Baz {bazInt :: Int, bazString :: String}
+
+data Bar = Bar {barBaz :: Baz, barMString :: Maybe String, barBop :: Bop}
+
+mkTyScope :: [P.TyDef] -> M.Map Text Pat
+mkTyScope  = flip foldl' M.empty $ \acc x ->
+  M.insert (x ^. #tyName . #name) (defToPat' x) acc
+
+
+testClsScope = mkManyStructuralRules [classA,classB,classC]
+
+expandInstances :: M.Map Text Pat
+                -> [Class]
+                -> Constraint
+                -> [Instance]
+expandInstances tyScope clsScope targ
+  = concatMap go $ solve structRules targ
+ where
+   structRules = mkManyStructuralRules clsScope
+
+   go :: Constraint -> [Instance]
+   go cst@(C cls (RefP (Name nm))) = case M.lookup nm tyScope of
+     Nothing -> [cst :<= []] --error $ "no type named " <> T.unpack nm <> " in scope"
+     Just p  -> expandInstances tyScope clsScope (C cls p)
+   go other (C cls p)= case filter (/= other) $ solve structRules other of
+     [] -> [other :<= []]
+     more -> (other :<= []) : concatMap (expandInstances tyScope clsScope) more

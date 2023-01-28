@@ -1,13 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
-{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables, AllowAmbiguousTypes #-}
-
-module LambdaBuffers.CodeGen.Gen.RustGen.Instances.Eq where
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
+module LambdaBuffers.CodeGen.RustGen.Instances.Eq where
 
 import Control.Applicative
 import Data.Text (Text)
@@ -15,17 +14,16 @@ import qualified Data.Map as M
 
 import Prettyprinter
 
-import LambdaBuffers.CodeGen.Gen.PP
-import LambdaBuffers.CodeGen.Common.Types
-import LambdaBuffers.CodeGen.Gen.Generator
-import LambdaBuffers.CodeGen.Resolve.Rules
-
+import LambdaBuffers.CodeGen.PP
+import LambdaBuffers.Common.TypeClass.Pat
+import LambdaBuffers.Common.TypeClass.Rules
+import LambdaBuffers.CodeGen.Generator
 --for testing
 
-eq :: Class l
+eq :: Class
 eq = Class "Eq" []
 
-eqScope :: [Instance l]
+eqScope :: [Instance]
 eqScope = [
    C eq Int :<= []
  , C eq Bool :<= []
@@ -42,7 +40,7 @@ eqScope = [
  , C eq (SumP _xs) :<= [C eq _xs]
  ]
 
-eqTyNoVars :: Instance l
+eqTyNoVars :: Instance
 eqTyNoVars = C eq (Sum _name Nil _body) :<= [C eq _body]
 
 fieldName :: Parser Rust c () (Doc ())
@@ -123,7 +121,7 @@ eqTyNoVarsGen = do
      let label = pretty label'
      pure $ "self" <.> label <+> "==" <+> "other" <.> label
 
-eqGen :: M.Map (Instance Rust) (InstanceGen Rust)
+eqGen :: M.Map Instance (InstanceGen Rust)
 eqGen = M.fromList [(eqTyNoVars,eqTyNoVarsGen)]
 
 {-

@@ -7,10 +7,10 @@ module LambdaBuffers.Common.TH (
   mkLBTypes,
   mkLBType,
   -- for testing / looking at in GHCI
-  Foo (..),
+  {- -Foo (..),
   Bar (..),
   Baz (..),
-  Beep (..),
+  Beep (..), -}
 ) where
 
 import Control.Lens ((^.))
@@ -161,6 +161,7 @@ star = [e|Kind (KindRef KType) $si|]
 
 -- "tests"
 
+{-
 data Foo a b = Ctor1 | Ctor2 Bool | Ctor3 {field1 :: a, field2 :: b}
 
 data Bar a b = Bar
@@ -172,5 +173,5 @@ data Bar a b = Bar
 data Baz = BazA | BazB
 
 data Beep a b = Beep Int String (Maybe a) (Maybe b)
-
+-}
 -- GHCI:  $(mkLBTypes [''Foo, ''Bar, ''Baz, ''Beep])

@@ -44,7 +44,7 @@ mkModuleBuilder (P.CompilerInput inp) = traverse (secondPass . firstPass) inp
                   $ traverse (\x -> getClasses (x ^. #classDefs)) inp
 
     firstPass :: P.Module -> InstanceM  (P.ModuleName,[(Pat,P.SourceInfo)],Instances l,Classes l)
-    firstPass (P.Module modNm tDefs cDefs instances _) = do
+    firstPass (P.Module modNm tDefs cDefs instances _ _) = do
       mbdefs <- lift $ types tDefs
       mbclasses <- lift $ getClasses cDefs
       mbinstances <- getInstances allClasses instances

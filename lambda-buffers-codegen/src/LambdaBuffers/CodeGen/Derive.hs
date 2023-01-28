@@ -3,7 +3,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds, TypeFamilies #-}
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
@@ -13,18 +12,17 @@ module LambdaBuffers.CodeGen.Resolve.Derive where
 import Control.Monad.Trans.Except (ExceptT, throwE, runExceptT)
 import Data.Foldable (traverse_)
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
 import Control.Monad.State.Class
 import Control.Monad.State
-
 import Prettyprinter
-
 import Debug.Trace (trace)
 
-import LambdaBuffers.CodeGen.Common.Types
-import LambdaBuffers.CodeGen.Resolve.Solve
-import LambdaBuffers.CodeGen.Resolve.Rules
-import LambdaBuffers.CodeGen.Gen.Generator
+import LambdaBuffers.Common.TypeClass.Pat
+import LambdaBuffers.Common.TypeClass.Solve
+import LambdaBuffers.Common.TypeClass.Rules
+import LambdaBuffers.CodeGen.Generator
+
+import qualified Data.Map.Strict as M
 
 
 {- The typeclass machinery should perform two tasks when it encounters an instance declaration for a given type:
@@ -69,34 +67,34 @@ Deriving algorithm:
 
 -}
 
-data DeriveError l
- = NoGenerator (Constraint l)
- | GenError (Constraint l)
- | ConstraintFail [Constraint l]
- | MultipleMatchingGenerators (Constraint l) [Instance l] deriving (Show, Eq)
+data DeriveError
+ = NoGenerator Constraint
+ | GenError Constraint
+ | ConstraintFail [Constraint]
+ | MultipleMatchingGenerators Constraint [Instance] deriving (Show, Eq)
 
-type GenTable l = Map (Instance l) (InstanceGen l)
+type GenTable l = Map Instance (InstanceGen l)
 
-newtype Assumptions (l :: Lang) = Assumptions  [Constraint l]
+newtype Assumptions = Assumptions  [Constraint]
 
-noAssumptions :: Assumptions l
+noAssumptions :: Assumptions
 noAssumptions = Assumptions []
 
-assume :: [Constraint l] -> [Instance l]
+assume :: [Constraint] -> [Instance]
 assume cs = for cs $ \(C c t) -> C c t :<= []
 
 data DeriveState (l :: Lang) = DeriveState {
-  scope      :: [Instance l],
+  scope      :: [Instance],
   generators :: GenTable l,
   output     :: [DSL l]
 }
 
-splitInstance :: Instance l -> (Constraint l, [Constraint l])
+splitInstance :: Instance -> (Constraint, [Constraint])
 splitInstance (C c t :<= is) = (C c t, is)
 
 type DeriveM l a = ExceptT (DeriveError l) (State (DeriveState l)) a
 
-simplify :: Rule l -> Rule l
+simplify :: Rule -> Rule
 simplify (C c t :<= _)= C c t :<= []
 
 {- NOTE: Right now this recursively derives and generates code for all of the necessary constraints.
@@ -112,8 +110,8 @@ simplify (C c t :<= _)= C c t :<= []
 -}
 derive :: forall (l :: Lang)
         . TargetLang l
-       => Assumptions l {- Constraints which are assumed to hold locally for the purposes of code generation. Needed to handle type variables in user defined constrained instances, e.g. instance (C a, C b) => C (Foo a b) -}
-       -> Constraint l
+       => Assumptions {- Constraints which are assumed to hold locally for the purposes of code generation. Needed to handle type variables in user defined constrained instances, e.g. instance (C a, C b) => C (Foo a b) -}
+       -> Constraint
        -> DeriveM l  ()  -- switch from String to something better
 derive axs@(Assumptions as) cst@(C _ cp) = do
   let given = assume as
@@ -138,14 +136,14 @@ derive axs@(Assumptions as) cst@(C _ cp) = do
            others -> throwE $ ConstraintFail others
          -}
  where
-   processGen :: Instance l -> InstanceGen l -> DeriveM l ()
+   processGen :: Instance -> InstanceGen -> DeriveM ()
    processGen genRule generator = case parse generator cp of
      Left _    -> throwE $ GenError cst
      Right dsl -> modify' $ \(DeriveState sc ge out) ->
        -- we simplify a (r :<= cs) constraint b/c at this point we know that `cs` has been derived or solved
        DeriveState (simplify genRule:sc) ge (dsl:out)
 
-   findMatchingGen :: DeriveM l (Instance l, InstanceGen l)
+   findMatchingGen :: DeriveM l (Instance, InstanceGen l)
    findMatchingGen = do
      gs  <- gets (M.toList . generators)
      case filter (matchInstance cst . fst) gs of
@@ -156,9 +154,9 @@ derive axs@(Assumptions as) cst@(C _ cp) = do
 runDerive :: forall (l :: Lang)
            . (TargetLang l, DSL l ~ Doc ())
           => GenTable l
-          -> [Instance l]
-          -> Instance l -- Constraint l
-          -> Either (DeriveError l) [Doc ()]
+          -> [Instance]
+          -> Instance -- Constraint l
+          -> Either DeriveError [Doc ()]
 runDerive gens scope inst  = case runState (runExceptT $ derive (Assumptions cs) c) st of
    (Left e,_) -> Left e
    (Right (), res) -> Right $ output res
@@ -168,9 +166,9 @@ runDerive gens scope inst  = case runState (runExceptT $ derive (Assumptions cs)
 
 runDerive' :: forall (l :: Lang)
               . (TargetLang l, DSL l ~ Doc ())
-             => Map (Instance l) (InstanceGen l)
-             -> [Instance l]
-             -> Instance l
+             => Map Instance (InstanceGen l)
+             -> [Instance]
+             -> Instance
              -> IO ()
 runDerive' g sc inst = either print (print . vcat) $ runDerive g sc inst
 

@@ -1,27 +1,20 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 
 
-module LambdaBuffers.CodeGen.Resolve.Rules where
+module LambdaBuffers.Common.TypeClass.Rules where
 
 import Data.Kind (Type)
 import Data.Text (Text)
 
-import LambdaBuffers.CodeGen.Common.Types
+import LambdaBuffers.Common.TypeClass.Pat
 import LambdaBuffers.CodeGen.Gen.Generator
 
-
-type InstanceGen l = Parser l InstanceDecl () (DSL l)
-
-nullGen :: InstanceGen Haskell
-nullGen = match _x >> pure ""
-
-data Class (l :: Lang) = Class
+data Class  = Class
   { name   :: Text
-  , supers :: [Class l]
+  , supers :: [Class]
   } deriving stock (Show, Eq, Ord)
 
 {- A type which represents instances. Can be either a single simple instance or
@@ -33,18 +26,17 @@ data Class (l :: Lang) = Class
    NOTE: All variables to the right of the first :<= must occur to the left of the first :<=
 -}
 
-data Constraint l = C (Class l) Pat deriving (Show, Eq, Ord)
+data Constraint = C Class Pat deriving (Show, Eq, Ord)
 
-data Rule (l :: Lang)  where
-  (:<=) :: Constraint l -> [Constraint l] -> Rule l
+data Rule  where
+  (:<=) :: Constraint -> [Constraint] -> Rule
   deriving (Show, Eq, Ord)
 infixl 7 :<=
 
-type Instance l = Rule l
+type Instance = Rule
 
 {- Map over the Pats inside of an Rule
 -}
-mapPat :: (Pat -> Pat) -> Rule l -> Rule l
+mapPat :: (Pat -> Pat) -> Rule -> Rule
 mapPat f (C c ty :<= is) = C c (f ty) :<=  map (\(C c p) -> C c (f p)) is
 
--- just playing around
