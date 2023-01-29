@@ -171,8 +171,10 @@ eval_rule(_, _, kind(Ty, kind(Kind))) :-
     (
         ty_kind(Ty, Kind) -> true;
         (
-            ty_kind(Ty, Kind_),
-            print_message(error, wrong_kind(Ty, got(Kind_), wanted(Kind))),
+            (
+                ty_kind(Ty, Kind_) -> print_message(error, wrong_kind(Ty, got(Kind_), wanted(Kind)));
+                print_message(error, invalid_kind(Ty))
+            ),
             fail
         )
     ).
