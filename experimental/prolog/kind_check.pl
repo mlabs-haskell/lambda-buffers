@@ -8,17 +8,20 @@ ty_var_name(VarName) :- member(VarName, [a, b, c]).
 
 ty_kind(_, opaque(kind(K), _), K).
 
-ty_kind(Ctx, ty_ref(RefName), K) :-
-    ty_def(RefName, Ty),
-    ty_kind(Ctx, Ty, K).
+ty_kind(ctx(Vars,Trace), ty_ref(RefName), K) :-
+    first(RefName-K, Trace) -> true;
+    (
+        ty_def(RefName, Ty),
+        ty_kind(ctx(Vars, [RefName-K|Trace]), Ty, K)
+    ).
 
-ty_kind(ctx(Args), ty_var(VarName), KArg) :-
+ty_kind(ctx(Args, _), ty_var(VarName), KArg) :-
     ty_var_name(VarName),
     first(VarName-KArg, Args).
 
-ty_kind(ctx(Args), ty_abs(ArgName-KArg, TyBody), KAbs) :-
+ty_kind(ctx(Args, Trace), ty_abs(ArgName-KArg, TyBody), KAbs) :-
     append([ArgName-KArg], Args, Args_),
-    ty_kind(ctx(Args_), TyBody, KBody),
+    ty_kind(ctx(Args_, Trace), TyBody, KBody),
     KAbs = (KArg -> KBody).
 
 ty_kind(Ctx, ty_app(TyAbs, TyArg), KRes) :-
@@ -28,7 +31,7 @@ ty_kind(Ctx, ty_app(TyAbs, TyArg), KRes) :-
 
 % Example: ty_kind(ty_app(ty_ref(maybe), ty_ref(int8)), K)
 ty_kind(Ty, Kind) :-
-    ty_kind(ctx([]), Ty, Kind).
+    ty_kind(ctx([], []), Ty, Kind).
 
 % TODO(bladyjoker): Add iterative deepening.
 kind(*).

@@ -82,7 +82,20 @@ ty_def(list, ty_abs(a-(*),
                     ))
       ).
 
-ty_def(rec, ty_abs(a-(*), ty_app(ty_ref(rec), ty_var(a)))).
+% data Rec a = X (Rec a)
+ty_def(rec, ty_abs(a-(*),
+                   ty_app(
+                       ty_app(
+                           ty_ref(prod),
+                           ty_app(
+                               ty_ref(rec),
+                               ty_var(a)
+                           )
+                       ),
+                       ty_ref(unit)
+                   )
+                  )
+      ).
 
 first(X, [H|_]) :-
     X = H.
