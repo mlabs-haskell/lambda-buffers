@@ -95,6 +95,7 @@ library
     , text                        >=1.2
 
   exposed-modules:
+    LambdaBuffers.Compiler.Canonical
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Inference
     LambdaBuffers.Compiler.NamingCheck
