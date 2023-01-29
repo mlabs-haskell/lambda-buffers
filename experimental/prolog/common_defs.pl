@@ -7,7 +7,7 @@ ty_def(either,
                      ty_app(
                          ty_app(
                              opaque(
-                                 kind(* -> * -> *),
+                                 kind(arr(*, arr(*,*))),
                                  cardinality(
                                      ty_card(ty_var(a)) +
                                      ty_card(ty_var(b))
@@ -27,7 +27,7 @@ ty_def(prod,
                      ty_app(
                          ty_app(
                              opaque(
-                                 kind(* -> * -> *),
+                                 kind(arr(*, arr(*,*))),
                                  cardinality(
                                      ty_card(ty_var(a)) *
                                      ty_card(ty_var(b))
@@ -43,9 +43,8 @@ ty_def(prod,
 ty_def(void, opaque(kind(*), cardinality(k(0)))).
 ty_def(unit, opaque(kind(*), cardinality(k(1)))).
 
-ty_def(bool, opaque(kind(*), cardinality(k(2)))).
-
 %% user opaques
+ty_def(bool, opaque(kind(*), cardinality(k(2)))).
 ty_def(int8, opaque(kind(*), cardinality(k(256)))).
 ty_def(string, opaque(kind(*), cardinality(k(sup)))).
 ty_def(bytes, opaque(kind(*), cardinality(k(sup)))).
@@ -95,6 +94,26 @@ ty_def(rec, ty_abs(a-(*),
                        ty_ref(unit)
                    )
                   )
+      ).
+
+% data RecFoo = RecFoo RecBar
+ty_def(recfoo, ty_app(
+                   ty_app(
+                       ty_ref(prod),
+                       ty_ref(recbar)
+                   ),
+                   ty_ref(unit)
+               )
+      ).
+
+% data RecBar = RecBar RecFoo
+ty_def(recbar, ty_app(
+                   ty_app(
+                       ty_ref(either),
+                       ty_ref(recfoo)
+                   ),
+                   ty_ref(void)
+               )
       ).
 
 first(X, [H|_]) :-
