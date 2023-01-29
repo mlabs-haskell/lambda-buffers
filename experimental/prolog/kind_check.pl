@@ -1,9 +1,9 @@
-%% Simple arity based kind checking (only * KindRefs and all TyArgs are of arity 0)
-:- module(kind_check, [ty_kind/3, ty_kind/2]).
+:- module(kind_check, [ty_kind/3, ty_kind/2, kind/1]).
 
 :- use_module(library(clpfd)).
 :- use_module(common_defs).
 
+% TODO(bladyjoker): Provide a proper out moded var_name pred
 ty_var_name(VarName) :- member(VarName, [a, b, c]).
 
 ty_kind(_, opaque(kind(K), _), K).
@@ -13,19 +13,23 @@ ty_kind(Ctx, ty_ref(RefName), K) :-
     ty_kind(Ctx, Ty, K).
 
 ty_kind(ctx(Args), ty_var(VarName), KArg) :-
-    ty_var_name(VarName), %% TODO(bladyjoker): Provide a proper out moded var_name pred
+    ty_var_name(VarName),
     first(VarName-KArg, Args).
 
-ty_kind(ctx(Args), ty_abs(ArgName, TyBody), KtAbs) :-
-    KArg #= 0,
+ty_kind(ctx(Args), ty_abs(ArgName-KArg, TyBody), KAbs) :-
     append([ArgName-KArg], Args, Args_),
     ty_kind(ctx(Args_), TyBody, KBody),
-    KtAbs #= 1 + KBody.
+    KAbs = (KArg -> KBody).
 
-ty_kind(Ctx, ty_app(TyFun, TyArg), KRes) :-
+ty_kind(Ctx, ty_app(TyAbs, TyArg), KRes) :-
     ty_kind(Ctx, TyArg, KArg),
-    ty_kind(Ctx, TyFun, KFun),
-    KRes #= KFun - 1.
+    ty_kind(Ctx, TyAbs, KAbs),
+    KAbs = (KArg -> KRes).
 
+% Example: ty_kind(ty_app(ty_ref(maybe), ty_ref(int8)), K)
 ty_kind(Ty, Kind) :-
     ty_kind(ctx([]), Ty, Kind).
+
+% TODO(bladyjoker): Add iterative deepening.
+kind(*).
+kind(L -> R) :- kind(L), kind(R).

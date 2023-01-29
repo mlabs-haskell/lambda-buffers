@@ -2,12 +2,12 @@
 
 %% bottom types
 ty_def(either,
-       ty_abs(a,
-              ty_abs(b,
+       ty_abs(a-(*),
+              ty_abs(b-(*),
                      ty_app(
                          ty_app(
                              opaque(
-                                 kind(2),
+                                 kind(* -> * -> *),
                                  cardinality(
                                      ty_card(ty_var(a)) +
                                      ty_card(ty_var(b))
@@ -22,12 +22,12 @@ ty_def(either,
       ).
 
 ty_def(prod,
-       ty_abs(a,
-              ty_abs(b,
+       ty_abs(a-(*),
+              ty_abs(b-(*),
                      ty_app(
                          ty_app(
                              opaque(
-                                 kind(2),
+                                 kind(* -> * -> *),
                                  cardinality(
                                      ty_card(ty_var(a)) *
                                      ty_card(ty_var(b))
@@ -40,17 +40,18 @@ ty_def(prod,
                     )
              )
       ).
-ty_def(void, opaque(kind(0), cardinality(k(0)))).
-ty_def(unit, opaque(kind(0), cardinality(k(1)))).
-ty_def(bool, opaque(kind(0), cardinality(k(2)))).
+ty_def(void, opaque(kind(*), cardinality(k(0)))).
+ty_def(unit, opaque(kind(*), cardinality(k(1)))).
+
+ty_def(bool, opaque(kind(*), cardinality(k(2)))).
 
 %% user opaques
-ty_def(int8, opaque(kind(0), cardinality(k(256)))).
-ty_def(string, opaque(kind(0), cardinality(k(sup)))).
-ty_def(bytes, opaque(kind(0), cardinality(k(sup)))).
+ty_def(int8, opaque(kind(*), cardinality(k(256)))).
+ty_def(string, opaque(kind(*), cardinality(k(sup)))).
+ty_def(bytes, opaque(kind(*), cardinality(k(sup)))).
 
 %% user defined
-ty_def(maybe, ty_abs(a,
+ty_def(maybe, ty_abs(a-(*),
                      ty_app(
                          ty_app(
                              ty_ref(either),
@@ -62,7 +63,7 @@ ty_def(maybe, ty_abs(a,
       ).
 
 % List a = Nil | Cons a (List a) = Either Unit (Prod a (List a))
-ty_def(list, ty_abs(a,
+ty_def(list, ty_abs(a-(*),
                     ty_app(
                         ty_app(
                             ty_ref(either),
@@ -81,7 +82,7 @@ ty_def(list, ty_abs(a,
                     ))
       ).
 
-ty_def(rec, ty_abs(a, ty_app(ty_ref(rec), ty_var(a)))).
+ty_def(rec, ty_abs(a-(*), ty_app(ty_ref(rec), ty_var(a)))).
 
 first(X, [H|_]) :-
     X = H.
