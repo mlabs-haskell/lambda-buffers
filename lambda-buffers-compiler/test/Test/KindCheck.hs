@@ -3,13 +3,13 @@
 module Test.KindCheck (test) where
 
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
-import LambdaBuffers.Common.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.KindCheck (
   check,
   foldWithProduct,
   foldWithSum,
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
+import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 
@@ -19,11 +19,85 @@ test = testGroup "Compiler tests" [testCheck, testFolds]
 --------------------------------------------------------------------------------
 -- Module tests
 
-testCheck = testGroup "KindChecker Tests" [trivialKCTest]
+testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe]
 
 trivialKCTest =
   testCase "Empty CompInput should check." $
     check (P.CompilerInput []) @?= Right ()
+
+kcTestMaybe =
+  testCase "Maybe should psss." $
+    check ci1 @?= Right ()
+
+ci1 :: P.CompilerInput
+ci1 =
+  P.CompilerInput
+    [ P.Module
+        { P.moduleName =
+            P.ModuleName
+              { P.parts = [P.ModuleNamePart "Module" esi]
+              , P.sourceInfo = esi
+              }
+        , P.typeDefs =
+            [ P.TyDef
+                { P.tyName = P.TyName "Maybe" esi
+                , P.tyAbs =
+                    P.TyAbs
+                      { P.tyArgs =
+                          [ P.TyArg
+                              { P.argName = P.VarName "a" esi
+                              , P.argKind =
+                                  P.Kind
+                                    { P.kind = P.KindRef P.KType
+                                    , P.sourceInfo = esi
+                                    }
+                              , P.sourceInfo = esi
+                              }
+                          ]
+                      , P.tyBody =
+                          P.SumI $
+                            P.Sum
+                              { constructors =
+                                  P.Constructor
+                                    { P.constrName = P.ConstrName {P.name = "Nothing", P.sourceInfo = esi}
+                                    , P.product = P.TupleI $ P.Tuple {P.fields = [], P.sourceInfo = esi}
+                                    }
+                                    :| [ P.Constructor
+                                          { P.constrName = P.ConstrName {P.name = "Just", P.sourceInfo = esi}
+                                          , P.product =
+                                              P.TupleI $
+                                                P.Tuple
+                                                  { P.fields =
+                                                      [ P.TyVarI
+                                                          ( P.TyVar
+                                                              { P.varName =
+                                                                  P.VarName
+                                                                    { P.name = ""
+                                                                    , P.sourceInfo = esi
+                                                                    }
+                                                              , P.sourceInfo = esi
+                                                              }
+                                                          )
+                                                      ]
+                                                  , P.sourceInfo = esi
+                                                  }
+                                          }
+                                       ]
+                              , sourceInfo = esi
+                              }
+                      , P.sourceInfo = esi
+                      }
+                , P.sourceInfo = esi
+                }
+            ]
+        , P.classDefs = mempty
+        , P.instances = mempty
+        , P.sourceInfo = esi
+        }
+    ]
+  where
+    esi :: P.SourceInfo -- empty Source Info
+    esi = P.SourceInfo "Empty Info" (P.SourcePosition 0 0) (P.SourcePosition 0 1)
 
 --------------------------------------------------------------------------------
 -- Fold tests

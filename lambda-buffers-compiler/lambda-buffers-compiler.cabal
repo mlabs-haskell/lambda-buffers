@@ -48,6 +48,7 @@ common common-language
     FlexibleInstances
     ForeignFunctionInterface
     GADTSyntax
+    GeneralizedNewtypeDeriving
     HexFloatLiterals
     ImportQualifiedPost
     InstanceSigs
