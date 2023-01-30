@@ -17,7 +17,7 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 import Data.Bifunctor (Bifunctor (second))
 
 import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
-import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, KindP, (:->:)), KindPrimitive (Constraint, Type))
 import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var))
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
 
@@ -74,11 +74,11 @@ data InferErr
   | RecursiveSubstitutionErr T.Text
   deriving stock (Show, Eq)
 
-newtype Constraint = Constraint (Kind, Kind)
+newtype UConstraint = UConstraint (Kind, Kind)
   deriving stock (Show, Eq)
 
-instance Pretty Constraint where
-  pretty (Constraint (t1, t2)) = pretty t1 <+> "=" <+> pretty t2
+instance Pretty UConstraint where
+  pretty (UConstraint (t1, t2)) = pretty t1 <+> "=" <+> pretty t2
 
 newtype Substitution = Substitution {getSubstitution :: (Atom, Kind)}
   deriving stock (Show, Eq)
@@ -90,7 +90,7 @@ newtype DerivationContext = DC
   { _freshVarStream :: [Atom]
   }
 
-type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error InferErr]
+type DeriveEff = '[State Context, State DerivationContext, State [UConstraint], Error InferErr]
 
 type DeriveM a = Eff DeriveEff a
 
@@ -99,7 +99,7 @@ type Derive a =
   Members
     '[ Reader Context
      , State DerivationContext
-     , Writer [Constraint]
+     , Writer [UConstraint]
      , Error InferErr
      ]
     effs =>
@@ -109,25 +109,26 @@ type Derive a =
 -- Runners
 
 -- | Run derivation builder - not unified yet.
-runDerive :: Context -> Type -> Either InferErr (Derivation, [Constraint])
+runDerive :: Context -> Type -> Either InferErr (Derivation, [UConstraint])
 runDerive ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReader ctx (derive t)
 
 infer :: Context -> Type -> Either InferErr Kind
 infer ctx t = do
-  (d, c) <- runDerive (defTerms <> ctx) t
+  (d, c) <- runDerive (defContext <> ctx) t
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. topKind
-  where
-    defTerms =
-      mempty
-        & context
-          .~ M.fromList
-            [ ("Σ", Type :->: Type :->: Type)
-            , ("Π", Type :->: Type :->: Type)
-            , ("𝟙", Type)
-            , ("𝟘", Type)
-            ]
+
+defContext :: Context
+defContext =
+  mempty
+    & context
+      .~ M.fromList
+        [ ("Σ", KindP Type :->: KindP Type :->: KindP Type)
+        , ("Π", KindP Type :->: KindP Type :->: KindP Type)
+        , ("𝟙", KindP Type)
+        , ("𝟘", KindP Type)
+        ]
 
 --------------------------------------------------------------------------------
 -- Implementation
@@ -146,14 +147,14 @@ derive x = do
       let ty1 = d1 ^. topKind
           ty2 = d2 ^. topKind
       v <- KVar <$> fresh
-      tell [Constraint (ty1, ty2 :->: v)]
+      tell [UConstraint (ty1, ty2 :->: v)]
       pure $ Application (Judgement (c, x, v)) d1 d2
     Abs v t -> do
       newTy <- KVar <$> fresh
       d <- local (\(Context ctx addC) -> Context ctx $ M.insert v newTy addC) (derive t)
       let ty = d ^. topKind
       freshT <- KVar <$> fresh
-      tell [Constraint (freshT, newTy :->: ty)]
+      tell [UConstraint (freshT, newTy :->: ty)]
       pure $ Abstraction (Judgement (c, x, freshT)) d
   where
     fresh :: Derive Atom
@@ -188,7 +189,7 @@ type Unifier a = forall effs. Member (Error InferErr) effs => Eff effs a
 -- | Gets the variables of a type.
 getVariables :: Kind -> [Atom]
 getVariables = \case
-  Type -> mempty
+  KindP _ -> mempty
   x :->: y -> getVariables x <> getVariables y
   KVar x -> [x]
 
@@ -196,17 +197,25 @@ getVariables = \case
 -- Unification
 
 -- | Unifies constraints and creates substitutions.
-unify :: [Constraint] -> Unifier [Substitution]
+unify :: [UConstraint] -> Unifier [Substitution]
 unify [] = pure []
-unify (constraint@(Constraint (l, r)) : xs) = case l of
-  Type -> case r of
-    Type -> unify xs
-    (_ :->: _) -> nope constraint
+unify (constraint@(UConstraint (l, r)) : xs) = case l of
+  KindP Type -> case r of
+    KindP Type -> unify xs
     KVar v ->
-      let sub = Substitution (v, Type)
+      let sub = Substitution (v, KindP Type)
        in (sub :) <$> unify (sub `substituteIn` xs)
+    (_ :->: _) -> nope constraint
+    KindP _ -> nope constraint
+  KindP Constraint -> case r of
+    KindP Type -> unify xs
+    KVar v ->
+      let sub = Substitution (v, KindP Constraint)
+       in (sub :) <$> unify (sub `substituteIn` xs)
+    (_ :->: _) -> nope constraint
+    KindP _ -> nope constraint
   x :->: y -> case r of
-    Type -> nope constraint
+    KindP _ -> nope constraint
     KVar v ->
       if v `appearsIn` l
         then appearsErr v l
@@ -214,8 +223,8 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
           let sub = Substitution (v, l)
            in (sub :) <$> unify (sub `substituteIn` xs)
     m :->: n ->
-      let c1 = Constraint (x, m)
-          c2 = Constraint (y, n)
+      let c1 = UConstraint (x, m)
+          c2 = UConstraint (y, n)
        in unify (c1 : c2 : xs)
   KVar a -> case r of
     KVar b ->
@@ -224,7 +233,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
         else
           let sub = Substitution (a, r)
            in (sub :) <$> unify (sub `substituteIn` xs)
-    _ -> unify $ Constraint (r, l) : xs
+    _ -> unify $ UConstraint (r, l) : xs
   where
     nope :: forall eff b a. (Member (Error InferErr) eff, Pretty b) => b -> Eff eff a
     nope c = throwError . ImpossibleUnificationErr . T.unlines $ ["Cannot unify: " <> (T.pack . show . pretty) c]
@@ -248,17 +257,18 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
     appearsIn a ty = a `elem` getVariables ty
 
     substituteIn _ [] = []
-    substituteIn s ((Constraint (lt, rt)) : cs) = Constraint (applySubstitution s lt, applySubstitution s rt) : substituteIn s cs
+    substituteIn s ((UConstraint (lt, rt)) : cs) = UConstraint (applySubstitution s lt, applySubstitution s rt) : substituteIn s cs
 
 -- | Applies substitutions to a kind.
 applySubstitution :: Substitution -> Kind -> Kind
 applySubstitution s@(Substitution (a, t)) k = case k of
-  Type -> Type
+  KindP Type -> KindP Type
+  KindP Constraint -> KindP Constraint
   l :->: r -> applySubstitution s l :->: applySubstitution s r
   KVar v -> if v == a then t else k
 
 -- | Runs the unifier.
-runUnify' :: [Constraint] -> Either InferErr [Substitution]
+runUnify' :: [UConstraint] -> Either InferErr [Substitution]
 runUnify' = run . runError . unify
 
 {- | Applies substitutions to all the types in the Derivation, and the

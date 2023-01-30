@@ -26,11 +26,11 @@ import Data.Text (Text, intercalate)
 import LambdaBuffers.Compiler.KindCheck.Context (Context, getAllContext)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   InferErr,
-  Kind (Type, (:->:)),
   Type (Abs, Var),
   context,
   infer,
  )
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KindP, (:->:)), KindPrimitive (Type))
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
 import LambdaBuffers.Compiler.KindCheck.Variable (Var)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
@@ -174,7 +174,7 @@ tyAbsLHS2Kind :: P.TyAbs -> Kind
 tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
 
 foldWithArrow :: [Kind] -> Kind
-foldWithArrow = foldl (:->:) Type
+foldWithArrow = foldl (:->:) (KindP Type)
 
 -- ================================================================================
 -- To Kind Conversion functions
@@ -182,7 +182,7 @@ foldWithArrow = foldl (:->:) Type
 pKind2Type :: P.Kind -> Kind
 pKind2Type k =
   case k ^. #kind of
-    P.KindRef P.KType -> Type
+    P.KindRef P.KType -> KindP Type
     P.KindArrow l r -> pKind2Type l :->: pKind2Type r
     -- FIXME(cstml) what is an undefined type meant to mean?
     _ -> error "Fixme undefined type"
