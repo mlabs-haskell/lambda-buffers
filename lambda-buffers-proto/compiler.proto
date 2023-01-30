@@ -491,3 +491,104 @@ message CompilerInput {
   // Modules to compile.
   repeated Module modules = 1;
 }
+
+
+message CompilerFailure {
+
+  // Source information relating to the error. 
+  SourceInfo source_info = 1;
+  
+  // Reason why the compilation failed.
+  oneof failure {
+    KindCheckErr kc_err = 2;
+  }
+
+}
+
+/* Inference Failure 
+ */
+
+message InferenceErr {
+
+  // Error referring to an unbound term. This usually means that the term was
+  // not defined.
+  message UnboundTerm {
+    string msg = 1; 
+  }
+
+  // This should never happen.
+  message ImpossibleErr {
+    string msg = 1;
+  }
+
+  // Unification has failed - type is incorrectly defined.
+  message UnificationErr {
+    string msg = 1; 
+  }
+
+  // Infinite recursion due to a substitution replacing a term with a term
+  // containing itself. Should never type check.
+  message RecursiveSubstitutionErr {
+    string msg = 1;
+  }
+
+  // The types of inference errors.
+  oneof inference_err {
+    UnboundTermErr unbound_term_err = 1;
+    ImpossibleErr impossible_err = 2;
+    UnificationErr unification_err = 3;
+    RecursiveSubstitutionErr recursive_subs_err = 4; 
+  }
+}
+
+/* Kindcheck Failure
+
+   Information regarding a Kindcheck failure.
+ */
+
+message KindCheckErr {
+
+  // The inferred type differs from the type as defined.
+  message InconsistentType {
+    TyDef type_def = 1;
+  }
+
+  message InferenceFailure {
+    TyDef type_def = 1;
+    InferenceErr infer_err = 2;
+  }
+  
+  oneof kind_check_error {
+    string err = 1;
+    InconsistentType inconsistent_type_err = 2; 
+  }
+}
+
+/*
+  Compiler Output
+
+  A successful Compilation Output.
+ */
+message CompilerOutput {
+  
+  // A type definition.
+  message TypeDefinition {
+    TyDef type_def = 1 ;
+    Kind kind = 2;
+  }
+  
+  // A map of checked type definitions.
+  repeated TypeDefinition type_defs = 1;
+}
+
+
+/* Compilation Result 
+
+   Compiler Output is either an Error or a Compiler Output.
+ */
+message CompilerResult {
+  oneof compiler_result {
+    CompilerFailure failed_compilation = 1;
+    CompilerOutput compilation_result = 2;
+  }
+}
