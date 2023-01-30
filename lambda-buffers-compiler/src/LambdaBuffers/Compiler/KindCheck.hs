@@ -47,9 +47,7 @@ import Data.Map qualified as M
 
 -- | Kind Check failure types.
 data KindCheckFailure
-  = CheckFailure String
-  | LookupRefFailure P.TyRef
-  | AppWrongArgKind Kind Kind -- Expected Kind got Kind
+  = InvalidType InferErr
   | InferenceFailed P.TyDef InferErr
   | InconsistentType P.TyDef
   deriving stock (Show, Eq)

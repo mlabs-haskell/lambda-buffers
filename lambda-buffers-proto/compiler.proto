@@ -512,7 +512,7 @@ message InferenceErr {
 
   // Error referring to an unbound term. This usually means that the term was
   // not defined.
-  message UnboundTerm {
+  message UnboundTermErr {
     string msg = 1; 
   }
 
