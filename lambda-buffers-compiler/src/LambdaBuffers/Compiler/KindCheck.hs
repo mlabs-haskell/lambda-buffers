@@ -3,9 +3,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{- | FIXME(cstml): At the moment the Kind Checker disregards multiple Modules for
-simplicity of testing and developing. This will be changed ASAP.
--}
 module LambdaBuffers.Compiler.KindCheck (
   KindCheckFailure (..),
   check,
