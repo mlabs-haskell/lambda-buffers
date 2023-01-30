@@ -19,7 +19,7 @@ module LambdaBuffers.Compiler.KindCheck (
 ) where
 
 import Control.Exception (Exception)
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens (view, (&), (.~), (^.))
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.Text (Text, intercalate)
@@ -27,10 +27,11 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
   Context,
   InferErr,
   Kind (Type, (:->:)),
-  Type (Var),
+  Type (Abs, Var),
   context,
   infer,
  )
+import LambdaBuffers.Compiler.KindCheck.Variable
 
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Members, reinterpret, run)
@@ -54,7 +55,7 @@ data KindCheckFailure
   | AppToManyArgs Int
   | InvalidProto Text
   | AppNoArgs -- No args
-  | InvalidType
+  | InvalidType InferErr
   | InferenceFailed P.TyDef InferErr
   deriving stock (Show, Eq)
 
@@ -122,19 +123,19 @@ localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
   KCTypeDefinition mname ctx tydef -> do
     kindFromTyDef mname tydef >>= inferTypeKind ctx >>= checkKindConsistency tydef ctx
-  KCClassInstance _ctx _instClause -> error "FIXME(cstml)"
-  KCClass _ctx _classDef -> error "FIXME(cstml)"
+  KCClassInstance _ctx _instClause -> pure () -- "FIXME(cstml)"
+  KCClass _ctx _classDef -> pure () --  "FIXME(cstml)"
 
 runKindCheck :: Eff '[KindCheck] a -> Eff '[Err] a
 runKindCheck = reinterpret $ \case
   KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
-  InferTypeKind ctx ty -> either (\_ -> throwError InvalidType) pure $ infer ctx ty
+  InferTypeKind ctx ty -> either (throwError . InvalidType) pure $ infer ctx ty
   CheckKindConsistency def ctx k -> resolveKindConsistency def ctx k
 
 -- Resolvers
 
 resolveKindConsistency :: forall effs. P.TyDef -> Context -> Kind -> Eff effs Kind
-resolveKindConsistency _tydef _ctx _k = error "FIXME(cstml)"
+resolveKindConsistency _tydef _ctx = pure -- "FIXME(cstml)"
 
 resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
 resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
@@ -148,11 +149,11 @@ flattenModuleName mName = intercalate "." $ (\p -> p ^. #name) <$> mName ^. #par
 tyDef2Context :: forall effs. ModuleName -> P.TyDef -> Eff effs Context
 tyDef2Context curModName tyDef = do
   let name = curModName <> "." <> (tyDef ^. #tyName . #name) -- name is qualified
-  let ty = tyAbsLHS2Type (tyDef ^. #tyAbs)
+  let ty = tyAbsLHS2Kind (tyDef ^. #tyAbs)
   pure $ mempty & context .~ M.singleton name ty
 
-tyAbsLHS2Type :: P.TyAbs -> Kind
-tyAbsLHS2Type tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
+tyAbsLHS2Kind :: P.TyAbs -> Kind
+tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
 
 foldWithArrow :: [Kind] -> Kind
 foldWithArrow = foldl (:->:) Type
@@ -177,7 +178,27 @@ tyDef2Type ::
   Members '[Reader ModuleName, Err] eff =>
   P.TyDef ->
   Eff eff Type
-tyDef2Type tyde = tyAbsRHS2Type (tyde ^. #tyAbs)
+tyDef2Type tyde = tyAbsLHS2Type (tyde ^. #tyAbs) <*> tyAbsRHS2Type (tyde ^. #tyAbs)
+
+tyAbsLHS2Type ::
+  forall eff.
+  Members '[Reader ModuleName, Err] eff =>
+  P.TyAbs ->
+  Eff eff (Type -> Type)
+tyAbsLHS2Type tyab = tyArgs2Type (tyab ^. #tyArgs)
+
+tyArgs2Type ::
+  forall eff.
+  [P.TyArg] ->
+  Eff eff (Type -> Type)
+tyArgs2Type = \case
+  [] -> pure id
+  x : xs -> do
+    f <- tyArgs2Type xs
+    pure $ \c -> Abs (tyArg2Var x) (f c)
+
+tyArg2Var :: P.TyArg -> Var
+tyArg2Var = view (#argName . #name)
 
 tyAbsRHS2Type ::
   forall eff.

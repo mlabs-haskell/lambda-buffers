@@ -1,12 +1,12 @@
 module LambdaBuffers.Compiler.KindCheck.Type (Type (Var, Abs, App)) where
 
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Var)
+import LambdaBuffers.Compiler.KindCheck.Variable (Var)
 import Prettyprinter (Doc, Pretty (pretty), parens, (<+>))
 
 data Type
   = Var Var
   | App Type Type
-  | Abs Atom Type
+  | Abs Var Type
   deriving stock (Eq, Show)
 
 instance Pretty Type where

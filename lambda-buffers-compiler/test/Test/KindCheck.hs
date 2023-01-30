@@ -72,7 +72,7 @@ ci1 =
                                                           ( P.TyVar
                                                               { P.varName =
                                                                   P.VarName
-                                                                    { P.name = ""
+                                                                    { P.name = "a"
                                                                     , P.sourceInfo = esi
                                                                     }
                                                               , P.sourceInfo = esi
