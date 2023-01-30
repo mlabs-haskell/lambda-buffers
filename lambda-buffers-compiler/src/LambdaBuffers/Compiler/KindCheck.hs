@@ -42,6 +42,9 @@ import Data.Map qualified as M
 --------------------------------------------------------------------------------
 -- Types
 
+-- FIXME(cstml) - We should add the following tests:
+-- - double declaration of a type
+
 -- | Kind Check failure types.
 data KindCheckFailure
   = CheckFailure String
@@ -330,6 +333,7 @@ foreignTyRef2Type ftr = do
   let moduleName = flattenModuleName (ftr ^. #moduleName)
   pure $ Var $ moduleName <> "." <> (ftr ^. #tyName . #name)
 
+--------------------------------------------------------------------------------
 -- Utilities
 
 foldWithApp :: NonEmpty Type -> Type
