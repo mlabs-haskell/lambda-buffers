@@ -67,7 +67,7 @@ test("should_succeed(Maybe Int :: ?)", [ ]) :-
     aggregate_all(count, ty_kind(ty_app(ty_ref(maybe), ty_ref(int8)), *), 1).
 
 test("should_succeed(Maybe ? :: *)", [ ]) :-
-    aggregate_all(count, ty_kind(ty_app(ty_ref(maybe), ty_ref(_)), *), 8).
+    aggregate_all(count, ty_kind(ty_app(ty_ref(maybe), ty_ref(_)), *), 9).
 
 test("should_succeed(Int :: *)", [ nondet ]) :-
     ty_kind(ty_ref(int8), *).
@@ -76,7 +76,7 @@ test("should_succeed(Int :: ?)", [ ]) :-
     aggregate_all(count, ty_kind(ty_ref(int8), *), 1).
 
 test("should_succeed(? :: *)", [ ]) :-
-    aggregate_all(count, ty_kind(ty_ref(_), *), 8).
+    aggregate_all(count, ty_kind(ty_ref(_), *), 9).
 
 test("should_succeed(List :: * -> *)", [ nondet ]) :-
     ty_kind(ty_ref(list), arr(*,*)).

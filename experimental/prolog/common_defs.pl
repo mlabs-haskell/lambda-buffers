@@ -96,6 +96,9 @@ ty_def(rec, ty_abs(a-(*),
                   )
       ).
 
+% data Foo = MkFoo (Maybe Int8)
+ty_def(foo, ty_app(ty_ref(maybe),ty_ref(int8))).
+
 % data RecFoo = RecFoo RecBar
 ty_def(recfoo, ty_app(
                    ty_app(

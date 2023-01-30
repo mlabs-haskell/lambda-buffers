@@ -76,12 +76,13 @@ struct_rule(class(ClassName, class_arg(_, Kind), _),
           )
          ).
 
-user_rule(class(ClassName, class_arg(_, Kind), _),
-           rule(ClassName, ty_ref(RefName)) :-
-               (
-                   kind(ty_ref(RefName), Kind)
-               )
-          ).
+user_rule(class(ClassName, _, _),
+          rule(ClassName, ty_ref(RefName)) :-
+              (
+                  ty_def(RefName, Ty),
+                  rule(ClassName, Ty)
+              )
+         ).
 
 user_rule(class(ClassName, class_arg(_, Kind), _),
            (rule(ClassName, ty_app(F, A)) :-
@@ -179,6 +180,9 @@ eval_rule(_, _, kind(Ty, kind(Kind))) :-
         )
     ).
 
+eval_rule(_, _, ty_def(RefName, Ty)) :-
+    ty_def(RefName, Ty).
+
 :- multifile prolog:message//1.
 
 prolog:message(wrong_kind(Ty, got(Got), wanted(Want))) --> [ '~w is of kind ~w but wanted kind ~w'-[Ty, Got, Want]].
@@ -250,5 +254,8 @@ test("should_succeed(derive_functor_of_either_int)", []) :-
 
 test("should_fail(derive_functor_of_either)", [ fail ]) :-
     derive([ty_ref(either)], functor, S, U), eval_rules(S, U).
+
+test("should_fail(derive_eq_of_foo)", [ fail ]) :-
+    derive([ty_ref(foo)], eq, S, U), eval_rules(S, U).
 
 :- end_tests(class_check).
