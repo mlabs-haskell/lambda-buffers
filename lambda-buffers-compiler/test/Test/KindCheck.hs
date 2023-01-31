@@ -57,7 +57,7 @@ modMaybe =
                           , P.argKind =
                               P.Kind
                                 { P.kind = P.KindRef P.KType
-                                , P.sourceInfo = esi
+                                -- , P.sourceInfo = esi
                                 }
                           , P.sourceInfo = esi
                           }
@@ -129,7 +129,7 @@ ci2 = ci1 & #modules .~ [addMod]
                                   , P.argKind =
                                       P.Kind
                                         { P.kind = P.KindRef P.KType
-                                        , P.sourceInfo = esi
+                                        -- , P.sourceInfo = esi
                                         }
                                   , P.sourceInfo = esi
                                   }

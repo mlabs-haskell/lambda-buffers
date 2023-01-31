@@ -23,8 +23,6 @@ import Options.Applicative (
   subparser,
  )
 
-import LambdaBuffers.Compiler.KindCheck (check)
-
 newtype Command = Compile CompileOpts
 
 inputPathP :: Parser FilePath

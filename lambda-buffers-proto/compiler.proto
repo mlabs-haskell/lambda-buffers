@@ -276,8 +276,6 @@ message Kind {
     KindRef kind_ref = 1;
     KindArrow kind_arrow = 2;
   };
-  // Source information.
-  SourceInfo source_info = 3;
 }
 
 
@@ -562,9 +560,14 @@ message KindCheckErr {
   }
 }
 
+// A namespaced type term.
+message NSTypeName {
+  string namespaced_name = 1;
+}
+
 // A validated type definition.
 message TypeDefinition {
-  TyDef type_def = 1 ;
+  NSTypeName ns_name = 1 ;
   Kind kind = 2;
 }
 

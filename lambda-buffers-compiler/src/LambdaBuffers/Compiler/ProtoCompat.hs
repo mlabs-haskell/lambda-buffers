@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X) where
+module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X, kindConvert) where
 
 -- NOTE(cstml): I'm re-exporting the module from here as it makes more sense -
 -- also avoids annoying errors.
@@ -18,6 +18,7 @@ import Data.ProtoLens (defMessage)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
+import LambdaBuffers.Compiler.KindCheck.Kind qualified as K
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
 import Proto.Compiler (NamingError)
 import Proto.Compiler qualified as P
@@ -263,23 +264,20 @@ instance IsMessage P.Kind'KindRef KindRefType where
 
 instance IsMessage P.Kind Kind where
   fromProto k = do
-    si <- fromProto $ k ^. P.sourceInfo
     kt <- case k ^. P.maybe'kind of
       Nothing -> throwProtoError $ OneOfNotSet "ty_ref"
       Just k' -> case k' of
         P.Kind'KindRef r -> KindRef <$> fromProto r
         P.Kind'KindArrow' arr -> KindArrow <$> fromProto (arr ^. P.left) <*> fromProto (arr ^. P.right)
-    pure $ Kind kt si
+    pure $ Kind kt
 
-  toProto (Kind (KindArrow l r) si) = do
+  toProto (Kind (KindArrow l r)) = do
     defMessage
       & P.kindArrow . P.left .~ toProto l
       & P.kindArrow . P.right .~ toProto r
-      & P.sourceInfo .~ toProto si
-  toProto (Kind (KindRef r) si) = do
+  toProto (Kind (KindRef r)) = do
     defMessage
       & P.kindRef .~ toProto r
-      & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyArg TyArg where
   fromProto ta = do
@@ -529,12 +527,16 @@ instance IsMessage P.CompilerOutput CompilerOutput where
   fromProto co = CompilerOutput . M.fromList <$> traverse fromProto (co ^. P.typeDefs)
   toProto (CompilerOutput tds) = defMessage & P.typeDefs .~ (toProto <$> M.toList tds)
 
-instance IsMessage P.TypeDefinition (TyDef, Kind) where
-  fromProto td = (,) <$> fromProto (td ^. P.typeDef) <*> fromProto (td ^. P.kind)
+instance IsMessage P.TypeDefinition (Var, Kind) where
+  fromProto td = (,) <$> fromProto (td ^. P.nsName) <*> fromProto (td ^. P.kind)
   toProto (td, k) =
     defMessage
-      & P.typeDef .~ toProto td
+      & P.nsName .~ toProto td
       & P.kind .~ toProto k
+
+instance IsMessage P.NSTypeName Var where
+  fromProto nst = fromProto (nst ^. P.namespacedName)
+  toProto var = defMessage & P.namespacedName .~ var
 
 instance IsMessage P.KindCheckErr KindCheckErr where
   fromProto kce = do
@@ -566,3 +568,10 @@ instance IsMessage P.InferenceErr InferenceErr where
     ImpossibleErr e -> defMessage & P.impossibleE . P.msg .~ toProto e
     UnificationErr e -> defMessage & P.unificationE . P.msg .~ toProto e
     RecursiveSubstitutionErr e -> defMessage & P.recursiveSubsE . P.msg .~ toProto e
+
+-- | Convert from internal Kind to Proto Kind.
+kindConvert :: K.Kind -> Kind
+kindConvert = \case
+  k1 K.:->: k2 -> Kind $ KindArrow (kindConvert k1) (kindConvert k2)
+  K.Type -> Kind . KindRef $ KType
+  K.KVar _ -> Kind . KindRef $ KUnspecified -- this shouldn't happen.

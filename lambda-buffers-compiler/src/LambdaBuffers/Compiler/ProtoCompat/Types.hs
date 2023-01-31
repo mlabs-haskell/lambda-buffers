@@ -40,6 +40,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyRef (..),
   TyVar (..),
   VarName (..),
+  module VARS,
 ) where
 
 import Control.Exception (Exception)
@@ -47,6 +48,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Map qualified as M
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var)
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -79,7 +81,7 @@ data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data Kind = Kind {kind :: KindType, sourceInfo :: SourceInfo}
+newtype Kind = Kind {kind :: KindType}
   deriving stock (Show, Eq, Ord, Generic)
 
 data KindType
@@ -238,7 +240,7 @@ newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving newtype (Monoid, Semigroup)
 
 newtype CompilerOutput = CompilerOutput
-  { typeDefs :: M.Map TyDef Kind
+  { typeDefs :: M.Map Var Kind
   }
   deriving stock (Show, Eq, Ord, Generic)
 
