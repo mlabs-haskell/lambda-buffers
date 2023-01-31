@@ -1,10 +1,7 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedLabels #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Test.KindCheck (test) where
 
-import Control.Lens ((%~), (&), (.~))
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
@@ -13,6 +10,7 @@ import LambdaBuffers.Compiler.KindCheck (
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import Test.Samples (ci1, ci2)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
@@ -36,133 +34,6 @@ kcTestFailing =
   testCase "This should fail." $
     assertBool "Test should have failed." $
       check_ ci2 /= Right ()
-
-esi = P.SourceInfo "Empty Info" (P.SourcePosition 0 0) (P.SourcePosition 0 1)
-
-modMaybe =
-  P.Module
-    { P.moduleName =
-        P.ModuleName
-          { P.parts = [P.ModuleNamePart "Module" esi]
-          , P.sourceInfo = esi
-          }
-    , P.typeDefs =
-        [ P.TyDef
-            { P.tyName = P.TyName "Maybe" esi
-            , P.tyAbs =
-                P.TyAbs
-                  { P.tyArgs =
-                      [ P.TyArg
-                          { P.argName = P.VarName "a" esi
-                          , P.argKind =
-                              P.Kind
-                                { P.kind = P.KindRef P.KType
-                                -- , P.sourceInfo = esi
-                                }
-                          , P.sourceInfo = esi
-                          }
-                      ]
-                  , P.tyBody =
-                      P.SumI $
-                        P.Sum
-                          { constructors =
-                              P.Constructor
-                                { P.constrName = P.ConstrName {P.name = "Nothing", P.sourceInfo = esi}
-                                , P.product = P.TupleI $ P.Tuple {P.fields = [], P.sourceInfo = esi}
-                                }
-                                :| [ P.Constructor
-                                      { P.constrName = P.ConstrName {P.name = "Just", P.sourceInfo = esi}
-                                      , P.product =
-                                          P.TupleI $
-                                            P.Tuple
-                                              { P.fields =
-                                                  [ P.TyVarI
-                                                      ( P.TyVar
-                                                          { P.varName =
-                                                              P.VarName
-                                                                { P.name = "a"
-                                                                , P.sourceInfo = esi
-                                                                }
-                                                          , P.sourceInfo = esi
-                                                          }
-                                                      )
-                                                  ]
-                                              , P.sourceInfo = esi
-                                              }
-                                      }
-                                   ]
-                          , sourceInfo = esi
-                          }
-                  , P.sourceInfo = esi
-                  }
-            , P.sourceInfo = esi
-            }
-        ]
-    , P.classDefs = mempty
-    , P.instances = mempty
-    , P.sourceInfo = esi
-    }
-
-ci1 :: P.CompilerInput
-ci1 = P.CompilerInput {P.modules = [modMaybe]}
-
-{- | Maybe = ...
-   B a = B Maybe
-
- Should fail as B a defaults to B :: Type -> Type and Maybe is inferred as
- Type -> Type. This is an inconsistency failure.
--}
-ci2 = ci1 & #modules .~ [addMod]
-  where
-    addMod =
-      modMaybe
-        & #typeDefs
-          %~ ( <>
-                [ -- B a = B Maybe
-                  P.TyDef
-                    { P.tyName = P.TyName "B" esi
-                    , P.tyAbs =
-                        P.TyAbs
-                          { P.tyArgs =
-                              [ P.TyArg
-                                  { P.argName = P.VarName "a" esi
-                                  , P.argKind =
-                                      P.Kind
-                                        { P.kind = P.KindRef P.KType
-                                        -- , P.sourceInfo = esi
-                                        }
-                                  , P.sourceInfo = esi
-                                  }
-                              ]
-                          , P.tyBody =
-                              P.SumI $
-                                P.Sum
-                                  { constructors =
-                                      P.Constructor
-                                        { P.constrName = P.ConstrName {P.name = "B", P.sourceInfo = esi}
-                                        , P.product =
-                                            P.TupleI $
-                                              P.Tuple
-                                                { P.fields =
-                                                    [ P.TyRefI $
-                                                        P.LocalI $
-                                                          P.LocalRef
-                                                            { P.tyName = P.TyName {P.name = "Maybe", P.sourceInfo = esi}
-                                                            , P.sourceInfo = esi
-                                                            }
-                                                    ]
-                                                , P.sourceInfo = esi
-                                                }
-                                        }
-                                        :| []
-                                  , sourceInfo = esi
-                                  }
-                          , P.sourceInfo = esi
-                          }
-                    , P.sourceInfo = esi
-                    }
-                ]
-             )
 
 --------------------------------------------------------------------------------
 -- Fold tests

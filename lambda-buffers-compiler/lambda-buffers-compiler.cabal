@@ -38,6 +38,7 @@ common common-language
     DeriveTraversable
     DerivingStrategies
     DoAndIfThenElse
+    DuplicateRecordFields
     EmptyCase
     EmptyDataDecls
     EmptyDataDeriving
@@ -59,6 +60,7 @@ common common-language
     NamedFieldPuns
     NamedWildCards
     NumericUnderscores
+    OverloadedLabels
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
@@ -148,4 +150,8 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
+    Test.Samples
+    Test.Samples.Proto.CompilerInput
+    Test.Samples.Proto.Module
+    Test.Samples.Proto.SourceInfo
     Test.TypeClassCheck
