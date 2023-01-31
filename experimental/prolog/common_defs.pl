@@ -8,10 +8,7 @@ ty_def(either,
                          ty_app(
                              opaque(
                                  kind(arr(*, arr(*,*))),
-                                 cardinality(
-                                     ty_card(ty_var(a)) +
-                                     ty_card(ty_var(b))
-                                 )
+                                 cardinality(ty_var(a) + ty_var(b))
                              ),
                              ty_var(a)
                          ),
@@ -28,10 +25,7 @@ ty_def(prod,
                          ty_app(
                              opaque(
                                  kind(arr(*, arr(*,*))),
-                                 cardinality(
-                                     ty_card(ty_var(a)) *
-                                     ty_card(ty_var(b))
-                                 )
+                                 cardinality(ty_var(a) * ty_var(b))
                              ),
                              ty_var(a)
                          ),
@@ -119,8 +113,5 @@ ty_def(recbar, ty_app(
                )
       ).
 
-first(X, [H|_]) :-
-    X = H.
 first(X, [H|Xs]) :-
-    X \= H,
-    first(X, Xs).
+    X = H -> true; first(X, Xs).

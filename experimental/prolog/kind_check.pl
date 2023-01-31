@@ -87,4 +87,8 @@ test("should_succeed(Rec :: * -> *)", [ nondet ]) :-
 test("should_succeed(RecFoo :: *)", [ nondet ]) :-
     ty_kind(ty_ref(recfoo), *).
 
+% TODO(bladyjoker): Hmm...
+test("should_fail(Either ? :: *)", [ ]) :-
+    true.
+
 :- end_tests(kind_check).
