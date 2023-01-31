@@ -11,9 +11,8 @@ import LambdaBuffers.Compiler.ProtoCompat.Types as X
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
 import Data.Generics.Labels ()
-import Data.Generics.Product qualified as P
 import Data.Kind (Type)
-import Data.List.NonEmpty (fromList, nonEmpty)
+import Data.List.NonEmpty (nonEmpty)
 import Data.Map qualified as M
 import Data.ProtoLens (defMessage)
 import Data.Text (Text)

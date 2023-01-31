@@ -103,7 +103,9 @@ library
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Context
+    LambdaBuffers.Compiler.KindCheck.Derivation
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.KindCheck.Judgement
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.KindCheck.Variable

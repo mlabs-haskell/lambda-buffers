@@ -7,7 +7,7 @@ module Test.KindCheck (test) where
 import Control.Lens ((%~), (&), (.~))
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
 import LambdaBuffers.Compiler.KindCheck (
-  check,
+  check_,
   foldWithProduct,
   foldWithSum,
  )
@@ -26,16 +26,16 @@ testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFai
 
 trivialKCTest =
   testCase "Empty CompInput should check." $
-    check (P.CompilerInput []) @?= Right ()
+    check_ (P.CompilerInput []) @?= Right ()
 
 kcTestMaybe =
   testCase "Maybe should pass." $
-    check ci1 @?= Right ()
+    check_ ci1 @?= Right ()
 
 kcTestFailing =
   testCase "This should fail." $
     assertBool "Test should have failed." $
-      check ci2 /= Right ()
+      check_ ci2 /= Right ()
 
 esi = P.SourceInfo "Empty Info" (P.SourcePosition 0 0) (P.SourcePosition 0 1)
 

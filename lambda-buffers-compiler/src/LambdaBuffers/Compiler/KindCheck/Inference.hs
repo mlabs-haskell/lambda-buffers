@@ -9,7 +9,6 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
   DeriveM,
   DeriveEff,
-  InferErr (..),
   context,
   addContext,
 ) where
@@ -17,6 +16,8 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 import Data.Bifunctor (Bifunctor (second))
 
 import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
+import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom))
+import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var))
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
@@ -34,45 +35,15 @@ import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Map qualified as M
 
 import Prettyprinter (
-  Doc,
   Pretty (pretty),
-  encloseSep,
-  hang,
-  lbracket,
-  line,
-  rbracket,
-  space,
   (<+>),
  )
 
-newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
-  deriving stock (Show, Eq)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
+  InferenceErr (..),
+ )
 
-instance Pretty Judgement where
-  pretty (Judgement (c, t, k)) = pretty c <> " ⊢ " <> pretty t <+> ":" <+> pretty k
-
-data Derivation
-  = Axiom Judgement
-  | Abstraction Judgement Derivation
-  | Application Judgement Derivation Derivation
-  deriving stock (Show, Eq)
-
-instance Pretty Derivation where
-  pretty x = case x of
-    Axiom j -> hang 2 $ pretty j
-    Abstraction j d -> dNest j [d]
-    Application j d1 d2 -> dNest j [d1, d2]
-    where
-      dNest :: forall a b c. (Pretty a, Pretty b) => a -> [b] -> Doc c
-      dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> "∧" <> space) (pretty <$> ds))
-
-data InferErr
-  = Misc T.Text
-  | ImpossibleErr T.Text
-  | UnboundTermErr T.Text
-  | ImpossibleUnificationErr T.Text
-  | RecursiveSubstitutionErr T.Text
-  deriving stock (Show, Eq)
+type InferErr = P.InferenceErr
 
 newtype Constraint = Constraint (Kind, Kind)
   deriving stock (Show, Eq)
@@ -161,7 +132,7 @@ derive x = do
       (DC vs) <- get
       case vs of
         a : as -> put (DC as) >> pure a
-        [] -> throwError $ ImpossibleErr "End of infinite stream"
+        [] -> throwError $ P.ImpossibleErr "End of infinite stream"
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
@@ -171,7 +142,7 @@ getBinding t = do
   ctx <- asks getAllContext
   case ctx M.!? t of
     Just x -> pure x
-    Nothing -> throwError $ UnboundTermErr $ (T.pack . show . pretty) t
+    Nothing -> throwError $ P.UnboundTermErr $ (T.pack . show . pretty) t
 
 -- | Gets kind from a derivation.
 topKind :: Getter Derivation Kind
@@ -227,12 +198,12 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
     _ -> unify $ Constraint (r, l) : xs
   where
     nope :: forall eff b a. (Member (Error InferErr) eff, Pretty b) => b -> Eff eff a
-    nope c = throwError . ImpossibleUnificationErr . T.unlines $ ["Cannot unify: " <> (T.pack . show . pretty) c]
+    nope c = throwError . P.UnificationErr . T.unlines $ ["Cannot unify: " <> (T.pack . show . pretty) c]
 
     appearsErr :: forall eff a. Member (Error InferErr) eff => T.Text -> Kind -> Eff eff a
     appearsErr var ty =
       throwError $
-        RecursiveSubstitutionErr $
+        P.RecursiveSubstitutionErr $
           mconcat
             [ "Cannot unify: "
             , T.pack . show . pretty $ var

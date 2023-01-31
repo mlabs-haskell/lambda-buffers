@@ -42,6 +42,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   VarName (..),
 ) where
 
+import Control.Exception (Exception)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map qualified as M
 import Data.Text (Text)
@@ -223,10 +224,14 @@ data InferenceErr
   | RecursiveSubstitutionErr Text
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Exception InferenceErr
+
 data KindCheckErr
   = InconsistentTypeErr TyDef
   | InferenceFailure TyDef InferenceErr
   deriving stock (Show, Eq, Ord, Generic)
+
+instance Exception KindCheckErr
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)

@@ -4,8 +4,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaBuffers.Compiler.KindCheck (
-  KindCheckFailure (..),
   check,
+  check_,
   foldWithSum,
 
   -- * Testing Utils
@@ -15,7 +15,6 @@ module LambdaBuffers.Compiler.KindCheck (
   foldWithProduct,
 ) where
 
-import Control.Exception (Exception)
 import Control.Lens (view, (&), (.~), (^.))
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Members, reinterpret, run)
@@ -25,7 +24,6 @@ import Control.Monad.Freer.TH (makeEffect)
 import Data.Text (Text, intercalate)
 import LambdaBuffers.Compiler.KindCheck.Context (Context, getAllContext)
 import LambdaBuffers.Compiler.KindCheck.Inference (
-  InferErr,
   Kind (Type, (:->:)),
   Type (Abs, Var),
   context,
@@ -46,13 +44,7 @@ import Data.Map qualified as M
 -- - double declaration of a type
 
 -- | Kind Check failure types.
-data KindCheckFailure
-  = InvalidType InferErr
-  | InferenceFailed P.TyDef InferErr
-  | InconsistentType P.TyDef
-  deriving stock (Show, Eq)
-
-instance Exception KindCheckFailure
+type KindCheckFailure = P.KindCheckErr
 
 type Err = Error KindCheckFailure
 
@@ -81,7 +73,7 @@ makeEffect ''ModuleCheck
 
 data KindCheck a where
   KindFromTyDef :: ModName -> P.TyDef -> KindCheck Type
-  InferTypeKind :: Context -> Type -> KindCheck Kind
+  InferTypeKind :: ModName -> P.TyDef -> Context -> Type -> KindCheck Kind
   CheckKindConsistency :: ModName -> P.TyDef -> Context -> Kind -> KindCheck Kind
 makeEffect ''KindCheck
 
@@ -90,8 +82,13 @@ makeEffect ''KindCheck
 runCheck :: Eff (Check ': '[]) a -> Either KindCheckFailure a
 runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
+-- | Run the check - return the validated context or the failure.
 check :: P.CompilerInput -> Either KindCheckFailure Context
 check = runCheck . kCheck
+
+-- | Run the check - drop the result if it succeeds.
+check_ :: P.CompilerInput -> Either KindCheckFailure ()
+check_ = void . check
 
 --------------------------------------------------------------------------------
 
@@ -116,14 +113,14 @@ moduleStrategy = reinterpret $ \case
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
   KCTypeDefinition mname ctx tydef -> do
-    kindFromTyDef mname tydef >>= inferTypeKind ctx >>= checkKindConsistency mname tydef ctx
+    kindFromTyDef mname tydef >>= inferTypeKind mname tydef ctx >>= checkKindConsistency mname tydef ctx
   KCClassInstance _ctx _instClause -> pure () -- "FIXME(cstml)"
   KCClass _ctx _classDef -> pure () --  "FIXME(cstml)"
 
 runKindCheck :: Eff '[KindCheck] a -> Eff '[Err] a
 runKindCheck = reinterpret $ \case
   KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
-  InferTypeKind ctx ty -> either (throwError . InvalidType) pure $ infer ctx ty
+  InferTypeKind _modName tyDef ctx ty -> either (throwError . P.InferenceFailure tyDef) pure $ infer ctx ty
   CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
 
 -- Resolvers
@@ -142,7 +139,7 @@ resolveKindConsistency tydef ctx inferredKind = do
   guard $ getAllContext ctx M.!? n == Just inferredKind
   pure inferredKind
   where
-    guard b = if b then pure () else throwError $ InconsistentType tydef
+    guard b = if b then pure () else throwError $ P.InconsistentTypeErr tydef
 
 resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
 resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
