@@ -6,6 +6,7 @@
 :- use_module(kind_check).
 
 %% Apply and argument to a type abstraction - assumes Kind validity
+%% TODO(bladyjoker): Just use the Lambda representation of types, it's easier.
 apply(ty_ref(RefName), A, Res) :-
     ty_def(RefName, Ty),
     apply(Ty, A, Res).
@@ -35,7 +36,7 @@ subst(Ctx, ty_app(TyAbs, TyArg), ty_app(AbsRes, ArgRes)) :-
     subst(Ctx, TyAbs, AbsRes),
     subst(Ctx, TyArg, ArgRes).
 
-% apply(ty_abs(a-(*), ty_app(ty_abs(a-(*), ty_var(a)), ty_var(a))), ty_ref(int8), Res).
+% Haskell: Functor Deriving https://mail.haskell.org/pipermail/haskell-prime/2007-March/002137.html
 
 %% Structural Template
 struct_rule(class(ClassName, class_arg(_, Kind), _),
@@ -50,7 +51,7 @@ struct_rule(class(ClassName, class_arg(_, kind(*)), _),
             rule(ClassName, ty_ref(void)) :- true
            ).
 
-struct_rule(class(ClassName, class_arg(_, _), _),
+struct_rule(class(ClassName, class_arg(_, kind(*)), _),
              rule(ClassName, ty_app(ty_app(ty_ref(prod), A), B)) :-
                  (
                      rule(ClassName, A),
@@ -59,7 +60,7 @@ struct_rule(class(ClassName, class_arg(_, _), _),
                  )
             ).
 
-struct_rule(class(ClassName, class_arg(_, _), _),
+struct_rule(class(ClassName, class_arg(_, kind(*)), _),
              rule(ClassName, ty_app(ty_app(ty_ref(either), A), B)) :-
                  (
                      rule(ClassName, A),
@@ -68,10 +69,19 @@ struct_rule(class(ClassName, class_arg(_, _), _),
                  )
             ).
 
+struct_rule(class(ClassName, class_arg(_, kind(arr(KL, KR))), _),
+            rule(ClassName, ty_app(TL, TR)) :-
+                (
+                    rule(ClassName, TL),
+                    kind(ty_app(TL, TR), kind(arr(KL, KR)))
+                )
+           ).
+
 struct_rule(class(ClassName, class_arg(_, Kind), _),
           (rule(ClassName, ty_abs(A, B)) :-
                (
-                   kind(ty_abs(A, B), Kind)
+                   kind(ty_abs(A, B), Kind),
+                   rule(ClassName, B)
                )
           )
          ).
@@ -88,16 +98,12 @@ user_rule(class(ClassName, class_arg(_, Kind), _),
            (rule(ClassName, ty_app(F, A)) :-
                 (
                     kind(ty_app(F, A), Kind),
+                    %% TODO(bladyjoker): Ask gnumonik@ if normalizing a Ty is what's really needed here. Imo, it is. Perhaps apply the rules on already normalized expressions?
                     apply(F, A, Res),
                     rule(ClassName, Res)
                 )
            )
           ).
-
-%% functor(ty_app(ty_ref(either), A)) :-
-%%     apply(ty_ref(either), A, Res),
-%%     functor(Res),
-%%     kind(ty_app(ty_ref(either), A), kind(arr(*,*))).
 
 class_def(eq, class_arg(a, kind(*)), []).
 class_def(ord, class_arg(a, kind(*)), [eq(a)]).
@@ -154,10 +160,13 @@ eval_rule(Rules, Trace, (RL,RR)) :-
     print_message(informational, rule_ok(RR)).
 
 eval_rule(Rules, Trace, rule(CName, Ty)) :-
-    first((rule(CName, Ty) :- RuleBody), Rules) -> eval_rule(Rules, [rule(CName, Ty)], RuleBody);
+    first(rule(CName, Ty), Trace) -> true;
     (
-        print_message(error, missing_rule(rule(CName, Ty), Trace)),
-        fail
+        first((rule(CName, Ty) :- RuleBody), Rules) -> eval_rule(Rules, [rule(CName, Ty)|Trace], RuleBody);
+        (
+            print_message(error, missing_rule(rule(CName, Ty), Trace)),
+            fail
+        )
     ).
 
 eval_rule(_, Trace, apply(F, A, Res)) :-
@@ -168,19 +177,16 @@ eval_rule(_, Trace, apply(F, A, Res)) :-
     ).
 
 eval_rule(_, _, kind(Ty, kind(Kind))) :-
-    print_message(info, kind(Ty, Kind)),
+    ty_kind(Ty, Kind) -> true;
     (
-        ty_kind(Ty, Kind) -> true;
         (
-            (
-                ty_kind(Ty, Kind_) -> print_message(error, wrong_kind(Ty, got(Kind_), wanted(Kind)));
-                print_message(error, invalid_kind(Ty))
-            ),
-            fail
-        )
+            ty_kind(Ty, Kind_) -> print_message(error, wrong_kind(Ty, got(Kind_), wanted(Kind)));
+            print_message(error, invalid_kind(Ty))
+        ),
+        fail
     ).
 
-eval_rule(_, _, ty_def(RefName, Ty)) :-
+eval_rule(_, Trace, ty_def(RefName, Ty)) :-
     ty_def(RefName, Ty).
 
 :- multifile prolog:message//1.
@@ -237,13 +243,7 @@ test("should_succeed(derive_eq_of_maybe_a)", []) :-
     derive([ty_app(ty_ref(maybe), _A)], eq, S, U), eval_rules(S, U).
 
 test("should_succeed(derive_functor_of_maybe)", []) :-
-    derive(
-        [
-            ty_ref(maybe)
-        ],
-        functor,
-        S,
-        U),
+    derive([ty_ref(maybe)], functor,S,U),
     eval_rules(S, U).
 
 test("should_succeed(derive_functor_of_either_int)", []) :-
