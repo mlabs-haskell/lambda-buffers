@@ -1,57 +1,56 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
-  SourceInfo (..),
-  SourcePosition (..),
-  LBName (..),
-  TyName (..),
+  ClassDef (..),
+  ClassName (..),
+  CompilerFailure (..),
+  CompilerInput (..),
+  CompilerOutput (..),
+  CompilerResult (..),
   ConstrName (..),
+  Constraint (..),
+  Constructor (..),
+  Field (..),
+  FieldName (..),
+  ForeignRef (..),
+  InferenceErr (..),
+  InstanceClause (..),
+  Kind (..),
+  KindRefType (..),
+  KindCheckErr (..),
+  KindType (..),
+  LBName (..),
+  LocalRef (..),
+  Module (..),
   ModuleName (..),
   ModuleNamePart (..),
-  VarName (..),
-  FieldName (..),
-  ClassName (..),
-  Kind (..),
-  KindType (..),
-  KindRefType (..),
-  TyVar (..),
+  Product (..),
+  Record (..),
+  SourceInfo (..),
+  SourcePosition (..),
+  Sum (..),
+  Tuple (..),
   Ty (..),
-  TyApp (..),
-  ForeignRef (..),
-  LocalRef (..),
-  TyRef (..),
-  TyDef (..),
   TyAbs (..),
+  TyApp (..),
   TyArg (..),
   TyBody (..),
-  Constructor (..),
-  Sum (..),
-  Field (..),
-  Record (..),
-  Tuple (..),
-  Product (..),
-  ClassDef (..),
-  InstanceClause (..),
-  Constraint (..),
-  Module (..),
-  CompilerInput (..),
+  TyDef (..),
+  TyName (..),
+  TyRef (..),
+  TyVar (..),
+  VarName (..),
 ) where
 
 import Data.List.NonEmpty (NonEmpty)
+import Data.Map qualified as M
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-data SourceInfo = SourceInfo
-  { file :: Text
-  , posFrom :: SourcePosition
-  , posTo :: SourcePosition
-  }
+data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
 
-data SourcePosition = SourcePosition
-  { column :: Int
-  , row :: Int
-  }
+data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
 
 -- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
@@ -217,6 +216,31 @@ data Module = Module
   }
   deriving stock (Show, Eq, Ord, Generic)
 
+data InferenceErr
+  = UnboundTermErr Text
+  | ImpossibleErr Text
+  | UnificationErr Text
+  | RecursiveSubstitutionErr Text
+  deriving stock (Show, Eq, Ord, Generic)
+
+data KindCheckErr
+  = InconsistentTypeErr TyDef
+  | InferenceFailure TyDef InferenceErr
+  deriving stock (Show, Eq, Ord, Generic)
+
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
+
+newtype CompilerOutput = CompilerOutput
+  { typeDefs :: M.Map TyDef Kind
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
+newtype CompilerFailure = KCErr KindCheckErr
+  deriving stock (Show, Eq, Ord, Generic)
+
+data CompilerResult
+  = RCompilerFailure CompilerFailure
+  | RCompilerOutput CompilerOutput
+  deriving stock (Show, Eq, Ord, Generic)

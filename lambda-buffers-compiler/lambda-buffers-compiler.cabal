@@ -114,6 +114,7 @@ library
 
   hs-source-dirs:  src
 
+-- note(cstml): should we name this something shorter? lb-cli?
 executable lambda-buffers-compiler-cli
   import:         common-language
   import:         common-imports

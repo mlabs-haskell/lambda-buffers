@@ -60,7 +60,7 @@ type ModName = Text
 
 -- | Main interface to the Kind Checker.
 data Check a where
-  KCheck :: P.CompilerInput -> Check ()
+  KCheck :: P.CompilerInput -> Check Context
 
 makeEffect ''Check
 
@@ -90,7 +90,7 @@ makeEffect ''KindCheck
 runCheck :: Eff (Check ': '[]) a -> Either KindCheckFailure a
 runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
-check :: P.CompilerInput -> Either KindCheckFailure ()
+check :: P.CompilerInput -> Either KindCheckFailure Context
 check = runCheck . kCheck
 
 --------------------------------------------------------------------------------
@@ -103,6 +103,7 @@ globalStrategy = reinterpret $ \case
   KCheck ci -> do
     ctx <- createContext ci
     void $ validateModule ctx `traverse` (ci ^. #modules)
+    pure ctx
 
 moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
@@ -147,7 +148,7 @@ resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
 resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
 
 module2Context :: forall effs. P.Module -> Eff effs Context
-module2Context m = mconcat <$> traverse (tyDef2Context (flattenModuleName (m ^. #moduleName))) (P.typeDefs m)
+module2Context m = mconcat <$> traverse (tyDef2Context (flattenModuleName (m ^. #moduleName))) (m ^. #typeDefs)
 
 flattenModuleName :: P.ModuleName -> Text
 flattenModuleName mName = intercalate "." $ (\p -> p ^. #name) <$> mName ^. #parts

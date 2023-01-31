@@ -23,8 +23,9 @@ import Options.Applicative (
   subparser,
  )
 
-newtype Command
-  = Compile CompileOpts
+import LambdaBuffers.Compiler.KindCheck (check)
+
+newtype Command = Compile CompileOpts
 
 inputPathP :: Parser FilePath
 inputPathP =

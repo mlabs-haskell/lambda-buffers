@@ -11,17 +11,18 @@ import LambdaBuffers.Compiler.ProtoCompat.Types as X
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
 import Data.Generics.Labels ()
+import Data.Generics.Product qualified as P
 import Data.Kind (Type)
-import Data.List.NonEmpty (nonEmpty)
+import Data.List.NonEmpty (fromList, nonEmpty)
+import Data.Map qualified as M
 import Data.ProtoLens (defMessage)
 import Data.Text (Text)
-import GHC.Generics (Generic)
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
-
 import Data.Text qualified as Text
+import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
 import Proto.Compiler (NamingError)
+import Proto.Compiler qualified as P
+import Proto.Compiler_Fields qualified as P
 
 note :: e -> Maybe a -> Either e a
 note e = \case
@@ -500,3 +501,69 @@ instance IsMessage P.ModuleName ModuleName where
     defMessage
       & P.parts .~ (toProto <$> parts)
       & P.sourceInfo .~ toProto si
+
+{-
+  Outputs
+-}
+
+instance IsMessage P.CompilerResult CompilerResult where
+  fromProto cr = do
+    si <- fromProto $ cr ^. P.sourceInfo
+    case cr ^. P.maybe'compilerResult of
+      Just (P.CompilerResult'CompilationResult r) -> RCompilerOutput <$> fromProto r
+      Just (P.CompilerResult'FailedCompilation f) -> RCompilerFailure <$> fromProto f
+      _ -> throwProtoError $ EmptySumBody si
+
+  toProto = \case
+    RCompilerFailure cf -> defMessage & P.failedCompilation .~ toProto cf
+    RCompilerOutput co -> defMessage & P.compilationResult .~ toProto co
+
+instance IsMessage P.CompilerFailure CompilerFailure where
+  fromProto cf = do
+    case cf ^. P.maybe'failure of
+      Just (P.CompilerFailure'KcErr f) -> KCErr <$> fromProto f
+      _ -> throwProtoError EmptyField
+
+  toProto (KCErr f) = defMessage & P.kcErr .~ toProto f
+
+instance IsMessage P.CompilerOutput CompilerOutput where
+  fromProto co = CompilerOutput . M.fromList <$> traverse fromProto (co ^. P.typeDefs)
+  toProto (CompilerOutput tds) = defMessage & P.typeDefs .~ (toProto <$> M.toList tds)
+
+instance IsMessage P.TypeDefinition (TyDef, Kind) where
+  fromProto td = (,) <$> fromProto (td ^. P.typeDef) <*> fromProto (td ^. P.kind)
+  toProto (td, k) =
+    defMessage
+      & P.typeDef .~ toProto td
+      & P.kind .~ toProto k
+
+instance IsMessage P.KindCheckErr KindCheckErr where
+  fromProto kce = do
+    case kce ^. P.maybe'kindCheckError of
+      Just x -> case x of
+        P.KindCheckErr'InconsistentTypeErr e -> InconsistentTypeErr <$> fromProto (e ^. P.typeDef)
+        P.KindCheckErr'InferenceFailureErr e -> InferenceFailure <$> fromProto (e ^. P.typeDef) <*> fromProto (e ^. P.inferErr)
+      Nothing -> throwProtoError EmptyField
+
+  toProto = \case
+    InconsistentTypeErr td ->
+      defMessage & P.inconsistentTypeErr . P.typeDef .~ toProto td
+    InferenceFailure td f ->
+      defMessage
+        & P.inferenceFailureErr . P.typeDef .~ toProto td
+        & P.inferenceFailureErr . P.inferErr .~ toProto f
+
+instance IsMessage P.InferenceErr InferenceErr where
+  fromProto infErr = case infErr ^. P.maybe'infErr of
+    Just x -> case x of
+      P.InferenceErr'UnboundTermE e -> UnboundTermErr <$> fromProto (e ^. P.msg)
+      P.InferenceErr'ImpossibleE e -> ImpossibleErr <$> fromProto (e ^. P.msg)
+      P.InferenceErr'RecursiveSubsE e -> RecursiveSubstitutionErr <$> fromProto (e ^. P.msg)
+      P.InferenceErr'UnificationE e -> UnificationErr <$> fromProto (e ^. P.msg)
+    Nothing -> throwProtoError EmptyField
+
+  toProto = \case
+    UnboundTermErr e -> defMessage & P.unboundTermE . P.msg .~ toProto e
+    ImpossibleErr e -> defMessage & P.impossibleE . P.msg .~ toProto e
+    UnificationErr e -> defMessage & P.unificationE . P.msg .~ toProto e
+    RecursiveSubstitutionErr e -> defMessage & P.recursiveSubsE . P.msg .~ toProto e
