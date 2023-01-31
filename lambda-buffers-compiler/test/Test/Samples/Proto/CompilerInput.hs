@@ -7,9 +7,9 @@ import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Samples.Proto.Module
 
 -- | Compiler Input containing 1 module with 1 definition - Maybe.
-ci1 :: P.CompilerInput
-ci1 = P.CompilerInput {P.modules = [modMaybe]}
+compilerInput'maybe :: P.CompilerInput
+compilerInput'maybe = P.CompilerInput {P.modules = [module'maybe]}
 
 -- | Contains 2 definitions - 1 wrong one.
-ci2 :: P.CompilerInput
-ci2 = ci1 & #modules .~ [addMod]
+compilerInput'incoherent :: P.CompilerInput
+compilerInput'incoherent = compilerInput'maybe & #modules .~ [module'incoherent]

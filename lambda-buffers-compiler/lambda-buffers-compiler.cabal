@@ -154,4 +154,5 @@ test-suite tests
     Test.Samples.Proto.CompilerInput
     Test.Samples.Proto.Module
     Test.Samples.Proto.SourceInfo
+    Test.Samples.Proto.TyDef
     Test.TypeClassCheck

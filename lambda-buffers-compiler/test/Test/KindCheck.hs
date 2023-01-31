@@ -10,7 +10,7 @@ import LambdaBuffers.Compiler.KindCheck (
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples (ci1, ci2)
+import Test.Samples (compilerInput'incoherent, compilerInput'maybe)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
@@ -28,12 +28,12 @@ trivialKCTest =
 
 kcTestMaybe =
   testCase "Maybe should pass." $
-    check_ ci1 @?= Right ()
+    check_ compilerInput'maybe @?= Right ()
 
 kcTestFailing =
   testCase "This should fail." $
     assertBool "Test should have failed." $
-      check_ ci2 /= Right ()
+      check_ compilerInput'incoherent /= Right ()
 
 --------------------------------------------------------------------------------
 -- Fold tests
