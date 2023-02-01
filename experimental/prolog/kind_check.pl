@@ -5,7 +5,7 @@
 % TODO(bladyjoker): Provide a proper out moded var_name pred
 ty_var_name(VarName) :- member(VarName, [a, b, c]).
 
-ty_kind(_, opaque(kind(K), _), K).
+ty_kind(_, opaque(_, kind(K), _), K).
 
 ty_kind(ctx(Vars,Trace), ty_ref(RefName), K) :-
     first(RefName-K, Trace) -> true;

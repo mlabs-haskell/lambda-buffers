@@ -7,6 +7,7 @@ ty_def(either,
                      ty_app(
                          ty_app(
                              opaque(
+                                 either,
                                  kind(arr(*, arr(*,*))),
                                  cardinality(ty_var(a) + ty_var(b))
                              ),
@@ -24,6 +25,7 @@ ty_def(prod,
                      ty_app(
                          ty_app(
                              opaque(
+                                 prod,
                                  kind(arr(*, arr(*,*))),
                                  cardinality(ty_var(a) * ty_var(b))
                              ),
@@ -34,14 +36,14 @@ ty_def(prod,
                     )
              )
       ).
-ty_def(void, opaque(kind(*), cardinality(k(0)))).
-ty_def(unit, opaque(kind(*), cardinality(k(1)))).
+ty_def(void, opaque(void, kind(*), cardinality(k(0)))).
+ty_def(unit, opaque(unit, kind(*), cardinality(k(1)))).
 
 %% user opaques
-ty_def(bool, opaque(kind(*), cardinality(k(2)))).
-ty_def(int8, opaque(kind(*), cardinality(k(256)))).
-ty_def(string, opaque(kind(*), cardinality(k(sup)))).
-ty_def(bytes, opaque(kind(*), cardinality(k(sup)))).
+ty_def(bool, opaque(bool, kind(*), cardinality(k(2)))).
+ty_def(int8, opaque(int8, kind(*), cardinality(k(256)))).
+ty_def(string, opaque(string, kind(*), cardinality(k(sup)))).
+ty_def(bytes, opaque(bytes, kind(*), cardinality(k(sup)))).
 
 %% user defined
 ty_def(maybe, ty_abs(a-(*),
