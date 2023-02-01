@@ -7,6 +7,7 @@ module LambdaBuffers.Compiler.TypeClass.Pat where
 import Data.Bifunctor
 import Data.List.NonEmpty qualified as NE
 import Data.Text (Text)
+import LambdaBuffers.Compiler.ProtoCompat qualified as P
 
 {- A simple ADT to represent patterns
 
@@ -19,6 +20,7 @@ do something without using a billion language extensions, and some nonsense is t
 data Pat
   = {- extremely stupid, unfortunately necessary -}
     Name Text
+  | ModuleName [Text] -- also stupid, also necessary -_-
   | Opaque
   | {- Lists (constructed from Nil and :*) with bare types are used to
        encode products (where a list of length n encodes an n-tuple)
@@ -49,7 +51,7 @@ data Pat
                  it is also used more generally to refer to any "hole" in a pattern to which another pattern
                  may be substituted. We could have separate constr for type variables but it doesn't appear to be
                  necessary at this time. -}
-  | RefP Pat {- still unclear on how to handle these here -}
+  | RefP Pat Pat {- 1st arg should be a ModuleName  -}
   | AppP Pat Pat {- Pattern for Type applications -}
   | {- This last one is a bit special. This represents a complete type declaration.
 
@@ -67,26 +69,29 @@ data Pat
 infixr 5 :*
 
 -- Pattern synonyms. These VASTLY improve readability
+pattern Prim :: Pat -> Pat
+pattern Prim p = RefP (ModuleName ["Prelude"]) p
+
 pattern Int :: Pat
-pattern Int = RefP (Name "Int")
+pattern Int = Prim (Name "Int")
 
 pattern String :: Pat
-pattern String = RefP (Name "String")
+pattern String = Prim (Name "String")
 
 pattern Bool :: Pat
-pattern Bool = RefP (Name "Bool")
+pattern Bool = Prim (Name "Bool")
 
 pattern List :: Pat -> Pat
-pattern List t = AppP (RefP (Name "List")) t
+pattern List t = AppP (Prim (Name "List")) t
 
 pattern Maybe :: Pat -> Pat
-pattern Maybe t = AppP (RefP (Name "Maybe")) t
+pattern Maybe t = AppP (Prim (Name "Maybe")) t
 
 pattern Map :: Pat -> Pat -> Pat
-pattern Map k v = AppP (AppP (RefP (Name "Map")) k) v
+pattern Map k v = AppP (AppP (Prim (Name "Map")) k) v
 
 pattern Either :: Pat -> Pat -> Pat
-pattern Either l r = AppP (AppP (RefP (Name "Either")) l) r
+pattern Either l r = AppP (AppP (Prim (Name "Either")) l) r
 
 pattern RecFields :: Pat -> Pat -> Pat -> Pat
 pattern RecFields l x xs = RecP ((l := x) :* xs)
@@ -120,16 +125,16 @@ pattern Void = SumP Nil
 
 -- we probably don't need these _ functions
 _list :: Pat
-_list = RefP (Name "List")
+_list = Prim (Name "List")
 
 _maybe :: Pat
-_maybe = RefP (Name "Maybe")
+_maybe = Prim (Name "Maybe")
 
 _map :: Pat
-_map = RefP (Name "Map")
+_map = Prim (Name "Map")
 
 _either :: Pat
-_either = RefP (Name "Either")
+_either = Prim (Name "Either")
 
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}

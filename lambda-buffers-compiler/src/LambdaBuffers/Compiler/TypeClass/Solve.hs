@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -9,21 +8,12 @@
 
 module LambdaBuffers.Compiler.TypeClass.Solve where
 
-import Control.Lens.Operators ((^.))
-import Data.Generics.Labels ()
 import Data.List (foldl', sortBy)
 import Data.Text (Text)
-import Prettyprinter
 
-import LambdaBuffers.Compiler.TH (mkLBTypes)
-import LambdaBuffers.Compiler.TypeClass.Compat (defToPat')
 import LambdaBuffers.Compiler.TypeClass.Match
 import LambdaBuffers.Compiler.TypeClass.Pat
 import LambdaBuffers.Compiler.TypeClass.Rules
-
-import Data.Map qualified as M
-import Data.Set qualified as S
-import Data.Text qualified as T
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 
@@ -44,7 +34,7 @@ subV varNm t = \case
   RecP xs -> RecP (subV varNm t xs)
   SumP xs -> SumP (subV varNm t xs)
   AppP t1 t2 -> AppP (subV varNm t t1) (subV varNm t t2)
-  RefP x -> RefP (subV varNm t x)
+  RefP n x -> RefP (subV varNm t n) (subV varNm t x)
   DecP a b c -> DecP (subV varNm t a) (subV varNm t b) (subV varNm t c)
   other -> other
 
@@ -75,7 +65,7 @@ getSubs (ProdP xs) (ProdP xs') = getSubs xs xs'
 getSubs (RecP xs) (RecP xs') = getSubs xs xs'
 getSubs (SumP xs) (SumP xs') = getSubs xs xs'
 getSubs (AppP t1 t2) (AppP t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
-getSubs (RefP t) (RefP t') = getSubs t t'
+getSubs (RefP n t) (RefP n' t') = getSubs n n' <> getSubs t t'
 getSubs (DecP a b c) (DecP a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
 getSubs _ _ = []
 
@@ -156,32 +146,7 @@ classA = Class (CRef (P.ClassName "A" si) (P.ModuleName [] si)) []
 classB = Class (CRef (P.ClassName "B" si) (P.ModuleName [] si)) [classA]
 classC = Class (CRef (P.ClassName "C" si) (P.ModuleName [] si)) [classB]
 
-mkManyStructuralRules :: [Class] -> [Instance]
-mkManyStructuralRules = concatMap mkStructuralRules
-
-mkStructuralRules :: Class -> [Instance]
-mkStructuralRules c =
-  [ C c Nil :<= [] -- I'm not sure whether this really has any meaning
-  , C c (_x :* _xs) :<= [C c _x, C c _xs]
-  , C c (_l := _x) :<= [C c _x]
-  , C c (RecP _xs) :<= [C c _xs]
-  , C c (ProdP _xs) :<= [C c _xs]
-  , C c (SumP _xs) :<= [C c _xs]
-  , C c (DecP _name _vars _body) :<= [C c _body]
-  ]
-
-data Bop = Bop
-
-data Baz = Baz {bazInt :: Int, bazString :: String}
-
-data Bar = Bar {barBaz :: Baz, barMString :: Maybe String, barBop :: Bop}
-
-mkTyScope :: [P.TyDef] -> M.Map Text Pat
-mkTyScope = flip foldl' M.empty $ \acc x ->
-  M.insert (x ^. #tyName . #name) (defToPat' x) acc
-
-testClsScope = mkManyStructuralRules [classA, classB, classC]
-
+{-
 expandInstances ::
   M.Map Text Pat ->
   [Class] ->
@@ -199,3 +164,4 @@ expandInstances tyScope clsScope targ =
     go other = case filter (/= other) $ solve structRules other of
       [] -> [other :<= []]
       more -> (other :<= []) : concatMap (expandInstances tyScope clsScope) more
+-}

@@ -25,7 +25,7 @@ matches (ProdP xs) (ProdP xs') = matches xs xs'
 matches (RecP xs) (RecP xs') = matches xs xs'
 matches (SumP xs) (SumP xs') = matches xs xs'
 matches (AppP t1 t2) (AppP t1' t2') = matches t1 t1' && matches t2 t2'
-matches (RefP t1) (RefP t2) = matches t1 t2
+matches (RefP mn t1) (RefP mn' t2) = matches mn mn' && matches t1 t2
 matches (DecP t1 t2 t3) (DecP t1' t2' t3') =
   matches t1 t1' && matches t2 t2' && matches t3 t3'
 matches _ _ = False
