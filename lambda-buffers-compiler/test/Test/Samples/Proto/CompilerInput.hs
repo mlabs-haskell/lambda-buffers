@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -Wno-missing-import-lists #-}
-
-module Test.Samples.Proto.CompilerInput where
+module Test.Samples.Proto.CompilerInput (compilerInput'incoherent, compilerInput'maybe) where
 
 import Control.Lens ((&), (.~))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
