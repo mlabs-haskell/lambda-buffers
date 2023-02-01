@@ -56,7 +56,13 @@ kcTestFailing =
     assertBool "Test should have failed." $
       check_ compilerInput'incoherent /= Right ()
 
--- | TyDef order does not matter when kind checking
+{- | TyDef order does not matter when kind checking.
+
+ We're not interested in the failure error as there might be more than two
+ errors in a module - and it is non-determistic which one is first. But it is
+ deterministic if the property holds for the whole CompilerInput. Therefore we
+ only track if given the input - the fails or succeeds.
+-}
 kcTestOrdering :: TestTree
 kcTestOrdering =
   testProperty "Module order inside the CompilerInput does not matter to the result of the kindchecker." $
