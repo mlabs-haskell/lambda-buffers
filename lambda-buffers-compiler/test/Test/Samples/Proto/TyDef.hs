@@ -1,9 +1,8 @@
 module Test.Samples.Proto.TyDef where
 
-import Control.Lens ((%~), (&), (.~))
-import Data.List.NonEmpty (NonEmpty ((:|)), cons)
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.SourceInfo
+import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
 
 -- | Maybe tyDef.
 tyDef'maybe :: P.TyDef
@@ -71,7 +70,6 @@ tyDef'incoherent =
                   , P.argKind =
                       P.Kind
                         { P.kind = P.KindRef P.KType
-                        -- , P.sourceInfo = sourceInfo'empty
                         }
                   , P.sourceInfo = sourceInfo'empty
                   }
