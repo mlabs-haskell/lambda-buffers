@@ -1,5 +1,6 @@
 module Test.KindCheck (test) where
 
+import Data.Bifunctor (Bifunctor (bimap))
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
@@ -7,19 +8,37 @@ import LambdaBuffers.Compiler.KindCheck (
   foldWithSum,
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples (compilerInput'incoherent, compilerInput'maybe)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
+  CompilerInput (CompilerInput),
+ )
+import Test.QuickCheck (
+  Arbitrary (arbitrary, shrink),
+  Property,
+  forAll,
+  forAllShrink,
+  resize,
+  shuffle,
+  (===),
+ )
+import Test.Samples.Proto.CompilerInput (
+  compilerInput'incoherent,
+  compilerInput'maybe,
+ )
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
+import Test.Tasty.QuickCheck (testProperty)
+
+--------------------------------------------------------------------------------
+-- Top Level tests
 
 test :: TestTree
-test = testGroup "Compiler tests" [testCheck, testFolds]
+test = testGroup "Compiler tests" [testCheck, testFolds, testRefl]
 
 --------------------------------------------------------------------------------
 -- Module tests
 
 testCheck :: TestTree
-testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
+testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing, kcTestOrdering]
 
 trivialKCTest :: TestTree
 trivialKCTest =
@@ -37,6 +56,20 @@ kcTestFailing =
     assertBool "Test should have failed." $
       check_ compilerInput'incoherent /= Right ()
 
+-- | TyDef order does not matter when kind checking
+kcTestOrdering :: TestTree
+kcTestOrdering =
+  testProperty "Module order inside the CompilerInput does not matter to the result of the kindchecker." $
+    forAllShrink (resize 5 genModuleIn2Layouts) shrink $
+      \(l, r) -> eitherFailOrPass (check_ l) == eitherFailOrPass (check_ r)
+  where
+    genModuleIn2Layouts = do
+      mods <- arbitrary
+      shuffledMods <- shuffle mods
+      pure (P.CompilerInput mods, P.CompilerInput shuffledMods)
+
+    eitherFailOrPass = bimap (const ()) (const ())
+
 --------------------------------------------------------------------------------
 -- Fold tests
 
@@ -44,7 +77,7 @@ testFolds :: TestTree
 testFolds =
   testGroup
     "Test Folds"
-    [ testGroup "Test Product Folds." [testFoldProd1, testFoldProd2, testFoldProd3]
+    [ testGroup "Test Product Folds." [testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
     , testGroup "Test Sum Folds." [testSumFold1, testSumFold2, testSumFold3]
     ]
 
@@ -70,6 +103,12 @@ testFoldProd3 =
         (App (Var "Π") (Var "c"))
         (App (App (Var "Π") (Var "b")) (Var "a"))
 
+testPProdFoldTotal :: TestTree
+testPProdFoldTotal =
+  testProperty "ProductFold is total." $
+    forAll arbitrary $
+      \ts -> foldWithProduct ts === foldWithProduct ts
+
 -- | [ a ] -> a
 testSumFold1 :: TestTree
 testSumFold1 =
@@ -91,3 +130,10 @@ testSumFold3 =
       @?= App
         (App (Var "Σ") (Var "c"))
         (App (App (Var "Σ") (Var "b")) (Var "a"))
+
+-- Property Tests
+testRefl :: TestTree
+testRefl = testProperty "Refl" reflTerm
+  where
+    reflTerm :: Property
+    reflTerm = forAllShrink (arbitrary @Int) shrink (\a -> a == a)

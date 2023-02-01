@@ -37,6 +37,7 @@ common common-language
     DeriveLift
     DeriveTraversable
     DerivingStrategies
+    DerivingVia
     DoAndIfThenElse
     DuplicateRecordFields
     EmptyCase
@@ -94,6 +95,7 @@ library
   build-depends:
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
+    , generic-arbitrary
     , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
@@ -116,6 +118,7 @@ library
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
+    Orphan.Text
 
   hs-source-dirs:  src
 
@@ -145,8 +148,10 @@ test-suite tests
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , proto-lens                  >=0.7
+    , QuickCheck                  >=2.14
     , tasty                       >=1.4
     , tasty-hunit                 >=0.10
+    , tasty-quickcheck            >=0.10
     , text                        >=1.2
 
   other-modules:

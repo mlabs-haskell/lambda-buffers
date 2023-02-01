@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
@@ -47,98 +46,151 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 import Control.Exception (Exception)
 import Data.List.NonEmpty (NonEmpty ((:|)), (<|))
 import Data.Map qualified as M
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var)
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof, sized)
+import Test.QuickCheck (Arbitrary (arbitrary), Gen, NonEmptyList (getNonEmpty), oneof, resize, sized)
+import Test.QuickCheck.Arbitrary.Generic
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary SourceInfo
 
 data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary SourcePosition
 
--- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
+{- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
+ shouldn't be used anywhere outside of that
+-}
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LBName
 
 data TyName = TyName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyName
 
 data ConstrName = ConstrName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ConstrName
 
 data ModuleName = ModuleName {parts :: [ModuleNamePart], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ModuleName
 
 data ModuleNamePart = ModuleNamePart {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ModuleNamePart
 
 data VarName = VarName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary VarName
 
 data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary FieldName
 
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ClassName
 
 newtype Kind = Kind {kind :: KindType}
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary Kind where
+  arbitrary = sized fn
+    where
+      fn n = Kind <$> resize n arbitrary
+
 data KindType = KindRef KindRefType | KindArrow Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary KindType where
+  arbitrary = sized fn
+    where
+      fn n
+        | n <= 0 = KindRef <$> arbitrary
+        | otherwise = KindArrow <$> resize (n `div` 2) arbitrary <*> resize (n `div` 2) arbitrary
+
 data KindRefType = KUnspecified | KType
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindRefType
 
 data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyVar
 
 data Ty = TyVarI TyVar | TyAppI TyApp | TyRefI TyRef
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary Ty where
+  arbitrary = sized fn
+    where
+      fn n
+        | n <= 0 = TyRefI <$> arbitrary
+        | otherwise =
+            oneof
+              [ TyVarI <$> arbitrary
+              , TyAppI <$> arbitrary
+              , TyRefI <$> arbitrary
+              ]
+
 data TyApp = TyApp {tyFunc :: Ty, tyArgs :: NonEmpty Ty, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyApp
 
 data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ForeignRef
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LocalRef
 
 data TyRef = LocalI LocalRef | ForeignI ForeignRef
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyRef
 
 data TyDef = TyDef {tyName :: TyName, tyAbs :: TyAbs, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyDef
 
 data TyAbs = TyAbs {tyArgs :: [TyArg], tyBody :: TyBody, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyAbs
 
 data TyArg = TyArg {argName :: VarName, argKind :: Kind, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyArg
 
 data TyBody = OpaqueI SourceInfo | SumI Sum
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyBody
 
 data Constructor = Constructor {constrName :: ConstrName, product :: Product}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Constructor
 
 data Sum = Sum {constructors :: NonEmpty Constructor, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Sum
 
 data Field = Field {fieldName :: FieldName, fieldTy :: Ty}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Field
 
 data Record = Record {fields :: NonEmpty Field, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Record
 
 data Tuple = Tuple {fields :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Tuple
 
 data Product = RecordI Record | TupleI Tuple
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Product
 
 data ClassDef = ClassDef
   { className :: ClassName
@@ -148,6 +200,7 @@ data ClassDef = ClassDef
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ClassDef
 
 data InstanceClause = InstanceClause
   { className :: ClassName
@@ -157,12 +210,23 @@ data InstanceClause = InstanceClause
   }
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary InstanceClause where
+  arbitrary = sized fn
+    where
+      fn n =
+        InstanceClause
+          <$> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+
 data Constraint = Constraint
   { className :: ClassName
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Constraint
 
 data Module = Module
   { moduleName :: ModuleName
@@ -173,12 +237,24 @@ data Module = Module
   }
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary Module where
+  arbitrary = sized fn
+    where
+      fn n =
+        Module
+          <$> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+
 data InferenceErr
   = UnboundTermErr Text
   | ImpossibleErr Text
   | UnificationErr Text
   | RecursiveSubstitutionErr Text
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary InferenceErr
 
 instance Exception InferenceErr
 
@@ -186,150 +262,37 @@ data KindCheckErr
   = InconsistentTypeErr TyDef
   | InferenceFailure TyDef InferenceErr
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindCheckErr
 
 instance Exception KindCheckErr
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (Monoid, Semigroup, Arbitrary)
+  deriving newtype (Monoid, Semigroup)
+
+instance Arbitrary CompilerInput where
+  arbitrary = sized fn
+    where
+      fn n = CompilerInput <$> resize n arbitrary
 
 newtype CompilerOutput = CompilerOutput {typeDefs :: M.Map Var Kind}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (Arbitrary)
+  deriving (Arbitrary) via GenericArbitrary CompilerOutput
 
 newtype CompilerFailure = KCErr KindCheckErr
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (Arbitrary)
+  deriving (Arbitrary) via GenericArbitrary CompilerFailure
 
 data CompilerResult
   = RCompilerFailure CompilerFailure
   | RCompilerOutput CompilerOutput
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary CompilerResult
 
-instance Arbitrary SourceInfo where
-  arbitrary = SourceInfo <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary SourcePosition where
-  arbitrary = SourcePosition <$> arbitrary <*> arbitrary
-
-instance Arbitrary LBName where
-  arbitrary = LBName <$> arbitrary <*> arbitrary
-
-instance Arbitrary TyName where
-  arbitrary = TyName <$> arbitrary <*> arbitrary
-
-instance Arbitrary ConstrName where
-  arbitrary = ConstrName <$> arbitrary <*> arbitrary
-
-instance Arbitrary ModuleName where
-  arbitrary = ModuleName <$> arbitrary <*> arbitrary
-
-instance Arbitrary ModuleNamePart where
-  arbitrary = ModuleNamePart <$> arbitrary <*> arbitrary
-
-instance Arbitrary VarName where
-  arbitrary = VarName <$> arbitrary <*> arbitrary
-
-instance Arbitrary FieldName where
-  arbitrary = FieldName <$> arbitrary <*> arbitrary
-
-instance Arbitrary ClassName where
-  arbitrary = ClassName <$> arbitrary <*> arbitrary
-
-instance Arbitrary Kind where
-  arbitrary = Kind <$> arbitrary
-
-instance Arbitrary KindType where
-  arbitrary = oneof [KindRef <$> arbitrary, KindArrow <$> arbitrary <*> arbitrary]
-
-instance Arbitrary KindRefType where
-  arbitrary = oneof [pure KUnspecified, pure KType]
-
-instance Arbitrary TyVar where
-  arbitrary = TyVar <$> arbitrary <*> arbitrary
-
-instance Arbitrary Ty where
-  arbitrary = oneof [TyVarI <$> arbitrary, TyAppI <$> arbitrary, TyRefI <$> arbitrary]
-
-instance Arbitrary TyApp where
-  arbitrary = TyApp <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary ForeignRef where
-  arbitrary = ForeignRef <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary LocalRef where
-  arbitrary = LocalRef <$> arbitrary <*> arbitrary
-
-instance Arbitrary TyRef where
-  arbitrary = oneof [LocalI <$> arbitrary, ForeignI <$> arbitrary]
-
-instance Arbitrary TyDef where
-  arbitrary = TyDef <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary TyAbs where
-  arbitrary = TyAbs <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary TyArg where
-  arbitrary = TyArg <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary TyBody where
-  arbitrary = oneof [OpaqueI <$> arbitrary, SumI <$> arbitrary]
-
-instance Arbitrary Constructor where
-  arbitrary = Constructor <$> arbitrary <*> arbitrary
-
-instance Arbitrary Sum where
-  arbitrary = Sum <$> arbitrary <*> arbitrary
-
-instance Arbitrary Field where
-  arbitrary = Field <$> arbitrary <*> arbitrary
-
-instance Arbitrary Record where
-  arbitrary = Record <$> arbitrary <*> arbitrary
-
-instance Arbitrary Tuple where
-  arbitrary = Tuple <$> arbitrary <*> arbitrary
-
-instance Arbitrary Product where
-  arbitrary = oneof [RecordI <$> arbitrary, TupleI <$> arbitrary]
-
-instance Arbitrary ClassDef where
-  arbitrary = ClassDef <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary InstanceClause where
-  arbitrary = InstanceClause <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary Constraint where
-  arbitrary = Constraint <$> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary Module where
-  arbitrary = Module <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance Arbitrary InferenceErr where
-  arbitrary =
-    oneof
-      [ UnboundTermErr <$> arbitrary
-      , ImpossibleErr <$> arbitrary
-      , UnificationErr <$> arbitrary
-      , RecursiveSubstitutionErr <$> arbitrary
-      ]
-
-instance Arbitrary KindCheckErr where
-  arbitrary =
-    oneof
-      [ InconsistentTypeErr <$> arbitrary
-      , InferenceFailure <$> arbitrary <*> arbitrary
-      ]
-
-instance Arbitrary CompilerResult where
-  arbitrary =
-    oneof
-      [ RCompilerFailure <$> arbitrary
-      , RCompilerOutput <$> arbitrary
-      ]
+nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
+nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)
 
 -- Orphan Instances
-
 instance Arbitrary a => Arbitrary (NonEmpty a) where
   arbitrary = sized f
     where
@@ -342,6 +305,3 @@ instance Arbitrary a => Arbitrary (NonEmpty a) where
             x <- arbitrary
             xs <- f (n - 1)
             pure $ x <| xs
-
-instance Arbitrary Text where
-  arbitrary = pack <$> arbitrary
