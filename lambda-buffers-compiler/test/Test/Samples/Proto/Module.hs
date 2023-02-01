@@ -1,4 +1,4 @@
-module Test.Samples.Proto.Module where
+module Test.Samples.Proto.Module (module'maybe, module'incoherent) where
 
 import Control.Lens ((%~), (&))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P

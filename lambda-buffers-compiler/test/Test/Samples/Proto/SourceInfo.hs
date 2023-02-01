@@ -1,4 +1,4 @@
-module Test.Samples.Proto.SourceInfo where
+module Test.Samples.Proto.SourceInfo (sourceInfo'empty) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 

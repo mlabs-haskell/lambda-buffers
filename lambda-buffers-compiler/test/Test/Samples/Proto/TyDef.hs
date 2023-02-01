@@ -1,4 +1,4 @@
-module Test.Samples.Proto.TyDef where
+module Test.Samples.Proto.TyDef (tyDef'maybe, tyDef'incoherent) where
 
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
