@@ -17,6 +17,8 @@ import LambdaBuffers.Compiler.TypeClass.Rules
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 
+import Data.Set qualified as S
+
 {- Variable substitution. Given a string that represents a variable name,
    and a type to instantiate variables with that name to, performs the
    instantiation
