@@ -7,7 +7,7 @@ import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
-import LambdaBuffers.Compiler.ProtoCompat (FromProtoErr (NamingError, ProtoError), IsMessage (fromProto, toProto))
+import LambdaBuffers.Compiler.ProtoCompat ()
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import Proto.Compiler (CompilerInput)
 import System.FilePath.Lens (extension)
@@ -23,6 +23,7 @@ makeLenses ''CompileOpts
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
+  {-
   compIn <- readCompilerInput (opts ^. input)
   case fromProto @CompilerInput @ProtoCompat.CompilerInput compIn of
     Left err -> case err of
@@ -31,7 +32,7 @@ compile opts = do
     Right compIn' -> do
       print @String "Successfully processed the CompilerInput"
       writeCompilerOutput (opts ^. output) (toProto compIn')
-
+  -}
   return ()
 
 readCompilerInput :: FilePath -> IO CompilerInput

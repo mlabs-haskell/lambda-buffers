@@ -54,7 +54,7 @@ data SourcePosition = SourcePosition
   }
   deriving stock (Show, Eq, Ord, Generic)
 
--- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
+-- I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
@@ -79,7 +79,10 @@ data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data Kind = Kind {kind :: KindType, sourceInfo :: SourceInfo}
+data Kind = Kind
+  { kind :: KindType
+  , sourceInfo :: SourceInfo
+  }
   deriving stock (Show, Eq, Ord, Generic)
 
 data KindType
@@ -92,7 +95,10 @@ data KindRefType
   | KType
   deriving stock (Show, Eq, Ord, Generic)
 
-data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
+data TyVar = TyVar
+  { varName :: VarName
+  , sourceInfo :: SourceInfo
+  }
   deriving stock (Show, Eq, Ord, Generic)
 
 data Ty
@@ -115,7 +121,10 @@ data ForeignRef = ForeignRef
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
+data LocalRef = LocalRef
+  { tyName :: TyName
+  , sourceInfo :: SourceInfo
+  }
   deriving stock (Show, Eq, Ord, Generic)
 
 data TyRef
@@ -194,7 +203,7 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
 
 data InstanceClause = InstanceClause
-  { className :: ClassName
+  { classRef :: TyRef
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
@@ -202,7 +211,7 @@ data InstanceClause = InstanceClause
   deriving stock (Show, Eq, Ord, Generic)
 
 data Constraint = Constraint
-  { className :: ClassName
+  { classRef :: TyRef
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
@@ -213,10 +222,10 @@ data Module = Module
   , typeDefs :: [TyDef]
   , classDefs :: [ClassDef]
   , instances :: [InstanceClause]
+  , imports :: [ModuleName]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (Monoid, Semigroup)

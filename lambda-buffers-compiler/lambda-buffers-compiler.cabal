@@ -94,11 +94,15 @@ library
     , freer-simple                >=1.2
     , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
+    , megaparsec
     , mtl                         >=2.2
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
+    , template-haskell
     , text                        >=1.2
+    , th-abstraction
+    , transformers
 
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
@@ -109,7 +113,18 @@ library
     LambdaBuffers.Compiler.KindCheck.Variable
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.IsMessage
+    LambdaBuffers.Compiler.ProtoCompat.NameLike
+    LambdaBuffers.Compiler.ProtoCompat.NameValidation
     LambdaBuffers.Compiler.ProtoCompat.Types
+    LambdaBuffers.Compiler.TH
+    LambdaBuffers.Compiler.TypeClass.Compat
+    LambdaBuffers.Compiler.TypeClass.Match
+    LambdaBuffers.Compiler.TypeClass.Pat
+    LambdaBuffers.Compiler.TypeClass.Rules
+    LambdaBuffers.Compiler.TypeClass.Solve
+    LambdaBuffers.Compiler.TypeClass.Validate.TestCI
+    LambdaBuffers.Compiler.TypeClass.Validate.Utils
     LambdaBuffers.Compiler.TypeClassCheck
 
   hs-source-dirs:  src
