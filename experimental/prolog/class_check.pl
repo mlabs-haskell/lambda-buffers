@@ -1,10 +1,10 @@
-:- use_module(library(clpfd)).
 :- use_module(common_defs).
-:- use_module(ty_lam).
 :- use_module(kind_check).
 
 %% Apply and argument to a type abstraction - assumes Kind validity
-% Beta-reduction Apply and argument to a type abstraction - assumes Kind validity
+% Beta-reduction Apply an argument to a type abstraction - assumes Kind validity
+apply(opaque(N, kind(arr(KL, KR)), Cd), _, opaque(N, kind(KR), Cd)).
+
 apply(ty_ref(RefName), A, ResTy) :-
     ty_def(RefName, Ty),
     apply(Ty, A, ResTy).
@@ -23,7 +23,7 @@ subst(ctx(VarName-A, Args), ty_var(VarName), Res) :-
 subst(ctx(ArgName-_, _), ty_var(VarName), ty_var(VarName)) :-
     ArgName \= VarName.
 
-subst(_, opaque(K, Cd), opaque(K, Cd)).
+subst(_, opaque(N, K, Cd), opaque(N, K, Cd)).
 
 subst(_, ty_ref(RefName), ty_ref(RefName)).
 
@@ -33,9 +33,6 @@ subst(ctx(Arg, Args), ty_abs(ArgName-KArg, Body), ty_abs(ArgName-KArg, Res)) :-
 subst(Ctx, ty_app(TyAbs, TyArg), ty_app(AbsRes, ArgRes)) :-
     subst(Ctx, TyAbs, AbsRes),
     subst(Ctx, TyArg, ArgRes).
-
-% Haskell: Functor Deriving https://mail.haskell.org/pipermail/haskell-prime/2007-March/002137.html
-
 
 %% Sum/Product/Rec get normalized into a canonical form Either/Prod/Void/Unit/Opaque
 struct_rule(class(ClassName, class_arg(_, kind(*)), _),
@@ -64,12 +61,15 @@ struct_rule(class(ClassName, class_arg(_, kind(*)), _),
                  )
             ).
 
-%% Classes on types of kind ->
+%% NOTE(bladjoker): Experimentals class rules on types of kind ->
+% Haskell: Functor Deriving https://mail.haskell.org/pipermail/haskell-prime/2007-March/002137.html
 struct_rule(class(ClassName, class_arg(_, kind(arr(KL, KR))), _),
             rule(ClassName, ty_app(TL, TR)) :-
                 (
                     %kind(ty_app(TL, TR), kind(arr(KL, KR))),
-                    rule(ClassName, TL)
+                    rule(ClassName, TL),
+                    apply(TL, TR, Res),
+                    rule(ClassName, Res)
                 )
            ).
 
@@ -101,7 +101,7 @@ user_rule(class(ClassName, class_arg(_, Kind), _),
            (rule(ClassName, ty_app(F, A)) :-
                 (
                     %kind(ty_app(F, A), Kind),
-                    %% TODO(bladyjoker): Ask gnumonik@ if normalizing a Ty is what's really needed here. Imo, it is. Perhaps apply the rules on already normalized expressions?
+                    %% TODO(bladyjoker): Ask gnumonik@ if beta-reduction is what's really needed here. Imo, it is.
                     apply(F, A, Res),
                     rule(ClassName, Res)
                 )
