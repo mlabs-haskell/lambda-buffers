@@ -490,14 +490,12 @@ message CompilerInput {
   repeated Module modules = 1;
 }
 
-
 // Compiler Failure can be extended with other classes of errors.
 message CompilerFailure {
   // Reason why the compilation failed.
   oneof failure {
     KindCheckErr kc_err = 1;
   }
-
 }
 
 /* Inference Failure 
@@ -580,7 +578,6 @@ message CompilerOutput {
   // A map of checked type definitions.
   repeated TypeDefinition type_defs = 1;
 }
-
 
 /* Compilation Result 
 
