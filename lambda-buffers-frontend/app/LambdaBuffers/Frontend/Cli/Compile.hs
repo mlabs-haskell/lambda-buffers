@@ -2,6 +2,7 @@ module LambdaBuffers.Frontend.Cli.Compile (CompileOpts (..), compile) where
 
 import Control.Lens (makeLenses, (^.))
 import Data.ByteString qualified as BS
+import Data.Maybe (fromMaybe)
 import Data.ProtoLens.Encoding qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
@@ -20,6 +21,7 @@ data CompileOpts = CompileOpts
   , _moduleFilepath :: FilePath
   , _compilerCliFilepath :: FilePath
   , _debug :: Bool
+  , _workingDir :: Maybe FilePath
   }
   deriving stock (Eq, Show)
 
@@ -38,9 +40,10 @@ compile opts = do
       let ext = if opts ^. debug then "textproto" else "pb"
       withSystemTempDirectory
         "lambda-buffers-frontend"
-        ( \fp -> do
-            let compInpFp = fp </> "compiler-input" <.> ext
-                compOutFp = fp </> "compiler-output" <.> ext
+        ( \tempDir -> do
+            let workDir = fromMaybe tempDir (opts ^. workingDir)
+                compInpFp = workDir </> "compiler-input" <.> ext
+                compOutFp = workDir </> "compiler-output" <.> ext
             writeCompilerInput compInpFp compInp
             let args = ["compile", "--input-file", compInpFp, "--output-file", compOutFp]
             putStrLn $ "Calling: " <> show (opts ^. compilerCliFilepath) <> " on " <> show args

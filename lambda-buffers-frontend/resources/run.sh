@@ -17,4 +17,4 @@ lbcompile -i symbol_already_imported -f symbol_already_imported/A.lbf
 lbcompile -i tydef_name_conflict -f tydef_name_conflict/A.lbf
 lbcompile -i tyref_not_found -f tyref_not_found/A.lbf
 
-lbcompile -i good -f good/Test.lbf
+lbcompile -w good/work-dir -i good -f good/Test.lbf
