@@ -240,10 +240,7 @@ data CompilerError
   | CompMiscError MiscError
   deriving stock (Show, Eq, Ord, Generic)
 
-data ValidatedTyDef = ValidatedTyDef {tyRef :: TyRef, tyBody :: Ty, tyKind :: Kind}
-  deriving stock (Show, Eq, Ord, Generic)
-
-newtype CompilerResult = CompilerResult {typeDefs :: M.Map TyRef (Ty, Kind)}
+data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
 
 type CompilerOutput = Either CompilerError CompilerResult

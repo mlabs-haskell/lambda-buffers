@@ -539,23 +539,12 @@ instance IsMessage P.CompilerError CompilerError where
     CompKindCheckError kcerr -> defMessage & P.compKindCheckErr .~ toProto kcerr
     CompMiscError miscerr -> defMessage & P.compMiscErr .~ toProto miscerr
 
-instance IsMessage P.ValidatedTyDef (TyRef, (Ty, Kind)) where
-  fromProto vt =
-    (,)
-      <$> fromProto (vt ^. P.tyRef)
-      <*> ( (,)
-              <$> fromProto (vt ^. P.tyBody)
-              <*> fromProto (vt ^. P.tyKind)
-          )
-  toProto (tyref, (tybo, tyki)) =
-    defMessage
-      & P.tyRef .~ toProto tyref
-      & P.tyBody .~ toProto tybo
-      & P.tyKind .~ toProto tyki
-
 instance IsMessage P.CompilerResult CompilerResult where
-  fromProto co = CompilerResult . M.fromList <$> traverse fromProto (co ^. P.typeDefs)
-  toProto (CompilerResult tds) = defMessage & P.typeDefs .~ (toProto <$> M.toList tds)
+  fromProto c =
+    if c == defMessage
+      then pure CompilerResult
+      else throwProtoError EmptyField
+  toProto CompilerResult = defMessage
 
 instance IsMessage P.CompilerOutput CompilerOutput where
   fromProto co = case co ^. P.maybe'compilerOutput of

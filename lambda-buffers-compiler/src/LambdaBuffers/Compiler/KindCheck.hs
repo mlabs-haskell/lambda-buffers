@@ -43,9 +43,9 @@ import Data.Map qualified as M
 -- - double declaration of a type
 
 -- | Kind Check failure types.
-type KindCheckFailure = P.KindCheckErr
+type CompilerErr = P.CompilerError
 
-type Err = Error KindCheckFailure
+type Err = Error CompilerErr
 
 type ModName = Text
 
@@ -78,15 +78,15 @@ makeEffect ''KindCheck
 
 --------------------------------------------------------------------------------
 
-runCheck :: Eff (Check ': '[]) a -> Either KindCheckFailure a
+runCheck :: Eff (Check ': '[]) a -> Either CompilerErr a
 runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
 -- | Run the check - return the validated context or the failure.
-check :: P.CompilerInput -> Either KindCheckFailure Context
+check :: P.CompilerInput -> Either CompilerErr Context
 check = runCheck . kCheck
 
 -- | Run the check - drop the result if it succeeds.
-check_ :: P.CompilerInput -> Either KindCheckFailure ()
+check_ :: P.CompilerInput -> Either CompilerErr ()
 check_ = void . check
 
 --------------------------------------------------------------------------------

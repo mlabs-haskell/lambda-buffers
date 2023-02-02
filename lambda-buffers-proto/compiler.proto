@@ -561,17 +561,9 @@ message CompilerError {
   }
 }
 
-// A validated type definition.
-message ValidatedTyDef {
-  TyRef ty_ref = 1 ;
-  Ty ty_body = 2;
-  Kind ty_kind = 3;
-}
-
 // Compiler Result ~ a successful Compilation Output.
 message CompilerResult {
-  // A map of checked type definitions.
-  repeated ValidatedTyDef type_defs = 1;
+  // equivalent of unit.
 }
 
 // Output of the Compiler.
