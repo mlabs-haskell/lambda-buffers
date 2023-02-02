@@ -18,8 +18,7 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
   Pat (AppP, DecP, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)),
  )
 import LambdaBuffers.Compiler.TypeClass.Rules (
-  Class (Class, supers),
-  ClassRef (CRef),
+  Class (supers),
   Constraint (C),
   Instance,
   Rule ((:<=)),

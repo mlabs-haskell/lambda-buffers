@@ -13,11 +13,11 @@ module LambdaBuffers.Compiler.TypeClass.Pretty (
 import Control.Lens ((^.))
 import Data.Generics.Labels ()
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat (Pat (..), patList)
+import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)), patList)
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   ClassRef (CRef),
-  Constraint (..),
+  Constraint (C),
   Instance,
   Rule ((:<=)),
  )
