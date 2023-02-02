@@ -88,16 +88,19 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , base                     >=4.16
-    , containers               >=0.6
-    , directory                >=1.3
-    , filepath                 >=1.4
-    , lambda-buffers-compiler  >=0.1
-    , mtl                      >=2.2
-    , parsec                   >=3.1
-    , prettyprinter            >=1.7
-    , text                     >=1.2
-    , transformers             >=0.5
+    , base                        >=4.16
+    , containers                  >=0.6
+    , directory                   >=1.3
+    , filepath                    >=1.4
+    , lambda-buffers-compiler     >=0.1
+    , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
+    , mtl                         >=2.2
+    , parsec                      >=3.1
+    , prettyprinter               >=1.7
+    , proto-lens                  >=0.7
+    , text                        >=1.2
+    , transformers                >=0.5
 
   hs-source-dirs:  src
   exposed-modules:
@@ -105,6 +108,7 @@ library
     LambdaBuffers.Frontend.Parsec
     LambdaBuffers.Frontend.PPrint
     LambdaBuffers.Frontend.Syntax
+    LambdaBuffers.Frontend.ToProto
 
 executable lambda-buffers-frontend-cli
   import:         common-language
