@@ -49,6 +49,20 @@ compileOptsP =
           <> metavar "FILEPATH"
           <> help "LambdaBuffers file (.lbf) to compile"
       )
+    <*> strOption
+      ( long "compiler"
+          <> short 'c'
+          <> metavar "FILEPATH"
+          <> help "LambdaBuffers compiler location (lambda-buffers-compiler-cli)"
+      )
+    <*> flag
+      False
+      True
+      ( long "debug"
+          <> short 'd'
+          <> help "Run in debug mode"
+          <> showDefault
+      )
 
 formatOptsP :: Parser FormatOpts
 formatOptsP =

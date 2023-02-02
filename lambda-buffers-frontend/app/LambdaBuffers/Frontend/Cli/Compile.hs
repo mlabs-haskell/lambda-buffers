@@ -1,15 +1,25 @@
 module LambdaBuffers.Frontend.Cli.Compile (CompileOpts (..), compile) where
 
 import Control.Lens (makeLenses, (^.))
-import Data.Map qualified as Map
+import Data.ByteString qualified as BS
+import Data.ProtoLens.Encoding qualified as Pb
+import Data.ProtoLens.TextFormat qualified as PbText
+import Data.Text.Lazy qualified as Text
+import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Frontend (runFrontend)
 import LambdaBuffers.Frontend.PPrint ()
-import Prettyprinter (Pretty (pretty))
-import Proto.Compiler ()
+import LambdaBuffers.Frontend.ToProto (toCompilerInput)
+import Proto.Compiler (CompilerInput)
+import System.FilePath ((<.>), (</>))
+import System.FilePath.Lens (extension)
+import System.IO.Temp (withSystemTempDirectory)
+import System.Process (callProcess)
 
 data CompileOpts = CompileOpts
   { _importPaths :: [FilePath]
   , _moduleFilepath :: FilePath
+  , _compilerCliFilepath :: FilePath
+  , _debug :: Bool
   }
   deriving stock (Eq, Show)
 
@@ -21,6 +31,26 @@ compile opts = do
   errOrMod <- runFrontend (opts ^. importPaths) (opts ^. moduleFilepath)
   case errOrMod of
     Left err -> print err
-    Right mods -> do
+    Right res -> do
+      -- TODO(bladyjoker): Use proper logging (Katip)
       putStrLn "OK"
-      putStrLn $ "Compiler closure contains the following modules: " <> (show . pretty . Map.elems $ mods)
+      compInp <- either (\e -> error $ "Failed translating to Compiler proto: " <> show e) return (toCompilerInput res)
+      let ext = if opts ^. debug then "textproto" else "pb"
+      withSystemTempDirectory
+        "lambda-buffers-frontend"
+        ( \fp -> do
+            let compInpFp = fp </> "compiler-input" <.> ext
+                compOutFp = fp </> "compiler-output" <.> ext
+            writeCompilerInput compInpFp compInp
+            let args = ["compile", "--input-file", compInpFp, "--output-file", compOutFp]
+            putStrLn $ "Calling: " <> show (opts ^. compilerCliFilepath) <> " on " <> show args
+            callProcess (opts ^. compilerCliFilepath) args
+        )
+
+writeCompilerInput :: FilePath -> CompilerInput -> IO ()
+writeCompilerInput fp compInp = do
+  let ext = fp ^. extension
+  case ext of
+    ".pb" -> BS.writeFile fp (Pb.encodeMessage compInp)
+    ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage compInp)
+    _ -> error $ "Unknown CompilerInput format " <> ext

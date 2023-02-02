@@ -114,12 +114,16 @@ executable lambda-buffers-frontend-cli
   import:         common-language
   build-depends:
     , base                        >=4.16
-    , containers                  >=0.6
+    , bytestring                  >=0.11
+    , filepath                    >=1.4
     , lambda-buffers-compiler-pb  >=0.1
     , lambda-buffers-frontend
     , lens                        >=5.2
     , optparse-applicative        >=0.17
     , prettyprinter               >=1.7
+    , process                     >=1.6
+    , proto-lens                  >=0.7
+    , temporary
     , text                        >=1.2
 
   hs-source-dirs: app
