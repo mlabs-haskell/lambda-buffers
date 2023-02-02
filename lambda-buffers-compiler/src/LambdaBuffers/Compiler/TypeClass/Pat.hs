@@ -1,8 +1,26 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PatternSynonyms #-}
 
-module LambdaBuffers.Compiler.TypeClass.Pat where
+module LambdaBuffers.Compiler.TypeClass.Pat (
+  Pat (..),
+  toProd,
+  toRec,
+  toSum,
+  patList,
+  for,
+  safeHead,
+  _k,
+  _v,
+  _a,
+  _l,
+  _x,
+  _xs,
+  _name,
+  _vars,
+  _nil,
+  _body,
+  _ref,
+) where
 
 import Data.Text (Text)
 
@@ -64,74 +82,6 @@ data Pat
   deriving stock (Show, Eq, Ord)
 
 infixr 5 :*
-
--- Pattern synonyms. These VASTLY improve readability
-pattern Prim :: Pat -> Pat
-pattern Prim p = RefP (ModuleName ["Prelude"]) p
-
-pattern Int :: Pat
-pattern Int = Prim (Name "Int")
-
-pattern String :: Pat
-pattern String = Prim (Name "String")
-
-pattern Bool :: Pat
-pattern Bool = Prim (Name "Bool")
-
-pattern List :: Pat -> Pat
-pattern List t = AppP (Prim (Name "List")) t
-
-pattern Maybe :: Pat -> Pat
-pattern Maybe t = AppP (Prim (Name "Maybe")) t
-
-pattern Map :: Pat -> Pat -> Pat
-pattern Map k v = AppP (AppP (Prim (Name "Map")) k) v
-
-pattern Either :: Pat -> Pat -> Pat
-pattern Either l r = AppP (AppP (Prim (Name "Either")) l) r
-
-pattern RecFields :: Pat -> Pat -> Pat -> Pat
-pattern RecFields l x xs = RecP ((l := x) :* xs)
-
-pattern ProdArgs :: Pat -> Pat -> Pat
-pattern ProdArgs x xs = ProdP (x :* xs)
-
-pattern RecBody :: Pat -> Pat -> Pat
-pattern RecBody constr fields = SumP (constr := RecP fields :* Nil)
-
-pattern ProdBody :: Pat -> Pat -> Pat
-pattern ProdBody constr fields = SumP ((constr := ProdP fields) :* Nil)
-
-pattern Rec :: Pat -> Pat -> Pat -> Pat -> Pat
-pattern Rec tyName tyVars constr fields =
-  DecP tyName tyVars (SumP (constr := RecP fields :* Nil))
-
-pattern Product :: Pat -> Pat -> Pat -> Pat -> Pat
-pattern Product tyName tyVars constr args =
-  DecP tyName tyVars (SumP (constr := ProdP args :* Nil))
-
-pattern SumBody :: Pat -> Pat -> Pat -> Pat
-pattern SumBody l x xs = SumP ((l := x) :* xs)
-
-pattern Sum :: Pat -> Pat -> Pat -> Pat
-pattern Sum tyName tyVars pat =
-  DecP tyName tyVars pat
-
-pattern Void :: Pat
-pattern Void = SumP Nil
-
--- we probably don't need these _ functions
-_list :: Pat
-_list = Prim (Name "List")
-
-_maybe :: Pat
-_maybe = Prim (Name "Maybe")
-
-_map :: Pat
-_map = Prim (Name "Map")
-
-_either :: Pat
-_either = Prim (Name "Either")
 
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}

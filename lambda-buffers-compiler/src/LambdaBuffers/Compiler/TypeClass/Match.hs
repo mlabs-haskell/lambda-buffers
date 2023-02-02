@@ -1,7 +1,9 @@
 module LambdaBuffers.Compiler.TypeClass.Match (matches) where
 
 -- can't import the patterns explicitly?
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Pat (AppP, DecP, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)),
+ )
 
 {- This is used as a predicate to filter instances or Gens which are structurally compatible
    with the argument type.
@@ -16,12 +18,8 @@ import LambdaBuffers.Compiler.TypeClass.Pat
 matches :: Pat -> Pat -> Bool
 matches t1 t2 | t1 == t2 = True -- need the guard
 matches (VarP _) _ = True
-matches (List t1) (List t2) = matches t1 t2
-matches (Maybe t1) (Maybe t2) = matches t1 t2
 matches (x :* xs) (x' :* xs') = matches x x' && matches xs xs'
 matches (l := t) (l' := t') = matches l l' && matches t t'
-matches (Map k v) (Map k' v') = matches k k' && matches v v'
-matches (Either l r) (Either l' r') = matches l l' && matches r r'
 matches (ProdP xs) (ProdP xs') = matches xs xs'
 matches (RecP xs) (RecP xs') = matches xs xs'
 matches (SumP xs) (SumP xs') = matches xs xs'

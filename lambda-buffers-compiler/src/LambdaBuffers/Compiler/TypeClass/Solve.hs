@@ -14,7 +14,9 @@ import Data.List (foldl', sortBy)
 import Data.Text (Text)
 
 import LambdaBuffers.Compiler.TypeClass.Match (matches)
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Pat (AppP, DecP, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)),
+ )
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class, supers),
   ClassRef (CRef),
@@ -34,12 +36,8 @@ import Data.Set qualified as S
 subV :: Text -> Pat -> Pat -> Pat
 subV varNm t = \case
   var@(VarP v) -> if v == varNm then t else var
-  List x -> List $ subV varNm t x
-  Maybe x -> Maybe $ subV varNm t x
   x :* xs -> subV varNm t x :* subV varNm t xs
   l := x -> subV varNm t l := subV varNm t x
-  Map k v -> Map (subV varNm t k) (subV varNm t v)
-  Either l r -> Either (subV varNm t l) (subV varNm t r)
   ProdP xs -> ProdP (subV varNm t xs)
   RecP xs -> RecP (subV varNm t xs)
   SumP xs -> SumP (subV varNm t xs)
@@ -65,12 +63,8 @@ subst cst@(C _ t :<= _) ty = mapPat (go (getSubs t ty)) cst
 -}
 getSubs :: Pat -> Pat -> [(Text, Pat)] -- should be a set, whatever
 getSubs (VarP s) t = [(s, t)]
-getSubs (List t) (List t') = getSubs t t'
-getSubs (Maybe t) (Maybe t') = getSubs t t'
 getSubs (x :* xs) (x' :* xs') = getSubs x x' <> getSubs xs xs'
 getSubs (l := t) (l' := t') = getSubs l l' <> getSubs t t'
-getSubs (Map k v) (Map k' v') = getSubs k k' <> getSubs v v'
-getSubs (Either l r) (Either l' r') = getSubs l l' <> getSubs r r'
 getSubs (ProdP xs) (ProdP xs') = getSubs xs xs'
 getSubs (RecP xs) (RecP xs') = getSubs xs xs'
 getSubs (SumP xs) (SumP xs') = getSubs xs xs'
