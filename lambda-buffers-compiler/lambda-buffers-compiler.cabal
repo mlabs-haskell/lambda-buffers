@@ -132,15 +132,17 @@ library
 
 executable lambda-buffers-compiler-cli
   import:         common-language
-  import:         common-imports
+
+  -- import:         common-imports
   main-is:        Main.hs
-  build-depends:
-    , bytestring                  >=0.11
-    , lambda-buffers-compiler
-    , lambda-buffers-compiler-pb  >=0.1.0.0
-    , optparse-applicative        >=0.17
-    , proto-lens                  >=0.7
-    , text                        >=1.2
+  build-depends:  base >=4.16
+
+  -- , bytestring                  >=0.11
+  -- , lambda-buffers-compiler
+  -- , lambda-buffers-compiler-pb  >=0.1.0.0
+  -- , optparse-applicative        >=0.17
+  -- , proto-lens                  >=0.7
+  -- , text                        >=1.2
 
   hs-source-dirs: app
   other-modules:  LambdaBuffers.Compiler.Cli.Compile

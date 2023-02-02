@@ -1,5 +1,9 @@
 module Main (main) where
 
+main :: IO ()
+main = pure ()
+
+{-
 import Control.Applicative ((<**>))
 
 import LambdaBuffers.Compiler.Cli.Compile (CompileOpts (CompileOpts), compile)
@@ -62,3 +66,4 @@ main = do
   cmd <- customExecParser (prefs (showHelpOnEmpty <> showHelpOnError)) parserInfo
   case cmd of
     Compile opts -> compile opts
+-}

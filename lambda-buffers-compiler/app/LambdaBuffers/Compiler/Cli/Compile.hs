@@ -1,5 +1,6 @@
-module LambdaBuffers.Compiler.Cli.Compile (CompileOpts (..), compile) where
+module LambdaBuffers.Compiler.Cli.Compile () {- (CompileOpts (..), compile) -} where
 
+{-
 import Control.Lens (makeLenses)
 import Control.Lens.Getter ((^.))
 import Data.ByteString qualified as BS
@@ -8,8 +9,8 @@ import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler.ProtoCompat ()
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import Proto.Compiler (CompilerInput)
+import LambdaBuffers.Compiler.ProtoCompat qualified as ProtoCompat
+import Proto.Compiler
 import System.FilePath.Lens (extension)
 
 data CompileOpts = CompileOpts
@@ -23,7 +24,6 @@ makeLenses ''CompileOpts
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
-  {-
   compIn <- readCompilerInput (opts ^. input)
   case fromProto @CompilerInput @ProtoCompat.CompilerInput compIn of
     Left err -> case err of
@@ -32,7 +32,6 @@ compile opts = do
     Right compIn' -> do
       print @String "Successfully processed the CompilerInput"
       writeCompilerOutput (opts ^. output) (toProto compIn')
-  -}
   return ()
 
 readCompilerInput :: FilePath -> IO CompilerInput
@@ -55,3 +54,4 @@ writeCompilerOutput fp co = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage co)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage co)
     _ -> error $ "Unknown CompilerOutput format " <> ext
+-}
