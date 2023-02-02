@@ -1,6 +1,6 @@
 -- TODO(gnumonik): Move into a real test suite
 
-module LambdaBuffers.Compiler.TypeClass.Validate.TestCI (testCompilerInput) where
+module LambdaBuffers.Compiler.TypeClass.Validate.TestCI (testCompilerInput, foo, foo2) where
 
 import Data.List.NonEmpty qualified as NE
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
@@ -44,7 +44,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 
 testCompilerInput :: P.CompilerInput
-testCompilerInput = P.CompilerInput [prelude, foo]
+testCompilerInput = P.CompilerInput [prelude, foo2]
 
 si :: P.SourceInfo
 si = P.SourceInfo "" (P.SourcePosition 0 0) (P.SourcePosition 0 0)

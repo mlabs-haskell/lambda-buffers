@@ -57,6 +57,7 @@ detectSuperclassCycles ci = case detectSuperclassCycles' ci of
 -- construct, so we return it here if successful.
 validateTypeClasses' :: P.CompilerInput -> Either TypeClassError (M.Map P.ModuleName ModuleBuilder)
 validateTypeClasses' ci = do
+  detectSuperclassCycles ci
   moduleBuilders <- mkBuilders ci
   void $ traverseWithKey runDeriveCheck moduleBuilders
   pure moduleBuilders
