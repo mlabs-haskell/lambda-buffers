@@ -1,35 +1,37 @@
 {-# LANGUAGE OverloadedLabels #-}
 
-module LambdaBuffers.Compiler.TypeClass.Compat where
+module LambdaBuffers.Compiler.TypeClass.Compat (
+  si,
+  modulename,
+  defToPat,
+  tyToPat,
+) where
 
 import Control.Lens ((^.))
-import Control.Lens.Combinators (Bifunctor (bimap), over, set, view)
-import Control.Monad.State (State)
-import Data.Generics.Labels (Field')
-import Data.List.NonEmpty (NonEmpty (..))
+import Control.Lens.Combinators (view)
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE
-import Data.Map qualified as M
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat
-import LambdaBuffers.Compiler.TypeClass.Rules (
-  Class (Class),
-  ClassRef (CRef),
-  Constraint (..),
-  Instance,
-  Rule ((:<=)),
- )
-import Prettyprinter (
-  Doc,
-  Pretty (pretty),
-  hcat,
-  list,
-  parens,
-  punctuate,
-  viaShow,
-  (<+>),
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Pat (
+    AppP,
+    DecP,
+    ModuleName,
+    Name,
+    Nil,
+    Opaque,
+    RefP,
+    VarP,
+    (:*),
+    (:=)
+  ),
+  toProd,
+  toRec,
+  toSum,
  )
 
+-- TODO(gnumonik): Data.Default instance
 si :: P.SourceInfo
 si = P.SourceInfo "" (P.SourcePosition 0 0) (P.SourcePosition 0 0)
 
@@ -78,19 +80,3 @@ appToPat :: Pat -> NonEmpty Pat -> Pat
 appToPat fun (p :| ps) = case NE.nonEmpty ps of
   Nothing -> AppP fun p
   Just rest -> AppP fun p `appToPat` rest
-
-prettyClassRef :: ClassRef -> Doc ()
-prettyClassRef (CRef nm mn) = prettyModuleName mn <> "." <> pretty (nm ^. #name)
-
-prettyModuleName :: P.ModuleName -> Doc ()
-prettyModuleName (P.ModuleName parts _) = hcat . punctuate "." $ map (\x -> pretty $ x ^. #name) parts
-
-prettyClass :: Class -> Doc ()
-prettyClass (Class nm []) = prettyClassRef nm
-prettyClass (Class nm sups) = prettyClassRef nm <+> "<=" <+> hcat (map prettyClass sups)
-
-prettyConstraint :: Constraint -> Doc ()
-prettyConstraint (C cls p) = "C" <+> parens (prettyClass cls) <+> viaShow p
-
-prettyInstance :: Instance -> Doc ()
-prettyInstance (c :<= cs) = prettyConstraint c <+> "<=" <+> list (prettyConstraint <$> cs)

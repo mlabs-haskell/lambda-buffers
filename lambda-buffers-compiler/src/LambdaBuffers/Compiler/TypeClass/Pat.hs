@@ -4,10 +4,7 @@
 
 module LambdaBuffers.Compiler.TypeClass.Pat where
 
-import Data.Bifunctor
-import Data.List.NonEmpty qualified as NE
 import Data.Text (Text)
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
 
 {- A simple ADT to represent patterns
 
@@ -64,7 +61,7 @@ data Pat
        In some languages, parts of this may be ignored. E.g. in Rust the type name doesn't matter (we use the constr name of the
        outermost inner sum for constructing types). -}
     DecP Pat Pat Pat
-  deriving (Show, Eq, Ord)
+  deriving stock (Show, Eq, Ord)
 
 infixr 5 :*
 
@@ -147,6 +144,12 @@ toRec = RecP . foldr (:*) Nil
 toSum :: [Pat] -> Pat
 toSum = SumP . foldr (:*) Nil
 
+patList :: Pat -> Maybe [Pat]
+patList = \case
+  Nil -> Just []
+  p1 :* p2 -> (p1 :) <$> patList p2
+  _ -> Nothing
+
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}
 
@@ -161,7 +164,7 @@ safeHead = \case
   [] -> Nothing
   (x : _) -> Just x
 
-_k, _v, _a, _l, _x, _xs, _name, _vars, _nil, _body :: Pat
+_k, _v, _a, _l, _x, _xs, _name, _vars, _nil, _body, _ref :: Pat
 _k = VarP "kdasfadsfsadf3323232421413413413"
 _v = VarP "vdsfasdfa3e4fewafewufioeoifioaefiowe"
 _a = VarP "a3242432aefiosdjfioasdf32jior3j2oirj32io"
@@ -172,3 +175,4 @@ _name = VarP "namedsafdsfhuisdhfuidshu3893283h8df398hdf321"
 _body = VarP "bodyadfjasidofjads08f8943j289234j89234j98fj38"
 _vars = VarP "varsdsfdasfjklsdafjilsdafjiasdio43io2903"
 _nil = VarP "nildsfjosdjfiosdajfoi89321893y8914981398"
+_ref = VarP "refdsa9f0982323hn2hn0o09htghp;@@#@#FAF "

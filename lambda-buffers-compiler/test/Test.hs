@@ -10,5 +10,5 @@ main =
     testGroup
       "Compiler tests"
       [ KC.test
-      , TC.test
+      -- , TC.test
       ]

@@ -19,8 +19,8 @@ test =
     "TypeClassCheck tests"
     []
 
--- noCycleDetected
--- , cycleDetected
+{- [noCycleDetected
+, cycleDetected ] -}
 
 {-
 noCycleDetected :: TestTree
@@ -72,5 +72,4 @@ nocycles =
   , mkclass "Monad" ["Applicative"]
   , mkclass "Traversable" ["Foldable", "Functor"]
   ]
-
 -}

@@ -1,5 +1,6 @@
-module LambdaBuffers.Compiler.TypeClass.Match where
+module LambdaBuffers.Compiler.TypeClass.Match (matches) where
 
+-- can't import the patterns explicitly?
 import LambdaBuffers.Compiler.TypeClass.Pat
 
 {- This is used as a predicate to filter instances or Gens which are structurally compatible

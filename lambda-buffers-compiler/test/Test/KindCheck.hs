@@ -100,6 +100,7 @@ modMaybe =
         ]
     , P.classDefs = mempty
     , P.instances = mempty
+    , P.imports = mempty
     , P.sourceInfo = esi
     }
 

@@ -1,6 +1,8 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- can't get rid of it without writing the world's least comprehensible type signature
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.IsMessage (IsMessage (..), FromProtoErr (..)) where
 
@@ -17,7 +19,6 @@ import Proto.Compiler_Fields qualified as P
 
 import LambdaBuffers.Compiler.ProtoCompat.NameValidation (
   NameValidator,
-  classname,
   constrname,
   fieldname,
   tyname,

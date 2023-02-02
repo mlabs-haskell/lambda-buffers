@@ -3,15 +3,20 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module LambdaBuffers.Compiler.TypeClass.Rules where
+module LambdaBuffers.Compiler.TypeClass.Rules (
+  ClassRef (..),
+  Class (..),
+  Constraint (..),
+  Rule (..),
+  type Instance,
+  mapPat,
+) where
 
-import Data.Kind (Type)
-import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.TypeClass.Pat (Pat)
 
-import LambdaBuffers.Compiler.TypeClass.Pat
-
-data ClassRef = CRef {cname :: P.ClassName, cmodule :: P.ModuleName} deriving (Show, Eq, Ord)
+data ClassRef = CRef {cname :: P.ClassName, cmodule :: P.ModuleName}
+  deriving stock (Show, Eq, Ord)
 
 data Class = Class
   { name :: ClassRef
@@ -28,11 +33,12 @@ data Class = Class
    NOTE: All variables to the right of the first :<= must occur to the left of the first :<=
 -}
 
-data Constraint = C Class Pat deriving (Show, Eq, Ord)
+data Constraint = C Class Pat
+  deriving stock (Show, Eq, Ord)
 
 data Rule where
   (:<=) :: Constraint -> [Constraint] -> Rule
-  deriving (Show, Eq, Ord)
+  deriving stock (Show, Eq, Ord)
 infixl 7 :<=
 
 type Instance = Rule
@@ -40,4 +46,4 @@ type Instance = Rule
 {- Map over the Pats inside of an Rule
 -}
 mapPat :: (Pat -> Pat) -> Rule -> Rule
-mapPat f (C c ty :<= is) = C c (f ty) :<= map (\(C c p) -> C c (f p)) is
+mapPat f (C c ty :<= is) = C c (f ty) :<= map (\(C cx p) -> C cx (f p)) is

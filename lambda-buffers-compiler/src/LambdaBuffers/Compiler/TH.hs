@@ -1,16 +1,10 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-partial-fields #-}
 
 module LambdaBuffers.Compiler.TH (
   mkLBTypes,
   mkLBType,
-  -- for testing / looking at in GHCI
-  {- -Foo (..),
-  Bar (..),
-  Baz (..),
-  Beep (..), -}
 ) where
 
 import Control.Lens ((^.))
@@ -158,20 +152,3 @@ ne = \case
 
 star :: Q Exp
 star = [e|Kind (KindRef KType) $si|]
-
--- "tests"
-
-{-
-data Foo a b = Ctor1 | Ctor2 Bool | Ctor3 {field1 :: a, field2 :: b}
-
-data Bar a b = Bar
-  { bar1 :: Int
-  , bar2 :: Maybe Bool
-  , bar3 :: Either a b
-  }
-
-data Baz = BazA | BazB
-
-data Beep a b = Beep Int String (Maybe a) (Maybe b)
--}
--- GHCI:  $(mkLBTypes [''Foo, ''Bar, ''Baz, ''Beep])

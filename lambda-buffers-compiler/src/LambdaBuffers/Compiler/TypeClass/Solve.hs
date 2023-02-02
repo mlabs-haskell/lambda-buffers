@@ -5,17 +5,24 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+-- temporary
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module LambdaBuffers.Compiler.TypeClass.Solve where
+module LambdaBuffers.Compiler.TypeClass.Solve (solve) where
 
 import Data.List (foldl', sortBy)
 import Data.Text (Text)
 
-import LambdaBuffers.Compiler.TypeClass.Match
+import LambdaBuffers.Compiler.TypeClass.Match (matches)
 import LambdaBuffers.Compiler.TypeClass.Pat
-import LambdaBuffers.Compiler.TypeClass.Rules
-
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.TypeClass.Rules (
+  Class (Class, supers),
+  ClassRef (CRef),
+  Constraint (C),
+  Instance,
+  Rule ((:<=)),
+  mapPat,
+ )
 
 import Data.Set qualified as S
 
@@ -23,6 +30,7 @@ import Data.Set qualified as S
    and a type to instantiate variables with that name to, performs the
    instantiation
 -}
+-- TODO(gnumonik): Remove the pattern synonyms, they're strictly superfluous
 subV :: Text -> Pat -> Pat -> Pat
 subV varNm t = \case
   var@(VarP v) -> if v == varNm then t else var
@@ -132,38 +140,3 @@ solve inScope cst@(C c pat) =
 
     matchHeads :: [Instance] -> [Instance]
     matchHeads xs = flip filter xs $ \(C c' t' :<= _) -> c == c' && matches t' pat
-
-{-
---output is too damn hard to read
-
--}
-
-si = P.SourceInfo "" (P.SourcePosition 0 0) (P.SourcePosition 0 0)
-
-matchInstance :: Constraint -> Instance -> Bool
-matchInstance (C cc cp) (C c p :<= _) = cc == c && matches p cp
-
-classA, classB, classC :: Class
-classA = Class (CRef (P.ClassName "A" si) (P.ModuleName [] si)) []
-classB = Class (CRef (P.ClassName "B" si) (P.ModuleName [] si)) [classA]
-classC = Class (CRef (P.ClassName "C" si) (P.ModuleName [] si)) [classB]
-
-{-
-expandInstances ::
-  M.Map Text Pat ->
-  [Class] ->
-  Constraint ->
-  [Instance]
-expandInstances tyScope clsScope targ =
-  concatMap go $ solve structRules targ
-  where
-    structRules = mkManyStructuralRules clsScope
-
-    go :: Constraint -> [Instance]
-    go cst@(C cls (RefP (Name nm))) = case M.lookup nm tyScope of
-      Nothing -> [cst :<= []] -- error $ "no type named " <> T.unpack nm <> " in scope"
-      Just p -> expandInstances tyScope clsScope (C cls p)
-    go other = case filter (/= other) $ solve structRules other of
-      [] -> [other :<= []]
-      more -> (other :<= []) : concatMap (expandInstances tyScope clsScope) more
--}

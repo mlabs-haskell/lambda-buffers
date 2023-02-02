@@ -121,6 +121,7 @@ library
     LambdaBuffers.Compiler.TypeClass.Compat
     LambdaBuffers.Compiler.TypeClass.Match
     LambdaBuffers.Compiler.TypeClass.Pat
+    LambdaBuffers.Compiler.TypeClass.Pretty
     LambdaBuffers.Compiler.TypeClass.Rules
     LambdaBuffers.Compiler.TypeClass.Solve
     LambdaBuffers.Compiler.TypeClass.Validate.TestCI
