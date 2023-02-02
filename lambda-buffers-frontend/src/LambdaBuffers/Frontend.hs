@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend (runFrontend, FrontendError (..), parseModule) where
+module LambdaBuffers.Frontend (runFrontend, FrontendError (..), FrontendResult (..), Symbol, Scope, parseModule) where
 
 import Control.Monad (foldM, void, when)
 import Control.Monad.Except (ExceptT, runExceptT)
@@ -17,7 +17,7 @@ import Data.Text.IO qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef))
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef))
 import Prettyprinter (Doc, LayoutOptions (layoutPageWidth), PageWidth (Unbounded), Pretty (pretty), defaultLayoutOptions, layoutPretty, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 import System.Directory (findFiles)
@@ -32,7 +32,7 @@ data FrontRead = FrontRead
   deriving stock (Eq, Show)
 
 newtype FrontState = FrontState
-  { importedModules :: Map (ModuleName ()) (Module SourceInfo)
+  { importedModules :: Map (ModuleName ()) (Module SourceInfo, Scope)
   }
   deriving stock (Eq, Show)
 
@@ -52,6 +52,11 @@ data FrontendError
   | TyDefNameConflict (ModuleName SourceInfo) (TyDef SourceInfo) (ModuleName SourceInfo)
   deriving stock (Eq)
 
+newtype FrontendResult = FrontendResult
+  { processedModules :: Map (ModuleName ()) (Module SourceInfo, Scope)
+  }
+  deriving stock (Eq, Show)
+
 showOneLine :: Doc a -> String
 showOneLine d = (renderShowS . layoutPretty (defaultLayoutOptions {layoutPageWidth = Unbounded}) $ d) ""
 
@@ -70,12 +75,13 @@ instance Show FrontendError where
 type FrontendT m a = MonadIO m => ReaderT FrontRead (StateT FrontState (ExceptT FrontendError m)) a
 
 -- | Run a Frontend compilation action on a "lbf" file, return the entire compilation closure or a frontend error.
-runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError (Map (ModuleName ()) (Module SourceInfo)))
+runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError FrontendResult)
 runFrontend importPaths modFp = do
-  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] undefined) [] importPaths)
+  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] (SourceInfo "" (SourcePos 0 0) (SourcePos 0 0))) [] importPaths)
       exM = runStateT stM (FrontState mempty)
       ioM = runExceptT exM
-  fmap (importedModules . snd) <$> ioM
+  _ <- ioM
+  fmap (FrontendResult . importedModules . snd) <$> ioM
 
 throwE' :: FrontendError -> FrontendT m a
 throwE' = lift . lift . throwE
@@ -121,7 +127,7 @@ importModule imp = do
         modFps -> do
           cm <- asks current
           throwE' $ MultipleModulesFound cm imp modFps
-    Just m -> return m
+    Just (m, _) -> return m
 
 processFile :: FilePath -> FrontendT m (Module SourceInfo)
 processFile modFp = do
@@ -141,8 +147,9 @@ processModule m = local
   $ do
     importedScope <- processImports m
     localScope <- collectLocalScope m importedScope
-    checkReferences (localScope <> importedScope) m
-    _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) m . importedModules)
+    let modScope = localScope <> importedScope
+    checkReferences modScope m
+    _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) (m, modScope) . importedModules)
     return m
 
 checkReferences :: Scope -> Module SourceInfo -> FrontendT m ()

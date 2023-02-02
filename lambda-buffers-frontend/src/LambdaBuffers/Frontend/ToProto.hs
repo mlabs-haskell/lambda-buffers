@@ -1,11 +1,16 @@
 module LambdaBuffers.Frontend.ToProto (toCompilerInput) where
 
 import Control.Lens ((&), (.~))
+import Control.Monad (void)
+import Control.Monad.Except (Except, MonadError (throwError), runExcept)
+import Control.Monad.Reader (MonadReader (ask), ReaderT (runReaderT))
+import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
+import Data.Traversable (for)
+import LambdaBuffers.Frontend (FrontendResult (FrontendResult), Scope)
 import LambdaBuffers.Frontend.Syntax (
   ConstrName (ConstrName),
   Constructor (Constructor),
-  Import,
   Module (Module),
   ModuleName (ModuleName),
   ModuleNamePart (ModuleNamePart),
@@ -22,62 +27,106 @@ import LambdaBuffers.Frontend.Syntax (
  )
 import Proto.Compiler (Kind'KindRef (Kind'KIND_REF_TYPE))
 import Proto.Compiler qualified as P
-import Proto.Compiler_Fields as PF (argKind, argName, column, constrName, constructors, fields, file, kindRef, localTyRef, moduleName, modules, name, ntuple, opaque, parts, posFrom, posTo, product, row, sourceInfo, sum, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
+import Proto.Compiler_Fields as PF (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindRef, localTyRef, moduleName, modules, name, ntuple, opaque, parts, posFrom, posTo, product, row, sourceInfo, sum, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 
-toCompilerInput :: [Module SourceInfo] -> P.CompilerInput
-toCompilerInput ms = defMessage & modules .~ (toModule <$> ms)
+type ToProto a = (ReaderT (ModuleName (), Scope) (Except ToProtoError)) a
 
-toModule :: Module SourceInfo -> P.Module
-toModule (Module mn imps tyds info) =
-  defMessage
-    & moduleName .~ toModuleName mn
-    & typeDefs .~ (toTypeDef imps <$> tyds)
-    & sourceInfo .~ toSourceInfo info
+newtype ToProtoError = MissingTyRef (TyRef SourceInfo)
+  deriving stock (Show, Eq)
 
-toTypeDef :: [Import SourceInfo] -> TyDef SourceInfo -> P.TyDef
-toTypeDef _ (TyDef tn args body info) =
-  defMessage
-    & tyName .~ toTyName tn
-    & ( case args of
-          [] -> tyBody .~ toTyBody body
-          (a : as) -> tyAbs .~ toTyAbs a as body
+toCompilerInput :: FrontendResult -> Either ToProtoError P.CompilerInput
+toCompilerInput (FrontendResult modsWithScope) = do
+  mods <-
+    for
+      (Map.toList modsWithScope)
+      ( \(modName, (m, scope)) -> do
+          let errM = runReaderT (toModule m) (modName, scope)
+          runExcept errM
       )
-    & sourceInfo .~ toSourceInfo info
+  return $ defMessage & modules .~ mods
 
-toTyBody :: TyBody SourceInfo -> P.TyBody
-toTyBody (Sum cs info) =
-  defMessage
-    & PF.sum . constructors .~ (toConstructor <$> cs)
-    & PF.sum . sourceInfo .~ toSourceInfo info
-toTyBody Opaque = defMessage & opaque .~ defMessage
+toModule :: Module SourceInfo -> ToProto P.Module
+toModule (Module mn _ tyds info) = do
+  tyds' <- for tyds toTypeDef
+  return $
+    defMessage
+      & moduleName .~ toModuleName mn
+      & typeDefs .~ tyds'
+      & sourceInfo .~ toSourceInfo info
+
+toTypeDef :: TyDef SourceInfo -> ToProto P.TyDef
+toTypeDef (TyDef tn args body info) =
+  let tydef =
+        defMessage
+          & tyName .~ toTyName tn
+          & sourceInfo
+            .~ toSourceInfo
+              info
+   in case args of
+        [] -> do
+          body' <- toTyBody body
+          return $ tydef & tyBody .~ body'
+        (a : as) -> do
+          abs' <- toTyAbs a as body
+          return $ tydef & tyAbs .~ abs'
+
+toTyBody :: TyBody SourceInfo -> ToProto P.TyBody
+toTyBody (Sum cs info) = do
+  cs' <- for cs toConstructor
+  return $
+    defMessage
+      & PF.sum . constructors .~ cs'
+      & PF.sum . sourceInfo .~ toSourceInfo info
+toTyBody Opaque = return $ defMessage & opaque .~ defMessage
 
 -- TODO(bladyjoker): Add SourceInfo?
-toConstructor :: Constructor SourceInfo -> P.Sum'Constructor
-toConstructor (Constructor cname prod info) =
-  defMessage
-    & constrName .~ toConstName cname
-    & PF.product .~ toProduct prod
+toConstructor :: Constructor SourceInfo -> ToProto P.Sum'Constructor
+toConstructor (Constructor cname prod _info) = do
+  prod' <- toProduct prod
+  return $
+    defMessage
+      & constrName .~ toConstName cname
+      & PF.product .~ prod'
 
-toProduct :: Product SourceInfo -> P.Product
-toProduct (Product tys info) =
-  defMessage
-    & ntuple . fields .~ (toTy <$> tys)
-    & ntuple . sourceInfo .~ toSourceInfo info
+toProduct :: Product SourceInfo -> ToProto P.Product
+toProduct (Product tys info) = do
+  tys' <- for tys toTy
+  return $
+    defMessage
+      & ntuple . fields .~ tys'
+      & ntuple . sourceInfo .~ toSourceInfo info
 
-toTy :: Ty SourceInfo -> P.Ty
+toTy :: Ty SourceInfo -> ToProto P.Ty
 toTy (TyVar vn info) =
-  defMessage
-    & tyVar . varName .~ toVarName vn
-    & tyVar . sourceInfo .~ toSourceInfo info
-toTy (TyApp ty tys info) =
-  defMessage
-    & tyApp . tyFunc .~ toTy ty
-    & tyApp . tyArgs .~ (toTy <$> tys)
-    & tyApp . sourceInfo .~ toSourceInfo info
-toTy (TyRef' (TyRef mayModAl tn info) _) =
-  defMessage
-    & tyRef . localTyRef . tyName .~ toTyName tn
-    & tyRef . localTyRef . sourceInfo .~ toSourceInfo info
+  return $
+    defMessage
+      & tyVar . varName .~ toVarName vn
+      & tyVar . sourceInfo .~ toSourceInfo info
+toTy (TyApp ty tys info) = do
+  ty' <- toTy ty
+  tys' <- for tys toTy
+  return $
+    defMessage
+      & tyApp . tyFunc .~ ty'
+      & tyApp . tyArgs .~ tys'
+      & tyApp . sourceInfo .~ toSourceInfo info
+toTy (TyRef' tref@(TyRef _ tn info) _) = do
+  (currentModName, scope) <- ask
+  case Map.lookup (void tref) scope of
+    Nothing -> throwError $ MissingTyRef tref
+    Just modName ->
+      if currentModName == void modName
+        then
+          return $
+            defMessage
+              & tyRef . localTyRef . tyName .~ toTyName tn
+              & tyRef . localTyRef . sourceInfo .~ toSourceInfo info
+        else
+          return $
+            defMessage
+              & tyRef . foreignTyRef . moduleName .~ toModuleName modName
+              & tyRef . foreignTyRef . tyName .~ toTyName tn
+              & tyRef . foreignTyRef . sourceInfo .~ toSourceInfo info
 
 toVarName :: VarName SourceInfo -> P.VarName
 toVarName (VarName n info) =
@@ -92,11 +141,13 @@ toConstName (ConstrName cn info) =
     & sourceInfo .~ toSourceInfo info
 
 -- TODO(bladyjoker): TyAbs needs SourceInfo? Remove it if not.
-toTyAbs :: TyArg SourceInfo -> [TyArg SourceInfo] -> TyBody SourceInfo -> P.TyAbs
-toTyAbs arg args body =
-  defMessage
-    & tyArgs .~ (toTyArg <$> arg : args)
-    & tyBody .~ toTyBody body
+toTyAbs :: TyArg SourceInfo -> [TyArg SourceInfo] -> TyBody SourceInfo -> ToProto P.TyAbs
+toTyAbs arg args body = do
+  body' <- toTyBody body
+  return $
+    defMessage
+      & tyArgs .~ (toTyArg <$> arg : args)
+      & tyBody .~ body'
 
 toTyArg :: TyArg SourceInfo -> P.TyArg
 toTyArg (TyArg an info) =
