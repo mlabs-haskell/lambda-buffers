@@ -102,7 +102,6 @@ library
     , template-haskell
     , text                        >=1.2
     , th-abstraction
-    , transformers
 
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
