@@ -2,6 +2,7 @@
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
+  MiscError (..),
   ClassName (..),
   CompilerError (..),
   CompilerInput (..),
@@ -230,13 +231,13 @@ data KindCheckError
   = UnboundTermErr Text
   | UnificationErr Text
   | RecursiveSubstitutionErr Text
-  | InconsistentTypeErr TyDef
+  | InconsistentTypeErr TyRef
   deriving stock (Show, Eq, Ord, Generic)
 instance Exception KindCheckError
 
 data CompilerError
   = CompKindCheckError KindCheckError
-  | CompMiscErr MiscError
+  | CompMiscError MiscError
   deriving stock (Show, Eq, Ord, Generic)
 
 data ValidatedTyDef = ValidatedTyDef {tyRef :: TyRef, tyBody :: Ty, tyKind :: Kind}

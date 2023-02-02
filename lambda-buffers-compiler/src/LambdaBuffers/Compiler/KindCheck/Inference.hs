@@ -39,11 +39,9 @@ import Prettyprinter (
   (<+>),
  )
 
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
-  InferenceErr (..),
- )
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
 
-type InferErr = P.InferenceErr
+type InferErr = P.CompilerError
 
 newtype Constraint = Constraint (Kind, Kind)
   deriving stock (Show, Eq)
@@ -132,7 +130,7 @@ derive x = do
       (DC vs) <- get
       case vs of
         a : as -> put (DC as) >> pure a
-        [] -> throwError $ P.ImpossibleErr "End of infinite stream"
+        [] -> throwError . P.CompMiscError . P.ImpossibleErr $ "End of infinite stream"
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
@@ -142,7 +140,7 @@ getBinding t = do
   ctx <- asks getAllContext
   case ctx M.!? t of
     Just x -> pure x
-    Nothing -> throwError $ P.UnboundTermErr $ (T.pack . show . pretty) t
+    Nothing -> throwError $ P.CompKindCheckError $ P.UnboundTermErr $ (T.pack . show . pretty) t
 
 -- | Gets kind from a derivation.
 topKind :: Getter Derivation Kind

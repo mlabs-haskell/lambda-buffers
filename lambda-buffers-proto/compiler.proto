@@ -539,14 +539,15 @@ message KindCheckError {
   
   // The inferred type differs from the type as defined.
   message InconsistentTypeError {
-    TyDef type_def = 1;
+    TyRef ty_ref = 1;
   }
 
   // The types of inference errors.
-  oneof kindchek_error {
-    UnboundTermError unbound_term_e = 1;
-    UnificationError unification_e = 2;
-    RecursiveSubstitutionError recursive_subs_e = 3; 
+  oneof kind_check_error {
+    UnboundTermError unbound_term_err = 1;
+    UnificationError unification_err = 2;
+    RecursiveSubstitutionError recursive_subs_err = 3; 
+    InconsistentTypeError inconsistent_type_err = 4;
   }
 }
 
@@ -555,8 +556,8 @@ message CompilerError {
   
   // Reason why the compilation failed.
   oneof compiler_error {
-    KindCheckError kind_check_err = 1;
-    MiscError misc_err = 2;
+    KindCheckError comp_kind_check_err = 1;
+    MiscError comp_misc_err = 2;
   }
 }
 
