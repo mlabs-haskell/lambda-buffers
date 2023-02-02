@@ -515,7 +515,7 @@ instance IsMessage P.CompilerResult CompilerResult where
     RCompilerFailure cf -> defMessage & P.failedCompilation .~ toProto cf
     RCompilerOutput co -> defMessage & P.compilationResult .~ toProto co
 
-instance IsMessage P.CompilerFailure CompilerFailure where
+instance IsMessage P.CompilerFailure CompilerError where
   fromProto cf = do
     case cf ^. P.maybe'failure of
       Just (P.CompilerFailure'KcErr f) -> KCErr <$> fromProto f

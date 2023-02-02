@@ -4,13 +4,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaBuffers.Compiler.KindCheck (
+  -- * Kindchecking functions.
   check,
   check_,
+
+  -- * Testing Utils.
   foldWithSum,
-
-  -- * Testing Utils
-
-  -- * Utilities -- exported for testing
   foldWithArrow,
   foldWithProduct,
 ) where

@@ -3,9 +3,9 @@
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
   ClassName (..),
-  CompilerFailure (..),
+  CompilerError (..),
   CompilerInput (..),
-  CompilerOutput (..),
+  CompilerOutput,
   CompilerResult (..),
   ConstrName (..),
   Constraint (..),
@@ -13,11 +13,10 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   Field (..),
   FieldName (..),
   ForeignRef (..),
-  InferenceErr (..),
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
-  KindCheckErr (..),
+  KindCheckError (..),
   KindType (..),
   LBName (..),
   LocalRef (..),
@@ -219,35 +218,31 @@ data Module = Module
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-data InferenceErr
-  = UnboundTermErr Text
-  | ImpossibleErr Text
-  | UnificationErr Text
-  | RecursiveSubstitutionErr Text
-  deriving stock (Show, Eq, Ord, Generic)
-
-instance Exception InferenceErr
-
-data KindCheckErr
-  = InconsistentTypeErr TyDef
-  | InferenceFailure TyDef InferenceErr
-  deriving stock (Show, Eq, Ord, Generic)
-
-instance Exception KindCheckErr
-
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
 
-newtype CompilerOutput = CompilerOutput
-  { typeDefs :: M.Map Var Kind
-  }
+newtype MiscError = ImpossibleErr Text
+  deriving stock (Show, Eq, Ord, Generic)
+instance Exception MiscError
+
+data KindCheckError
+  = UnboundTermErr Text
+  | UnificationErr Text
+  | RecursiveSubstitutionErr Text
+  | InconsistentTypeErr TyDef
+  deriving stock (Show, Eq, Ord, Generic)
+instance Exception KindCheckError
+
+data CompilerError
+  = CompKindCheckError KindCheckError
+  | CompMiscErr MiscError
   deriving stock (Show, Eq, Ord, Generic)
 
-newtype CompilerFailure = KCErr KindCheckErr
+data ValidatedTyDef = ValidatedTyDef {tyRef :: TyRef, tyBody :: Ty, tyKind :: Kind}
   deriving stock (Show, Eq, Ord, Generic)
 
-data CompilerResult
-  = RCompilerFailure CompilerFailure
-  | RCompilerOutput CompilerOutput
+newtype CompilerResult = CompilerResult {typeDefs :: M.Map TyRef (Ty, Kind)}
   deriving stock (Show, Eq, Ord, Generic)
+
+type CompilerOutput = Either CompilerError CompilerResult

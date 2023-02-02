@@ -9,12 +9,26 @@ Frontends are advised to include *Source* information to denote how their
 *Compiler* errors back to the Frontend.
 */
 message SourceInfo {
+  
+  // // Information related to where the 
+  // message Generated {
+  //   string description = 1;
+  // }
+
+  // Source information relating to where the information is coming from.
+  // message Parsed {
   // A filename denoting the Source file.
   string file = 1;
   // Starting position in Source.
   SourcePosition pos_from = 2;
   // End position in Source.
   SourcePosition pos_to = 3;
+  // }
+
+  // oneof source_info {
+  //   Generated generated_info = 1;
+  //   Parsed parsed_info = 2; 
+  // }
 }
 
 /* Position in Source */
@@ -490,103 +504,79 @@ message CompilerInput {
   repeated Module modules = 1;
 }
 
-// Compiler Failure can be extended with other classes of errors.
-message CompilerFailure {
-  // Reason why the compilation failed.
-  oneof failure {
-    KindCheckErr kc_err = 1;
-  }
-}
-
-/* Inference Failure 
- */
-
-message InferenceErr {
-
-  // Error referring to an unbound term. This usually means that the term was
-  // not defined.
-  message UnboundTermErr {
-    string msg = 1; 
-  }
+// Miscellaneous errors.
+message MiscError {
 
   // This should never happen.
-  message ImpossibleErr {
+  message ImpossibleError {
     string msg = 1;
   }
 
+  oneof misc_error {
+    ImpossibleError impossible_error = 1;
+  }
+}
+
+// Kindchecker errors.
+message KindCheckError {
+
+  // Error referring to an unbound term. This usually means that the term was
+  // not defined.
+  message UnboundTermError {
+    string msg = 1; 
+  }
+
   // Unification has failed - type is incorrectly defined.
-  message UnificationErr {
+  message UnificationError {
     string msg = 1; 
   }
 
   // Infinite recursion due to a substitution replacing a term with a term
   // containing itself. Should never type check.
-  message RecursiveSubstitutionErr {
+  message RecursiveSubstitutionError {
     string msg = 1;
+  }
+  
+  // The inferred type differs from the type as defined.
+  message InconsistentTypeError {
+    TyDef type_def = 1;
   }
 
   // The types of inference errors.
-  oneof inf_err {
-    UnboundTermErr unbound_term_e = 1;
-    ImpossibleErr impossible_e = 2;
-    UnificationErr unification_e = 3;
-    RecursiveSubstitutionErr recursive_subs_e = 4; 
+  oneof kindchek_error {
+    UnboundTermError unbound_term_e = 1;
+    UnificationError unification_e = 2;
+    RecursiveSubstitutionError recursive_subs_e = 3; 
   }
 }
 
-// The inferred type differs from the type as defined.
-message InconsistentTypeErr {
-  TyDef type_def = 1;
-}
-
-// Inference failed.
-message InferenceFailure {
-  TyDef type_def = 1;
-  InferenceErr infer_err = 2;
-}
-
-
-/* Kindcheck Failure
-
-   Information regarding a Kindcheck failure.
- */
-message KindCheckErr {
-
-  oneof kind_check_error {
-    InferenceFailure inference_failure_err = 1;
-    InconsistentTypeErr inconsistent_type_err = 2; 
+// Compiler Error can be extended with other classes of errors.
+message CompilerError {
+  
+  // Reason why the compilation failed.
+  oneof compiler_error {
+    KindCheckError kind_check_err = 1;
+    MiscError misc_err = 2;
   }
-}
-
-// A namespaced type term.
-message NSTypeName {
-  string namespaced_name = 1;
 }
 
 // A validated type definition.
-message TypeDefinition {
-  NSTypeName ns_name = 1 ;
-  Kind kind = 2;
+message ValidatedTyDef {
+  TyRef ty_ref = 1 ;
+  Ty ty_body = 2;
+  Kind ty_kind = 3;
 }
 
-/*
-  Compiler Output
-
-  A successful Compilation Output.
- */
-message CompilerOutput {
-  // A map of checked type definitions.
-  repeated TypeDefinition type_defs = 1;
-}
-
-/* Compilation Result 
-
-   Compiler Output is either an Error or a Compiler Output.
- */
+// Compiler Result ~ a successful Compilation Output.
 message CompilerResult {
-  oneof compiler_result {
-    CompilerFailure failed_compilation = 1;
-    CompilerOutput compilation_result = 2;
+  // A map of checked type definitions.
+  repeated ValidatedTyDef type_defs = 1;
+}
+
+// Output of the Compiler.
+message CompilerOutput {
+  oneof compiler_output {
+    CompilerError compilation_error = 1;
+    CompilerResult compilation_result = 2;
   }
-  SourceInfo source_info = 3;
 }
