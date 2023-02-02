@@ -21,7 +21,7 @@ import Proto.Compiler_Fields qualified as P
 
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
-import Proto.Compiler (NamingError)
+import Proto.Compiler (NamingError, TyDef'Ty (TyDef'TyAbs, TyDef'TyBody))
 
 note :: e -> Maybe a -> Either e a
 note e = \case
@@ -228,14 +228,18 @@ instance IsMessage P.TyRef TyRef where
 instance IsMessage P.TyDef TyDef where
   fromProto td = do
     tnm <- fromProto $ td ^. P.tyName
-    tyabs <- fromProto $ td ^. P.tyAbs
+    ty <- case td ^. P.maybe'ty of
+      Nothing -> throwProtoError $ OneOfNotSet "ty_ref"
+      Just x -> case x of
+        TyDef'TyAbs tyA -> Left <$> fromProto tyA
+        TyDef'TyBody tyB -> Right <$> fromProto tyB
     si <- fromProto $ td ^. P.sourceInfo
-    pure $ TyDef tnm tyabs si
+    pure $ TyDef tnm ty si
 
-  toProto (TyDef tnm tyabs si) =
+  toProto (TyDef tnm ty si) =
     defMessage
       & P.tyName .~ toProto tnm
-      & P.tyAbs .~ toProto tyabs
+      & either (\tyA -> P.tyAbs .~ toProto tyA) (\tyB -> P.tyBody .~ toProto tyB) ty
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyAbs TyAbs where

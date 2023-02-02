@@ -162,7 +162,7 @@ flattenModuleName mName = intercalate "." $ (\p -> p ^. #name) <$> mName ^. #par
 tyDef2NameAndKind :: forall effs. ModName -> P.TyDef -> Eff effs (ModName, Kind)
 tyDef2NameAndKind curModName tyDef = do
   let name = curModName <> "." <> (tyDef ^. #tyName . #name) -- name is qualified
-  let k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
+  let k = tyDefTyLHS2Kind (tyDef ^. #ty)
   pure (name, k)
 
 tyDef2Context :: forall effs. ModName -> P.TyDef -> Eff effs Context
@@ -170,8 +170,9 @@ tyDef2Context curModName tyDef = do
   r <- tyDef2NameAndKind curModName tyDef
   pure $ mempty & context .~ uncurry M.singleton r
 
-tyAbsLHS2Kind :: P.TyAbs -> Kind
-tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
+tyDefTyLHS2Kind :: Either P.TyAbs P.TyBody -> Kind
+tyDefTyLHS2Kind (Left tyAbs) = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
+tyDefTyLHS2Kind (Right _) = Type
 
 foldWithArrow :: [Kind] -> Kind
 foldWithArrow = foldl (:->:) Type
@@ -196,13 +197,14 @@ tyDef2Type ::
   Members '[Reader ModName, Err] eff =>
   P.TyDef ->
   Eff eff Type
-tyDef2Type tyde = tyAbsLHS2Type (tyde ^. #tyAbs) <*> tyAbsRHS2Type (tyde ^. #tyAbs)
+tyDef2Type tyde = tyDefTyLHS2Type (tyde ^. #ty) <*> tyDefTyRHS2Type (tyde ^. #ty)
 
-tyAbsLHS2Type ::
+tyDefTyLHS2Type ::
   forall eff.
-  P.TyAbs ->
+  Either P.TyAbs P.TyBody ->
   Eff eff (Type -> Type)
-tyAbsLHS2Type tyab = tyArgs2Type (tyab ^. #tyArgs)
+tyDefTyLHS2Type (Left tyab) = tyArgs2Type (tyab ^. #tyArgs)
+tyDefTyLHS2Type (Right _) = pure id
 
 tyArgs2Type ::
   forall eff.
@@ -217,12 +219,13 @@ tyArgs2Type = \case
 tyArg2Var :: P.TyArg -> Var
 tyArg2Var = view (#argName . #name)
 
-tyAbsRHS2Type ::
+tyDefTyRHS2Type ::
   forall eff.
   Members '[Reader ModName, Err] eff =>
-  P.TyAbs ->
+  Either P.TyAbs P.TyBody ->
   Eff eff Type
-tyAbsRHS2Type tyab = tyBody2Type (tyab ^. #tyBody)
+tyDefTyRHS2Type (Left tyab) = tyBody2Type (tyab ^. #tyBody)
+tyDefTyRHS2Type (Right tyb) = tyBody2Type tyb
 
 tyBody2Type ::
   forall eff.

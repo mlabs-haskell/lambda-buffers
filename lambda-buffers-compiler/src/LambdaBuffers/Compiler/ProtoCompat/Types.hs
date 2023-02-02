@@ -125,7 +125,7 @@ data TyRef
 
 data TyDef = TyDef
   { tyName :: TyName
-  , tyAbs :: TyAbs
+  , ty :: Either TyAbs TyBody
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
