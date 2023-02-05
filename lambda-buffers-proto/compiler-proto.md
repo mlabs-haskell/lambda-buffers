@@ -651,9 +651,8 @@ Once introduced in the module scope, type definitions are referred to using
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Type name. |
-| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type term.
-
-TODO(bladyjoker): Turn into a oneOf TyAbs | Ty |
+| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type abstraction can only be introduced in TyDef context. |
+| ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | The body can be introduced in TyDef directly or under TyAbs. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 

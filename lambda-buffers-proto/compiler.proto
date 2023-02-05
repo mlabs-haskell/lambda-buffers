@@ -223,9 +223,14 @@ message TyDef {
   // Type name.
   TyName ty_name = 1;
   // Type term.
-  TyAbs ty_abs = 2; // TODO(bladyjoker): Turn into a oneOf TyAbs | Ty
+  oneof ty {
+    // Type abstraction can only be introduced in TyDef context.
+    TyAbs ty_abs = 2;
+    // The body can be introduced in TyDef directly or under TyAbs.
+    TyBody ty_body = 3;
+  }
   // Source information.
-  SourceInfo source_info = 3;
+  SourceInfo source_info = 4;
 }
 
 /* Type arguments

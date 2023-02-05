@@ -79,10 +79,7 @@ data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data Kind = Kind
-  { kind :: KindType
-  , sourceInfo :: SourceInfo
-  }
+data Kind = Kind {kind :: KindType, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 data KindType
@@ -95,10 +92,7 @@ data KindRefType
   | KType
   deriving stock (Show, Eq, Ord, Generic)
 
-data TyVar = TyVar
-  { varName :: VarName
-  , sourceInfo :: SourceInfo
-  }
+data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 data Ty
@@ -121,10 +115,7 @@ data ForeignRef = ForeignRef
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-data LocalRef = LocalRef
-  { tyName :: TyName
-  , sourceInfo :: SourceInfo
-  }
+data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 data TyRef
@@ -134,7 +125,7 @@ data TyRef
 
 data TyDef = TyDef
   { tyName :: TyName
-  , tyAbs :: TyAbs
+  , ty :: Either TyAbs TyBody
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -228,3 +219,4 @@ data Module = Module
 
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (Monoid, Semigroup)

@@ -1,7 +1,12 @@
 {-# LANGUAGE OverloadedLabels #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..)) where
+module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X) where
+
+-- NOTE(cstml): I'm re-exporting the module from here as it makes more sense -
+-- also avoids annoying errors.
+import LambdaBuffers.Compiler.ProtoCompat.Types as X
 
 import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Foldable (toList)
@@ -16,42 +21,7 @@ import Proto.Compiler_Fields qualified as P
 
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
-import LambdaBuffers.Compiler.ProtoCompat.Types (
-  ClassDef (ClassDef),
-  ClassName (ClassName),
-  CompilerInput (CompilerInput),
-  ConstrName (ConstrName),
-  Constraint (Constraint),
-  Constructor (Constructor),
-  Field (Field),
-  FieldName (FieldName),
-  ForeignRef (ForeignRef),
-  InstanceClause (InstanceClause),
-  Kind (Kind),
-  KindRefType (KType, KUnspecified),
-  KindType (KindArrow, KindRef),
-  LocalRef (LocalRef),
-  Module (Module),
-  ModuleName (ModuleName),
-  ModuleNamePart (ModuleNamePart),
-  Product (RecordI, TupleI),
-  Record (Record),
-  SourceInfo (SourceInfo),
-  SourcePosition (SourcePosition),
-  Sum (Sum),
-  Tuple (Tuple),
-  Ty (TyAppI, TyRefI, TyVarI),
-  TyAbs (TyAbs),
-  TyApp (TyApp),
-  TyArg (TyArg),
-  TyBody (OpaqueI, SumI),
-  TyDef (TyDef),
-  TyName (TyName),
-  TyRef (ForeignI, LocalI),
-  TyVar (TyVar),
-  VarName (VarName),
- )
-import Proto.Compiler (NamingError)
+import Proto.Compiler (NamingError, TyDef'Ty (TyDef'TyAbs, TyDef'TyBody))
 
 note :: e -> Maybe a -> Either e a
 note e = \case
@@ -258,14 +228,18 @@ instance IsMessage P.TyRef TyRef where
 instance IsMessage P.TyDef TyDef where
   fromProto td = do
     tnm <- fromProto $ td ^. P.tyName
-    tyabs <- fromProto $ td ^. P.tyAbs
+    ty <- case td ^. P.maybe'ty of
+      Nothing -> throwProtoError $ OneOfNotSet "ty_ref"
+      Just x -> case x of
+        TyDef'TyAbs tyA -> Left <$> fromProto tyA
+        TyDef'TyBody tyB -> Right <$> fromProto tyB
     si <- fromProto $ td ^. P.sourceInfo
-    pure $ TyDef tnm tyabs si
+    pure $ TyDef tnm ty si
 
-  toProto (TyDef tnm tyabs si) =
+  toProto (TyDef tnm ty si) =
     defMessage
       & P.tyName .~ toProto tnm
-      & P.tyAbs .~ toProto tyabs
+      & either (\tyA -> P.tyAbs .~ toProto tyA) (\tyB -> P.tyBody .~ toProto tyB) ty
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyAbs TyAbs where
