@@ -16,9 +16,8 @@ kind_check(CompIn, Sol) :-
             ),
             Modules),
     make_kind_check_ctx(Modules, Sol),
-    member(Mod, Modules),
     catch_with_backtrace(
-        kind_check_module(Sol, Mod),
+        maplist(call(kind_check_module, Sol), Modules),
         error(Error),
         (print_message(error, Error), throw(error(Error)))
     ).
@@ -77,7 +76,6 @@ prod_ty_def(TyName, Cons, '.lambdabuffers.compiler.TyDef'{
                               ty_abs: Ty,
                               source_info: _Todo
                           }) :-
-
     prod_ty(Cons.product, Ty),
     prod_ty_name(TyName, Cons.constr_name, ProdTyName).
 
@@ -85,11 +83,13 @@ prod_ty_name(TyName, ConstrName, '.lambdabuffers.compiler.TyName'{ name: ProdTyN
     string_concat(TyName.name, "'Sum'", SumTyName),
     string_concat(SumTyName, ConstrName.name, ProdTyName).
 
-prod_ty('.lambdabuffers.compiler.Product'{ ntuple: _{fields: [], source_info: _}, source_info: _ }, TyAbs) :-
+prod_ty(Prod, TyAbs) :-
+    Prod.ntuple.fields = [],
     ty_abs([], '.lambdabuffers.compiler.TyBody'{ opaque: '.lambdabuffers.compiler.Opaque'{ source_info: _}}, TyAbs),
     print_message(info, reached_tuple_unit).
 
-prod_ty('.lambdabuffers.compiler.Product'{ ntuple: _{fields: [_|Fs], source_info: _}, source_info: _}, Ty) :-
+prod_ty(Prod, Ty) :-
+    Prod.ntuple.fields = [_|Fs],
     kind_ref(type, K),
     prod_ty('.lambdabuffers.compiler.Product'{
                 ntuple: '.lambdabuffers.compiler.Product.NTuple'{ fields: Fs, source_info: _},
@@ -230,7 +230,8 @@ kind_check_ty(Ctx, '.lambdabuffers.compiler.Ty'{ty_app: _{ty_func: TyFunc, ty_ar
      kind_check_ty(Ctx, TyFunc, KAbs),
      kind_arrow_(KArgs, K, KAbs).
 
-kind_check_ty(ctx(Mn, Tn, Rs, As), '.lambdabuffers.compiler.TyAbs'{ty_body: TyBody, ty_args: TyArgs, source_info: _}, K) :-
+kind_check_ty(ctx(Mn, Tn, Rs, As), TyAbs, K) :-
+    '.lambdabuffers.compiler.TyAbs'{ty_body: TyBody, ty_args: TyArgs} :< TyAbs,
     findall(KArg,
             (
                 member(TyArg, TyArgs),
@@ -482,10 +483,17 @@ test("\nmodule Mod\nopaque String\nopaque Int\nsum Foo f = MkA (f Int String)", 
 
 :- multifile prolog:message//1.
 
-prolog:message(missing_ty_ref(ModuleName, TyName, TyRef, _Sol))
+prolog:message(missing_ty_ref(ModuleName, TyName, _{local_ty_ref: LocalTyRef}, _Sol))
 --> {pretty_module_name(ModuleName, Mn)},[
         'Error while kind checking type ~w.~w: Missing local type reference ~w '-[
-            Mn, TyName.name, TyRef.local_ty_ref.ty_name.name
+            Mn, TyName.name, LocalTyRef.ty_name.name
+        ]
+    ].
+
+prolog:message(missing_ty_ref(ModuleName, TyName, _{foreign_ty_ref: ForeignTyRef}, _Sol))
+--> {pretty_module_name(ModuleName, Mn)},[
+        'Error while kind checking type ~w.~w: Missing foreign type reference ~w '-[
+            Mn, TyName.name, ForeignTyRef.ty_name.name
         ]
     ].
 
