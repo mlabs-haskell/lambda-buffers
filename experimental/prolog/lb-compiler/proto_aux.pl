@@ -9,6 +9,7 @@
              ty_app/3,
              ty_abs/3,
              ty_arg/3,
+             ty_var/2,
              ty_def_opaque/2,
              ntuple/2,
              sum/2,
@@ -18,7 +19,9 @@
              kind_arrow/3,
              kind_arrow_/3,
              pretty_solution/2,
-             print_solution/1
+             print_solution/1,
+             pretty_kind/2,
+             pretty_module_name/2
          ]).
 
 :- use_module(compiler_pb).
@@ -61,6 +64,11 @@ ty_abs(TyArgs, TyBody, '.lambdabuffers.compiler.TyAbs'{
                           ty_body: TyBody,
                           source_info: _Si % TODO(bladyjoker): Missing source info
                       }).
+
+ty_var(VarName, '.lambdabuffers.compiler.Ty'{ ty_var: '.lambdabuffers.compiler.TyVar'{
+                                                          var_name: '.lambdabuffers.compiler.VarName'{ name: VarName, source_info: _},
+                                                          source_info: _
+                                                      }}).
 
 comp_input(Modules, '.lambdabuffers.compiler.CompilerInput'{ modules: Modules }).
 
@@ -108,7 +116,8 @@ ntuple(Fields,  '.lambdabuffers.compiler.Product'{
 
 ty_arg(ArgName, ArgKind, '.lambdabuffers.compiler.TyArg'{
                              arg_name: '.lambdabuffers.compiler.VarName'{ name: ArgName, source_info: _Todo },
-                             arg_kind: ArgKind
+                             arg_kind: ArgKind,
+                             source_info: _
                          }).
 
 ty_def_opaque(TyName, TyDef) :-
@@ -138,10 +147,15 @@ pretty_solution([ModuleName-TyName-K|Rs], [Mn-TyName.name-K_|Rs_]) :-
     pretty_kind(K, K_),
     pretty_solution(Rs, Rs_).
 
-pretty_kind('.lambdabuffers.compiler.Kind'{kind_ref: 'KIND_REF_TYPE'}, *).
-pretty_kind('.lambdabuffers.compiler.Kind'{kind_arrow: '.lambdabuffers.compiler.Kind.KindArrow'{left: L, right: R}}, L_->R_) :-
-    pretty_kind(L, L_),
-    pretty_kind(R, R_).
+pretty_kind(K, K_) :-
+    var(K) -> K_='?';
+    (
+        K = '.lambdabuffers.compiler.Kind'{kind_ref: 'KIND_REF_TYPE'} -> K_='*'
+    ).
+pretty_kind(K, L_->R_) :-
+    \+var(K) -> K = '.lambdabuffers.compiler.Kind'{kind_arrow: '.lambdabuffers.compiler.Kind.KindArrow'{left: L, right: R}},
+                pretty_kind(L, L_),
+                pretty_kind(R, R_).
 
 pretty_module_name(ModuleName, Mn) :-
     module_name_parts_tolist(ModuleName.parts, Ps),
