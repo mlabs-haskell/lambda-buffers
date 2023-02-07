@@ -20,6 +20,9 @@ import Control.Monad.Freer (Eff, Members, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
 import Control.Monad.Freer.TH (makeEffect)
+import Data.Foldable (traverse_)
+import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
+import Data.Map qualified as M
 import Data.Text (Text, intercalate)
 import LambdaBuffers.Compiler.KindCheck.Context (Context)
 import LambdaBuffers.Compiler.KindCheck.Inference (
@@ -34,8 +37,11 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
   context,
   infer,
  )
+import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
+import LambdaBuffers.Compiler.KindCheck.Type qualified as P
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
+import LambdaBuffers.Compiler.ProtoCompat (kind2ProtoKind)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ClassDef,
   CompilerError (..),
@@ -74,12 +80,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   TyVar,
   VarName (VarName),
  )
-
-import Data.Foldable (traverse_)
-import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
-import Data.Map qualified as M
-import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
-import LambdaBuffers.Compiler.ProtoCompat (kind2ProtoKind)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PT
 
 --------------------------------------------------------------------------------
 -- Types
@@ -131,12 +132,12 @@ runCheck :: Eff (Check ': '[]) a -> Either CompilerErr a
 runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
 -- | Run the check - return the validated context or the failure.
-check :: P.CompilerInput -> Either CompilerErr Context
-check = runCheck . kCheck
+check :: P.CompilerInput -> PT.CompilerOutput
+check = fmap (const PT.CompilerResult) . runCheck . kCheck
 
 -- | Run the check - drop the result if it succeeds.
 check_ :: P.CompilerInput -> Either CompilerErr ()
-check_ = void . check
+check_ = void . runCheck . kCheck
 
 --------------------------------------------------------------------------------
 

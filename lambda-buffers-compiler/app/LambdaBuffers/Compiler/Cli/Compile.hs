@@ -10,12 +10,8 @@ import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler.KindCheck (check)
 import LambdaBuffers.Compiler.KindCheck.Context (getAllContext)
 import LambdaBuffers.Compiler.ProtoCompat (
-  CompilerFailure (KCErr),
-  CompilerOutput (CompilerOutput),
-  CompilerResult (RCompilerFailure, RCompilerOutput),
   FromProtoErr (NamingError, ProtoError),
   IsMessage (fromProto, toProto),
-  kindConvert,
  )
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import Proto.Compiler as ProtoLib (CompilerInput, CompilerResult)
