@@ -8,13 +8,12 @@ import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler.KindCheck (check)
-import LambdaBuffers.Compiler.KindCheck.Context (getAllContext)
 import LambdaBuffers.Compiler.ProtoCompat (
   FromProtoErr (NamingError, ProtoError),
   IsMessage (fromProto, toProto),
  )
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import Proto.Compiler as ProtoLib (CompilerInput, CompilerResult)
+import Proto.Compiler as ProtoLib (CompilerInput, CompilerOutput)
 import System.FilePath.Lens (extension)
 
 data CompileOpts = CompileOpts
@@ -37,7 +36,7 @@ compile opts = do
       ProtoError pe -> print $ "Encountered a proto error " <> show pe
     Right compIn' -> do
       print @String "Successfully processed the CompilerInput"
-      let result = either (RCompilerFailure . KCErr) (RCompilerOutput . CompilerOutput . fmap kindConvert . getAllContext) $ check compIn'
+      let result = check compIn'
       writeCompilerOutput (opts ^. output) (toProto result)
   return ()
 
@@ -53,7 +52,7 @@ readCompilerInput fp = do
       return $ PbText.readMessageOrDie content
     _ -> error $ "Unknown CompilerInput format " <> ext
 
-writeCompilerOutput :: FilePath -> ProtoLib.CompilerResult -> IO ()
+writeCompilerOutput :: FilePath -> ProtoLib.CompilerOutput -> IO ()
 writeCompilerOutput fp cr = do
   let ext = fp ^. extension
   case ext of
