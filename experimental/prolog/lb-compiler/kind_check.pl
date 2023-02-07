@@ -452,6 +452,37 @@ test("\nmodule Mod\nsum Foo a = MkA b", [ ]) :-
         error(missing_ty_var(_, _, TyV, _)),
         TyV.var_name.name = "b").
 
+test("\nmodule ModFoo\nsum Foo = MkFoo Bar\nopaque NotBar", [ ]) :-
+    ty_def_opaque("NotBar", NotBarTyDef),
+    ty_local_ref_("Bar", BarTyRef),
+    ntuple([BarTyRef], MkFooProd),
+    constr("MkFoo", MkFooProd, MkFooConstr),
+    sum([MkFooConstr], FooTyBody),
+    ty_def_body("Foo", FooTyBody, FooTyDef),
+    mod("ModFoo", [NotBarTyDef, FooTyDef], ModFoo),
+    comp_input([ModFoo], CompIn),
+    catch(
+        kind_check(CompIn, _Solution),
+        error(missing_ty_ref(_, _, TyRef, _)),
+        TyRef.local_ty_ref.ty_name.name = "Bar").
+
+test("\nmodule ModFoo\nsum Foo = MkFoo Bar\nmodule ModBar\nopaque NotBar", [ ]) :-
+    ty_def_opaque("NotBar", NotBarTyDef),
+    mod("ModBar", [NotBarTyDef], ModBar),
+    ty_foreign_ref_(["ModBar"], "Bar", BarTyRef),
+    ntuple([BarTyRef], MkFooProd),
+    constr("MkFoo", MkFooProd, MkFooConstr),
+    sum([MkFooConstr], FooTyBody),
+    ty_def_body("Foo", FooTyBody, FooTyDef),
+    mod("ModFoo", [FooTyDef], ModFoo),
+    comp_input([ModFoo, ModBar], CompIn),
+    catch(
+        kind_check(CompIn, _Solution),
+        error(missing_ty_ref(_, _, TyRef, _)),
+        TyRef.foreign_ty_ref.ty_name.name = "Bar").
+
+    print_solution(Solution).
+
 :- end_tests(kind_check).
 
 :- multifile prolog:message//1.
