@@ -1,6 +1,20 @@
-module Test.Samples.Proto.Helpers where
+module Test.Samples.Proto.Helpers (
+  _tyName,
+  _varName,
+  _tyVar,
+  _TyVarI,
+  _TupleI,
+  _Constructor,
+  _ConstrName,
+  _Sum,
+  _TyAbs,
+  _TyArg,
+  _Type,
+  _TyDef,
+  _TyRefILocal,
+) where
 
-import Data.List.NonEmpty (NonEmpty ((:|)), fromList)
+import Data.List.NonEmpty (fromList)
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
