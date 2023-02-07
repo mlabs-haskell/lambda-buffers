@@ -39,10 +39,10 @@ _TupleI x =
       , P.sourceInfo = sourceInfo'empty
       }
 
-_Constructor :: P.ConstrName -> P.Product -> P.Constructor
+_Constructor :: Text -> P.Product -> P.Constructor
 _Constructor c f =
   P.Constructor
-    { P.constrName = c
+    { P.constrName = _ConstrName c
     , P.product = f
     }
 
@@ -53,19 +53,19 @@ _ConstrName x =
     , P.sourceInfo = sourceInfo'empty
     }
 
-_Sum :: [P.Constructor] -> P.TyBody
+_Sum :: [(Text, P.Product)] -> P.TyBody
 _Sum cs =
   P.SumI $
     P.Sum
-      { constructors = fromList cs
+      { constructors = fromList $ uncurry _Constructor <$> cs
       , sourceInfo = sourceInfo'empty
       }
 
-_TyAbs :: [P.TyArg] -> P.TyBody -> P.TyAbs
+_TyAbs :: [(Text, P.KindType)] -> [(Text, P.Product)] -> P.TyAbs
 _TyAbs args body =
   P.TyAbs
-    { P.tyArgs = args
-    , P.tyBody = body
+    { P.tyArgs = _TyArg <$> args
+    , P.tyBody = _Sum body
     , sourceInfo = sourceInfo'empty
     }
 

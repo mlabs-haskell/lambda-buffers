@@ -39,7 +39,6 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
  )
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
-import LambdaBuffers.Compiler.KindCheck.Type qualified as P
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat (kind2ProtoKind)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
