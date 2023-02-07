@@ -6,6 +6,8 @@
              ty_def_abs/3,
              ty_local_ref/2,
              ty_local_ref_/2,
+             ty_foreign_ref/3,
+             ty_foreign_ref_/3,
              ty_app/3,
              ty_abs/3,
              ty_arg/3,
@@ -21,7 +23,8 @@
              pretty_solution/2,
              print_solution/1,
              pretty_kind/2,
-             pretty_module_name/2
+             pretty_module_name/2,
+             pretty_foreign_ty_ref/2
          ]).
 
 :- use_module(compiler_pb).
@@ -50,6 +53,24 @@ ty_local_ref(TyName, '.lambdabuffers.compiler.Ty'{
 ty_local_ref_(TyName, Ty) :-
     ty_local_ref('.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _}, Ty).
 
+ty_foreign_ref(ModName, TyName, '.lambdabuffers.compiler.Ty'{
+                                    ty_ref: '.lambdabuffers.compiler.TyRef'{
+                                                foreign_ty_ref: '.lambdabuffers.compiler.TyRef.Foreign'{
+                                                                    ty_name: TyName,
+                                                                    module_name: ModName,
+                                                                    source_info: _
+                                                                }
+                                            }
+                                }).
+
+ty_foreign_ref_(ModName, TyName, Ty) :-
+    findall('.lambdabuffers.compiler.ModuleNamePart'{ name: P, source_info: _}, member(P, ModName), Ps),
+    ty_foreign_ref(
+        '.lambdabuffers.compiler.ModuleName'{ parts: Ps, source_info: _},
+        '.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _},
+        Ty).
+
+
 ty_app(TyF, TyArgs, '.lambdabuffers.compiler.Ty'{
                        ty_app: '.lambdabuffers.compiler.TyApp'{
                                    ty_func: TyF,
@@ -76,46 +97,47 @@ mod(ModuleName, TyDefs, '.lambdabuffers.compiler.Module'{
                                module_name: '.lambdabuffers.compiler.ModuleName'{
                                                 parts: ['.lambdabuffers.compiler.ModuleNamePart'{
                                                             name: ModuleName,
-                                                            source_info: _Todo
-                                                        }]
+                                                            source_info: _
+                                                        }],
+                                                source_info: _
                                             },
-                               source_info: _Todo,
+                               source_info: _,
                                type_defs: TyDefs
                            }).
 
 ty_def_body(TyName, TyBody, '.lambdabuffers.compiler.TyDef'{
-                           ty_name: '.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _Todo },
+                           ty_name: '.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _ },
                            ty_body: TyBody,
-                           source_info: _Todo
+                           source_info: _
                        }).
 
 ty_def_abs(TyName, TyAbs, '.lambdabuffers.compiler.TyDef'{
-                           ty_name: '.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _Todo },
+                           ty_name: '.lambdabuffers.compiler.TyName'{ name: TyName, source_info: _ },
                            ty_abs: TyAbs,
-                           source_info: _Todo
+                           source_info: _
                        }).
 
-opaque('.lambdabuffers.compiler.TyBody'{ opaque: '.lambdabuffers.compiler.Opaque'{ source_info: _Todo }}).
+opaque('.lambdabuffers.compiler.TyBody'{ opaque: '.lambdabuffers.compiler.Opaque'{ source_info: _ }}).
 
-sum(Cons, '.lambdabuffers.compiler.TyBody'{ sum: '.lambdabuffers.compiler.Sum'{ constructors: Cons, source_info: _Todo }}).
+sum(Cons, '.lambdabuffers.compiler.TyBody'{ sum: '.lambdabuffers.compiler.Sum'{ constructors: Cons, source_info: _ }}).
 
 constr(ConstrName, Prod, '.lambdabuffers.compiler.Constructor'{
                              constr_name: '.lambdabuffers.compiler.ConstrName'{
                                               name: ConstrName,
                                               source_info: _},
                              product: Prod,
-                             source_info: _Todo }).
+                             source_info: _ }).
 
 ntuple(Fields,  '.lambdabuffers.compiler.Product'{
                     ntuple: '.lambdabuffers.compiler.Product.NTuple'{
                                 fields: Fields,
-                                source_info: _Todo
+                                source_info: _
                             },
-                    source_info: _Todo
+                    source_info: _
                 }).
 
 ty_arg(ArgName, ArgKind, '.lambdabuffers.compiler.TyArg'{
-                             arg_name: '.lambdabuffers.compiler.VarName'{ name: ArgName, source_info: _Todo },
+                             arg_name: '.lambdabuffers.compiler.VarName'{ name: ArgName, source_info: _ },
                              arg_kind: ArgKind,
                              source_info: _
                          }).
@@ -164,3 +186,7 @@ pretty_module_name(ModuleName, Mn) :-
 print_solution(Solution) :-
     pretty_solution(Solution, Solution_),
     maplist(writeln, Solution_).
+
+pretty_foreign_ty_ref(FTyRef, FTyRef_) :-
+    pretty_module_name(FTyRef.module_name, Mn),
+    atomics_to_string([Mn, FTyRef.ty_name.name], ".", FTyRef_).

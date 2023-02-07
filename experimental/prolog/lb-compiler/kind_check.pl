@@ -116,102 +116,43 @@ kind_check_ty_def(Sol, ModuleName, '.lambdabuffers.compiler.TyDef'{ ty_name: TyN
     ctx(ctx(ModuleName, TyName, Sol, []), kind, K).
 
 ctx(ctx(ModuleName, TyName, Sol, _Args), kind, K) :-
-    %print_message(informational, ctx(kind, ModuleName-TyName-K)),
+    print_message(informational, ctx(kind, ModuleName-TyName-K)),
     first(ModuleName-TyName-K, Sol).
 
-ctx(ctx(ModuleName, TyName, _Sol, Args), arg('.lambdabuffers.compiler.TyVar'{
-                                                  var_name: _{
-                                                                name: VarName,
-                                                                source_info: VnSi
-                                                            },
-                                                  source_info: TvSi
-                                              }),K) :-
-    %print_message(informational, ctx(arg(VarName), ModuleName-TyName-K)),
-    first(
-        '.lambdabuffers.compiler.TyArg'{
-            arg_name: _{name: VarName, source_info: _},
-            arg_kind: K
-        },
-        Args
-    ) -> true;
+ctx(ctx(ModuleName, TyName, _Sol, Args), arg(TyVar),K) :-
+    print_message(informational, ctx(arg(TyVar.var_name.name), ModuleName-TyName-K)),
     (
-        throw(error(missing_ty_var(
-                                 ModuleName,
-                                 TyName,
-                                 '.lambdabuffers.compiler.TyVar'{
-                                     var_name: _{
-                                                   name: VarName,
-                                                   source_info: VnSi
-                                               },
-                                     source_info: TvSi
-                                 },
-                                 Args))
-             )
+        first(_{
+                  arg_name: _{name: TyVar.var_name.name, source_info: _},
+                  arg_kind: K
+              },
+              Args
+             ) -> true;
+        throw(error(missing_ty_var(ModuleName, TyName,TyVar,Args)))
     ).
 
-ctx(ctx(ModuleName, TyName, Sol, _Args), ref('.lambdabuffers.compiler.TyRef'{
-                                                 local_ty_ref: _{
-                                                                   ty_name: _{
-                                                                                name: LocalTyName,
-                                                                                source_info: LtnSi
-                                                                            },
-                                                                   source_info: Si
-                                                               }
-                                             }
-                                            ), K) :-
-    first(ModuleName-_{name: LocalTyName, source_info:_}-K, Sol) -> print_message(informational, ctx(local_ref(LocalTyName), ModuleName-TyName-K)), true;
+ctx(ctx(ModuleName, TyName, Sol, _Args), ref(TyRef), K) :-
+    _{ local_ty_ref: LTyRef } :< TyRef,
+    print_message(informational, ctx(local_ref(LTyRef), ModuleName-TyName-K)),
     (
-        throw(error(missing_ty_ref(
-                        ModuleName,
-                        TyName,
-                        '.lambdabuffers.compiler.TyRef'{
-                            local_ty_ref: '.lambdabuffers.compiler.TyRef.Local'{
-                                              ty_name:  '.lambdabuffers.compiler.TyRef.TyName'{
-                                                            name: LocalTyName,
-                                                            source_info: LtnSi
-                                                        },
-                                              source_info: Si
-                                          }
-                        },
-                        Sol)
-                   ))
+        find_sol(Sol, ModuleName, LTyRef.ty_name, K) -> true;
+        throw(error(missing_ty_ref(ModuleName, TyName, TyRef,Sol)))
     ).
 
-ctx(ctx(ModuleName, TyName, Sol, _Args), ref(
-                                             '.lambdabuffers.compiler.TyRef'{
-                                                 foreign_ty_ref: _{
-                                                                     ty_name: _{
-                                                                                  name: ForeignTyName,
-                                                                                  source_info: FtnSi
-                                                                              },
-                                                                     module_name: _{
-                                                                                      name: ForeignModuleName,
-                                                                                      source_info: FmnSi
-                                                                                  },
-                                                                     source_info: Si
-                                                                 }
-                                             }
-                                         ), K) :-
-    first(_{name: ForeignModuleName, source_info:_}-_{name: ForeignTyName, source_info: _}-K, Sol) -> true;
+ctx(ctx(ModuleName, TyName, Sol, _Args), ref(TyRef), K) :-
+    _{ foreign_ty_ref: FTyRef } :< TyRef,
+    print_message(informational, ctx(foreign_ref(FTyRef), ModuleName-TyName-K)),
     (
-        throw(error(missing_ty_ref(
-                        ModuleName,
-                        TyName,
-                        '.lambdabuffers.compiler.TyRef'{
-                            foreign_ty_ref: {
-                                ty_name: {
-                                    name: ForeignTyName,
-                                    source_info: FtnSi
-                                },
-                                module_name: {
-                                    name: ForeignModuleName,
-                                    source_info: FmnSi
-                                },
-                                source_info: Si
-                            }
-                        },
-                        Sol)
-                   ))
+        find_sol(Sol, FTyRef.module_name, FTyRef.ty_name, K) -> true;
+        throw(error(missing_ty_ref(ModuleName, TyName, TyRef, Sol)))
+    ).
+
+find_sol([Mn-Tn-K_|Sol], ModuleName, TyName, K) :-
+    pretty_module_name(ModuleName, ModuleName_),
+    pretty_module_name(Mn, Mn_),
+    (
+        ModuleName_ = Mn_, TyName.name = Tn.name -> K=K_, true;
+        find_sol(Sol, ModuleName, TyName, K)
     ).
 
 kind_check_ty(Ctx, '.lambdabuffers.compiler.Ty'{ty_var: TyVar}, K) :-
@@ -320,8 +261,6 @@ test("module Mod\nopaque Foo f :: (* -> *) -> *", []) :-
     pretty_solution(Solution, [
                         "Mod"-"Foo"-(((*)->(*))->(*))
                     ]).
-
-
 
 test("\nmodule Mod\nsum Foo", [ ]) :-
     sum([], TyBody),
@@ -479,6 +418,26 @@ test("\nmodule Mod\nopaque String\nopaque Int\nsum Foo f = MkA (f Int String)", 
     kind_check(CompIn, Solution),
     print_solution(Solution).
 
+test("\nmodule ModFoo\nsum Foo = MkFoo Bar\nmodule ModBar\nopaque Bar", [ ]) :-
+    ty_def_opaque("Bar", BarTyDef),
+    mod("ModBar", [BarTyDef], ModBar),
+    ty_foreign_ref_(["ModBar"], "Bar", BarTyRef),
+    ntuple([BarTyRef], MkFooProd),
+    constr("MkFoo", MkFooProd, MkFooConstr),
+    sum([MkFooConstr], FooTyBody),
+    ty_def_body("Foo", FooTyBody, FooTyDef),
+    mod("ModFoo", [FooTyDef], ModFoo),
+    comp_input([ModFoo, ModBar], CompIn),
+    kind_check(CompIn, Solution),
+    print_solution(Solution),
+    pretty_solution(Solution, [
+                        "ModFoo"-"Foo"-(*),
+                        "ModFoo"-"Foo'Sum"-((*)->(*)),
+                        "ModFoo"-"Foo'Sum'MkFoo"-((*)->(*)),
+                        "ModBar"-"Bar"-(*)
+                    ]).
+
+
 :- end_tests(kind_check).
 
 :- multifile prolog:message//1.
@@ -491,9 +450,14 @@ prolog:message(missing_ty_ref(ModuleName, TyName, _{local_ty_ref: LocalTyRef}, _
     ].
 
 prolog:message(missing_ty_ref(ModuleName, TyName, _{foreign_ty_ref: ForeignTyRef}, _Sol))
---> {pretty_module_name(ModuleName, Mn)},[
+--> {
+        pretty_module_name(ModuleName, Mn),
+        pretty_foreign_ty_ref(ForeignTyRef, FTyRef)
+
+    },
+    [
         'Error while kind checking type ~w.~w: Missing foreign type reference ~w '-[
-            Mn, TyName.name, ForeignTyRef.ty_name.name
+            Mn, TyName.name, FTyRef
         ]
     ].
 
