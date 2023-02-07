@@ -535,7 +535,7 @@ message KindCheckError {
   // FIXME(cstml): add source of constraint to the error such that user can see 
   // where the constraint was generated - therefore where the error precisely 
   // is. 
-  message IncorrectApplicationError {
+  message ImpossibleUnificationError {
     TyName ty_name = 1;
     Kind ty_kind_1 = 2;
     Kind ty_kind_2 = 3;
@@ -556,10 +556,10 @@ message KindCheckError {
 
   // The types of inference errors.
   oneof kind_check_error {
-    UnboundTermError unbound_term_err = 1;
-    IncorrectApplicationError unification_err = 2;
-    RecursiveKindError recursive_subs_err = 3; 
-    InconsistentTypeError inconsistent_type_err = 4;
+    UnboundTermError unbound_term_error = 1;
+    ImpossibleUnificationError unification_error = 2;
+    RecursiveKindError recursive_subs_error = 3; 
+    InconsistentTypeError inconsistent_type_error = 4;
   }
 }
 
@@ -568,8 +568,8 @@ message CompilerError {
   
   // Reason why the compilation failed.
   oneof compiler_error {
-    KindCheckError comp_kind_check_err = 1;
-    InternalError comp_misc_err = 2;
+    KindCheckError comp_kind_check_error = 1;
+    InternalError comp_misc_error = 2;
   }
 }
 

@@ -220,19 +220,19 @@ newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
 
-newtype MiscError = ImpossibleErr Text
+newtype MiscError = ImpossibleError Text
   deriving stock (Show, Eq, Ord, Generic)
 instance Exception MiscError
 
 data KindCheckError
   = -- | The following term is unbound in the following type definition.
-    UnboundTermErr TyName VarName
+    UnboundTermError TyName VarName
   | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
     IncorrectApplicationError TyName Kind Kind
   | -- | Kind recurses forever - not permitted.
     RecursiveKindError TyName
   | -- | The following type has the wrong.
-    InconsistentTypeErr TyName Kind Kind
+    InconsistentTypeError TyName Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
 instance Exception KindCheckError
 

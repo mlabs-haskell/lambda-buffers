@@ -513,63 +513,63 @@ instance IsMessage P.KindCheckError KindCheckError where
   fromProto kce =
     case kce ^. P.maybe'kindCheckError of
       Just x -> case x of
-        P.KindCheckError'UnboundTermErr err ->
-          UnboundTermErr
+        P.KindCheckError'UnboundTermError' err ->
+          UnboundTermError
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.varName)
-        P.KindCheckError'UnificationErr err ->
+        P.KindCheckError'UnificationError err ->
           IncorrectApplicationError
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.tyKind1)
             <*> fromProto (err ^. P.tyKind2)
-        P.KindCheckError'RecursiveSubsErr err ->
+        P.KindCheckError'RecursiveSubsError err ->
           RecursiveKindError
             <$> fromProto (err ^. P.tyName)
-        P.KindCheckError'InconsistentTypeErr err ->
-          InconsistentTypeErr
+        P.KindCheckError'InconsistentTypeError' err ->
+          InconsistentTypeError
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.inferredKind)
             <*> fromProto (err ^. P.definedKind)
       Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    UnboundTermErr tyname varname ->
+    UnboundTermError tyname varname ->
       defMessage
-        & (P.unboundTermErr . P.tyName) .~ toProto tyname
-        & (P.unboundTermErr . P.varName) .~ toProto varname
+        & (P.unboundTermError . P.tyName) .~ toProto tyname
+        & (P.unboundTermError . P.varName) .~ toProto varname
     IncorrectApplicationError name k1 k2 ->
       defMessage
-        & (P.unificationErr . P.tyName) .~ toProto name
-        & (P.unificationErr . P.tyKind1) .~ toProto k1
-        & (P.unificationErr . P.tyKind2) .~ toProto k2
+        & (P.unificationError . P.tyName) .~ toProto name
+        & (P.unificationError . P.tyKind1) .~ toProto k1
+        & (P.unificationError . P.tyKind2) .~ toProto k2
     RecursiveKindError err ->
       defMessage
-        & (P.recursiveSubsErr . P.tyName) .~ toProto err
-    InconsistentTypeErr name ki kd ->
+        & (P.recursiveSubsError . P.tyName) .~ toProto err
+    InconsistentTypeError name ki kd ->
       defMessage
-        & (P.inconsistentTypeErr . P.tyName) .~ toProto name
-        & (P.inconsistentTypeErr . P.inferredKind) .~ toProto ki
-        & (P.inconsistentTypeErr . P.definedKind) .~ toProto kd
+        & (P.inconsistentTypeError . P.tyName) .~ toProto name
+        & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
+        & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
 
 instance IsMessage P.InternalError MiscError where
   fromProto kce = case kce ^. P.maybe'internalError of
     Just x -> case x of
-      P.InternalError'ImpossibleError' err -> ImpossibleErr <$> fromProto (err ^. P.msg)
+      P.InternalError'ImpossibleError' err -> ImpossibleError <$> fromProto (err ^. P.msg)
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    ImpossibleErr err -> defMessage & (P.impossibleError . P.msg) .~ toProto err
+    ImpossibleError err -> defMessage & (P.impossibleError . P.msg) .~ toProto err
 
 instance IsMessage P.CompilerError CompilerError where
   fromProto err = case err ^. P.maybe'compilerError of
     Just x -> case x of
-      P.CompilerError'CompKindCheckErr kcerr -> CompKindCheckError <$> fromProto kcerr
-      P.CompilerError'CompMiscErr miscerr -> CompMiscError <$> fromProto miscerr
+      P.CompilerError'CompKindCheckError kcerr -> CompKindCheckError <$> fromProto kcerr
+      P.CompilerError'CompMiscError miscerr -> CompMiscError <$> fromProto miscerr
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    CompKindCheckError kcerr -> defMessage & P.compKindCheckErr .~ toProto kcerr
-    CompMiscError miscerr -> defMessage & P.compMiscErr .~ toProto miscerr
+    CompKindCheckError kcerr -> defMessage & P.compKindCheckError .~ toProto kcerr
+    CompMiscError miscerr -> defMessage & P.compMiscError .~ toProto miscerr
 
 instance IsMessage P.CompilerResult CompilerResult where
   fromProto c =

@@ -46,15 +46,15 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   InstanceClause,
   Kind,
   KindCheckError (
-    InconsistentTypeErr,
+    InconsistentTypeError,
     IncorrectApplicationError,
     RecursiveKindError,
-    UnboundTermErr
+    UnboundTermError
   ),
   KindRefType (KType),
   KindType (KindArrow, KindRef),
   LocalRef,
-  MiscError (ImpossibleErr),
+  MiscError (ImpossibleError),
   Module,
   ModuleName,
   Product (..),
@@ -76,7 +76,6 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 
 import Data.Foldable (traverse_)
-import Data.Foldable qualified as NonEmpty
 import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
 import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
@@ -120,9 +119,10 @@ data KindCheck a where
   KindFromTyDef :: ModName -> P.TyDef -> KindCheck Type
   InferTypeKind :: ModName -> P.TyDef -> Context -> Type -> KindCheck Kind
   CheckKindConsistency :: ModName -> P.TyDef -> Context -> Kind -> KindCheck Kind
-  -- FIXME(cstml) add check for Context Consistency
-  -- FIXME(cstml) add check for Double Declaration
-  TyDefToTypes :: ModName -> P.TyDef -> KindCheck [Type]
+
+-- FIXME(cstml) add check for Context Consistency
+-- FIXME(cstml) add check for Double Declaration
+-- TyDefToTypes :: ModName -> P.TyDef -> KindCheck [Type]
 makeEffect ''KindCheck
 
 --------------------------------------------------------------------------------
@@ -168,20 +168,20 @@ localStrategy = reinterpret $ \case
 runKindCheck :: Eff '[KindCheck] a -> Eff '[Err] a
 runKindCheck = reinterpret $ \case
   KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
-  TyDefToTypes moduleName tydef -> runReader moduleName (tyDef2Types tydef)
+  -- TyDefToTypes moduleName tydef -> runReader moduleName (tyDef2Types tydef)
   InferTypeKind _modName tyDef ctx ty -> either (handleErr tyDef) pure $ infer ctx ty
   CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
   where
     handleErr :: forall a. P.TyDef -> InferErr -> Eff '[Err] a
     handleErr td = \case
       InferUnboundTermErr uA ->
-        throwError . P.CompKindCheckError $ P.UnboundTermErr (tyDef2TyName td) (var2VarName uA)
+        throwError . P.CompKindCheckError $ P.UnboundTermError (tyDef2TyName td) (var2VarName uA)
       InferUnifyTermErr (I.Constraint (k1, k2)) ->
         throwError . P.CompKindCheckError $ P.IncorrectApplicationError (tyDef2TyName td) (kind2ProtoKind k1) (kind2ProtoKind k2)
       InferRecursiveSubstitutionErr _ ->
         throwError . P.CompKindCheckError $ P.RecursiveKindError $ tyDef2TyName td
       InferImpossibleErr t ->
-        throwError . P.CompMiscError $ P.ImpossibleErr t
+        throwError . P.CompMiscError $ P.ImpossibleError t
 
     var2VarName = \case
       LocalRef n -> P.VarName n emptySourceInfo
@@ -212,7 +212,7 @@ resolveKindConsistency tydef _ctx inferredKind = do
       | i == d = pure ()
       | otherwise =
           throwError . P.CompKindCheckError $
-            P.InconsistentTypeErr n (kind2ProtoKind i) (kind2ProtoKind d)
+            P.InconsistentTypeError n (kind2ProtoKind i) (kind2ProtoKind d)
 
 resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
 resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
@@ -403,7 +403,7 @@ foreignTyRef2Type ftr = do
 
 -- =============================================================================
 -- X To Canonical type conversion functions.
-
+{-
 -- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
 tyDef2Types ::
   forall eff.
@@ -437,7 +437,7 @@ sum2Types ::
   P.Sum ->
   Eff eff [Type]
 sum2Types su = NonEmpty.toList <$> traverse constructor2Type (su ^. #constructors)
-
+-}
 --------------------------------------------------------------------------------
 -- Utilities
 
