@@ -2,7 +2,14 @@
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X, kindConvert) where
+module LambdaBuffers.Compiler.ProtoCompat (
+  IsMessage (..),
+  FromProtoErr (..),
+  ProtoError (..),
+  module X,
+  protoKind2Kind,
+  kind2ProtoKind,
+) where
 
 -- NOTE(cstml): I'm re-exporting the module from here as it makes more sense -
 -- also avoids annoying errors.
@@ -13,7 +20,6 @@ import Data.Foldable (toList)
 import Data.Generics.Labels ()
 import Data.Kind (Type)
 import Data.List.NonEmpty (nonEmpty)
-import Data.Map qualified as M
 import Data.ProtoLens (defMessage)
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -22,7 +28,6 @@ import LambdaBuffers.Compiler.KindCheck.Kind qualified as K
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
 import Proto.Compiler (NamingError)
 import Proto.Compiler qualified as P
-import Proto.Compiler_Fields (tyRef)
 import Proto.Compiler_Fields qualified as P
 
 note :: e -> Maybe a -> Either e a
@@ -505,24 +510,51 @@ instance IsMessage P.ModuleName ModuleName where
 -}
 
 instance IsMessage P.KindCheckError KindCheckError where
-  fromProto kce = case kce ^. P.maybe'kindCheckError of
-    Just x -> case x of
-      P.KindCheckError'UnboundTermErr ubterr -> UnboundTermErr <$> fromProto (ubterr ^. P.msg)
-      P.KindCheckError'InconsistentTypeErr iterr -> InconsistentTypeErr <$> fromProto (iterr ^. P.tyRef)
-      P.KindCheckError'RecursiveSubsErr rerr -> RecursiveSubstitutionErr <$> fromProto (rerr ^. P.msg)
-      P.KindCheckError'UnificationErr uerr -> UnificationErr <$> fromProto (uerr ^. P.msg)
-    Nothing -> throwProtoError EmptyField
+  fromProto kce =
+    case kce ^. P.maybe'kindCheckError of
+      Just x -> case x of
+        P.KindCheckError'UnboundTermErr err ->
+          UnboundTermErr
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.varName)
+        P.KindCheckError'UnificationErr err ->
+          IncorrectApplicationError
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.tyKind1)
+            <*> fromProto (err ^. P.tyKind2)
+        P.KindCheckError'RecursiveSubsErr err ->
+          RecursiveKindError
+            <$> fromProto (err ^. P.tyName)
+        P.KindCheckError'InconsistentTypeErr err ->
+          InconsistentTypeErr
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.inferredKind)
+            <*> fromProto (err ^. P.definedKind)
+      Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    UnboundTermErr err -> defMessage & (P.unboundTermErr . P.msg) .~ toProto err
-    UnificationErr err -> defMessage & (P.unificationErr . P.msg) .~ toProto err
-    RecursiveSubstitutionErr err -> defMessage & (P.recursiveSubsErr . P.msg) .~ toProto err
-    InconsistentTypeErr err -> defMessage & P.inconsistentTypeErr . P.tyRef .~ toProto err
+    UnboundTermErr tyname varname ->
+      defMessage
+        & (P.unboundTermErr . P.tyName) .~ toProto tyname
+        & (P.unboundTermErr . P.varName) .~ toProto varname
+    IncorrectApplicationError name k1 k2 ->
+      defMessage
+        & (P.unificationErr . P.tyName) .~ toProto name
+        & (P.unificationErr . P.tyKind1) .~ toProto k1
+        & (P.unificationErr . P.tyKind2) .~ toProto k2
+    RecursiveKindError err ->
+      defMessage
+        & (P.recursiveSubsErr . P.tyName) .~ toProto err
+    InconsistentTypeErr name ki kd ->
+      defMessage
+        & (P.inconsistentTypeErr . P.tyName) .~ toProto name
+        & (P.inconsistentTypeErr . P.inferredKind) .~ toProto ki
+        & (P.inconsistentTypeErr . P.definedKind) .~ toProto kd
 
-instance IsMessage P.MiscError MiscError where
-  fromProto kce = case kce ^. P.maybe'miscError of
+instance IsMessage P.InternalError MiscError where
+  fromProto kce = case kce ^. P.maybe'internalError of
     Just x -> case x of
-      P.MiscError'ImpossibleError' err -> ImpossibleErr <$> fromProto (err ^. P.msg)
+      P.InternalError'ImpossibleError' err -> ImpossibleErr <$> fromProto (err ^. P.msg)
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
@@ -557,8 +589,16 @@ instance IsMessage P.CompilerOutput CompilerOutput where
     Left err -> defMessage & P.compilationError .~ toProto err
 
 -- | Convert from internal Kind to Proto Kind.
-kindConvert :: K.Kind -> Kind
-kindConvert = \case
-  k1 K.:->: k2 -> Kind $ KindArrow (kindConvert k1) (kindConvert k2)
+kind2ProtoKind :: K.Kind -> Kind
+kind2ProtoKind = \case
+  k1 K.:->: k2 -> Kind $ KindArrow (kind2ProtoKind k1) (kind2ProtoKind k2)
   K.Type -> Kind . KindRef $ KType
   K.KVar _ -> Kind . KindRef $ KUnspecified -- this shouldn't happen.
+
+-- | Convert from internal Kind to Proto Kind.
+protoKind2Kind :: Kind -> K.Kind
+protoKind2Kind = \case
+  Kind k -> case k of
+    KindArrow k1 k2 -> protoKind2Kind k1 K.:->: protoKind2Kind k2
+    KindRef KType -> K.Type
+    KindRef KUnspecified -> K.KVar "Unspecified"

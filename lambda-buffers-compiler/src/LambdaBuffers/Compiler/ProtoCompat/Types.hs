@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
@@ -45,10 +47,9 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 
 import Control.Exception (Exception)
 import Data.List.NonEmpty (NonEmpty)
-import Data.Map qualified as M
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var)
+import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -110,11 +111,7 @@ data TyApp = TyApp
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-data ForeignRef = ForeignRef
-  { tyName :: TyName
-  , moduleName :: ModuleName
-  , sourceInfo :: SourceInfo
-  }
+data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
@@ -228,10 +225,14 @@ newtype MiscError = ImpossibleErr Text
 instance Exception MiscError
 
 data KindCheckError
-  = UnboundTermErr Text
-  | UnificationErr Text
-  | RecursiveSubstitutionErr Text
-  | InconsistentTypeErr TyRef
+  = -- | The following term is unbound in the following type definition.
+    UnboundTermErr TyName VarName
+  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
+    IncorrectApplicationError TyName Kind Kind
+  | -- | Kind recurses forever - not permitted.
+    RecursiveKindError TyName
+  | -- | The following type has the wrong.
+    InconsistentTypeErr TyName Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
 instance Exception KindCheckError
 
