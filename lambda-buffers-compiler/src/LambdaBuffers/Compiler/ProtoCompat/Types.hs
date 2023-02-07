@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (

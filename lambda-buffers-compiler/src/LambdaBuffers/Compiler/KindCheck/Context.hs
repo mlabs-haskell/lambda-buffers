@@ -14,8 +14,6 @@ import Prettyprinter (
   (<+>),
  )
 
--- import LambdaBuffers.Compiler.ProtoCompat (TyRef)
--- type Variable = TyRef
 
 data Context = Context
   { _context :: M.Map Variable Kind
