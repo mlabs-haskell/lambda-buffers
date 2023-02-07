@@ -9,26 +9,12 @@ Frontends are advised to include *Source* information to denote how their
 *Compiler* errors back to the Frontend.
 */
 message SourceInfo {
-  
-  // // Information related to where the 
-  // message Generated {
-  //   string description = 1;
-  // }
-
-  // Source information relating to where the information is coming from.
-  // message Parsed {
   // A filename denoting the Source file.
   string file = 1;
   // Starting position in Source.
   SourcePosition pos_from = 2;
   // End position in Source.
   SourcePosition pos_to = 3;
-  // }
-
-  // oneof source_info {
-  //   Generated generated_info = 1;
-  //   Parsed parsed_info = 2; 
-  // }
 }
 
 /* Position in Source */
