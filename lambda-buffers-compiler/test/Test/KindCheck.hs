@@ -2,12 +2,16 @@ module Test.KindCheck (test) where
 
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
+import Data.Text (Text)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
   foldWithProduct,
   foldWithSum,
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
+import LambdaBuffers.Compiler.KindCheck.Variable (
+  Variable (LocalRef),
+ )
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   CompilerInput (CompilerInput),
  )
@@ -91,23 +95,23 @@ testFolds =
 testFoldProd1 :: TestTree
 testFoldProd1 =
   testCase "Fold with product - 1 type." $
-    foldWithProduct (Var "a" :| []) @?= Var "a"
+    foldWithProduct (lVar "a" :| []) @?= lVar "a"
 
 -- | [a ,b] -> (a,b)
 testFoldProd2 :: TestTree
 testFoldProd2 =
   testCase "Fold with product - 2 types." $
-    foldWithProduct (cons (Var "b") $ Var "a" :| [])
-      @?= App (App (Var "Π") (Var "b")) (Var "a")
+    foldWithProduct (cons (lVar "b") $ lVar "a" :| [])
+      @?= App (App (lVar "Π") (lVar "b")) (lVar "a")
 
 -- | [ a, b ,c ] -> (a,(b,c))
 testFoldProd3 :: TestTree
 testFoldProd3 =
   testCase "Fold with product - 2 types." $
-    foldWithProduct (cons (Var "c") $ cons (Var "b") $ Var "a" :| [])
+    foldWithProduct (cons (lVar "c") $ cons (lVar "b") $ lVar "a" :| [])
       @?= App
-        (App (Var "Π") (Var "c"))
-        (App (App (Var "Π") (Var "b")) (Var "a"))
+        (App (lVar "Π") (lVar "c"))
+        (App (App (lVar "Π") (lVar "b")) (lVar "a"))
 
 testPProdFoldTotal :: TestTree
 testPProdFoldTotal =
@@ -119,23 +123,27 @@ testPProdFoldTotal =
 testSumFold1 :: TestTree
 testSumFold1 =
   testCase "Fold 1 type." $
-    foldWithSum (Var "a" :| []) @?= Var "a"
+    foldWithSum (lVar "a" :| []) @?= lVar "a"
 
 -- | [ a , b ] -> a | b
 testSumFold2 :: TestTree
 testSumFold2 =
   testCase "Fold 2 type." $
-    foldWithSum (cons (Var "b") $ Var "a" :| [])
-      @?= App (App (Var "Σ") (Var "b")) (Var "a")
+    foldWithSum (cons (lVar "b") $ lVar "a" :| [])
+      @?= App (App (lVar "Σ") (lVar "b")) (lVar "a")
 
 -- | [ a , b , c ] -> a | ( b | c )
 testSumFold3 :: TestTree
 testSumFold3 =
   testCase "Fold 3 types." $
-    foldWithSum (cons (Var "c") $ cons (Var "b") $ Var "a" :| [])
+    foldWithSum (cons (lVar "c") $ cons (lVar "b") $ lVar "a" :| [])
       @?= App
-        (App (Var "Σ") (Var "c"))
-        (App (App (Var "Σ") (Var "b")) (Var "a"))
+        (App (lVar "Σ") (lVar "c"))
+        (App (App (lVar "Σ") (lVar "b")) (lVar "a"))
+
+-- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
+lVar :: Text -> Type
+lVar = Var . LocalRef
 
 -- Property Tests
 testRefl :: TestTree

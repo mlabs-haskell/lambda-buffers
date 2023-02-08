@@ -158,6 +158,7 @@ test-suite tests
     Test.KindCheck
     Test.Samples
     Test.Samples.Proto.CompilerInput
+    Test.Samples.Proto.Helpers
     Test.Samples.Proto.Module
     Test.Samples.Proto.SourceInfo
     Test.Samples.Proto.TyDef

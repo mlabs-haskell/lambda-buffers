@@ -3,7 +3,7 @@ module LambdaBuffers.Compiler.KindCheck.Context (Context (Context), context, add
 import Control.Lens (makeLenses, (^.))
 import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind)
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
+import LambdaBuffers.Compiler.KindCheck.Variable (Variable)
 import Prettyprinter (
   Doc,
   Pretty (pretty),
@@ -15,8 +15,8 @@ import Prettyprinter (
  )
 
 data Context = Context
-  { _context :: M.Map Atom Kind
-  , _addContext :: M.Map Atom Kind
+  { _context :: M.Map Variable Kind
+  , _addContext :: M.Map Variable Kind
   }
   deriving stock (Show, Eq)
 
@@ -27,7 +27,7 @@ instance Pretty Context where
     [] -> "Γ"
     ctx -> "Γ" <+> "∪" <+> braces (setPretty ctx)
     where
-      setPretty :: [(Atom, Kind)] -> Doc ann
+      setPretty :: [(Variable, Kind)] -> Doc ann
       setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> ":" <+> pretty t)
 
 instance Semigroup Context where
@@ -37,5 +37,5 @@ instance Monoid Context where
   mempty = Context mempty mempty
 
 -- | Utility to unify the two.
-getAllContext :: Context -> M.Map Atom Kind
+getAllContext :: Context -> M.Map Variable Kind
 getAllContext c = c ^. context <> c ^. addContext

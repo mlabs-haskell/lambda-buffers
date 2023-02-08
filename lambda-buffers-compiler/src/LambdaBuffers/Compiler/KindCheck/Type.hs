@@ -1,14 +1,26 @@
-module LambdaBuffers.Compiler.KindCheck.Type (Type (Var, Abs, App)) where
+{-# LANGUAGE PatternSynonyms #-}
 
-import LambdaBuffers.Compiler.KindCheck.Variable (Var)
+module LambdaBuffers.Compiler.KindCheck.Type (
+  Type (Var, Abs, App),
+  pattern Σ,
+  pattern Π,
+) where
+
+import LambdaBuffers.Compiler.KindCheck.Variable (Variable (LocalRef))
 import Prettyprinter (Doc, Pretty (pretty), parens, (<+>))
 import Test.QuickCheck (Arbitrary, arbitrary, oneof, sized)
 
 data Type
-  = Var Var
+  = Var Variable
   | App Type Type
-  | Abs Var Type
+  | Abs Variable Type
   deriving stock (Eq, Show)
+
+pattern Σ :: Type -> Type -> Type
+pattern Σ t1 t2 = App (App (Var (LocalRef "Σ")) t1) t2
+
+pattern Π :: Type -> Type -> Type
+pattern Π t1 t2 = App (App (Var (LocalRef "Π")) t1) t2
 
 instance Pretty Type where
   pretty = \case

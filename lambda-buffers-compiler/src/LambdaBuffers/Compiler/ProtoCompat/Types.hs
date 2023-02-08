@@ -1,11 +1,13 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
   ClassName (..),
-  CompilerFailure (..),
+  CompilerError (..),
   CompilerInput (..),
-  CompilerOutput (..),
+  CompilerOutput,
   CompilerResult (..),
   ConstrName (..),
   Constraint (..),
@@ -13,11 +15,10 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   Field (..),
   FieldName (..),
   ForeignRef (..),
-  InferenceErr (..),
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
-  KindCheckErr (..),
+  KindCheckError (..),
   KindType (..),
   LBName (..),
   LocalRef (..),
@@ -48,7 +49,7 @@ import Data.List.NonEmpty (NonEmpty ((:|)), (<|))
 import Data.Map qualified as M
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var)
+import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var, Variable)
 import Test.QuickCheck (Arbitrary (arbitrary), Gen, NonEmptyList (getNonEmpty), oneof, resize, sized)
 import Test.QuickCheck.Arbitrary.Generic
 
@@ -276,18 +277,29 @@ instance Arbitrary CompilerInput where
       fn n = CompilerInput <$> resize n arbitrary
 
 newtype CompilerOutput = CompilerOutput {typeDefs :: M.Map Var Kind}
+data KindCheckError
+  = -- | The following term is unbound in the following type definition.
+    UnboundTermError TyName VarName
+  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
+    IncorrectApplicationError TyName Kind Kind
+  | -- | Kind recurses forever - not permitted.
+    RecursiveKindError TyName
+  | -- | The following type has the wrong.
+    InconsistentTypeError TyName Kind Kind
+  deriving stock (Show, Eq, Ord, Generic)
+instance Exception KindCheckError
+
+data CompilerError
+  = CompKindCheckError KindCheckError
+  | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary CompilerOutput
 
-newtype CompilerFailure = KCErr KindCheckErr
+data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary CompilerFailure
 
-data CompilerResult
-  = RCompilerFailure CompilerFailure
-  | RCompilerOutput CompilerOutput
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary CompilerResult
+type CompilerOutput = Either CompilerError CompilerResult
 
 nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
 nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)

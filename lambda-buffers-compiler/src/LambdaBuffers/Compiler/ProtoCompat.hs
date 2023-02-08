@@ -1,8 +1,14 @@
-{-# LANGUAGE OverloadedLabels #-}
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat (IsMessage (..), FromProtoErr (..), ProtoError (..), module X, kindConvert) where
+module LambdaBuffers.Compiler.ProtoCompat (
+  IsMessage (..),
+  FromProtoErr (..),
+  ProtoError (..),
+  module X,
+  protoKind2Kind,
+  kind2ProtoKind,
+) where
 
 -- NOTE(cstml): I'm re-exporting the module from here as it makes more sense -
 -- also avoids annoying errors.
@@ -13,7 +19,6 @@ import Data.Foldable (toList)
 import Data.Generics.Labels ()
 import Data.Kind (Type)
 import Data.List.NonEmpty (nonEmpty)
-import Data.Map qualified as M
 import Data.ProtoLens (defMessage)
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -503,75 +508,87 @@ instance IsMessage P.ModuleName ModuleName where
   Outputs
 -}
 
-instance IsMessage P.CompilerResult CompilerResult where
-  fromProto cr = do
-    si <- fromProto $ cr ^. P.sourceInfo
-    case cr ^. P.maybe'compilerResult of
-      Just (P.CompilerResult'CompilationResult r) -> RCompilerOutput <$> fromProto r
-      Just (P.CompilerResult'FailedCompilation f) -> RCompilerFailure <$> fromProto f
-      _ -> throwProtoError $ EmptySumBody si
-
-  toProto = \case
-    RCompilerFailure cf -> defMessage & P.failedCompilation .~ toProto cf
-    RCompilerOutput co -> defMessage & P.compilationResult .~ toProto co
-
-instance IsMessage P.CompilerFailure CompilerFailure where
-  fromProto cf = do
-    case cf ^. P.maybe'failure of
-      Just (P.CompilerFailure'KcErr f) -> KCErr <$> fromProto f
-      _ -> throwProtoError EmptyField
-
-  toProto (KCErr f) = defMessage & P.kcErr .~ toProto f
-
-instance IsMessage P.CompilerOutput CompilerOutput where
-  fromProto co = CompilerOutput . M.fromList <$> traverse fromProto (co ^. P.typeDefs)
-  toProto (CompilerOutput tds) = defMessage & P.typeDefs .~ (toProto <$> M.toList tds)
-
-instance IsMessage P.TypeDefinition (Var, Kind) where
-  fromProto td = (,) <$> fromProto (td ^. P.nsName) <*> fromProto (td ^. P.kind)
-  toProto (td, k) =
-    defMessage
-      & P.nsName .~ toProto td
-      & P.kind .~ toProto k
-
-instance IsMessage P.NSTypeName Var where
-  fromProto nst = fromProto (nst ^. P.namespacedName)
-  toProto var = defMessage & P.namespacedName .~ var
-
-instance IsMessage P.KindCheckErr KindCheckErr where
-  fromProto kce = do
+instance IsMessage P.KindCheckError KindCheckError where
+  fromProto kce =
     case kce ^. P.maybe'kindCheckError of
       Just x -> case x of
-        P.KindCheckErr'InconsistentTypeErr e -> InconsistentTypeErr <$> fromProto (e ^. P.typeDef)
-        P.KindCheckErr'InferenceFailureErr e -> InferenceFailure <$> fromProto (e ^. P.typeDef) <*> fromProto (e ^. P.inferErr)
+        P.KindCheckError'UnboundTermError' err ->
+          UnboundTermError
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.varName)
+        P.KindCheckError'UnificationError err ->
+          IncorrectApplicationError
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.tyKind1)
+            <*> fromProto (err ^. P.tyKind2)
+        P.KindCheckError'RecursiveSubsError err ->
+          RecursiveKindError
+            <$> fromProto (err ^. P.tyName)
+        P.KindCheckError'InconsistentTypeError' err ->
+          InconsistentTypeError
+            <$> fromProto (err ^. P.tyName)
+            <*> fromProto (err ^. P.inferredKind)
+            <*> fromProto (err ^. P.definedKind)
       Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    InconsistentTypeErr td ->
-      defMessage & P.inconsistentTypeErr . P.typeDef .~ toProto td
-    InferenceFailure td f ->
+    UnboundTermError tyname varname ->
       defMessage
-        & P.inferenceFailureErr . P.typeDef .~ toProto td
-        & P.inferenceFailureErr . P.inferErr .~ toProto f
+        & (P.unboundTermError . P.tyName) .~ toProto tyname
+        & (P.unboundTermError . P.varName) .~ toProto varname
+    IncorrectApplicationError name k1 k2 ->
+      defMessage
+        & (P.unificationError . P.tyName) .~ toProto name
+        & (P.unificationError . P.tyKind1) .~ toProto k1
+        & (P.unificationError . P.tyKind2) .~ toProto k2
+    RecursiveKindError err ->
+      defMessage
+        & (P.recursiveSubsError . P.tyName) .~ toProto err
+    InconsistentTypeError name ki kd ->
+      defMessage
+        & (P.inconsistentTypeError . P.tyName) .~ toProto name
+        & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
+        & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
 
-instance IsMessage P.InferenceErr InferenceErr where
-  fromProto infErr = case infErr ^. P.maybe'infErr of
+instance IsMessage P.CompilerError CompilerError where
+  fromProto cErr = case cErr ^. P.maybe'compilerError of
     Just x -> case x of
-      P.InferenceErr'UnboundTermE e -> UnboundTermErr <$> fromProto (e ^. P.msg)
-      P.InferenceErr'ImpossibleE e -> ImpossibleErr <$> fromProto (e ^. P.msg)
-      P.InferenceErr'RecursiveSubsE e -> RecursiveSubstitutionErr <$> fromProto (e ^. P.msg)
-      P.InferenceErr'UnificationE e -> UnificationErr <$> fromProto (e ^. P.msg)
+      P.CompilerError'KindCheckError err -> CompKindCheckError <$> fromProto err
+      P.CompilerError'InternalError err -> InternalError <$> fromProto (err ^. P.internalError)
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    UnboundTermErr e -> defMessage & P.unboundTermE . P.msg .~ toProto e
-    ImpossibleErr e -> defMessage & P.impossibleE . P.msg .~ toProto e
-    UnificationErr e -> defMessage & P.unificationE . P.msg .~ toProto e
-    RecursiveSubstitutionErr e -> defMessage & P.recursiveSubsE . P.msg .~ toProto e
+    CompKindCheckError err -> defMessage & P.kindCheckError .~ toProto err
+    InternalError err -> defMessage & (P.internalError . P.internalError) .~ toProto err
+
+instance IsMessage P.CompilerResult CompilerResult where
+  fromProto c =
+    if c == defMessage
+      then pure CompilerResult
+      else throwProtoError EmptyField
+  toProto CompilerResult = defMessage
+
+instance IsMessage P.CompilerOutput CompilerOutput where
+  fromProto co = case co ^. P.maybe'compilerOutput of
+    Just (P.CompilerOutput'CompilationResult res) -> Right <$> fromProto res
+    Just (P.CompilerOutput'CompilationError err) -> Left <$> fromProto err
+    Nothing -> throwProtoError EmptyField
+
+  toProto = \case
+    Right res -> defMessage & P.compilationResult .~ toProto res
+    Left err -> defMessage & P.compilationError .~ toProto err
 
 -- | Convert from internal Kind to Proto Kind.
-kindConvert :: K.Kind -> Kind
-kindConvert = \case
-  k1 K.:->: k2 -> Kind $ KindArrow (kindConvert k1) (kindConvert k2)
+kind2ProtoKind :: K.Kind -> Kind
+kind2ProtoKind = \case
+  k1 K.:->: k2 -> Kind $ KindArrow (kind2ProtoKind k1) (kind2ProtoKind k2)
   K.Type -> Kind . KindRef $ KType
   K.KVar _ -> Kind . KindRef $ KUnspecified -- this shouldn't happen.
+
+-- | Convert from internal Kind to Proto Kind.
+protoKind2Kind :: Kind -> K.Kind
+protoKind2Kind = \case
+  Kind k -> case k of
+    KindArrow k1 k2 -> protoKind2Kind k1 K.:->: protoKind2Kind k2
+    KindRef KType -> K.Type
+    KindRef KUnspecified -> K.KVar "Unspecified"
