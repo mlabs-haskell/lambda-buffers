@@ -14,7 +14,6 @@ import Prettyprinter (
   (<+>),
  )
 
-
 data Context = Context
   { _context :: M.Map Variable Kind
   , _addContext :: M.Map Variable Kind
