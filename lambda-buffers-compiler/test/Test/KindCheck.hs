@@ -25,6 +25,7 @@ import Test.QuickCheck (
  )
 import Test.Samples.Proto.CompilerInput (
   compilerInput'doubleDeclaration,
+  compilerInput'doubleDeclarationDiffMod,
   compilerInput'incoherent,
   compilerInput'maybe,
  )
@@ -43,12 +44,17 @@ test = testGroup "Compiler tests" [testCheck, testFolds, testRefl, testMultipleD
 -- Multiple declaration test
 
 testMultipleDec :: TestTree
-testMultipleDec = testGroup "Multiple declaration tests." [doubleDeclaration]
+testMultipleDec = testGroup "Multiple declaration tests." [doubleDeclaration, passingDoubleDeclaration]
 
 doubleDeclaration :: TestTree
 doubleDeclaration =
-  testCase "Two declarations of the same type was not detected." $
+  testCase "Two declarations of Maybe within the same module are caught." $
     check_ compilerInput'doubleDeclaration @?= Left (P.CompReaderError $ P.MultipleDeclaration (_tyName "Maybe") (_tyName "Maybe"))
+
+passingDoubleDeclaration :: TestTree
+passingDoubleDeclaration =
+  testCase "Two declarations of Maybe within different modules are fine." $
+    check_ compilerInput'doubleDeclarationDiffMod @?= Right ()
 
 --------------------------------------------------------------------------------
 -- Module tests

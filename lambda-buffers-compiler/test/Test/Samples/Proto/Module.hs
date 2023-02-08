@@ -5,6 +5,15 @@ import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
 import Test.Samples.Proto.TyDef (tyDef'incoherent, tyDef'maybe)
 
+_Module mn tds cds ins =
+  P.Module
+    { P.moduleName = mn
+    , P.typeDefs = tds
+    , P.classDefs = cds
+    , P.instances = ins
+    , P.sourceInfo = sourceInfo'empty
+    }
+
 module'maybe :: P.Module
 module'maybe =
   P.Module
