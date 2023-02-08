@@ -1,8 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module LambdaBuffers.Compiler.KindCheck (
   -- * Kindchecking functions.
   check,
@@ -59,7 +54,6 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   KindRefType (KType),
   KindType (KindArrow, KindRef),
   LocalRef,
-  MiscError (ImpossibleError),
   Module,
   ModuleName,
   Product (..),
@@ -181,7 +175,7 @@ runKindCheck = reinterpret $ \case
       InferRecursiveSubstitutionErr _ ->
         throwError . P.CompKindCheckError $ P.RecursiveKindError $ tyDef2TyName td
       InferImpossibleErr t ->
-        throwError . P.CompMiscError $ P.ImpossibleError t
+        throwError . P.InternalError $ t
 
     var2VarName = \case
       LocalRef n -> P.VarName n emptySourceInfo

@@ -3,7 +3,6 @@
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
-  MiscError (..),
   ClassName (..),
   CompilerError (..),
   CompilerInput (..),
@@ -219,10 +218,6 @@ newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
 
-newtype MiscError = ImpossibleError Text
-  deriving stock (Show, Eq, Ord, Generic)
-instance Exception MiscError
-
 data KindCheckError
   = -- | The following term is unbound in the following type definition.
     UnboundTermError TyName VarName
@@ -237,7 +232,7 @@ instance Exception KindCheckError
 
 data CompilerError
   = CompKindCheckError KindCheckError
-  | CompMiscError MiscError
+  | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
 
 data CompilerResult = CompilerResult

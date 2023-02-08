@@ -492,15 +492,7 @@ message CompilerInput {
 
 // Internal errors.
 message InternalError {
-
-  // This should never happen.
-  message ImpossibleError {
-    string msg = 1;
-  }
-
-  oneof internal_error {
-    ImpossibleError impossible_error = 1;
-  }
+  string internal_error = 1;
 }
 
 // Kindchecker errors.
@@ -554,8 +546,8 @@ message CompilerError {
   
   // Reason why the compilation failed.
   oneof compiler_error {
-    KindCheckError comp_kind_check_error = 1;
-    InternalError comp_misc_error = 2;
+    KindCheckError kind_check_error = 1;
+    InternalError internal_error = 2;
   }
 }
 

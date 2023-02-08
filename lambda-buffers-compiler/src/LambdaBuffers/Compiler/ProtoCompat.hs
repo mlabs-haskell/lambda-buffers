@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedLabels #-}
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
@@ -551,25 +550,16 @@ instance IsMessage P.KindCheckError KindCheckError where
         & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
         & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
 
-instance IsMessage P.InternalError MiscError where
-  fromProto kce = case kce ^. P.maybe'internalError of
-    Just x -> case x of
-      P.InternalError'ImpossibleError' err -> ImpossibleError <$> fromProto (err ^. P.msg)
-    Nothing -> throwProtoError EmptyField
-
-  toProto = \case
-    ImpossibleError err -> defMessage & (P.impossibleError . P.msg) .~ toProto err
-
 instance IsMessage P.CompilerError CompilerError where
-  fromProto err = case err ^. P.maybe'compilerError of
+  fromProto cErr = case cErr ^. P.maybe'compilerError of
     Just x -> case x of
-      P.CompilerError'CompKindCheckError kcerr -> CompKindCheckError <$> fromProto kcerr
-      P.CompilerError'CompMiscError miscerr -> CompMiscError <$> fromProto miscerr
+      P.CompilerError'KindCheckError err -> CompKindCheckError <$> fromProto err
+      P.CompilerError'InternalError err -> InternalError <$> fromProto (err ^. P.internalError)
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
-    CompKindCheckError kcerr -> defMessage & P.compKindCheckError .~ toProto kcerr
-    CompMiscError miscerr -> defMessage & P.compMiscError .~ toProto miscerr
+    CompKindCheckError err -> defMessage & P.kindCheckError .~ toProto err
+    InternalError err -> defMessage & (P.internalError . P.internalError) .~ toProto err
 
 instance IsMessage P.CompilerResult CompilerResult where
   fromProto c =
