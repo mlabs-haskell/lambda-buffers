@@ -78,6 +78,7 @@ kcTestOrdering =
       shuffledMods <- shuffle mods
       pure (P.CompilerInput mods, P.CompilerInput shuffledMods)
 
+    eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
     eitherFailOrPass = bimap (const ()) (const ())
 
 --------------------------------------------------------------------------------

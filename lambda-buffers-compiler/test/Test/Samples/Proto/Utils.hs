@@ -1,4 +1,4 @@
-module Test.Samples.Proto.Helpers (
+module Test.Samples.Proto.Utils (
   _tyName,
   _varName,
   _tyVar,

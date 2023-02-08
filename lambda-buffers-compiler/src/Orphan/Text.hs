@@ -1,7 +1,17 @@
-module Orphan.Text where
+{-# OPTIONS_GHC -Wno-orphans #-}
 
-import Data.Text
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, oneof, sized)
+module Orphan.Text () where
+
+import Data.Text (Text, pack)
+import Test.QuickCheck (Arbitrary (arbitrary), Gen, sized)
 
 instance Arbitrary Text where
-  arbitrary = pack <$> arbitrary
+  arbitrary = sized f
+    where
+      f :: (Ord a, Num a) => a -> Gen Text
+      f n
+        | n <= 0 = pure $ pack []
+        | otherwise = do
+            c <- arbitrary
+            cs <- f (n - 1)
+            pure $ pack [c] <> cs

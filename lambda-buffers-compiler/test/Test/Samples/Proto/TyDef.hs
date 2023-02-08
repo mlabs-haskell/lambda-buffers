@@ -1,7 +1,7 @@
 module Test.Samples.Proto.TyDef (tyDef'maybe, tyDef'incoherent) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.Helpers (
+import Test.Samples.Proto.Utils (
   _TupleI,
   _TyAbs,
   _TyDef,

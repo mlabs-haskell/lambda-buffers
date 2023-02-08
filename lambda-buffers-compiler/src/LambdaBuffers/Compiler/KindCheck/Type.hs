@@ -8,7 +8,7 @@ module LambdaBuffers.Compiler.KindCheck.Type (
 
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (LocalRef))
 import Prettyprinter (Doc, Pretty (pretty), parens, (<+>))
-import Test.QuickCheck (Arbitrary, arbitrary, oneof, sized)
+import Test.QuickCheck (Arbitrary, Gen, arbitrary, oneof, sized)
 
 data Type
   = Var Variable
@@ -37,6 +37,7 @@ instance Pretty Type where
 instance Arbitrary Type where
   arbitrary = sized f
     where
+      f :: Integral a => a -> Gen Type
       f n
         | n <= 0 = Var <$> arbitrary
         | otherwise =

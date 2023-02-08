@@ -46,12 +46,11 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 
 import Control.Exception (Exception)
 import Data.List.NonEmpty (NonEmpty ((:|)), (<|))
-import Data.Map qualified as M
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Var, Variable)
-import Test.QuickCheck (Arbitrary (arbitrary), Gen, NonEmptyList (getNonEmpty), oneof, resize, sized)
-import Test.QuickCheck.Arbitrary.Generic
+import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
+import Test.QuickCheck (Gen, oneof, resize, sized)
+import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -128,6 +127,7 @@ data Ty = TyVarI TyVar | TyAppI TyApp | TyRefI TyRef
 instance Arbitrary Ty where
   arbitrary = sized fn
     where
+      fn :: (Num a, Ord a) => a -> Gen Ty
       fn n
         | n <= 0 = TyRefI <$> arbitrary
         | otherwise =
@@ -276,7 +276,6 @@ instance Arbitrary CompilerInput where
     where
       fn n = CompilerInput <$> resize n arbitrary
 
-newtype CompilerOutput = CompilerOutput {typeDefs :: M.Map Var Kind}
 data KindCheckError
   = -- | The following term is unbound in the following type definition.
     UnboundTermError TyName VarName
@@ -287,22 +286,23 @@ data KindCheckError
   | -- | The following type has the wrong.
     InconsistentTypeError TyName Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
 
 data CompilerError
   = CompKindCheckError KindCheckError
   | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary CompilerOutput
+  deriving (Arbitrary) via GenericArbitrary CompilerError
 
 data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary CompilerFailure
+  deriving (Arbitrary) via GenericArbitrary CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
 
-nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
-nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)
+-- nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
+-- nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)
 
 -- Orphan Instances
 instance Arbitrary a => Arbitrary (NonEmpty a) where
