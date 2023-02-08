@@ -508,7 +508,7 @@ message Module {
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
-  // Imported modules. Needed to determine imported instances
+  // Imported modules the Compiler consults when searching for instance clauses.
   repeated ModuleName imports = 5;
   // Source information.
   SourceInfo source_info = 6;
