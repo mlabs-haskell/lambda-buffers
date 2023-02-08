@@ -14,6 +14,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   Field (..),
   FieldName (..),
   ForeignRef (..),
+  ForeignClassRef (..),
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
@@ -21,6 +22,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   KindType (..),
   LBName (..),
   LocalRef (..),
+  LocalClassRef (..),
   Module (..),
   ModuleName (..),
   ModuleNamePart (..),
@@ -35,6 +37,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyApp (..),
   TyArg (..),
   TyBody (..),
+  TyClassRef (..),
   TyDef (..),
   TyName (..),
   TyRef (..),
@@ -181,6 +184,21 @@ data Product
   | TupleI Tuple
   deriving stock (Show, Eq, Ord, Generic)
 
+data ForeignClassRef = ForeignClassRef
+  { className :: ClassName
+  , moduleName :: ModuleName
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+
+data LocalClassRef = LocalClassRef {className :: ClassName, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+
+data TyClassRef
+  = LocalCI LocalClassRef
+  | ForeignCI ForeignClassRef
+  deriving stock (Show, Eq, Ord, Generic)
+
 data ClassDef = ClassDef
   { className :: ClassName
   , classArgs :: TyArg
@@ -191,7 +209,7 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
 
 data InstanceClause = InstanceClause
-  { className :: ClassName
+  { classRef :: TyClassRef
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
@@ -199,7 +217,7 @@ data InstanceClause = InstanceClause
   deriving stock (Show, Eq, Ord, Generic)
 
 data Constraint = Constraint
-  { className :: ClassName
+  { classRef :: TyClassRef
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
@@ -210,6 +228,7 @@ data Module = Module
   , typeDefs :: [TyDef]
   , classDefs :: [ClassDef]
   , instances :: [InstanceClause]
+  , imports :: [ModuleName]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)

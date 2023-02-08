@@ -17,6 +17,7 @@ module'maybe =
     , P.classDefs = mempty
     , P.instances = mempty
     , P.sourceInfo = sourceInfo'empty
+    , P.imports = mempty
     }
 
 {- | 1 Module containing
