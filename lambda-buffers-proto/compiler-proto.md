@@ -6,13 +6,22 @@
 - [compiler.proto](#compiler-proto)
     - [ClassDef](#lambdabuffers-compiler-ClassDef)
     - [ClassName](#lambdabuffers-compiler-ClassName)
+    - [CompilerError](#lambdabuffers-compiler-CompilerError)
     - [CompilerInput](#lambdabuffers-compiler-CompilerInput)
+    - [CompilerOutput](#lambdabuffers-compiler-CompilerOutput)
+    - [CompilerResult](#lambdabuffers-compiler-CompilerResult)
     - [ConstrName](#lambdabuffers-compiler-ConstrName)
     - [Constraint](#lambdabuffers-compiler-Constraint)
     - [FieldName](#lambdabuffers-compiler-FieldName)
     - [InstanceClause](#lambdabuffers-compiler-InstanceClause)
+    - [InternalError](#lambdabuffers-compiler-InternalError)
     - [Kind](#lambdabuffers-compiler-Kind)
     - [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow)
+    - [KindCheckError](#lambdabuffers-compiler-KindCheckError)
+    - [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError)
+    - [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError)
+    - [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError)
+    - [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError)
     - [Module](#lambdabuffers-compiler-Module)
     - [ModuleName](#lambdabuffers-compiler-ModuleName)
     - [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart)
@@ -108,6 +117,22 @@ Type class name
 
 
 
+<a name="lambdabuffers-compiler-CompilerError"></a>
+
+### CompilerError
+Compiler Error can be extended with other classes of errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind_check_error | [KindCheckError](#lambdabuffers-compiler-KindCheckError) |  |  |
+| internal_error | [InternalError](#lambdabuffers-compiler-InternalError) |  |  |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-CompilerInput"></a>
 
 ### CompilerInput
@@ -120,6 +145,34 @@ compilation closure needed by the Compiler to perform its task.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | modules | [Module](#lambdabuffers-compiler-Module) | repeated | Modules to compile. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerOutput"></a>
+
+### CompilerOutput
+Output of the Compiler.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| compilation_error | [CompilerError](#lambdabuffers-compiler-CompilerError) |  |  |
+| compilation_result | [CompilerResult](#lambdabuffers-compiler-CompilerResult) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerResult"></a>
+
+### CompilerResult
+Compiler Result ~ a successful Compilation Output.
+
+equivalent of unit.
 
 
 
@@ -195,6 +248,21 @@ Instance clauses enable users to specify &#39;semantic&#39; rules for their type
 
 
 
+<a name="lambdabuffers-compiler-InternalError"></a>
+
+### InternalError
+Internal errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| internal_error | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-Kind"></a>
 
 ### Kind
@@ -210,7 +278,6 @@ etc.
 | ----- | ---- | ----- | ----------- |
 | kind_ref | [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef) |  |  |
 | kind_arrow | [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -227,6 +294,97 @@ A kind arrow.
 | ----- | ---- | ----- | ----------- |
 | left | [Kind](#lambdabuffers-compiler-Kind) |  |  |
 | right | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError"></a>
+
+### KindCheckError
+Kind checking errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| unbound_term_error | [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError) |  |  |
+| unification_error | [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError) |  | FIXME(bladyjoker): Align naming. |
+| recursive_subs_error | [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError) |  |  |
+| inconsistent_type_error | [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError"></a>
+
+### KindCheckError.ImpossibleUnificationError
+In ty_name definition an error has occurred when trying to unify kind
+ty_kind_1 with ty_kind_2.
+
+FIXME(cstml): Add source of constraint to the error such that user can see
+where the constraint was generated - therefore where the error precisely
+is.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| ty_kind_1 | [Kind](#lambdabuffers-compiler-Kind) |  | FIXME(bladyjoker): Use _lhs. |
+| ty_kind_2 | [Kind](#lambdabuffers-compiler-Kind) |  | FIXME(bladyjoker): Use _rhs. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-InconsistentTypeError"></a>
+
+### KindCheckError.InconsistentTypeError
+Couldn&#39;t match expected_kind with actual_kind
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| inferred_kind | [Kind](#lambdabuffers-compiler-Kind) |  | FIXME(bladyjoker): Rename to actual. |
+| defined_kind | [Kind](#lambdabuffers-compiler-Kind) |  | FIXME(bladyjoker): Rename to expected. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-RecursiveKindError"></a>
+
+### KindCheckError.RecursiveKindError
+Inifinitely recursive term detected in definition ty_name.
+FIXME(bladyjoker): Improve the reading of this, I don&#39;t know what it is.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-UnboundTermError"></a>
+
+### KindCheckError.UnboundTermError
+Error referring to an unbound term. This usually means that the term was
+not defined.
+FIXME(bladyjoker): Rename to UnboundTyVar, add reading.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| var_name | [VarName](#lambdabuffers-compiler-VarName) |  | FIXME(bladyjoker): Replace with TyVar. |
 
 
 
@@ -553,7 +711,7 @@ type term can only be introduced in the context of a
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | List of type variables. |
+| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | List of arguments (possibly empty). |
 | ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | Type body. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
@@ -651,9 +809,7 @@ Once introduced in the module scope, type definitions are referred to using
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Type name. |
-| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type term.
-
-TODO(bladyjoker): Turn into a oneOf TyAbs | Ty |
+| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type term. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 

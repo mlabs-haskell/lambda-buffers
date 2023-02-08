@@ -76,7 +76,7 @@ type term can only be introduced in the context of a
 [type definition](@ref TyDef).
 */
 message TyAbs {
-  // List of type variables.
+  // List of arguments (possibly empty).
   repeated TyArg ty_args = 1;
   // Type body.
   TyBody ty_body = 2;
@@ -223,7 +223,7 @@ message TyDef {
   // Type name.
   TyName ty_name = 1;
   // Type term.
-  TyAbs ty_abs = 2; // TODO(bladyjoker): Turn into a oneOf TyAbs | Ty
+  TyAbs ty_abs = 2;
   // Source information.
   SourceInfo source_info = 3;
 }
@@ -495,55 +495,55 @@ message InternalError {
   string internal_error = 1;
 }
 
-// Kindchecker errors.
+// Kind checking errors.
 message KindCheckError {
 
   // Error referring to an unbound term. This usually means that the term was
   // not defined.
+  // FIXME(bladyjoker): Rename to UnboundTyVar, add reading.
   message UnboundTermError {
     TyName ty_name = 1;
-    VarName var_name = 2;
+    VarName var_name = 2; // FIXME(bladyjoker): Replace with TyVar.
   }
 
-  // Unification has failed - type is incorrectly defined. Error reads as 
-  // follows:
-  // > In ty_name definition an error has occurred when trying to unify kind 
-  // > ty_kind_1 with ty_kind_2. 
+  // In ty_name definition an error has occurred when trying to unify kind
+  // ty_kind_1 with ty_kind_2.
   //
-  // FIXME(cstml): add source of constraint to the error such that user can see 
-  // where the constraint was generated - therefore where the error precisely 
-  // is. 
+  // FIXME(cstml): Add source of constraint to the error such that user can see
+  // where the constraint was generated - therefore where the error precisely
+  // is.
   message ImpossibleUnificationError {
     TyName ty_name = 1;
-    Kind ty_kind_1 = 2;
-    Kind ty_kind_2 = 3;
+    Kind ty_kind_1 = 2; // FIXME(bladyjoker): Use _lhs.
+    Kind ty_kind_2 = 3; // FIXME(bladyjoker): Use _rhs.
   }
 
-  // Error reads:
-  // Inifinitely recursive term detected in definition ty_name. 
+  // Inifinitely recursive term detected in definition ty_name.
+  // FIXME(bladyjoker): Improve the reading of this, I don't know what it is.
   message RecursiveKindError {
     TyName ty_name = 1;
   }
-  
-  // The inferred type differs from the type as defined.
+
+  // Couldn't match expected_kind with actual_kind
   message InconsistentTypeError {
     TyName ty_name = 1;
-    Kind inferred_kind = 2;
-    Kind defined_kind = 3;
+    Kind inferred_kind = 2; // FIXME(bladyjoker): Rename to actual.
+    Kind defined_kind = 3; // FIXME(bladyjoker): Rename to expected.
   }
 
-  // The types of inference errors.
+  // The types of kind checking errors.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
+    // FIXME(bladyjoker): Align naming.
     ImpossibleUnificationError unification_error = 2;
-    RecursiveKindError recursive_subs_error = 3; 
+    RecursiveKindError recursive_subs_error = 3;
     InconsistentTypeError inconsistent_type_error = 4;
   }
 }
 
 // Compiler Error can be extended with other classes of errors.
 message CompilerError {
-  
+
   // Reason why the compilation failed.
   oneof compiler_error {
     KindCheckError kind_check_error = 1;
