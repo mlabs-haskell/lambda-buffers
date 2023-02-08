@@ -9,17 +9,20 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
   DeriveM,
   DeriveEff,
-  InferErr (..),
   context,
   addContext,
+  InferErr (..),
+  Constraint (..),
 ) where
 
 import Data.Bifunctor (Bifunctor (second))
 
 import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
+import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom))
+import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var))
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (LocalRef))
 
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -34,45 +37,15 @@ import Control.Lens (Getter, to, (&), (.~), (^.))
 import Data.Map qualified as M
 
 import Prettyprinter (
-  Doc,
   Pretty (pretty),
-  encloseSep,
-  hang,
-  lbracket,
-  line,
-  rbracket,
-  space,
   (<+>),
  )
 
-newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
-  deriving stock (Show, Eq)
-
-instance Pretty Judgement where
-  pretty (Judgement (c, t, k)) = pretty c <> " ⊢ " <> pretty t <+> ":" <+> pretty k
-
-data Derivation
-  = Axiom Judgement
-  | Abstraction Judgement Derivation
-  | Application Judgement Derivation Derivation
-  deriving stock (Show, Eq)
-
-instance Pretty Derivation where
-  pretty x = case x of
-    Axiom j -> hang 2 $ pretty j
-    Abstraction j d -> dNest j [d]
-    Application j d1 d2 -> dNest j [d1, d2]
-    where
-      dNest :: forall a b c. (Pretty a, Pretty b) => a -> [b] -> Doc c
-      dNest j ds = pretty j <> line <> hang 2 (encloseSep (lbracket <> space) rbracket (space <> "∧" <> space) (pretty <$> ds))
-
 data InferErr
-  = Misc T.Text
-  | ImpossibleErr T.Text
-  | UnboundTermErr T.Text
-  | ImpossibleUnificationErr T.Text
-  | RecursiveSubstitutionErr T.Text
-  deriving stock (Show, Eq)
+  = InferUnboundTermErr Variable
+  | InferUnifyTermErr Constraint
+  | InferRecursiveSubstitutionErr T.Text
+  | InferImpossibleErr T.Text
 
 newtype Constraint = Constraint (Kind, Kind)
   deriving stock (Show, Eq)
@@ -123,10 +96,10 @@ infer ctx t = do
       mempty
         & context
           .~ M.fromList
-            [ ("Σ", Type :->: Type :->: Type)
-            , ("Π", Type :->: Type :->: Type)
-            , ("𝟙", Type)
-            , ("𝟘", Type)
+            [ (LocalRef "Σ", Type :->: Type :->: Type)
+            , (LocalRef "Π", Type :->: Type :->: Type)
+            , (LocalRef "𝟙", Type)
+            , (LocalRef "𝟘", Type)
             ]
 
 --------------------------------------------------------------------------------
@@ -161,17 +134,17 @@ derive x = do
       (DC vs) <- get
       case vs of
         a : as -> put (DC as) >> pure a
-        [] -> throwError $ ImpossibleErr "End of infinite stream"
+        [] -> throwError $ InferImpossibleErr "Reached end of infinite stream."
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
 -}
-getBinding :: Atom -> Derive Kind
+getBinding :: Variable -> Derive Kind
 getBinding t = do
   ctx <- asks getAllContext
   case ctx M.!? t of
     Just x -> pure x
-    Nothing -> throwError $ UnboundTermErr $ (T.pack . show . pretty) t
+    Nothing -> throwError $ InferUnboundTermErr t
 
 -- | Gets kind from a derivation.
 topKind :: Getter Derivation Kind
@@ -226,13 +199,13 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
            in (sub :) <$> unify (sub `substituteIn` xs)
     _ -> unify $ Constraint (r, l) : xs
   where
-    nope :: forall eff b a. (Member (Error InferErr) eff, Pretty b) => b -> Eff eff a
-    nope c = throwError . ImpossibleUnificationErr . T.unlines $ ["Cannot unify: " <> (T.pack . show . pretty) c]
+    nope :: forall eff a. (Member (Error InferErr) eff) => Constraint -> Eff eff a
+    nope = throwError . InferUnifyTermErr
 
     appearsErr :: forall eff a. Member (Error InferErr) eff => T.Text -> Kind -> Eff eff a
     appearsErr var ty =
       throwError $
-        RecursiveSubstitutionErr $
+        InferRecursiveSubstitutionErr $
           mconcat
             [ "Cannot unify: "
             , T.pack . show . pretty $ var
@@ -276,7 +249,7 @@ substitute s d = case d of
       [] -> c
       xs -> Context ctx $ M.fromList $ second (applySubstitution subs) <$> xs
 
--- :fixme: not avoiding any clashes
+-- FIXME(cstml) not avoiding any clashes
 
 -- | Fresh atoms
 atoms :: [Atom]

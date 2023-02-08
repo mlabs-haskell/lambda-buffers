@@ -7,9 +7,13 @@ import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
-import LambdaBuffers.Compiler.ProtoCompat (FromProtoErr (NamingError, ProtoError), IsMessage (fromProto, toProto))
+import LambdaBuffers.Compiler.KindCheck (check)
+import LambdaBuffers.Compiler.ProtoCompat (
+  FromProtoErr (NamingError, ProtoError),
+  IsMessage (fromProto, toProto),
+ )
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import Proto.Compiler (CompilerInput)
+import Proto.Compiler as ProtoLib (CompilerInput, CompilerOutput)
 import System.FilePath.Lens (extension)
 
 data CompileOpts = CompileOpts
@@ -19,6 +23,8 @@ data CompileOpts = CompileOpts
   deriving stock (Eq, Show)
 
 makeLenses ''CompileOpts
+
+-- NOTE(cstml) - let's use Katip instead of print.
 
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
@@ -30,8 +36,8 @@ compile opts = do
       ProtoError pe -> print $ "Encountered a proto error " <> show pe
     Right compIn' -> do
       print @String "Successfully processed the CompilerInput"
-      writeCompilerOutput (opts ^. output) (toProto compIn')
-
+      let result = check compIn'
+      writeCompilerOutput (opts ^. output) (toProto result)
   return ()
 
 readCompilerInput :: FilePath -> IO CompilerInput
@@ -46,11 +52,10 @@ readCompilerInput fp = do
       return $ PbText.readMessageOrDie content
     _ -> error $ "Unknown CompilerInput format " <> ext
 
--- FIXME(bladyjoker): Do this properly when you figure out what the CompilerOutput is.
-writeCompilerOutput :: FilePath -> CompilerInput -> IO ()
-writeCompilerOutput fp co = do
+writeCompilerOutput :: FilePath -> ProtoLib.CompilerOutput -> IO ()
+writeCompilerOutput fp cr = do
   let ext = fp ^. extension
   case ext of
-    ".pb" -> BS.writeFile fp (Pb.encodeMessage co)
-    ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage co)
+    ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
+    ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
     _ -> error $ "Unknown CompilerOutput format " <> ext

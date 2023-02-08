@@ -23,8 +23,7 @@ import Options.Applicative (
   subparser,
  )
 
-newtype Command
-  = Compile CompileOpts
+newtype Command = Compile CompileOpts
 
 inputPathP :: Parser FilePath
 inputPathP =

@@ -276,8 +276,6 @@ message Kind {
     KindRef kind_ref = 1;
     KindArrow kind_arrow = 2;
   };
-  // Source information.
-  SourceInfo source_info = 3;
 }
 
 
@@ -490,4 +488,78 @@ compilation closure needed by the Compiler to perform its task.
 message CompilerInput {
   // Modules to compile.
   repeated Module modules = 1;
+}
+
+// Internal errors.
+message InternalError {
+  string internal_error = 1;
+}
+
+// Kindchecker errors.
+message KindCheckError {
+
+  // Error referring to an unbound term. This usually means that the term was
+  // not defined.
+  message UnboundTermError {
+    TyName ty_name = 1;
+    VarName var_name = 2;
+  }
+
+  // Unification has failed - type is incorrectly defined. Error reads as 
+  // follows:
+  // > In ty_name definition an error has occurred when trying to unify kind 
+  // > ty_kind_1 with ty_kind_2. 
+  //
+  // FIXME(cstml): add source of constraint to the error such that user can see 
+  // where the constraint was generated - therefore where the error precisely 
+  // is. 
+  message ImpossibleUnificationError {
+    TyName ty_name = 1;
+    Kind ty_kind_1 = 2;
+    Kind ty_kind_2 = 3;
+  }
+
+  // Error reads:
+  // Inifinitely recursive term detected in definition ty_name. 
+  message RecursiveKindError {
+    TyName ty_name = 1;
+  }
+  
+  // The inferred type differs from the type as defined.
+  message InconsistentTypeError {
+    TyName ty_name = 1;
+    Kind inferred_kind = 2;
+    Kind defined_kind = 3;
+  }
+
+  // The types of inference errors.
+  oneof kind_check_error {
+    UnboundTermError unbound_term_error = 1;
+    ImpossibleUnificationError unification_error = 2;
+    RecursiveKindError recursive_subs_error = 3; 
+    InconsistentTypeError inconsistent_type_error = 4;
+  }
+}
+
+// Compiler Error can be extended with other classes of errors.
+message CompilerError {
+  
+  // Reason why the compilation failed.
+  oneof compiler_error {
+    KindCheckError kind_check_error = 1;
+    InternalError internal_error = 2;
+  }
+}
+
+// Compiler Result ~ a successful Compilation Output.
+message CompilerResult {
+  // equivalent of unit.
+}
+
+// Output of the Compiler.
+message CompilerOutput {
+  oneof compiler_output {
+    CompilerError compilation_error = 1;
+    CompilerResult compilation_result = 2;
+  }
 }
