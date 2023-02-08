@@ -38,6 +38,7 @@ common common-language
     DeriveTraversable
     DerivingStrategies
     DoAndIfThenElse
+    DuplicateRecordFields
     EmptyCase
     EmptyDataDecls
     EmptyDataDeriving
@@ -59,6 +60,7 @@ common common-language
     NamedFieldPuns
     NamedWildCards
     NumericUnderscores
+    OverloadedLabels
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
@@ -103,7 +105,9 @@ library
   exposed-modules:
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Context
+    LambdaBuffers.Compiler.KindCheck.Derivation
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.KindCheck.Judgement
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.KindCheck.Variable
@@ -117,6 +121,7 @@ library
 
   hs-source-dirs:  src
 
+-- note(cstml): should we name this something shorter? lb-cli?
 executable lambda-buffers-compiler-cli
   import:         common-language
   import:         common-imports
@@ -148,4 +153,10 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
+    Test.Samples
+    Test.Samples.Proto.CompilerInput
+    Test.Samples.Proto.Helpers
+    Test.Samples.Proto.Module
+    Test.Samples.Proto.SourceInfo
+    Test.Samples.Proto.TyDef
     Test.TypeClassCheck

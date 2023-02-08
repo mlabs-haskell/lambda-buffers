@@ -1,18 +1,23 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedLabels #-}
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
-
 module Test.KindCheck (test) where
 
-import Control.Lens ((%~), (&), (.~))
 import Data.List.NonEmpty (NonEmpty ((:|)), cons)
+import Data.Text (Text)
 import LambdaBuffers.Compiler.KindCheck (
-  check,
+  check_,
   foldWithProduct,
   foldWithSum,
  )
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.KindCheck.Variable (
+  Variable (LocalRef),
+ )
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
+  CompilerInput (CompilerInput),
+ )
+import Test.Samples.Proto.CompilerInput (
+  compilerInput'incoherent,
+  compilerInput'maybe,
+ )
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 
@@ -22,152 +27,29 @@ test = testGroup "Compiler tests" [testCheck, testFolds]
 --------------------------------------------------------------------------------
 -- Module tests
 
+testCheck :: TestTree
 testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
 
+trivialKCTest :: TestTree
 trivialKCTest =
   testCase "Empty CompInput should check." $
-    check (P.CompilerInput []) @?= Right ()
+    check_ (P.CompilerInput []) @?= Right ()
 
+kcTestMaybe :: TestTree
 kcTestMaybe =
   testCase "Maybe should pass." $
-    check ci1 @?= Right ()
+    check_ compilerInput'maybe @?= Right ()
 
+kcTestFailing :: TestTree
 kcTestFailing =
   testCase "This should fail." $
     assertBool "Test should have failed." $
-      check ci2 /= Right ()
-
-esi = P.SourceInfo "Empty Info" (P.SourcePosition 0 0) (P.SourcePosition 0 1)
-
-modMaybe =
-  P.Module
-    { P.moduleName =
-        P.ModuleName
-          { P.parts = [P.ModuleNamePart "Module" esi]
-          , P.sourceInfo = esi
-          }
-    , P.typeDefs =
-        [ P.TyDef
-            { P.tyName = P.TyName "Maybe" esi
-            , P.tyAbs =
-                P.TyAbs
-                  { P.tyArgs =
-                      [ P.TyArg
-                          { P.argName = P.VarName "a" esi
-                          , P.argKind =
-                              P.Kind
-                                { P.kind = P.KindRef P.KType
-                                , P.sourceInfo = esi
-                                }
-                          , P.sourceInfo = esi
-                          }
-                      ]
-                  , P.tyBody =
-                      P.SumI $
-                        P.Sum
-                          { constructors =
-                              P.Constructor
-                                { P.constrName = P.ConstrName {P.name = "Nothing", P.sourceInfo = esi}
-                                , P.product = P.TupleI $ P.Tuple {P.fields = [], P.sourceInfo = esi}
-                                }
-                                :| [ P.Constructor
-                                      { P.constrName = P.ConstrName {P.name = "Just", P.sourceInfo = esi}
-                                      , P.product =
-                                          P.TupleI $
-                                            P.Tuple
-                                              { P.fields =
-                                                  [ P.TyVarI
-                                                      ( P.TyVar
-                                                          { P.varName =
-                                                              P.VarName
-                                                                { P.name = "a"
-                                                                , P.sourceInfo = esi
-                                                                }
-                                                          , P.sourceInfo = esi
-                                                          }
-                                                      )
-                                                  ]
-                                              , P.sourceInfo = esi
-                                              }
-                                      }
-                                   ]
-                          , sourceInfo = esi
-                          }
-                  , P.sourceInfo = esi
-                  }
-            , P.sourceInfo = esi
-            }
-        ]
-    , P.classDefs = mempty
-    , P.instances = mempty
-    , P.imports = mempty
-    , P.sourceInfo = esi
-    }
-
-ci1 :: P.CompilerInput
-ci1 = P.CompilerInput {P.modules = [modMaybe]}
-
-{- | Maybe = ...
-   B a = B Maybe
-
- Should fail as B a defaults to B :: Type -> Type and Maybe is inferred as
- Type -> Type. This is an inconsistency failure.
--}
-ci2 = ci1 & #modules .~ [addMod]
-  where
-    addMod =
-      modMaybe
-        & #typeDefs
-          %~ ( <>
-                [ -- B a = B Maybe
-                  P.TyDef
-                    { P.tyName = P.TyName "B" esi
-                    , P.tyAbs =
-                        P.TyAbs
-                          { P.tyArgs =
-                              [ P.TyArg
-                                  { P.argName = P.VarName "a" esi
-                                  , P.argKind =
-                                      P.Kind
-                                        { P.kind = P.KindRef P.KType
-                                        , P.sourceInfo = esi
-                                        }
-                                  , P.sourceInfo = esi
-                                  }
-                              ]
-                          , P.tyBody =
-                              P.SumI $
-                                P.Sum
-                                  { constructors =
-                                      P.Constructor
-                                        { P.constrName = P.ConstrName {P.name = "B", P.sourceInfo = esi}
-                                        , P.product =
-                                            P.TupleI $
-                                              P.Tuple
-                                                { P.fields =
-                                                    [ P.TyRefI $
-                                                        P.LocalI $
-                                                          P.LocalRef
-                                                            { P.tyName = P.TyName {P.name = "Maybe", P.sourceInfo = esi}
-                                                            , P.sourceInfo = esi
-                                                            }
-                                                    ]
-                                                , P.sourceInfo = esi
-                                                }
-                                        }
-                                        :| []
-                                  , sourceInfo = esi
-                                  }
-                          , P.sourceInfo = esi
-                          }
-                    , P.sourceInfo = esi
-                    }
-                ]
-             )
+      check_ compilerInput'incoherent /= Right ()
 
 --------------------------------------------------------------------------------
 -- Fold tests
 
+testFolds :: TestTree
 testFolds =
   testGroup
     "Test Folds"
@@ -176,39 +58,49 @@ testFolds =
     ]
 
 -- | [ a ] -> a
+testFoldProd1 :: TestTree
 testFoldProd1 =
   testCase "Fold with product - 1 type." $
-    foldWithProduct (Var "a" :| []) @?= Var "a"
+    foldWithProduct (lVar "a" :| []) @?= lVar "a"
 
 -- | [a ,b] -> (a,b)
+testFoldProd2 :: TestTree
 testFoldProd2 =
   testCase "Fold with product - 2 types." $
-    foldWithProduct (cons (Var "b") $ Var "a" :| [])
-      @?= App (App (Var "Π") (Var "b")) (Var "a")
+    foldWithProduct (cons (lVar "b") $ lVar "a" :| [])
+      @?= App (App (lVar "Π") (lVar "b")) (lVar "a")
 
 -- | [ a, b ,c ] -> (a,(b,c))
+testFoldProd3 :: TestTree
 testFoldProd3 =
   testCase "Fold with product - 2 types." $
-    foldWithProduct (cons (Var "c") $ cons (Var "b") $ Var "a" :| [])
+    foldWithProduct (cons (lVar "c") $ cons (lVar "b") $ lVar "a" :| [])
       @?= App
-        (App (Var "Π") (Var "c"))
-        (App (App (Var "Π") (Var "b")) (Var "a"))
+        (App (lVar "Π") (lVar "c"))
+        (App (App (lVar "Π") (lVar "b")) (lVar "a"))
 
 -- | [ a ] -> a
+testSumFold1 :: TestTree
 testSumFold1 =
   testCase "Fold 1 type." $
-    foldWithSum (Var "a" :| []) @?= Var "a"
+    foldWithSum (lVar "a" :| []) @?= lVar "a"
 
 -- | [ a , b ] -> a | b
+testSumFold2 :: TestTree
 testSumFold2 =
   testCase "Fold 2 type." $
-    foldWithSum (cons (Var "b") $ Var "a" :| [])
-      @?= App (App (Var "Σ") (Var "b")) (Var "a")
+    foldWithSum (cons (lVar "b") $ lVar "a" :| [])
+      @?= App (App (lVar "Σ") (lVar "b")) (lVar "a")
 
 -- | [ a , b , c ] -> a | ( b | c )
+testSumFold3 :: TestTree
 testSumFold3 =
   testCase "Fold 3 types." $
-    foldWithSum (cons (Var "c") $ cons (Var "b") $ Var "a" :| [])
+    foldWithSum (cons (lVar "c") $ cons (lVar "b") $ lVar "a" :| [])
       @?= App
-        (App (Var "Σ") (Var "c"))
-        (App (App (Var "Σ") (Var "b")) (Var "a"))
+        (App (lVar "Σ") (lVar "c"))
+        (App (App (lVar "Σ") (lVar "b")) (lVar "a"))
+
+-- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
+lVar :: Text -> Type
+lVar = Var . LocalRef

@@ -1,60 +1,61 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
-  SourceInfo (..),
-  SourcePosition (..),
-  LBName (..),
-  TyName (..),
+  ClassDef (..),
+  ClassName (..),
+  CompilerError (..),
+  CompilerInput (..),
+  CompilerOutput,
+  CompilerResult (..),
   ConstrName (..),
+  Constraint (..),
+  Constructor (..),
+  Field (..),
+  FieldName (..),
+  ForeignRef (..),
+  ForeignClassRef (..),
+  InstanceClause (..),
+  Kind (..),
+  KindRefType (..),
+  KindCheckError (..),
+  KindType (..),
+  LBName (..),
+  LocalRef (..),
+  LocalClassRef (..),
+  Module (..),
   ModuleName (..),
   ModuleNamePart (..),
-  VarName (..),
-  FieldName (..),
-  ClassName (..),
-  Kind (..),
-  KindType (..),
-  KindRefType (..),
-  TyVar (..),
+  Product (..),
+  Record (..),
+  SourceInfo (..),
+  SourcePosition (..),
+  Sum (..),
+  Tuple (..),
   Ty (..),
-  TyApp (..),
-  ForeignRef (..),
-  LocalRef (..),
-  TyRef (..),
-  TyDef (..),
   TyAbs (..),
+  TyApp (..),
   TyArg (..),
   TyBody (..),
-  Constructor (..),
-  Sum (..),
-  Field (..),
-  Record (..),
-  Tuple (..),
-  Product (..),
-  LocalClassRef (..),
-  ForeignClassRef (..),
   TyClassRef (..),
-  ClassDef (..),
-  InstanceClause (..),
-  Constraint (..),
-  Module (..),
-  CompilerInput (..),
+  TyDef (..),
+  TyName (..),
+  TyRef (..),
+  TyVar (..),
+  VarName (..),
+  module VARS,
 ) where
 
+import Control.Exception (Exception)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
 
-data SourceInfo = SourceInfo
-  { file :: Text
-  , posFrom :: SourcePosition
-  , posTo :: SourcePosition
-  }
+data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
 
-data SourcePosition = SourcePosition
-  { column :: Int
-  , row :: Int
-  }
+data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
 
 -- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
@@ -82,7 +83,7 @@ data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
-data Kind = Kind {kind :: KindType, sourceInfo :: SourceInfo}
+newtype Kind = Kind {kind :: KindType}
   deriving stock (Show, Eq, Ord, Generic)
 
 data KindType
@@ -111,11 +112,7 @@ data TyApp = TyApp
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-data ForeignRef = ForeignRef
-  { tyName :: TyName
-  , moduleName :: ModuleName
-  , sourceInfo :: SourceInfo
-  }
+data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
@@ -239,3 +236,25 @@ data Module = Module
 newtype CompilerInput = CompilerInput {modules :: [Module]}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
+
+data KindCheckError
+  = -- | The following term is unbound in the following type definition.
+    UnboundTermError TyName VarName
+  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
+    IncorrectApplicationError TyName Kind Kind
+  | -- | Kind recurses forever - not permitted.
+    RecursiveKindError TyName
+  | -- | The following type has the wrong.
+    InconsistentTypeError TyName Kind Kind
+  deriving stock (Show, Eq, Ord, Generic)
+instance Exception KindCheckError
+
+data CompilerError
+  = CompKindCheckError KindCheckError
+  | InternalError Text
+  deriving stock (Show, Eq, Ord, Generic)
+
+data CompilerResult = CompilerResult
+  deriving stock (Show, Eq, Ord, Generic)
+
+type CompilerOutput = Either CompilerError CompilerResult
