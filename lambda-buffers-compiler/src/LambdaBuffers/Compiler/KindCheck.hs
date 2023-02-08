@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module LambdaBuffers.Compiler.KindCheck (
   -- * Kindchecking functions.
   check,
@@ -11,9 +13,10 @@ module LambdaBuffers.Compiler.KindCheck (
 
 import Control.Lens (view, (&), (.~), (^.))
 import Control.Monad (void)
-import Control.Monad.Freer (Eff, Members, reinterpret, run)
+import Control.Monad.Freer (Eff, Member, Members, interpret, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
+import Control.Monad.Freer.State (State, evalState, get, modify)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.Foldable (traverse_)
 import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
@@ -36,50 +39,11 @@ import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat (kind2ProtoKind)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
-  ClassDef,
-  CompilerError (..),
-  CompilerInput,
-  Constructor,
-  Field,
-  ForeignRef,
-  InstanceClause,
-  Kind,
-  KindCheckError (
-    InconsistentTypeError,
-    IncorrectApplicationError,
-    RecursiveKindError,
-    UnboundTermError
-  ),
-  KindRefType (KType),
-  KindType (KindArrow, KindRef),
-  LocalRef,
-  Module,
-  ModuleName,
-  Product (..),
-  Record,
-  SourceInfo (SourceInfo),
-  SourcePosition (SourcePosition),
-  Sum,
-  Tuple,
-  Ty (..),
-  TyAbs,
-  TyApp,
-  TyArg,
-  TyBody (..),
-  TyDef (TyDef),
-  TyName,
-  TyRef (..),
-  TyVar,
-  VarName (VarName),
- )
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PT
 
 --------------------------------------------------------------------------------
 -- Types
-
--- FIXME(cstml) - We should add the following tests:
--- - double declaration of a type
 
 -- | Kind Check failure types.
 type CompilerErr = P.CompilerError
@@ -121,20 +85,27 @@ makeEffect ''KindCheck
 
 --------------------------------------------------------------------------------
 
-runCheck :: Eff (Check ': '[]) a -> Either CompilerErr a
+-- | The Check effect runner.
+runCheck :: Eff '[Check, Err] a -> Either CompilerErr a
 runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
--- | Run the check - return the validated context or the failure.
+{- | Run the check - return the validated context or the failure. The main API
+ function of the library.
+-}
 check :: P.CompilerInput -> PT.CompilerOutput
 check = fmap (const PT.CompilerResult) . runCheck . kCheck
 
--- | Run the check - drop the result if it succeeds.
+-- | Run the check - drop the result if it succeeds - useful for testing.
 check_ :: P.CompilerInput -> Either CompilerErr ()
 check_ = void . runCheck . kCheck
 
 --------------------------------------------------------------------------------
 
-type Transform x y = forall effs {a}. Eff (x ': effs) a -> Eff (y ': effs) a
+{- | A transformation (in the context of the Kind Checker) is a mapping from one
+ Effect to another. All effects can fial via the `Err` effect - which is
+ essentially the Kind Check failure.
+-}
+type Transform x y = forall effs {a}. Member Err effs => Eff (x ': effs) a -> Eff (y ': effs) a
 
 -- Transformation strategies
 globalStrategy :: Transform Check GlobalCheck
@@ -146,7 +117,7 @@ globalStrategy = reinterpret $ \case
 
 moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
-  CreateContext ci -> resolveCreateContext ci
+  CreateContext ci -> evalState (mempty @(M.Map Variable P.TyName)) . resolveCreateContext $ ci
   ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (module2ModuleName md) cx) (md ^. #typeDefs)
     traverse_ (kCClassInstance cx) (md ^. #instances)
@@ -159,14 +130,14 @@ localStrategy = reinterpret $ \case
   KCClassInstance _ctx _instClause -> pure () -- "FIXME(cstml)"
   KCClass _ctx _classDef -> pure () --  "FIXME(cstml)"
 
-runKindCheck :: Eff '[KindCheck] a -> Eff '[Err] a
-runKindCheck = reinterpret $ \case
+runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
+runKindCheck = interpret $ \case
   KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
   -- TyDefToTypes moduleName tydef -> runReader moduleName (tyDef2Types tydef)
   InferTypeKind _modName tyDef ctx ty -> either (handleErr tyDef) pure $ infer ctx ty
   CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
   where
-    handleErr :: forall a. P.TyDef -> InferErr -> Eff '[Err] a
+    handleErr :: forall {b}. P.TyDef -> InferErr -> Eff effs b
     handleErr td = \case
       InferUnboundTermErr uA ->
         throwError . P.CompKindCheckError $ P.UnboundTermError (tyDef2TyName td) (var2VarName uA)
@@ -208,15 +179,50 @@ resolveKindConsistency tydef _ctx inferredKind = do
           throwError . P.CompKindCheckError $
             P.InconsistentTypeError n (kind2ProtoKind i) (kind2ProtoKind d)
 
-resolveCreateContext :: forall effs. P.CompilerInput -> Eff effs Context
-resolveCreateContext ci = mconcat <$> traverse module2Context (ci ^. #modules)
-
 tyDef2TyName :: P.TyDef -> P.TyName
 tyDef2TyName (P.TyDef n _ _) = n
 
-module2Context :: forall effs. P.Module -> Eff effs Context
-module2Context m = mconcat <$> traverse (tyDef2Context (moduleName2ModName (m ^. #moduleName))) (m ^. #typeDefs)
+--------------------------------------------------------------------------------
+-- Context Creation
 
+{- | Resolver function for the context creation - it fails if two identical
+ declarations are found.
+-}
+resolveCreateContext ::
+  forall effs.
+  Member (State (M.Map Variable P.TyName)) effs =>
+  Member Err effs =>
+  P.CompilerInput ->
+  Eff effs Context
+resolveCreateContext ci = do
+  ctxs <- traverse module2Context (ci ^. #modules)
+  pure $ mconcat ctxs
+
+module2Context :: forall effs. Member (State (M.Map Variable P.TyName)) effs => Member Err effs => P.Module -> Eff effs Context
+module2Context m = do
+  let typeDefinitions = m ^. #typeDefs
+  ctxs <- traverse (tyDef2Context (moduleName2ModName (m ^. #moduleName))) typeDefinitions
+  pure $ mconcat ctxs
+
+-- | Creates a Context entry from one type definition.
+tyDef2Context :: forall effs. Member (State (M.Map Variable P.TyName)) effs => Member Err effs => ModName -> P.TyDef -> Eff effs Context
+tyDef2Context curModName tyDef@(P.TyDef tyName _ _) = do
+  r@(v, _) <- tyDef2NameAndKind curModName tyDef
+  associateName v tyName
+  pure $ mempty & context .~ uncurry M.singleton r
+  where
+    -- Ads the name to our map - we can use its SourceLocation in the case of a
+    -- double use. If it's already in our map - that means we've double declared it.
+    associateName :: Variable -> P.TyName -> Eff effs ()
+    associateName v t = do
+      maps <- get @(M.Map Variable P.TyName)
+      case maps M.!? v of
+        Just otherTyName -> throwError . PT.CompReaderError $ PT.MultipleDeclaration otherTyName t
+        Nothing -> modify (M.insert v t)
+
+{- | Converts the Proto Module name to a local modname - dropping the
+ information.
+-}
 moduleName2ModName :: P.ModuleName -> ModName
 moduleName2ModName mName = (\p -> p ^. #name) <$> mName ^. #parts
 
@@ -226,11 +232,6 @@ tyDef2NameAndKind curModName tyDef = do
   let name = ForeignRef curModName (tyDef ^. #tyName . #name)
   let k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
   pure (name, k)
-
-tyDef2Context :: forall effs. ModName -> P.TyDef -> Eff effs Context
-tyDef2Context curModName tyDef = do
-  r <- tyDef2NameAndKind curModName tyDef
-  pure $ mempty & context .~ uncurry M.singleton r
 
 tyAbsLHS2Kind :: P.TyAbs -> Kind
 tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)

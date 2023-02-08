@@ -41,6 +41,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyRef (..),
   TyVar (..),
   VarName (..),
+  ReaderError (..),
   module VARS,
 ) where
 
@@ -289,8 +290,19 @@ data KindCheckError
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
 
+{- | Reader errors are validation errors which are not directly tied to the kind
+ checking.
+-}
+data ReaderError
+  = -- | The following type@(TyName) was declared here@(SourceInfo) and here@(SourceInfo).
+    MultipleDeclaration TyName TyName
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ReaderError
+
+-- | All the compiler errors.
 data CompilerError
   = CompKindCheckError KindCheckError
+  | CompReaderError ReaderError
   | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary CompilerError
