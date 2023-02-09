@@ -15,6 +15,10 @@ import LambdaBuffers.Compiler.KindCheck.Variable (
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   CompilerInput (CompilerInput),
  )
+import Test.Proto.CompilerInput (
+  compilerInput'incoherent,
+  compilerInput'maybe,
+ )
 import Test.QuickCheck (
   Arbitrary (arbitrary, shrink),
   Property,
@@ -23,10 +27,6 @@ import Test.QuickCheck (
   resize,
   shuffle,
   (===),
- )
-import Test.Samples.Proto.CompilerInput (
-  compilerInput'incoherent,
-  compilerInput'maybe,
  )
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))

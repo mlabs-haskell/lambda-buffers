@@ -1,4 +1,4 @@
-module Test.Samples.Proto.Utils (
+module Test.Proto.Utils (
   _tyName,
   _varName,
   _tyVar,
@@ -17,7 +17,7 @@ module Test.Samples.Proto.Utils (
 import Data.List.NonEmpty (fromList)
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
+import Test.Proto.SourceInfo (sourceInfo'empty)
 
 _tyName :: Text -> P.TyName
 _tyName x = P.TyName x sourceInfo'empty
