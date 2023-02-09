@@ -301,9 +301,6 @@ data CompilerResult = CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
 
--- nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
--- nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)
-
 -- Orphan Instances
 instance Arbitrary a => Arbitrary (NonEmpty a) where
   arbitrary = sized f

@@ -69,7 +69,7 @@ kcTestFailing =
 -}
 kcTestOrdering :: TestTree
 kcTestOrdering =
-  testProperty "Module order inside the CompilerInput does not matter to the result of the kindchecker." $
+  testProperty "Module order inside the CompilerInput does not matter." $
     forAllShrink (resize 5 genModuleIn2Layouts) shrink $
       \(l, r) -> eitherFailOrPass (check_ l) == eitherFailOrPass (check_ r)
   where
