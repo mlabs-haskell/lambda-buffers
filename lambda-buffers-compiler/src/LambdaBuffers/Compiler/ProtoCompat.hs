@@ -550,15 +550,29 @@ instance IsMessage P.KindCheckError KindCheckError where
         & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
         & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
 
+instance IsMessage P.ReaderError ReaderError where
+  fromProto rErr = case rErr ^. P.maybe'readerError of
+    Just x -> case x of
+      P.ReaderError'MultipleDeclarationError' err -> MultipleDeclaration <$> fromProto (err ^. P.declaration1) <*> fromProto (err ^. P.declaration2)
+    Nothing -> throwProtoError EmptyField
+
+  toProto = \case
+    MultipleDeclaration d1 d2 ->
+      defMessage
+        & (P.multipleDeclarationError . P.declaration1) .~ toProto d1
+        & (P.multipleDeclarationError . P.declaration2) .~ toProto d2
+
 instance IsMessage P.CompilerError CompilerError where
   fromProto cErr = case cErr ^. P.maybe'compilerError of
     Just x -> case x of
       P.CompilerError'KindCheckError err -> CompKindCheckError <$> fromProto err
       P.CompilerError'InternalError err -> InternalError <$> fromProto (err ^. P.internalError)
+      P.CompilerError'ReaderError err -> CompReaderError <$> fromProto err
     Nothing -> throwProtoError EmptyField
 
   toProto = \case
     CompKindCheckError err -> defMessage & P.kindCheckError .~ toProto err
+    CompReaderError err -> defMessage & P.readerError .~ toProto err
     InternalError err -> defMessage & (P.internalError . P.internalError) .~ toProto err
 
 instance IsMessage P.CompilerResult CompilerResult where

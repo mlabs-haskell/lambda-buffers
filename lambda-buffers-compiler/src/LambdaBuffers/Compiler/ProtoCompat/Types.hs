@@ -294,7 +294,7 @@ instance Exception KindCheckError
  checking.
 -}
 data ReaderError
-  = -- | The following type@(TyName) was declared here@(SourceInfo) and here@(SourceInfo).
+  = -- | The following type@(TyName) was redeclared here@(TyName).
     MultipleDeclaration TyName TyName
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ReaderError
