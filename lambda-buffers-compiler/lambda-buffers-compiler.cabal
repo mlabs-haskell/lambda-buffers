@@ -103,6 +103,7 @@ library
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
+    , quickcheck-instances        >=0.3
     , text                        >=1.2
 
   exposed-modules:
@@ -118,7 +119,6 @@ library
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
-    Orphan.Text
 
   hs-source-dirs:  src
 
