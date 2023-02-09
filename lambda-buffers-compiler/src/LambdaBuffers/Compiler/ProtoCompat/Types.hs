@@ -205,14 +205,17 @@ data ForeignClassRef = ForeignClassRef
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ForeignClassRef
 
 data LocalClassRef = LocalClassRef {className :: ClassName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LocalClassRef
 
 data TyClassRef
   = LocalCI LocalClassRef
   | ForeignCI ForeignClassRef
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyClassRef
 
 data ClassDef = ClassDef
   { className :: ClassName
@@ -266,6 +269,7 @@ instance Arbitrary Module where
       fn n =
         Module
           <$> resize n arbitrary
+          <*> resize n arbitrary
           <*> resize n arbitrary
           <*> resize n arbitrary
           <*> resize n arbitrary
