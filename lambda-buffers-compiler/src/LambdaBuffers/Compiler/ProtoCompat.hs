@@ -54,10 +54,10 @@ throwNamingError = either (Left . NamingError) return
 
 -- TODO(bladyjoker): Revisit and make part of compiler.proto
 data ProtoError
-  = MultipleInstanceHeads ClassName [Ty] SourceInfo
-  | NoInstanceHead ClassName SourceInfo
-  | NoConstraintArgs ClassName SourceInfo
-  | MultipleConstraintArgs ClassName [Ty] SourceInfo
+  = MultipleInstanceHeads TyClassRef [Ty] SourceInfo
+  | NoInstanceHead TyClassRef SourceInfo
+  | NoConstraintArgs TyClassRef SourceInfo
+  | MultipleConstraintArgs TyClassRef [Ty] SourceInfo
   | NoClassArgs ClassName SourceInfo
   | MultipleClassArgs ClassName SourceInfo
   | NoTyAppArgs SourceInfo
@@ -387,6 +387,41 @@ instance IsMessage P.Product'Record'Field Field where
     Classes, instances, constraints
 -}
 
+instance IsMessage P.TyClassRef'Local LocalClassRef where
+  fromProto lr = do
+    si <- fromProto $ lr ^. P.sourceInfo
+    nm <- fromProto $ lr ^. P.className
+    pure $ LocalClassRef nm si
+
+  toProto (LocalClassRef nm si) =
+    defMessage
+      & P.className .~ toProto nm
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.TyClassRef'Foreign ForeignClassRef where
+  fromProto fr = do
+    si <- fromProto $ fr ^. P.sourceInfo
+    mn <- fromProto $ fr ^. P.moduleName
+    tn <- fromProto $ fr ^. P.className
+    pure $ ForeignClassRef tn mn si
+
+  toProto (ForeignClassRef tn mn si) =
+    defMessage
+      & P.className .~ toProto tn
+      & P.moduleName .~ toProto mn
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.TyClassRef TyClassRef where
+  fromProto tr = case tr ^. P.maybe'classRef of
+    Nothing -> throwProtoError $ OneOfNotSet "class_ref"
+    Just x -> case x of
+      P.TyClassRef'LocalClassRef lr -> LocalCI <$> fromProto lr
+      P.TyClassRef'ForeignClassRef f -> ForeignCI <$> fromProto f
+
+  toProto = \case
+    LocalCI lr -> defMessage & P.localClassRef .~ toProto lr
+    ForeignCI fr -> defMessage & P.foreignClassRef .~ toProto fr
+
 instance IsMessage P.ClassDef ClassDef where
   fromProto cd = do
     si <- fromProto $ cd ^. P.sourceInfo
@@ -411,7 +446,7 @@ instance IsMessage P.ClassDef ClassDef where
 instance IsMessage P.InstanceClause InstanceClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
-    cnm <- fromProto $ ic ^. P.className
+    cnm <- fromProto $ ic ^. P.classRef
     csts <- traverse fromProto $ ic ^. P.constraints
     hds <- ic ^. (P.heads . traversing fromProto)
     hd <- case hds of
@@ -422,7 +457,7 @@ instance IsMessage P.InstanceClause InstanceClause where
 
   toProto (InstanceClause cnm hd csts si) =
     defMessage
-      & P.className .~ toProto cnm
+      & P.classRef .~ toProto cnm
       & P.heads .~ pure (toProto hd)
       & P.constraints .~ (toProto <$> csts)
       & P.sourceInfo .~ toProto si
@@ -430,7 +465,7 @@ instance IsMessage P.InstanceClause InstanceClause where
 instance IsMessage P.Constraint Constraint where
   fromProto c = do
     si <- fromProto $ c ^. P.sourceInfo
-    cnm <- fromProto $ c ^. P.className
+    cnm <- fromProto $ c ^. P.classRef
     args <- c ^. (P.arguments . traversing fromProto)
     arg <- case args of
       [] -> throwProtoError $ NoConstraintArgs cnm si
@@ -440,7 +475,7 @@ instance IsMessage P.Constraint Constraint where
 
   toProto (Constraint cnm arg si) =
     defMessage
-      & P.className .~ toProto cnm
+      & P.classRef .~ toProto cnm
       & P.arguments .~ pure (toProto arg)
       & P.sourceInfo .~ toProto si
 
@@ -454,15 +489,17 @@ instance IsMessage P.Module Module where
     tdefs <- traverse fromProto $ m ^. P.typeDefs
     cdefs <- traverse fromProto $ m ^. P.classDefs
     insts <- traverse fromProto $ m ^. P.instances
+    impts <- traverse fromProto $ m ^. P.imports
     si <- fromProto $ m ^. P.sourceInfo
-    pure $ Module mnm tdefs cdefs insts si
+    pure $ Module mnm tdefs cdefs insts impts si
 
-  toProto (Module mnm tdefs cdefs insts si) =
+  toProto (Module mnm tdefs cdefs insts impts si) =
     defMessage
       & P.moduleName .~ toProto mnm
       & P.typeDefs .~ (toProto <$> tdefs)
       & P.classDefs .~ (toProto <$> cdefs)
       & P.instances .~ (toProto <$> insts)
+      & P.imports .~ (toProto <$> impts)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.CompilerInput CompilerInput where
