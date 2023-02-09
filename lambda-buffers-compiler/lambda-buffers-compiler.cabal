@@ -156,9 +156,9 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
-    Test.Proto.CompilerInput
-    Test.Proto.Module
-    Test.Proto.SourceInfo
-    Test.Proto.TyDef
-    Test.Proto.Utils
     Test.TypeClassCheck
+    Test.Utils.CompilerInput
+    Test.Utils.Constructors
+    Test.Utils.Module
+    Test.Utils.SourceInfo
+    Test.Utils.TyDef

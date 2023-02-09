@@ -1,8 +1,8 @@
-module Test.Proto.CompilerInput (compilerInput'incoherent, compilerInput'maybe) where
+module Test.Utils.CompilerInput (compilerInput'incoherent, compilerInput'maybe) where
 
 import Control.Lens ((&), (.~))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Proto.Module (module'incoherent, module'maybe)
+import Test.Utils.Module (module'incoherent, module'maybe)
 
 -- | Compiler Input containing 1 module with 1 definition - Maybe.
 compilerInput'maybe :: P.CompilerInput
