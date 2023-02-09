@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
@@ -44,13 +45,15 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   module VARS,
 ) where
 
+-- for NonEmpty
 import Control.Exception (Exception)
-import Data.List.NonEmpty (NonEmpty ((:|)), (<|))
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
 import Test.QuickCheck (Gen, oneof, resize, sized)
 import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
+import Test.QuickCheck.Instances.Semigroup ()
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -300,17 +303,3 @@ data CompilerResult = CompilerResult
   deriving (Arbitrary) via GenericArbitrary CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
-
--- Orphan Instances
-instance Arbitrary a => Arbitrary (NonEmpty a) where
-  arbitrary = sized f
-    where
-      f :: (Num t, Ord t) => t -> Gen (NonEmpty a)
-      f n
-        | n <= 0 = do
-            x <- arbitrary @a
-            pure $ x :| []
-        | otherwise = do
-            x <- arbitrary
-            xs <- f (n - 1)
-            pure $ x <| xs
