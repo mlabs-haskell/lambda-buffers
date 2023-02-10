@@ -532,26 +532,19 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
+  // A tydef was defined multiple times.
+  message MultipleTyDefError {
+    TyName declaration_1 = 1;
+    TyName declaration_2 = 2;
+  }
+
   // The types of inference errors.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
     ImpossibleUnificationError unification_error = 2;
     RecursiveKindError recursive_subs_error = 3;
     InconsistentTypeError inconsistent_type_error = 4;
-  }
-}
-
-// Error relating to the content read by the compiler.
-message ReaderError {
-
-  // A tydef was defined multiple times.
-  message MultipleDeclarationError {
-    TyName declaration_1 = 1;
-    TyName declaration_2 = 2;
-  }
-
-  oneof reader_error {
-    MultipleDeclarationError multiple_declaration_error = 1;
+    MultipleTyDefError multiple_tydef_error = 5;
   }
 }
 
@@ -561,9 +554,7 @@ message CompilerError {
   // Reason why the compilation failed.
   oneof compiler_error {
     KindCheckError kind_check_error = 1;
-    ReaderError reader_error = 2;
     InternalError internal_error = 3;
-
   }
 }
 

@@ -217,7 +217,7 @@ tyDef2Context curModName tyDef@(P.TyDef tyName _ _) = do
     associateName v t = do
       maps <- get @(M.Map Variable P.TyName)
       case maps M.!? v of
-        Just otherTyName -> throwError . PT.CompReaderError $ PT.MultipleDeclaration otherTyName t
+        Just otherTyName -> throwError . PT.CompKindCheckError $ PT.MultipleTyDefError otherTyName t
         Nothing -> modify (M.insert v t)
 
 {- | Converts the Proto Module name to a local modname - dropping the

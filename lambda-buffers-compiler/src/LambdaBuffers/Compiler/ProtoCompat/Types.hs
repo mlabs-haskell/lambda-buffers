@@ -1,7 +1,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
+{- | this is needed so the deriving via can generate Arbitrary instances for
+ data definitions with more than 4 constructors
+-}
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
   ClassName (..),
@@ -41,7 +45,6 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyRef (..),
   TyVar (..),
   VarName (..),
-  ReaderError (..),
   module VARS,
 ) where
 
@@ -286,23 +289,15 @@ data KindCheckError
     RecursiveKindError TyName
   | -- | The following type has the wrong.
     InconsistentTypeError TyName Kind Kind
+  | -- | The following type@(TyName) was redeclared here@(TyName).
+    MultipleTyDefError TyName TyName
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
 
-{- | Reader errors are validation errors which are not directly tied to the kind
- checking.
--}
-data ReaderError
-  = -- | The following type@(TyName) was redeclared here@(TyName).
-    MultipleDeclaration TyName TyName
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary ReaderError
-
 -- | All the compiler errors.
 data CompilerError
   = CompKindCheckError KindCheckError
-  | CompReaderError ReaderError
   | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary CompilerError
