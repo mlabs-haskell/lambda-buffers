@@ -1,9 +1,9 @@
-module Test.Samples.Proto.Module (module'maybe, module'incoherent) where
+module Test.Utils.Module (module'maybe, module'incoherent) where
 
 import Control.Lens ((%~), (&))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
-import Test.Samples.Proto.TyDef (tyDef'incoherent, tyDef'maybe)
+import Test.Utils.SourceInfo (sourceInfo'empty)
+import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe)
 
 module'maybe :: P.Module
 module'maybe =

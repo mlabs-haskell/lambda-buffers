@@ -37,6 +37,7 @@ common common-language
     DeriveLift
     DeriveTraversable
     DerivingStrategies
+    DerivingVia
     DoAndIfThenElse
     DuplicateRecordFields
     EmptyCase
@@ -94,12 +95,15 @@ library
   build-depends:
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
+    , generic-arbitrary
     , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
+    , QuickCheck                  >=2.14
+    , quickcheck-instances        >=0.3
     , text                        >=1.2
 
   exposed-modules:
@@ -151,16 +155,17 @@ test-suite tests
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , proto-lens                  >=0.7
+    , QuickCheck                  >=2.14
     , tasty                       >=1.4
     , tasty-hunit                 >=0.10
+    , tasty-quickcheck            >=0.10
     , text                        >=1.2
 
   other-modules:
     Test.KindCheck
-    Test.Samples
-    Test.Samples.Proto.CompilerInput
-    Test.Samples.Proto.Helpers
-    Test.Samples.Proto.Module
-    Test.Samples.Proto.SourceInfo
-    Test.Samples.Proto.TyDef
     Test.TypeClassCheck
+    Test.Utils.CompilerInput
+    Test.Utils.Constructors
+    Test.Utils.Module
+    Test.Utils.SourceInfo
+    Test.Utils.TyDef
