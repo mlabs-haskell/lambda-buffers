@@ -32,7 +32,8 @@ import Test.Utils.CompilerInput (
   compilerInput'incoherent,
   compilerInput'maybe,
  )
-import Test.Utils.Constructors (_tyName)
+import Test.Utils.Constructors (_ModuleName)
+import Test.Utils.TyDef (tyDef'maybe)
 
 --------------------------------------------------------------------------------
 -- Top Level tests
@@ -49,7 +50,10 @@ testMultipleDec = testGroup "Multiple declaration tests." [doubleDeclaration, pa
 doubleDeclaration :: TestTree
 doubleDeclaration =
   testCase "Two declarations of Maybe within the same module are caught." $
-    check_ compilerInput'doubleDeclaration @?= Left (P.CompKindCheckError $ P.MultipleTyDefError (_tyName "Maybe") (_tyName "Maybe"))
+    check_ compilerInput'doubleDeclaration
+      @?= Left (P.CompKindCheckError (P.MultipleTyDefError moduleName [tyDef'maybe, tyDef'maybe]))
+  where
+    moduleName = _ModuleName ["Module"]
 
 passingDoubleDeclaration :: TestTree
 passingDoubleDeclaration =

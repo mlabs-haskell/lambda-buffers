@@ -117,7 +117,7 @@ globalStrategy = reinterpret $ \case
 
 moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
-  CreateContext ci -> evalState (mempty @(M.Map Variable P.TyName)) . resolveCreateContext $ ci
+  CreateContext ci -> evalState (mempty @(M.Map Variable P.TyDef)) . resolveCreateContext $ ci
   ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (module2ModuleName md) cx) (md ^. #typeDefs)
     traverse_ (kCClassInstance cx) (md ^. #instances)
@@ -190,7 +190,7 @@ tyDef2TyName (P.TyDef n _ _) = n
 -}
 resolveCreateContext ::
   forall effs.
-  Member (State (M.Map Variable P.TyName)) effs =>
+  Member (State (M.Map Variable P.TyDef)) effs =>
   Member Err effs =>
   P.CompilerInput ->
   Eff effs Context
@@ -198,27 +198,42 @@ resolveCreateContext ci = do
   ctxs <- traverse module2Context (ci ^. #modules)
   pure $ mconcat ctxs
 
-module2Context :: forall effs. Member (State (M.Map Variable P.TyName)) effs => Member Err effs => P.Module -> Eff effs Context
+module2Context ::
+  forall effs.
+  Member (State (M.Map Variable P.TyDef)) effs =>
+  Member Err effs =>
+  P.Module ->
+  Eff effs Context
 module2Context m = do
   let typeDefinitions = m ^. #typeDefs
-  ctxs <- traverse (tyDef2Context (moduleName2ModName (m ^. #moduleName))) typeDefinitions
+  ctxs <- runReader (m ^. #moduleName) $ do
+    traverse (tyDef2Context (moduleName2ModName (m ^. #moduleName))) typeDefinitions
   pure $ mconcat ctxs
 
 -- | Creates a Context entry from one type definition.
-tyDef2Context :: forall effs. Member (State (M.Map Variable P.TyName)) effs => Member Err effs => ModName -> P.TyDef -> Eff effs Context
-tyDef2Context curModName tyDef@(P.TyDef tyName _ _) = do
+tyDef2Context ::
+  forall effs.
+  Member (Reader P.ModuleName) effs =>
+  Member (State (M.Map Variable P.TyDef)) effs =>
+  Member Err effs =>
+  ModName ->
+  P.TyDef ->
+  Eff effs Context
+tyDef2Context curModName tyDef = do
   r@(v, _) <- tyDef2NameAndKind curModName tyDef
-  associateName v tyName
+  associateName v tyDef
   pure $ mempty & context .~ uncurry M.singleton r
   where
     -- Ads the name to our map - we can use its SourceLocation in the case of a
     -- double use. If it's already in our map - that means we've double declared it.
-    associateName :: Variable -> P.TyName -> Eff effs ()
-    associateName v t = do
-      maps <- get @(M.Map Variable P.TyName)
+    associateName :: Variable -> P.TyDef -> Eff effs ()
+    associateName v curTyDef = do
+      modName <- ask
+      maps <- get @(M.Map Variable P.TyDef)
       case maps M.!? v of
-        Just otherTyName -> throwError . PT.CompKindCheckError $ PT.MultipleTyDefError otherTyName t
-        Nothing -> modify (M.insert v t)
+        Just otherTyDef ->
+          throwError . PT.CompKindCheckError $ PT.MultipleTyDefError modName [otherTyDef, curTyDef]
+        Nothing -> modify (M.insert v curTyDef)
 
 {- | Converts the Proto Module name to a local modname - dropping the
  information.

@@ -305,16 +305,11 @@ instance Arbitrary CompilerInput where
       fn n = CompilerInput <$> resize n arbitrary
 
 data KindCheckError
-  = -- | The following term is unbound in the following type definition.
-    UnboundTermError TyName VarName
-  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
-    IncorrectApplicationError TyName Kind Kind
-  | -- | Kind recurses forever - not permitted.
-    RecursiveKindError TyName
-  | -- | The following type has the wrong.
-    InconsistentTypeError TyName Kind Kind
-  | -- | The following type@(TyName) was redeclared here@(TyName).
-    MultipleTyDefError TyName TyName
+  = UnboundTermError TyName VarName
+  | IncorrectApplicationError TyName Kind Kind
+  | RecursiveKindError TyName
+  | InconsistentTypeError TyName Kind Kind
+  | MultipleTyDefError ModuleName [TyDef]
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
