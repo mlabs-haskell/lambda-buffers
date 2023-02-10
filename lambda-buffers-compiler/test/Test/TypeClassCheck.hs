@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Test.TypeClassCheck {- (test) -} where
+module Test.TypeClassCheck (test) where
 
 import Control.Lens ((.~))
 import Data.Function ((&))
