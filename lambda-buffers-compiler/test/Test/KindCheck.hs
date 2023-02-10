@@ -23,16 +23,16 @@ import Test.QuickCheck (
   shuffle,
   (===),
  )
-import Test.Samples.Proto.CompilerInput (
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (assertBool, testCase, (@?=))
+import Test.Tasty.QuickCheck (testProperty)
+import Test.Utils.CompilerInput (
   compilerInput'doubleDeclaration,
   compilerInput'doubleDeclarationDiffMod,
   compilerInput'incoherent,
   compilerInput'maybe,
  )
-import Test.Samples.Proto.Utils (_tyName)
-import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertBool, testCase, (@?=))
-import Test.Tasty.QuickCheck (testProperty)
+import Test.Utils.Constructors (_tyName)
 
 --------------------------------------------------------------------------------
 -- Top Level tests
@@ -49,7 +49,7 @@ testMultipleDec = testGroup "Multiple declaration tests." [doubleDeclaration, pa
 doubleDeclaration :: TestTree
 doubleDeclaration =
   testCase "Two declarations of Maybe within the same module are caught." $
-    check_ compilerInput'doubleDeclaration @?= Left (P.CompReaderError $ P.MultipleDeclaration (_tyName "Maybe") (_tyName "Maybe"))
+    check_ compilerInput'doubleDeclaration @?= Left (P.CompKindCheckError $ P.MultipleTyDefError (_tyName "Maybe") (_tyName "Maybe"))
 
 passingDoubleDeclaration :: TestTree
 passingDoubleDeclaration =
@@ -87,7 +87,7 @@ kcTestFailing =
 -}
 kcTestOrdering :: TestTree
 kcTestOrdering =
-  testProperty "Module order inside the CompilerInput does not matter to the result of the kindchecker." $
+  testProperty "Module order inside the CompilerInput does not matter." $
     forAllShrink (resize 5 genModuleIn2Layouts) shrink $
       \(l, r) -> eitherFailOrPass (check_ l) == eitherFailOrPass (check_ r)
   where

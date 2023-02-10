@@ -1,14 +1,9 @@
-module Test.Samples.Proto.CompilerInput (
-  compilerInput'incoherent,
-  compilerInput'maybe,
-  compilerInput'doubleDeclaration,
-  compilerInput'doubleDeclarationDiffMod,
-) where
+module Test.Utils.CompilerInput (compilerInput'incoherent, compilerInput'maybe, compilerInput'doubleDeclarationDiffMod, compilerInput'doubleDeclaration) where
 
 import Control.Lens ((%~), (&), (.~))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.Module (module'incoherent, module'maybe)
-import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
+import Test.Utils.Module (module'incoherent, module'maybe)
+import Test.Utils.SourceInfo (sourceInfo'empty)
 
 _CompilerInput :: [P.Module] -> P.CompilerInput
 _CompilerInput x = P.CompilerInput {P.modules = x}

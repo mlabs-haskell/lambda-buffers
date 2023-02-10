@@ -2,10 +2,10 @@ module LambdaBuffers.Compiler.KindCheck.Variable (Variable (LocalRef, ForeignRef
 
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Orphan.Text ()
 import Prettyprinter (Pretty (pretty), concatWith)
 import Test.QuickCheck (Arbitrary)
 import Test.QuickCheck.Arbitrary.Generic (GenericArbitrary (GenericArbitrary))
+import Test.QuickCheck.Instances.Text ()
 
 type Atom = Text
 

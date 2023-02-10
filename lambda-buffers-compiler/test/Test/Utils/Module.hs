@@ -1,9 +1,9 @@
-module Test.Samples.Proto.Module (module'maybe, module'incoherent, _Module) where
+module Test.Utils.Module (module'maybe, module'incoherent) where
 
 import Control.Lens ((%~), (&))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Samples.Proto.SourceInfo (sourceInfo'empty)
-import Test.Samples.Proto.TyDef (tyDef'incoherent, tyDef'maybe)
+import Test.Utils.SourceInfo (sourceInfo'empty)
+import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe)
 
 _Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.InstanceClause] -> P.Module
 _Module mn tds cds ins =
@@ -12,6 +12,7 @@ _Module mn tds cds ins =
     , P.typeDefs = tds
     , P.classDefs = cds
     , P.instances = ins
+    , P.imports = mempty
     , P.sourceInfo = sourceInfo'empty
     }
 
@@ -27,6 +28,7 @@ module'maybe =
     , P.classDefs = mempty
     , P.instances = mempty
     , P.sourceInfo = sourceInfo'empty
+    , P.imports = mempty
     }
 
 {- | 1 Module containing

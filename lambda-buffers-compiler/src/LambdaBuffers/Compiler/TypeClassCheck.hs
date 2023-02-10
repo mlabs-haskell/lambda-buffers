@@ -3,6 +3,7 @@
 
 module LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles, detectSuperclassCycles') where
 
+import Control.Lens.Combinators (view)
 import Control.Lens.Operators ((^.))
 import Data.Generics.Labels ()
 import Data.List (foldl')
@@ -10,6 +11,9 @@ import Data.Map qualified as M
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (),
+  ForeignClassRef (ForeignClassRef),
+  LocalClassRef (LocalClassRef),
+  TyClassRef (ForeignCI, LocalCI),
  )
 import Prettyprinter (
   Doc,
@@ -30,7 +34,11 @@ detectSuperclassCycles' = detectCycles . mkClassGraph . map defToClassInfo
     defToClassInfo :: ClassDef -> ClassInfo
     defToClassInfo cd =
       ClassInfo (cd ^. #className . #name) $
-        map (\x -> x ^. #className . #name) (cd ^. #supers)
+        map (extractName . view #classRef) (cd ^. #supers)
+      where
+        extractName = \case
+          LocalCI (LocalClassRef nm _) -> nm ^. #name
+          ForeignCI (ForeignClassRef nm _ _) -> nm ^. #name
 
     mkClassGraph :: [ClassInfo] -> M.Map Text [Text]
     mkClassGraph = foldl' (\acc (ClassInfo nm sups) -> M.insert nm sups acc) M.empty

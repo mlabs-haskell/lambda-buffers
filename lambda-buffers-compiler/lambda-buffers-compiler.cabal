@@ -103,6 +103,7 @@ library
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
+    , quickcheck-instances        >=0.3
     , text                        >=1.2
 
   exposed-modules:
@@ -117,8 +118,10 @@ library
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.Types
+    LambdaBuffers.Compiler.TypeClass.Pat
+    LambdaBuffers.Compiler.TypeClass.Pretty
+    LambdaBuffers.Compiler.TypeClass.Rules
     LambdaBuffers.Compiler.TypeClassCheck
-    Orphan.Text
 
   hs-source-dirs:  src
 
@@ -156,9 +159,9 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
-    Test.Samples.Proto.CompilerInput
-    Test.Samples.Proto.Module
-    Test.Samples.Proto.SourceInfo
-    Test.Samples.Proto.TyDef
-    Test.Samples.Proto.Utils
     Test.TypeClassCheck
+    Test.Utils.CompilerInput
+    Test.Utils.Constructors
+    Test.Utils.Module
+    Test.Utils.SourceInfo
+    Test.Utils.TyDef

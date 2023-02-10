@@ -1,11 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+--  this is needed so the deriving via can generate Arbitrary instances for data
+--  definitions with more than 4 constructors
 {-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
-{- | this is needed so the deriving via can generate Arbitrary instances for
- data definitions with more than 4 constructors
--}
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
   ClassName (..),
@@ -19,6 +18,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   Field (..),
   FieldName (..),
   ForeignRef (..),
+  ForeignClassRef (..),
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
@@ -26,6 +26,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   KindType (..),
   LBName (..),
   LocalRef (..),
+  LocalClassRef (..),
   Module (..),
   ModuleName (..),
   ModuleNamePart (..),
@@ -40,6 +41,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyApp (..),
   TyArg (..),
   TyBody (..),
+  TyClassRef (..),
   TyDef (..),
   TyName (..),
   TyRef (..),
@@ -48,13 +50,15 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   module VARS,
 ) where
 
+-- for NonEmpty
 import Control.Exception (Exception)
-import Data.List.NonEmpty (NonEmpty ((:|)), (<|))
+import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
 import Test.QuickCheck (Gen, oneof, resize, sized)
 import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
+import Test.QuickCheck.Instances.Semigroup ()
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -197,6 +201,24 @@ data Product = RecordI Record | TupleI Tuple
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Product
 
+data ForeignClassRef = ForeignClassRef
+  { className :: ClassName
+  , moduleName :: ModuleName
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ForeignClassRef
+
+data LocalClassRef = LocalClassRef {className :: ClassName, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LocalClassRef
+
+data TyClassRef
+  = LocalCI LocalClassRef
+  | ForeignCI ForeignClassRef
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyClassRef
+
 data ClassDef = ClassDef
   { className :: ClassName
   , classArgs :: TyArg
@@ -208,7 +230,7 @@ data ClassDef = ClassDef
   deriving (Arbitrary) via GenericArbitrary ClassDef
 
 data InstanceClause = InstanceClause
-  { className :: ClassName
+  { classRef :: TyClassRef
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
@@ -226,7 +248,7 @@ instance Arbitrary InstanceClause where
           <*> resize n arbitrary
 
 data Constraint = Constraint
-  { className :: ClassName
+  { classRef :: TyClassRef
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
@@ -238,6 +260,7 @@ data Module = Module
   , typeDefs :: [TyDef]
   , classDefs :: [ClassDef]
   , instances :: [InstanceClause]
+  , imports :: [ModuleName]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -248,6 +271,7 @@ instance Arbitrary Module where
       fn n =
         Module
           <$> resize n arbitrary
+          <*> resize n arbitrary
           <*> resize n arbitrary
           <*> resize n arbitrary
           <*> resize n arbitrary
@@ -307,20 +331,3 @@ data CompilerResult = CompilerResult
   deriving (Arbitrary) via GenericArbitrary CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
-
--- nonEmptyArbList :: forall a. Arbitrary a => Gen [a]
--- nonEmptyArbList = getNonEmpty <$> arbitrary @(NonEmptyList a)
-
--- Orphan Instances
-instance Arbitrary a => Arbitrary (NonEmpty a) where
-  arbitrary = sized f
-    where
-      f :: (Num t, Ord t) => t -> Gen (NonEmpty a)
-      f n
-        | n <= 0 = do
-            x <- arbitrary @a
-            pure $ x :| []
-        | otherwise = do
-            x <- arbitrary
-            xs <- f (n - 1)
-            pure $ x <| xs

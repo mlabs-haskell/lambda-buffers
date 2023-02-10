@@ -437,13 +437,45 @@ message ClassDef {
   SourceInfo source_info = 5;
 }
 
+/* Type class references
+
+It is necessary to know whether a type class is defined locally or in a
+foreign module when referring to it in an instance clause or constraint,
+this allows users (and requires the frontend) to explicitly communicate
+that information.
+*/
+
+message TyClassRef {
+  // Local type reference.
+  message Local {
+    // Local module class name.
+    ClassName class_name = 1;
+    // Source information.
+    SourceInfo source_info = 2;
+  }
+  // Foreign class reference.
+  message Foreign {
+    // Foreign module class name.
+    ClassName class_name = 1;
+    // Foreign module name.
+    ModuleName module_name = 2;
+    // Source information.
+    SourceInfo source_info = 3;
+  }
+  // Local or a foreign type class reference.
+  oneof class_ref {
+    Local local_class_ref = 1;
+    Foreign foreign_class_ref = 2;
+  }
+}
+
 /* Type class instances
 
 Instance clauses enable users to specify 'semantic' rules for their types.
 */
 message InstanceClause {
   // Type class name.
-  ClassName class_name = 1;
+  TyClassRef class_ref = 1;
   // Head of the instance clause. Currently, the Compiler only accepts single
   // parameter type classes.
   repeated Ty heads = 2;
@@ -456,7 +488,7 @@ message InstanceClause {
 /* Constraint expression */
 message Constraint {
   // Name of the type class.
-  ClassName class_name = 1;
+  TyClassRef class_ref = 1;
   // Constraint arguments.
   repeated Ty arguments = 2;
   // Source information.
@@ -476,8 +508,10 @@ message Module {
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
+  // Imported modules the Compiler consults when searching for instance clauses.
+  repeated ModuleName imports = 5;
   // Source information.
-  SourceInfo source_info = 5;
+  SourceInfo source_info = 6;
 }
 
 /* Compiler Input

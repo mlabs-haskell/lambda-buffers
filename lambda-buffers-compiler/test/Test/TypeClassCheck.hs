@@ -9,7 +9,7 @@ import LambdaBuffers.Compiler.ProtoCompat (IsMessage (fromProto))
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
 import Proto.Compiler (ClassDef, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
-import Proto.Compiler_Fields (argKind, argName, arguments, classArgs, className, kindRef, name, supers, tyVar, varName)
+import Proto.Compiler_Fields (argKind, argName, arguments, classArgs, className, classRef, kindRef, localClassRef, name, supers, tyVar, varName)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -53,7 +53,7 @@ mkclass nm sups =
 constraint :: Text -> Constraint
 constraint nm =
   defMessage
-    & className . name .~ nm
+    & classRef . localClassRef . className . name .~ nm
     & arguments .~ [defMessage & tyVar . varName . name .~ "a"]
 
 cycles :: [ClassDef]
