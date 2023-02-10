@@ -1,9 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Solve (solve) where
+module LambdaBuffers.Compiler.TypeClass.Solve (solveM, solve, Overlap (..)) where
 
-import Data.List (foldl', sortBy)
-import Data.Text (Text)
 import LambdaBuffers.Compiler.TypeClass.Pat (
   Pat (AppP, DecP, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)),
   matches,
@@ -17,11 +15,20 @@ import LambdaBuffers.Compiler.TypeClass.Rules (
   ruleHeadPat,
  )
 
+import Control.Monad.Except (throwError)
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Reader.Class (MonadReader (ask))
+import Control.Monad.Writer.Class (MonadWriter (tell))
+import Control.Monad.Writer.Strict (WriterT, execWriterT)
+import Data.Foldable (traverse_)
+import Data.List (foldl')
 import Data.Set qualified as S
+import Data.Text (Text)
 
-{- Variable substitution. Given a string that represents a variable name,
-   and a type to instantiate variables with that name to, performs the
-   instantiation
+{- Pattern/Template/Unification variable  substitution.
+   Given a string that represents a variable name,
+   and a type to instantiate variables with that name to,
+   performs the instantiation
 -}
 subV :: Text -> Pat -> Pat -> Pat
 subV varNm t = \case
@@ -64,28 +71,20 @@ getSubs (RefP n t) (RefP n' t') = getSubs n n' <> getSubs t t'
 getSubs (DecP a b c) (DecP a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
 getSubs _ _ = []
 
--- should be vastly more efficient than Data.List.Nub
-deduplicate :: Ord a => [a] -> [a]
-deduplicate = S.toList . S.fromList
+-- NoMatch isn't fatal but OverlappingMatches is (i.e. we need to stop when we encounter it)
+data MatchError
+  = NoMatch
+  | OverlappingMatches [Rule]
 
--- is the first pattern a substitution instance of the second
-isSubstitutionOf :: Pat -> Pat -> Bool
-isSubstitutionOf p1 p2 = matches p2 p1
+-- for SolveM, since we catch NoMatch
+data Overlap = Overlap Constraint [Rule]
+  deriving stock (Show, Eq)
 
-compareSpecificity :: Pat -> Pat -> Ordering
-compareSpecificity p1 p2
-  | p1
-      `isSubstitutionOf` p2
-      && p2
-      `isSubstitutionOf` p1 =
-      EQ
-  | p1 `isSubstitutionOf` p2 = LT
-  | otherwise = GT
-
-sortOnSpecificity :: Pat -> Class -> [Rule] -> [Rule]
-sortOnSpecificity p c ps =
-  sortBy (\a1 a2 -> compareSpecificity (ruleHeadPat a1) (ruleHeadPat a2)) $
-    filter matchPatAndClass ps
+selectMatchingInstance :: Pat -> Class -> [Rule] -> Either MatchError Rule
+selectMatchingInstance p c rs = case filter matchPatAndClass rs of
+  [] -> Left NoMatch
+  [r] -> Right r
+  overlaps -> Left $ OverlappingMatches overlaps
   where
     matchPatAndClass :: Rule -> Bool
     matchPatAndClass r =
@@ -93,10 +92,7 @@ sortOnSpecificity p c ps =
         && ruleHeadPat r
         `matches` p
 
-mostSpecificInstance :: Pat -> Class -> [Rule] -> Maybe Rule
-mostSpecificInstance p c ps = case sortOnSpecificity p c ps of
-  [] -> Nothing
-  (x : _) -> Just x
+type SolveM = ReaderT [Rule] (WriterT (S.Set Constraint) (Either Overlap))
 
 {- Given a list of instances (the initial scope), determines whether we can derive
    an instance of the Class argument for the Pat argument. A result of [] indicates that there are
@@ -108,38 +104,28 @@ mostSpecificInstance p c ps = case sortOnSpecificity p c ps of
          it doesn't b/c it's *impossible* to have `instance Foo X` if the definition of Foo is
          `class Bar y => Foo y` without an `instance Bar X`)
 -}
-solve ::
-  [Rule] -> -- all instance rules in scope. WE ASSUME THESE HAVE ALREADY BEEN GENERATED, SOMEWHERE
-  Constraint -> -- constraint we're trying to solve
-  [Constraint] -- subgoals that cannot be solved for w/ the current rule set
-solve inScope cst@(C c pat) =
-  -- First, we look for the most specific instance...
-  case mostSpecificInstance pat c inScope of
-    -- If there isn't one, we return only the constraint we were trying to solve
-    Nothing -> [cst]
-    -- If there is, we substitute the argument of the constraint to be solved into the matching rules
-    Just rule -> case subst rule pat of
-      -- If there are no additional constraints on the rule, we try to solve the superclasses
-      C _ p :<= [] -> case csupers c of
-        [] -> []
-        xs -> solveClassesFor p xs
-      -- If there are additional constraints on the rule, we try to solve them
-      C _ _ :<= is -> case concatMap (solve inScope) is of
-        -- If we succeed at solving the additional constraints on the rule, we try to solve the supers
-        [] -> solveClassesFor pat (csupers c)
-        -- We deduplicate the list of unsolvable subgoals
-        xs -> deduplicate xs
+solveM :: Constraint -> SolveM ()
+solveM cst@(C c pat) =
+  ask >>= \inScope ->
+    -- First, we look for the most specific instance...
+    case selectMatchingInstance pat c inScope of
+      Left e -> case e of
+        NoMatch -> tell $ S.singleton cst
+        OverlappingMatches olps -> throwError $ Overlap cst olps
+      -- If there is, we substitute the argument of the constraint to be solved into the matching rules
+      Right rule -> case subst rule pat of
+        -- If there are no additional constraints on the rule, we try to solve the superclasses
+        C _ p :<= [] -> solveClassesFor p (csupers c)
+        -- If there are additional constraints on the rule, we try to solve them
+        C _ _ :<= is -> do
+          traverse_ solveM is
+          solveClassesFor pat (csupers c)
   where
     -- NOTE(@bladyjoker): The version w/ flip is more performant...
     -- Given a Pat and a list of Classes, attempt to solve the constraints
     -- constructed from the Pat and each Class
-    solveClassesFor :: Pat -> [Class] -> [Constraint]
-    solveClassesFor p =
-      deduplicate -- multiple constraints could emit the same subgoal which is bad
-        . concatMap
-          ( solve inScope
-              . ( \cls ->
-                    let classConstraint = C cls p
-                     in classConstraint
-                )
-          )
+    solveClassesFor :: Pat -> [Class] -> SolveM ()
+    solveClassesFor p = traverse_ (\cls -> solveM (C cls p))
+
+solve :: [Rule] -> Constraint -> Either Overlap [Constraint]
+solve rules c = fmap S.toList $ execWriterT $ runReaderT (solveM c) rules

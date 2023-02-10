@@ -10,8 +10,9 @@ module LambdaBuffers.Compiler.TypeClass.Pretty (
 ) where
 
 import Data.Generics.Labels ()
+import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)), patList)
+import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, TyVarP, VarP, (:*), (:=)), patList)
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   Constraint (C),
@@ -58,6 +59,7 @@ instance Pretty Pat where
     Name t -> pretty t
     ModuleName ts -> hcat . punctuate "." . map pretty $ ts
     Opaque -> "<OPAQUE>"
+    TyVarP t -> pretty t
     RecP ps -> case patList ps of
       Nothing -> pretty ps
       Just fields -> case traverse prettyField fields of
@@ -80,7 +82,8 @@ instance Pretty Pat where
     RefP mn@(ModuleName _) n@(Name _) -> pretty mn <> "." <> pretty n
     RefP Nil (Name n) -> pretty n
     RefP p1 p2 -> parens $ "Ref" <+> pretty p1 <+> pretty p2
-    VarP t -> pretty t
+    -- Pattern variables are uppercased to distinguish them from proper TyVars
+    VarP t -> pretty (T.toUpper t)
     ap@(AppP p1 p2) -> case prettyApp ap of
       Just pap -> parens pap
       Nothing -> "App" <+> pretty p1 <+> pretty p2
