@@ -20,7 +20,6 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
     RefP,
     SumP,
     TyVarP,
-    VarP,
     (:*),
     (:=)
   ),
@@ -33,6 +32,11 @@ import LambdaBuffers.Compiler.TypeClass.Rules (
  )
 import LambdaBuffers.Compiler.TypeClass.Rules qualified as R
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap), solve)
+import LambdaBuffers.Compiler.TypeClass.Validate (
+  mkStructuralRules,
+  _L,
+  _X,
+ )
 import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
 import Proto.Compiler (ClassDef, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
 import Proto.Compiler_Fields (argKind, argName, arguments, classArgs, className, classRef, kindRef, localClassRef, name, supers, tyVar, varName)
@@ -157,31 +161,10 @@ solveTests =
         , C _c (Maybe Int) :<= []
         ]
 
--- hardcoded PATTERN variables, easier to read than (VarP "blah") everywhere
-_X, _XS, _VARS, _NAME, _L, _BODY :: Pat
-_X = VarP "x"
-_XS = VarP "xs"
-_VARS = VarP "vars"
-_NAME = VarP "name"
-_L = VarP "l"
-_BODY = VarP "body"
-
 -- hardcoded TYPE variables
 vl, vr :: Pat
 vl = TyVarP "l"
 vr = TyVarP "r"
-
--- TODO(@gnumonik): Import this from somewhere else when that somewhere else module exists
-mkStructuralRules :: Class -> [Rule]
-mkStructuralRules c =
-  [ C c Nil :<= []
-  , C c (_X :* _XS) :<= [C c _X, C c _XS]
-  , C c (_L := _X) :<= [C c _X]
-  , C c (RecP _XS) :<= [C c _XS]
-  , C c (ProdP _XS) :<= [C c _XS]
-  , C c (SumP _XS) :<= [C c _XS]
-  , C c (DecP _NAME _VARS _BODY) :<= [C c _BODY]
-  ]
 
 pattern (:@) :: Pat -> Pat -> Pat
 pattern (:@) p1 p2 = AppP p1 p2

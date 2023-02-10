@@ -55,7 +55,7 @@ data Pat
   | AppP Pat Pat {- Pattern for Type applications -}
   | {- This last one is a bit special. This represents a complete type declaration.
        The first Pat should be instantiated to `Name l` where l is a concrete name.
-       The second Pat should be instantiated to a Pat-List (using :*/Nil) which only contains Names.
+       The second Pat should be instantiated to a Pat-List (using :*/Nil) which only contains TyVarPs.
        The final Pat should be instantiated to a Pat body.
        In some languages, parts of this may be ignored. E.g. in Rust the type name doesn't matter (we use the constr name of the
        outermost inner sum for constructing types). -}

@@ -9,6 +9,7 @@ module LambdaBuffers.Compiler.TypeClass.Pretty (
   (<///>),
 ) where
 
+import Control.Lens.Operators ((^.))
 import Data.Generics.Labels ()
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
@@ -32,6 +33,9 @@ import Prettyprinter (
   punctuate,
   (<+>),
  )
+
+instance Pretty P.ModuleName where
+  pretty (P.ModuleName pts _) = hcat . punctuate "." $ map (\x -> pretty $ x ^. #name) pts
 
 instance Pretty FQClassName where
   pretty (FQClassName cn mnps) = hcat (punctuate "." . map pretty $ mnps) <> pretty cn

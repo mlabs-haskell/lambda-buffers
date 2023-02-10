@@ -39,12 +39,14 @@ data Rule where
   deriving stock (Show, Eq, Ord)
 infixl 7 :<=
 
-{- Map over the Pats inside of an Rule
+{- |
+Map over the Pats inside of an Rule
 -}
 mapPat :: (Pat -> Pat) -> Rule -> Rule
 mapPat f (C c ty :<= is) = C c (f ty) :<= map (\(C cx p) -> C cx (f p)) is
 
-{- Extract the inner Pat from a Rule head
+{- |
+Extract the inner Pat from a Rule head
 -}
 ruleHeadPat :: Rule -> Pat
 ruleHeadPat (C _ p :<= _) = p
