@@ -44,7 +44,13 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
   ),
  )
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap, solve)
-import LambdaBuffers.Compiler.TypeClass.Utils (ModuleBuilder, TypeClassError (LocalTyRefNotFound, OverlapDetected), lookupOr, mbInstances, mbScope, mbTyDefs, type Instance)
+import LambdaBuffers.Compiler.TypeClass.Utils (
+  BasicConditionViolation (OverlapDetected),
+  Instance,
+  ModuleBuilder (mbInstances, mbScope, mbTyDefs),
+  TypeClassError (BadInstance, LocalTyRefNotFound),
+  lookupOr,
+ )
 
 -- hardcoded PATTERN variables, easier to read than (VarP "blah") everywhere
 _X, _XS, _VARS, _NAME, _L, _BODY :: Pat
@@ -105,7 +111,7 @@ checkDerive :: P.ModuleName -> ModuleBuilder -> Instance -> Either TypeClassErro
 checkDerive mn mb i = concat <$> (traverse solveRef =<< catchOverlap (solve assumptions c))
   where
     catchOverlap :: Either Overlap a -> Either TypeClassError a
-    catchOverlap = either (Left . OverlapDetected) pure
+    catchOverlap = either (Left . BadInstance . OverlapDetected) pure
 
     (c, cs) = splitInstance i
 

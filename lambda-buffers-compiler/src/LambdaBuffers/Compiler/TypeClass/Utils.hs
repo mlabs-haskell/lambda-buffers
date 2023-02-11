@@ -4,6 +4,7 @@ module LambdaBuffers.Compiler.TypeClass.Utils (
   -- exports for Validate & Tests
   type Instance,
   TypeClassError (..),
+  BasicConditionViolation (..),
   lookupOr,
   -- for the superclass cycle check
   mkClassInfos,
@@ -59,11 +60,12 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
     RecP,
     RefP,
     SumP,
+    TyVarP,
     (:*),
     (:=)
   ),
  )
-import LambdaBuffers.Compiler.TypeClass.Pretty (pointies)
+import LambdaBuffers.Compiler.TypeClass.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap))
 import Prettyprinter (
   Pretty (pretty),
@@ -91,7 +93,7 @@ data TypeClassError
   | LocalTyRefNotFound T.Text P.ModuleName
   | SuperclassCycleDetected [[FQClassName]]
   | CouldntSolveConstraints P.ModuleName [Constraint] Instance
-  | OverlapDetected Overlap
+  | BadInstance BasicConditionViolation
   deriving stock (Show)
 
 instance Pretty TypeClassError where
@@ -137,11 +139,63 @@ instance Pretty TypeClassError where
           <> line
           <> line
           <> indent 2 (vcat $ map pretty cs)
+    BadInstance bcv -> pretty bcv
+
+data BasicConditionViolation
+  = TyConInContext Instance Constraint
+  | OnlyTyVarsInHead Instance Constraint
+  | OverlapDetected Overlap
+  deriving stock (Show)
+
+instance Pretty BasicConditionViolation where
+  pretty = \case
+    TyConInContext inst cst ->
+      "Error: Invalid instance declaration!"
+        <///> indent 2 (pretty inst)
+        <///> "The instance constraint"
+        <///> indent 2 (pretty cst)
+        <///> "Contains a type constructor, but may only contain type variables"
+    OnlyTyVarsInHead inst cst ->
+      "Error: Invalid instance declaration!"
+        <///> indent 2 (pretty inst)
+        <///> "The instance constraint"
+        <///> indent 2 (pretty cst)
+        <///> "only contains type variables, but must contain at least one constructor"
     OverlapDetected (Overlap cst rules) ->
       "Error: Overlapping instances detected when trying to solve constraint"
         <+> pretty cst
           <> line
           <> indent 2 (vcat (map pretty rules))
+
+{- NOTE: We need different conditions for MPTCs but these are correct for now
+
+From https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/jfp06.pdf p.10-11
+1. The context C of a class and instance declaration can mention only type
+variables, not type constructors, and in each individual class constraint CC
+all the type variables are distinct.
+
+2. In an instance declaration instance C => T C t1 . . . tn, at least one of the types ti must not be a type variable
+
+3. The instance declarations must not overlap.
+-}
+
+checkInstance :: Rule -> Either BasicConditionViolation ()
+checkInstance rule@(C cls hd :<= constraints) =
+  case traverse cond1 constraints of
+    Left e -> Left e
+    Right _ -> case hd of
+      TyVarP _ -> Left $ OnlyTyVarsInHead rule (C cls hd)
+      -- NOTE: THIS ASSUMES THAT EVERYTHING HAS BEEN KIND-CHECKED AND
+      --       THAT NO TYVARS HAVE KIND (* -> *). If every tyvar
+      --       is of kind * and we have no MPTCs then the
+      --       only case we have to worry about for condition 2 is
+      --       a bare type variable in the head
+      _ -> Right ()
+  where
+    cond1 :: Constraint -> Either BasicConditionViolation ()
+    cond1 cst@(C _ p) = case p of
+      TyVarP _ -> Right ()
+      _ -> Left $ TyConInContext rule cst
 
 {- This contains:
      - Everything needed to validate instances (in the form needed to do so)
@@ -237,9 +291,12 @@ getInstances ctable mn = foldM go S.empty
       Just cls -> do
         let p = tyToPat h
         cs <- traverse goConstraint csts
-        pure . flip S.insert acc $ C cls p :<= cs
+        let inst = C cls p :<= cs
+        check inst
+        pure $ S.insert inst acc
       where
         cref = tyRefToFQClassName (modulename mn) cn
+        check = either (Left . BadInstance) pure . checkInstance
 
     goConstraint :: P.Constraint -> Either TypeClassError Constraint
     goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
