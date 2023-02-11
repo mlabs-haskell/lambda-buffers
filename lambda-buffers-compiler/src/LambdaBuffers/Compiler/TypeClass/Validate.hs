@@ -12,11 +12,7 @@ module LambdaBuffers.Compiler.TypeClass.Validate (
   checkDerive,
 ) where
 
-import Data.List (foldl')
-
-import Data.Map qualified as M
 import Data.Set qualified as S
-import Data.Text qualified as T
 
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class,
@@ -29,11 +25,9 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 import LambdaBuffers.Compiler.TypeClass.Pat (
   Pat (
-    AppP,
     DecP,
     Name,
     Nil,
-    Opaque,
     ProdP,
     RecP,
     RefP,
@@ -77,32 +71,20 @@ mkStructuralRules c =
 splitInstance :: Instance -> (Constraint, [Constraint])
 splitInstance (C c t :<= is) = (C c t, is)
 
--- utility
+{- NOTE: This is *only* a safe thing to do in cases where:
+           1) The instances have all been kind-checked
+           2) The instances have been checked for basic condition violations (specifically conditions 1 & 2, see Utils.hs)
+           3) Steps 1 & 2 were performed IN THAT ORDER
+
+         If the above checks have not been performed, a user can short-circuit all of our
+         typeclass validation by doing something stupid like `instance Foo a => Foo a`
+         (that's not the only thing that can go wrong, checking for duplicates isn't enough)
+-}
 assume :: [Constraint] -> [Instance]
 assume = map $ \(C c t) -> C c t :<= []
 
 constraintClass :: Constraint -> Class
 constraintClass (C c _) = c
-
-{- We presume that all locally defined instances of the forms:
-     1. instance C Opaque0
-     2. instance C var => C (Opaque1 var)
-   Should be interpreted as axioms, and, therefore, are
-   automagically solved.
--}
-assumeLocalOpaqueInstances :: M.Map T.Text Pat -> [Instance] -> [Instance]
-assumeLocalOpaqueInstances localTyScope =
-  foldl'
-    ( \acc i -> case i of
-        cx@(C _ (RefP Nil (Name t)) :<= []) -> case M.lookup t localTyScope of
-          Just (DecP _ _ Opaque) -> cx : acc
-          _ -> acc
-        cx@(C _ (AppP (RefP Nil (Name t)) _) :<= _) -> case M.lookup t localTyScope of
-          Just (DecP _ _ Opaque) -> cx : acc
-          _ -> acc
-        _ -> acc
-    )
-    []
 
 -- NOTE: Practically this enforces the "must define instances where types are defined"
 --       half of Haskell's orphan instances rule. We could relax that in various ways
@@ -128,11 +110,9 @@ checkDerive mn mb i = concat <$> (traverse solveRef =<< catchOverlap (solve assu
         catchOverlap $ solve assumptions (C cx refOf)
       other -> pure [other]
 
-    -- TODO(gnumonik): THESE ARE NOT RIGHT. UPDATE TO WORK W/ TyVarP
     assumptions =
       S.toList . S.fromList $
         S.toList inScopeInstances -- the basic set of in-scope instances
           <> concatMap (mkStructuralRules . constraintClass) (c : cs) -- structural rules for all in scope classes
           <> assume cs -- local assumptions, i.e., the `C a` in `instance C a => C (F a)`
           <> S.toList (S.filter (/= i) localInstances) -- all local instances that aren't the one we're trying to check
-          <> assumeLocalOpaqueInstances localTyDefs (S.toList localInstances) -- all local instances (i.e. ones to be generated) with an opaque body (treat them as assertions/axioms)
