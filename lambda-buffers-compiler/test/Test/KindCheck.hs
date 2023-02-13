@@ -109,8 +109,8 @@ testFolds :: TestTree
 testFolds =
   testGroup
     "Test Folds"
-    [ testGroup "Test Product Folds." [testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
-    , testGroup "Test Sum Folds." [testSumFold1, testSumFold2, testSumFold3]
+    [ testGroup "Test Product Folds." [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
+    , testGroup "Test Sum Folds." [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
     ]
 
 prod :: Type -> Type -> Type
@@ -118,6 +118,12 @@ prod = App . App (Var tyProd)
 
 unit' :: Type
 unit' = Var tyUnit
+
+-- | [ ] -> unit
+testFoldProd0 :: TestTree
+testFoldProd0 =
+  testCase "Fold with product - 0 type." $
+    foldWithProduct [] @?= unit'
 
 -- | [ a ] -> prod unit a
 testFoldProd1 :: TestTree
@@ -150,6 +156,12 @@ either' = App . App (Var tyEither)
 
 void' :: Type
 void' = Var tyVoid
+
+-- | [ ] -> void
+testSumFold0 :: TestTree
+testSumFold0 =
+  testCase "Fold 0 type." $
+    foldWithSum [] @?= void'
 
 -- | [ a ] -> either void a
 testSumFold1 :: TestTree

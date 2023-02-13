@@ -125,8 +125,8 @@ localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
   KCTypeDefinition mname ctx tydef -> do
     kindFromTyDef mname tydef >>= inferTypeKind mname tydef ctx >>= checkKindConsistency mname tydef ctx
-  KCClassInstance _ctx _instClause -> pure () -- "FIXME(cstml)"
-  KCClass _ctx _classDef -> pure () --  "FIXME(cstml)"
+  KCClassInstance _ctx _instClause -> pure () -- FIXME(cstml)
+  KCClass _ctx _classDef -> pure () --  FIXME(cstml)
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
