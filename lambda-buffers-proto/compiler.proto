@@ -566,7 +566,6 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
-  // Error reads:
   // Multiple TyDefs with the same TyName were found in ModuleName.
   message MultipleTyDefError {
     // Module in which the error was found.
