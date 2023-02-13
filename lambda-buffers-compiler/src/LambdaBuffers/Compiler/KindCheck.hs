@@ -19,7 +19,6 @@ import Control.Monad.Freer.Reader (Reader, ask, runReader)
 import Control.Monad.Freer.State (State, evalState, get, modify)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.Foldable (traverse_)
-import Data.Functor ((<&>))
 import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Map (Map)
