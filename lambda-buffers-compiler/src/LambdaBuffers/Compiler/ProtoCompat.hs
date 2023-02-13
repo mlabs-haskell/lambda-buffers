@@ -15,6 +15,7 @@ module LambdaBuffers.Compiler.ProtoCompat (
 import LambdaBuffers.Compiler.ProtoCompat.Types as X
 
 import Control.Lens (Getter, to, (&), (.~), (^.))
+import Control.Monad.Except (MonadError (throwError))
 import Data.Foldable (toList)
 import Data.Generics.Labels ()
 import Data.Kind (Type)
@@ -29,11 +30,6 @@ import Proto.Compiler (NamingError)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-note :: e -> Maybe a -> Either e a
-note e = \case
-  Nothing -> Left e
-  Just a -> Right a
-
 -- FIXME(bladyjoker): This emits a missing Functor constraint @gnumonik
 -- something like this probably exists in lens but i can't find it
 traversing :: (Traversable t, Applicative f) => (a -> f b) -> Getter (t a) (f (t b))
@@ -45,12 +41,12 @@ data FromProtoErr
   deriving stock (Show, Eq, Ord, Generic)
 
 class IsMessage (proto :: Type) (good :: Type) where
-  fromProto :: proto -> Either FromProtoErr good
+  fromProto :: MonadError FromProtoErr m => proto -> m good
 
   toProto :: good -> proto
 
-throwNamingError :: Either NamingError b -> Either FromProtoErr b
-throwNamingError = either (Left . NamingError) return
+throwNamingError :: MonadError FromProtoErr m => Either NamingError b -> m b
+throwNamingError = either (throwError . NamingError) return
 
 -- TODO(bladyjoker): Revisit and make part of compiler.proto
 data ProtoError
@@ -69,8 +65,8 @@ data ProtoError
   | UnrecognizedKindRefEnum Text
   deriving stock (Show, Eq, Ord)
 
-throwProtoError :: ProtoError -> Either FromProtoErr b
-throwProtoError = Left . ProtoError
+throwProtoError :: MonadError FromProtoErr m => ProtoError -> m b
+throwProtoError = throwError . ProtoError
 
 {-
     SourceInfo
@@ -170,7 +166,7 @@ instance IsMessage P.TyApp TyApp where
     tf <- fromProto $ ta ^. P.tyFunc
     si <- fromProto $ ta ^. P.sourceInfo
     targs' <- ta ^. (P.tyArgs . traversing fromProto)
-    targs <- note (ProtoError $ NoTyAppArgs si) $ nonEmpty targs'
+    targs <- maybe (throwProtoError $ NoTyAppArgs si) return $ nonEmpty targs'
     pure $ TyApp tf targs si
 
   toProto (TyApp tf args si) =
@@ -314,7 +310,7 @@ instance IsMessage P.Sum Sum where
   fromProto s = do
     si <- fromProto $ s ^. P.sourceInfo
     ctors' <- s ^. (P.constructors . traversing fromProto)
-    ctors <- note (ProtoError $ EmptySumBody si) $ nonEmpty ctors'
+    ctors <- maybe (throwProtoError $ EmptySumBody si) return $ nonEmpty ctors'
     pure $ Sum ctors si
 
   toProto (Sum ctors si) =
@@ -337,7 +333,7 @@ instance IsMessage P.Product'Record Record where
   fromProto r = do
     fs' <- traverse fromProto $ r ^. P.fields
     si <- fromProto $ r ^. P.sourceInfo
-    fs <- note (ProtoError $ EmptyRecordBody si) $ nonEmpty fs'
+    fs <- maybe (throwProtoError $ EmptyRecordBody si) return $ nonEmpty fs'
     pure $ Record fs si
 
   toProto (Record fs si) =
@@ -429,7 +425,7 @@ instance IsMessage P.ClassDef ClassDef where
     cargs <- traverse fromProto $ cd ^. P.classArgs
     carg <- case cargs of
       [] -> throwProtoError $ NoClassArgs cnm si
-      [x] -> Right x
+      [x] -> return x
       _ -> throwProtoError $ MultipleClassArgs cnm si
     sups <- traverse fromProto $ cd ^. P.supers
     let doc = cd ^. P.documentation
@@ -451,7 +447,7 @@ instance IsMessage P.InstanceClause InstanceClause where
     hds <- ic ^. (P.heads . traversing fromProto)
     hd <- case hds of
       [] -> throwProtoError $ NoInstanceHead cnm si
-      [x] -> Right x
+      [x] -> return x
       xs -> throwProtoError $ MultipleInstanceHeads cnm xs si
     pure $ InstanceClause cnm hd csts si
 
@@ -469,7 +465,7 @@ instance IsMessage P.Constraint Constraint where
     args <- c ^. (P.arguments . traversing fromProto)
     arg <- case args of
       [] -> throwProtoError $ NoConstraintArgs cnm si
-      [x] -> Right x
+      [x] -> return x
       xs -> throwProtoError $ MultipleConstraintArgs cnm xs si
     pure $ Constraint cnm arg si
 
@@ -566,10 +562,6 @@ instance IsMessage P.KindCheckError KindCheckError where
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.inferredKind)
             <*> fromProto (err ^. P.definedKind)
-        P.KindCheckError'MultipleTydefError err ->
-          MultipleTyDefError
-            <$> fromProto (err ^. P.moduleName)
-            <*> traverse fromProto (err ^. P.tyDefs)
       Nothing -> throwProtoError EmptyField
 
   toProto = \case
@@ -590,10 +582,6 @@ instance IsMessage P.KindCheckError KindCheckError where
         & (P.inconsistentTypeError . P.tyName) .~ toProto name
         & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
         & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
-    MultipleTyDefError m ds ->
-      defMessage
-        & (P.multipleTydefError . P.moduleName) .~ toProto m
-        & (P.multipleTydefError . P.tyDefs) .~ (toProto <$> ds)
 
 instance IsMessage P.CompilerError CompilerError where
   fromProto cErr = case cErr ^. P.maybe'compilerError of
