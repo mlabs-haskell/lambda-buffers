@@ -13,21 +13,29 @@ module Test.Utils.Constructors (
   _TyDef,
   _TyRefILocal,
   _Module,
+  _CompilerInput,
   _ModuleName,
   _ModuleNamePart,
 ) where
 
-import Data.List.NonEmpty (fromList)
+import Control.Lens ((^.))
+import Data.Map qualified as Map
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.SourceInfo (sourceInfo'empty)
+
+_CompilerInput :: [P.Module] -> P.CompilerInput
+_CompilerInput ms =
+  P.CompilerInput
+    { P.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]
+    }
 
 _Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.InstanceClause] -> P.Module
 _Module mn tds cds ins =
   P.Module
     { P.moduleName = mn
-    , P.typeDefs = tds
-    , P.classDefs = cds
+    , P.typeDefs = Map.fromList [(td ^. #tyName, td) | td <- tds]
+    , P.classDefs = Map.fromList [(cd ^. #className, cd) | cd <- cds]
     , P.instances = ins
     , P.imports = mempty
     , P.sourceInfo = sourceInfo'empty
@@ -81,14 +89,14 @@ _Sum :: [(Text, P.Product)] -> P.TyBody
 _Sum cs =
   P.SumI $
     P.Sum
-      { constructors = fromList $ uncurry _Constructor <$> cs
+      { constructors = Map.fromList [(ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
       , sourceInfo = sourceInfo'empty
       }
 
 _TyAbs :: [(Text, P.KindType)] -> [(Text, P.Product)] -> P.TyAbs
 _TyAbs args body =
   P.TyAbs
-    { P.tyArgs = _TyArg <$> args
+    { P.tyArgs = Map.fromList [(ta ^. #argName, ta) | ta <- _TyArg <$> args]
     , P.tyBody = _Sum body
     , sourceInfo = sourceInfo'empty
     }

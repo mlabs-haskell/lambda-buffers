@@ -21,8 +21,8 @@ import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, 
 import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom))
 import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
-import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var))
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (LocalRef))
+import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var), tyEither, tyProd, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable)
 
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -96,10 +96,10 @@ infer ctx t = do
       mempty
         & context
           .~ M.fromList
-            [ (LocalRef "Σ", Type :->: Type :->: Type)
-            , (LocalRef "Π", Type :->: Type :->: Type)
-            , (LocalRef "𝟙", Type)
-            , (LocalRef "𝟘", Type)
+            [ (tyEither, Type :->: Type :->: Type)
+            , (tyProd, Type :->: Type :->: Type)
+            , (tyUnit, Type)
+            , (tyVoid, Type)
             ]
 
 --------------------------------------------------------------------------------

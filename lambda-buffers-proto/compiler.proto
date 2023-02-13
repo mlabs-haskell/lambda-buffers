@@ -189,23 +189,6 @@ message ClassName {
   SourceInfo source_info = 2;
 }
 
-/* Naming error message */
-message NamingError {
-  enum NameType {
-    NAME_TYPE_UNSPECIFIED = 0;
-    NAME_TYPE_MODULE = 1;
-    NAME_TYPE_TYPE = 2;
-    NAME_TYPE_VAR = 3;
-    NAME_TYPE_CONSTR = 4;
-    NAME_TYPE_FIELD = 5;
-    NAME_TYPE_CLASS = 6;
-  };
-  // Type of name.
-  NameType name_type = 1;
-  // Source information.
-  SourceInfo source_info = 2;
-}
-
 /* Type definition
 
 A type definition consists of a type name and its associated type term.
@@ -526,50 +509,88 @@ message CompilerInput {
 
 // Internal errors.
 message InternalError {
-  string internal_error = 1;
+  string msg = 1;
 }
 
-// Multiple Modules with the same ModuleName were found.
-message MultipleModuleError {
-  // Conflicting type definitions.
-  repeated Module modules = 2;
-}
+// All errors that occur because of Google Protocol Buffer's inability to
+// enforce certain invariants.
+// Some of invariance:
+// - using Proto `map` restricts users to `string` keys which impacts
+//   API documentation, which is why `repeated` fields are used throughout,
+// - using Proto 'oneof' means users have to check if such a field is
+//   set or report an error otherwise.
+message ProtoParseError {
+  // Multiple Modules with the same ModuleName were found.
+  message MultipleModuleError {
+    // Conflicting type definitions.
+    repeated Module modules = 2;
+  }
 
-// Multiple TyDefs with the same TyName were found in ModuleName.
-message MultipleTyDefError {
-  // Module in which the error was found.
-  ModuleName module_name = 1;
-  // Conflicting type definitions.
-  repeated TyDef ty_defs = 2;
-}
+  // Multiple TyDefs with the same TyName were found in ModuleName.
+  message MultipleTyDefError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting type definitions.
+    repeated TyDef ty_defs = 2;
+  }
 
-// Multiple ClassDefs with the same ClassName were found in ModuleName.
-message MultipleClassDefError {
-  // Module in which the error was found.
-  ModuleName module_name = 1;
-  // Conflicting class definitions.
-  repeated ClassDef class_defs = 2;
-}
+  // Multiple ClassDefs with the same ClassName were found in ModuleName.
+  message MultipleClassDefError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting class definitions.
+    repeated ClassDef class_defs = 2;
+  }
 
-// Multiple TyArgs with the same ArgName were found in ModuleName.TyDef.
-message MultipleTyArgError {
-  // Module in which the error was found.
-  ModuleName module_name = 1;
-  // Type definition in which the error was found.
-  TyDef ty_def = 2;
-  // Conflicting type abstraction arguments.
-  repeated TyArg ty_args = 3;
-}
+  // Multiple TyArgs with the same ArgName were found in ModuleName.TyDef.
+  message MultipleTyArgError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting type abstraction arguments.
+    repeated TyArg ty_args = 3;
+  }
 
-// Multiple Sum Constructors with the same ConstrName were found in
-// ModuleName.TyDef.
-message MultipleConstructorError {
-  // Module in which the error was found.
-  ModuleName module_name = 1;
-  // Type definition in which the error was found.
-  TyDef ty_def = 2;
-  // Conflicting constructors.
-  repeated Sum.Constructor constructors = 3;
+  // Multiple Sum Constructors with the same ConstrName were found in
+  // ModuleName.TyDef.
+  message MultipleConstructorError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting constructors.
+    repeated Sum.Constructor constructors = 3;
+  }
+
+  // Multiple Record Fields with the same FieldName were found in
+  // ModuleName.TyDef.
+  message MultipleFieldError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting record fields.
+    repeated Product.Record.Field fields = 3;
+  }
+
+  // Proto `oneof` field is not set.
+  message OneOfNotSetError {
+    // Proto message name in which the `oneof` field is not set.
+    string message_name = 1;
+    // The `oneof` field that is not set.
+    string field_name = 2;
+  }
+
+  oneof proto_parse_error {
+    MultipleModuleError multiple_module_error = 1;
+    MultipleTyDefError multiple_tydef_error = 2;
+    MultipleClassDefError multiple_classdef_error = 3;
+    MultipleTyArgError multiple_tyarg_error = 4;
+    MultipleConstructorError multiple_constructor_error = 5;
+    MultipleFieldError multiple_field_error = 6;
+    OneOfNotSetError one_of_not_set_error = 7;
+  }
 }
 
 // Kind checking errors.
@@ -596,7 +617,6 @@ message KindCheckError {
     Kind ty_kind_2 = 3;
   }
 
-  // Error reads:
   // Inifinitely recursive term detected in definition ty_name.
   message RecursiveKindError {
     TyName ty_name = 1;
@@ -609,7 +629,7 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
-  // The types of inference errors.
+  // One of the errors occurred during kind checking.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
     ImpossibleUnificationError unification_error = 2;
@@ -618,30 +638,39 @@ message KindCheckError {
   }
 }
 
-// Compiler Error can be extended with other classes of errors.
-message CompilerError {
-
-  // Reason why the compilation failed.
-  oneof compiler_error {
-    MultipleModuleError multiple_module_error = 1;
-    MultipleTyDefError multiple_tydef_error = 2;
-    MultipleClassDefError multiple_classdef_error = 3;
-    MultipleTyArgError multiple_tyarg_error = 4;
-    MultipleConstructorError multiple_constructor_error = 5;
-    KindCheckError kind_check_error = 6;
-    InternalError internal_error = 7;
+/* Naming error message */
+message NamingError {
+  // One of naming errors.
+  oneof naming_error {
+    ModuleNamePart module_name_err = 1;
+    TyName ty_name_err = 2;
+    VarName var_name_err = 3;
+    ConstrName constr_name_err = 4;
+    FieldName field_name_err = 5;
+    ClassName class_name_err = 6;
   }
+}
+
+// Compiler Error
+message CompilerError {
+  // Errors occurred during a proto parsing.
+  repeated ProtoParseError proto_parse_errors = 1;
+  // Errors occurred during naming checking.
+  repeated NamingError naming_errors = 2;
+  // Errors occurred during kind checking.
+  repeated KindCheckError kind_check_errors = 4;
+  // Errors internal to the compiler implementation.
+  repeated InternalError internal_errors = 5;
 }
 
 // Compiler Result ~ a successful Compilation Output.
 message CompilerResult {
-  // equivalent of unit.
 }
 
 // Output of the Compiler.
 message CompilerOutput {
   oneof compiler_output {
-    CompilerError compilation_error = 1;
-    CompilerResult compilation_result = 2;
+    CompilerError compiler_error = 1;
+    CompilerResult compiler_result = 2;
   }
 }

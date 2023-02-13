@@ -18,8 +18,7 @@ import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
 import Control.Monad.Freer.State (State, evalState, get, modify)
 import Control.Monad.Freer.TH (makeEffect)
-import Data.Foldable (traverse_)
-import Data.List.NonEmpty (NonEmpty ((:|)), uncons, (<|))
+import Data.Foldable (Foldable (foldl', toList), traverse_)
 import Data.Map qualified as M
 import Data.Text (Text, intercalate)
 import LambdaBuffers.Compiler.KindCheck.Context (Context)
@@ -36,7 +35,7 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
   infer,
  )
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App))
+import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyEither, tyOpaque, tyProd, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat (kind2ProtoKind)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
@@ -79,7 +78,6 @@ data KindCheck a where
   CheckKindConsistency :: ModName -> P.TyDef -> Context -> Kind -> KindCheck Kind
 
 -- FIXME(cstml) add check for Context Consistency
--- FIXME(cstml) add check for Double Declaration
 -- TyDefToTypes :: ModName -> P.TyDef -> KindCheck [Type]
 makeEffect ''KindCheck
 
@@ -195,7 +193,7 @@ resolveCreateContext ::
   P.CompilerInput ->
   Eff effs Context
 resolveCreateContext ci = do
-  ctxs <- traverse module2Context (ci ^. #modules)
+  ctxs <- traverse module2Context (toList $ ci ^. #modules)
   pure $ mconcat ctxs
 
 module2Context ::
@@ -205,7 +203,7 @@ module2Context ::
   P.Module ->
   Eff effs Context
 module2Context m = do
-  let typeDefinitions = m ^. #typeDefs
+  let typeDefinitions = toList $ m ^. #typeDefs
   ctxs <- runReader (m ^. #moduleName) $ do
     traverse (tyDef2Context (moduleName2ModName (m ^. #moduleName))) typeDefinitions
   pure $ mconcat ctxs
@@ -249,7 +247,7 @@ tyDef2NameAndKind curModName tyDef = do
   pure (name, k)
 
 tyAbsLHS2Kind :: P.TyAbs -> Kind
-tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> (tyAbs ^. #tyArgs)
+tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
 
 foldWithArrow :: [Kind] -> Kind
 foldWithArrow = foldl (:->:) Type
@@ -265,10 +263,9 @@ pKind2Type k =
     -- FIXME(cstml) what is an undefined type meant to mean?
     _ -> error "Fixme undefined type"
 
--- =============================================================================
--- X To Canonical type conversion functions.
-
--- | TyDef to Kind Canonical representation.
+{- | TyDef to Kind Canonical representation.
+ TODO(@cstml): Move this close to KindCheck/Type.hs (even just there).
+-}
 tyDef2Type ::
   forall eff.
   Members '[Reader ModName, Err] eff =>
@@ -280,7 +277,7 @@ tyAbsLHS2Type ::
   forall eff.
   P.TyAbs ->
   Eff eff (Type -> Type)
-tyAbsLHS2Type tyab = tyArgs2Type (tyab ^. #tyArgs)
+tyAbsLHS2Type tyab = tyArgs2Type (toList $ tyab ^. #tyArgs)
 
 tyArgs2Type ::
   forall eff.
@@ -308,7 +305,7 @@ tyBody2Type ::
   P.TyBody ->
   Eff eff Type
 tyBody2Type = \case
-  P.OpaqueI _ -> pure $ Var $ LocalRef "Opaque"
+  P.OpaqueI _ -> pure $ Var tyOpaque
   P.SumI s -> sum2Type s
 
 sum2Type ::
@@ -316,7 +313,7 @@ sum2Type ::
   Members '[Reader ModName, Err] eff =>
   P.Sum ->
   Eff eff Type
-sum2Type su = foldWithSum <$> traverse constructor2Type (su ^. #constructors)
+sum2Type su = foldWithSum <$> traverse constructor2Type (toList $ su ^. #constructors)
 
 constructor2Type ::
   forall eff.
@@ -339,7 +336,7 @@ record2Type ::
   Members '[Reader ModName, Err] eff =>
   P.Record ->
   Eff eff Type
-record2Type r = foldWithProduct <$> traverse field2Type (r ^. #fields)
+record2Type r = foldWithProduct <$> traverse field2Type (toList $ r ^. #fields)
 
 tuple2Type ::
   forall eff.
@@ -348,9 +345,7 @@ tuple2Type ::
   Eff eff Type
 tuple2Type tu = do
   tup <- traverse ty2Type $ tu ^. #fields
-  case tup of
-    [] -> pure $ Var $ LocalRef "𝟙"
-    x : xs -> pure . foldWithProduct $ x :| xs
+  pure . foldWithProduct $ tup
 
 field2Type ::
   forall eff.
@@ -382,8 +377,8 @@ tyApp2Type ::
   Eff eff Type
 tyApp2Type ta = do
   fn <- ty2Type (ta ^. #tyFunc)
-  args <- traverse ty2Type (ta ^. #tyArgs)
-  pure $ foldWithApp (fn <| args)
+  args <- traverse ty2Type (toList $ ta ^. #tyArgs)
+  pure $ foldWithApp fn args
 
 tyRef2Type ::
   forall eff.
@@ -451,20 +446,14 @@ sum2Types su = NonEmpty.toList <$> traverse constructor2Type (su ^. #constructor
 --------------------------------------------------------------------------------
 -- Utilities
 
-foldWithApp :: NonEmpty Type -> Type
-foldWithApp = foldWithBinaryOp App
+foldWithApp :: Type -> [Type] -> Type
+foldWithApp = foldl' App
 
-foldWithProduct :: NonEmpty Type -> Type
-foldWithProduct = foldWithBinaryOp $ App . App (Var $ LocalRef "Π")
+foldWithProduct :: [Type] -> Type
+foldWithProduct = foldl' (App . App (Var tyProd)) (Var tyUnit)
 
-foldWithSum :: NonEmpty Type -> Type
-foldWithSum = foldWithBinaryOp $ App . App (Var $ LocalRef "Σ")
-
--- | Generic way of folding.
-foldWithBinaryOp :: (Type -> Type -> Type) -> NonEmpty Type -> Type
-foldWithBinaryOp op ne = case uncons ne of
-  (x, Nothing) -> x
-  (x, Just xs) -> op x $ foldWithBinaryOp op xs
+foldWithSum :: [Type] -> Type
+foldWithSum = foldl' (App . App (Var tyEither)) (Var tyVoid)
 
 module2ModuleName :: P.Module -> ModName
 module2ModuleName = moduleName2ModName . (^. #moduleName)

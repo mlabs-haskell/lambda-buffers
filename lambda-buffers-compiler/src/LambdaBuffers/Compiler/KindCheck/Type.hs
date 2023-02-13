@@ -4,6 +4,11 @@ module LambdaBuffers.Compiler.KindCheck.Type (
   Type (Var, Abs, App),
   pattern Σ,
   pattern Π,
+  tyOpaque,
+  tyUnit,
+  tyVoid,
+  tyEither,
+  tyProd,
 ) where
 
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (LocalRef))
@@ -15,6 +20,21 @@ data Type
   | App Type Type
   | Abs Variable Type
   deriving stock (Eq, Show)
+
+tyOpaque :: Variable
+tyOpaque = LocalRef "Opaque"
+
+tyUnit :: Variable
+tyUnit = LocalRef "𝟙"
+
+tyVoid :: Variable
+tyVoid = LocalRef "𝟘"
+
+tyEither :: Variable
+tyEither = LocalRef "Σ"
+
+tyProd :: Variable
+tyProd = LocalRef "Π"
 
 pattern Σ :: Type -> Type -> Type
 pattern Σ t1 t2 = App (App (Var (LocalRef "Σ")) t1) t2

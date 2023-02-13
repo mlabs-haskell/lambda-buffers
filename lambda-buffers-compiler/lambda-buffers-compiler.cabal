@@ -148,6 +148,7 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
+    , containers                  >=0.6
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , proto-lens                  >=0.7
