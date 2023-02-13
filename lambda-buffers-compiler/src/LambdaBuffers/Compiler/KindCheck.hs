@@ -16,7 +16,7 @@ import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, interpret, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
-import Control.Monad.Freer.State (State, evalState, get, modify)
+import Control.Monad.Freer.State (State, evalState, modify)
 import Control.Monad.Freer.TH (makeEffect)
 import Data.Foldable (Foldable (foldl', toList), traverse_)
 import Data.Map qualified as M
@@ -225,13 +225,7 @@ tyDef2Context curModName tyDef = do
     -- Ads the name to our map - we can use its SourceLocation in the case of a
     -- double use. If it's already in our map - that means we've double declared it.
     associateName :: Variable -> P.TyDef -> Eff effs ()
-    associateName v curTyDef = do
-      modName <- ask
-      maps <- get @(M.Map Variable P.TyDef)
-      case maps M.!? v of
-        Just otherTyDef ->
-          throwError . PT.CompKindCheckError $ PT.MultipleTyDefError modName [otherTyDef, curTyDef]
-        Nothing -> modify (M.insert v curTyDef)
+    associateName v curTyDef = modify (M.insert v curTyDef)
 
 {- | Converts the Proto Module name to a local modname - dropping the
  information.

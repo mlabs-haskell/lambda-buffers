@@ -574,11 +574,26 @@ message ProtoParseError {
     repeated Product.Record.Field fields = 3;
   }
 
+  message MultipleImportError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting module imports.
+    repeated ModuleName imports = 2;
+  }
+
   // Proto `oneof` field is not set.
   message OneOfNotSetError {
     // Proto message name in which the `oneof` field is not set.
     string message_name = 1;
     // The `oneof` field that is not set.
+    string field_name = 2;
+  }
+
+  // Proto `enum` field is unknown.
+  message UnknownEnumError {
+    // Proto message name in which the `enum` field is unknown.
+    string message_name = 1;
+    // The `enum` field that is unknown.
     string field_name = 2;
   }
 
@@ -589,7 +604,9 @@ message ProtoParseError {
     MultipleTyArgError multiple_tyarg_error = 4;
     MultipleConstructorError multiple_constructor_error = 5;
     MultipleFieldError multiple_field_error = 6;
-    OneOfNotSetError one_of_not_set_error = 7;
+    MultipleImportError multiple_import_error = 7;
+    OneOfNotSetError one_of_not_set_error = 8;
+    UnknownEnumError unknown_enum_error = 9;
   }
 }
 
@@ -653,7 +670,7 @@ message NamingError {
 
 // Compiler Error
 message CompilerError {
-  // Errors occurred during a proto parsing.
+  // Errors occurred during proto parsing.
   repeated ProtoParseError proto_parse_errors = 1;
   // Errors occurred during naming checking.
   repeated NamingError naming_errors = 2;

@@ -255,7 +255,7 @@ instance IsMessage P.TyDef TyDef where
 
 instance IsMessage P.TyAbs TyAbs where
   fromProto ta = do
-    (tyargs, mulTyArgs) <- collectMultipleKeys (\a -> a ^. #argName) (ta ^. P.tyArgs)
+    (tyargs, mulTyArgs) <- parseAndIndex (\a -> a ^. #argName) (ta ^. P.tyArgs)
     tybody <- fromProto $ ta ^. P.tyBody
     si <- fromProto $ ta ^. P.sourceInfo
     let mulArgsErrs =
@@ -330,7 +330,7 @@ instance IsMessage P.TyBody TyBody where
 
 instance IsMessage P.Sum Sum where
   fromProto s = do
-    (ctors, mulCtors) <- collectMultipleKeys (\c -> c ^. #constrName) (s ^. P.constructors)
+    (ctors, mulCtors) <- parseAndIndex (\c -> c ^. #constrName) (s ^. P.constructors)
     si <- fromProto $ s ^. P.sourceInfo
     -- TODO(bladyjoker): ctors <- maybe (throwProtoError $ EmptySumBody si) return $ nonEmpty ctors'
     let mulFieldsErrs =
@@ -362,7 +362,7 @@ instance IsMessage P.Sum'Constructor Constructor where
 
 instance IsMessage P.Product'Record Record where
   fromProto r = do
-    (fields, mulFields) <- collectMultipleKeys (\f -> f ^. #fieldName) (r ^. P.fields)
+    (fields, mulFields) <- parseAndIndex (\f -> f ^. #fieldName) (r ^. P.fields)
     si <- fromProto $ r ^. P.sourceInfo
     let mulFieldsErrs =
           [ ProtoParseError $
@@ -518,23 +518,23 @@ instance IsMessage P.Constraint Constraint where
     Module, CompilerInput
 -}
 
-collectMultipleKeys :: forall {t :: Type -> Type} {proto} {a} {k}. (Foldable t, IsMessage proto a, Ord k) => (a -> k) -> t proto -> FromProto (Map k a, Map k [proto])
-collectMultipleKeys key =
+parseAndIndex :: forall {t :: Type -> Type} {proto} {a} {k}. (Foldable t, IsMessage proto a, Ord k) => (a -> k) -> t proto -> FromProto (Map k a, Map k [proto])
+parseAndIndex key =
   foldlM
-    ( \(good, bad) px -> do
+    ( \(indexed, multiples) px -> do
         x <- fromProto px
-        if Map.member (key x) good
-          then return (good, Map.insertWith (++) (key x) [px] bad)
-          else return (Map.insert (key x) x good, bad)
+        if Map.member (key x) indexed
+          then return (indexed, Map.insertWith (++) (key x) [px] multiples)
+          else return (Map.insert (key x) x indexed, multiples)
     )
     (mempty, mempty)
 
 instance IsMessage P.Module Module where
   fromProto m = do
     mnm <- fromProto $ m ^. P.moduleName
-    (tydefs, mulTyDefs) <- collectMultipleKeys (\tyDef -> tyDef ^. #tyName) (m ^. P.typeDefs)
-    (cldefs, mulClDefs) <- collectMultipleKeys (\cldef -> cldef ^. #className) (m ^. P.classDefs)
-    (impts, mulImpts) <- collectMultipleKeys (id @ModuleName) (m ^. P.imports)
+    (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> tyDef ^. #tyName) (m ^. P.typeDefs)
+    (cldefs, mulClDefs) <- parseAndIndex (\cldef -> cldef ^. #className) (m ^. P.classDefs)
+    (impts, mulImpts) <- parseAndIndex (\(mn :: ModuleName) -> mn) (m ^. P.imports)
     insts <- traverse fromProto $ m ^. P.instances
     si <- fromProto $ m ^. P.sourceInfo
     let mulTyDefsErrs =
@@ -551,7 +551,14 @@ instance IsMessage P.Module Module where
               & P.multipleClassdefError . P.classDefs .~ cds
           | (_cn, cds) <- Map.toList mulClDefs
           ]
-        protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs
+        mulImptsErrs =
+          [ ProtoParseError $
+            defMessage
+              & P.multipleImportError . P.moduleName .~ (m ^. P.moduleName)
+              & P.multipleImportError . P.imports .~ ims
+          | (_in, ims) <- Map.toList mulImpts
+          ]
+        protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
     if null protoParseErrs
       then pure $ Module mnm tydefs cldefs insts (Map.keysSet impts) si
       else throwError protoParseErrs
@@ -567,7 +574,7 @@ instance IsMessage P.Module Module where
 
 instance IsMessage P.CompilerInput CompilerInput where
   fromProto ci = do
-    (mods, mulModules) <- collectMultipleKeys (\m -> m ^. #moduleName) (ci ^. P.modules)
+    (mods, mulModules) <- parseAndIndex (\m -> m ^. #moduleName) (ci ^. P.modules)
     let mulModulesErrs =
           [ ProtoParseError $
             defMessage

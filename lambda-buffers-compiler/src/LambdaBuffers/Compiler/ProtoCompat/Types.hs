@@ -309,7 +309,6 @@ data KindCheckError
   | IncorrectApplicationError TyName Kind Kind
   | RecursiveKindError TyName
   | InconsistentTypeError TyName Kind Kind
-  | MultipleTyDefError ModuleName [TyDef]
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
