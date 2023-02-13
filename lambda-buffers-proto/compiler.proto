@@ -529,7 +529,50 @@ message InternalError {
   string internal_error = 1;
 }
 
-// Kindchecker errors.
+// Multiple Modules with the same ModuleName were found.
+message MultipleModuleError {
+  // Conflicting type definitions.
+  repeated Module modules = 2;
+}
+
+// Multiple TyDefs with the same TyName were found in ModuleName.
+message MultipleTyDefError {
+  // Module in which the error was found.
+  ModuleName module_name = 1;
+  // Conflicting type definitions.
+  repeated TyDef ty_defs = 2;
+}
+
+// Multiple ClassDefs with the same ClassName were found in ModuleName.
+message MultipleClassDefError {
+  // Module in which the error was found.
+  ModuleName module_name = 1;
+  // Conflicting class definitions.
+  repeated ClassDef class_defs = 2;
+}
+
+// Multiple TyArgs with the same ArgName were found in ModuleName.TyDef.
+message MultipleTyArgError {
+  // Module in which the error was found.
+  ModuleName module_name = 1;
+  // Type definition in which the error was found.
+  TyDef ty_def = 2;
+  // Conflicting type abstraction arguments.
+  repeated TyArg ty_args = 3;
+}
+
+// Multiple Sum Constructors with the same ConstrName were found in
+// ModuleName.TyDef.
+message MultipleConstructorError {
+  // Module in which the error was found.
+  ModuleName module_name = 1;
+  // Type definition in which the error was found.
+  TyDef ty_def = 2;
+  // Conflicting constructors.
+  repeated Sum.Constructor constructors = 3;
+}
+
+// Kind checking errors.
 message KindCheckError {
 
   // Error referring to an unbound term. This usually means that the term was
@@ -566,21 +609,12 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
-  // Multiple TyDefs with the same TyName were found in ModuleName.
-  message MultipleTyDefError {
-    // Module in which the error was found.
-    ModuleName module_name = 1;
-    // Conflicting type definitions.
-    repeated TyDef ty_defs = 2;
-  }
-
   // The types of inference errors.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
     ImpossibleUnificationError unification_error = 2;
     RecursiveKindError recursive_subs_error = 3;
     InconsistentTypeError inconsistent_type_error = 4;
-    MultipleTyDefError multiple_tydef_error = 5;
   }
 }
 
@@ -589,8 +623,13 @@ message CompilerError {
 
   // Reason why the compilation failed.
   oneof compiler_error {
-    KindCheckError kind_check_error = 1;
-    InternalError internal_error = 3;
+    MultipleModuleError multiple_module_error = 1;
+    MultipleTyDefError multiple_tydef_error = 2;
+    MultipleClassDefError multiple_classdef_error = 3;
+    MultipleTyArgError multiple_tyarg_error = 4;
+    MultipleConstructorError multiple_constructor_error = 5;
+    KindCheckError kind_check_error = 6;
+    InternalError internal_error = 7;
   }
 }
 
