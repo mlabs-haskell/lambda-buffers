@@ -126,7 +126,7 @@ library
 
   hs-source-dirs:  src
 
--- note(cstml): should we name this something shorter? lb-cli?
+-- NOTE(cstml): should we name this something shorter? lb-cli?
 executable lambda-buffers-compiler-cli
   import:         common-language
   import:         common-imports
@@ -152,8 +152,10 @@ test-suite tests
     , containers                  >=0.6
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , mtl                         >=2.2
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
+    , quickcheck-transformer
     , tasty                       >=1.4
     , tasty-hunit                 >=0.10
     , tasty-quickcheck            >=0.10
@@ -161,6 +163,8 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
+    Test.LambdaBuffers.Compiler
+    Test.LambdaBuffers.Compiler.Gen
     Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors

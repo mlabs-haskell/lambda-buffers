@@ -22,7 +22,7 @@ import Test.QuickCheck (
   (===),
  )
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertBool, testCase, (@?=))
+import Test.Tasty.HUnit (assertBool, assertEqual, testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
   compilerInput'incoherent,
@@ -44,18 +44,18 @@ testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFai
 
 trivialKCTest :: TestTree
 trivialKCTest =
-  testCase "Empty CompInput should check." $
+  testCase "Empty CompInput should check" $
     check_ (_CompilerInput []) @?= Right ()
 
 kcTestMaybe :: TestTree
 kcTestMaybe =
-  testCase "Maybe should pass." $
+  testCase "Maybe should pass" $
     check_ compilerInput'maybe @?= Right ()
 
 kcTestFailing :: TestTree
 kcTestFailing =
-  testCase "This should fail." $
-    assertBool "Test should have failed." $
+  testCase "This should fail" $
+    assertBool "Test should have failed" $
       check_ compilerInput'incoherent /= Right ()
 
 {- | TyDef order does not matter when kind checking.
@@ -67,9 +67,9 @@ kcTestFailing =
 -}
 kcTestOrdering :: TestTree
 kcTestOrdering =
-  testProperty "Module order inside the CompilerInput does not matter." $
-    forAllShrink (resize 5 genModuleIn2Layouts) shrink $
-      \(l, r) -> eitherFailOrPass (check_ l) == eitherFailOrPass (check_ r)
+  testProperty "Module order inside the CompilerInput does not matter" $
+    forAllShrink (resize 2 genModuleIn2Layouts) shrink $
+      \(l, r) -> check_ l === check_ r
   where
     genModuleIn2Layouts = do
       mods <- arbitrary
@@ -86,8 +86,8 @@ testFolds :: TestTree
 testFolds =
   testGroup
     "Test Folds"
-    [ testGroup "Test Product Folds." [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
-    , testGroup "Test Sum Folds." [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
+    [ testGroup "Test Product Folds" [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
+    , testGroup "Test Sum Folds" [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
     ]
 
 prod :: Type -> Type -> Type
@@ -99,32 +99,32 @@ unit' = Var tyUnit
 -- | [ ] -> unit
 testFoldProd0 :: TestTree
 testFoldProd0 =
-  testCase "Fold with product - 0 type." $
+  testCase "Fold with product - 0 type" $
     foldWithProduct [] @?= unit'
 
 -- | [ a ] -> prod unit a
 testFoldProd1 :: TestTree
 testFoldProd1 =
-  testCase "Fold with product - 1 type." $
+  testCase "Fold with product - 1 type" $
     foldWithProduct [lVar "a"] @?= prod unit' (lVar "a")
 
 -- | [b ,a] -> prod (prod unit b) a
 testFoldProd2 :: TestTree
 testFoldProd2 =
-  testCase "Fold with product - 2 types." $
+  testCase "Fold with product - 2 types" $
     foldWithProduct [lVar "b", lVar "a"]
       @?= prod (prod unit' (lVar "b")) (lVar "a")
 
 -- | [ a, b ,c ] -> prod (prod (prod unit c) b) a
 testFoldProd3 :: TestTree
 testFoldProd3 =
-  testCase "Fold with product - 2 types." $
+  testCase "Fold with product - 2 types" $
     foldWithProduct [lVar "c", lVar "b", lVar "a"]
       @?= prod (prod (prod unit' (lVar "c")) (lVar "b")) (lVar "a")
 
 testPProdFoldTotal :: TestTree
 testPProdFoldTotal =
-  testProperty "ProductFold is total." $
+  testProperty "ProductFold is total" $
     forAll arbitrary $
       \ts -> foldWithProduct ts === foldWithProduct ts
 
@@ -137,26 +137,26 @@ void' = Var tyVoid
 -- | [ ] -> void
 testSumFold0 :: TestTree
 testSumFold0 =
-  testCase "Fold 0 type." $
+  testCase "Fold 0 type" $
     foldWithSum [] @?= void'
 
 -- | [ a ] -> either void a
 testSumFold1 :: TestTree
 testSumFold1 =
-  testCase "Fold 1 type." $
+  testCase "Fold 1 type" $
     foldWithSum [lVar "a"] @?= either' void' (lVar "a")
 
 -- | [ a , b ] -> either (either void a) b
 testSumFold2 :: TestTree
 testSumFold2 =
-  testCase "Fold 2 type." $
+  testCase "Fold 2 type" $
     foldWithSum [lVar "b", lVar "a"]
       @?= either' (either' void' (lVar "b")) (lVar "a")
 
 -- | [ a , b , c ] -> a | ( b | c )
 testSumFold3 :: TestTree
 testSumFold3 =
-  testCase "Fold 3 types." $
+  testCase "Fold 3 types" $
     foldWithSum [lVar "c", lVar "b", lVar "a"]
       @?= either' (either' (either' void' (lVar "c")) (lVar "b")) (lVar "a")
 
