@@ -1,16 +1,15 @@
-module LambdaBuffers.Compiler.NamingCheck (pModuleNamePart, pVarName, pTyName, pConstrName, pFieldName, pClassName, checkModuleName, checkTyName, checkVarName, checkConstrName, checkClassName, checkFieldName) where
+module LambdaBuffers.Compiler.NamingCheck (pModuleNamePart, pVarName, pTyName, pConstrName, pFieldName, pClassName, checkModuleNamePart, checkTyName, checkVarName, checkConstrName, checkClassName, checkFieldName) where
 
 import Control.Lens (ASetter, (.~), (^.))
 import Control.Monad.Except (MonadError (throwError))
-import Data.Foldable (for_)
 import Data.Function ((&))
 import Data.Kind (Type)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
-import Proto.Compiler (ClassName, ConstrName, FieldName, Module, NamingError, TyName, VarName)
-import Proto.Compiler_Fields (classNameErr, constrNameErr, fieldNameErr, moduleName, moduleNameErr, name, parts, tyNameErr, varNameErr)
+import Proto.Compiler (ClassName, ConstrName, FieldName, ModuleNamePart, NamingError, TyName, VarName)
+import Proto.Compiler_Fields (classNameErr, constrNameErr, fieldNameErr, moduleNameErr, name, tyNameErr, varNameErr)
 import Text.Parsec (ParsecT, Stream, alphaNum, label, lower, many, many1, runParserT)
 import Text.Parsec.Char (upper)
 
@@ -56,11 +55,8 @@ validateP p f i = do
     Left _ -> throwError $ defMessage & f .~ i
     Right _ -> return ()
 
-checkModuleName :: MonadError NamingError m => Module -> m ()
-checkModuleName m =
-  for_
-    (m ^. (moduleName . parts))
-    (validateP pModuleNamePart moduleNameErr)
+checkModuleNamePart :: MonadError NamingError m => ModuleNamePart -> m ()
+checkModuleNamePart = validateP pModuleNamePart moduleNameErr
 
 checkTyName :: MonadError NamingError m => TyName -> m ()
 checkTyName = validateP pTyName tyNameErr

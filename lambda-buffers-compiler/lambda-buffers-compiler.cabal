@@ -164,5 +164,4 @@ test-suite tests
     Test.Utils.CompilerInput
     Test.Utils.Constructors
     Test.Utils.Module
-    Test.Utils.SourceInfo
     Test.Utils.TyDef

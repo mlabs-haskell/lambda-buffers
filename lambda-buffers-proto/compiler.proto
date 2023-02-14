@@ -452,17 +452,16 @@ message TyClassRef {
   }
 }
 
-/* Type class instances
+/* Type class instances (rules)
 
 Instance clauses enable users to specify 'semantic' rules for their types.
 */
 message InstanceClause {
   // Type class name.
   TyClassRef class_ref = 1;
-  // Head of the instance clause. Currently, the Compiler only accepts single
-  // parameter type classes.
-  repeated Ty heads = 2;
-  // Body of the rule, conjunction of constraints.
+  // Instance (rule) arguments.
+  repeated Ty args = 2;
+  // Instance (rule) body, conjunction of constraints.
   repeated Constraint constraints = 3;
   // Source information.
   SourceInfo source_info = 4;
@@ -591,10 +590,10 @@ message ProtoParseError {
 
   // Proto `enum` field is unknown.
   message UnknownEnumError {
-    // Proto message name in which the `enum` field is unknown.
-    string message_name = 1;
-    // The `enum` field that is unknown.
-    string field_name = 2;
+    // Proto `enum` name.
+    string enum_name = 1;
+    // The unknown tag for the `enum`.
+    string got_tag = 2;
   }
 
   oneof proto_parse_error {

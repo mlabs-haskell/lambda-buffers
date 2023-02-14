@@ -48,6 +48,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyVar (..),
   VarName (..),
   module VARS,
+  defSourceInfo,
 ) where
 
 import Control.Exception (Exception)
@@ -67,6 +68,9 @@ data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: 
 data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary SourcePosition
+
+defSourceInfo :: SourceInfo
+defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
 
 {- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
  shouldn't be used anywhere outside of that

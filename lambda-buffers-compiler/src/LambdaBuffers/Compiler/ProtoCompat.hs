@@ -4,65 +4,62 @@
 module LambdaBuffers.Compiler.ProtoCompat (
   IsMessage (..),
   FromProtoErr (..),
-  ProtoError (..),
   module X,
   protoKind2Kind,
   kind2ProtoKind,
+  runFromProto,
 ) where
 
 -- NOTE(cstml): I'm re-exporting the module from here as it makes more sense -
 -- also avoids annoying errors.
 import LambdaBuffers.Compiler.ProtoCompat.Types as X hiding (InternalError)
 
-import Control.Lens (Getter, to, (&), (.~), (^.))
-import Control.Monad.Except (MonadError (throwError))
+import Control.Lens ((&), (.~), (^.))
+import Control.Monad.Except (Except, MonadError (throwError), runExcept)
+import Control.Monad.Reader (MonadReader (ask, local), ReaderT (runReaderT))
 import Data.Foldable (foldlM, toList)
 import Data.Generics.Labels ()
+import Data.Generics.Product (HasField)
 import Data.Kind (Type)
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.ProtoLens (Message (messageName), defMessage)
+import Data.ProtoLens (Message (messageName), MessageEnum (showEnum), defMessage)
 import Data.Proxy (Proxy (Proxy))
 import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Kind qualified as K
-import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkTyName, checkVarName)
+import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkModuleNamePart, checkTyName, checkVarName)
 import Proto.Compiler (NamingError)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
--- FIXME(bladyjoker): This emits a missing Functor constraint @gnumonik
--- something like this probably exists in lens but i can't find it
-traversing :: (Traversable t, Applicative f) => (a -> f b) -> Getter (t a) (f (t b))
-traversing f = to $ \ta -> traverse f ta
-
 data FromProtoErr
-  = ProtoError ProtoError
-  | NamingError P.NamingError
+  = NamingError P.NamingError
   | InternalError P.InternalError
   | ProtoParseError P.ProtoParseError
   deriving stock (Show, Eq, Ord, Generic)
 
-type FromProto a = forall m. MonadError [FromProtoErr] m => m a
+data FromProtoContext
+  = CtxCompilerInput
+  | CtxModule P.ModuleName
+  | CtxTyDef P.ModuleName P.TyDef
+  | CtxClassDef P.ModuleName P.ClassDef
+  deriving stock (Show, Eq, Ord, Generic)
+
+type FromProto a = ReaderT FromProtoContext (Except [FromProtoErr]) a
+
+-- | Parse a Proto API CompilerInput into the internal CompilerInput representation or report errors.
+runFromProto :: P.CompilerInput -> Either [FromProtoErr] CompilerInput
+runFromProto compInp = do
+  let exM = runReaderT (fromProto compInp) CtxCompilerInput
+  runExcept exM
 
 class IsMessage (proto :: Type) (good :: Type) where
   fromProto :: proto -> FromProto good
 
   toProto :: good -> proto
-
--- TODO(bladyjoker): Revisit and make part of compiler.proto
-data ProtoError
-  = MultipleInstanceHeads TyClassRef [Ty] SourceInfo
-  | NoInstanceHead TyClassRef SourceInfo
-  | NoConstraintArgs TyClassRef SourceInfo
-  | MultipleConstraintArgs TyClassRef [Ty] SourceInfo
-  | NoClassArgs ClassName SourceInfo
-  | MultipleClassArgs ClassName SourceInfo
-  | EmptyField
-  | UnrecognizedKindRefEnum Text
-  deriving stock (Show, Eq, Ord)
 
 throwNamingError :: Either NamingError b -> FromProto b
 throwNamingError = either (\err -> throwError [NamingError err]) return
@@ -75,9 +72,6 @@ throwOneOfError protoMsgName protoFieldName =
           & P.oneOfNotSetError . P.messageName .~ protoMsgName
           & P.oneOfNotSetError . P.fieldName .~ protoFieldName
     ]
-
-throwProtoError :: ProtoError -> FromProto b
-throwProtoError err = throwError [ProtoError err]
 
 throwInternalError :: Text -> FromProto b
 throwInternalError msg = throwError [InternalError $ defMessage & P.msg .~ msg]
@@ -109,6 +103,36 @@ instance IsMessage P.SourceInfo SourceInfo where
       & P.file .~ (si ^. #file)
       & P.posFrom .~ toProto (si ^. #posFrom)
       & P.posTo .~ toProto (si ^. #posTo)
+
+{-
+    Names
+-}
+
+instance IsMessage Text Text where
+  fromProto = pure
+  toProto = id
+
+instance IsMessage P.ModuleNamePart ModuleNamePart where
+  fromProto mnp = do
+    si <- fromProto $ mnp ^. P.sourceInfo
+    throwNamingError $ checkModuleNamePart mnp
+    pure $ ModuleNamePart (mnp ^. P.name) si
+
+  toProto (ModuleNamePart nm si) =
+    defMessage
+      & P.name .~ nm
+      & P.sourceInfo .~ toProto si
+
+instance IsMessage P.ModuleName ModuleName where
+  fromProto mn = do
+    si <- fromProto $ mn ^. P.sourceInfo
+    parts <- traverse fromProto $ mn ^. P.parts
+    pure $ ModuleName parts si
+
+  toProto (ModuleName parts si) =
+    defMessage
+      & P.parts .~ (toProto <$> parts)
+      & P.sourceInfo .~ toProto si
 
 instance IsMessage P.FieldName FieldName where
   fromProto v = do
@@ -179,7 +203,7 @@ instance IsMessage P.TyApp TyApp where
   fromProto ta = do
     tf <- fromProto $ ta ^. P.tyFunc
     si <- fromProto $ ta ^. P.sourceInfo
-    targs <- ta ^. (P.tyArgs . traversing fromProto)
+    targs <- traverse fromProto $ ta ^. P.tyArgs
     pure $ TyApp tf targs si
 
   toProto (TyApp tf args si) =
@@ -242,10 +266,15 @@ instance IsMessage P.TyRef TyRef where
 
 instance IsMessage P.TyDef TyDef where
   fromProto td = do
-    tnm <- fromProto $ td ^. P.tyName
-    tyabs <- fromProto $ td ^. P.tyAbs
-    si <- fromProto $ td ^. P.sourceInfo
-    pure $ TyDef tnm tyabs si
+    ctx <- ask
+    ctxModuleName <- case ctx of
+      CtxModule mn -> return mn
+      _ -> throwInternalError "Expected to be in Module Context"
+    local (const $ CtxTyDef ctxModuleName td) $ do
+      tnm <- fromProto $ td ^. P.tyName
+      tyabs <- fromProto $ td ^. P.tyAbs
+      si <- fromProto $ td ^. P.sourceInfo
+      pure $ TyDef tnm tyabs si
 
   toProto (TyDef tnm tyabs si) =
     defMessage
@@ -255,13 +284,18 @@ instance IsMessage P.TyDef TyDef where
 
 instance IsMessage P.TyAbs TyAbs where
   fromProto ta = do
-    (tyargs, mulTyArgs) <- parseAndIndex (\a -> a ^. #argName) (ta ^. P.tyArgs)
+    (tyargs, mulTyArgs) <- parseAndIndex (\a -> stripSourceInfo $ a ^. #argName) (ta ^. P.tyArgs)
     tybody <- fromProto $ ta ^. P.tyBody
     si <- fromProto $ ta ^. P.sourceInfo
+    ctx <- ask
+    (ctxMn, ctxTyd) <- case ctx of
+      CtxTyDef mn tyd -> return (mn, tyd)
+      _ -> throwInternalError "Expected to be in TyDef Context"
     let mulArgsErrs =
           [ ProtoParseError $
             defMessage
-              -- TODO(bladyjoker): Add Module/TyDef context
+              & P.multipleTyargError . P.moduleName .~ ctxMn
+              & P.multipleTyargError . P.tyDef .~ ctxTyd
               & P.multipleTyargError . P.tyArgs .~ args
           | (_an, args) <- Map.toList mulTyArgs
           ]
@@ -276,10 +310,19 @@ instance IsMessage P.TyAbs TyAbs where
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.Kind'KindRef KindRefType where
-  fromProto = \case
-    P.Kind'KIND_REF_TYPE -> pure KType
-    P.Kind'KIND_REF_UNSPECIFIED -> pure KUnspecified
-    P.Kind'KindRef'Unrecognized v -> throwProtoError $ UnrecognizedKindRefEnum (Text.pack . show $ v)
+  fromProto kr =
+    ( \case
+        P.Kind'KIND_REF_TYPE -> pure KType
+        P.Kind'KIND_REF_UNSPECIFIED -> pure KUnspecified
+        P.Kind'KindRef'Unrecognized v ->
+          throwError
+            [ ProtoParseError $
+                defMessage
+                  & P.unknownEnumError . P.enumName .~ Text.pack (showEnum kr)
+                  & P.unknownEnumError . P.gotTag .~ (Text.pack . show $ v)
+            ]
+    )
+      kr
 
   toProto = \case
     KType -> P.Kind'KIND_REF_TYPE
@@ -330,19 +373,23 @@ instance IsMessage P.TyBody TyBody where
 
 instance IsMessage P.Sum Sum where
   fromProto s = do
-    (ctors, mulCtors) <- parseAndIndex (\c -> c ^. #constrName) (s ^. P.constructors)
+    (ctors, mulCtors) <- parseAndIndex (\c -> stripSourceInfo $ c ^. #constrName) (s ^. P.constructors)
     si <- fromProto $ s ^. P.sourceInfo
-    -- TODO(bladyjoker): ctors <- maybe (throwProtoError $ EmptySumBody si) return $ nonEmpty ctors'
-    let mulFieldsErrs =
+    ctx <- ask
+    (ctxMn, ctxTyd) <- case ctx of
+      CtxTyDef mn tyd -> return (mn, tyd)
+      _ -> throwInternalError "Expected to be in TyDef Context"
+    let mulCtorsErrs =
           [ ProtoParseError $
             defMessage
-              -- TODO(bladyjoker): Add Module/TyDef context
+              & P.multipleConstructorError . P.moduleName .~ ctxMn
+              & P.multipleConstructorError . P.tyDef .~ ctxTyd
               & P.multipleConstructorError . P.constructors .~ cs
           | (_cn, cs) <- Map.toList mulCtors
           ]
-    if null mulFieldsErrs
+    if null mulCtorsErrs
       then pure $ Sum ctors si
-      else throwError mulFieldsErrs
+      else throwError mulCtorsErrs
 
   toProto (Sum ctors si) =
     defMessage
@@ -362,12 +409,17 @@ instance IsMessage P.Sum'Constructor Constructor where
 
 instance IsMessage P.Product'Record Record where
   fromProto r = do
-    (fields, mulFields) <- parseAndIndex (\f -> f ^. #fieldName) (r ^. P.fields)
+    (fields, mulFields) <- parseAndIndex (\f -> stripSourceInfo $ f ^. #fieldName) (r ^. P.fields)
     si <- fromProto $ r ^. P.sourceInfo
+    ctx <- ask
+    (ctxMn, ctxTyd) <- case ctx of
+      CtxTyDef mn tyd -> return (mn, tyd)
+      _ -> throwInternalError "Expected to be in TyDef Context"
     let mulFieldsErrs =
           [ ProtoParseError $
             defMessage
-              -- TODO(bladyjoker): Add Module/TyDef context
+              & P.multipleFieldError . P.moduleName .~ ctxMn
+              & P.multipleFieldError . P.tyDef .~ ctxTyd
               & P.multipleFieldError . P.fields .~ fs
           | (_fn, fs) <- Map.toList mulFields
           ]
@@ -459,16 +511,21 @@ instance IsMessage P.TyClassRef TyClassRef where
 
 instance IsMessage P.ClassDef ClassDef where
   fromProto cd = do
-    si <- fromProto $ cd ^. P.sourceInfo
-    cnm <- fromProto $ cd ^. P.className
-    cargs <- traverse fromProto $ cd ^. P.classArgs
-    carg <- case cargs of
-      [] -> throwProtoError $ NoClassArgs cnm si
-      [x] -> return x
-      _ -> throwInternalError "Multi parameter type classes are not supported"
-    sups <- traverse fromProto $ cd ^. P.supers
-    let doc = cd ^. P.documentation
-    pure $ ClassDef cnm carg sups doc si
+    ctx <- ask
+    ctxMn <- case ctx of
+      CtxModule mn -> return mn
+      _ -> throwInternalError "Expected to be in Module Context"
+    local (const $ CtxClassDef ctxMn cd) $ do
+      si <- fromProto $ cd ^. P.sourceInfo
+      cnm <- fromProto $ cd ^. P.className
+      cargs <- traverse fromProto $ cd ^. P.classArgs
+      carg <- case cargs of
+        [] -> throwInternalError "Zero parameter type classes are not supported"
+        [x] -> return x
+        _ -> throwInternalError "Multi parameter type classes are not supported"
+      sups <- traverse fromProto $ cd ^. P.supers
+      let doc = cd ^. P.documentation
+      pure $ ClassDef cnm carg sups doc si
 
   toProto (ClassDef cnm carg sups doc si) =
     defMessage
@@ -483,17 +540,17 @@ instance IsMessage P.InstanceClause InstanceClause where
     si <- fromProto $ ic ^. P.sourceInfo
     cnm <- fromProto $ ic ^. P.classRef
     csts <- traverse fromProto $ ic ^. P.constraints
-    hds <- ic ^. (P.heads . traversing fromProto)
-    hd <- case hds of
-      [] -> throwProtoError $ NoInstanceHead cnm si
+    args <- traverse fromProto $ ic ^. P.args
+    arg <- case args of
+      [] -> throwInternalError "Zero instance arguments, but zero parameter type classes are not supported"
       [x] -> return x
-      _ -> throwInternalError "Multiple instance head, but multi parameter type classes are not supported"
-    pure $ InstanceClause cnm hd csts si
+      _ -> throwInternalError "Multiple instance arguments, but multi parameter type classes are not supported"
+    pure $ InstanceClause cnm arg csts si
 
   toProto (InstanceClause cnm hd csts si) =
     defMessage
       & P.classRef .~ toProto cnm
-      & P.heads .~ pure (toProto hd)
+      & P.args .~ pure (toProto hd)
       & P.constraints .~ (toProto <$> csts)
       & P.sourceInfo .~ toProto si
 
@@ -501,11 +558,11 @@ instance IsMessage P.Constraint Constraint where
   fromProto c = do
     si <- fromProto $ c ^. P.sourceInfo
     cnm <- fromProto $ c ^. P.classRef
-    args <- c ^. (P.arguments . traversing fromProto)
+    args <- traverse fromProto $ c ^. P.arguments
     arg <- case args of
-      [] -> throwProtoError $ NoConstraintArgs cnm si
+      [] -> throwInternalError "Zero constraint arguments, but zero parameter type classes are not supported"
       [x] -> return x
-      _ -> throwInternalError "Multiple instance constraint arguments, but multi parameter type classes are not supported"
+      _ -> throwInternalError "Multiple constraint arguments, but multi parameter type classes are not supported"
     pure $ Constraint cnm arg si
 
   toProto (Constraint cnm arg si) =
@@ -523,45 +580,54 @@ parseAndIndex key =
   foldlM
     ( \(indexed, multiples) px -> do
         x <- fromProto px
-        if Map.member (key x) indexed
-          then return (indexed, Map.insertWith (++) (key x) [px] multiples)
-          else return (Map.insert (key x) x indexed, multiples)
+        let k = key x
+        if Map.member k indexed
+          then return (indexed, Map.insertWith (++) k [px] multiples)
+          else return (Map.insert k x indexed, multiples)
     )
     (mempty, mempty)
 
+stripSourceInfo :: HasField "sourceInfo" s t a SourceInfo => s -> t
+stripSourceInfo x = x & #sourceInfo .~ defSourceInfo
+
 instance IsMessage P.Module Module where
   fromProto m = do
-    mnm <- fromProto $ m ^. P.moduleName
-    (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> tyDef ^. #tyName) (m ^. P.typeDefs)
-    (cldefs, mulClDefs) <- parseAndIndex (\cldef -> cldef ^. #className) (m ^. P.classDefs)
-    (impts, mulImpts) <- parseAndIndex (\(mn :: ModuleName) -> mn) (m ^. P.imports)
-    insts <- traverse fromProto $ m ^. P.instances
-    si <- fromProto $ m ^. P.sourceInfo
-    let mulTyDefsErrs =
-          [ ProtoParseError $
-            defMessage
-              & P.multipleTydefError . P.moduleName .~ (m ^. P.moduleName)
-              & P.multipleTydefError . P.tyDefs .~ tds
-          | (_tn, tds) <- Map.toList mulTyDefs
-          ]
-        mulClassDefsErrs =
-          [ ProtoParseError $
-            defMessage
-              & P.multipleClassdefError . P.moduleName .~ (m ^. P.moduleName)
-              & P.multipleClassdefError . P.classDefs .~ cds
-          | (_cn, cds) <- Map.toList mulClDefs
-          ]
-        mulImptsErrs =
-          [ ProtoParseError $
-            defMessage
-              & P.multipleImportError . P.moduleName .~ (m ^. P.moduleName)
-              & P.multipleImportError . P.imports .~ ims
-          | (_in, ims) <- Map.toList mulImpts
-          ]
-        protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
-    if null protoParseErrs
-      then pure $ Module mnm tydefs cldefs insts (Map.keysSet impts) si
-      else throwError protoParseErrs
+    ctx <- ask
+    case ctx of
+      CtxCompilerInput -> return ()
+      _ -> throwInternalError "Expected to be in CompilerInput Context"
+    local (const $ CtxModule (m ^. P.moduleName)) $ do
+      mnm <- fromProto $ m ^. P.moduleName
+      (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> stripSourceInfo $ tyDef ^. #tyName) (m ^. P.typeDefs)
+      (cldefs, mulClDefs) <- parseAndIndex (\cldef -> stripSourceInfo $ cldef ^. #className) (m ^. P.classDefs)
+      (impts, mulImpts) <- parseAndIndex stripSourceInfo (m ^. P.imports)
+      insts <- traverse fromProto $ m ^. P.instances
+      si <- fromProto $ m ^. P.sourceInfo
+      let mulTyDefsErrs =
+            [ ProtoParseError $
+              defMessage
+                & P.multipleTydefError . P.moduleName .~ (m ^. P.moduleName)
+                & P.multipleTydefError . P.tyDefs .~ tds
+            | (_tn, tds) <- Map.toList mulTyDefs
+            ]
+          mulClassDefsErrs =
+            [ ProtoParseError $
+              defMessage
+                & P.multipleClassdefError . P.moduleName .~ (m ^. P.moduleName)
+                & P.multipleClassdefError . P.classDefs .~ cds
+            | (_cn, cds) <- Map.toList mulClDefs
+            ]
+          mulImptsErrs =
+            [ ProtoParseError $
+              defMessage
+                & P.multipleImportError . P.moduleName .~ (m ^. P.moduleName)
+                & P.multipleImportError . P.imports .~ ims
+            | (_in, ims) <- Map.toList mulImpts
+            ]
+          protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
+      if null protoParseErrs
+        then pure $ Module mnm tydefs cldefs insts (Map.keysSet impts) si
+        else throwError protoParseErrs
 
   toProto (Module mnm tdefs cdefs insts impts si) =
     defMessage
@@ -574,51 +640,20 @@ instance IsMessage P.Module Module where
 
 instance IsMessage P.CompilerInput CompilerInput where
   fromProto ci = do
-    (mods, mulModules) <- parseAndIndex (\m -> m ^. #moduleName) (ci ^. P.modules)
-    let mulModulesErrs =
-          [ ProtoParseError $
-            defMessage
-              -- TODO(bladyjoker): Add Module/TyDef context
-              & P.multipleModuleError . P.modules .~ ms
-          | (_mn, ms) <- Map.toList mulModules
-          ]
-    if null mulModulesErrs
-      then pure $ CompilerInput mods
-      else throwError mulModulesErrs
+    local (const CtxCompilerInput) $ do
+      (mods, mulModules) <- parseAndIndex (\m -> stripSourceInfo $ m ^. #moduleName) (ci ^. P.modules)
+      let mulModulesErrs =
+            [ ProtoParseError $
+              defMessage & P.multipleModuleError . P.modules .~ ms
+            | (_mn, ms) <- Map.toList mulModules
+            ]
+      if null mulModulesErrs
+        then pure $ CompilerInput mods
+        else throwError mulModulesErrs
 
   toProto (CompilerInput ms) =
     defMessage
       & P.modules .~ (toProto <$> toList ms)
-
-{-
-    Names
--}
-
-instance IsMessage Text Text where
-  fromProto = pure
-  toProto = id
-
-instance IsMessage P.ModuleNamePart ModuleNamePart where
-  fromProto mnp = do
-    nm <- fromProto $ mnp ^. P.name
-    si <- fromProto $ mnp ^. P.sourceInfo
-    pure $ ModuleNamePart nm si
-
-  toProto (ModuleNamePart nm si) =
-    defMessage
-      & P.name .~ nm
-      & P.sourceInfo .~ toProto si
-
-instance IsMessage P.ModuleName ModuleName where
-  fromProto mn = do
-    si <- fromProto $ mn ^. P.sourceInfo
-    parts <- traverse fromProto $ mn ^. P.parts
-    pure $ ModuleName parts si
-
-  toProto (ModuleName parts si) =
-    defMessage
-      & P.parts .~ (toProto <$> parts)
-      & P.sourceInfo .~ toProto si
 
 {-
   Outputs
@@ -645,7 +680,7 @@ instance IsMessage P.KindCheckError KindCheckError where
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.inferredKind)
             <*> fromProto (err ^. P.definedKind)
-      Nothing -> throwProtoError EmptyField
+      Nothing -> throwOneOfError (messageName (Proxy @P.KindCheckError)) "kind_check_error"
 
   toProto = \case
     UnboundTermError tyname varname ->
