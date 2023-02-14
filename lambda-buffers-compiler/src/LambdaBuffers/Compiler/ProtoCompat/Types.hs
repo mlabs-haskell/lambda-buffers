@@ -48,11 +48,12 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyVar (..),
   VarName (..),
   module VARS,
+  defSourceInfo,
 ) where
 
--- for NonEmpty
 import Control.Exception (Exception)
-import Data.List.NonEmpty (NonEmpty)
+import Data.Map (Map)
+import Data.Set (Set)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
@@ -67,6 +68,9 @@ data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: 
 data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary SourcePosition
+
+defSourceInfo :: SourceInfo
+defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
 
 {- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
  shouldn't be used anywhere outside of that
@@ -145,7 +149,7 @@ instance Arbitrary Ty where
               , TyRefI <$> arbitrary
               ]
 
-data TyApp = TyApp {tyFunc :: Ty, tyArgs :: NonEmpty Ty, sourceInfo :: SourceInfo}
+data TyApp = TyApp {tyFunc :: Ty, tyArgs :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyApp
 
@@ -165,7 +169,7 @@ data TyDef = TyDef {tyName :: TyName, tyAbs :: TyAbs, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyDef
 
-data TyAbs = TyAbs {tyArgs :: [TyArg], tyBody :: TyBody, sourceInfo :: SourceInfo}
+data TyAbs = TyAbs {tyArgs :: Map VarName TyArg, tyBody :: TyBody, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyAbs
 
@@ -181,7 +185,7 @@ data Constructor = Constructor {constrName :: ConstrName, product :: Product}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Constructor
 
-data Sum = Sum {constructors :: NonEmpty Constructor, sourceInfo :: SourceInfo}
+data Sum = Sum {constructors :: Map ConstrName Constructor, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Sum
 
@@ -189,7 +193,7 @@ data Field = Field {fieldName :: FieldName, fieldTy :: Ty}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Field
 
-data Record = Record {fields :: NonEmpty Field, sourceInfo :: SourceInfo}
+data Record = Record {fields :: Map FieldName Field, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Record
 
@@ -257,10 +261,10 @@ data Constraint = Constraint
 
 data Module = Module
   { moduleName :: ModuleName
-  , typeDefs :: [TyDef]
-  , classDefs :: [ClassDef]
+  , typeDefs :: Map TyName TyDef
+  , classDefs :: Map ClassName ClassDef
   , instances :: [InstanceClause]
-  , imports :: [ModuleName]
+  , imports :: Set ModuleName
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -295,7 +299,7 @@ data KindCheckErr
 
 instance Exception KindCheckErr
 
-newtype CompilerInput = CompilerInput {modules :: [Module]}
+newtype CompilerInput = CompilerInput {modules :: Map ModuleName Module}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
 
@@ -309,7 +313,6 @@ data KindCheckError
   | IncorrectApplicationError TyName Kind Kind
   | RecursiveKindError TyName
   | InconsistentTypeError TyName Kind Kind
-  | MultipleTyDefError ModuleName [TyDef]
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError

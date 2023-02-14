@@ -1,16 +1,15 @@
-module LambdaBuffers.Compiler.NamingCheck (pModuleNamePart, pVarName, pTyName, pConstrName, pFieldName, pClassName, checkModuleName, checkTyName, checkVarName, checkConstrName, checkClassName, checkFieldName) where
+module LambdaBuffers.Compiler.NamingCheck (pModuleNamePart, pVarName, pTyName, pConstrName, pFieldName, pClassName, checkModuleNamePart, checkTyName, checkVarName, checkConstrName, checkClassName, checkFieldName) where
 
-import Control.Lens ((.~), (^.))
+import Control.Lens (ASetter, (.~), (^.))
 import Control.Monad.Except (MonadError (throwError))
-import Data.Foldable (for_)
 import Data.Function ((&))
 import Data.Kind (Type)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
-import Proto.Compiler (ClassName, ConstrName, FieldName, Module, NamingError, NamingError'NameType (NamingError'NAME_TYPE_CLASS, NamingError'NAME_TYPE_CONSTR, NamingError'NAME_TYPE_FIELD, NamingError'NAME_TYPE_MODULE, NamingError'NAME_TYPE_TYPE, NamingError'NAME_TYPE_VAR), SourceInfo, TyName, VarName)
-import Proto.Compiler_Fields (moduleName, name, nameType, parts, sourceInfo)
+import Proto.Compiler (ClassName, ConstrName, FieldName, ModuleNamePart, NamingError, TyName, VarName)
+import Proto.Compiler_Fields (classNameErr, constrNameErr, fieldNameErr, moduleNameErr, name, tyNameErr, varNameErr)
 import Text.Parsec (ParsecT, Stream, alphaNum, label, lower, many, many1, runParserT)
 import Text.Parsec.Char (upper)
 
@@ -45,38 +44,31 @@ label' :: String -> Parser s m a -> Parser s m a
 label' l m = label m l
 
 validateP ::
-  ( MonadError NamingError m
-  , HasField a "sourceInfo" SourceInfo
-  , HasField a "name" Text
-  ) =>
+  (HasField i "name" Text, MonadError NamingError m, Message a1) =>
   Parser Text m Text ->
-  NamingError'NameType ->
-  a ->
+  ASetter a1 NamingError a3 i ->
+  i ->
   m ()
-validateP p nt i = do
+validateP p f i = do
   resOrErr <- runParserT p () "" (i ^. name)
   case resOrErr of
-    Left _ ->
-      throwError $
-        defMessage
-          & nameType .~ nt
-          & sourceInfo .~ (i ^. sourceInfo)
+    Left _ -> throwError $ defMessage & f .~ i
     Right _ -> return ()
 
-checkModuleName :: MonadError NamingError m => Module -> m ()
-checkModuleName m = for_ (m ^. (moduleName . parts)) (validateP pModuleNamePart NamingError'NAME_TYPE_MODULE)
+checkModuleNamePart :: MonadError NamingError m => ModuleNamePart -> m ()
+checkModuleNamePart = validateP pModuleNamePart moduleNameErr
 
 checkTyName :: MonadError NamingError m => TyName -> m ()
-checkTyName = validateP pTyName NamingError'NAME_TYPE_TYPE
+checkTyName = validateP pTyName tyNameErr
 
 checkVarName :: MonadError NamingError m => VarName -> m ()
-checkVarName = validateP pVarName NamingError'NAME_TYPE_VAR
+checkVarName = validateP pVarName varNameErr
 
 checkConstrName :: MonadError NamingError m => ConstrName -> m ()
-checkConstrName = validateP pConstrName NamingError'NAME_TYPE_CONSTR
+checkConstrName = validateP pConstrName constrNameErr
 
 checkFieldName :: MonadError NamingError m => FieldName -> m ()
-checkFieldName = validateP pFieldName NamingError'NAME_TYPE_FIELD
+checkFieldName = validateP pFieldName fieldNameErr
 
 checkClassName :: MonadError NamingError m => ClassName -> m ()
-checkClassName = validateP pClassName NamingError'NAME_TYPE_CLASS
+checkClassName = validateP pClassName classNameErr
