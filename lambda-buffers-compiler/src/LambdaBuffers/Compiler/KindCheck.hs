@@ -268,7 +268,7 @@ tyAbsLHS2Kind :: PC.TyAbs -> Kind
 tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Kind . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
 
 foldWithArrow :: [Kind] -> Kind
-foldWithArrow = foldl (:->:) Type
+foldWithArrow = foldr (:->:) Type
 
 -- ================================================================================
 -- To Kind Conversion functions
