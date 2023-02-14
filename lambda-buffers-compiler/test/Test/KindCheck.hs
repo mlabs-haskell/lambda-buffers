@@ -76,8 +76,8 @@ kcTestOrdering =
       shuffledMods <- shuffle mods
       pure (_CompilerInput mods, _CompilerInput shuffledMods)
 
-eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
-eitherFailOrPass = bimap (const ()) (const ())
+_eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
+_eitherFailOrPass = bimap (const ()) (const ())
 
 --------------------------------------------------------------------------------
 -- Fold tests

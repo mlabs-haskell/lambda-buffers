@@ -576,7 +576,7 @@ instance IsMessage P.Constraint PC.Constraint where
   fromProto c = do
     si <- fromProto $ c ^. P.sourceInfo
     cnm <- fromProto $ c ^. P.classRef
-    args <- traverse fromProto $ c ^. P.arguments
+    args <- traverse fromProto $ c ^. P.args
     arg <- case args of
       [] -> throwInternalError "Zero constraint arguments, but zero parameter type classes are not supported"
       [x] -> return x
@@ -586,7 +586,7 @@ instance IsMessage P.Constraint PC.Constraint where
   toProto (PC.Constraint cnm arg si) =
     defMessage
       & P.classRef .~ toProto cnm
-      & P.arguments .~ pure (toProto arg)
+      & P.args .~ pure (toProto arg)
       & P.sourceInfo .~ toProto si
 
 {-

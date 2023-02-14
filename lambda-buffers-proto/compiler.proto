@@ -77,6 +77,10 @@ type term can only be introduced in the context of a
 */
 message TyAbs {
   // List of type variables.
+  // No type arguments means `delay` or `const ty_body`,
+  // meaning `TyAbs [] ty_body = ty_body`.
+  // Duplicate type arguments MUST be reported with
+  // `ProtoParseError.MultipleTyArgError`.
   repeated TyArg ty_args = 1;
   // Type body.
   TyBody ty_body = 2;
@@ -92,6 +96,7 @@ message TyApp {
   // Type function. TODO(bladyjoker): Rename to ty_abs?
   Ty ty_func = 1;
   // Arguments to apply.
+  // No arguments to apply means `force`, meaning `TyApp ty_func [] = ty_func``
   repeated Ty ty_args = 2;
   // Source information.
   SourceInfo source_info = 3;
@@ -206,7 +211,7 @@ message TyDef {
   // Type name.
   TyName ty_name = 1;
   // Type term.
-  TyAbs ty_abs = 2; // TODO(bladyjoker): Turn into a oneOf TyAbs | Ty
+  TyAbs ty_abs = 2;
   // Source information.
   SourceInfo source_info = 3;
 }
@@ -327,8 +332,6 @@ type Foo_ a b = Either
     (b, ConstrName)
   )
 ```
-
-TODO(bladyjoker): Cleanup.
 */
 message Sum {
   // Constructor of a Sum type is a Product type term.
@@ -341,6 +344,10 @@ message Sum {
     Product product = 2;
   };
   // Sum type constructors.
+  // Empty `constructors` means `void` and means that the type can't be
+  // constructed. Compiler MAY report an error.
+  // Duplicate constructors MUST be reported with
+  // `ProtoParseError.MultipleConstructorError`.
   repeated Constructor constructors = 1;
   // Source information.
   SourceInfo source_info = 2;
@@ -379,6 +386,9 @@ message Product {
     SourceInfo source_info = 2;
   }
   // A product is a record or a tuple.
+  // A record or a tuple with no fields means `unit`.
+  // Duplicate fields in a record MUST be reported with
+  // `ProtoParseError.MultipleFieldError`.
   oneof product {
     Record record = 1;
     NTuple ntuple = 2;
@@ -409,8 +419,9 @@ TODO(bladyjoker): Cleanup and reformulate with Sean.
 message ClassDef {
   // Type class name.
   ClassName class_name = 1;
-  // Type class arguments. Currently the Compiler only accepts single parameter
-  // type class declarations.
+  // Type class arguments.
+  // Class with no arguments is a trivial class. Compiler MAY report an error.
+  // TODO(bladyjoker): MultipleClassArgError.
   repeated TyArg class_args = 2;
   // Superclass constraints.
   repeated Constraint supers = 3;
@@ -460,6 +471,8 @@ message InstanceClause {
   // Type class name.
   TyClassRef class_ref = 1;
   // Instance (rule) arguments.
+  // Instance clause with no arguments is a trivial instance clause.
+  // Compiler MAY report an error.
   repeated Ty args = 2;
   // Instance (rule) body, conjunction of constraints.
   repeated Constraint constraints = 3;
@@ -472,7 +485,9 @@ message Constraint {
   // Name of the type class.
   TyClassRef class_ref = 1;
   // Constraint arguments.
-  repeated Ty arguments = 2;
+  // Constraint with no arguments is a trivial constraint.
+  // Compiler MAY report an error.
+  repeated Ty args = 2;
   // Source information.
   SourceInfo source_info = 3;
 }
@@ -485,12 +500,19 @@ message Module {
   // Module name.
   ModuleName module_name = 1;
   // Type definitions.
+  // Duplicate type definitions MUST be reported with
+  // `ProtoParseError.MultipleTyDefError`.
   repeated TyDef type_defs = 2;
   // Type class definitions.
+  // Duplicate class definitions MUST be reported with
+  // `ProtoParseError.MultipleClassDefError`.
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
-  // Imported modules the Compiler consults when searching for instance clauses.
+  // Imported modules the Compiler consults when searching for
+  // instance clauses.
+  // Duplicate imports MUST be reported with
+  // `ProtoParseError.MultipleImportError`.
   repeated ModuleName imports = 5;
   // Source information.
   SourceInfo source_info = 6;
@@ -503,6 +525,8 @@ compilation closure needed by the Compiler to perform its task.
 */
 message CompilerInput {
   // Modules to compile.
+  // Duplicate modules MUST be reported with
+  // `ProtoParseError.MultipleModuleError`.
   repeated Module modules = 1;
 }
 
