@@ -1,7 +1,9 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
+--  this is needed so the deriving via can generate Arbitrary instances for data
+--  definitions with more than 4 constructors
+{-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
@@ -50,7 +52,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 
 -- for NonEmpty
 import Control.Exception (Exception)
-import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
@@ -303,18 +305,16 @@ instance Arbitrary CompilerInput where
       fn n = CompilerInput <$> resize n arbitrary
 
 data KindCheckError
-  = -- | The following term is unbound in the following type definition.
-    UnboundTermError TyName VarName
-  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
-    IncorrectApplicationError TyName Kind Kind
-  | -- | Kind recurses forever - not permitted.
-    RecursiveKindError TyName
-  | -- | The following type has the wrong.
-    InconsistentTypeError TyName Kind Kind
+  = UnboundTermError TyName VarName
+  | IncorrectApplicationError TyName Kind Kind
+  | RecursiveKindError TyName
+  | InconsistentTypeError TyName Kind Kind
+  | MultipleTyDefError ModuleName [TyDef]
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
 
+-- | All the compiler errors.
 data CompilerError
   = CompKindCheckError KindCheckError
   | InternalError Text

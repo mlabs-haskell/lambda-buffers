@@ -12,12 +12,36 @@ module Test.Utils.Constructors (
   _Type,
   _TyDef,
   _TyRefILocal,
+  _Module,
+  _ModuleName,
+  _ModuleNamePart,
 ) where
 
 import Data.List.NonEmpty (fromList)
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.SourceInfo (sourceInfo'empty)
+
+_Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.InstanceClause] -> P.Module
+_Module mn tds cds ins =
+  P.Module
+    { P.moduleName = mn
+    , P.typeDefs = tds
+    , P.classDefs = cds
+    , P.instances = ins
+    , P.imports = mempty
+    , P.sourceInfo = sourceInfo'empty
+    }
+
+_ModuleName :: [Text] -> P.ModuleName
+_ModuleName ps =
+  P.ModuleName
+    { P.parts = _ModuleNamePart <$> ps
+    , P.sourceInfo = sourceInfo'empty
+    }
+
+_ModuleNamePart :: Text -> P.ModuleNamePart
+_ModuleNamePart n = P.ModuleNamePart n sourceInfo'empty
 
 _tyName :: Text -> P.TyName
 _tyName x = P.TyName x sourceInfo'empty

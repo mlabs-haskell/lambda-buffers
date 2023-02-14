@@ -539,14 +539,14 @@ message KindCheckError {
     VarName var_name = 2;
   }
 
-  // Unification has failed - type is incorrectly defined. Error reads as 
+  // Unification has failed - type is incorrectly defined. Error reads as
   // follows:
-  // > In ty_name definition an error has occurred when trying to unify kind 
-  // > ty_kind_1 with ty_kind_2. 
+  // > In ty_name definition an error has occurred when trying to unify kind
+  // > ty_kind_1 with ty_kind_2.
   //
-  // FIXME(cstml): add source of constraint to the error such that user can see 
-  // where the constraint was generated - therefore where the error precisely 
-  // is. 
+  // FIXME(cstml): add source of constraint to the error such that user can see
+  // where the constraint was generated - therefore where the error precisely
+  // is.
   message ImpossibleUnificationError {
     TyName ty_name = 1;
     Kind ty_kind_1 = 2;
@@ -554,11 +554,11 @@ message KindCheckError {
   }
 
   // Error reads:
-  // Inifinitely recursive term detected in definition ty_name. 
+  // Inifinitely recursive term detected in definition ty_name.
   message RecursiveKindError {
     TyName ty_name = 1;
   }
-  
+
   // The inferred type differs from the type as defined.
   message InconsistentTypeError {
     TyName ty_name = 1;
@@ -566,22 +566,31 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
+  // Multiple TyDefs with the same TyName were found in ModuleName.
+  message MultipleTyDefError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting type definitions.
+    repeated TyDef ty_defs = 2;
+  }
+
   // The types of inference errors.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
     ImpossibleUnificationError unification_error = 2;
-    RecursiveKindError recursive_subs_error = 3; 
+    RecursiveKindError recursive_subs_error = 3;
     InconsistentTypeError inconsistent_type_error = 4;
+    MultipleTyDefError multiple_tydef_error = 5;
   }
 }
 
 // Compiler Error can be extended with other classes of errors.
 message CompilerError {
-  
+
   // Reason why the compilation failed.
   oneof compiler_error {
     KindCheckError kind_check_error = 1;
-    InternalError internal_error = 2;
+    InternalError internal_error = 3;
   }
 }
 

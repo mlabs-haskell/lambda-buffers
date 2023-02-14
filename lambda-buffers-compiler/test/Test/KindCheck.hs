@@ -12,9 +12,8 @@ import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var))
 import LambdaBuffers.Compiler.KindCheck.Variable (
   Variable (LocalRef),
  )
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
-  CompilerInput (CompilerInput),
- )
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
+
 import Test.QuickCheck (
   Arbitrary (arbitrary, shrink),
   Property,
@@ -28,15 +27,38 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
+  compilerInput'doubleDeclaration,
+  compilerInput'doubleDeclarationDiffMod,
   compilerInput'incoherent,
   compilerInput'maybe,
  )
+import Test.Utils.Constructors (_ModuleName)
+import Test.Utils.TyDef (tyDef'maybe)
 
 --------------------------------------------------------------------------------
 -- Top Level tests
 
 test :: TestTree
-test = testGroup "Compiler tests" [testCheck, testFolds, testRefl]
+test = testGroup "Compiler tests" [testCheck, testFolds, testRefl, testMultipleDec]
+
+--------------------------------------------------------------------------------
+-- Multiple declaration test
+
+testMultipleDec :: TestTree
+testMultipleDec = testGroup "Multiple declaration tests." [doubleDeclaration, passingDoubleDeclaration]
+
+doubleDeclaration :: TestTree
+doubleDeclaration =
+  testCase "Two declarations of Maybe within the same module are caught." $
+    check_ compilerInput'doubleDeclaration
+      @?= Left (P.CompKindCheckError (P.MultipleTyDefError moduleName [tyDef'maybe, tyDef'maybe]))
+  where
+    moduleName = _ModuleName ["Module"]
+
+passingDoubleDeclaration :: TestTree
+passingDoubleDeclaration =
+  testCase "Two declarations of Maybe within different modules are fine." $
+    check_ compilerInput'doubleDeclarationDiffMod @?= Right ()
 
 --------------------------------------------------------------------------------
 -- Module tests
@@ -78,8 +100,8 @@ kcTestOrdering =
       shuffledMods <- shuffle mods
       pure (P.CompilerInput mods, P.CompilerInput shuffledMods)
 
-    eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
-    eitherFailOrPass = bimap (const ()) (const ())
+eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
+eitherFailOrPass = bimap (const ()) (const ())
 
 --------------------------------------------------------------------------------
 -- Fold tests

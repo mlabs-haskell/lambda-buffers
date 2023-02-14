@@ -566,6 +566,10 @@ instance IsMessage P.KindCheckError KindCheckError where
             <$> fromProto (err ^. P.tyName)
             <*> fromProto (err ^. P.inferredKind)
             <*> fromProto (err ^. P.definedKind)
+        P.KindCheckError'MultipleTydefError err ->
+          MultipleTyDefError
+            <$> fromProto (err ^. P.moduleName)
+            <*> traverse fromProto (err ^. P.tyDefs)
       Nothing -> throwProtoError EmptyField
 
   toProto = \case
@@ -586,6 +590,10 @@ instance IsMessage P.KindCheckError KindCheckError where
         & (P.inconsistentTypeError . P.tyName) .~ toProto name
         & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
         & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
+    MultipleTyDefError m ds ->
+      defMessage
+        & (P.multipleTydefError . P.moduleName) .~ toProto m
+        & (P.multipleTydefError . P.tyDefs) .~ (toProto <$> ds)
 
 instance IsMessage P.CompilerError CompilerError where
   fromProto cErr = case cErr ^. P.maybe'compilerError of
