@@ -5,16 +5,22 @@ module LambdaBuffers.Compiler.TypeClass.Rules (
   Class (..),
   Constraint (..),
   Rule (..),
-  type Instance,
+  FQClassName (..),
   mapPat,
+  ruleHeadPat,
+  ruleHeadClass,
 ) where
 
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import Data.Text (Text)
+
 import LambdaBuffers.Compiler.TypeClass.Pat (Pat)
 
+data FQClassName = FQClassName {cName :: Text, cModule :: [Text]}
+  deriving stock (Show, Eq, Ord)
+
 data Class = Class
-  { name :: P.TyClassRef
-  , supers :: [Class]
+  { cname :: FQClassName
+  , csupers :: [Class]
   }
   deriving stock (Show, Eq, Ord)
 
@@ -33,9 +39,15 @@ data Rule where
   deriving stock (Show, Eq, Ord)
 infixl 7 :<=
 
-type Instance = Rule
-
 {- Map over the Pats inside of an Rule
 -}
 mapPat :: (Pat -> Pat) -> Rule -> Rule
 mapPat f (C c ty :<= is) = C c (f ty) :<= map (\(C cx p) -> C cx (f p)) is
+
+{- Extract the inner Pat from a Rule head
+-}
+ruleHeadPat :: Rule -> Pat
+ruleHeadPat (C _ p :<= _) = p
+
+ruleHeadClass :: Rule -> Class
+ruleHeadClass (C c _ :<= _) = c
