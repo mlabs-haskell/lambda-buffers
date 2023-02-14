@@ -88,6 +88,9 @@ parseAndIndex key =
     )
     (mempty, mempty)
 
+-- WARN(bladyjoker): This function is used to 'strip' the SourceInfo from types that end up as Map keys.
+--   This can cause confusion and errors and we should rather parametrize types with `info` and
+--   maintain `Map (TyName ()) (TyDef SourceInfo)`
 stripSourceInfo :: HasField "sourceInfo" s t a PC.SourceInfo => s -> t
 stripSourceInfo x = x & #sourceInfo .~ PC.defSourceInfo
 
