@@ -77,7 +77,7 @@ data KindCheck a where
   InferTypeKind :: ModName -> P.TyDef -> Context -> Type -> KindCheck Kind
   CheckKindConsistency :: ModName -> P.TyDef -> Context -> Kind -> KindCheck Kind
 
--- FIXME(cstml) add check for Context Consistency
+-- FIXME(cstml): Add check for Context Consistency
 -- TyDefToTypes :: ModName -> P.TyDef -> KindCheck [Type]
 makeEffect ''KindCheck
 

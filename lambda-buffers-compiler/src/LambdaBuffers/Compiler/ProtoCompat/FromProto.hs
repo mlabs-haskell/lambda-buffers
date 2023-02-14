@@ -1,9 +1,8 @@
 module LambdaBuffers.Compiler.ProtoCompat.FromProto (
-  IsMessage (..),
-  FromProtoErr (..),
   protoKind2Kind,
   kind2ProtoKind,
   runFromProto,
+  toProto,
 ) where
 
 import Control.Lens ((&), (.~), (^.))
@@ -43,11 +42,22 @@ data FromProtoContext
 
 type FromProto a = ReaderT FromProtoContext (Except [FromProtoErr]) a
 
--- | Parse a Proto API CompilerInput into the internal CompilerInput representation or report errors.
-runFromProto :: P.CompilerInput -> Either [FromProtoErr] PC.CompilerInput
+-- | Parse a Proto API CompilerInput into the internal CompilerInput representation or report errors (in Proto format).
+runFromProto :: P.CompilerInput -> Either P.CompilerError PC.CompilerInput
 runFromProto compInp = do
   let exM = runReaderT (fromProto compInp) CtxCompilerInput
-  runExcept exM
+      errsOrRes = runExcept exM
+  case errsOrRes of
+    Left errs ->
+      let nerrs = [err | FPNamingError err <- errs]
+          pperrs = [err | FPProtoParseError err <- errs]
+          ierrs = [err | FPInternalError err <- errs]
+       in Left $
+            defMessage
+              & P.namingErrors .~ nerrs
+              & P.protoParseErrors .~ pperrs
+              & P.internalErrors .~ ierrs
+    Right compIn' -> return compIn'
 
 class IsMessage (proto :: Type) (good :: Type) where
   fromProto :: proto -> FromProto good
@@ -694,33 +704,23 @@ instance IsMessage P.KindCheckError PC.KindCheckError where
         & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
         & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
 
--- instance IsMessage P.CompilerError CompilerError where
---   fromProto cErr = case cErr ^. P.maybe'compilerError of
---     Just x -> case x of
---       P.CompilerError'KindCheckError err -> CompKindCheckError <$> fromProto err
---       P.CompilerError'InternalError err -> InternalError <$> fromProto (err ^. P.internalError)
---     Nothing -> throwProtoError EmptyField
+instance IsMessage P.CompilerError PC.CompilerError where
+  fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
---   toProto = \case
---     CompKindCheckError err -> defMessage & P.kindCheckError .~ toProto err
---     InternalError err -> defMessage & (P.internalError . P.internalError) .~ toProto err
+  toProto = \case
+    PC.CompKindCheckError err -> defMessage & P.kindCheckErrors .~ [toProto err]
+    PC.InternalError err -> defMessage & P.internalErrors .~ [defMessage & P.msg .~ err]
 
--- instance IsMessage P.CompilerResult CompilerResult where
---   fromProto c =
---     if c == defMessage
---       then pure CompilerResult
---       else throwProtoError EmptyField
---   toProto CompilerResult = defMessage
+instance IsMessage P.CompilerResult PC.CompilerResult where
+  fromProto _ = throwInternalError "fromProto CompilerError not implemented"
+  toProto PC.CompilerResult = defMessage
 
--- instance IsMessage P.CompilerOutput CompilerOutput where
---   fromProto co = case co ^. P.maybe'compilerOutput of
---     Just (P.CompilerOutput'CompilerResult res) -> Right <$> fromProto res
---     Just (P.CompilerOutput'CompilerError err) -> Left <$> fromProto err
---     Nothing -> throwProtoError EmptyField
+instance IsMessage P.CompilerOutput PC.CompilerOutput where
+  fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
---   toProto = \case
---     Right res -> defMessage & P.compilerResult .~ toProto res
---     Left err -> defMessage & P.compilerError .~ toProto err
+  toProto = \case
+    Right res -> defMessage & P.compilerResult .~ toProto res
+    Left err -> defMessage & P.compilerError .~ toProto err
 
 -- | Convert from internal Kind to Proto Kind.
 kind2ProtoKind :: K.Kind -> PC.Kind
