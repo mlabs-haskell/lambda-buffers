@@ -122,7 +122,7 @@ derive x = do
       tell [Constraint (ty1, ty2 :->: v)]
       pure $ Application (Judgement (c, x, v)) d1 d2
     Abs v t -> do
-      newTy <- KVar <$> fresh
+      newTy <- getBinding v
       d <- local (\(Context ctx addC) -> Context ctx $ M.insert v newTy addC) (derive t)
       let ty = d ^. topKind
       freshT <- KVar <$> fresh
