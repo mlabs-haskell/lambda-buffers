@@ -22,7 +22,7 @@ import Test.QuickCheck (
   (===),
  )
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertBool, assertEqual, testCase, (@?=))
+import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
   compilerInput'incoherent,

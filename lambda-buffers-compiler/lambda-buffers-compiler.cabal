@@ -107,6 +107,7 @@ library
     , text                        >=1.2
 
   exposed-modules:
+    LambdaBuffers.Compiler
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Context
     LambdaBuffers.Compiler.KindCheck.Derivation
@@ -155,7 +156,6 @@ test-suite tests
     , mtl                         >=2.2
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
-    , quickcheck-transformer
     , tasty                       >=1.4
     , tasty-hunit                 >=0.10
     , tasty-quickcheck            >=0.10

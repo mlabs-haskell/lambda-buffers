@@ -1,8 +1,7 @@
 module Test.LambdaBuffers.Compiler.Gen (genCompilerInput) where
 
 import Control.Lens ((&), (.~), (^.))
-import Control.Monad.Reader (MonadTrans (lift), ReaderT, replicateM)
-import Control.Monad.State (StateT)
+import Control.Monad.Reader (replicateM)
 import Data.List qualified as List
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
@@ -13,16 +12,8 @@ import Proto.Compiler_Fields (argKind, argName, constrName, constructors, fields
 import Proto.Compiler_Fields qualified as P
 import Test.QuickCheck qualified as QC (Gen, chooseEnum, chooseInt, elements, oneof, vectorOf)
 
-data GenProtoCtx
-data GenProtoState
-
-type GenProto a = ReaderT GenProtoCtx (StateT GenProtoState QC.Gen) a
-
-vecOf :: forall {a}. GenProto a -> Int -> GenProto [a]
+vecOf :: forall {a}. QC.Gen a -> Int -> QC.Gen [a]
 vecOf g n = replicateM n g
-
-chooseInt :: (Int, Int) -> GenProto Int
-chooseInt r = lift . lift $ QC.chooseInt r
 
 -- | Names
 genAlphaNum :: QC.Gen Char
@@ -34,73 +25,73 @@ genUpperCamelCase len = do
   t <- QC.vectorOf len genAlphaNum
   return $ Text.pack $ h : t
 
-genModuleNamePart :: GenProto ModuleNamePart
+genModuleNamePart :: QC.Gen ModuleNamePart
 genModuleNamePart = do
-  mnp <- lift . lift $ genUpperCamelCase 10
+  mnp <- genUpperCamelCase 10
   return $ defMessage & name .~ mnp
 
-genModuleName :: GenProto ModuleName
+genModuleName :: QC.Gen ModuleName
 genModuleName = do
-  ps <- chooseInt (1, 5) >>= vecOf genModuleNamePart
+  ps <- QC.chooseInt (1, 5) >>= vecOf genModuleNamePart
   return $ defMessage & parts .~ ps
 
-genTyName :: GenProto TyName
+genTyName :: QC.Gen TyName
 genTyName = do
-  n <- lift . lift $ genUpperCamelCase 10
+  n <- genUpperCamelCase 10
   return $ defMessage & name .~ n
 
-_genClassName :: GenProto ClassName
+_genClassName :: QC.Gen ClassName
 _genClassName = do
-  n <- lift . lift $ genUpperCamelCase 10
+  n <- genUpperCamelCase 10
   return $ defMessage & name .~ n
 
-genConstrName :: GenProto ConstrName
+genConstrName :: QC.Gen ConstrName
 genConstrName = do
-  n <- lift . lift $ genUpperCamelCase 10
+  n <- genUpperCamelCase 10
   return $ defMessage & name .~ n
 
-genVarName :: GenProto VarName
+genVarName :: QC.Gen VarName
 genVarName = do
-  h <- lift . lift $ QC.chooseEnum ('a', 'z')
-  t <- lift . lift $ QC.vectorOf 4 (QC.chooseEnum ('a', 'z'))
+  h <- QC.chooseEnum ('a', 'z')
+  t <- QC.vectorOf 4 (QC.chooseEnum ('a', 'z'))
   return $ defMessage & name .~ Text.pack (h : t)
 
-genTyArg :: VarName -> GenProto TyArg
+genTyArg :: VarName -> QC.Gen TyArg
 genTyArg vn = do
   return $
     defMessage
       & argName .~ vn
-      & argKind . kindRef .~ Kind'KIND_REF_TYPE -- TODO(bladyjoker): Gen arbitrary kinds.
+      & argKind . kindRef .~ Kind'KIND_REF_TYPE -- TODO(bladyjoker): QC.Gen arbitrary kinds.
 
-genSum :: [TyArg] -> GenProto Sum
+genSum :: [TyArg] -> QC.Gen Sum
 genSum args = do
-  cns <- chooseInt (1, 10) >>= vecOf genConstrName
+  cns <- QC.chooseInt (1, 2) >>= vecOf genConstrName
   ctors <- for (List.nub cns) (genConstructor args)
   return $ defMessage & constructors .~ ctors
 
 -- TODO(bladyjoker): Add TyRef, TyApp etc.
-genTy :: [TyArg] -> GenProto Ty
+genTy :: [TyArg] -> QC.Gen Ty
 genTy args = do
-  ar <- lift . lift $ QC.elements args
+  ar <- QC.elements args
   return $ defMessage & tyVar . varName .~ (ar ^. argName)
 
-genConstructor :: [TyArg] -> ConstrName -> GenProto Sum'Constructor
+genConstructor :: [TyArg] -> ConstrName -> QC.Gen Sum'Constructor
 genConstructor args cn = do
-  tys <- chooseInt (1, 10) >>= vecOf (genTy args)
+  tys <- QC.chooseInt (1, 2) >>= vecOf (genTy args)
   return $
     defMessage
       & constrName .~ cn
       & P.product . ntuple . fields .~ tys
 
 -- TODO(bladyjoker): Add Opaque.
-genTyBody :: [TyArg] -> GenProto TyBody
+genTyBody :: [TyArg] -> QC.Gen TyBody
 genTyBody args = do
   b <- genSum args
   return $ defMessage & P.sum .~ b
 
-genTyAbs :: GenProto TyAbs
+genTyAbs :: QC.Gen TyAbs
 genTyAbs = do
-  vns <- chooseInt (1, 10) >>= vecOf genVarName
+  vns <- QC.chooseInt (1, 2) >>= vecOf genVarName
   args <- for (List.nub vns) genTyArg
   body <- genTyBody args
   return $
@@ -108,7 +99,7 @@ genTyAbs = do
       & tyArgs .~ args
       & tyBody .~ body
 
-genTyDef :: TyName -> GenProto TyDef
+genTyDef :: TyName -> QC.Gen TyDef
 genTyDef tn = do
   tyabs <- genTyAbs
   return $
@@ -116,17 +107,17 @@ genTyDef tn = do
       & tyName .~ tn
       & tyAbs .~ tyabs
 
-genModule :: ModuleName -> GenProto Module
+genModule :: ModuleName -> QC.Gen Module
 genModule mn = do
-  tns <- chooseInt (1, 100) >>= vecOf genTyName
+  tns <- QC.chooseInt (1, 2) >>= vecOf genTyName
   tydefs <- for (List.nub tns) genTyDef
   return $
     defMessage
       & moduleName .~ mn
       & typeDefs .~ tydefs
 
-genCompilerInput :: GenProto CompilerInput
+genCompilerInput :: QC.Gen CompilerInput
 genCompilerInput = do
-  mns <- chooseInt (1, 100) >>= vecOf genModuleName
+  mns <- QC.chooseInt (1, 2) >>= vecOf genModuleName
   ms <- for (List.nub mns) genModule
   return $ defMessage & modules .~ ms

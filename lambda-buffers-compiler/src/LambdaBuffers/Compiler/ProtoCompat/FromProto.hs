@@ -1,6 +1,4 @@
 module LambdaBuffers.Compiler.ProtoCompat.FromProto (
-  protoKind2Kind,
-  kind2ProtoKind,
   runFromProto,
   toProto,
 ) where
@@ -20,7 +18,6 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.KindCheck.Kind qualified as K
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkModuleNamePart, checkTyName, checkVarName)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Proto.Compiler (NamingError)
@@ -721,18 +718,3 @@ instance IsMessage P.CompilerOutput PC.CompilerOutput where
   toProto = \case
     Right res -> defMessage & P.compilerResult .~ toProto res
     Left err -> defMessage & P.compilerError .~ toProto err
-
--- | Convert from internal Kind to Proto Kind.
-kind2ProtoKind :: K.Kind -> PC.Kind
-kind2ProtoKind = \case
-  k1 K.:->: k2 -> PC.Kind $ PC.KindArrow (kind2ProtoKind k1) (kind2ProtoKind k2)
-  K.Type -> PC.Kind . PC.KindRef $ PC.KType
-  K.KVar _ -> PC.Kind . PC.KindRef $ PC.KUnspecified -- this shouldn't happen.
-
--- | Convert from internal Kind to Proto Kind.
-protoKind2Kind :: PC.Kind -> K.Kind
-protoKind2Kind = \case
-  PC.Kind k -> case k of
-    PC.KindArrow k1 k2 -> protoKind2Kind k1 K.:->: protoKind2Kind k2
-    PC.KindRef PC.KType -> K.Type
-    PC.KindRef PC.KUnspecified -> K.KVar "Unspecified"

@@ -8,8 +8,7 @@ import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
-import LambdaBuffers.Compiler.KindCheck (check_)
-import LambdaBuffers.Compiler.ProtoCompat (runFromProto, toProto)
+import LambdaBuffers.Compiler (runCompiler)
 import Proto.Compiler (CompilerError, CompilerInput, CompilerOutput)
 import Proto.Compiler_Fields (compilerError, compilerResult)
 import System.FilePath.Lens (extension)
@@ -28,17 +27,13 @@ makeLenses ''CompileOpts
 compile :: CompileOpts -> IO ()
 compile opts = do
   compInp <- readCompilerInput (opts ^. input)
-  case runFromProto compInp of
+  case runCompiler compInp of
     Left compErr -> do
-      print @String "Encountered errors during CompilerInput proto parsing"
+      print @String "Encountered errors during Compilation"
       writeCompilerError (opts ^. output) compErr
-    Right compInp' -> do
-      print @String "Successfully parsed the CompilerInput proto"
-      case check_ compInp' of
-        Left kcCompErr -> do
-          print @String "Encountered errors during CompilerInput proto parsing"
-          writeCompilerError (opts ^. output) (toProto kcCompErr)
-        Right _ -> writeCompilerOutput (opts ^. output) (defMessage & compilerResult .~ defMessage)
+    Right compRes -> do
+      print @String "Compilation succeeded"
+      writeCompilerOutput (opts ^. output) (defMessage & compilerResult .~ compRes)
   return ()
 
 readCompilerInput :: FilePath -> IO CompilerInput

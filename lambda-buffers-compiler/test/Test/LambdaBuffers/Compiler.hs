@@ -1,6 +1,18 @@
 module Test.LambdaBuffers.Compiler (test) where
 
-import Test.Tasty (TestTree)
+import Data.ProtoLens (Message (defMessage))
+import LambdaBuffers.Compiler (runCompiler)
+import Test.LambdaBuffers.Compiler.Gen (genCompilerInput)
+import Test.QuickCheck (forAll, (===))
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.QuickCheck (testProperty)
 
 test :: TestTree
-test = undefined
+test =
+  testGroup
+    "Compiler Proto API tests"
+    [ allCorrectCompInpCompile
+    ]
+
+allCorrectCompInpCompile :: TestTree
+allCorrectCompInpCompile = testProperty "All correct CompilerInputs must compile" (forAll genCompilerInput (\compInp -> runCompiler compInp === Right defMessage))
