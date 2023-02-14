@@ -69,6 +69,13 @@ data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary SourcePosition
 
+-- TODO(bladyjoker): Make this proper by parametrized SourceInfo as `info`. For
+-- example, `TyName` becomes `TyName info` and when working with `TyName
+-- SourceInfo` a 'stripped' version can be obtained by simply `void tyName ::
+-- TyName ()`.
+-- In situations like testing or indexing when we want to ignore the SourceInfo,
+-- this seems like the proper way of doing it. Then we wouldn't need
+-- `defSourceInfo`.
 defSourceInfo :: SourceInfo
 defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
 

@@ -36,7 +36,7 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
  )
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (kind2ProtoKind)
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyEither, tyProd, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyProd, tySum, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat ()
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -479,7 +479,7 @@ foldWithProduct :: [Type] -> Type
 foldWithProduct = foldl' (App . App (Var tyProd)) (Var tyUnit)
 
 foldWithSum :: [Type] -> Type
-foldWithSum = foldl' (App . App (Var tyEither)) (Var tyVoid)
+foldWithSum = foldl' (App . App (Var tySum)) (Var tyVoid)
 
 module2ModuleName :: PC.Module -> ModName
 module2ModuleName = moduleName2ModName . (^. #moduleName)

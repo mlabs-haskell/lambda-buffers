@@ -7,7 +7,7 @@ module LambdaBuffers.Compiler.KindCheck.Type (
   tyOpaque,
   tyUnit,
   tyVoid,
-  tyEither,
+  tySum,
   tyProd,
 ) where
 
@@ -30,8 +30,8 @@ tyUnit = LocalRef "𝟙"
 tyVoid :: Variable
 tyVoid = LocalRef "𝟘"
 
-tyEither :: Variable
-tyEither = LocalRef "Σ"
+tySum :: Variable
+tySum = LocalRef "Σ"
 
 tyProd :: Variable
 tyProd = LocalRef "Π"

@@ -6,7 +6,7 @@ import LambdaBuffers.Compiler.KindCheck (
   foldWithProduct,
   foldWithSum,
  )
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var), tyEither, tyProd, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var), tyProd, tySum, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (
   Variable (LocalRef),
  )
@@ -104,8 +104,8 @@ testPProdFoldTotal =
     forAll arbitrary $
       \ts -> foldWithProduct ts === foldWithProduct ts
 
-either' :: Type -> Type -> Type
-either' = App . App (Var tyEither)
+sum' :: Type -> Type -> Type
+sum' = App . App (Var tySum)
 
 void' :: Type
 void' = Var tyVoid
@@ -116,25 +116,25 @@ testSumFold0 =
   testCase "Fold 0 type" $
     foldWithSum [] @?= void'
 
--- | [ a ] -> either void a
+-- | [ a ] -> sum void a
 testSumFold1 :: TestTree
 testSumFold1 =
   testCase "Fold 1 type" $
-    foldWithSum [lVar "a"] @?= either' void' (lVar "a")
+    foldWithSum [lVar "a"] @?= sum' void' (lVar "a")
 
--- | [ a , b ] -> either (either void a) b
+-- | [ a , b ] -> sum (sum void a) b
 testSumFold2 :: TestTree
 testSumFold2 =
   testCase "Fold 2 type" $
     foldWithSum [lVar "b", lVar "a"]
-      @?= either' (either' void' (lVar "b")) (lVar "a")
+      @?= sum' (sum' void' (lVar "b")) (lVar "a")
 
 -- | [ a , b , c ] -> a | ( b | c )
 testSumFold3 :: TestTree
 testSumFold3 =
   testCase "Fold 3 types" $
     foldWithSum [lVar "c", lVar "b", lVar "a"]
-      @?= either' (either' (either' void' (lVar "c")) (lVar "b")) (lVar "a")
+      @?= sum' (sum' (sum' void' (lVar "c")) (lVar "b")) (lVar "a")
 
 -- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
 lVar :: Text -> Type

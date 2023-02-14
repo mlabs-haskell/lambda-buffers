@@ -21,7 +21,7 @@ import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, 
 import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom))
 import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
-import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var), tyEither, tyProd, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var), tyProd, tySum, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable)
 
 import Control.Monad.Freer (Eff, Member, Members, run)
@@ -96,7 +96,7 @@ infer ctx t = do
       mempty
         & context
           .~ M.fromList
-            [ (tyEither, Type :->: Type :->: Type)
+            [ (tySum, Type :->: Type :->: Type)
             , (tyProd, Type :->: Type :->: Type)
             , (tyUnit, Type)
             , (tyVoid, Type)
