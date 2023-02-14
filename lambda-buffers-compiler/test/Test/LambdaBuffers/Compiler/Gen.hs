@@ -15,6 +15,9 @@ import Test.QuickCheck qualified as QC (Gen, chooseEnum, chooseInt, elements, on
 vecOf :: forall {a}. QC.Gen a -> Int -> QC.Gen [a]
 vecOf g n = replicateM n g
 
+limit :: Int
+limit = 10
+
 -- | Names
 genAlphaNum :: QC.Gen Char
 genAlphaNum = QC.oneof [QC.chooseEnum ('a', 'z'), QC.chooseEnum ('A', 'Z'), QC.chooseEnum ('0', '9')]
@@ -32,7 +35,7 @@ genModuleNamePart = do
 
 genModuleName :: QC.Gen ModuleName
 genModuleName = do
-  ps <- QC.chooseInt (1, 5) >>= vecOf genModuleNamePart
+  ps <- QC.chooseInt (1, limit) >>= vecOf genModuleNamePart
   return $ defMessage & parts .~ ps
 
 genTyName :: QC.Gen TyName
@@ -65,7 +68,7 @@ genTyArg vn = do
 
 genSum :: [TyArg] -> QC.Gen Sum
 genSum args = do
-  cns <- QC.chooseInt (1, 2) >>= vecOf genConstrName
+  cns <- QC.chooseInt (1, limit) >>= vecOf genConstrName
   ctors <- for (List.nub cns) (genConstructor args)
   return $ defMessage & constructors .~ ctors
 
@@ -77,7 +80,7 @@ genTy args = do
 
 genConstructor :: [TyArg] -> ConstrName -> QC.Gen Sum'Constructor
 genConstructor args cn = do
-  tys <- QC.chooseInt (1, 2) >>= vecOf (genTy args)
+  tys <- QC.chooseInt (1, limit) >>= vecOf (genTy args)
   return $
     defMessage
       & constrName .~ cn
@@ -91,7 +94,7 @@ genTyBody args = do
 
 genTyAbs :: QC.Gen TyAbs
 genTyAbs = do
-  vns <- QC.chooseInt (1, 2) >>= vecOf genVarName
+  vns <- QC.chooseInt (1, limit) >>= vecOf genVarName
   args <- for (List.nub vns) genTyArg
   body <- genTyBody args
   return $
@@ -109,7 +112,7 @@ genTyDef tn = do
 
 genModule :: ModuleName -> QC.Gen Module
 genModule mn = do
-  tns <- QC.chooseInt (1, 2) >>= vecOf genTyName
+  tns <- QC.chooseInt (1, limit) >>= vecOf genTyName
   tydefs <- for (List.nub tns) genTyDef
   return $
     defMessage
@@ -118,6 +121,6 @@ genModule mn = do
 
 genCompilerInput :: QC.Gen CompilerInput
 genCompilerInput = do
-  mns <- QC.chooseInt (1, 2) >>= vecOf genModuleName
+  mns <- QC.chooseInt (1, limit) >>= vecOf genModuleName
   ms <- for (List.nub mns) genModule
   return $ defMessage & modules .~ ms

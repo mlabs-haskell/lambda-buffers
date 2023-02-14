@@ -16,3 +16,6 @@ test =
 
 allCorrectCompInpCompile :: TestTree
 allCorrectCompInpCompile = testProperty "All correct CompilerInputs must compile" (forAll genCompilerInput (\compInp -> runCompiler compInp === Right defMessage))
+
+-- TODO(bladyjoker): Add error producing mutations.
+-- TODO(bladyjoker): Add bening mutations (module, tydef, classdef shuffle).

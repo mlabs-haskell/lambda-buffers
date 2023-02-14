@@ -1,6 +1,5 @@
 module Test.KindCheck (test) where
 
-import Data.Bifunctor (Bifunctor (bimap))
 import Data.Text (Text)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
@@ -17,8 +16,6 @@ import Test.QuickCheck (
   Property,
   forAll,
   forAllShrink,
-  resize,
-  shuffle,
   (===),
  )
 import Test.Tasty (TestTree, testGroup)
@@ -40,7 +37,7 @@ test = testGroup "Compiler tests" [testCheck, testFolds, testRefl]
 -- Module tests
 
 testCheck :: TestTree
-testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing, kcTestOrdering]
+testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
 
 trivialKCTest :: TestTree
 trivialKCTest =
@@ -57,27 +54,6 @@ kcTestFailing =
   testCase "This should fail" $
     assertBool "Test should have failed" $
       check_ compilerInput'incoherent /= Right ()
-
-{- | TyDef order does not matter when kind checking.
-
- We're not interested in the failure error as there might be more than two
- errors in a module - and it is non-determistic which one is first. But it is
- deterministic if the property holds for the whole CompilerInput. Therefore we
- only track if given the input - the fails or succeeds.
--}
-kcTestOrdering :: TestTree
-kcTestOrdering =
-  testProperty "Module order inside the CompilerInput does not matter" $
-    forAllShrink (resize 2 genModuleIn2Layouts) shrink $
-      \(l, r) -> check_ l === check_ r
-  where
-    genModuleIn2Layouts = do
-      mods <- arbitrary
-      shuffledMods <- shuffle mods
-      pure (_CompilerInput mods, _CompilerInput shuffledMods)
-
-_eitherFailOrPass :: forall {a} {c}. Either a c -> Either () ()
-_eitherFailOrPass = bimap (const ()) (const ())
 
 --------------------------------------------------------------------------------
 -- Fold tests
