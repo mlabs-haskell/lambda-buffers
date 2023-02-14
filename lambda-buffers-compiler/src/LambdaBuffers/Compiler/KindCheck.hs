@@ -36,7 +36,7 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
  )
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (kind2ProtoKind)
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyEither, tyOpaque, tyProd, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyEither, tyProd, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat ()
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -67,18 +67,20 @@ makeEffect ''GlobalCheck
 -- | Interactions that happen at the level of the
 data ModuleCheck a where -- Module
   KCTypeDefinition :: ModName -> Context -> PC.TyDef -> ModuleCheck Kind
-  KCClassInstance :: Context -> PC.InstanceClause -> ModuleCheck ()
-  KCClass :: Context -> PC.ClassDef -> ModuleCheck ()
+
+-- fixme(cstml & gnumonik): lets reach consensus on these - Note(1).
+--  KCClassInstance :: Context -> P.InstanceClause -> ModuleCheck ()
+--  KCClass :: Context -> P.ClassDef -> ModuleCheck ()
 
 makeEffect ''ModuleCheck
 
 data KindCheck a where
-  KindFromTyDef :: ModName -> PC.TyDef -> KindCheck Type
+  TypesFromTyDef :: ModName -> PC.TyDef -> KindCheck [Type]
   InferTypeKind :: ModName -> PC.TyDef -> Context -> Type -> KindCheck Kind
   CheckKindConsistency :: ModName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
 
--- FIXME(cstml): Add check for Context Consistency
--- TyDefToTypes :: ModName -> PC.TyDef -> KindCheck [Type]
+--  TypeFromTyDef :: ModName -> P.TyDef -> KindCheck Type -- replaced with constructor by constructor check
+
 makeEffect ''KindCheck
 
 --------------------------------------------------------------------------------
@@ -118,20 +120,27 @@ moduleStrategy = reinterpret $ \case
   CreateContext ci -> evalState (mempty @(M.Map Variable PC.TyDef)) . resolveCreateContext $ ci
   ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (module2ModuleName md) cx) (md ^. #typeDefs)
-    traverse_ (kCClassInstance cx) (md ^. #instances)
-    traverse_ (kCClass cx) (md ^. #classDefs)
 
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
   KCTypeDefinition mname ctx tydef -> do
-    kindFromTyDef mname tydef >>= inferTypeKind mname tydef ctx >>= checkKindConsistency mname tydef ctx
-  KCClassInstance _ctx _instClause -> pure () -- FIXME(cstml)
-  KCClass _ctx _classDef -> pure () --  FIXME(cstml)
+    typesFromTyDef mname tydef
+      >>= traverse (inferTypeKind mname tydef ctx)
+      >>= traverse (checkKindConsistency mname tydef ctx)
+      >>= traverse (checkKindConsistency mname tydef ctx)
+      >>= \case
+        [] -> pure Type -- Void
+        x : _ -> pure x -- The Kind of the first constructor ~ already checked
+        -- and consistent.
+        {- See note (1).
+        --  KCClassInstance _ctx _instClause -> pure ()
+        --  KCClass _ctx _classDef -> pure ()
+        -}
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
-  KindFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
-  -- TyDefToTypes moduleName tydef -> runReader moduleName (tyDef2Types tydef)
+  --  TypeFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
+  TypesFromTyDef moduleName tydef -> runReader moduleName (tyDef2Types tydef)
   InferTypeKind _modName tyDef ctx ty -> either (handleErr tyDef) pure $ infer ctx ty
   CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
   where
@@ -219,13 +228,28 @@ tyDef2Context ::
   Eff effs Context
 tyDef2Context curModName tyDef = do
   r@(v, _) <- tyDef2NameAndKind curModName tyDef
+  ctx2 <- tyDefArgs2Context tyDef
   associateName v tyDef
-  pure $ mempty & context .~ uncurry M.singleton r
+  pure $ mempty & context .~ uncurry M.singleton r <> ctx2
   where
     -- Ads the name to our map - we can use its SourceLocation in the case of a
     -- double use. If it's already in our map - that means we've double declared it.
     associateName :: Variable -> PC.TyDef -> Eff effs ()
     associateName v curTyDef = modify (M.insert v curTyDef)
+
+{- | Gets the kind of the variables from the definition and adds them to the
+ context.
+-}
+tyDefArgs2Context :: PC.TyDef -> Eff effs (M.Map Variable Kind)
+tyDefArgs2Context tydef = do
+  let ds = g <$> M.elems (tydef ^. #tyAbs . #tyArgs)
+  pure $ M.fromList ds
+  where
+    g :: PC.TyArg -> (Variable, Kind)
+    g tyarg = (v, k)
+      where
+        v = LocalRef (tyarg ^. #argName . #name)
+        k = pKind2Kind (tyarg ^. #argKind)
 
 {- | Converts the Proto Module name to a local modname - dropping the
  information.
@@ -241,31 +265,34 @@ tyDef2NameAndKind curModName tyDef = do
   pure (name, k)
 
 tyAbsLHS2Kind :: PC.TyAbs -> Kind
-tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Type . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
+tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Kind . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
 
 foldWithArrow :: [Kind] -> Kind
-foldWithArrow = foldl (:->:) Type
+foldWithArrow = foldr (:->:) Type
 
 -- ================================================================================
 -- To Kind Conversion functions
 
-pKind2Type :: PC.Kind -> Kind
-pKind2Type k =
+pKind2Kind :: PC.Kind -> Kind
+pKind2Kind k =
   case k ^. #kind of
     PC.KindRef PC.KType -> Type
-    PC.KindArrow l r -> pKind2Type l :->: pKind2Type r
+    PC.KindArrow l r -> pKind2Kind l :->: pKind2Kind r
     -- FIXME(cstml) what is an undefined type meant to mean?
     _ -> error "Fixme undefined type"
 
-{- | TyDef to Kind Canonical representation.
- TODO(@cstml): Move this close to KindCheck/Type.hs (even just there).
--}
+-- =============================================================================
+-- X To Canonical type conversion functions.
+
+{- Replaced with Constructor by Constructor check.
+-- | TyDef to Kind Canonical representation.
 tyDef2Type ::
   forall eff.
   Members '[Reader ModName, Err] eff =>
   PC.TyDef ->
   Eff eff Type
 tyDef2Type tyde = tyAbsLHS2Type (tyde ^. #tyAbs) <*> tyAbsRHS2Type (tyde ^. #tyAbs)
+-}
 
 tyAbsLHS2Type ::
   forall eff.
@@ -286,6 +313,7 @@ tyArgs2Type = \case
 tyArg2Var :: PC.TyArg -> Variable
 tyArg2Var = LocalRef . view (#argName . #name)
 
+{- Replaced with Constructor by Constructor check.
 tyAbsRHS2Type ::
   forall eff.
   Members '[Reader ModName, Err] eff =>
@@ -308,6 +336,7 @@ sum2Type ::
   PC.Sum ->
   Eff eff Type
 sum2Type su = foldWithSum <$> traverse constructor2Type (toList $ su ^. #constructors)
+-}
 
 constructor2Type ::
   forall eff.
@@ -402,8 +431,11 @@ foreignTyRef2Type ftr = do
 
 -- =============================================================================
 -- X To Canonical type conversion functions.
-{-
--- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
+
+{- | TyDef to Kind Canonical representation - sums not folded - therefore we get
+ constructor granularity. Might use in a different implementation for more
+ granular errors.
+-}
 tyDef2Types ::
   forall eff.
   Members '[Reader ModName, Err] eff =>
@@ -435,8 +467,8 @@ sum2Types ::
   Members '[Reader ModName, Err] eff =>
   PC.Sum ->
   Eff eff [Type]
-sum2Types su = NonEmpty.toList <$> traverse constructor2Type (su ^. #constructors)
--}
+sum2Types su = traverse constructor2Type $ M.elems (su ^. #constructors)
+
 --------------------------------------------------------------------------------
 -- Utilities
 
