@@ -55,20 +55,15 @@ toModule (Module mn _ tyds info) = do
       & sourceInfo .~ toSourceInfo info
 
 toTypeDef :: TyDef SourceInfo -> ToProto P.TyDef
-toTypeDef (TyDef tn args body info) =
+toTypeDef (TyDef tn args body info) = do
   let tydef =
         defMessage
           & tyName .~ toTyName tn
           & sourceInfo
             .~ toSourceInfo
               info
-   in case args of
-        [] -> do
-          body' <- toTyBody body
-          return $ tydef & tyBody .~ body'
-        (a : as) -> do
-          abs' <- toTyAbs a as body
-          return $ tydef & tyAbs .~ abs'
+  abs' <- toTyAbs args body
+  return $ tydef & tyAbs .~ abs'
 
 toTyBody :: TyBody SourceInfo -> ToProto P.TyBody
 toTyBody (Sum cs info) = do
@@ -141,12 +136,12 @@ toConstName (ConstrName cn info) =
     & sourceInfo .~ toSourceInfo info
 
 -- TODO(bladyjoker): TyAbs needs SourceInfo? Remove it if not.
-toTyAbs :: TyArg SourceInfo -> [TyArg SourceInfo] -> TyBody SourceInfo -> ToProto P.TyAbs
-toTyAbs arg args body = do
+toTyAbs :: [TyArg SourceInfo] -> TyBody SourceInfo -> ToProto P.TyAbs
+toTyAbs args body = do
   body' <- toTyBody body
   return $
     defMessage
-      & tyArgs .~ (toTyArg <$> arg : args)
+      & tyArgs .~ (toTyArg <$> args)
       & tyBody .~ body'
 
 toTyArg :: TyArg SourceInfo -> P.TyArg
