@@ -111,7 +111,8 @@ genTyBodyOpaque = return $ defMessage & P.opaque .~ defMessage
 
 genTyAbs :: QC.Gen TyAbs
 genTyAbs = do
-  vns <- QC.chooseInt (0, limit) >>= vecOf genVarName
+  -- TODO(bladyjoker): Allow empty args
+  vns <- QC.chooseInt (1, limit) >>= vecOf genVarName
   args <- for (List.nub vns) genTyArg
   body <- genTyBody args
   return $
