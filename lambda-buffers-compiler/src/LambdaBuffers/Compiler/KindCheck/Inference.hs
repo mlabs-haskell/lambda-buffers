@@ -21,7 +21,7 @@ import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, 
 import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom))
 import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KVar, Type, (:->:)))
-import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var), tyProd, tySum, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Var), tyOpaque, tyProd, tySum, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable)
 
 import Control.Monad.Freer (Eff, Member, Members, run)
@@ -87,20 +87,23 @@ runDerive ctx t = run $ runError $ runWriter $ evalState (DC atoms) $ runReader 
 
 infer :: Context -> Type -> Either InferErr Kind
 infer ctx t = do
-  (d, c) <- runDerive (defTerms <> ctx) t
+  (d, c) <- runDerive (defContext <> ctx) t
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. topKind
-  where
-    defTerms =
-      mempty
-        & context
-          .~ M.fromList
-            [ (tySum, Type :->: Type :->: Type)
-            , (tyProd, Type :->: Type :->: Type)
-            , (tyUnit, Type)
-            , (tyVoid, Type)
-            ]
+
+-- | Default KC Context.
+defContext :: Context
+defContext =
+  mempty
+    & context
+      .~ M.fromList
+        [ (tySum, Type :->: Type :->: Type)
+        , (tyProd, Type :->: Type :->: Type)
+        , (tyUnit, Type)
+        , (tyVoid, Type)
+        , (tyOpaque, Type)
+        ]
 
 --------------------------------------------------------------------------------
 -- Implementation
