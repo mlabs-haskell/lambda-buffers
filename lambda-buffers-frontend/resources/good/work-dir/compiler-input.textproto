@@ -23,31 +23,33 @@ modules {
         pos_to { column: 6 row: 3 }
       }
     }
-    ty_body {
-      sum {
-        constructors {
-          constr_name {
-            name: "MkA"
-            source_info {
-              file: "good/A.lbf"
-              pos_from { column: 9 row: 3 }
-              pos_to { column: 12 row: 3 }
-            }
-          }
-          product {
-            ntuple {
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkA"
               source_info {
                 file: "good/A.lbf"
-                pos_from { column: 12 row: 3 }
+                pos_from { column: 9 row: 3 }
                 pos_to { column: 12 row: 3 }
               }
             }
+            product {
+              ntuple {
+                source_info {
+                  file: "good/A.lbf"
+                  pos_from { column: 12 row: 3 }
+                  pos_to { column: 12 row: 3 }
+                }
+              }
+            }
           }
-        }
-        source_info {
-          file: "good/A.lbf"
-          pos_from { column: 9 row: 3 }
-          pos_to { column: 12 row: 3 }
+          source_info {
+            file: "good/A.lbf"
+            pos_from { column: 9 row: 3 }
+            pos_to { column: 12 row: 3 }
+          }
         }
       }
     }
@@ -96,31 +98,33 @@ modules {
         pos_to { column: 6 row: 3 }
       }
     }
-    ty_body {
-      sum {
-        constructors {
-          constr_name {
-            name: "MkA"
-            source_info {
-              file: "good/A/B.lbf"
-              pos_from { column: 9 row: 3 }
-              pos_to { column: 12 row: 3 }
-            }
-          }
-          product {
-            ntuple {
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkA"
               source_info {
                 file: "good/A/B.lbf"
-                pos_from { column: 12 row: 3 }
+                pos_from { column: 9 row: 3 }
                 pos_to { column: 12 row: 3 }
               }
             }
+            product {
+              ntuple {
+                source_info {
+                  file: "good/A/B.lbf"
+                  pos_from { column: 12 row: 3 }
+                  pos_to { column: 12 row: 3 }
+                }
+              }
+            }
           }
-        }
-        source_info {
-          file: "good/A/B.lbf"
-          pos_from { column: 9 row: 3 }
-          pos_to { column: 12 row: 3 }
+          source_info {
+            file: "good/A/B.lbf"
+            pos_from { column: 9 row: 3 }
+            pos_to { column: 12 row: 3 }
+          }
         }
       }
     }
@@ -161,31 +165,33 @@ modules {
         pos_to { column: 6 row: 3 }
       }
     }
-    ty_body {
-      sum {
-        constructors {
-          constr_name {
-            name: "MkA"
-            source_info {
-              file: "good/B.lbf"
-              pos_from { column: 9 row: 3 }
-              pos_to { column: 12 row: 3 }
-            }
-          }
-          product {
-            ntuple {
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkA"
               source_info {
                 file: "good/B.lbf"
-                pos_from { column: 12 row: 3 }
+                pos_from { column: 9 row: 3 }
                 pos_to { column: 12 row: 3 }
               }
             }
+            product {
+              ntuple {
+                source_info {
+                  file: "good/B.lbf"
+                  pos_from { column: 12 row: 3 }
+                  pos_to { column: 12 row: 3 }
+                }
+              }
+            }
           }
-        }
-        source_info {
-          file: "good/B.lbf"
-          pos_from { column: 9 row: 3 }
-          pos_to { column: 12 row: 3 }
+          source_info {
+            file: "good/B.lbf"
+            pos_from { column: 9 row: 3 }
+            pos_to { column: 12 row: 3 }
+          }
         }
       }
     }
@@ -226,31 +232,33 @@ modules {
         pos_to { column: 6 row: 3 }
       }
     }
-    ty_body {
-      sum {
-        constructors {
-          constr_name {
-            name: "MkA"
-            source_info {
-              file: "good/C.lbf"
-              pos_from { column: 9 row: 3 }
-              pos_to { column: 12 row: 3 }
-            }
-          }
-          product {
-            ntuple {
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkA"
               source_info {
                 file: "good/C.lbf"
-                pos_from { column: 12 row: 3 }
+                pos_from { column: 9 row: 3 }
                 pos_to { column: 12 row: 3 }
               }
             }
+            product {
+              ntuple {
+                source_info {
+                  file: "good/C.lbf"
+                  pos_from { column: 12 row: 3 }
+                  pos_to { column: 12 row: 3 }
+                }
+              }
+            }
           }
-        }
-        source_info {
-          file: "good/C.lbf"
-          pos_from { column: 9 row: 3 }
-          pos_to { column: 12 row: 3 }
+          source_info {
+            file: "good/C.lbf"
+            pos_from { column: 9 row: 3 }
+            pos_to { column: 12 row: 3 }
+          }
         }
       }
     }
@@ -632,38 +640,11 @@ modules {
         pos_to { column: 11 row: 20 }
       }
     }
-    ty_abs {
-      ty_args {
-        arg_name { name: "a" }
-        arg_kind { kind_ref: KIND_REF_TYPE }
-        source_info {
-          file: "good/Test.lbf"
-          pos_from { column: 12 row: 20 }
-          pos_to { column: 13 row: 20 }
-        }
-      }
-      ty_body { opaque {} }
-    }
+    ty_abs { ty_body { opaque {} } }
     source_info {
       file: "good/Test.lbf"
       pos_from { column: 1 row: 20 }
-      pos_to { column: 13 row: 20 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Bytes"
-      source_info {
-        file: "good/Test.lbf"
-        pos_from { column: 8 row: 21 }
-        pos_to { column: 13 row: 21 }
-      }
-    }
-    ty_body { opaque {} }
-    source_info {
-      file: "good/Test.lbf"
-      pos_from { column: 1 row: 21 }
-      pos_to { column: 13 row: 21 }
+      pos_to { column: 11 row: 20 }
     }
   }
   type_defs {
@@ -671,8 +652,8 @@ modules {
       name: "Foo"
       source_info {
         file: "good/Test.lbf"
-        pos_from { column: 5 row: 23 }
-        pos_to { column: 8 row: 23 }
+        pos_from { column: 5 row: 22 }
+        pos_to { column: 8 row: 22 }
       }
     }
     ty_abs {
@@ -681,8 +662,8 @@ modules {
         arg_kind { kind_ref: KIND_REF_TYPE }
         source_info {
           file: "good/Test.lbf"
-          pos_from { column: 9 row: 23 }
-          pos_to { column: 10 row: 23 }
+          pos_from { column: 9 row: 22 }
+          pos_to { column: 10 row: 22 }
         }
       }
       ty_body {
@@ -692,8 +673,8 @@ modules {
               name: "MkFoo"
               source_info {
                 file: "good/Test.lbf"
-                pos_from { column: 13 row: 23 }
-                pos_to { column: 18 row: 23 }
+                pos_from { column: 13 row: 22 }
+                pos_to { column: 18 row: 22 }
               }
             }
             product {
@@ -705,8 +686,42 @@ modules {
                         name: "A"
                         source_info {
                           file: "good/Test.lbf"
-                          pos_from { column: 5 row: 24 }
-                          pos_to { column: 6 row: 24 }
+                          pos_from { column: 5 row: 23 }
+                          pos_to { column: 6 row: 23 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "A"
+                          source_info {
+                            file: "good/Test.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 9 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "good/Test.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 9 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "good/Test.lbf"
+                        pos_from { column: 5 row: 23 }
+                        pos_to { column: 6 row: 23 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "A"
+                        source_info {
+                          file: "good/Test.lbf"
+                          pos_from { column: 7 row: 24 }
+                          pos_to { column: 8 row: 24 }
                         }
                       }
                       module_name {
@@ -727,7 +742,7 @@ modules {
                       source_info {
                         file: "good/Test.lbf"
                         pos_from { column: 5 row: 24 }
-                        pos_to { column: 6 row: 24 }
+                        pos_to { column: 8 row: 24 }
                       }
                     }
                   }
@@ -741,40 +756,6 @@ modules {
                           file: "good/Test.lbf"
                           pos_from { column: 7 row: 25 }
                           pos_to { column: 8 row: 25 }
-                        }
-                      }
-                      module_name {
-                        parts {
-                          name: "A"
-                          source_info {
-                            file: "good/Test.lbf"
-                            pos_from { column: 8 row: 3 }
-                            pos_to { column: 9 row: 3 }
-                          }
-                        }
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 8 row: 3 }
-                          pos_to { column: 9 row: 3 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 5 row: 25 }
-                        pos_to { column: 8 row: 25 }
-                      }
-                    }
-                  }
-                }
-                fields {
-                  ty_ref {
-                    foreign_ty_ref {
-                      ty_name {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 7 row: 26 }
-                          pos_to { column: 8 row: 26 }
                         }
                       }
                       module_name {
@@ -794,8 +775,8 @@ modules {
                       }
                       source_info {
                         file: "good/Test.lbf"
-                        pos_from { column: 5 row: 26 }
-                        pos_to { column: 8 row: 26 }
+                        pos_from { column: 5 row: 25 }
+                        pos_to { column: 8 row: 25 }
                       }
                     }
                   }
@@ -807,8 +788,8 @@ modules {
                         name: "A"
                         source_info {
                           file: "good/Test.lbf"
-                          pos_from { column: 9 row: 27 }
-                          pos_to { column: 10 row: 27 }
+                          pos_from { column: 9 row: 26 }
+                          pos_to { column: 10 row: 26 }
                         }
                       }
                       module_name {
@@ -836,8 +817,8 @@ modules {
                       }
                       source_info {
                         file: "good/Test.lbf"
-                        pos_from { column: 5 row: 27 }
-                        pos_to { column: 10 row: 27 }
+                        pos_from { column: 5 row: 26 }
+                        pos_to { column: 10 row: 26 }
                       }
                     }
                   }
@@ -849,8 +830,8 @@ modules {
                         name: "A"
                         source_info {
                           file: "good/Test.lbf"
-                          pos_from { column: 8 row: 28 }
-                          pos_to { column: 9 row: 28 }
+                          pos_from { column: 8 row: 27 }
+                          pos_to { column: 9 row: 27 }
                         }
                       }
                       module_name {
@@ -878,8 +859,42 @@ modules {
                       }
                       source_info {
                         file: "good/Test.lbf"
+                        pos_from { column: 5 row: 27 }
+                        pos_to { column: 9 row: 27 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "A"
+                        source_info {
+                          file: "good/Test.lbf"
+                          pos_from { column: 7 row: 28 }
+                          pos_to { column: 8 row: 28 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "C"
+                          source_info {
+                            file: "good/Test.lbf"
+                            pos_from { column: 18 row: 10 }
+                            pos_to { column: 19 row: 10 }
+                          }
+                        }
+                        source_info {
+                          file: "good/Test.lbf"
+                          pos_from { column: 18 row: 10 }
+                          pos_to { column: 19 row: 10 }
+                        }
+                      }
+                      source_info {
+                        file: "good/Test.lbf"
                         pos_from { column: 5 row: 28 }
-                        pos_to { column: 9 row: 28 }
+                        pos_to { column: 8 row: 28 }
                       }
                     }
                   }
@@ -900,40 +915,6 @@ modules {
                           name: "C"
                           source_info {
                             file: "good/Test.lbf"
-                            pos_from { column: 18 row: 10 }
-                            pos_to { column: 19 row: 10 }
-                          }
-                        }
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 10 }
-                          pos_to { column: 19 row: 10 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 5 row: 29 }
-                        pos_to { column: 8 row: 29 }
-                      }
-                    }
-                  }
-                }
-                fields {
-                  ty_ref {
-                    foreign_ty_ref {
-                      ty_name {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 7 row: 30 }
-                          pos_to { column: 8 row: 30 }
-                        }
-                      }
-                      module_name {
-                        parts {
-                          name: "C"
-                          source_info {
-                            file: "good/Test.lbf"
                             pos_from { column: 18 row: 11 }
                             pos_to { column: 19 row: 11 }
                           }
@@ -946,37 +927,37 @@ modules {
                       }
                       source_info {
                         file: "good/Test.lbf"
-                        pos_from { column: 5 row: 30 }
-                        pos_to { column: 8 row: 30 }
+                        pos_from { column: 5 row: 29 }
+                        pos_to { column: 8 row: 29 }
                       }
                     }
                   }
                 }
                 source_info {
                   file: "good/Test.lbf"
-                  pos_from { column: 2 row: 24 }
-                  pos_to { column: 8 row: 30 }
+                  pos_from { column: 2 row: 23 }
+                  pos_to { column: 8 row: 29 }
                 }
               }
             }
           }
           source_info {
             file: "good/Test.lbf"
-            pos_from { column: 13 row: 23 }
-            pos_to { column: 8 row: 30 }
+            pos_from { column: 13 row: 22 }
+            pos_to { column: 8 row: 29 }
           }
         }
       }
     }
     source_info {
       file: "good/Test.lbf"
-      pos_from { column: 1 row: 23 }
-      pos_to { column: 8 row: 30 }
+      pos_from { column: 1 row: 22 }
+      pos_to { column: 8 row: 29 }
     }
   }
   source_info {
     file: "good/Test.lbf"
     pos_from { column: 1 row: 1 }
-    pos_to { column: 1 row: 31 }
+    pos_to { column: 1 row: 30 }
   }
 }
