@@ -68,7 +68,7 @@ makeEffect ''GlobalCheck
 data ModuleCheck a where -- Module
   KCTypeDefinition :: ModName -> Context -> PC.TyDef -> ModuleCheck Kind
 
--- fixme(cstml & gnumonik): lets reach consensus on these - Note(1).
+-- NOTE(cstml & gnumonik): Lets reach consensus on these - Note(1).
 --  KCClassInstance :: Context -> P.InstanceClause -> ModuleCheck ()
 --  KCClass :: Context -> P.ClassDef -> ModuleCheck ()
 
@@ -78,8 +78,6 @@ data KindCheck a where
   TypesFromTyDef :: ModName -> PC.TyDef -> KindCheck [Type]
   InferTypeKind :: ModName -> PC.TyDef -> Context -> Type -> KindCheck Kind
   CheckKindConsistency :: ModName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
-
---  TypeFromTyDef :: ModName -> P.TyDef -> KindCheck Type -- replaced with constructor by constructor check
 
 makeEffect ''KindCheck
 
@@ -139,7 +137,6 @@ localStrategy = reinterpret $ \case
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
-  --  TypeFromTyDef moduleName tydef -> runReader moduleName (tyDef2Type tydef)
   TypesFromTyDef moduleName tydef -> runReader moduleName (tyDef2Types tydef)
   InferTypeKind _modName tyDef ctx ty -> either (handleErr tyDef) pure $ infer ctx ty
   CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
@@ -278,7 +275,7 @@ pKind2Kind k =
   case k ^. #kind of
     PC.KindRef PC.KType -> Type
     PC.KindArrow l r -> pKind2Kind l :->: pKind2Kind r
-    -- FIXME(cstml) what is an undefined type meant to mean?
+    -- NOTE(cstml): What is an Kind type meant to mean?
     _ -> error "Fixme undefined type"
 
 -- =============================================================================
