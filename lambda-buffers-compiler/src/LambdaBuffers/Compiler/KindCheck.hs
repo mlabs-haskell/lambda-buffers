@@ -36,7 +36,7 @@ import LambdaBuffers.Compiler.KindCheck.Inference (
  )
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (kind2ProtoKind)
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyProd, tySum, tyUnit, tyVoid)
+import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyOpaque, tyProd, tySum, tyUnit, tyVoid)
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat ()
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -459,7 +459,7 @@ tyBody2Types ::
   PC.TyBody ->
   Eff eff [Type]
 tyBody2Types = \case
-  PC.OpaqueI _ -> pure [Var $ LocalRef "Opaque"]
+  PC.OpaqueI _ -> pure [Var tyOpaque]
   PC.SumI s -> sum2Types s
 
 sum2Types ::
