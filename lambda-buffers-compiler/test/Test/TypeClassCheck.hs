@@ -2,12 +2,13 @@
 
 module Test.TypeClassCheck (test) where
 
-import Control.Lens ((.~))
+import Control.Lens ((.~), (^.))
+import Data.Foldable (Foldable (toList))
 import Data.Function ((&))
+import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
-import Data.Traversable (for)
-import LambdaBuffers.Compiler.ProtoCompat (IsMessage (fromProto))
+import LambdaBuffers.Compiler.ProtoCompat (runFromProto)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import LambdaBuffers.Compiler.TypeClass.Pat (
   Pat (
@@ -34,10 +35,11 @@ import LambdaBuffers.Compiler.TypeClass.Rules (
 import LambdaBuffers.Compiler.TypeClass.Rules qualified as R
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap), solve)
 import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
-import Proto.Compiler (ClassDef, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
-import Proto.Compiler_Fields (argKind, argName, arguments, classArgs, className, classRef, kindRef, localClassRef, name, supers, tyVar, varName)
+import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
+import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, kindRef, localClassRef, moduleName, modules, name, parts, supers, tyVar, varName)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
+import Test.Utils.Constructors (_ModuleName)
 
 test :: TestTree
 test =
@@ -56,17 +58,25 @@ cycleTests =
 noCycleDetected :: TestTree
 noCycleDetected =
   testCase "No cycle detected" $ do
-    nocycles' <- classDefsFromProto nocycles
-    detectSuperclassCycles' nocycles' @?= []
+    nocycles' <- fromProto' nocycles
+    case Map.lookup (_ModuleName ["ModuleWithNoClassCycles"]) (nocycles' ^. #modules) of
+      Nothing -> assertFailure "Failed lookup to ModuleWithClassNoClassCycles"
+      Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= []
 
 cycleDetected :: TestTree
 cycleDetected =
   testCase "Cycle detected" $ do
-    cycles' <- classDefsFromProto cycles
-    detectSuperclassCycles' cycles' @?= [["Bar", "Foo", "Bop", "Bar"], ["Bop", "Bar", "Foo", "Bop"], ["Foo", "Bop", "Bar", "Foo"]]
+    cycles' <- fromProto' cycles
+    case Map.lookup (_ModuleName ["ModuleWithClassCycles"]) (cycles' ^. #modules) of
+      Nothing -> assertFailure "Failed lookup to ModuleWithClassCycles"
+      Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= [["Bar", "Foo", "Bop", "Bar"], ["Bop", "Bar", "Foo", "Bop"], ["Foo", "Bop", "Bar", "Foo"]]
 
-classDefsFromProto :: [ClassDef] -> IO [ProtoCompat.ClassDef]
-classDefsFromProto cds = for cds (either (\err -> assertFailure $ "FromProto failed with " <> show err) return . fromProto @ClassDef @ProtoCompat.ClassDef)
+fromProto' :: CompilerInput -> IO ProtoCompat.CompilerInput
+fromProto' compInp =
+  either
+    (\errs -> assertFailure $ "FromProto failed with " <> show errs)
+    return
+    (runFromProto compInp)
 
 star :: Kind
 star = defMessage & kindRef .~ Kind'KIND_REF_TYPE
@@ -86,22 +96,34 @@ constraint :: Text -> Proto.Compiler.Constraint
 constraint nm =
   defMessage
     & classRef . localClassRef . className . name .~ nm
-    & arguments .~ [defMessage & tyVar . varName . name .~ "a"]
+    & args .~ [defMessage & tyVar . varName . name .~ "a"]
 
-cycles :: [ClassDef]
+cycles :: CompilerInput
 cycles =
-  [ mkclass "Foo" ["Bar", "Baz", "Beep"]
-  , mkclass "Bar" ["Bip", "Bop"]
-  , mkclass "Bop" ["Foo"]
-  ]
+  defMessage
+    & modules
+      .~ [ defMessage
+            & moduleName . parts .~ [defMessage & name .~ "ModuleWithClassCycles"]
+            & classDefs
+              .~ [ mkclass "Foo" ["Bar", "Baz", "Beep"]
+                 , mkclass "Bar" ["Bip", "Bop"]
+                 , mkclass "Bop" ["Foo"]
+                 ]
+         ]
 
-nocycles :: [ClassDef]
+nocycles :: CompilerInput
 nocycles =
-  [ mkclass "Functor" []
-  , mkclass "Applicative" ["Functor"]
-  , mkclass "Monad" ["Applicative"]
-  , mkclass "Traversable" ["Foldable", "Functor"]
-  ]
+  defMessage
+    & modules
+      .~ [ defMessage
+            & moduleName . parts .~ [defMessage & name .~ "ModuleWithNoClassCycles"]
+            & classDefs
+              .~ [ mkclass "Functor" []
+                 , mkclass "Applicative" ["Functor"]
+                 , mkclass "Monad" ["Applicative"]
+                 , mkclass "Traversable" ["Foldable", "Functor"]
+                 ]
+         ]
 
 ---- Solver tests
 

@@ -77,6 +77,10 @@ type term can only be introduced in the context of a
 */
 message TyAbs {
   // List of type variables.
+  // No type arguments means `delay` or `const ty_body`,
+  // meaning `TyAbs [] ty_body = ty_body`.
+  // Duplicate type arguments MUST be reported with
+  // `ProtoParseError.MultipleTyArgError`.
   repeated TyArg ty_args = 1;
   // Type body.
   TyBody ty_body = 2;
@@ -92,6 +96,7 @@ message TyApp {
   // Type function. TODO(bladyjoker): Rename to ty_abs?
   Ty ty_func = 1;
   // Arguments to apply.
+  // No arguments to apply means `force`, meaning `TyApp ty_func [] = ty_func``
   repeated Ty ty_args = 2;
   // Source information.
   SourceInfo source_info = 3;
@@ -189,23 +194,6 @@ message ClassName {
   SourceInfo source_info = 2;
 }
 
-/* Naming error message */
-message NamingError {
-  enum NameType {
-    NAME_TYPE_UNSPECIFIED = 0;
-    NAME_TYPE_MODULE = 1;
-    NAME_TYPE_TYPE = 2;
-    NAME_TYPE_VAR = 3;
-    NAME_TYPE_CONSTR = 4;
-    NAME_TYPE_FIELD = 5;
-    NAME_TYPE_CLASS = 6;
-  };
-  // Type of name.
-  NameType name_type = 1;
-  // Source information.
-  SourceInfo source_info = 2;
-}
-
 /* Type definition
 
 A type definition consists of a type name and its associated type term.
@@ -223,7 +211,7 @@ message TyDef {
   // Type name.
   TyName ty_name = 1;
   // Type term.
-  TyAbs ty_abs = 2; // TODO(bladyjoker): Turn into a oneOf TyAbs | Ty
+  TyAbs ty_abs = 2;
   // Source information.
   SourceInfo source_info = 3;
 }
@@ -344,8 +332,6 @@ type Foo_ a b = Either
     (b, ConstrName)
   )
 ```
-
-TODO(bladyjoker): Cleanup.
 */
 message Sum {
   // Constructor of a Sum type is a Product type term.
@@ -358,6 +344,10 @@ message Sum {
     Product product = 2;
   };
   // Sum type constructors.
+  // Empty `constructors` means `void` and means that the type can't be
+  // constructed. Compiler MAY report an error.
+  // Duplicate constructors MUST be reported with
+  // `ProtoParseError.MultipleConstructorError`.
   repeated Constructor constructors = 1;
   // Source information.
   SourceInfo source_info = 2;
@@ -396,6 +386,9 @@ message Product {
     SourceInfo source_info = 2;
   }
   // A product is a record or a tuple.
+  // A record or a tuple with no fields means `unit`.
+  // Duplicate fields in a record MUST be reported with
+  // `ProtoParseError.MultipleFieldError`.
   oneof product {
     Record record = 1;
     NTuple ntuple = 2;
@@ -426,8 +419,9 @@ TODO(bladyjoker): Cleanup and reformulate with Sean.
 message ClassDef {
   // Type class name.
   ClassName class_name = 1;
-  // Type class arguments. Currently the Compiler only accepts single parameter
-  // type class declarations.
+  // Type class arguments.
+  // Class with no arguments is a trivial class. Compiler MAY report an error.
+  // TODO(bladyjoker): MultipleClassArgError.
   repeated TyArg class_args = 2;
   // Superclass constraints.
   repeated Constraint supers = 3;
@@ -469,17 +463,18 @@ message TyClassRef {
   }
 }
 
-/* Type class instances
+/* Type class instances (rules)
 
 Instance clauses enable users to specify 'semantic' rules for their types.
 */
 message InstanceClause {
   // Type class name.
   TyClassRef class_ref = 1;
-  // Head of the instance clause. Currently, the Compiler only accepts single
-  // parameter type classes.
-  repeated Ty heads = 2;
-  // Body of the rule, conjunction of constraints.
+  // Instance (rule) arguments.
+  // Instance clause with no arguments is a trivial instance clause.
+  // Compiler MAY report an error.
+  repeated Ty args = 2;
+  // Instance (rule) body, conjunction of constraints.
   repeated Constraint constraints = 3;
   // Source information.
   SourceInfo source_info = 4;
@@ -490,7 +485,9 @@ message Constraint {
   // Name of the type class.
   TyClassRef class_ref = 1;
   // Constraint arguments.
-  repeated Ty arguments = 2;
+  // Constraint with no arguments is a trivial constraint.
+  // Compiler MAY report an error.
+  repeated Ty args = 2;
   // Source information.
   SourceInfo source_info = 3;
 }
@@ -503,12 +500,19 @@ message Module {
   // Module name.
   ModuleName module_name = 1;
   // Type definitions.
+  // Duplicate type definitions MUST be reported with
+  // `ProtoParseError.MultipleTyDefError`.
   repeated TyDef type_defs = 2;
   // Type class definitions.
+  // Duplicate class definitions MUST be reported with
+  // `ProtoParseError.MultipleClassDefError`.
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
-  // Imported modules the Compiler consults when searching for instance clauses.
+  // Imported modules the Compiler consults when searching for
+  // instance clauses.
+  // Duplicate imports MUST be reported with
+  // `ProtoParseError.MultipleImportError`.
   repeated ModuleName imports = 5;
   // Source information.
   SourceInfo source_info = 6;
@@ -521,15 +525,115 @@ compilation closure needed by the Compiler to perform its task.
 */
 message CompilerInput {
   // Modules to compile.
+  // Duplicate modules MUST be reported with
+  // `ProtoParseError.MultipleModuleError`.
   repeated Module modules = 1;
 }
 
 // Internal errors.
 message InternalError {
-  string internal_error = 1;
+  string msg = 1;
 }
 
-// Kindchecker errors.
+// All errors that occur because of Google Protocol Buffer's inability to
+// enforce certain invariants.
+// Some of invariance:
+// - using Proto `map` restricts users to `string` keys which impacts
+//   API documentation, which is why `repeated` fields are used throughout,
+// - using Proto 'oneof' means users have to check if such a field is
+//   set or report an error otherwise.
+message ProtoParseError {
+  // Multiple Modules with the same ModuleName were found.
+  message MultipleModuleError {
+    // Conflicting type definitions.
+    repeated Module modules = 2;
+  }
+
+  // Multiple TyDefs with the same TyName were found in ModuleName.
+  message MultipleTyDefError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting type definitions.
+    repeated TyDef ty_defs = 2;
+  }
+
+  // Multiple ClassDefs with the same ClassName were found in ModuleName.
+  message MultipleClassDefError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting class definitions.
+    repeated ClassDef class_defs = 2;
+  }
+
+  // Multiple TyArgs with the same ArgName were found in ModuleName.TyDef.
+  message MultipleTyArgError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting type abstraction arguments.
+    repeated TyArg ty_args = 3;
+  }
+
+  // Multiple Sum Constructors with the same ConstrName were found in
+  // ModuleName.TyDef.
+  message MultipleConstructorError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting constructors.
+    repeated Sum.Constructor constructors = 3;
+  }
+
+  // Multiple Record Fields with the same FieldName were found in
+  // ModuleName.TyDef.
+  message MultipleFieldError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Type definition in which the error was found.
+    TyDef ty_def = 2;
+    // Conflicting record fields.
+    repeated Product.Record.Field fields = 3;
+  }
+
+  message MultipleImportError {
+    // Module in which the error was found.
+    ModuleName module_name = 1;
+    // Conflicting module imports.
+    repeated ModuleName imports = 2;
+  }
+
+  // Proto `oneof` field is not set.
+  message OneOfNotSetError {
+    // Proto message name in which the `oneof` field is not set.
+    string message_name = 1;
+    // The `oneof` field that is not set.
+    string field_name = 2;
+  }
+
+  // Proto `enum` field is unknown.
+  message UnknownEnumError {
+    // Proto `enum` name.
+    string enum_name = 1;
+    // The unknown tag for the `enum`.
+    string got_tag = 2;
+  }
+
+  oneof proto_parse_error {
+    MultipleModuleError multiple_module_error = 1;
+    MultipleTyDefError multiple_tydef_error = 2;
+    MultipleClassDefError multiple_classdef_error = 3;
+    MultipleTyArgError multiple_tyarg_error = 4;
+    MultipleConstructorError multiple_constructor_error = 5;
+    MultipleFieldError multiple_field_error = 6;
+    MultipleImportError multiple_import_error = 7;
+    OneOfNotSetError one_of_not_set_error = 8;
+    UnknownEnumError unknown_enum_error = 9;
+  }
+}
+
+// Kind checking errors.
 message KindCheckError {
 
   // Error referring to an unbound term. This usually means that the term was
@@ -553,7 +657,6 @@ message KindCheckError {
     Kind ty_kind_2 = 3;
   }
 
-  // Error reads:
   // Inifinitely recursive term detected in definition ty_name.
   message RecursiveKindError {
     TyName ty_name = 1;
@@ -566,43 +669,48 @@ message KindCheckError {
     Kind defined_kind = 3;
   }
 
-  // Multiple TyDefs with the same TyName were found in ModuleName.
-  message MultipleTyDefError {
-    // Module in which the error was found.
-    ModuleName module_name = 1;
-    // Conflicting type definitions.
-    repeated TyDef ty_defs = 2;
-  }
-
-  // The types of inference errors.
+  // One of the errors occurred during kind checking.
   oneof kind_check_error {
     UnboundTermError unbound_term_error = 1;
     ImpossibleUnificationError unification_error = 2;
     RecursiveKindError recursive_subs_error = 3;
     InconsistentTypeError inconsistent_type_error = 4;
-    MultipleTyDefError multiple_tydef_error = 5;
   }
 }
 
-// Compiler Error can be extended with other classes of errors.
-message CompilerError {
-
-  // Reason why the compilation failed.
-  oneof compiler_error {
-    KindCheckError kind_check_error = 1;
-    InternalError internal_error = 3;
+/* Naming error message */
+message NamingError {
+  // One of naming errors.
+  oneof naming_error {
+    ModuleNamePart module_name_err = 1;
+    TyName ty_name_err = 2;
+    VarName var_name_err = 3;
+    ConstrName constr_name_err = 4;
+    FieldName field_name_err = 5;
+    ClassName class_name_err = 6;
   }
+}
+
+// Compiler Error
+message CompilerError {
+  // Errors occurred during proto parsing.
+  repeated ProtoParseError proto_parse_errors = 1;
+  // Errors occurred during naming checking.
+  repeated NamingError naming_errors = 2;
+  // Errors occurred during kind checking.
+  repeated KindCheckError kind_check_errors = 4;
+  // Errors internal to the compiler implementation.
+  repeated InternalError internal_errors = 5;
 }
 
 // Compiler Result ~ a successful Compilation Output.
 message CompilerResult {
-  // equivalent of unit.
 }
 
 // Output of the Compiler.
 message CompilerOutput {
   oneof compiler_output {
-    CompilerError compilation_error = 1;
-    CompilerResult compilation_result = 2;
+    CompilerError compiler_error = 1;
+    CompilerResult compiler_result = 2;
   }
 }
