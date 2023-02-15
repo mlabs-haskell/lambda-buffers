@@ -6,13 +6,22 @@
 - [compiler.proto](#compiler-proto)
     - [ClassDef](#lambdabuffers-compiler-ClassDef)
     - [ClassName](#lambdabuffers-compiler-ClassName)
+    - [CompilerError](#lambdabuffers-compiler-CompilerError)
     - [CompilerInput](#lambdabuffers-compiler-CompilerInput)
+    - [CompilerOutput](#lambdabuffers-compiler-CompilerOutput)
+    - [CompilerResult](#lambdabuffers-compiler-CompilerResult)
     - [ConstrName](#lambdabuffers-compiler-ConstrName)
     - [Constraint](#lambdabuffers-compiler-Constraint)
     - [FieldName](#lambdabuffers-compiler-FieldName)
     - [InstanceClause](#lambdabuffers-compiler-InstanceClause)
+    - [InternalError](#lambdabuffers-compiler-InternalError)
     - [Kind](#lambdabuffers-compiler-Kind)
     - [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow)
+    - [KindCheckError](#lambdabuffers-compiler-KindCheckError)
+    - [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError)
+    - [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError)
+    - [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError)
+    - [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError)
     - [Module](#lambdabuffers-compiler-Module)
     - [ModuleName](#lambdabuffers-compiler-ModuleName)
     - [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart)
@@ -22,6 +31,16 @@
     - [Product.NTuple](#lambdabuffers-compiler-Product-NTuple)
     - [Product.Record](#lambdabuffers-compiler-Product-Record)
     - [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field)
+    - [ProtoParseError](#lambdabuffers-compiler-ProtoParseError)
+    - [ProtoParseError.MultipleClassDefError](#lambdabuffers-compiler-ProtoParseError-MultipleClassDefError)
+    - [ProtoParseError.MultipleConstructorError](#lambdabuffers-compiler-ProtoParseError-MultipleConstructorError)
+    - [ProtoParseError.MultipleFieldError](#lambdabuffers-compiler-ProtoParseError-MultipleFieldError)
+    - [ProtoParseError.MultipleImportError](#lambdabuffers-compiler-ProtoParseError-MultipleImportError)
+    - [ProtoParseError.MultipleModuleError](#lambdabuffers-compiler-ProtoParseError-MultipleModuleError)
+    - [ProtoParseError.MultipleTyArgError](#lambdabuffers-compiler-ProtoParseError-MultipleTyArgError)
+    - [ProtoParseError.MultipleTyDefError](#lambdabuffers-compiler-ProtoParseError-MultipleTyDefError)
+    - [ProtoParseError.OneOfNotSetError](#lambdabuffers-compiler-ProtoParseError-OneOfNotSetError)
+    - [ProtoParseError.UnknownEnumError](#lambdabuffers-compiler-ProtoParseError-UnknownEnumError)
     - [SourceInfo](#lambdabuffers-compiler-SourceInfo)
     - [SourcePosition](#lambdabuffers-compiler-SourcePosition)
     - [Sum](#lambdabuffers-compiler-Sum)
@@ -31,6 +50,9 @@
     - [TyApp](#lambdabuffers-compiler-TyApp)
     - [TyArg](#lambdabuffers-compiler-TyArg)
     - [TyBody](#lambdabuffers-compiler-TyBody)
+    - [TyClassRef](#lambdabuffers-compiler-TyClassRef)
+    - [TyClassRef.Foreign](#lambdabuffers-compiler-TyClassRef-Foreign)
+    - [TyClassRef.Local](#lambdabuffers-compiler-TyClassRef-Local)
     - [TyDef](#lambdabuffers-compiler-TyDef)
     - [TyName](#lambdabuffers-compiler-TyName)
     - [TyRef](#lambdabuffers-compiler-TyRef)
@@ -41,7 +63,6 @@
     - [VarName](#lambdabuffers-compiler-VarName)
   
     - [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef)
-    - [NamingError.NameType](#lambdabuffers-compiler-NamingError-NameType)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -82,7 +103,7 @@ TODO(bladyjoker): Cleanup and reformulate with Sean.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
-| class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Type class arguments. Currently the Compiler only accepts single parameter type class declarations. |
+| class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Type class arguments. Class with no arguments is a trivial class. Compiler MAY report an error. TODO(bladyjoker): MultipleClassArgError. |
 | supers | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Superclass constraints. |
 | documentation | [string](#string) |  | Documentation elaborating on the type class. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
@@ -108,6 +129,24 @@ Type class name
 
 
 
+<a name="lambdabuffers-compiler-CompilerError"></a>
+
+### CompilerError
+Compiler Error
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| proto_parse_errors | [ProtoParseError](#lambdabuffers-compiler-ProtoParseError) | repeated | Errors occurred during proto parsing. |
+| naming_errors | [NamingError](#lambdabuffers-compiler-NamingError) | repeated | Errors occurred during naming checking. |
+| kind_check_errors | [KindCheckError](#lambdabuffers-compiler-KindCheckError) | repeated | Errors occurred during kind checking. |
+| internal_errors | [InternalError](#lambdabuffers-compiler-InternalError) | repeated | Errors internal to the compiler implementation. |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-CompilerInput"></a>
 
 ### CompilerInput
@@ -119,7 +158,33 @@ compilation closure needed by the Compiler to perform its task.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| modules | [Module](#lambdabuffers-compiler-Module) | repeated | Modules to compile. |
+| modules | [Module](#lambdabuffers-compiler-Module) | repeated | Modules to compile. Duplicate modules MUST be reported with `ProtoParseError.MultipleModuleError`. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerOutput"></a>
+
+### CompilerOutput
+Output of the Compiler.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| compiler_error | [CompilerError](#lambdabuffers-compiler-CompilerError) |  |  |
+| compiler_result | [CompilerResult](#lambdabuffers-compiler-CompilerResult) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerResult"></a>
+
+### CompilerResult
+Compiler Result ~ a successful Compilation Output.
 
 
 
@@ -150,8 +215,8 @@ Constraint expression
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Name of the type class. |
-| arguments | [Ty](#lambdabuffers-compiler-Ty) | repeated | Constraint arguments. |
+| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Name of the type class. |
+| args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Constraint arguments. Constraint with no arguments is a trivial constraint. Compiler MAY report an error. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -178,17 +243,32 @@ Record type field name
 <a name="lambdabuffers-compiler-InstanceClause"></a>
 
 ### InstanceClause
-Type class instances
+Type class instances (rules)
 
 Instance clauses enable users to specify &#39;semantic&#39; rules for their types.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
-| heads | [Ty](#lambdabuffers-compiler-Ty) | repeated | Head of the instance clause. Currently, the Compiler only accepts single parameter type classes. |
-| constraints | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Body of the rule, conjunction of constraints. |
+| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Type class name. |
+| args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Instance (rule) arguments. Instance clause with no arguments is a trivial instance clause. Compiler MAY report an error. |
+| constraints | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Instance (rule) body, conjunction of constraints. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-InternalError"></a>
+
+### InternalError
+Internal errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| msg | [string](#string) |  |  |
 
 
 
@@ -210,7 +290,6 @@ etc.
 | ----- | ---- | ----- | ----------- |
 | kind_ref | [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef) |  |  |
 | kind_arrow | [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow) |  |  |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -233,6 +312,97 @@ A kind arrow.
 
 
 
+<a name="lambdabuffers-compiler-KindCheckError"></a>
+
+### KindCheckError
+Kind checking errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| unbound_term_error | [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError) |  |  |
+| unification_error | [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError) |  |  |
+| recursive_subs_error | [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError) |  |  |
+| inconsistent_type_error | [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError"></a>
+
+### KindCheckError.ImpossibleUnificationError
+Unification has failed - type is incorrectly defined. Error reads as
+follows:
+&gt; In ty_name definition an error has occurred when trying to unify kind
+&gt; ty_kind_1 with ty_kind_2.
+
+FIXME(cstml): add source of constraint to the error such that user can see
+where the constraint was generated - therefore where the error precisely
+is.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| ty_kind_1 | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| ty_kind_2 | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-InconsistentTypeError"></a>
+
+### KindCheckError.InconsistentTypeError
+The inferred type differs from the type as defined.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| inferred_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| defined_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-RecursiveKindError"></a>
+
+### KindCheckError.RecursiveKindError
+Inifinitely recursive term detected in definition ty_name.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-UnboundTermError"></a>
+
+### KindCheckError.UnboundTermError
+Error referring to an unbound term. This usually means that the term was
+not defined.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| var_name | [VarName](#lambdabuffers-compiler-VarName) |  |  |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-Module"></a>
 
 ### Module
@@ -244,9 +414,10 @@ A module encapsulates type, class and instance definitions.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module name. |
-| type_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated | Type definitions. |
-| class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated | Type class definitions. |
+| type_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated | Type definitions. Duplicate type definitions MUST be reported with `ProtoParseError.MultipleTyDefError`. |
+| class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated | Type class definitions. Duplicate class definitions MUST be reported with `ProtoParseError.MultipleClassDefError`. |
 | instances | [InstanceClause](#lambdabuffers-compiler-InstanceClause) | repeated | Type class instance clauses. |
+| imports | [ModuleName](#lambdabuffers-compiler-ModuleName) | repeated | Imported modules the Compiler consults when searching for instance clauses. Duplicate imports MUST be reported with `ProtoParseError.MultipleImportError`. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -294,8 +465,12 @@ Naming error message
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name_type | [NamingError.NameType](#lambdabuffers-compiler-NamingError-NameType) |  | Type of name. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+| module_name_err | [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart) |  |  |
+| ty_name_err | [TyName](#lambdabuffers-compiler-TyName) |  |  |
+| var_name_err | [VarName](#lambdabuffers-compiler-VarName) |  |  |
+| constr_name_err | [ConstrName](#lambdabuffers-compiler-ConstrName) |  |  |
+| field_name_err | [FieldName](#lambdabuffers-compiler-FieldName) |  |  |
+| class_name_err | [ClassName](#lambdabuffers-compiler-ClassName) |  |  |
 
 
 
@@ -406,6 +581,183 @@ Field in a record type.
 
 
 
+<a name="lambdabuffers-compiler-ProtoParseError"></a>
+
+### ProtoParseError
+All errors that occur because of Google Protocol Buffer&#39;s inability to
+enforce certain invariants.
+Some of invariance:
+- using Proto `map` restricts users to `string` keys which impacts
+  API documentation, which is why `repeated` fields are used throughout,
+- using Proto &#39;oneof&#39; means users have to check if such a field is
+  set or report an error otherwise.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| multiple_module_error | [ProtoParseError.MultipleModuleError](#lambdabuffers-compiler-ProtoParseError-MultipleModuleError) |  |  |
+| multiple_tydef_error | [ProtoParseError.MultipleTyDefError](#lambdabuffers-compiler-ProtoParseError-MultipleTyDefError) |  |  |
+| multiple_classdef_error | [ProtoParseError.MultipleClassDefError](#lambdabuffers-compiler-ProtoParseError-MultipleClassDefError) |  |  |
+| multiple_tyarg_error | [ProtoParseError.MultipleTyArgError](#lambdabuffers-compiler-ProtoParseError-MultipleTyArgError) |  |  |
+| multiple_constructor_error | [ProtoParseError.MultipleConstructorError](#lambdabuffers-compiler-ProtoParseError-MultipleConstructorError) |  |  |
+| multiple_field_error | [ProtoParseError.MultipleFieldError](#lambdabuffers-compiler-ProtoParseError-MultipleFieldError) |  |  |
+| multiple_import_error | [ProtoParseError.MultipleImportError](#lambdabuffers-compiler-ProtoParseError-MultipleImportError) |  |  |
+| one_of_not_set_error | [ProtoParseError.OneOfNotSetError](#lambdabuffers-compiler-ProtoParseError-OneOfNotSetError) |  |  |
+| unknown_enum_error | [ProtoParseError.UnknownEnumError](#lambdabuffers-compiler-ProtoParseError-UnknownEnumError) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleClassDefError"></a>
+
+### ProtoParseError.MultipleClassDefError
+Multiple ClassDefs with the same ClassName were found in ModuleName.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated | Conflicting class definitions. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleConstructorError"></a>
+
+### ProtoParseError.MultipleConstructorError
+Multiple Sum Constructors with the same ConstrName were found in
+ModuleName.TyDef.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  | Type definition in which the error was found. |
+| constructors | [Sum.Constructor](#lambdabuffers-compiler-Sum-Constructor) | repeated | Conflicting constructors. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleFieldError"></a>
+
+### ProtoParseError.MultipleFieldError
+Multiple Record Fields with the same FieldName were found in
+ModuleName.TyDef.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  | Type definition in which the error was found. |
+| fields | [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field) | repeated | Conflicting record fields. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleImportError"></a>
+
+### ProtoParseError.MultipleImportError
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| imports | [ModuleName](#lambdabuffers-compiler-ModuleName) | repeated | Conflicting module imports. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleModuleError"></a>
+
+### ProtoParseError.MultipleModuleError
+Multiple Modules with the same ModuleName were found.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| modules | [Module](#lambdabuffers-compiler-Module) | repeated | Conflicting type definitions. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleTyArgError"></a>
+
+### ProtoParseError.MultipleTyArgError
+Multiple TyArgs with the same ArgName were found in ModuleName.TyDef.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  | Type definition in which the error was found. |
+| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Conflicting type abstraction arguments. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-MultipleTyDefError"></a>
+
+### ProtoParseError.MultipleTyDefError
+Multiple TyDefs with the same TyName were found in ModuleName.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
+| ty_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated | Conflicting type definitions. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-OneOfNotSetError"></a>
+
+### ProtoParseError.OneOfNotSetError
+Proto `oneof` field is not set.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| message_name | [string](#string) |  | Proto message name in which the `oneof` field is not set. |
+| field_name | [string](#string) |  | The `oneof` field that is not set. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-ProtoParseError-UnknownEnumError"></a>
+
+### ProtoParseError.UnknownEnumError
+Proto `enum` field is unknown.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| enum_name | [string](#string) |  | Proto `enum` name. |
+| got_tag | [string](#string) |  | The unknown tag for the `enum`. |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-SourceInfo"></a>
 
 ### SourceInfo
@@ -473,12 +825,10 @@ type Foo_ a b = Either
 )
 ```
 
-TODO(bladyjoker): Cleanup.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| constructors | [Sum.Constructor](#lambdabuffers-compiler-Sum-Constructor) | repeated | Sum type constructors. |
+| constructors | [Sum.Constructor](#lambdabuffers-compiler-Sum-Constructor) | repeated | Sum type constructors. Empty `constructors` means `void` and means that the type can&#39;t be constructed. Compiler MAY report an error. Duplicate constructors MUST be reported with `ProtoParseError.MultipleConstructorError`. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -553,7 +903,7 @@ type term can only be introduced in the context of a
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | List of type variables. |
+| ty_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | List of type variables. No type arguments means `delay` or `const ty_body`, meaning `TyAbs [] ty_body = ty_body`. Duplicate type arguments MUST be reported with `ProtoParseError.MultipleTyArgError`. |
 | ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | Type body. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
@@ -573,7 +923,7 @@ A type expression that applies a type abstraction to a list of arguments.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ty_func | [Ty](#lambdabuffers-compiler-Ty) |  | Type function. TODO(bladyjoker): Rename to ty_abs? |
-| ty_args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Arguments to apply. |
+| ty_args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Arguments to apply. No arguments to apply means `force`, meaning `TyApp ty_func [] = ty_func`` |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -631,6 +981,55 @@ TODO: Add Tuple and Record type bodies.
 
 
 
+<a name="lambdabuffers-compiler-TyClassRef"></a>
+
+### TyClassRef
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| local_class_ref | [TyClassRef.Local](#lambdabuffers-compiler-TyClassRef-Local) |  |  |
+| foreign_class_ref | [TyClassRef.Foreign](#lambdabuffers-compiler-TyClassRef-Foreign) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassRef-Foreign"></a>
+
+### TyClassRef.Foreign
+Foreign class reference.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Foreign module class name. |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Foreign module name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassRef-Local"></a>
+
+### TyClassRef.Local
+Local type reference.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Local module class name. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-TyDef"></a>
 
 ### TyDef
@@ -651,8 +1050,7 @@ Once introduced in the module scope, type definitions are referred to using
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ty_name | [TyName](#lambdabuffers-compiler-TyName) |  | Type name. |
-| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type abstraction can only be introduced in TyDef context. |
-| ty_body | [TyBody](#lambdabuffers-compiler-TyBody) |  | The body can be introduced in TyDef directly or under TyAbs. |
+| ty_abs | [TyAbs](#lambdabuffers-compiler-TyAbs) |  | Type term. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -786,23 +1184,6 @@ A built-in kind.
 | ---- | ------ | ----------- |
 | KIND_REF_UNSPECIFIED | 0 | Unspecified kind SHOULD be inferred by the Compiler. |
 | KIND_REF_TYPE | 1 | A `Type` kind (also know as `*` in Haskell) built-in. |
-
-
-
-<a name="lambdabuffers-compiler-NamingError-NameType"></a>
-
-### NamingError.NameType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| NAME_TYPE_UNSPECIFIED | 0 |  |
-| NAME_TYPE_MODULE | 1 |  |
-| NAME_TYPE_TYPE | 2 |  |
-| NAME_TYPE_VAR | 3 |  |
-| NAME_TYPE_CONSTR | 4 |  |
-| NAME_TYPE_FIELD | 5 |  |
-| NAME_TYPE_CLASS | 6 |  |
 
 
  
