@@ -29,10 +29,10 @@ compile opts = do
   compInp <- readCompilerInput (opts ^. input)
   case runCompiler compInp of
     Left compErr -> do
-      print @String "Encountered errors during Compilation"
+      putStrLn "Encountered errors during Compilation"
       writeCompilerError (opts ^. output) compErr
     Right compRes -> do
-      print @String "Compilation succeeded"
+      putStrLn "Compilation succeeded"
       writeCompilerOutput (opts ^. output) (defMessage & compilerResult .~ compRes)
   return ()
 
