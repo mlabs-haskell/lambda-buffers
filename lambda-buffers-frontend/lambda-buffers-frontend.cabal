@@ -110,7 +110,7 @@ library
     LambdaBuffers.Frontend.Syntax
     LambdaBuffers.Frontend.ToProto
 
-executable lambda-buffers-frontend-cli
+executable lbf
   import:         common-language
   build-depends:
     , base                        >=4.16

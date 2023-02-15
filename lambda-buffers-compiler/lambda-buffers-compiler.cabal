@@ -128,8 +128,7 @@ library
 
   hs-source-dirs:  src
 
--- NOTE(cstml): should we name this something shorter? lb-cli?
-executable lambda-buffers-compiler-cli
+executable lbc
   import:         common-language
   import:         common-imports
   main-is:        Main.hs
