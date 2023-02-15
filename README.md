@@ -102,8 +102,10 @@ nix profile install nixpkgs#direnv
 nix profile install nixpkgs#nix-direnv
 ```
 
-Your shell and editors should pick up on the `.envrc` files in different directories and prepare the environment accordingly.
-Use `direnv allow` to enable the direnv environment and `direnv reload` to reload it when necessary.
+Your shell and editors should pick up on the `.envrc` files in different
+directories and prepare the environment accordingly.
+Use `direnv allow` to enable the direnv environment and `direnv reload` to
+reload it when necessary.
 
 Additionally, throughout the repository one can use:
 
