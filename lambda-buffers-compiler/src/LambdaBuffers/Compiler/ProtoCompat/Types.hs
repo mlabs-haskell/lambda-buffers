@@ -1,5 +1,9 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+--  this is needed so the deriving via can generate Arbitrary instances for data
+--  definitions with more than 4 constructors
+{-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef (..),
@@ -14,6 +18,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   Field (..),
   FieldName (..),
   ForeignRef (..),
+  ForeignClassRef (..),
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
@@ -21,6 +26,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   KindType (..),
   LBName (..),
   LocalRef (..),
+  LocalClassRef (..),
   Module (..),
   ModuleName (..),
   ModuleNamePart (..),
@@ -35,151 +41,194 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyApp (..),
   TyArg (..),
   TyBody (..),
+  TyClassRef (..),
   TyDef (..),
   TyName (..),
   TyRef (..),
   TyVar (..),
   VarName (..),
   module VARS,
+  defSourceInfo,
 ) where
 
 import Control.Exception (Exception)
-import Data.List.NonEmpty (NonEmpty)
+import Data.Map (Map)
+import Data.Set (Set)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable as VARS (Atom, Variable)
+import Test.QuickCheck (Gen, oneof, resize, sized)
+import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
+import Test.QuickCheck.Instances.Semigroup ()
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary SourceInfo
 
 data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary SourcePosition
 
--- NOTE(gnumonik): I need a "generic name" type for my template haskell, this shouldn't be used anywhere outside of that
+-- TODO(bladyjoker): Make this proper by parametrized SourceInfo as `info`. For
+-- example, `TyName` becomes `TyName info` and when working with `TyName
+-- SourceInfo` a 'stripped' version can be obtained by simply `void tyName ::
+-- TyName ()`.
+-- In situations like testing or indexing when we want to ignore the SourceInfo,
+-- this seems like the proper way of doing it. Then we wouldn't need
+-- `defSourceInfo`.
+defSourceInfo :: SourceInfo
+defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
+
+{- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
+ shouldn't be used anywhere outside of that
+-}
 data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LBName
 
 data TyName = TyName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyName
 
 data ConstrName = ConstrName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ConstrName
 
 data ModuleName = ModuleName {parts :: [ModuleNamePart], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ModuleName
 
 data ModuleNamePart = ModuleNamePart {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ModuleNamePart
 
 data VarName = VarName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary VarName
 
 data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary FieldName
 
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ClassName
 
 newtype Kind = Kind {kind :: KindType}
   deriving stock (Show, Eq, Ord, Generic)
 
-data KindType
-  = KindRef KindRefType
-  | KindArrow Kind Kind
+instance Arbitrary Kind where
+  arbitrary = sized fn
+    where
+      fn n = Kind <$> resize n arbitrary
+
+data KindType = KindRef KindRefType | KindArrow Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
 
-data KindRefType
-  = KUnspecified
-  | KType
+instance Arbitrary KindType where
+  arbitrary = sized fn
+    where
+      fn n
+        | n <= 0 = KindRef <$> arbitrary
+        | otherwise = KindArrow <$> resize (n `div` 2) arbitrary <*> resize (n `div` 2) arbitrary
+
+data KindRefType = KUnspecified | KType
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindRefType
 
 data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyVar
 
-data Ty
-  = TyVarI TyVar
-  | TyAppI TyApp
-  | TyRefI TyRef
+data Ty = TyVarI TyVar | TyAppI TyApp | TyRefI TyRef
   deriving stock (Show, Eq, Ord, Generic)
 
-data TyApp = TyApp
-  { tyFunc :: Ty
-  , tyArgs :: NonEmpty Ty
-  , sourceInfo :: SourceInfo
-  }
+instance Arbitrary Ty where
+  arbitrary = sized fn
+    where
+      fn :: (Num a, Ord a) => a -> Gen Ty
+      fn n
+        | n <= 0 = TyRefI <$> arbitrary
+        | otherwise =
+            oneof
+              [ TyVarI <$> arbitrary
+              , TyAppI <$> arbitrary
+              , TyRefI <$> arbitrary
+              ]
+
+data TyApp = TyApp {tyFunc :: Ty, tyArgs :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyApp
 
 data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ForeignRef
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LocalRef
 
-data TyRef
-  = LocalI LocalRef
-  | ForeignI ForeignRef
+data TyRef = LocalI LocalRef | ForeignI ForeignRef
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyRef
 
-data TyDef = TyDef
-  { tyName :: TyName
-  , tyAbs :: TyAbs
+data TyDef = TyDef {tyName :: TyName, tyAbs :: TyAbs, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyDef
+
+data TyAbs = TyAbs {tyArgs :: Map VarName TyArg, tyBody :: TyBody, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyAbs
+
+data TyArg = TyArg {argName :: VarName, argKind :: Kind, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyArg
+
+data TyBody = OpaqueI SourceInfo | SumI Sum
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyBody
+
+data Constructor = Constructor {constrName :: ConstrName, product :: Product}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Constructor
+
+data Sum = Sum {constructors :: Map ConstrName Constructor, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Sum
+
+data Field = Field {fieldName :: FieldName, fieldTy :: Ty}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Field
+
+data Record = Record {fields :: Map FieldName Field, sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Record
+
+data Tuple = Tuple {fields :: [Ty], sourceInfo :: SourceInfo}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Tuple
+
+data Product = RecordI Record | TupleI Tuple
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Product
+
+data ForeignClassRef = ForeignClassRef
+  { className :: ClassName
+  , moduleName :: ModuleName
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ForeignClassRef
 
-data TyAbs = TyAbs
-  { tyArgs :: [TyArg]
-  , tyBody :: TyBody
-  , sourceInfo :: SourceInfo
-  }
+data LocalClassRef = LocalClassRef {className :: ClassName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary LocalClassRef
 
-data TyArg = TyArg
-  { argName :: VarName
-  , argKind :: Kind
-  , sourceInfo :: SourceInfo
-  }
+data TyClassRef
+  = LocalCI LocalClassRef
+  | ForeignCI ForeignClassRef
   deriving stock (Show, Eq, Ord, Generic)
-
-data TyBody
-  = OpaqueI SourceInfo
-  | SumI Sum
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Constructor = Constructor
-  { constrName :: ConstrName
-  , product :: Product
-  }
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Sum = Sum
-  { constructors :: NonEmpty Constructor
-  , sourceInfo :: SourceInfo
-  }
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Field = Field
-  { fieldName :: FieldName
-  , fieldTy :: Ty
-  }
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Record = Record
-  { fields :: NonEmpty Field
-  , sourceInfo :: SourceInfo
-  }
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Tuple = Tuple
-  { fields :: [Ty]
-  , sourceInfo :: SourceInfo
-  }
-  deriving stock (Show, Eq, Ord, Generic)
-
-data Product
-  = RecordI Record
-  | TupleI Tuple
-  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary TyClassRef
 
 data ClassDef = ClassDef
   { className :: ClassName
@@ -189,53 +238,101 @@ data ClassDef = ClassDef
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary ClassDef
 
 data InstanceClause = InstanceClause
-  { className :: ClassName
+  { classRef :: TyClassRef
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
 
+instance Arbitrary InstanceClause where
+  arbitrary = sized fn
+    where
+      fn n =
+        InstanceClause
+          <$> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+
 data Constraint = Constraint
-  { className :: ClassName
+  { classRef :: TyClassRef
   , argument :: Ty
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary Constraint
 
 data Module = Module
   { moduleName :: ModuleName
-  , typeDefs :: [TyDef]
-  , classDefs :: [ClassDef]
+  , typeDefs :: Map TyName TyDef
+  , classDefs :: Map ClassName ClassDef
   , instances :: [InstanceClause]
+  , imports :: Set ModuleName
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-newtype CompilerInput = CompilerInput {modules :: [Module]}
+instance Arbitrary Module where
+  arbitrary = sized fn
+    where
+      fn n =
+        Module
+          <$> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+          <*> resize n arbitrary
+
+data InferenceErr
+  = UnboundTermErr Text
+  | ImpossibleErr Text
+  | UnificationErr Text
+  | RecursiveSubstitutionErr Text
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary InferenceErr
+
+instance Exception InferenceErr
+
+data KindCheckErr
+  = InconsistentTypeErr TyDef
+  | InferenceFailure TyDef InferenceErr
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindCheckErr
+
+instance Exception KindCheckErr
+
+newtype CompilerInput = CompilerInput {modules :: Map ModuleName Module}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
 
+instance Arbitrary CompilerInput where
+  arbitrary = sized fn
+    where
+      fn n = CompilerInput <$> resize n arbitrary
+
 data KindCheckError
-  = -- | The following term is unbound in the following type definition.
-    UnboundTermError TyName VarName
-  | -- | Failed unifying TyRef with TyRef in TyName. This is the TyDef.
-    IncorrectApplicationError TyName Kind Kind
-  | -- | Kind recurses forever - not permitted.
-    RecursiveKindError TyName
-  | -- | The following type has the wrong.
-    InconsistentTypeError TyName Kind Kind
+  = UnboundTermError TyName VarName
+  | IncorrectApplicationError TyName Kind Kind
+  | RecursiveKindError TyName
+  | InconsistentTypeError TyName Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError
 
+-- | All the compiler errors.
 data CompilerError
   = CompKindCheckError KindCheckError
   | InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary CompilerError
 
 data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
+  deriving (Arbitrary) via GenericArbitrary CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
