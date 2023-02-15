@@ -1,19 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Solve (solveM, solve, Overlap (..)) where
-
-import LambdaBuffers.Compiler.TypeClass.Pat (
-  Pat (AppP, DecP, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)),
-  matches,
- )
-import LambdaBuffers.Compiler.TypeClass.Rules (
-  Class (csupers),
-  Constraint (C),
-  Rule ((:<=)),
-  mapPat,
-  ruleHeadClass,
-  ruleHeadPat,
- )
+module LambdaBuffers.Compiler.TypeClass.Solve where
 
 import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -22,77 +9,96 @@ import Control.Monad.Writer.Class (MonadWriter (tell))
 import Control.Monad.Writer.Strict (WriterT, execWriterT)
 import Data.Foldable (traverse_)
 import Data.List (foldl')
+import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
+import Debug.Trace (traceM)
+import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Rules
 
 {- Pattern/Template/Unification variable  substitution.
    Given a string that represents a variable name,
    and a type to instantiate variables with that name to,
    performs the instantiation
 -}
-subV :: Text -> Pat -> Pat -> Pat
-subV varNm t = \case
-  var@(VarP v) -> if v == varNm then t else var
-  x :* xs -> subV varNm t x :* subV varNm t xs
-  l := x -> subV varNm t l := subV varNm t x
-  ProdP xs -> ProdP (subV varNm t xs)
-  RecP xs -> RecP (subV varNm t xs)
-  SumP xs -> SumP (subV varNm t xs)
-  AppP t1 t2 -> AppP (subV varNm t t1) (subV varNm t t2)
-  RefP n x -> RefP (subV varNm t n) (subV varNm t x)
-  DecP a b c -> DecP (subV varNm t a) (subV varNm t b) (subV varNm t c)
-  other -> other
+subV :: M.Map Text Exp -> Pat -> Exp
+subV cxt = \case
+  (VarP v) -> case M.lookup v cxt of
+    Nothing -> LitE (TyVar v)
+    Just t -> t
+  ConsP x xs -> subV cxt x *: subV cxt xs
+  LabelP l x -> subV cxt l *= subV cxt x
+  ProdP xs -> ProdE (subV cxt xs)
+  RecP xs -> RecE (subV cxt xs)
+  SumP xs -> SumE (subV cxt xs)
+  AppP t1 t2 -> AppE (subV cxt t1) (subV cxt t2)
+  RefP n x -> RefE (subV cxt n) (subV cxt x)
+  DecP a b c -> DecE (subV cxt a) (subV cxt b) (subV cxt c)
+  LitP l -> LitE l
+  NilP -> NilE
+
+inst :: Pat -> Exp
+inst = \case
+  VarP v -> LitE (TyVar v)
+  ConsP x xs -> ConsE (inst x) (inst xs)
+  LabelP l x -> LabelE (inst l) (inst x)
+  ProdP xs -> ProdE (inst xs)
+  RecP xs -> RecE (inst xs)
+  SumP xs -> SumE (inst xs)
+  AppP t1 t2 -> AppE (inst t1) (inst t2)
+  RefP n x -> RefE (inst n) (inst x)
+  DecP a b c -> DecE (inst a) (inst b) (inst c)
+  LitP l -> LitE l
+  NilP -> NilE
 
 {- Performs substitution on an entire instance (the first argument) given the
    concrete types from a Pat (the second argument).
    Note that ONLY PatVars which occur in the Instance *HEAD* are replaced, though they
    are replaced in the instance superclasses as well (if they occur there).
 -}
-subst :: Rule -> Pat -> Rule
-subst cst@(C _ t :<= _) ty = mapPat (go (getSubs t ty)) cst
+subst :: Rule Pat -> Exp -> Rule Exp
+subst cst@(C _ t :<= _) ty = fmap (go (getSubs t ty)) cst
   where
-    go :: [(Text, Pat)] -> Pat -> Pat
-    go subs tty =
-      let noflip p1 p2 = uncurry subV p2 p1
-       in foldl' noflip tty subs
+    go :: [(Text, Exp)] -> Pat -> Exp
+    go subs = subV (M.fromList subs)
 
 {- Given two patterns (which are hopefully structurally similar), gather a list of all substitutions
    from the PatVars in the first argument to the concrete types (hopefully!) in the second argument
 -}
-getSubs :: Pat -> Pat -> [(Text, Pat)] -- should be a set, whatever
+getSubs :: Pat -> Exp -> [(Text, Exp)] -- should be a set, whatever
 getSubs (VarP s) t = [(s, t)]
-getSubs (x :* xs) (x' :* xs') = getSubs x x' <> getSubs xs xs'
-getSubs (l := t) (l' := t') = getSubs l l' <> getSubs t t'
-getSubs (ProdP xs) (ProdP xs') = getSubs xs xs'
-getSubs (RecP xs) (RecP xs') = getSubs xs xs'
-getSubs (SumP xs) (SumP xs') = getSubs xs xs'
-getSubs (AppP t1 t2) (AppP t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
-getSubs (RefP n t) (RefP n' t') = getSubs n n' <> getSubs t t'
-getSubs (DecP a b c) (DecP a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
+getSubs (ConsP x xs) (ConsE x' xs') = getSubs x x' <> getSubs xs xs'
+getSubs (LabelP l t) (LabelE l' t') = getSubs l l' <> getSubs t t'
+getSubs (ProdP xs) (ProdE xs') = getSubs xs xs'
+getSubs (RecP xs) (RecE xs') = getSubs xs xs'
+getSubs (SumP xs) (SumE xs') = getSubs xs xs'
+getSubs (AppP t1 t2) (AppE t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
+getSubs (RefP n t) (RefE n' t') = getSubs n n' <> getSubs t t'
+getSubs (DecP a b c) (DecE a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
 getSubs _ _ = []
 
 -- NoMatch isn't fatal but OverlappingMatches is (i.e. we need to stop when we encounter it)
 data MatchError
   = NoMatch
-  | OverlappingMatches [Rule]
+  | OverlappingMatches [Rule Pat]
 
 -- for SolveM, since we catch NoMatch
-data Overlap = Overlap Constraint [Rule]
+data Overlap = Overlap (Constraint Exp) [Rule Pat]
   deriving stock (Show, Eq)
 
-selectMatchingInstance :: Pat -> Class -> [Rule] -> Either MatchError Rule
-selectMatchingInstance p c rs = case filter matchPatAndClass rs of
+selectMatchingInstance :: Exp -> Class -> [Rule Pat] -> Either MatchError (Rule Pat)
+selectMatchingInstance e c rs = case filter matchPatAndClass rs of
   [] -> Left NoMatch
   [r] -> Right r
   overlaps -> Left $ OverlappingMatches overlaps
   where
-    matchPatAndClass :: Rule -> Bool
+    matchPatAndClass :: Rule Pat -> Bool
     matchPatAndClass r =
-      ruleHeadClass r == c
-        && ruleHeadPat r
-        `matches` p
+      ruleClass r == c
+        && ruleHead r
+        `matches` e
 
-type SolveM = ReaderT [Rule] (WriterT (S.Set Constraint) (Either Overlap))
+type SolveM = ReaderT [Rule Pat] (WriterT (S.Set (Constraint Exp)) (Either Overlap))
 
 {- Given a list of instances (the initial scope), determines whether we can derive
    an instance of the Class argument for the Pat argument. A result of [] indicates that there are
@@ -104,7 +110,7 @@ type SolveM = ReaderT [Rule] (WriterT (S.Set Constraint) (Either Overlap))
          it doesn't b/c it's *impossible* to have `instance Foo X` if the definition of Foo is
          `class Bar y => Foo y` without an `instance Bar X`)
 -}
-solveM :: Constraint -> SolveM ()
+solveM :: Constraint Exp -> SolveM ()
 solveM cst@(C c pat) =
   ask >>= \inScope ->
     -- First, we look for the most specific instance...
@@ -124,8 +130,8 @@ solveM cst@(C c pat) =
     -- NOTE(@bladyjoker): The version w/ flip is more performant...
     -- Given a Pat and a list of Classes, attempt to solve the constraints
     -- constructed from the Pat and each Class
-    solveClassesFor :: Pat -> [Class] -> SolveM ()
+    solveClassesFor :: Exp -> [Class] -> SolveM ()
     solveClassesFor p = traverse_ (\cls -> solveM (C cls p))
 
-solve :: [Rule] -> Constraint -> Either Overlap [Constraint]
+solve :: [Rule Pat] -> Constraint Exp -> Either Overlap [Constraint Exp]
 solve rules c = fmap S.toList $ execWriterT $ runReaderT (solveM c) rules

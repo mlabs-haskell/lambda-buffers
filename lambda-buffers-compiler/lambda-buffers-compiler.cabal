@@ -152,8 +152,10 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
+    , containers
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , prettyprinter
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
@@ -162,6 +164,7 @@ test-suite tests
     , text                        >=1.2
 
   other-modules:
+    Test.DeriveCheck
     Test.KindCheck
     Test.TypeClassCheck
     Test.Utils.CompilerInput

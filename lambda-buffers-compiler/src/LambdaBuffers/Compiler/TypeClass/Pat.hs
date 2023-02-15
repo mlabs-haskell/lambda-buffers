@@ -1,14 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Pat (
-  Pat (..),
-  toProd,
-  toRec,
-  toSum,
-  patList,
-  matches,
-) where
+module LambdaBuffers.Compiler.TypeClass.Pat where
 
+import Data.Kind (Type)
 import Data.Text (Text)
 
 {- A simple ADT to represent patterns.
@@ -18,15 +12,15 @@ This could be ameliorated by using a GADT, which would give us correct-by-constr
 cost of significantly more complex type signatures.
 -}
 
-data Pat
-  = {- Name / ModuleName / Opaque / TyVarP are literal patterns (or ground terms)
-       because hey cannot contain any VarPs and therefore "have no holes".
-       Every TyDef or subcomponent thereof will be translated into a composite
-       pattern "without any holes". (Nil is also a literal/ground term, I guess) -}
-    Name Text
+data Literal
+  = Name Text
   | ModuleName [Text]
   | Opaque
-  | TyVarP Text
+  | TyVar Text
+  deriving stock (Show, Eq, Ord)
+
+data Pat
+  = LitP Literal
   | {- Lists (constructed from Nil and :*) with bare types are used to
        encode products (where a list of length n encodes an n-tuple)
        Lists with field labels (l := t) are used to encode records and sum types
@@ -40,10 +34,10 @@ data Pat
        using a GADT for Pat, but this would greatly complicate the constraint solving/deriving
        algorithms and require copious use of type families (and possibly singletons).
     -}
-    Nil -- Nil and :*  are hacks to write rules for ProdP and SumP. A bare Nil == Unit
-  | Pat :* Pat -- cons
-  | Pat := Pat {- field labels or constr names. The LHS should be (Name "Foo")
-                  for schema types, but should be a PatVar for deriving rules and instances -}
+    NilP -- Nil and :*  are hacks to write rules for ProdP and SumP. A bare Nil == Unit
+  | ConsP Pat Pat -- cons
+  | LabelP Pat Pat {- field labels or constr names. The LHS should be (Name "Foo")
+                   for schema types, but should be a PatVar for deriving rules and instances -}
   | RecP Pat {- where the Pat arg is expected to be (l := t :* rest) or Nil, where rest
                 is also a pat-list  of labeled fields or Nil -}
   | ProdP Pat {- Pat arg should be a list of "Bare types" -}
@@ -62,26 +56,83 @@ data Pat
     DecP Pat Pat Pat
   deriving stock (Show, Eq, Ord)
 
-infixr 5 :*
+-- infixr 5 :*
 
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}
-toProd :: [Pat] -> Pat
-toProd = ProdP . foldr (:*) Nil
+toProdP :: [Pat] -> Pat
+toProdP = ProdP . foldr ConsP NilP
 
-toRec :: [Pat] -> Pat
-toRec = RecP . foldr (:*) Nil
+toRecP :: [Pat] -> Pat
+toRecP = RecP . foldr ConsP NilP
 
-toSum :: [Pat] -> Pat
-toSum = SumP . foldr (:*) Nil
+toSumP :: [Pat] -> Pat
+toSumP = SumP . foldr ConsP NilP
 
 {- Converts a pattern that consists of a well formed pattern list
    (i.e. patterns formed from :* and Nil) into a list of patterns.
 -}
 patList :: Pat -> Maybe [Pat]
 patList = \case
-  Nil -> Just []
-  p1 :* p2 -> (p1 :) <$> patList p2
+  NilP -> Just []
+  p1 `ConsP` p2 -> (p1 :) <$> patList p2
+  _ -> Nothing
+
+data Exp
+  = LitE Literal
+  | NilE
+  | ConsE Exp Exp
+  | LabelE Exp Exp
+  | RecE Exp
+  | ProdE Exp
+  | SumE Exp
+  | -- NO EXPRESSION VARS! EXPRESSIONS DON'T HAVE HOLES!
+    RefE Exp Exp {- 1st arg should be a ModuleName  -}
+  | AppE Exp Exp {- Pattern for Type applications -}
+  | DecE Exp Exp Exp
+  deriving stock (Show, Eq, Ord)
+
+class ExpressionLike (p :: Type) where
+  (*:) :: p -> p -> p
+
+  nil :: p
+
+  (*=) :: p -> p -> p
+
+infixr 5 *:
+
+instance ExpressionLike Pat where
+  p1 *: p2 = p1 `ConsP` p2
+
+  nil = NilP
+
+  p1 *= p2 = LabelP p1 p2
+
+instance ExpressionLike Exp where
+  p1 *: p2 = p1 `ConsE` p2
+
+  nil = NilE
+
+  p1 *= p2 = LabelE p1 p2
+
+{- Utility functions. Turn a list of types into a product/record/sum type.
+-}
+toProdE :: [Exp] -> Exp
+toProdE = ProdE . foldr ConsE NilE
+
+toRecE :: [Exp] -> Exp
+toRecE = RecE . foldr ConsE NilE
+
+toSumE :: [Exp] -> Exp
+toSumE = SumE . foldr ConsE NilE
+
+{- Converts a pattern that consists of a well formed pattern list
+   (i.e. patterns formed from :* and Nil) into a list of patterns.
+-}
+expList :: Exp -> Maybe [Exp]
+expList = \case
+  NilE -> Just []
+  p1 `ConsE` p2 -> (p1 :) <$> expList p2
   _ -> Nothing
 
 {- This is used as a predicate to filter instances or Gens which are structurally compatible
@@ -91,16 +142,17 @@ patList = \case
    NOTE: Is not bidirectional! The first Pat has to be more general than the first
          (more specifically: The second Pat should be a substitution instance of the first)
 -}
-matches :: Pat -> Pat -> Bool
-matches t1 t2 | t1 == t2 = True -- need the guard
+matches :: Pat -> Exp -> Bool
+matches (LitP l1) (LitE l2) = l1 == l2
 matches (VarP _) _ = True
-matches (x :* xs) (x' :* xs') = matches x x' && matches xs xs'
-matches (l := t) (l' := t') = matches l l' && matches t t'
-matches (ProdP xs) (ProdP xs') = matches xs xs'
-matches (RecP xs) (RecP xs') = matches xs xs'
-matches (SumP xs) (SumP xs') = matches xs xs'
-matches (AppP t1 t2) (AppP t1' t2') = matches t1 t1' && matches t2 t2'
-matches (RefP mn t1) (RefP mn' t2) = matches mn mn' && matches t1 t2
-matches (DecP t1 t2 t3) (DecP t1' t2' t3') =
+matches (x `ConsP` xs) (x' `ConsE` xs') = matches x x' && matches xs xs'
+matches (LabelP l t) (LabelE l' t') = matches l l' && matches t t'
+matches (ProdP xs) (ProdE xs') = matches xs xs'
+matches (RecP xs) (RecE xs') = matches xs xs'
+matches (SumP xs) (SumE xs') = matches xs xs'
+matches (AppP t1 t2) (AppE t1' t2') = matches t1 t1' && matches t2 t2'
+matches (RefP mn t1) (RefE mn' t2) = matches mn mn' && matches t1 t2
+matches (DecP t1 t2 t3) (DecE t1' t2' t3') =
   matches t1 t1' && matches t2 t2' && matches t3 t3'
+matches NilP NilE = True
 matches _ _ = False

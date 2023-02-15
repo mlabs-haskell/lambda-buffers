@@ -13,7 +13,7 @@ import Control.Lens.Operators ((^.))
 import Data.Generics.Labels ()
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, TyVarP, VarP, (:*), (:=)), patList)
+import LambdaBuffers.Compiler.TypeClass.Pat
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   Constraint (C),
@@ -43,10 +43,10 @@ instance Pretty FQClassName where
 instance Pretty Class where
   pretty (Class nm _) = pretty nm
 
-instance Pretty Constraint where
+instance Pretty a => Pretty (Constraint a) where
   pretty (C cls p) = pretty cls <+> pretty p
 
-instance Pretty Rule where
+instance Pretty a => Pretty (Rule a) where
   pretty (c :<= []) = pretty c
   pretty (c :<= cs) = pretty c <+> "<=" <+> list (pretty <$> cs)
 
@@ -60,16 +60,17 @@ instance Pretty P.SourceInfo where
 -- pretty should emit valid Haskell for well-formed DecPs
 instance Pretty Pat where
   pretty = \case
-    Name t -> pretty t
-    ModuleName ts -> hcat . punctuate "." . map pretty $ ts
-    Opaque -> "<OPAQUE>"
-    TyVarP t -> pretty t
+    LitP lit -> case lit of
+      Name t -> pretty t
+      ModuleName ts -> hcat . punctuate "." . map pretty $ ts
+      Opaque -> "<OPAQUE>"
+      TyVar v -> pretty v
     RecP ps -> case patList ps of
       Nothing -> pretty ps
       Just fields -> case traverse prettyField fields of
         Just fs -> braces . nest 2 . hcat . punctuate ", " $ fs
         Nothing -> pretty ps
-    ProdP Nil -> ""
+    ProdP NilP -> ""
     ProdP xs -> case patList xs of
       Just [f] -> pretty f
       Just fs -> parens . hcat . punctuate ", " . map pretty $ fs
@@ -79,21 +80,21 @@ instance Pretty Pat where
       Just cs -> case traverse prettyConstr cs of
         Nothing -> pretty cs
         Just cstrs -> nest 2 . sumFmt $ cstrs
-    plist@(p1 :* p2) -> case patList plist of
+    plist@(ConsP p1 p2) -> case patList plist of
       Just pl -> list . map pretty $ pl
       Nothing -> pretty p1 <+> ":*" <+> pretty p2
-    Nil -> "Nil"
-    RefP mn@(ModuleName _) n@(Name _) -> pretty mn <> "." <> pretty n
-    RefP Nil (Name n) -> pretty n
+    NilP -> "Nil"
+    RefP mn@(LitP (ModuleName _)) n@(LitP (Name _)) -> pretty mn <> "." <> pretty n
+    RefP NilP (LitP (Name n)) -> pretty n
     RefP p1 p2 -> parens $ "Ref" <+> pretty p1 <+> pretty p2
     -- Pattern variables are uppercased to distinguish them from proper TyVars
     VarP t -> pretty (T.toUpper t)
     ap@(AppP p1 p2) -> case prettyApp ap of
       Just pap -> parens pap
       Nothing -> "App" <+> pretty p1 <+> pretty p2
-    p1 := p2 -> pretty p1 <+> ":=" <+> pretty p2
+    LabelP p1 p2 -> pretty p1 <+> ":=" <+> pretty p2
     DecP nm args body -> case nm of
-      Name n -> case patList args of
+      LitP (Name n) -> case patList args of
         Nothing -> "Dec" <+> pretty n <+> pretty args <+> "=" <+> pretty body
         Just [] ->
           "data"
@@ -110,19 +111,86 @@ instance Pretty Pat where
     where
       prettyField :: forall a. Pat -> Maybe (Doc a)
       prettyField = \case
-        Name l := t -> Just $ pretty l <+> "::" <+> pretty t
+        LabelP (LitP (Name l)) t -> Just $ pretty l <+> "::" <+> pretty t
         _ -> Nothing
 
       prettyConstr :: forall a. Pat -> Maybe (Doc a)
       prettyConstr = \case
-        Name l := (ProdP Nil) -> Just $ pretty l
-        Name l := t -> Just $ pretty l <+> pretty t
+        LabelP (LitP (Name l)) (ProdP NilP) -> Just $ pretty l
+        LabelP (LitP (Name l)) t -> Just $ pretty l <+> pretty t
         _ -> Nothing
 
       -- this is kind of annoying to get right, don't think this is it
       prettyApp :: forall a. Pat -> Maybe (Doc a)
       prettyApp = \case
         AppP p1 p2 -> (pretty p1 <+>) <$> prettyApp p2
+        other -> Just $ pretty other
+
+instance Pretty Exp where
+  pretty = \case
+    LitE lit -> case lit of
+      Name t -> pretty t
+      ModuleName ts -> hcat . punctuate "." . map pretty $ ts
+      Opaque -> "<OPAQUE>"
+      TyVar v -> pretty v
+    RecE ps -> case expList ps of
+      Nothing -> pretty ps
+      Just fields -> case traverse prettyField fields of
+        Just fs -> braces . nest 2 . hcat . punctuate ", " $ fs
+        Nothing -> pretty ps
+    ProdE NilE -> ""
+    ProdE xs -> case expList xs of
+      Just [f] -> pretty f
+      Just fs -> parens . hcat . punctuate ", " . map pretty $ fs
+      _ -> pretty xs
+    SumE xs -> case expList xs of
+      Nothing -> pretty xs
+      Just cs -> case traverse prettyConstr cs of
+        Nothing -> pretty cs
+        Just cstrs -> nest 2 . sumFmt $ cstrs
+    plist@(ConsE p1 p2) -> case expList plist of
+      Just pl -> list . map pretty $ pl
+      Nothing -> pretty p1 <+> ":*" <+> pretty p2
+    NilE -> "Nil"
+    RefE mn@(LitE (ModuleName _)) n@(LitE (Name _)) -> pretty mn <> "." <> pretty n
+    RefE NilE (LitE (Name n)) -> pretty n
+    RefE p1 p2 -> parens $ "Ref" <+> pretty p1 <+> pretty p2
+    -- Pattern variables are uppercased to distinguish them from proper TyVars
+    ap@(AppE p1 p2) -> case prettyApp ap of
+      Just pap -> parens pap
+      Nothing -> "App" <+> pretty p1 <+> pretty p2
+    LabelE p1 p2 -> pretty p1 <+> ":=" <+> pretty p2
+    DecE nm args body -> case nm of
+      LitE (Name n) -> case expList args of
+        Nothing -> "Dec" <+> pretty n <+> pretty args <+> "=" <+> pretty body
+        Just [] ->
+          "data"
+            <+> pretty n
+            <+> "="
+            <+> pretty body
+        Just vars ->
+          "data"
+            <+> pretty n
+            <+> hcat (punctuate " " . map pretty $ vars)
+            <+> "="
+            <+> pretty body
+      _ -> "Dec" <+> pretty nm <+> pretty args <+> "=" <+> pretty body
+    where
+      prettyField :: forall a. Exp -> Maybe (Doc a)
+      prettyField = \case
+        LabelE (LitE (Name l)) t -> Just $ pretty l <+> "::" <+> pretty t
+        _ -> Nothing
+
+      prettyConstr :: forall a. Exp -> Maybe (Doc a)
+      prettyConstr = \case
+        LabelE (LitE (Name l)) (ProdE NilE) -> Just $ pretty l
+        LabelE (LitE (Name l)) t -> Just $ pretty l <+> pretty t
+        _ -> Nothing
+
+      -- this is kind of annoying to get right, don't think this is it
+      prettyApp :: forall a. Exp -> Maybe (Doc a)
+      prettyApp = \case
+        AppE p1 p2 -> (pretty p1 <+>) <$> prettyApp p2
         other -> Just $ pretty other
 
 sumFmt :: [Doc a] -> Doc a

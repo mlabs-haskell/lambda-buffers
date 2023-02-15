@@ -6,6 +6,7 @@ module LambdaBuffers.Compiler.TypeClass.Utils (
   TypeClassError (..),
   BasicConditionViolation (..),
   lookupOr,
+  checkInstance,
   -- for the superclass cycle check
   mkClassInfos,
   toClassMap,
@@ -26,18 +27,8 @@ import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text qualified as T
 
-import LambdaBuffers.Compiler.TypeClass.Compat (
-  defToPat,
-  modulename,
-  tyToPat,
- )
-import LambdaBuffers.Compiler.TypeClass.Rules (
-  Class (Class),
-  Constraint (C),
-  FQClassName (FQClassName),
-  Rule ((:<=)),
-  mapPat,
- )
+import LambdaBuffers.Compiler.TypeClass.Compat
+import LambdaBuffers.Compiler.TypeClass.Rules
 
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
@@ -50,21 +41,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   SourceInfo,
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClass.Pat (
-  Pat (
-    AppP,
-    DecP,
-    ModuleName,
-    Nil,
-    ProdP,
-    RecP,
-    RefP,
-    SumP,
-    TyVarP,
-    (:*),
-    (:=)
-  ),
- )
+import LambdaBuffers.Compiler.TypeClass.Pat
 import LambdaBuffers.Compiler.TypeClass.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap))
 import Prettyprinter (
@@ -80,7 +57,7 @@ import Prettyprinter (
  )
 
 -- *Here* it's useful to distinguish them
-type Instance = Rule
+type Instance = Rule Pat
 
 {- Some of these are perfunctory & used to keep functions total.
 -}
@@ -92,7 +69,7 @@ data TypeClassError
   | ClassNotFoundInModule Text [Text]
   | LocalTyRefNotFound T.Text P.ModuleName
   | SuperclassCycleDetected [[FQClassName]]
-  | CouldntSolveConstraints P.ModuleName [Constraint] Instance
+  | CouldntSolveConstraints P.ModuleName [Constraint Exp] Instance
   | BadInstance BasicConditionViolation
   deriving stock (Show)
 
@@ -142,8 +119,8 @@ instance Pretty TypeClassError where
     BadInstance bcv -> pretty bcv
 
 data BasicConditionViolation
-  = TyConInContext Instance Constraint
-  | OnlyTyVarsInHead Instance Constraint
+  = TyConInContext Instance (Constraint Pat)
+  | OnlyTyVarsInHead Instance (Constraint Pat)
   | OverlapDetected Overlap
   deriving stock (Show)
 
@@ -179,12 +156,12 @@ all the type variables are distinct.
 3. The instance declarations must not overlap.
 -}
 
-checkInstance :: Rule -> Either BasicConditionViolation ()
+checkInstance :: Rule Pat -> Either BasicConditionViolation ()
 checkInstance rule@(C cls hd :<= constraints) =
   case traverse cond1 constraints of
     Left e -> Left e
     Right _ -> case hd of
-      TyVarP _ -> Left $ OnlyTyVarsInHead rule (C cls hd)
+      VarP _ -> Left $ OnlyTyVarsInHead rule (C cls hd)
       -- NOTE: THIS ASSUMES THAT EVERYTHING HAS BEEN KIND-CHECKED AND
       --       THAT NO TYVARS HAVE KIND (* -> *). If every tyvar
       --       is of kind * and we have no MPTCs then the
@@ -192,9 +169,9 @@ checkInstance rule@(C cls hd :<= constraints) =
       --       a bare type variable in the head
       _ -> Right ()
   where
-    cond1 :: Constraint -> Either BasicConditionViolation ()
+    cond1 :: Constraint Pat -> Either BasicConditionViolation ()
     cond1 cst@(C _ p) = case p of
-      TyVarP _ -> Right ()
+      VarP _ -> Right ()
       _ -> Left $ TyConInContext rule cst
 
 {- This contains:
@@ -202,7 +179,7 @@ checkInstance rule@(C cls hd :<= constraints) =
      - Everything needed for codegen (modulo sourceInfo)
 -}
 data ModuleBuilder = ModuleBuilder
-  { mbTyDefs :: M.Map T.Text Pat -- sourceInfo needs to be in here somehow (these are all local refs)
+  { mbTyDefs :: M.Map T.Text Exp -- sourceInfo needs to be in here somehow (these are all local refs)
   , mbInstances :: Instances -- instances to be generated
   , mbClasses :: Classes -- classes to be generated
   , mbScope :: Instances -- Instances to use as rules when checking instance clauses in the module
@@ -298,7 +275,7 @@ getInstances ctable mn = foldM go S.empty
         cref = tyRefToFQClassName (modulename mn) cn
         check = either (Left . BadInstance) pure . checkInstance
 
-    goConstraint :: P.Constraint -> Either TypeClassError Constraint
+    goConstraint :: P.Constraint -> Either TypeClassError (Constraint Pat)
     goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
       Nothing -> throwError $ UnknownClass cref si'
       Just cls -> do
@@ -335,7 +312,7 @@ moduleScope ::
   M.Map P.ModuleName P.Module ->
   M.Map P.ModuleName Instances ->
   P.ModuleName ->
-  Either TypeClassError (S.Set Rule)
+  Either TypeClassError (S.Set (Rule Pat))
 moduleScope modls is = go
   where
     go :: P.ModuleName -> Either TypeClassError Instances
@@ -357,12 +334,12 @@ moduleScope modls is = go
 -- but should be a RefP (ModuleName ...) (Name t) in the scope of the
 -- module that imports them
 contextualize :: P.ModuleName -> Instances -> Instances
-contextualize mn = S.map (mapPat go)
+contextualize mn = S.map (fmap go)
   where
     go :: Pat -> Pat
-    go (RefP Nil t) = RefP (ModuleName $ modulename mn) t
-    go (p1 := p2) = go p1 := go p2
-    go (p1 :* p2) = go p1 :* go p2
+    go (RefP NilP t) = RefP (LitP . ModuleName $ modulename mn) t
+    go (LabelP p1 p2) = LabelP (go p1) (go p2)
+    go (ConsP p1 p2) = ConsP (go p1) (go p2)
     go (RecP fs) = RecP $ go fs
     go (ProdP fs) = ProdP $ go fs
     go (SumP fs) = SumP $ go fs
@@ -405,7 +382,7 @@ mkBuilders ci = do
               ( \accM t ->
                   M.insert
                     (t ^. #tyName . #name)
-                    (defToPat t)
+                    (defToExp t)
                     accM
               )
               M.empty
