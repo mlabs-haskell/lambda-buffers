@@ -19,10 +19,14 @@ cost of significantly more complex type signatures.
 -}
 
 data Pat
-  = {- extremely stupid, unfortunately necessary -}
+  = {- Name / ModuleName / Opaque / TyVarP are literal patterns (or ground terms)
+       because hey cannot contain any VarPs and therefore "have no holes".
+       Every TyDef or subcomponent thereof will be translated into a composite
+       pattern "without any holes". (Nil is also a literal/ground term, I guess) -}
     Name Text
-  | ModuleName [Text] -- also stupid, also necessary -_-
+  | ModuleName [Text]
   | Opaque
+  | TyVarP Text
   | {- Lists (constructed from Nil and :*) with bare types are used to
        encode products (where a list of length n encodes an n-tuple)
        Lists with field labels (l := t) are used to encode records and sum types
@@ -45,10 +49,8 @@ data Pat
   | ProdP Pat {- Pat arg should be a list of "Bare types" -}
   | SumP Pat {- where the Pat arg is expected to be (Constr l t :* rest) or Nil, where
                 rest is either Nil or a tyList of Constrs -}
-  | VarP Text {- This isn't a type variable. Although it is used to represent them in certain contexts,
-                 it is also used more generally to refer to any "hole" in a pattern to which another pattern
-                 may be substituted. We could have separate constr for type variables but it doesn't appear to be
-                 necessary at this time. -}
+  | VarP Text {- This isn't a type variable. It is used more generally to refer to any "hole" in a pattern into
+                 to which another pattern may be substituted. TyVarP is the literal pattern / ground term for TyVars  -}
   | RefP Pat Pat {- 1st arg should be a ModuleName  -}
   | AppP Pat Pat {- Pattern for Type applications -}
   | {- This last one is a bit special. This represents a complete type declaration.

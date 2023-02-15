@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- orphans are the whole point of this module!
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -10,14 +9,14 @@ module LambdaBuffers.Compiler.TypeClass.Pretty (
   (<///>),
 ) where
 
-import Control.Lens ((^.))
 import Data.Generics.Labels ()
+import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, VarP, (:*), (:=)), patList)
+import LambdaBuffers.Compiler.TypeClass.Pat (Pat (AppP, DecP, ModuleName, Name, Nil, Opaque, ProdP, RecP, RefP, SumP, TyVarP, VarP, (:*), (:=)), patList)
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   Constraint (C),
-  Instance,
+  FQClassName (FQClassName),
   Rule ((:<=)),
  )
 import Prettyprinter (
@@ -34,13 +33,8 @@ import Prettyprinter (
   (<+>),
  )
 
-instance Pretty P.TyClassRef where
-  pretty = \case
-    P.ForeignCI (P.ForeignClassRef cn mn _) -> pretty mn <> "." <> pretty (cn ^. #name)
-    P.LocalCI (P.LocalClassRef cn _) -> pretty (cn ^. #name)
-
-instance Pretty P.ModuleName where
-  pretty (P.ModuleName pts _) = hcat . punctuate "." $ map (\x -> pretty $ x ^. #name) pts
+instance Pretty FQClassName where
+  pretty (FQClassName cn mnps) = hcat (punctuate "." . map pretty $ mnps) <> pretty cn
 
 instance Pretty Class where
   pretty (Class nm _) = pretty nm
@@ -48,7 +42,7 @@ instance Pretty Class where
 instance Pretty Constraint where
   pretty (C cls p) = pretty cls <+> pretty p
 
-instance Pretty Instance where
+instance Pretty Rule where
   pretty (c :<= []) = pretty c
   pretty (c :<= cs) = pretty c <+> "<=" <+> list (pretty <$> cs)
 
@@ -65,6 +59,7 @@ instance Pretty Pat where
     Name t -> pretty t
     ModuleName ts -> hcat . punctuate "." . map pretty $ ts
     Opaque -> "<OPAQUE>"
+    TyVarP t -> pretty t
     RecP ps -> case patList ps of
       Nothing -> pretty ps
       Just fields -> case traverse prettyField fields of
@@ -87,7 +82,8 @@ instance Pretty Pat where
     RefP mn@(ModuleName _) n@(Name _) -> pretty mn <> "." <> pretty n
     RefP Nil (Name n) -> pretty n
     RefP p1 p2 -> parens $ "Ref" <+> pretty p1 <+> pretty p2
-    VarP t -> pretty t
+    -- Pattern variables are uppercased to distinguish them from proper TyVars
+    VarP t -> pretty (T.toUpper t)
     ap@(AppP p1 p2) -> case prettyApp ap of
       Just pap -> parens pap
       Nothing -> "App" <+> pretty p1 <+> pretty p2

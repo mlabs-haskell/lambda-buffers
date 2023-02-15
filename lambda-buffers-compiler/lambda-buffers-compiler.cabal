@@ -123,6 +123,7 @@ library
     LambdaBuffers.Compiler.TypeClass.Pat
     LambdaBuffers.Compiler.TypeClass.Pretty
     LambdaBuffers.Compiler.TypeClass.Rules
+    LambdaBuffers.Compiler.TypeClass.Solve
     LambdaBuffers.Compiler.TypeClassCheck
 
   hs-source-dirs:  src
