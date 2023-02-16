@@ -188,6 +188,5 @@ testArrowFoldHHK =
     foldWithArrowToType [ty, (ty :->: ty) :->: ty, ty]
       @?= (ty :->: (((ty :->: ty) :->: ty) :->: (ty :->: ty)))
 
--- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
 lVar :: Text -> Type
 lVar = Var . LocalRef

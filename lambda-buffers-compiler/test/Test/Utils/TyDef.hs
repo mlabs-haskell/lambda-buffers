@@ -3,14 +3,18 @@ module Test.Utils.TyDef (
   tyDef'incoherent,
   tyDef'undefinedVar,
   tyDef'undefinedVar'var,
-  tyDef'undefinedlocalTyRef,
-  tyDef'undefinedlocalTyRef'localTyRef,
+  tyDef'undefinedLocalTyRef,
+  tyDef'undefinedLocalTyRef'TyRef,
+  tyDef'undefinedForeignTyRef,
+  tyDef'undefinedForeignTyRef'TyRef,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat.Types (Ty (TyVarI))
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
 import Test.Utils.Constructors (
+  _ForeignRef',
   _LocalRef',
+  _ModuleName,
   _SourceInfo,
   _TupleI,
   _TyAbs,
@@ -60,8 +64,8 @@ tyDef'undefinedVar'var :: P.TyVar
 tyDef'undefinedVar'var = _TyVar' "b" (_SourceInfo 1 2)
 
 -- | Foo a = Foo Baz b
-tyDef'undefinedlocalTyRef :: P.TyDef
-tyDef'undefinedlocalTyRef =
+tyDef'undefinedLocalTyRef :: P.TyDef
+tyDef'undefinedLocalTyRef =
   _TyDef
     (_TyName "Foo")
     ( _TyAbs
@@ -69,15 +73,38 @@ tyDef'undefinedlocalTyRef =
         [
           ( "Foo"
           , _TupleI
-              [ P.TyRefI tyDef'undefinedlocalTyRef'localTyRef
+              [ P.TyRefI tyDef'undefinedLocalTyRef'TyRef
               , _TyVarI "a"
               ]
           )
         ]
     )
 
-{- | The undefined Local TyRef (i.e. "Baz") in tyDef'undefinedlocalTyRef.
+{- | The undefined Local TyRef (i.e. "Baz") in tyDef'undefinedLocalTyRef.
  Exported to see if the test identifies it correctly.
 -}
-tyDef'undefinedlocalTyRef'localTyRef :: P.TyRef
-tyDef'undefinedlocalTyRef'localTyRef = P.LocalI $ _LocalRef' "Baz" (_SourceInfo 1 2)
+tyDef'undefinedLocalTyRef'TyRef :: P.TyRef
+tyDef'undefinedLocalTyRef'TyRef = P.LocalI $ _LocalRef' "Baz" (_SourceInfo 1 2)
+
+-- | Foo a = Foo Baz b
+tyDef'undefinedForeignTyRef :: P.TyDef
+tyDef'undefinedForeignTyRef =
+  _TyDef
+    (_TyName "Foo")
+    ( _TyAbs
+        [("a", _Type)]
+        [
+          ( "Foo"
+          , _TupleI
+              [ P.TyRefI tyDef'undefinedForeignTyRef'TyRef
+              , _TyVarI "a"
+              ]
+          )
+        ]
+    )
+
+{- | The undefined Local TyRef (i.e. "Baz") in tyDef'undefinedLocalTyRef.
+ Exported to see if the test identifies it correctly.
+-}
+tyDef'undefinedForeignTyRef'TyRef :: P.TyRef
+tyDef'undefinedForeignTyRef'TyRef = P.ForeignI $ _ForeignRef' "Baz" (_ModuleName ["Foreign", "Module"]) (_SourceInfo 1 2)

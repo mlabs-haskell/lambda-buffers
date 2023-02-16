@@ -1,8 +1,8 @@
-module Test.Utils.Module (module'maybe, module'incoherent, module'undefinedVar, module'undefinedlocalTyRef) where
+module Test.Utils.Module (module'maybe, module'incoherent, module'undefinedVar, module'undefinedLocalTyRef, module'undefinedForeignTyRef) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.Constructors (_Module, _ModuleName)
-import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe, tyDef'undefinedVar, tyDef'undefinedlocalTyRef)
+import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe, tyDef'undefinedForeignTyRef, tyDef'undefinedLocalTyRef, tyDef'undefinedVar)
 
 -- _Module mn tds cds ins =
 
@@ -34,5 +34,13 @@ module'undefinedVar = _Module (_ModuleName ["Module"]) [tyDef'undefinedVar] memp
               ^^^
   Should fail as Baz is a local undefined Ty Ref.
 -}
-module'undefinedlocalTyRef :: P.Module
-module'undefinedlocalTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedlocalTyRef] mempty mempty
+module'undefinedLocalTyRef :: P.Module
+module'undefinedLocalTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedLocalTyRef] mempty mempty
+
+{- | 1 Module containing
+  Foo b = Bar Module.Foreign.Baz b
+              ^^^^^^^^^^^^^^^^^^
+  Should fail as Baz is a foreign undefined Ty Ref.
+-}
+module'undefinedForeignTyRef :: P.Module
+module'undefinedForeignTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedForeignTyRef] mempty mempty

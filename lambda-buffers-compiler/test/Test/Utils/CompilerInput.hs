@@ -3,11 +3,12 @@ module Test.Utils.CompilerInput (
   compilerInput'maybe,
   compilerInput'undefinedVariable,
   compilerInput'undefinedLocalTyRef,
+  compilerInput'undefinedForeignTyRef,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.Constructors (_CompilerInput)
-import Test.Utils.Module (module'incoherent, module'maybe, module'undefinedVar, module'undefinedlocalTyRef)
+import Test.Utils.Module (module'incoherent, module'maybe, module'undefinedForeignTyRef, module'undefinedLocalTyRef, module'undefinedVar)
 
 -- | Compiler Input containing 1 module with 1 definition - Maybe.
 compilerInput'maybe :: P.CompilerInput
@@ -23,4 +24,8 @@ compilerInput'undefinedVariable = _CompilerInput [module'undefinedVar]
 
 -- | Contains 1 undefined Local TyRef.
 compilerInput'undefinedLocalTyRef :: P.CompilerInput
-compilerInput'undefinedLocalTyRef = _CompilerInput [module'undefinedlocalTyRef]
+compilerInput'undefinedLocalTyRef = _CompilerInput [module'undefinedLocalTyRef]
+
+-- | Contains 1 undefined Foreign TyRef.
+compilerInput'undefinedForeignTyRef :: P.CompilerInput
+compilerInput'undefinedForeignTyRef = _CompilerInput [module'undefinedForeignTyRef]

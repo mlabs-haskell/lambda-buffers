@@ -21,6 +21,7 @@ module Test.Utils.Constructors (
   _SourceInfo,
   _LocalRef,
   _LocalRef',
+  _ForeignRef',
 ) where
 
 import Control.Lens ((^.))
@@ -145,5 +146,16 @@ _LocalRef' :: Text -> P.SourceInfo -> P.LocalRef
 _LocalRef' x s =
   P.LocalRef
     { P.tyName = P.TyName {P.name = x, sourceInfo = s}
+    , P.sourceInfo = s
+    }
+
+_ForeignRef :: Text -> [Text] -> P.ForeignRef
+_ForeignRef n m = _ForeignRef' n (_ModuleName m) P.defSourceInfo
+
+_ForeignRef' :: Text -> P.ModuleName -> P.SourceInfo -> P.ForeignRef
+_ForeignRef' x m s =
+  P.ForeignRef
+    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
+    , P.moduleName = m
     , P.sourceInfo = s
     }
