@@ -77,11 +77,10 @@ type FrontendT m a = MonadIO m => ReaderT FrontRead (StateT FrontState (ExceptT 
 -- | Run a Frontend compilation action on a "lbf" file, return the entire compilation closure or a frontend error.
 runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError FrontendResult)
 runFrontend importPaths modFp = do
-  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] (SourceInfo "" (SourcePos 0 0) (SourcePos 0 0))) [] importPaths)
+  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] defaultSouceInfo)) [] importPaths)
       exM = runStateT stM (FrontState mempty)
       ioM = runExceptT exM
-  _ <- ioM
-  fmap (FrontendResult . importedModules . snd) <$> ioM
+  fmap (FrontendResult . importedModules . snd) <$> runExceptT exM
 
 throwE' :: FrontendError -> FrontendT m a
 throwE' = lift . lift . throwE
