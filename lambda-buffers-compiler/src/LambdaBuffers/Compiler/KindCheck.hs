@@ -18,9 +18,10 @@ import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
 import Control.Monad.Freer.State (State, evalState, modify)
 import Control.Monad.Freer.TH (makeEffect)
+import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 import Data.Foldable (Foldable (foldl', toList), traverse_)
 import Data.Map qualified as M
-import Data.Text (Text, intercalate)
+import Data.Text (Text, pack)
 import LambdaBuffers.Compiler.KindCheck.Context (Context)
 import LambdaBuffers.Compiler.KindCheck.Inference (
   InferErr (
@@ -40,6 +41,7 @@ import LambdaBuffers.Compiler.KindCheck.Type (Type (App), tyOpaque, tyProd, tySu
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef))
 import LambdaBuffers.Compiler.ProtoCompat ()
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import Prettyprinter (Pretty (pretty))
 
 --------------------------------------------------------------------------------
 -- Types
@@ -135,16 +137,24 @@ localStrategy = reinterpret $ \case
         --  KCClass _ctx _classDef -> pure ()
         -}
 
+-- | Internal to External term association map ~ a mapping between a Variable and the term it originated from. Allows us to throw meaningful errors.
+type IETermMap = M.Map Variable (Either PC.TyVar PC.TyRef)
+
+type HandleErrorEnv a = Eff '[Reader ModName, Writer IETermMap] a
+
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
-  TypesFromTyDef moduleName tydef -> runReader moduleName (tyDef2Types tydef)
-  InferTypeKind _modName tyDef ctx ty -> either (handleErr tyDef) pure $ infer ctx ty
-  CheckKindConsistency mname def ctx k -> runReader mname $ resolveKindConsistency def ctx k
+  TypesFromTyDef modName tydef -> runReader modName (tyDef2Types tydef)
+  InferTypeKind modName tyDef ctx ty -> either (handleErr modName tyDef) pure $ infer ctx ty
+  CheckKindConsistency modName def ctx k -> runReader modName $ resolveKindConsistency def ctx k
   where
-    handleErr :: forall {b}. PC.TyDef -> InferErr -> Eff effs b
-    handleErr td = \case
-      InferUnboundTermErr uA ->
-        throwError . PC.CompKindCheckError $ PC.UnboundTermError (tyDef2TyName td) (var2VarName uA)
+    handleErr :: forall {b}. ModName -> PC.TyDef -> InferErr -> Eff effs b
+    handleErr modName td = \case
+      InferUnboundTermErr uA -> do
+        tt <- getTermType modName td uA
+        throwError . PC.CompKindCheckError $ case tt of
+          Right r -> PC.UnboundTyRefError td r
+          Left l -> PC.UnboundTyVarError td l
       InferUnifyTermErr (I.Constraint (k1, k2)) ->
         throwError . PC.CompKindCheckError $ PC.IncorrectApplicationError (tyDef2TyName td) (kind2ProtoKind k1) (kind2ProtoKind k2)
       InferRecursiveSubstitutionErr _ ->
@@ -152,13 +162,66 @@ runKindCheck = interpret $ \case
       InferImpossibleErr t ->
         throwError . PC.InternalError $ t
 
-    var2VarName = \case
-      LocalRef n -> PC.VarName n emptySourceInfo
-      ForeignRef m s -> PC.VarName (intercalate "." m <> s) emptySourceInfo
+    getTermType :: ModName -> PC.TyDef -> Variable -> Eff effs (Either PC.TyVar PC.TyRef)
+    getTermType modName td va = do
+      let termMap = snd . run . runWriter . runReader modName $ tyDef2Map td
+      case termMap M.!? va of
+        Just x -> pure x
+        Nothing ->
+          throwError . PC.InternalError . pack . unlines $
+            [ "Could not find the corresponding source info for:"
+            , show . pretty $ va
+            , "This should never happen."
+            , "Please report error."
+            ]
+      where
+        {- Conversion functions that associate a variable with its KC term.
+        The Monad has a Writer Map instance which is then used to retrieve sourceInfo
+        about the term.
+        -}
 
-    emptySourceInfo = PC.SourceInfo mempty emptySourcePosition emptySourcePosition
+        tyDef2Map :: PC.TyDef -> HandleErrorEnv ()
+        tyDef2Map = tyAbs2Map . view #tyAbs
 
-    emptySourcePosition = PC.SourcePosition 0 0
+        -- Note(cstml): Is there any purpose for anything from the tyArg - be sure to cover with tests.
+        tyAbs2Map :: PC.TyAbs -> HandleErrorEnv ()
+        tyAbs2Map tyAbs = tyBody2Map (tyAbs ^. #tyBody)
+
+        tyBody2Map :: PC.TyBody -> HandleErrorEnv ()
+        tyBody2Map = \case
+          PC.OpaqueI _ -> pure ()
+          PC.SumI s -> sum2Map s
+
+        sum2Map :: PC.Sum -> HandleErrorEnv ()
+        sum2Map (PC.Sum constr _) = traverse_ constr2Map $ M.elems constr
+
+        constr2Map :: PC.Constructor -> HandleErrorEnv ()
+        constr2Map = product2Map . view #product
+
+        product2Map :: PC.Product -> HandleErrorEnv ()
+        product2Map = \case
+          PC.RecordI r -> record2Map r
+          PC.TupleI t -> tuple2Map t
+
+        record2Map :: PC.Record -> HandleErrorEnv ()
+        record2Map r = traverse_ field2Map $ r ^. #fields
+
+        field2Map :: PC.Field -> HandleErrorEnv ()
+        field2Map = ty2Map . view #fieldTy
+
+        ty2Map :: PC.Ty -> HandleErrorEnv ()
+        ty2Map = \case
+          PC.TyVarI tvar ->
+            tell @IETermMap $ M.singleton (tyVar2Variable tvar) (Left tvar)
+          PC.TyAppI tapp -> do
+            ty2Map $ tapp ^. #tyFunc
+            traverse_ ty2Map $ tapp ^. #tyArgs
+          PC.TyRefI tyref -> do
+            var <- tyRef2Variable tyref
+            tell @IETermMap $ M.singleton var (Right tyref)
+
+        tuple2Map :: PC.Tuple -> HandleErrorEnv ()
+        tuple2Map = traverse_ ty2Map . view #fields
 
 -- Resolvers
 
@@ -275,7 +338,7 @@ pKind2Kind k =
   case k ^. #kind of
     PC.KindRef PC.KType -> Type
     PC.KindArrow l r -> pKind2Kind l :->: pKind2Kind r
-    -- NOTE(cstml): What is an Kind type meant to mean?
+    -- NOTE(cstml): What is an undefined Kind type meant to mean?
     _ -> error "Fixme undefined type"
 
 -- =============================================================================
@@ -388,7 +451,10 @@ tyVar2Type ::
   forall eff.
   PC.TyVar ->
   Eff eff Type
-tyVar2Type tv = pure . Var . LocalRef $ (tv ^. #varName . #name)
+tyVar2Type = pure . Var . tyVar2Variable
+
+tyVar2Variable :: PC.TyVar -> Variable
+tyVar2Variable = LocalRef . view (#varName . #name)
 
 tyApp2Type ::
   forall eff.
@@ -405,26 +471,34 @@ tyRef2Type ::
   Members '[Reader ModName, Err] eff =>
   PC.TyRef ->
   Eff eff Type
-tyRef2Type = \case
-  PC.LocalI lref -> localTyRef2Type lref
-  PC.ForeignI fref -> foreignTyRef2Type fref
+tyRef2Type = fmap Var . tyRef2Variable
 
-localTyRef2Type ::
+tyRef2Variable ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader ModName] eff =>
+  PC.TyRef ->
+  Eff eff Variable
+tyRef2Variable = \case
+  PC.LocalI lref -> localTyRef2Variable lref
+  PC.ForeignI fref -> foreignTyRef2Variable fref
+
+localTyRef2Variable ::
+  forall eff.
+  Members '[Reader ModName] eff =>
   PC.LocalRef ->
-  Eff eff Type
-localTyRef2Type ltr = do
+  Eff eff Variable
+localTyRef2Variable ltr = do
   moduleName <- ask
-  pure . Var $ ForeignRef moduleName (ltr ^. #tyName . #name)
+  pure $ ForeignRef moduleName (ltr ^. #tyName . #name)
 
-foreignTyRef2Type ::
+foreignTyRef2Variable ::
   forall eff.
+  Members '[Reader ModName] eff =>
   PC.ForeignRef ->
-  Eff eff Type
-foreignTyRef2Type ftr = do
+  Eff eff Variable
+foreignTyRef2Variable ftr = do
   let moduleName = moduleName2ModName (ftr ^. #moduleName)
-  pure $ Var $ ForeignRef moduleName (ftr ^. #tyName . #name)
+  pure $ ForeignRef moduleName (ftr ^. #tyName . #name)
 
 -- =============================================================================
 -- X To Canonical type conversion functions.

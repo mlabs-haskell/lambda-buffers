@@ -316,7 +316,8 @@ instance Arbitrary CompilerInput where
       fn n = CompilerInput <$> resize n arbitrary
 
 data KindCheckError
-  = UnboundTermError TyName VarName
+  = UnboundTyVarError TyDef TyVar
+  | UnboundTyRefError TyDef TyRef
   | IncorrectApplicationError TyName Kind Kind
   | RecursiveKindError TyName
   | InconsistentTypeError TyName Kind Kind

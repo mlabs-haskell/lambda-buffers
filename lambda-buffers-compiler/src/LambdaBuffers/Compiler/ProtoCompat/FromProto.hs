@@ -666,43 +666,51 @@ instance IsMessage P.KindCheckError PC.KindCheckError where
   fromProto kce =
     case kce ^. P.maybe'kindCheckError of
       Just x -> case x of
-        P.KindCheckError'UnboundTermError' err ->
-          PC.UnboundTermError
-            <$> fromProto (err ^. P.tyName)
-            <*> fromProto (err ^. P.varName)
-        P.KindCheckError'UnificationError err ->
+        P.KindCheckError'UnboundTyVarError' err ->
+          PC.UnboundTyVarError
+            <$> fromProto (err ^. P.tyDef)
+            <*> fromProto (err ^. P.tyVar)
+        P.KindCheckError'UnboundTyRefError' err ->
+          PC.UnboundTyRefError
+            <$> fromProto (err ^. P.tyDef)
+            <*> fromProto (err ^. P.tyRef)
+        P.KindCheckError'ImpossibleUnificationError' err ->
           PC.IncorrectApplicationError
             <$> fromProto (err ^. P.tyName)
-            <*> fromProto (err ^. P.tyKind1)
-            <*> fromProto (err ^. P.tyKind2)
-        P.KindCheckError'RecursiveSubsError err ->
+            <*> fromProto (err ^. P.tyKindLhs)
+            <*> fromProto (err ^. P.tyKindRhs)
+        P.KindCheckError'RecursiveKindError' err ->
           PC.RecursiveKindError
             <$> fromProto (err ^. P.tyName)
         P.KindCheckError'InconsistentTypeError' err ->
           PC.InconsistentTypeError
             <$> fromProto (err ^. P.tyName)
-            <*> fromProto (err ^. P.inferredKind)
-            <*> fromProto (err ^. P.definedKind)
+            <*> fromProto (err ^. P.actualKind)
+            <*> fromProto (err ^. P.expectedKind)
       Nothing -> throwOneOfError (messageName (Proxy @P.KindCheckError)) "kind_check_error"
 
   toProto = \case
-    PC.UnboundTermError tyname varname ->
+    PC.UnboundTyVarError tydef tyvar ->
       defMessage
-        & (P.unboundTermError . P.tyName) .~ toProto tyname
-        & (P.unboundTermError . P.varName) .~ toProto varname
+        & (P.unboundTyVarError . P.tyDef) .~ toProto tydef
+        & (P.unboundTyVarError . P.tyVar) .~ toProto tyvar
+    PC.UnboundTyRefError tydef tyref ->
+      defMessage
+        & (P.unboundTyRefError . P.tyDef) .~ toProto tydef
+        & (P.unboundTyRefError . P.tyRef) .~ toProto tyref
     PC.IncorrectApplicationError name k1 k2 ->
       defMessage
-        & (P.unificationError . P.tyName) .~ toProto name
-        & (P.unificationError . P.tyKind1) .~ toProto k1
-        & (P.unificationError . P.tyKind2) .~ toProto k2
+        & (P.impossibleUnificationError . P.tyName) .~ toProto name
+        & (P.impossibleUnificationError . P.tyKindLhs) .~ toProto k1
+        & (P.impossibleUnificationError . P.tyKindRhs) .~ toProto k2
     PC.RecursiveKindError err ->
       defMessage
-        & (P.recursiveSubsError . P.tyName) .~ toProto err
+        & (P.recursiveKindError . P.tyName) .~ toProto err
     PC.InconsistentTypeError name ki kd ->
       defMessage
         & (P.inconsistentTypeError . P.tyName) .~ toProto name
-        & (P.inconsistentTypeError . P.inferredKind) .~ toProto ki
-        & (P.inconsistentTypeError . P.definedKind) .~ toProto kd
+        & (P.inconsistentTypeError . P.actualKind) .~ toProto ki
+        & (P.inconsistentTypeError . P.expectedKind) .~ toProto kd
 
 instance IsMessage P.CompilerError PC.CompilerError where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
