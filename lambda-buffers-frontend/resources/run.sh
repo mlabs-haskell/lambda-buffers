@@ -1,3 +1,4 @@
+#!/bin/sh
 function lbf {
    cabal run lbf -- $@
 }
