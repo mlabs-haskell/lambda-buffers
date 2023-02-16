@@ -92,7 +92,7 @@ genTyVar args = do
 
 genConstructor :: [TyArg] -> ConstrName -> QC.Gen Sum'Constructor
 genConstructor args cn = do
-  tys <- QC.chooseInt (1, limit) >>= vecOf (genTy [] args)
+  tys <- QC.chooseInt (1, limit) >>= vecOf (genTy mempty args)
   return $
     defMessage
       & constrName .~ cn
