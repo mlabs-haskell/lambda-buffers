@@ -6,7 +6,7 @@ module Test.DeriveCheck (test) where
 import Control.Lens (Prism, _Left, _Right)
 import Control.Lens.Extras (is)
 import Data.Generics.Labels ()
-import Data.Generics.Sum.Constructors (AsConstructor (..))
+import Data.Generics.Sum.Constructors (AsConstructor (_Ctor))
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
@@ -27,7 +27,7 @@ import LambdaBuffers.Compiler.TypeClass.Rules (
  )
 import LambdaBuffers.Compiler.TypeClass.Utils (
   Instance,
-  ModuleBuilder (..),
+  ModuleBuilder (ModuleBuilder, mbClasses, mbInstances, mbScope, mbTyDefs),
   TypeClassError,
  )
 import LambdaBuffers.Compiler.TypeClass.Validate (_X)
@@ -141,9 +141,6 @@ pattern LocalRefP nm = RefP NilP (LitP (Name nm))
 pattern ForeignRefP :: [Text] -> Text -> Pat
 pattern ForeignRefP mn nm = RefP (LitP (ModuleName mn)) (LitP (Name nm))
 
-pattern LocalRefE :: Text -> Exp
-pattern LocalRefE nm = RefE NilE (LitE (Name nm))
-
 pattern ForeignRefE :: [Text] -> Text -> Exp
 pattern ForeignRefE mn nm = RefE (LitE (ModuleName mn)) (LitE (Name nm))
 
@@ -251,6 +248,7 @@ moduleB'1 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) NilE $
@@ -294,6 +292,7 @@ moduleB'2 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) (LitE (TyVar "a") *: nil) $
@@ -331,6 +330,7 @@ moduleB'3 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) (LitE (TyVar "a") *: nil) $
@@ -375,6 +375,7 @@ moduleB'4 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) NilE $
@@ -408,6 +409,7 @@ moduleB'5 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) NilE $
@@ -441,6 +443,7 @@ moduleB'6 =
     , mbScope = scopeB
     }
   where
+    tyDefsB :: M.Map Text Exp
     tyDefsB =
       M.fromList
         [ "Foo" .= DecE (LitE (Name "Foo")) NilE $
@@ -481,6 +484,7 @@ moduleC'1 =
     , mbScope = scopeC
     }
   where
+    tyDefsC :: M.Map Text Exp
     tyDefsC =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
@@ -519,6 +523,7 @@ moduleD'1 =
     , mbScope = scopeC
     }
   where
+    tyDefsC :: M.Map Text Exp
     tyDefsC =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
@@ -557,6 +562,7 @@ moduleD'2 =
     , mbScope = scopeC
     }
   where
+    tyDefsC :: M.Map Text Exp
     tyDefsC =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
@@ -598,6 +604,7 @@ moduleD'3 =
     , mbScope = scopeC
     }
   where
+    tyDefsC :: M.Map Text Exp
     tyDefsC =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
