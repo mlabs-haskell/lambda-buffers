@@ -1,22 +1,23 @@
 module Test.LambdaBuffers.Compiler.Gen (genCompilerInput) where
 
 import Control.Lens ((&), (.~), (^.))
-import Control.Monad.Reader (replicateM)
+import Data.Foldable (Foldable (toList))
 import Data.List qualified as List
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
-import Proto.Compiler_Fields (argKind, argName, constrName, constructors, fields, kindRef, moduleName, modules, name, ntuple, parts, tyAbs, tyArgs, tyBody, tyName, tyVar, typeDefs, varName)
+import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, TyRef, VarName)
+import Proto.Compiler_Fields (argKind, argName, constrName, constructors, fields, kindRef, moduleName, modules, name, ntuple, parts, tyAbs, tyArgs, tyBody, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
 import Test.QuickCheck qualified as QC (Gen, chooseEnum, chooseInt, elements, oneof, vectorOf)
 
 vecOf :: forall {a}. QC.Gen a -> Int -> QC.Gen [a]
-vecOf g n = replicateM n g
+vecOf = flip QC.vectorOf
 
 limit :: Int
-limit = 10
+limit = 4
 
 -- | Names
 genAlphaNum :: QC.Gen Char
@@ -73,27 +74,44 @@ genSum args = do
   return $ defMessage & constructors .~ ctors
 
 -- TODO(bladyjoker): Add TyRef, TyApp etc.
-genTy :: [TyArg] -> QC.Gen Ty
-genTy args = do
-  ar <- QC.elements args
+genTy :: [TyRef] -> [TyArg] -> QC.Gen Ty
+genTy (r : refs) (a : args) = QC.oneof [genTyVar (a :| args), genTyRef (r :| refs)]
+genTy [] (a : args) = QC.oneof [genTyVar (a :| args)]
+genTy (r : refs) [] = QC.oneof [genTyRef (r :| refs)]
+genTy _ _ = error "TODO(bladyjoker): Not yet implemented"
+
+genTyRef :: NonEmpty TyRef -> QC.Gen Ty
+genTyRef refs = do
+  r <- QC.elements (toList refs)
+  return $ defMessage & tyRef .~ r
+
+genTyVar :: NonEmpty TyArg -> QC.Gen Ty
+genTyVar args = do
+  ar <- QC.elements (toList args)
   return $ defMessage & tyVar . varName .~ (ar ^. argName)
 
 genConstructor :: [TyArg] -> ConstrName -> QC.Gen Sum'Constructor
 genConstructor args cn = do
-  tys <- QC.chooseInt (1, limit) >>= vecOf (genTy args)
+  tys <- QC.chooseInt (1, limit) >>= vecOf (genTy mempty args)
   return $
     defMessage
       & constrName .~ cn
       & P.product . ntuple . fields .~ tys
 
--- TODO(bladyjoker): Add Opaque.
 genTyBody :: [TyArg] -> QC.Gen TyBody
-genTyBody args = do
+genTyBody args = QC.oneof [genTyBodyOpaque, genTyBodySum args]
+
+genTyBodySum :: [TyArg] -> QC.Gen TyBody
+genTyBodySum args = do
   b <- genSum args
   return $ defMessage & P.sum .~ b
 
+genTyBodyOpaque :: QC.Gen TyBody
+genTyBodyOpaque = return $ defMessage & P.opaque .~ defMessage
+
 genTyAbs :: QC.Gen TyAbs
 genTyAbs = do
+  -- TODO(bladyjoker): Allow empty args
   vns <- QC.chooseInt (1, limit) >>= vecOf genVarName
   args <- for (List.nub vns) genTyArg
   body <- genTyBody args

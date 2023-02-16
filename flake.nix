@@ -94,7 +94,10 @@
           # Frontend Build
           frontendBuild = buildAbstraction {
             import-location = ./lambda-buffers-frontend/build.nix;
-            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
+            additional = {
+              lambda-buffers-compiler = ./lambda-buffers-compiler;
+              lambda-buffers-compiler-cli = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
+            };
           };
           frontendFlake = flakeAbstraction frontendBuild;
 

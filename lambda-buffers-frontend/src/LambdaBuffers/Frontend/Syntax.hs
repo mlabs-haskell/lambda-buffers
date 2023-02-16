@@ -18,6 +18,7 @@ module LambdaBuffers.Frontend.Syntax (
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
+  defSourceInfo,
 ) where
 
 import Data.Text (Text)
@@ -96,3 +97,6 @@ data SourcePos = SourcePos
   , column :: Int
   }
   deriving stock (Eq, Ord, Show)
+
+defSourceInfo :: SourceInfo
+defSourceInfo = SourceInfo "" (SourcePos 0 0) (SourcePos 0 0)
