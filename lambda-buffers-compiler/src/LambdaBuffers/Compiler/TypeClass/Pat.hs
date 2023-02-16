@@ -1,6 +1,21 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Pat where
+module LambdaBuffers.Compiler.TypeClass.Pat (
+  Pat (..),
+  Exp (..),
+  Literal (..),
+  ExpressionLike (..),
+  toProdP,
+  toSumP,
+  toRecP,
+  patList,
+  toProdE,
+  toSumE,
+  toRecE,
+  getLocalRefE,
+  expList,
+  matches,
+) where
 
 import Data.Kind (Type)
 import Data.Text (Text)
@@ -125,6 +140,22 @@ toRecE = RecE . foldr ConsE NilE
 
 toSumE :: [Exp] -> Exp
 toSumE = SumE . foldr ConsE NilE
+
+-- | Extract the "type function" from an AppE Expr
+tyFunE :: Exp -> Maybe Exp
+tyFunE = \case
+  AppE e1 _ -> case tyFunE e1 of
+    Nothing -> Just e1
+    Just e2 -> Just e2
+  _ -> Nothing
+
+getLocalRefE :: Exp -> Maybe Text
+getLocalRefE = \case
+  RefE NilE (LitE (Name t)) -> Just t
+  app@(AppE _ _) -> case tyFunE app of
+    Just (RefE NilE (LitE (Name t))) -> Just t
+    _ -> Nothing
+  _ -> Nothing
 
 {- Converts a pattern that consists of a well formed pattern list
    (i.e. patterns formed from :* and Nil) into a list of patterns.

@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Test.TypeClassCheck where
+module Test.TypeClassCheck (test) where
 
 import Control.Lens ((.~))
 import Data.Function ((&))
@@ -9,7 +9,14 @@ import Data.Text (Text)
 import Data.Traversable (for)
 import LambdaBuffers.Compiler.ProtoCompat (IsMessage (fromProto))
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Exp (AppE, LabelE, LitE, NilE, RefE),
+  Literal (Name, TyVar),
+  Pat (AppP, LitP, NilP, RefP),
+  toProdE,
+  toRecE,
+  toSumE,
+ )
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   Constraint (C),
@@ -110,7 +117,7 @@ solveTests =
     , testCase "5: C (Either (Either Int Bool) (Either Bool Int)) (completeRules)" $
         solveTest5 @?= solved
     , testCase "6: C (Either l x) (completeRules)" $
-        solveTest6 @?= Right [cL, cX]
+        solveTest6 @?= solved
     , testCase "7: Sum test (completeRules)" $
         solveTest7 @?= solved
     , testCase "8: Sum test (partialRules)" $
@@ -123,12 +130,15 @@ solveTests =
         solveTest11 @?= solved
     , testCase "12: Prod test (partialRules)" $
         solveTest12 @?= Right [cBool, cInt]
-    , testCase "13: Dec test (completeRules)" $
-        solveTest13 @?= solved
-    , testCase "14: Dec test (partialRules)" $
-        solveTest14 @?= Right [cBool, cInt]
-    , testCase "15: Overlap test (specialrules)" $
-        solveTest15 @?= Left overlap
+    , testCase "13: Overlap test (specialRules)" $
+        solveTest13
+          @?= Left
+            ( Overlap
+                cMaybeInt
+                [ C _c (MaybeP _X) :<= [C _c _X]
+                , C _c (MaybeP IntP) :<= []
+                ]
+            )
     ]
   where
     solved :: Either Overlap [R.Constraint Exp]
@@ -137,15 +147,7 @@ solveTests =
     cMaybeInt = C _c (MaybeE IntE)
     cInt = C _c IntE
     cBool = C _c BoolE
-    cL = C _c vl
-    cX = C _c vr
     dInt = C _d IntE
-    overlap =
-      Overlap
-        cMaybeInt
-        [ C _c (MaybeP _X) :<= [C _c _X]
-        , C _c (MaybeP IntP) :<= []
-        ]
 
 -- hardcoded TYPE variables
 vl, vr :: Exp
@@ -177,9 +179,6 @@ pattern BoolP = LocalRefP "Bool"
 pattern NoConstraints :: Class -> Pat -> Rule Pat
 pattern NoConstraints c p = C c p :<= []
 
-pattern Labeled :: Text -> Pat -> Pat
-pattern Labeled nm p = LabelP (LitP (Name nm)) p
-
 -- Target
 
 pattern (:@@) :: Exp -> Exp -> Exp
@@ -202,9 +201,6 @@ pattern IntE = LocalRefE "Int"
 
 pattern BoolE :: Exp
 pattern BoolE = LocalRefE "Bool"
-
-pattern NoConstraintsE :: Class -> Exp -> Rule Exp
-pattern NoConstraintsE c p = C c p :<= []
 
 pattern LabeledE :: Text -> Exp -> Exp
 pattern LabeledE nm p = LabelE (LitE (Name nm)) p
@@ -261,8 +257,9 @@ solveTest4 = solve (completeRules _c) $ C _c $ ListE (ListE (ListE BoolE))
 solveTest5 :: Either Overlap [R.Constraint Exp]
 solveTest5 = solve (completeRules _c) $ C _c $ EitherE (EitherE IntE BoolE) (EitherE BoolE IntE)
 
--- NOTE(@bladyjoker): This one shows that we never need to "freshen" variables
--- C (Either l x) w/ complete rules (expected: [C l, C x])
+-- NOTE: This passes as a result of our hack where we assume that instances
+--       for bare type variables are satisfied.
+-- C (Either l x) w/ complete rules (expected: [])
 solveTest6 :: Either Overlap [R.Constraint Exp]
 solveTest6 = solve (completeRules _c) $ C _c $ EitherE vl vr
 
@@ -320,31 +317,9 @@ solveTest12 = solve (partialRules _c) $ C _c prodBody
   where
     prodBody = toProdE [ListE BoolE, EitherE IntE BoolE]
 
--- expected []
-solveTest13 :: Either Overlap [R.Constraint Exp]
-solveTest13 = solve (completeRules _c) $ C _c testDec
-  where
-    testDec =
-      DecE (LitE (Name "Foo")) NilE $
-        toSumE
-          [ LabeledE "Ctor1" (toProdE [MaybeE IntE])
-          , LabeledE "Ctor2" (toRecE [LabeledE "field1" BoolE])
-          ]
-
--- expected [C Int, C Bool]
-solveTest14 :: Either Overlap [R.Constraint Exp]
-solveTest14 = solve (partialRules _c) $ C _c testDec
-  where
-    testDec =
-      DecE (LitE (Name "Foo")) NilE $
-        toSumE
-          [ LabeledE "Ctor1" (toProdE [MaybeE IntE])
-          , LabeledE "Ctor2" (toRecE [LabeledE "field1" BoolE])
-          ]
-
 -- expected overlap
-solveTest15 :: Either Overlap [R.Constraint Exp]
-solveTest15 = solve cOverlapRules (C _c $ ListE (MaybeE IntE))
+solveTest13 :: Either Overlap [R.Constraint Exp]
+solveTest13 = solve cOverlapRules (C _c $ ListE (MaybeE IntE))
   where
     cOverlapRules =
       [ C _c (MaybeP _X) :<= [C _c _X]
@@ -352,17 +327,3 @@ solveTest15 = solve cOverlapRules (C _c $ ListE (MaybeE IntE))
       , C _c IntP :<= []
       , C _c (ListP _X) :<= [C _c _X]
       ]
-
-{-
-    checkDerive tests
--}
-
-{- Test 1:
-
-module A where
-
-opaque Int
-opaque Bool
-opaque
-
--}

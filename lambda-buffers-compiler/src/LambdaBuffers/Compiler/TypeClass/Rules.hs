@@ -1,7 +1,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module LambdaBuffers.Compiler.TypeClass.Rules where
+module LambdaBuffers.Compiler.TypeClass.Rules (
+  FQClassName (..),
+  Class (..),
+  Constraint (..),
+  Rule (..),
+  ruleHead,
+  ruleClass,
+) where
 
 import Data.Text (Text)
 

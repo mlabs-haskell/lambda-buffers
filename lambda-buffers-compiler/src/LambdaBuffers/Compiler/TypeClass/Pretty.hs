@@ -13,7 +13,13 @@ import Control.Lens.Operators ((^.))
 import Data.Generics.Labels ()
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE),
+  Literal (ModuleName, Name, Opaque, TyVar),
+  Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP),
+  expList,
+  patList,
+ )
 import LambdaBuffers.Compiler.TypeClass.Rules (
   Class (Class),
   Constraint (C),

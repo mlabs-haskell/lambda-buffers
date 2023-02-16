@@ -79,9 +79,11 @@ runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
   where
     go :: Instance -> Either TypeClassError ()
     go i =
-      checkDerive mn mb i >>= \case
-        [] -> pure ()
-        xs -> Left $ CouldntSolveConstraints mn xs i
+      checkInstance i
+        >> checkDerive mn mb i
+        >>= \case
+          [] -> pure ()
+          xs -> Left $ CouldntSolveConstraints mn xs i
 
 -- ModuleBuilder is suitable codegen input,
 -- and is (relatively) computationally expensive to

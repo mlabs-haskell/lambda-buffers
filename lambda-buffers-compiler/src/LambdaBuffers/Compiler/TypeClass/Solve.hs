@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Solve where
+module LambdaBuffers.Compiler.TypeClass.Solve (solve, inst, Overlap (..)) where
 
 import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -8,13 +8,11 @@ import Control.Monad.Reader.Class (MonadReader (ask))
 import Control.Monad.Writer.Class (MonadWriter (tell))
 import Control.Monad.Writer.Strict (WriterT, execWriterT)
 import Data.Foldable (traverse_)
-import Data.List (foldl')
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
-import Debug.Trace (traceM)
-import LambdaBuffers.Compiler.TypeClass.Pat
-import LambdaBuffers.Compiler.TypeClass.Rules
+import LambdaBuffers.Compiler.TypeClass.Pat (Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE), ExpressionLike ((*:), (*=)), Literal (TyVar), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), matches)
+import LambdaBuffers.Compiler.TypeClass.Rules (Class (csupers), Constraint (C), Rule ((:<=)), ruleClass, ruleHead)
 
 {- Pattern/Template/Unification variable  substitution.
    Given a string that represents a variable name,
@@ -38,18 +36,7 @@ subV cxt = \case
   NilP -> NilE
 
 inst :: Pat -> Exp
-inst = \case
-  VarP v -> LitE (TyVar v)
-  ConsP x xs -> ConsE (inst x) (inst xs)
-  LabelP l x -> LabelE (inst l) (inst x)
-  ProdP xs -> ProdE (inst xs)
-  RecP xs -> RecE (inst xs)
-  SumP xs -> SumE (inst xs)
-  AppP t1 t2 -> AppE (inst t1) (inst t2)
-  RefP n x -> RefE (inst n) (inst x)
-  DecP a b c -> DecE (inst a) (inst b) (inst c)
-  LitP l -> LitE l
-  NilP -> NilE
+inst = subV M.empty
 
 {- Performs substitution on an entire instance (the first argument) given the
    concrete types from a Pat (the second argument).
@@ -111,23 +98,20 @@ type SolveM = ReaderT [Rule Pat] (WriterT (S.Set (Constraint Exp)) (Either Overl
          `class Bar y => Foo y` without an `instance Bar X`)
 -}
 solveM :: Constraint Exp -> SolveM ()
+-- TODO(@gnumonik): Explain why we have this TyVar rule here
+solveM (C _ (LitE (TyVar _))) = pure ()
 solveM cst@(C c pat) =
   ask >>= \inScope ->
-    -- First, we look for the most specific instance...
     case selectMatchingInstance pat c inScope of
       Left e -> case e of
         NoMatch -> tell $ S.singleton cst
         OverlappingMatches olps -> throwError $ Overlap cst olps
-      -- If there is, we substitute the argument of the constraint to be solved into the matching rules
       Right rule -> case subst rule pat of
-        -- If there are no additional constraints on the rule, we try to solve the superclasses
         C _ p :<= [] -> solveClassesFor p (csupers c)
-        -- If there are additional constraints on the rule, we try to solve them
         C _ _ :<= is -> do
           traverse_ solveM is
           solveClassesFor pat (csupers c)
   where
-    -- NOTE(@bladyjoker): The version w/ flip is more performant...
     -- Given a Pat and a list of Classes, attempt to solve the constraints
     -- constructed from the Pat and each Class
     solveClassesFor :: Exp -> [Class] -> SolveM ()

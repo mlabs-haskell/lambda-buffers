@@ -1,6 +1,14 @@
 {-# LANGUAGE OverloadedLabels #-}
 
-module LambdaBuffers.Compiler.TypeClass.Compat where
+module LambdaBuffers.Compiler.TypeClass.Compat (
+  modulename,
+  defToExp,
+  tyToExp,
+  appToExp,
+  defToPat,
+  tyToPat,
+  appToPat,
+) where
 
 import Control.Lens ((^.))
 import Control.Lens.Combinators (view)
@@ -8,7 +16,18 @@ import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (
+  Exp (AppE, DecE, LitE, NilE, RefE),
+  ExpressionLike (nil, (*:), (*=)),
+  Literal (ModuleName, Name, Opaque, TyVar),
+  Pat (AppP, DecP, LitP, NilP, RefP, VarP),
+  toProdE,
+  toProdP,
+  toRecE,
+  toRecP,
+  toSumE,
+  toSumP,
+ )
 
 {-
     TyDefs

@@ -27,8 +27,17 @@ import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text qualified as T
 
-import LambdaBuffers.Compiler.TypeClass.Compat
-import LambdaBuffers.Compiler.TypeClass.Rules
+import LambdaBuffers.Compiler.TypeClass.Compat (
+  defToExp,
+  modulename,
+  tyToPat,
+ )
+import LambdaBuffers.Compiler.TypeClass.Rules (
+  Class (Class),
+  Constraint (C),
+  FQClassName (FQClassName),
+  Rule ((:<=)),
+ )
 
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
@@ -41,7 +50,8 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   SourceInfo,
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClass.Pat
+import LambdaBuffers.Compiler.TypeClass.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
+
 import LambdaBuffers.Compiler.TypeClass.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap))
 import Prettyprinter (
@@ -70,8 +80,9 @@ data TypeClassError
   | LocalTyRefNotFound T.Text P.ModuleName
   | SuperclassCycleDetected [[FQClassName]]
   | CouldntSolveConstraints P.ModuleName [Constraint Exp] Instance
+  | MalformedTyDef P.ModuleName Exp
   | BadInstance BasicConditionViolation
-  deriving stock (Show)
+  deriving stock (Show, Eq, Generic)
 
 instance Pretty TypeClassError where
   pretty = \case
@@ -116,13 +127,19 @@ instance Pretty TypeClassError where
           <> line
           <> line
           <> indent 2 (vcat $ map pretty cs)
+    MalformedTyDef mn xp ->
+      "Error: Encountered malformed type definition:"
+        <> line
+        <> indent 2 (pretty xp)
+        <> line
+        <> indent 2 ("in module" <+> pretty mn)
     BadInstance bcv -> pretty bcv
 
 data BasicConditionViolation
   = TyConInContext Instance (Constraint Pat)
   | OnlyTyVarsInHead Instance (Constraint Pat)
   | OverlapDetected Overlap
-  deriving stock (Show)
+  deriving stock (Show, Eq, Generic)
 
 instance Pretty BasicConditionViolation where
   pretty = \case
@@ -156,12 +173,12 @@ all the type variables are distinct.
 3. The instance declarations must not overlap.
 -}
 
-checkInstance :: Rule Pat -> Either BasicConditionViolation ()
+checkInstance :: Rule Pat -> Either TypeClassError ()
 checkInstance rule@(C cls hd :<= constraints) =
   case traverse cond1 constraints of
     Left e -> Left e
     Right _ -> case hd of
-      VarP _ -> Left $ OnlyTyVarsInHead rule (C cls hd)
+      VarP _ -> Left . BadInstance $ OnlyTyVarsInHead rule (C cls hd)
       -- NOTE: THIS ASSUMES THAT EVERYTHING HAS BEEN KIND-CHECKED AND
       --       THAT NO TYVARS HAVE KIND (* -> *). If every tyvar
       --       is of kind * and we have no MPTCs then the
@@ -169,10 +186,10 @@ checkInstance rule@(C cls hd :<= constraints) =
       --       a bare type variable in the head
       _ -> Right ()
   where
-    cond1 :: Constraint Pat -> Either BasicConditionViolation ()
+    cond1 :: Constraint Pat -> Either TypeClassError ()
     cond1 cst@(C _ p) = case p of
       VarP _ -> Right ()
-      _ -> Left $ TyConInContext rule cst
+      _ -> Left . BadInstance $ TyConInContext rule cst
 
 {- This contains:
      - Everything needed to validate instances (in the form needed to do so)
@@ -269,11 +286,10 @@ getInstances ctable mn = foldM go S.empty
         let p = tyToPat h
         cs <- traverse goConstraint csts
         let inst = C cls p :<= cs
-        check inst
+        checkInstance inst
         pure $ S.insert inst acc
       where
         cref = tyRefToFQClassName (modulename mn) cn
-        check = either (Left . BadInstance) pure . checkInstance
 
     goConstraint :: P.Constraint -> Either TypeClassError (Constraint Pat)
     goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
