@@ -17,7 +17,7 @@ import Data.Text.IO qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef))
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef), defSourceInfo)
 import Prettyprinter (Doc, LayoutOptions (layoutPageWidth), PageWidth (Unbounded), Pretty (pretty), defaultLayoutOptions, layoutPretty, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 import System.Directory (findFiles)
@@ -77,10 +77,10 @@ type FrontendT m a = MonadIO m => ReaderT FrontRead (StateT FrontState (ExceptT 
 -- | Run a Frontend compilation action on a "lbf" file, return the entire compilation closure or a frontend error.
 runFrontend :: MonadIO m => [FilePath] -> FilePath -> m (Either FrontendError FrontendResult)
 runFrontend importPaths modFp = do
-  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] defaultSouceInfo)) [] importPaths)
+  let stM = runReaderT (processFile modFp) (FrontRead (ModuleName [] defSourceInfo) [] importPaths)
       exM = runStateT stM (FrontState mempty)
       ioM = runExceptT exM
-  fmap (FrontendResult . importedModules . snd) <$> runExceptT exM
+  fmap (FrontendResult . importedModules . snd) <$> ioM
 
 throwE' :: FrontendError -> FrontendT m a
 throwE' = lift . lift . throwE
