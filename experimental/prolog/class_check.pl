@@ -158,29 +158,29 @@ prolog:message(rule_failed(rule(ClassName, Ty))) --> [ 'Failed rule ~w ~w'-[Clas
 
 :- begin_tests(class_check).
 
-test("should_succeed(derive_eq_of_int)", []) :-
+test("should_succeed: derive Eq Int)", []) :-
     derive([ty_ref(int8)], eq, S, U),
     solve(S, U, eq(ty_ref(int8))).
 
-test("should_succeed(derive_eq_of_maybe_int)", []) :-
+test("should_succeed: derive Eq Maybe Int8)", []) :-
     derive([ty_ref(int8), ty_app(ty_ref(maybe), ty_ref(int8))], eq, S, U),
     solve(S, U, eq(ty_ref(int8))),
     solve(S, U, eq(ty_app(ty_ref(maybe), ty_ref(int8)))).
 
-test("should_succeed(derive_eq_of_maybe_a)", []) :-
+test("should_succeed: derive Eq (Maybe a))", []) :-
     derive([ty_app(ty_ref(maybe), _A)], eq, S, U),
     solve(S, U, eq(ty_app(ty_ref(maybe), _B))).
 
-test("should_fail(derive_eq_of_foo)", [ fail ]) :-
+test("should_fail(derive Eq Foo)", [ fail ]) :-
     derive([ty_ref(foo)], eq, S, U),
     solve(S, U, eq(ty_ref(foo))).
 
-test("should_fail(derive_eq_of_foo with int8)", [ fail ]) :-
+test("should_fail(derive Eq Foo; derive Eq Int8)", [ fail ]) :-
     derive([ty_ref(int8), ty_ref(foo)], eq, S, U),
     solve(S, U, eq(ty_ref(int8))),
     solve(S, U, eq(ty_ref(foo))).
 
-test("should_succeed(derive_eq_of_foo with int8)", [ ]) :-
+test("should_succeed: derive Eq Foo; derive Eq Int8)", [ ]) :-
     derive([
                   ty_ref(int8),
                   ty_ref(foo),
@@ -190,24 +190,31 @@ test("should_succeed(derive_eq_of_foo with int8)", [ ]) :-
     solve(S, U, eq(ty_ref(foo))),
     solve(S, U, eq(ty_app(ty_ref(maybe), _B))).
 
-test("should_fail(derive_eq_of_recfoo)", [ fail ]) :-
+test("should_fail: derive Eq Recfoo", [ fail ]) :-
     derive([
                   ty_ref(recfoo)
               ], eq, S, U),
     solve(S, U, eq(ty_ref(recfoo))).
 
-test("should_succeed(derive_eq_of_recfoo with recbar)", [ ]) :-
+test("should_succeed: derive Eq Recfoo, Eq Recbar)", [ ]) :-
     derive([
                   ty_ref(recfoo),
                   ty_ref(recbar)
               ], eq, S, U),
     solve(S, U, eq(ty_ref(recfoo))).
 
-test("should_succeed(derive_eq_of_recfoo with recbar)", [ ]) :-
+test("should_succeed: derive Maybe (Maybe Int8))", [ ]) :-
     derive([
                   ty_ref(int8),
                   ty_app(ty_ref(maybe), _A)
               ], eq, S, U),
     solve(S, U, eq(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
+
+test("should_succeed: derive Maybe (Maybe a)", [ ]) :-
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), _A)
+              ], eq, S, U),
+    solve(S, U, eq(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), _B)))).
 
 :- end_tests(class_check).
