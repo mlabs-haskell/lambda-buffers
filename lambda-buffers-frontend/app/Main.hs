@@ -1,7 +1,6 @@
 module Main (main) where
 
-import Control.Applicative (Alternative (many), (<**>))
-
+import Control.Applicative (Alternative (many), optional, (<**>))
 import LambdaBuffers.Frontend.Cli.Compile (CompileOpts (CompileOpts), compile)
 import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
 import Options.Applicative (
@@ -48,6 +47,29 @@ compileOptsP =
           <> short 'f'
           <> metavar "FILEPATH"
           <> help "LambdaBuffers file (.lbf) to compile"
+      )
+    <*> strOption
+      ( long "compiler"
+          <> short 'c'
+          <> metavar "FILEPATH"
+          <> help "LambdaBuffers compiler location (lambda-buffers-compiler-cli)"
+      )
+    <*> flag
+      False
+      True
+      ( long "debug"
+          <> short 'd'
+          <> help "Run in debug mode"
+          <> showDefault
+      )
+    <*> optional
+      ( strOption
+          ( long "work-dir"
+              <> short 'w'
+              <> metavar "FILEPATH"
+              <> help "Working directory used to communicate with the Compiler"
+              <> showDefault
+          )
       )
 
 formatOptsP :: Parser FormatOpts

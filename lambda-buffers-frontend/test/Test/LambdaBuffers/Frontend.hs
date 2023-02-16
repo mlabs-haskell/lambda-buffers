@@ -2,12 +2,10 @@ module Test.LambdaBuffers.Frontend (tests) where
 
 import Test.Tasty (TestTree, testGroup)
 
-import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set qualified as Set
-import LambdaBuffers.Frontend (FrontendError, runFrontend)
+import LambdaBuffers.Frontend (FrontendError, FrontendResult (FrontendResult), runFrontend)
 import LambdaBuffers.Frontend.Parsec ()
-import LambdaBuffers.Frontend.Syntax (Module, ModuleName, SourceInfo)
 import Prettyprinter (Pretty (pretty))
 import System.FilePath ((</>))
 import Test.Tasty.HUnit (Assertion, assertFailure, testCase, (@?=))
@@ -87,13 +85,13 @@ frontendErrorTests resourcesFp =
         assertError (fileErr <> ":(6:13)-(6:28) Type WhereIsThisType not found in the module's scope [A, B, C, B.B, C.C]") errOrMod
     ]
 
-assertError :: String -> Either FrontendError (Map (ModuleName ()) (Module SourceInfo)) -> Assertion
+assertError :: String -> Either FrontendError FrontendResult -> Assertion
 assertError expected (Left frErr) = expected @?= show frErr
 assertError _ (Right _) = assertFailure "Expected to fail but succeeded"
 
-assertSuccess :: [String] -> Either FrontendError (Map (ModuleName ()) (Module SourceInfo)) -> Assertion
+assertSuccess :: [String] -> Either FrontendError FrontendResult -> Assertion
 assertSuccess _ (Left err) = assertFailure $ "Expected to succeed but failed with: " <> show err
-assertSuccess expected (Right mods) = Set.fromList expected @?= Set.fromList (show . pretty <$> Map.keys mods)
+assertSuccess expected (Right (FrontendResult mods)) = Set.fromList expected @?= Set.fromList (show . pretty <$> Map.keys mods)
 
 frontendSuccessTests :: FilePath -> TestTree
 frontendSuccessTests resourcesFp =

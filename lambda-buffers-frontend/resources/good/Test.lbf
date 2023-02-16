@@ -17,7 +17,8 @@ sum Either a b = Left a | Right b
 
 sum List a = Nil | List a (List a)
 
-opaque Int a
+opaque Int
+
 opaque Bytes
 
 sum Foo a = MkFoo
