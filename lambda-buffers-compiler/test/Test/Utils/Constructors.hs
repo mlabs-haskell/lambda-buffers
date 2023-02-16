@@ -19,6 +19,8 @@ module Test.Utils.Constructors (
   _ModuleNamePart,
   _TyVarI',
   _SourceInfo,
+  _LocalRef,
+  _LocalRef',
 ) where
 
 import Control.Lens ((^.))
@@ -133,10 +135,15 @@ _TyDef :: P.TyName -> P.TyAbs -> P.TyDef
 _TyDef name ab = P.TyDef {P.tyName = name, P.tyAbs = ab, sourceInfo = P.defSourceInfo}
 
 _TyRefILocal :: Text -> P.Ty
-_TyRefILocal x =
-  P.TyRefI $
-    P.LocalI $
-      P.LocalRef
-        { P.tyName = P.TyName {P.name = x, sourceInfo = P.defSourceInfo}
-        , P.sourceInfo = P.defSourceInfo
-        }
+_TyRefILocal x = P.TyRefI $ P.LocalI $ _LocalRef x
+
+_LocalRef :: Text -> P.LocalRef
+_LocalRef = flip _LocalRef' P.defSourceInfo
+
+-- | LocalRef with Source Info - for error precision testing.
+_LocalRef' :: Text -> P.SourceInfo -> P.LocalRef
+_LocalRef' x s =
+  P.LocalRef
+    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
+    , P.sourceInfo = s
+    }

@@ -1,8 +1,8 @@
-module Test.Utils.Module (module'maybe, module'incoherent, module'undefinedVar) where
+module Test.Utils.Module (module'maybe, module'incoherent, module'undefinedVar, module'undefinedlocalTyRef) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.Constructors (_Module, _ModuleName)
-import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe, tyDef'undefinedVar)
+import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe, tyDef'undefinedVar, tyDef'undefinedlocalTyRef)
 
 -- _Module mn tds cds ins =
 
@@ -28,3 +28,11 @@ module'incoherent = _Module (_ModuleName ["Module"]) [tyDef'maybe, tyDef'incoher
 -}
 module'undefinedVar :: P.Module
 module'undefinedVar = _Module (_ModuleName ["Module"]) [tyDef'undefinedVar] mempty mempty
+
+{- | 1 Module containing
+  Foo b = Bar Baz b
+              ^^^
+  Should fail as Baz is a local undefined Ty Ref.
+-}
+module'undefinedlocalTyRef :: P.Module
+module'undefinedlocalTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedlocalTyRef] mempty mempty
