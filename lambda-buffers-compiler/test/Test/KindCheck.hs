@@ -3,6 +3,7 @@ module Test.KindCheck (test) where
 import Data.Text (Text)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
+  foldWithArrowToType,
   foldWithProduct,
   foldWithSum,
  )
@@ -11,6 +12,7 @@ import LambdaBuffers.Compiler.KindCheck.Variable (
   Variable (LocalRef),
  )
 
+import LambdaBuffers.Compiler.KindCheck.Inference (Kind (Type, (:->:)))
 import Test.KindCheck.Errors (testGKindCheckErrors)
 import Test.QuickCheck (
   Arbitrary (arbitrary),
@@ -30,13 +32,15 @@ import Test.Utils.Constructors (_CompilerInput)
 -- Top Level tests
 
 test :: TestTree
-test = testGroup "Compiler tests" [testCheck, testFolds, testGKindCheckErrors]
+test =
+  testGroup "Compiler tests" [testCheck, testFolds, testGKindCheckErrors]
 
 --------------------------------------------------------------------------------
 -- Module tests
 
 testCheck :: TestTree
-testCheck = testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
+testCheck =
+  testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
 
 trivialKCTest :: TestTree
 trivialKCTest =
@@ -61,8 +65,15 @@ testFolds :: TestTree
 testFolds =
   testGroup
     "Test Folds"
-    [ testGroup "Test Product Folds" [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
-    , testGroup "Test Sum Folds" [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
+    [ testGroup
+        "Test Product Folds"
+        [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
+    , testGroup
+        "Test Sum Folds"
+        [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
+    , testGroup
+        "Test Arrow Folds"
+        [testArrowFold0, testArrowFold1, testArrowFold2, testArrowFold3HK, testArrowFold4HK, testArrowFoldHHK]
     ]
 
 prod :: Type -> Type -> Type
@@ -134,6 +145,48 @@ testSumFold3 =
   testCase "Fold 3 types" $
     foldWithSum [lVar "c", lVar "b", lVar "a"]
       @?= sum' (sum' (sum' void' (lVar "c")) (lVar "b")) (lVar "a")
+
+ty :: Kind
+ty = Type
+
+-- | [ ] -> *
+testArrowFold0 :: TestTree
+testArrowFold0 =
+  testCase "Fold 0 kinds" $
+    foldWithArrowToType [] @?= ty
+
+-- | [*] => * -> *
+testArrowFold1 :: TestTree
+testArrowFold1 =
+  testCase "Fold 1 kinds" $
+    foldWithArrowToType [ty] @?= ty :->: ty
+
+-- | [*,*] => * -> * -> *
+testArrowFold2 :: TestTree
+testArrowFold2 =
+  testCase "Fold 2 kinds" $
+    foldWithArrowToType [ty, ty] @?= ty :->: (ty :->: ty)
+
+-- | [* -> *, * ] => (* -> *) -> * -> *
+testArrowFold3HK :: TestTree
+testArrowFold3HK =
+  testCase "Fold 2 HKT" $
+    foldWithArrowToType [ty :->: ty, ty]
+      @?= ((ty :->: ty) :->: (ty :->: ty))
+
+-- | [*, * -> *, * ] => * -> (* -> *) -> * -> *
+testArrowFold4HK :: TestTree
+testArrowFold4HK =
+  testCase "Fold 2 HKT" $
+    foldWithArrowToType [ty, ty :->: ty, ty]
+      @?= (ty :->: ((ty :->: ty) :->: (ty :->: ty)))
+
+-- | [*, * -> *, * ] => * -> ((* -> *) -> *) -> * -> *
+testArrowFoldHHK :: TestTree
+testArrowFoldHHK =
+  testCase "Fold 2 HKT" $
+    foldWithArrowToType [ty, (ty :->: ty) :->: ty, ty]
+      @?= (ty :->: (((ty :->: ty) :->: ty) :->: (ty :->: ty)))
 
 -- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
 lVar :: Text -> Type

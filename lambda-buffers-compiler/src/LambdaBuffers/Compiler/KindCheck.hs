@@ -7,8 +7,9 @@ module LambdaBuffers.Compiler.KindCheck (
 
   -- * Testing Utils.
   foldWithSum,
-  foldWithArrow,
+  foldWithArrowToType,
   foldWithProduct,
+  foldWithApp,
 ) where
 
 import Control.Lens (view, (&), (.~), (^.))
@@ -326,12 +327,24 @@ tyDef2NameAndKind curModName tyDef = do
   pure (name, k)
 
 tyAbsLHS2Kind :: PC.TyAbs -> Kind
-tyAbsLHS2Kind tyAbs = foldWithArrow $ pKind2Kind . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
+tyAbsLHS2Kind tyAbs = foldWithArrowToType $ pKind2Kind . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)
 
-foldWithArrow :: [Kind] -> Kind
-foldWithArrow = foldr (:->:) Type
+{- | Folds kinds and appends them to a Kind result type. In essence creates a
+ curried function with a Type final kind.
 
--- ================================================================================
+ ghc> foldWithArrowToType []
+ Type
+
+ ghc> foldWithArrowToType [Type]
+ Type -> Type
+
+ ghc> foldWithArrowToType [Type, (Type -> Type)]
+ Type -> (Type -> Type) -> Type
+-}
+foldWithArrowToType :: [Kind] -> Kind
+foldWithArrowToType = foldr (:->:) Type
+
+-- =============================================================================
 -- To Kind Conversion functions
 
 pKind2Kind :: PC.Kind -> Kind
