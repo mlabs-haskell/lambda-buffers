@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles, detectSuperclassCycles', runDeriveCheck) where
+module LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles, detectSuperclassCycles', runDeriveCheck, validateTypeClasses) where
 
 import Control.Lens.Combinators (view)
 import Control.Lens.Operators ((^.))
@@ -19,8 +19,14 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (
   LocalClassRef (LocalClassRef),
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClass.Pretty
-import LambdaBuffers.Compiler.TypeClass.Utils
+import LambdaBuffers.Compiler.TypeClass.Pretty (spaced, (<//>))
+import LambdaBuffers.Compiler.TypeClass.Utils (
+  Instance,
+  ModuleBuilder (mbInstances),
+  TypeClassError (CouldntSolveConstraints),
+  checkInstance,
+  mkBuilders,
+ )
 import LambdaBuffers.Compiler.TypeClass.Validate (checkDerive)
 import Prettyprinter (
   Doc,
