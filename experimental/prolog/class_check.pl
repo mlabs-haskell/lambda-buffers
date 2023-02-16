@@ -3,7 +3,7 @@
 
 %% Apply and argument to a type abstraction - assumes Kind validity
 % Beta-reduction Apply an argument to a type abstraction - assumes Kind validity
-apply(opaque(N, kind(arr(KL, KR)), Cd), _, opaque(N, kind(KR), Cd)).
+apply(opaque(N, kind(arr(_KL, KR)), Cd), _, opaque(N, kind(KR), Cd)).
 
 apply(ty_ref(RefName), A, ResTy) :-
     ty_def(RefName, Ty),
@@ -35,78 +35,52 @@ subst(Ctx, ty_app(TyAbs, TyArg), ty_app(AbsRes, ArgRes)) :-
     subst(Ctx, TyArg, ArgRes).
 
 %% Sum/Product/Rec get normalized into a canonical form Either/Prod/Void/Unit/Opaque
-struct_rule(class(ClassName, class_arg(_, kind(*)), _),
-            rule(ClassName, ty_ref(unit)) :- true
-           ).
+%% Structural rules for types of kind `*`
+struct_rule(class(ClassName, class_arg(_, kind(*)), _), Rule) :-
+    member(Rule, [
+               (rule(ClassName, opaque(_, kind(*), _)) :- true),
+               (rule(ClassName, ty_ref(unit)) :- true),
+               (rule(ClassName, ty_ref(void)) :- true),
+               (rule(ClassName, ty_app(ty_app(ty_ref(prod), A), B)) :-
+                    (
+                        rule(ClassName, A),
+                        rule(ClassName, B)
+                    )),
+               (rule(ClassName, ty_app(ty_app(ty_ref(either), A), B)) :-
+                    (
+                        rule(ClassName, A),
+                        rule(ClassName, B)
+                    ))
+           ]).
 
-struct_rule(class(ClassName, class_arg(_, kind(*)), _),
-            rule(ClassName, ty_ref(void)) :- true
-           ).
+%% User specifiable `derive` rules (the same for any kind?)
+%% NOTE(bladyjoker): TyAbs can't be derived for non `*` kinds.
+derive_rule(ty_ref(RefName), class(ClassName, _, _), Rule) :-
+    ty_def(RefName, Ty),
+    Rule = (rule(ClassName, ty_ref(RefName)) :- rule(ClassName, Ty)).
 
-struct_rule(class(ClassName, class_arg(_, kind(*)), _),
-             rule(ClassName, ty_app(ty_app(ty_ref(prod), A), B)) :-
-                 (
-                     %kind(ty_app(ty_app(ty_ref(prod), A), B), kind(*)),
-                     rule(ClassName, A),
-                     rule(ClassName, B)
-                 )
-            ).
+derive_rule(ty_app(F, A), class(ClassName, _, _), Rule) :-
+    apply(F, A, Res),
+    Rule =  (rule(ClassName, ty_app(F, A)) :- rule(ClassName, Res)).
 
-struct_rule(class(ClassName, class_arg(_, kind(*)), _),
-             rule(ClassName, ty_app(ty_app(ty_ref(either), A), B)) :-
-                 (
-                     %kind(ty_app(ty_app(ty_ref(either), A), B), kind(*)),
-                     rule(ClassName, A),
-                     rule(ClassName, B)
-                 )
-            ).
-
-%% NOTE(bladjoker): Experimentals class rules on types of kind ->
+%% Experimental structural rules for types of kind * -> *
 % Haskell: Functor Deriving https://mail.haskell.org/pipermail/haskell-prime/2007-March/002137.html
-struct_rule(class(ClassName, class_arg(_, kind(arr(KL, KR))), _),
-            rule(ClassName, ty_app(TL, TR)) :-
-                (
-                    %kind(ty_app(TL, TR), kind(arr(KL, KR))),
-                    rule(ClassName, TL),
-                    apply(TL, TR, Res),
-                    rule(ClassName, Res)
-                )
-           ).
+%% struct_rule(class(ClassName, class_arg(_, kind(arr(_KL, _KR))), _), Rule) :-
+%%     member(Rule, [
+%%                (rule(ClassName, ty_app(TL, TR)) :-
+%%                     (
+%%                         rule(ClassName, TL),
+%%                         apply(TL, TR, Res),
+%%                         rule(ClassName, Res)
+%%                     )),
+%%                (rule(ClassName, ty_abs(_A, B)) :-
+%%                     (
+%%                         rule(ClassName, B)
+%%                     ))
+%%            ]
+%%           ).
 
-struct_rule(class(ClassName, class_arg(_, Kind), _),
-          (rule(ClassName, ty_abs(A, B)) :-
-               (
-                   %kind(ty_abs(A, B), Kind),
-                   rule(ClassName, B)
-               )
-          )
-         ).
 
-% Opaque stuff
-struct_rule(class(ClassName, class_arg(_, Kind), _),
-            rule(ClassName, opaque(_, Kind, _)) :- true
-           ).
-
-% User specifiable rules (this is what the API gets)
-user_rule(class(ClassName, class_arg(_, Kind), _),
-          rule(ClassName, ty_ref(RefName)) :-
-              (
-                  %kind(ty_ref(RefName), Kind),
-                  ty_def(RefName, Ty),
-                  rule(ClassName, Ty)
-              )
-         ).
-
-user_rule(class(ClassName, class_arg(_, Kind), _),
-           (rule(ClassName, ty_app(F, A)) :-
-                (
-                    %kind(ty_app(F, A), Kind),
-                    %% TODO(bladyjoker): Ask gnumonik@ if beta-reduction is what's really needed here. Imo, it is.
-                    apply(F, A, Res),
-                    rule(ClassName, Res)
-                )
-           )
-          ).
 
 class_def(eq, class_arg(a, kind(*)), []).
 class_def(ord, class_arg(a, kind(*)), [eq(a)]).
@@ -120,38 +94,34 @@ derive(Tys, CName, StructRules, UserRules) :-
             (
                 struct_rule(
                     class(CName, CArg, CSups),
-                    (rule(CName, Ty) :- RuleBody)
-                ),
-                StructRule = (rule(CName, Ty) :- RuleBody)
+                    StructRule
+                )
             ),
             StructRules
            ),
     findall(UserRule,
             (
                 member(Ty, Tys),
-                user_rule(
+                derive_rule(
+                    Ty,
                     class(CName, CArg, CSups),
-                    (rule(CName, Ty) :- RuleBody)
-                ),
-                UserRule = (rule(CName, Ty) :- RuleBody)
+                    UserRule
+                )
             ),
             UserRules
            ).
 
-eval_rules(StructRules, UserRules) :-
+solve(StructRules, UserRules, Goal) :-
+    Goal =.. [ClassName, Ty],
     append(StructRules, UserRules, Rules),
-    member((RuleHead :- RuleBody), UserRules),
-    print_message(informational, trying(RuleHead)),
-    (
-        eval_rule(Rules, [RuleHead], RuleBody) -> print_message(informational, rule_ok(RuleHead));
+    eval_rule(Rules, [], rule(ClassName, Ty)) -> true;
         (
-            print_message(error, rule_failed(RuleHead)),
+            print_message(error, rule_failed(Goal)),
             fail
-        )
-    ).
+        ).
 
-eval_rule(_, Trace, true) :-
-    print_message(informational, rules_reached_true(Trace)).
+eval_rule(_, _, true) :-
+    print_message(informational, rule_true).
 
 eval_rule(Rules, Trace, (RL,RR)) :-
     eval_rule(Rules, Trace, RL),
@@ -159,10 +129,11 @@ eval_rule(Rules, Trace, (RL,RR)) :-
 
 eval_rule(Rules, Trace, rule(ClassName, Ty)) :-
     var(Ty) -> print_message(informational, rule_ok(rule(ClassName, Ty))), true;
-    first(rule(ClassName, Ty), Trace) -> true;
+    first(rule(ClassName, Ty), Trace) -> print_message(informational, rule_ok_cycle(rule(ClassName, Ty))), true;
     (
         print_message(informational, lookup(rule(ClassName, Ty))),
-        first((rule(ClassName, Ty) :- RuleBody), Rules) -> (
+        copy_term(Rules, Rules_), %% WARN(bladyjoker): Without this, Rules get unified and instantiated leading to a cycle and just wrong.
+        first((rule(ClassName, Ty) :- RuleBody), Rules_) -> (
             print_message(informational, trying(rule(ClassName, Ty))),
             eval_rule(Rules, [rule(ClassName, Ty)|Trace], RuleBody),
             print_message(informational, rule_ok(rule(ClassName, Ty)))
@@ -173,26 +144,6 @@ eval_rule(Rules, Trace, rule(ClassName, Ty)) :-
         )
     ).
 
-eval_rule(_, Trace, apply(F, A, Res)) :-
-    apply(F, A, Res) -> print_message(info, apply(F, A, Res)),true;
-    (
-        print_message(error, normalization_failed(Trace, F, A)),
-        fail
-    ).
-
-eval_rule(_, _, kind(Ty, kind(Kind))) :-
-    ty_kind(Ty, Kind) -> true;
-    (
-        (
-            ty_kind(Ty, Kind_) -> print_message(error, wrong_kind(Ty, got(Kind_), wanted(Kind)));
-            print_message(error, invalid_kind(Ty))
-        ),
-        fail
-    ).
-
-eval_rule(_, _, ty_def(RefName, Ty)) :-
-    ty_def(RefName, Ty).
-
 :- multifile prolog:message//1.
 
 prolog:message(wrong_kind(Ty, got(Got), wanted(Want))) --> [ '~w is of kind ~w but wanted kind ~w'-[Ty, Got, Want]].
@@ -200,35 +151,63 @@ prolog:message(normalization_failed(_, Ty)) --> [ 'Normalizing ~w failed'-[Ty]].
 prolog:message(lookup(rule(ClassName, Ty))) --> [ 'Looking up rule ~w ~w'-[ClassName, Ty]].
 prolog:message(trying(rule(ClassName, Ty))) --> [ 'Trying rule ~w ~w'-[ClassName, Ty]].
 prolog:message(rule_ok(rule(ClassName, Ty))) --> [ 'Done with rule ~w ~w'-[ClassName, Ty]].
+prolog:message(rule_ok_cycle(rule(ClassName, Ty))) --> [ 'Done with rule because cycle ~w ~w'-[ClassName, Ty]].
+prolog:message(rule_true) --> [ 'Done because bottom'].
 prolog:message(missing_rule(rule(ClassName, Ty), _)) --> [ 'Missing rule ~w ~w'-[ClassName, Ty]].
 prolog:message(rule_failed(rule(ClassName, Ty))) --> [ 'Failed rule ~w ~w'-[ClassName, Ty]].
 
 :- begin_tests(class_check).
 
 test("should_succeed(derive_eq_of_int)", []) :-
-    derive([ty_ref(int8)],eq,S,U), eval_rules(S, U).
+    derive([ty_ref(int8)], eq, S, U),
+    solve(S, U, eq(ty_ref(int8))).
 
 test("should_succeed(derive_eq_of_maybe_int)", []) :-
     derive([ty_ref(int8), ty_app(ty_ref(maybe), ty_ref(int8))], eq, S, U),
-    eval_rules(S, U).
+    solve(S, U, eq(ty_ref(int8))),
+    solve(S, U, eq(ty_app(ty_ref(maybe), ty_ref(int8)))).
 
 test("should_succeed(derive_eq_of_maybe_a)", []) :-
-    derive([ty_app(ty_ref(maybe), _A)], eq, S, U), eval_rules(S, U).
-
-test("should_succeed(derive_functor_of_maybe)", []) :-
-    derive([ty_ref(maybe)], functor,S,U),
-    eval_rules(S, U).
-
-test("should_succeed(derive_functor_of_either_int)", []) :-
-    derive([ty_app(
-                ty_ref(either),
-                ty_ref(int8)
-            )], functor, S, U), eval_rules(S, U).
-
-test("should_fail(derive_functor_of_either)", [ fail ]) :-
-    derive([ty_ref(either)], functor, S, U), eval_rules(S, U).
+    derive([ty_app(ty_ref(maybe), _A)], eq, S, U),
+    solve(S, U, eq(ty_app(ty_ref(maybe), _B))).
 
 test("should_fail(derive_eq_of_foo)", [ fail ]) :-
-    derive([ty_ref(foo)], eq, S, U), eval_rules(S, U).
+    derive([ty_ref(foo)], eq, S, U),
+    solve(S, U, eq(ty_ref(foo))).
+
+test("should_fail(derive_eq_of_foo with int8)", [ fail ]) :-
+    derive([ty_ref(int8), ty_ref(foo)], eq, S, U),
+    solve(S, U, eq(ty_ref(int8))),
+    solve(S, U, eq(ty_ref(foo))).
+
+test("should_succeed(derive_eq_of_foo with int8)", [ ]) :-
+    derive([
+                  ty_ref(int8),
+                  ty_ref(foo),
+                  ty_app(ty_ref(maybe), _A)
+              ], eq, S, U),
+    solve(S, U, eq(ty_ref(int8))),
+    solve(S, U, eq(ty_ref(foo))),
+    solve(S, U, eq(ty_app(ty_ref(maybe), _B))).
+
+test("should_fail(derive_eq_of_recfoo)", [ fail ]) :-
+    derive([
+                  ty_ref(recfoo)
+              ], eq, S, U),
+    solve(S, U, eq(ty_ref(recfoo))).
+
+test("should_succeed(derive_eq_of_recfoo with recbar)", [ ]) :-
+    derive([
+                  ty_ref(recfoo),
+                  ty_ref(recbar)
+              ], eq, S, U),
+    solve(S, U, eq(ty_ref(recfoo))).
+
+test("should_succeed(derive_eq_of_recfoo with recbar)", [ ]) :-
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), _A)
+              ], eq, S, U),
+    solve(S, U, eq(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
 
 :- end_tests(class_check).
