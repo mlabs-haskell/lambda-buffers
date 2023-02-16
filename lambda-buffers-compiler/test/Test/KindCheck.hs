@@ -11,11 +11,10 @@ import LambdaBuffers.Compiler.KindCheck.Variable (
   Variable (LocalRef),
  )
 
+import Test.KindCheck.Errors (testGKindCheckErrors)
 import Test.QuickCheck (
-  Arbitrary (arbitrary, shrink),
-  Property,
+  Arbitrary (arbitrary),
   forAll,
-  forAllShrink,
   (===),
  )
 import Test.Tasty (TestTree, testGroup)
@@ -31,7 +30,7 @@ import Test.Utils.Constructors (_CompilerInput)
 -- Top Level tests
 
 test :: TestTree
-test = testGroup "Compiler tests" [testCheck, testFolds, testRefl]
+test = testGroup "Compiler tests" [testCheck, testFolds, testGKindCheckErrors]
 
 --------------------------------------------------------------------------------
 -- Module tests
@@ -139,10 +138,3 @@ testSumFold3 =
 -- | TyDef to Kind Canonical representation - sums not folded - therefore we get constructor granularity. Might use in a different implementation for more granular errors.
 lVar :: Text -> Type
 lVar = Var . LocalRef
-
--- Property Tests
-testRefl :: TestTree
-testRefl = testProperty "Refl" reflTerm
-  where
-    reflTerm :: Property
-    reflTerm = forAllShrink (arbitrary @Int) shrink (\a -> a == a)

@@ -1,7 +1,8 @@
 module Test.Utils.Constructors (
-  _tyName,
-  _varName,
-  _tyVar,
+  _TyName,
+  _VarName,
+  _TyVar,
+  _TyVar',
   _TyVarI,
   _TupleI,
   _Constructor,
@@ -16,12 +17,15 @@ module Test.Utils.Constructors (
   _CompilerInput,
   _ModuleName,
   _ModuleNamePart,
+  _TyVarI',
+  _SourceInfo,
 ) where
 
 import Control.Lens ((^.))
 import Data.Map qualified as Map
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
 
 _CompilerInput :: [P.Module] -> P.CompilerInput
 _CompilerInput ms =
@@ -50,17 +54,31 @@ _ModuleName ps =
 _ModuleNamePart :: Text -> P.ModuleNamePart
 _ModuleNamePart n = P.ModuleNamePart n P.defSourceInfo
 
-_tyName :: Text -> P.TyName
-_tyName x = P.TyName x P.defSourceInfo
+_TyName :: Text -> P.TyName
+_TyName x = P.TyName x P.defSourceInfo
 
-_varName :: Text -> P.VarName
-_varName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
+_VarName :: Text -> P.VarName
+_VarName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
 
-_tyVar :: Text -> P.TyVar
-_tyVar x = P.TyVar {P.varName = _varName x, P.sourceInfo = P.defSourceInfo}
+_TyVar :: Text -> P.TyVar
+_TyVar x = P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+
+-- | TyVar with Source Info - for error precision testing.
+_TyVar' :: Text -> SourceInfo -> P.TyVar
+_TyVar' x s = P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
 
 _TyVarI :: Text -> P.Ty
-_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _varName x, P.sourceInfo = P.defSourceInfo}
+_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+
+-- | TyVar with Source Info - for error precision testing.
+_TyVarI' :: Text -> SourceInfo -> P.Ty
+_TyVarI' x s = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
+
+_SourceInfo :: Int -> Int -> P.SourceInfo
+_SourceInfo x y = P.SourceInfo {P.file = "DefaultFile", P.posFrom = _SourcePosition x, P.posTo = _SourcePosition y}
+
+_SourcePosition :: Int -> P.SourcePosition
+_SourcePosition x = P.SourcePosition x (x + 1)
 
 _TupleI :: [P.Ty] -> P.Product
 _TupleI x =

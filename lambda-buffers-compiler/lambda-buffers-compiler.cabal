@@ -162,6 +162,7 @@ test-suite tests
 
   other-modules:
     Test.KindCheck
+    Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Gen
     Test.TypeClassCheck
