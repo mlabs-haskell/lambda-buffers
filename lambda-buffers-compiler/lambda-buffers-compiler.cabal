@@ -128,8 +128,7 @@ library
 
   hs-source-dirs:  src
 
--- NOTE(cstml): should we name this something shorter? lb-cli?
-executable lambda-buffers-compiler-cli
+executable lbc
   import:         common-language
   import:         common-imports
   main-is:        Main.hs
@@ -154,7 +153,6 @@ test-suite tests
     , containers                  >=0.6
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
-    , mtl                         >=2.2
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
