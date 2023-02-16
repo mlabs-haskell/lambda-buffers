@@ -234,7 +234,7 @@ mkClassInfos :: [P.Module] -> M.Map P.ModuleName [ClassInfo]
 mkClassInfos = foldl' (\acc mdl -> M.insert (mdl ^. #moduleName) (go mdl) acc) M.empty
   where
     go :: P.Module -> [ClassInfo]
-    go m = map (defToClassInfo $ m ^. #moduleName) (m ^. #classDefs)
+    go m = map (defToClassInfo $ m ^. #moduleName) (M.elems $ m ^. #classDefs)
 
 defToClassInfo :: P.ModuleName -> P.ClassDef -> ClassInfo
 defToClassInfo mName cd =
@@ -301,7 +301,7 @@ getInstances ctable mn = foldM go S.empty
         cref = tyRefToFQClassName (modulename mn) cn
 
 mkModuleClasses :: P.CompilerInput -> M.Map P.ModuleName [ClassInfo]
-mkModuleClasses (P.CompilerInput ms) = mkClassInfos ms
+mkModuleClasses (P.CompilerInput ms) = mkClassInfos (M.elems ms)
 
 {- |
 This constructs the instances defined in each module (NOT the instances in scope in that module)
@@ -334,7 +334,7 @@ moduleScope modls is = go
     go :: P.ModuleName -> Either TypeClassError Instances
     go mn = case modls ^? (ix mn . #imports) of
       Nothing -> Left $ UnknownModule mn
-      Just impts -> mconcat <$> traverse goImport impts
+      Just impts -> mconcat <$> traverse goImport (S.toList impts)
 
     -- NOTE: This doesn't do recursive scope fetching anymore.
     --       If a user wants an instance rule in scope, they
@@ -392,7 +392,7 @@ mkBuilders ci = do
       mbinsts <- lookupOr mn insts $ MissingModuleInstances mn
       mbscope <- lookupOr mn scope $ MissingModuleScope mn
       mdule <- lookupOr mn modTable $ UnknownModule mn
-      mbclasses <- resolveClasses classTable mn $ mdule ^. #classDefs
+      mbclasses <- resolveClasses classTable mn . M.elems $ mdule ^. #classDefs
       let mbtydefs =
             foldl'
               ( \accM t ->

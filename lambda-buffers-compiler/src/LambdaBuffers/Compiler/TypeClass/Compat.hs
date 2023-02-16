@@ -12,15 +12,16 @@ module LambdaBuffers.Compiler.TypeClass.Compat (
 
 import Control.Lens ((^.))
 import Control.Lens.Combinators (view)
-import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Bifunctor (second)
 import Data.List.NonEmpty qualified as NE
+import Data.Map qualified as M
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.TypeClass.Pat (
   Exp (AppE, DecE, LitE, NilE, RefE),
   ExpressionLike (nil, (*:), (*=)),
   Literal (ModuleName, Name, Opaque, TyVar),
-  Pat (AppP, DecP, LitP, NilP, RefP, VarP),
+  Pat (AppP, DecP, LitP, NilP, RefP),
   toProdE,
   toProdP,
   toRecE,
@@ -48,20 +49,20 @@ making the resulting Pat suitable for substitution into Rules.
 -}
 defToExp :: P.TyDef -> Exp
 defToExp (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecE (LitE . Name $ tName ^. #name) vars $ case tBody of
-  P.SumI constrs -> toSumE . NE.toList . fmap goConstr $ (constrs ^. #constructors)
+  P.SumI constrs -> toSumE . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitE Opaque
   where
-    collectFreeTyVars :: [P.TyArg] -> Exp
-    collectFreeTyVars = foldr (\x acc -> LitE (TyVar (x ^. (#argName . #name))) *: acc) nil
+    collectFreeTyVars :: [P.VarName] -> Exp
+    collectFreeTyVars = foldr (\x acc -> LitE (TyVar (x ^. #name)) *: acc) nil
 
-    vars = collectFreeTyVars tArgs
+    vars = collectFreeTyVars (M.keys tArgs)
 
-    goConstr :: P.Constructor -> Exp
-    goConstr (P.Constructor n p) = LitE (Name (n ^. #name)) *= goProduct p
+    goConstr :: P.ConstrName -> P.Product -> Exp
+    goConstr (P.ConstrName n _) p = LitE (Name n) *= goProduct p
 
     goProduct :: P.Product -> Exp
     goProduct = \case
-      P.RecordI (P.Record rMap _) -> toRecE . NE.toList . fmap goField $ rMap
+      P.RecordI (P.Record rMap _) -> toRecE . fmap goField . M.elems $ rMap
       P.TupleI (P.Tuple pList _) -> toProdE $ fmap tyToExp pList
 
     goField :: P.Field -> Exp
@@ -80,27 +81,28 @@ tyToExp = \case
       let mnm = modulename mn
        in RefE (LitE $ ModuleName mnm) . LitE . Name $ (tn ^. #name)
 
-appToExp :: Exp -> NonEmpty Exp -> Exp
-appToExp fun (p :| ps) = case NE.nonEmpty ps of
+appToExp :: Exp -> [Exp] -> Exp
+appToExp e [] = e
+appToExp fun (p : ps) = case NE.nonEmpty ps of
   Nothing -> AppE fun p
-  Just rest -> AppE fun p `appToExp` rest
+  Just rest -> AppE fun p `appToExp` NE.toList rest
 
 defToPat :: P.TyDef -> Pat
 defToPat (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecP (LitP . Name $ tName ^. #name) vars $ case tBody of
-  P.SumI constrs -> toSumP . NE.toList . fmap goConstr $ (constrs ^. #constructors)
+  P.SumI constrs -> toSumP . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitP Opaque
   where
-    collectFreeTyVars :: [P.TyArg] -> Pat
-    collectFreeTyVars = foldr (\x acc -> VarP (x ^. (#argName . #name)) *: acc) nil
+    collectFreeTyVars :: [P.VarName] -> Pat
+    collectFreeTyVars = foldr (\x acc -> LitP (TyVar (x ^. #name)) *: acc) nil
 
-    vars = collectFreeTyVars tArgs
+    vars = collectFreeTyVars (M.keys tArgs)
 
-    goConstr :: P.Constructor -> Pat
-    goConstr (P.Constructor n p) = LitP (Name (n ^. #name)) *= goProduct p
+    goConstr :: P.ConstrName -> P.Product -> Pat
+    goConstr (P.ConstrName n _) p = LitP (Name n) *= goProduct p
 
     goProduct :: P.Product -> Pat
     goProduct = \case
-      P.RecordI (P.Record rMap _) -> toRecP . NE.toList . fmap goField $ rMap
+      P.RecordI (P.Record rMap _) -> toRecP . fmap goField . M.elems $ rMap
       P.TupleI (P.Tuple pList _) -> toProdP $ fmap tyToPat pList
 
     goField :: P.Field -> Pat
@@ -108,7 +110,7 @@ defToPat (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecP (LitP . Name $ tName ^
 
 tyToPat :: P.Ty -> Pat
 tyToPat = \case
-  P.TyVarI t -> VarP (t ^. #varName . #name)
+  P.TyVarI t -> LitP . TyVar $ t ^. #varName . #name
   P.TyAppI tapp ->
     let fun = tyToPat $ tapp ^. #tyFunc
         ps = tyToPat <$> tapp ^. #tyArgs
@@ -119,7 +121,8 @@ tyToPat = \case
       let mnm = modulename mn
        in RefP (LitP $ ModuleName mnm) . LitP . Name $ (tn ^. #name)
 
-appToPat :: Pat -> NonEmpty Pat -> Pat
-appToPat fun (p :| ps) = case NE.nonEmpty ps of
+appToPat :: Pat -> [Pat] -> Pat
+appToPat e [] = e
+appToPat fun (p : ps) = case NE.nonEmpty ps of
   Nothing -> AppP fun p
-  Just rest -> AppP fun p `appToPat` rest
+  Just rest -> AppP fun p `appToPat` NE.toList rest

@@ -13,5 +13,6 @@ main =
       "Compiler tests"
       [ KC.test
       , TC.test
+      , DC.test
       , LBC.test
       ]

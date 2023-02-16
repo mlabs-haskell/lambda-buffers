@@ -120,6 +120,7 @@ library
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Types
+    LambdaBuffers.Compiler.TypeClass.Compat
     LambdaBuffers.Compiler.TypeClass.Pat
     LambdaBuffers.Compiler.TypeClass.Pretty
     LambdaBuffers.Compiler.TypeClass.Rules
