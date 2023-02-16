@@ -107,6 +107,7 @@ library
     , text                        >=1.2
 
   exposed-modules:
+    LambdaBuffers.Compiler
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Context
     LambdaBuffers.Compiler.KindCheck.Derivation
@@ -117,8 +118,8 @@ library
     LambdaBuffers.Compiler.KindCheck.Variable
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Types
-    LambdaBuffers.Compiler.TypeClass.Compat
     LambdaBuffers.Compiler.TypeClass.Pat
     LambdaBuffers.Compiler.TypeClass.Pretty
     LambdaBuffers.Compiler.TypeClass.Rules
@@ -129,7 +130,7 @@ library
 
   hs-source-dirs:  src
 
--- note(cstml): should we name this something shorter? lb-cli?
+-- NOTE(cstml): should we name this something shorter? lb-cli?
 executable lambda-buffers-compiler-cli
   import:         common-language
   import:         common-imports
@@ -156,7 +157,7 @@ test-suite tests
     , generic-lens
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
-    , lens
+    , mtl                         >=2.2
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
@@ -167,9 +168,10 @@ test-suite tests
   other-modules:
     Test.DeriveCheck
     Test.KindCheck
+    Test.LambdaBuffers.Compiler
+    Test.LambdaBuffers.Compiler.Gen
     Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors
     Test.Utils.Module
-    Test.Utils.SourceInfo
     Test.Utils.TyDef

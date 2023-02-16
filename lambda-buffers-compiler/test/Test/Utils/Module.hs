@@ -1,24 +1,13 @@
 module Test.Utils.Module (module'maybe, module'incoherent) where
 
-import Control.Lens ((%~), (&))
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import Test.Utils.SourceInfo (sourceInfo'empty)
+import Test.Utils.Constructors (_Module, _ModuleName)
 import Test.Utils.TyDef (tyDef'incoherent, tyDef'maybe)
 
+-- _Module mn tds cds ins =
+
 module'maybe :: P.Module
-module'maybe =
-  P.Module
-    { P.moduleName =
-        P.ModuleName
-          { P.parts = [P.ModuleNamePart "Module" sourceInfo'empty]
-          , P.sourceInfo = sourceInfo'empty
-          }
-    , P.typeDefs = [tyDef'maybe]
-    , P.classDefs = mempty
-    , P.instances = mempty
-    , P.sourceInfo = sourceInfo'empty
-    , P.imports = mempty
-    }
+module'maybe = _Module (_ModuleName ["Module"]) [tyDef'maybe] mempty mempty
 
 {- | 1 Module containing
   Maybe = ...
@@ -30,4 +19,4 @@ module'maybe =
  Type -> Type. This is an inconsistency failure.
 -}
 module'incoherent :: P.Module
-module'incoherent = module'maybe & #typeDefs %~ (<> [tyDef'incoherent])
+module'incoherent = _Module (_ModuleName ["Module"]) [tyDef'maybe, tyDef'incoherent] mempty mempty
