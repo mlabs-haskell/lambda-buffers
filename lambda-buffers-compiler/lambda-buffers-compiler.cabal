@@ -37,7 +37,9 @@ common common-language
     DeriveLift
     DeriveTraversable
     DerivingStrategies
+    DerivingVia
     DoAndIfThenElse
+    DuplicateRecordFields
     EmptyCase
     EmptyDataDecls
     EmptyDataDeriving
@@ -59,6 +61,7 @@ common common-language
     NamedFieldPuns
     NamedWildCards
     NumericUnderscores
+    OverloadedLabels
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
@@ -92,29 +95,40 @@ library
   build-depends:
     , containers                  >=0.6.5.1
     , freer-simple                >=1.2
+    , generic-arbitrary
     , generic-lens                >=2.2
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
+    , QuickCheck                  >=2.14
+    , quickcheck-instances        >=0.3
     , text                        >=1.2
 
   exposed-modules:
-    LambdaBuffers.Compiler.Canonical
+    LambdaBuffers.Compiler
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Context
+    LambdaBuffers.Compiler.KindCheck.Derivation
     LambdaBuffers.Compiler.KindCheck.Inference
+    LambdaBuffers.Compiler.KindCheck.Judgement
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.KindCheck.Variable
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Types
+    LambdaBuffers.Compiler.TypeClass.Pat
+    LambdaBuffers.Compiler.TypeClass.Pretty
+    LambdaBuffers.Compiler.TypeClass.Rules
+    LambdaBuffers.Compiler.TypeClass.Solve
     LambdaBuffers.Compiler.TypeClassCheck
 
   hs-source-dirs:  src
 
+-- NOTE(cstml): should we name this something shorter? lb-cli?
 executable lambda-buffers-compiler-cli
   import:         common-language
   import:         common-imports
@@ -137,13 +151,23 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
+    , containers                  >=0.6
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , mtl                         >=2.2
     , proto-lens                  >=0.7
+    , QuickCheck                  >=2.14
     , tasty                       >=1.4
     , tasty-hunit                 >=0.10
+    , tasty-quickcheck            >=0.10
     , text                        >=1.2
 
   other-modules:
     Test.KindCheck
+    Test.LambdaBuffers.Compiler
+    Test.LambdaBuffers.Compiler.Gen
     Test.TypeClassCheck
+    Test.Utils.CompilerInput
+    Test.Utils.Constructors
+    Test.Utils.Module
+    Test.Utils.TyDef
