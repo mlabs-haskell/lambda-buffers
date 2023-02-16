@@ -162,6 +162,7 @@ runKindCheck = interpret $ \case
       InferImpossibleErr t ->
         throwError . PC.InternalError $ t
 
+    -- Gets the original term associated with the Variable.
     getTermType :: ModName -> PC.TyDef -> Variable -> Eff effs (Either PC.TyVar PC.TyRef)
     getTermType modName td va = do
       let termMap = snd . run . runWriter . runReader modName $ tyDef2Map td
@@ -344,16 +345,6 @@ pKind2Kind k =
 -- =============================================================================
 -- X To Canonical type conversion functions.
 
-{- Replaced with Constructor by Constructor check.
--- | TyDef to Kind Canonical representation.
-tyDef2Type ::
-  forall eff.
-  Members '[Reader ModName, Err] eff =>
-  PC.TyDef ->
-  Eff eff Type
-tyDef2Type tyde = tyAbsLHS2Type (tyde ^. #tyAbs) <*> tyAbsRHS2Type (tyde ^. #tyAbs)
--}
-
 tyAbsLHS2Type ::
   forall eff.
   PC.TyAbs ->
@@ -372,31 +363,6 @@ tyArgs2Type = \case
 
 tyArg2Var :: PC.TyArg -> Variable
 tyArg2Var = LocalRef . view (#argName . #name)
-
-{- Replaced with Constructor by Constructor check.
-tyAbsRHS2Type ::
-  forall eff.
-  Members '[Reader ModName, Err] eff =>
-  PC.TyAbs ->
-  Eff eff Type
-tyAbsRHS2Type tyab = tyBody2Type (tyab ^. #tyBody)
-
-tyBody2Type ::
-  forall eff.
-  Members '[Reader ModName, Err] eff =>
-  PC.TyBody ->
-  Eff eff Type
-tyBody2Type = \case
-  PC.OpaqueI _ -> pure $ Var tyOpaque
-  PC.SumI s -> sum2Type s
-
-sum2Type ::
-  forall eff.
-  Members '[Reader ModName, Err] eff =>
-  PC.Sum ->
-  Eff eff Type
-sum2Type su = foldWithSum <$> traverse constructor2Type (toList $ su ^. #constructors)
--}
 
 constructor2Type ::
   forall eff.
