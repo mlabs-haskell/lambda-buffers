@@ -185,7 +185,7 @@ runKindCheck = interpret $ \case
         tyDef2Map :: PC.TyDef -> HandleErrorEnv ()
         tyDef2Map = tyAbs2Map . view #tyAbs
 
-        -- Note(cstml): Is there any purpose for anything from the tyArg - be sure to cover with tests.
+        -- NOTE(cstml): Is there any purpose for anything from the tyArg - be sure to cover with tests.
         tyAbs2Map :: PC.TyAbs -> HandleErrorEnv ()
         tyAbs2Map tyAbs = tyBody2Map (tyAbs ^. #tyBody)
 
