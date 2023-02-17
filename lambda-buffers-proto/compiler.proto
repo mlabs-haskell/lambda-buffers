@@ -642,7 +642,7 @@ message KindCheckError {
     TyVar ty_var = 2;
   }
 
-  // Unbound variable ty_ref detected in term ty_def.
+  // Unbound type reference ty_ref detected in term ty_def.
   message UnboundTyRefError {
     TyDef ty_def = 1;
     TyRef ty_ref = 2;
