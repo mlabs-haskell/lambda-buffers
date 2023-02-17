@@ -676,13 +676,13 @@ instance IsMessage P.KindCheckError PC.KindCheckError where
             <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.tyRef)
             <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'ImpossibleUnificationError' err ->
+        P.KindCheckError'UnificationError' err ->
           PC.IncorrectApplicationError
             <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.tyKindLhs)
             <*> fromProto (err ^. P.tyKindRhs)
             <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'RecursiveKindError' err ->
+        P.KindCheckError'CyclicKindError' err ->
           PC.RecursiveKindError
             <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.moduleName)
@@ -707,14 +707,14 @@ instance IsMessage P.KindCheckError PC.KindCheckError where
         & (P.unboundTyRefError . P.moduleName) .~ toProto modname
     PC.IncorrectApplicationError tydef k1 k2 modname ->
       defMessage
-        & (P.impossibleUnificationError . P.tyDef) .~ toProto tydef
-        & (P.impossibleUnificationError . P.tyKindLhs) .~ toProto k1
-        & (P.impossibleUnificationError . P.tyKindRhs) .~ toProto k2
-        & (P.impossibleUnificationError . P.moduleName) .~ toProto modname
+        & (P.unificationError . P.tyDef) .~ toProto tydef
+        & (P.unificationError . P.tyKindLhs) .~ toProto k1
+        & (P.unificationError . P.tyKindRhs) .~ toProto k2
+        & (P.unificationError . P.moduleName) .~ toProto modname
     PC.RecursiveKindError tydef modname ->
       defMessage
-        & (P.recursiveKindError . P.tyDef) .~ toProto tydef
-        & (P.recursiveKindError . P.moduleName) .~ toProto modname
+        & (P.cyclicKindError . P.tyDef) .~ toProto tydef
+        & (P.cyclicKindError . P.moduleName) .~ toProto modname
     PC.InconsistentTypeError tydef ki kd modname ->
       defMessage
         & (P.inconsistentTypeError . P.tyDef) .~ toProto tydef

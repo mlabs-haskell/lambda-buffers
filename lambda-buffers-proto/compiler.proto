@@ -645,9 +645,9 @@ message KindCheckError {
 
   // Unbound type reference ty_ref detected in term ty_def.
   message UnboundTyRefError {
-    TyDef ty_def = 1;
-    TyRef ty_ref = 2;
-    ModuleName module_name = 3;
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    TyRef ty_ref = 3;
   }
 
   // In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
@@ -656,35 +656,34 @@ message KindCheckError {
   // FIXME(cstml): Add source of constraint to the error such that user can see
   // where the constraint was generated - therefore where the error precisely
   // is.
-  message ImpossibleUnificationError {
-    TyDef ty_def = 1;
-    Kind ty_kind_lhs = 2;
-    Kind ty_kind_rhs = 3;
-    ModuleName module_name = 4;
+  message UnificationError {
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    Kind ty_kind_lhs = 3;
+    Kind ty_kind_rhs = 4;
   }
 
-  // A cyclic term was encountered. Infinite terms like this are not acceptable,
-  // and we do not support them. We could not construct infinite "a = ty_name a"
-  // error.
-  message RecursiveKindError {
+  // A cyclic kind was encountered. Infinite kinds like this are not acceptable,
+  // and we do not support them. We could not construct infinite kind in ty_def.
+  message CyclicKindError {
     TyDef ty_def = 1;
     ModuleName module_name = 2;
   }
 
   // The actual_kind differs from the expected_kind.
   message InconsistentTypeError {
-    TyDef ty_def = 1;
-    Kind actual_kind = 2;
-    Kind expected_kind = 3;
-    ModuleName module_name = 4;
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    Kind actual_kind = 3;
+    Kind expected_kind = 4;
   }
 
   // One of the errors occurred during kind checking.
   oneof kind_check_error {
     UnboundTyRefError unbound_ty_ref_error = 1;
     UnboundTyVarError unbound_ty_var_error = 2;
-    ImpossibleUnificationError impossible_unification_error = 3;
-    RecursiveKindError recursive_kind_error = 4;
+    UnificationError unification_error = 3;
+    CyclicKindError cyclic_kind_error = 4;
     InconsistentTypeError inconsistent_type_error = 5;
   }
 }
