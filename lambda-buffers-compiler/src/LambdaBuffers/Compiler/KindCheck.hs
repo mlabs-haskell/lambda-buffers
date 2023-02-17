@@ -69,7 +69,7 @@ makeEffect ''GlobalCheck
 
 -- | Interactions that happen at the level of the
 data ModuleCheck a where -- Module
-  KCTypeDefinition :: ModName -> Context -> PC.TyDef -> ModuleCheck Kind
+  KCTypeDefinition :: PC.ModuleName -> Context -> PC.TyDef -> ModuleCheck Kind
 
 -- NOTE(cstml & gnumonik): Lets reach consensus on these - Note(1).
 --  KCClassInstance :: Context -> P.InstanceClause -> ModuleCheck ()
@@ -78,9 +78,9 @@ data ModuleCheck a where -- Module
 makeEffect ''ModuleCheck
 
 data KindCheck a where
-  TypesFromTyDef :: ModName -> PC.TyDef -> KindCheck [Type]
-  InferTypeKind :: ModName -> PC.TyDef -> Context -> Type -> KindCheck Kind
-  CheckKindConsistency :: ModName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
+  TypesFromTyDef :: PC.ModuleName -> PC.TyDef -> KindCheck [Type]
+  InferTypeKind :: PC.ModuleName -> PC.TyDef -> Context -> Type -> KindCheck Kind
+  CheckKindConsistency :: PC.ModuleName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
 
 makeEffect ''KindCheck
 
@@ -120,7 +120,7 @@ moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
   CreateContext ci -> evalState (mempty @(M.Map Variable PC.TyDef)) . resolveCreateContext $ ci
   ValidateModule cx md -> do
-    traverse_ (kCTypeDefinition (module2ModuleName md) cx) (md ^. #typeDefs)
+    traverse_ (kCTypeDefinition (module2ModName md) cx) (md ^. #typeDefs)
 
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
@@ -141,7 +141,7 @@ localStrategy = reinterpret $ \case
 -- | Internal to External term association map ~ a mapping between a Variable and the term it originated from. Allows us to throw meaningful errors.
 type IETermMap = M.Map Variable (Either PC.TyVar PC.TyRef)
 
-type HandleErrorEnv a = Eff '[Reader ModName, Writer IETermMap] a
+type HandleErrorEnv a = Eff '[Reader PC.ModuleName, Writer IETermMap] a
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
@@ -149,22 +149,22 @@ runKindCheck = interpret $ \case
   InferTypeKind modName tyDef ctx ty -> either (handleErr modName tyDef) pure $ infer ctx ty
   CheckKindConsistency modName def ctx k -> runReader modName $ resolveKindConsistency def ctx k
   where
-    handleErr :: forall {b}. ModName -> PC.TyDef -> InferErr -> Eff effs b
+    handleErr :: forall {b}. PC.ModuleName -> PC.TyDef -> InferErr -> Eff effs b
     handleErr modName td = \case
       InferUnboundTermErr uA -> do
         tt <- getTermType modName td uA
         throwError . PC.CompKindCheckError $ case tt of
-          Right r -> PC.UnboundTyRefError td r
-          Left l -> PC.UnboundTyVarError td l
+          Right r -> PC.UnboundTyRefError td r modName
+          Left l -> PC.UnboundTyVarError td l modName
       InferUnifyTermErr (I.Constraint (k1, k2)) ->
-        throwError . PC.CompKindCheckError $ PC.IncorrectApplicationError (tyDef2TyName td) (kind2ProtoKind k1) (kind2ProtoKind k2)
+        throwError . PC.CompKindCheckError $ PC.IncorrectApplicationError td (kind2ProtoKind k1) (kind2ProtoKind k2) modName
       InferRecursiveSubstitutionErr _ ->
-        throwError . PC.CompKindCheckError $ PC.RecursiveKindError $ tyDef2TyName td
+        throwError . PC.CompKindCheckError $ PC.RecursiveKindError td modName
       InferImpossibleErr t ->
         throwError . PC.InternalError $ t
 
     -- Gets the original term associated with the Variable.
-    getTermType :: ModName -> PC.TyDef -> Variable -> Eff effs (Either PC.TyVar PC.TyRef)
+    getTermType :: PC.ModuleName -> PC.TyDef -> Variable -> Eff effs (Either PC.TyVar PC.TyRef)
     getTermType modName td va = do
       let termMap = snd . run . runWriter . runReader modName $ tyDef2Map td
       case termMap M.!? va of
@@ -229,27 +229,24 @@ runKindCheck = interpret $ \case
 
 resolveKindConsistency ::
   forall effs.
-  Members '[Reader ModName, Err] effs =>
+  Members '[Reader PC.ModuleName, Err] effs =>
   PC.TyDef ->
   Context ->
   Kind ->
   Eff effs Kind
 resolveKindConsistency tydef _ctx inferredKind = do
-  mName <- ask @ModName
-  let tyName = tyDef2TyName tydef
-  (_, k) <- tyDef2NameAndKind mName tydef
-  guard tyName k inferredKind
+  modname <- ask @PC.ModuleName
+  (_, k) <- tyDef2NameAndKind (moduleName2ModName modname) tydef
+  guard tydef k inferredKind modname
   pure inferredKind
   where
-    guard :: PC.TyName -> Kind -> Kind -> Eff effs ()
-    guard n i d
+    guard :: PC.TyDef -> Kind -> Kind -> PC.ModuleName -> Eff effs ()
+    guard t i d mn
       | i == d = pure ()
       | otherwise =
-          throwError . PC.CompKindCheckError $
-            PC.InconsistentTypeError n (kind2ProtoKind i) (kind2ProtoKind d)
-
-tyDef2TyName :: PC.TyDef -> PC.TyName
-tyDef2TyName (PC.TyDef n _ _) = n
+          throwError
+            . PC.CompKindCheckError
+            $ PC.InconsistentTypeError t (kind2ProtoKind i) (kind2ProtoKind d) mn
 
 --------------------------------------------------------------------------------
 -- Context Creation
@@ -379,14 +376,14 @@ tyArg2Var = LocalRef . view (#argName . #name)
 
 constructor2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Constructor ->
   Eff eff Type
 constructor2Type co = product2Type (co ^. #product)
 
 product2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Product ->
   Eff eff Type
 product2Type = \case
@@ -395,14 +392,14 @@ product2Type = \case
 
 record2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Record ->
   Eff eff Type
 record2Type r = foldWithProduct <$> traverse field2Type (toList $ r ^. #fields)
 
 tuple2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Tuple ->
   Eff eff Type
 tuple2Type tu = do
@@ -411,14 +408,14 @@ tuple2Type tu = do
 
 field2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Field ->
   Eff eff Type
 field2Type f = ty2Type (f ^. #fieldTy)
 
 ty2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Ty ->
   Eff eff Type
 ty2Type = \case
@@ -437,7 +434,7 @@ tyVar2Variable = LocalRef . view (#varName . #name)
 
 tyApp2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.TyApp ->
   Eff eff Type
 tyApp2Type ta = do
@@ -447,14 +444,14 @@ tyApp2Type ta = do
 
 tyRef2Type ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.TyRef ->
   Eff eff Type
 tyRef2Type = fmap Var . tyRef2Variable
 
 tyRef2Variable ::
   forall eff.
-  Members '[Reader ModName] eff =>
+  Members '[Reader PC.ModuleName] eff =>
   PC.TyRef ->
   Eff eff Variable
 tyRef2Variable = \case
@@ -463,16 +460,15 @@ tyRef2Variable = \case
 
 localTyRef2Variable ::
   forall eff.
-  Members '[Reader ModName] eff =>
+  Members '[Reader PC.ModuleName] eff =>
   PC.LocalRef ->
   Eff eff Variable
 localTyRef2Variable ltr = do
-  moduleName <- ask
+  moduleName <- moduleName2ModName <$> ask
   pure $ ForeignRef moduleName (ltr ^. #tyName . #name)
 
 foreignTyRef2Variable ::
   forall eff.
-  Members '[Reader ModName] eff =>
   PC.ForeignRef ->
   Eff eff Variable
 foreignTyRef2Variable ftr = do
@@ -488,7 +484,7 @@ foreignTyRef2Variable ftr = do
 -}
 tyDef2Types ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.TyDef ->
   Eff eff [Type]
 tyDef2Types tyde = do
@@ -498,14 +494,14 @@ tyDef2Types tyde = do
 
 tyAbsRHS2Types ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.TyAbs ->
   Eff eff [Type]
 tyAbsRHS2Types tyab = tyBody2Types (tyab ^. #tyBody)
 
 tyBody2Types ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.TyBody ->
   Eff eff [Type]
 tyBody2Types = \case
@@ -514,7 +510,7 @@ tyBody2Types = \case
 
 sum2Types ::
   forall eff.
-  Members '[Reader ModName, Err] eff =>
+  Members '[Reader PC.ModuleName, Err] eff =>
   PC.Sum ->
   Eff eff [Type]
 sum2Types su = traverse constructor2Type $ M.elems (su ^. #constructors)
@@ -531,5 +527,5 @@ foldWithProduct = foldl' (App . App (Var tyProd)) (Var tyUnit)
 foldWithSum :: [Type] -> Type
 foldWithSum = foldl' (App . App (Var tySum)) (Var tyVoid)
 
-module2ModuleName :: PC.Module -> ModName
-module2ModuleName = moduleName2ModName . (^. #moduleName)
+module2ModName :: PC.Module -> PC.ModuleName
+module2ModName = view #moduleName

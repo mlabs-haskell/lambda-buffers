@@ -670,47 +670,57 @@ instance IsMessage P.KindCheckError PC.KindCheckError where
           PC.UnboundTyVarError
             <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.tyVar)
+            <*> fromProto (err ^. P.moduleName)
         P.KindCheckError'UnboundTyRefError' err ->
           PC.UnboundTyRefError
             <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.tyRef)
+            <*> fromProto (err ^. P.moduleName)
         P.KindCheckError'ImpossibleUnificationError' err ->
           PC.IncorrectApplicationError
-            <$> fromProto (err ^. P.tyName)
+            <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.tyKindLhs)
             <*> fromProto (err ^. P.tyKindRhs)
+            <*> fromProto (err ^. P.moduleName)
         P.KindCheckError'RecursiveKindError' err ->
           PC.RecursiveKindError
-            <$> fromProto (err ^. P.tyName)
+            <$> fromProto (err ^. P.tyDef)
+            <*> fromProto (err ^. P.moduleName)
         P.KindCheckError'InconsistentTypeError' err ->
           PC.InconsistentTypeError
-            <$> fromProto (err ^. P.tyName)
+            <$> fromProto (err ^. P.tyDef)
             <*> fromProto (err ^. P.actualKind)
             <*> fromProto (err ^. P.expectedKind)
+            <*> fromProto (err ^. P.moduleName)
       Nothing -> throwOneOfError (messageName (Proxy @P.KindCheckError)) "kind_check_error"
 
   toProto = \case
-    PC.UnboundTyVarError tydef tyvar ->
+    PC.UnboundTyVarError tydef tyvar modname ->
       defMessage
         & (P.unboundTyVarError . P.tyDef) .~ toProto tydef
         & (P.unboundTyVarError . P.tyVar) .~ toProto tyvar
-    PC.UnboundTyRefError tydef tyref ->
+        & (P.unboundTyVarError . P.moduleName) .~ toProto modname
+    PC.UnboundTyRefError tydef tyref modname ->
       defMessage
         & (P.unboundTyRefError . P.tyDef) .~ toProto tydef
         & (P.unboundTyRefError . P.tyRef) .~ toProto tyref
-    PC.IncorrectApplicationError name k1 k2 ->
+        & (P.unboundTyRefError . P.moduleName) .~ toProto modname
+    PC.IncorrectApplicationError tydef k1 k2 modname ->
       defMessage
-        & (P.impossibleUnificationError . P.tyName) .~ toProto name
+        & (P.impossibleUnificationError . P.tyDef) .~ toProto tydef
         & (P.impossibleUnificationError . P.tyKindLhs) .~ toProto k1
         & (P.impossibleUnificationError . P.tyKindRhs) .~ toProto k2
-    PC.RecursiveKindError err ->
+        & (P.impossibleUnificationError . P.moduleName) .~ toProto modname
+    PC.RecursiveKindError tydef modname ->
       defMessage
-        & (P.recursiveKindError . P.tyName) .~ toProto err
-    PC.InconsistentTypeError name ki kd ->
+        & (P.recursiveKindError . P.tyDef) .~ toProto tydef
+        & (P.recursiveKindError . P.moduleName) .~ toProto modname
+    PC.InconsistentTypeError tydef ki kd modname ->
       defMessage
-        & (P.inconsistentTypeError . P.tyName) .~ toProto name
+        & (P.inconsistentTypeError . P.tyDef) .~ toProto tydef
         & (P.inconsistentTypeError . P.actualKind) .~ toProto ki
         & (P.inconsistentTypeError . P.expectedKind) .~ toProto kd
+        & (P.inconsistentTypeError . P.moduleName) .~ toProto modname
 
 instance IsMessage P.CompilerError PC.CompilerError where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
