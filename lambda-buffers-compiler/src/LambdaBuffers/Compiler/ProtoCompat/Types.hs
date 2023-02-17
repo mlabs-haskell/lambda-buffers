@@ -316,10 +316,11 @@ instance Arbitrary CompilerInput where
       fn n = CompilerInput <$> resize n arbitrary
 
 data KindCheckError
-  = UnboundTermError TyName VarName
-  | IncorrectApplicationError TyName Kind Kind
-  | RecursiveKindError TyName
-  | InconsistentTypeError TyName Kind Kind
+  = UnboundTyVarError TyDef TyVar ModuleName
+  | UnboundTyRefError TyDef TyRef ModuleName
+  | IncorrectApplicationError TyDef Kind Kind ModuleName
+  | RecursiveKindError TyDef ModuleName
+  | InconsistentTypeError TyDef Kind Kind ModuleName
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckError
 instance Exception KindCheckError

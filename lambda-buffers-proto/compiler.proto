@@ -636,45 +636,66 @@ message ProtoParseError {
 // Kind checking errors.
 message KindCheckError {
 
-  // Error referring to an unbound term. This usually means that the term was
-  // not defined.
-  message UnboundTermError {
-    TyName ty_name = 1;
-    VarName var_name = 2;
+  // Unbound variable ty_var detected in term ty_def.
+  message UnboundTyVarError {
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    TyVar ty_var = 3;
   }
 
-  // Unification has failed - type is incorrectly defined. Error reads as
-  // follows:
-  // > In ty_name definition an error has occurred when trying to unify kind
-  // > ty_kind_1 with ty_kind_2.
+  // Unbound type reference ty_ref detected in term ty_def.
+  message UnboundTyRefError {
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    TyRef ty_ref = 3;
+  }
+
+  // In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
+  // with ty_kind_rhs.
   //
-  // FIXME(cstml): add source of constraint to the error such that user can see
+  // FIXME(cstml): Add source of constraint to the error such that user can see
   // where the constraint was generated - therefore where the error precisely
   // is.
-  message ImpossibleUnificationError {
-    TyName ty_name = 1;
-    Kind ty_kind_1 = 2;
-    Kind ty_kind_2 = 3;
+  message UnificationError {
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    Kind ty_kind_lhs = 3;
+    Kind ty_kind_rhs = 4;
   }
 
-  // Inifinitely recursive term detected in definition ty_name.
-  message RecursiveKindError {
-    TyName ty_name = 1;
+  // A cyclic kind was encountered. Infinite kinds like this are not acceptable,
+  // and we do not support them. We could not construct infinite kind in ty_def.
+  // 
+  // As the implementation currently stands such an error is (most likely) not
+  // representable - therefore not reachable. Such an error would usually occur
+  // for a term like: λa. a a - in which case the inference would try to unify
+  // two kinds of the form: m and m -> n - because m appears in both terms -
+  // the cyclic unification error would be thrown.
+  //
+  // In the case of LambdaBuffers - such an error is not (currently) achievable
+  // as the kind of the variable is given by the context - (i.e. λa : m . a a,
+  // where m is a kind) therefore the unification would fail with Unification
+  // Error. Nevertheless - future features might require it.
+  message CyclicKindError {
+    TyDef ty_def = 1;
+    ModuleName module_name = 2;
   }
 
-  // The inferred type differs from the type as defined.
+  // The actual_kind differs from the expected_kind.
   message InconsistentTypeError {
-    TyName ty_name = 1;
-    Kind inferred_kind = 2;
-    Kind defined_kind = 3;
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    Kind actual_kind = 3;
+    Kind expected_kind = 4;
   }
 
   // One of the errors occurred during kind checking.
   oneof kind_check_error {
-    UnboundTermError unbound_term_error = 1;
-    ImpossibleUnificationError unification_error = 2;
-    RecursiveKindError recursive_subs_error = 3;
-    InconsistentTypeError inconsistent_type_error = 4;
+    UnboundTyRefError unbound_ty_ref_error = 1;
+    UnboundTyVarError unbound_ty_var_error = 2;
+    UnificationError unification_error = 3;
+    CyclicKindError cyclic_kind_error = 4;
+    InconsistentTypeError inconsistent_type_error = 5;
   }
 }
 
