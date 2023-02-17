@@ -665,6 +665,17 @@ message KindCheckError {
 
   // A cyclic kind was encountered. Infinite kinds like this are not acceptable,
   // and we do not support them. We could not construct infinite kind in ty_def.
+  // 
+  // As the implementation currently stands such an error is (most likely) not
+  // representable - therefore not reachable. Such an error would usually occur
+  // for a term like: λa. a a - in which case the inference would try to unify
+  // two kinds of the form: m and m -> n - because m appears in both terms -
+  // the cyclic unification error would be thrown.
+  //
+  // In the case of LambdaBuffers - such an error is not (currently) achievable
+  // as the kind of the variable is given by the context - (i.e. λa : m . a a,
+  // where m is a kind) therefore the unification would fail with Unification
+  // Error. Nevertheless - future features might require it.
   message CyclicKindError {
     TyDef ty_def = 1;
     ModuleName module_name = 2;
