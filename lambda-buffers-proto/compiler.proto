@@ -638,9 +638,9 @@ message KindCheckError {
 
   // Unbound variable ty_var detected in term ty_def.
   message UnboundTyVarError {
-    TyDef ty_def = 1;
-    TyVar ty_var = 2;
-    ModuleName module_name = 3;
+    ModuleName module_name = 1;
+    TyDef ty_def = 2;
+    TyVar ty_var = 3;
   }
 
   // Unbound type reference ty_ref detected in term ty_def.
