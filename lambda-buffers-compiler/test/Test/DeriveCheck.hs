@@ -61,70 +61,70 @@ test =
     test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11 :: TestTree
 
     test1 =
-      testCase "1: Basic simple module" $
-        assertPrism "FAIL!" _Right (runTest "A" moduleA'1)
+      testCase "Basic simple module" $
+        assertPrism "FAIL!" _Right (runTest moduleA'1)
 
     test2 =
-      testCase "2: Module w/ imports" $
-        assertPrism "FAIL!" _Right (runTest "B" moduleB'1)
+      testCase "Module w/ imports" $
+        assertPrism "FAIL!" _Right (runTest moduleB'1)
 
     test3 =
-      testCase "3: Imports w/ tyvars" $
-        assertPrism "FAIL!" _Right (runTest "B" moduleB'2)
+      testCase "Imports w/ tyvars" $
+        assertPrism "FAIL!" _Right (runTest moduleB'2)
 
     test4 =
-      testCase "4: Circular constraints" $
+      testCase "Circular constraints" $
         assertPrism
           "FAIL!"
           (_Left . _Ctor @"BadInstance" . _Ctor @"TyConInContext")
-          (runTest "B" moduleB'3)
+          (runTest moduleB'3)
 
     test5 =
-      testCase "5: Overlapping instances" $
+      testCase "Overlapping instances" $
         assertPrism
           "FAIL!"
           (_Left . _Ctor @"BadInstance" . _Ctor @"OverlapDetected")
-          (runTest "B" moduleB'4)
+          (runTest moduleB'4)
 
     test6 =
-      testCase "6: Missing Int instance" $
-        assertCtor @"CouldntSolveConstraints"
+      testCase "Missing Int instance" $
+        assertCtor @"FailedToSolveConstraints"
           "FAIL!"
-          (runTest "B" moduleB'5)
+          (runTest moduleB'5)
 
     test7 =
-      testCase "7: Constr in instance constraint" $
+      testCase "Constr in instance constraint" $
         assertPrism
           "FAIL!"
           (_Left . _Ctor @"BadInstance" . _Ctor @"TyConInContext")
-          (runTest "B" moduleB'6)
+          (runTest moduleB'6)
 
     test8 =
-      testCase "8: Multiple TyVar data type" $
+      testCase "Multiple TyVar data type" $
         assertPrism
           "FAIL!"
           _Right
-          (runTest "C" moduleC'1)
+          (runTest moduleC'1)
 
     test9 =
-      testCase "9: Phantom tyvar arg" $
+      testCase "Phantom tyvar arg" $
         assertPrism
           "FAIL"
           _Right
-          (runTest "D" moduleD'1)
+          (runTest moduleD'1)
 
     test10 =
-      testCase "10: Phantom (concrete) type arg" $
+      testCase "Phantom (concrete) type arg" $
         assertPrism
           "FAIL!"
           _Right
-          (runTest "D" moduleD'2)
+          (runTest moduleD'2)
 
     test11 =
-      testCase "11: Missing type in phantom" $
-        assertCtor @"CouldntSolveConstraints"
+      testCase "Missing type in phantom" $
+        assertCtor @"FailedToSolveConstraints"
           "FAIL!"
-          (runTest "D" moduleD'3)
+          (runTest moduleD'3)
 
 -- We should be able to avoid tricky superclass examples here
 -- b/c we have them in the test suite for `solve`
@@ -147,14 +147,6 @@ pattern ForeignRefE mn nm = RefE (LitE (ModuleName mn)) (LitE (Name nm))
 pattern OpaqueDecNoVars :: Text -> Exp
 pattern OpaqueDecNoVars nm = DecE (LitE (Name nm)) NilE (LitE Opaque)
 
-moduleName1 :: Text -> PC.ModuleName
-moduleName1 nm = PC.ModuleName [PC.ModuleNamePart nm si] si
-  where
-    si :: PC.SourceInfo
-    si = PC.SourceInfo "" pos pos
-    pos :: PC.SourcePosition
-    pos = PC.SourcePosition 0 0
-
 -- No supers
 _c :: Class
 _c = Class (FQClassName "C" []) []
@@ -175,8 +167,13 @@ tyVarE t = LitE (TyVar t)
 tyVarP :: Text -> Pat
 tyVarP t = LitP (TyVar t)
 
-runTest :: Text -> ModuleBuilder -> Either TypeClassError ()
-runTest nm = runDeriveCheck (moduleName1 nm)
+runTest :: ModuleBuilder -> Either TypeClassError ()
+runTest = runDeriveCheck (moduleName1 "")
+  where
+    moduleName1 :: Text -> PC.ModuleName
+    moduleName1 nm = PC.ModuleName [PC.ModuleNamePart nm si] si
+    si = PC.SourceInfo "" pos pos
+    pos = PC.SourcePosition 0 0
 
 {- Test 1: Basic test. Should pass
 module A where
@@ -260,8 +257,6 @@ moduleB'1 =
     scopeB =
       S.fromList
         [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
         , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
@@ -303,10 +298,7 @@ moduleB'2 =
 
     scopeB =
       S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+        [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo" :@ _X) :<= [C _c _X]]
@@ -319,7 +311,7 @@ import A
 
 data Foo a = Foo (Maybe a)
 
-instance C a => C (Foo a)
+instance C (Foo a) => C (Foo a)
 -}
 moduleB'3 :: ModuleBuilder
 moduleB'3 =
@@ -327,7 +319,7 @@ moduleB'3 =
     { mbTyDefs = tyDefsB
     , mbInstances = instancesB
     , mbClasses = S.empty
-    , mbScope = scopeB
+    , mbScope = S.empty
     }
   where
     tyDefsB :: M.Map Text Exp
@@ -337,14 +329,6 @@ moduleB'3 =
             mkSum
               [ "Foo" .= toProdE [ForeignRefE ["A"] "Maybe" :@@ LitE (TyVar "a")]
               ]
-        ]
-
-    scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo" :@ _X) :<= [C _c (LocalRefP "Foo" :@ _X)]]
@@ -387,8 +371,6 @@ moduleB'4 =
     scopeB =
       S.fromList
         [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
         , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         , C _c (ForeignRefP ["A"] "Maybe" :@ ForeignRefP ["A"] "Int") :<= []
         ]
@@ -420,9 +402,7 @@ moduleB'5 =
 
     scopeB =
       S.fromList
-        [ C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+        [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo") :<= []]
@@ -440,7 +420,7 @@ moduleB'6 =
     { mbTyDefs = tyDefsB
     , mbInstances = instancesB
     , mbClasses = S.empty
-    , mbScope = scopeB
+    , mbScope = S.empty
     }
   where
     tyDefsB :: M.Map Text Exp
@@ -450,14 +430,6 @@ moduleB'6 =
             mkSum
               [ "Foo" .= toProdE [ForeignRefE ["A"] "Maybe" :@@ ForeignRefE ["A"] "Int"]
               ]
-        ]
-
-    scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
     instancesB =
@@ -496,9 +468,6 @@ moduleC'1 =
     scopeC =
       S.fromList
         [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
     instancesC = S.fromList [C _c (LocalRefP "Bar" :@ tyVarP "a" :@ tyVarP "b") :<= []]
@@ -517,14 +486,14 @@ instance C (Bar a b)
 moduleD'1 :: ModuleBuilder
 moduleD'1 =
   ModuleBuilder
-    { mbTyDefs = tyDefsC
-    , mbInstances = instancesC
+    { mbTyDefs = tyDefsD
+    , mbInstances = instancesD
     , mbClasses = S.empty
-    , mbScope = scopeC
+    , mbScope = scopeD
     }
   where
-    tyDefsC :: M.Map Text Exp
-    tyDefsC =
+    tyDefsD :: M.Map Text Exp
+    tyDefsD =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
             mkSum
@@ -532,15 +501,12 @@ moduleD'1 =
               ]
         ]
 
-    scopeC =
+    scopeD =
       S.fromList
         [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Bool") :<= []
-        , C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
-    instancesC = S.fromList [C _c (LocalRefP "Bar" :@ tyVarP "a" :@ tyVarP "b") :<= []]
+    instancesD = S.fromList [C _c (LocalRefP "Bar" :@ tyVarP "a" :@ tyVarP "b") :<= []]
 
 {- Test 10. Phantom concrete type. Should pass (b/c instance isn't needed for phantom type)
 
@@ -556,14 +522,14 @@ instance C (Bar a Bool)
 moduleD'2 :: ModuleBuilder
 moduleD'2 =
   ModuleBuilder
-    { mbTyDefs = tyDefsC
-    , mbInstances = instancesC
+    { mbTyDefs = tyDefsD
+    , mbInstances = instancesD
     , mbClasses = S.empty
-    , mbScope = scopeC
+    , mbScope = scopeD
     }
   where
-    tyDefsC :: M.Map Text Exp
-    tyDefsC =
+    tyDefsD :: M.Map Text Exp
+    tyDefsD =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
             mkSum
@@ -571,15 +537,12 @@ moduleD'2 =
               ]
         ]
 
-    scopeC =
+    scopeD =
       S.fromList
         [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , -- , C _c (ForeignRefP ["A"] "Bool") :<= []
-          C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
         ]
 
-    instancesC =
+    instancesD =
       S.fromList
         [ C _c (LocalRefP "Bar" :@ tyVarP "a" :@ ForeignRefP ["A"] "Bool") :<= []
         ]
@@ -598,14 +561,14 @@ instance C (Bar a Bool)
 moduleD'3 :: ModuleBuilder
 moduleD'3 =
   ModuleBuilder
-    { mbTyDefs = tyDefsC
-    , mbInstances = instancesC
+    { mbTyDefs = tyDefsD
+    , mbInstances = instancesD
     , mbClasses = S.empty
-    , mbScope = scopeC
+    , mbScope = S.empty
     }
   where
-    tyDefsC :: M.Map Text Exp
-    tyDefsC =
+    tyDefsD :: M.Map Text Exp
+    tyDefsD =
       M.fromList
         [ "Bar" .= DecE (LitE (Name "Bar")) (tyVarE "a" *: tyVarE "b" *: nil) $
             mkSum
@@ -613,15 +576,7 @@ moduleD'3 =
               ]
         ]
 
-    scopeC =
-      S.fromList
-        [ -- C _c (ForeignRefP ["A"] "Int") :<= []
-          -- , C _c (ForeignRefP ["A"] "Bool") :<= []
-          C _c (ForeignRefP ["A"] "String") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
-        ]
-
-    instancesC =
+    instancesD =
       S.fromList
         [ C _c (LocalRefP "Bar" :@ tyVarP "a" :@ ForeignRefP ["A"] "Bool") :<= []
         ]

@@ -64,8 +64,14 @@ constraintClass (C c _) = c
 --       half of Haskell's orphan instances rule. We could relax that in various ways
 --       but it would require reworking a lot of the utilities above.
 checkDerive :: P.ModuleName -> ModuleBuilder -> Rule Pat -> Either TypeClassError [Constraint Exp]
-checkDerive mn mb i = concat <$> (traverse solveRef =<< catchOverlap (solve assumptions c))
+checkDerive mn mb i = concat <$> secondPass
   where
+    secondPass :: Either TypeClassError [[Constraint Exp]]
+    secondPass = traverse solveRef =<< firstPass
+
+    firstPass :: Either TypeClassError [Constraint Exp]
+    firstPass = catchOverlap (solve assumptions c)
+
     catchOverlap :: Either Overlap a -> Either TypeClassError a
     catchOverlap = either (Left . BadInstance . OverlapDetected) pure
 

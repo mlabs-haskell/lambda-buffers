@@ -71,8 +71,6 @@ data Pat
     DecP Pat Pat Pat
   deriving stock (Show, Eq, Ord)
 
--- infixr 5 :*
-
 {- Utility functions. Turn a list of types into a product/record/sum type.
 -}
 toProdP :: [Pat] -> Pat
@@ -166,13 +164,6 @@ expList = \case
   p1 `ConsE` p2 -> (p1 :) <$> expList p2
   _ -> Nothing
 
-{- This is used as a predicate to filter instances or Gens which are structurally compatible
-   with the argument type.
-   The first argument is the inner Pat from an instance head or Gen.
-   The second argument is the Pat representation of a type that we want to derive an instance / generate code for.
-   NOTE: Is not bidirectional! The first Pat has to be more general than the first
-         (more specifically: The second Pat should be a substitution instance of the first)
--}
 matches :: Pat -> Exp -> Bool
 matches (LitP l1) (LitE l2) = l1 == l2
 matches (VarP _) _ = True

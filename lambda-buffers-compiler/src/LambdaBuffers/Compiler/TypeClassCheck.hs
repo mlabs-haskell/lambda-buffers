@@ -23,7 +23,7 @@ import LambdaBuffers.Compiler.TypeClass.Pretty (spaced, (<//>))
 import LambdaBuffers.Compiler.TypeClass.Utils (
   Instance,
   ModuleBuilder (mbInstances),
-  TypeClassError (CouldntSolveConstraints),
+  TypeClassError (FailedToSolveConstraints),
   checkInstance,
   mkBuilders,
  )
@@ -89,7 +89,7 @@ runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
         >> checkDerive mn mb i
         >>= \case
           [] -> pure ()
-          xs -> Left $ CouldntSolveConstraints mn xs i
+          xs -> Left $ FailedToSolveConstraints mn xs i
 
 -- ModuleBuilder is suitable codegen input,
 -- and is (relatively) computationally expensive to

@@ -44,16 +44,13 @@ inst = subV M.empty
    are replaced in the instance superclasses as well (if they occur there).
 -}
 subst :: Rule Pat -> Exp -> Rule Exp
-subst cst@(C _ t :<= _) ty = fmap (go (getSubs t ty)) cst
-  where
-    go :: [(Text, Exp)] -> Pat -> Exp
-    go subs = subV (M.fromList subs)
+subst cst@(C _ t :<= _) ty = fmap (subV (getSubs t ty)) cst
 
 {- Given two patterns (which are hopefully structurally similar), gather a list of all substitutions
    from the PatVars in the first argument to the concrete types (hopefully!) in the second argument
 -}
-getSubs :: Pat -> Exp -> [(Text, Exp)] -- should be a set, whatever
-getSubs (VarP s) t = [(s, t)]
+getSubs :: Pat -> Exp -> M.Map Text Exp -- should be a set, whatever
+getSubs (VarP s) t = M.fromList [(s, t)]
 getSubs (ConsP x xs) (ConsE x' xs') = getSubs x x' <> getSubs xs xs'
 getSubs (LabelP l t) (LabelE l' t') = getSubs l l' <> getSubs t t'
 getSubs (ProdP xs) (ProdE xs') = getSubs xs xs'
@@ -62,22 +59,23 @@ getSubs (SumP xs) (SumE xs') = getSubs xs xs'
 getSubs (AppP t1 t2) (AppE t1' t2') = getSubs t1 t1' <> getSubs t2 t2'
 getSubs (RefP n t) (RefE n' t') = getSubs n n' <> getSubs t t'
 getSubs (DecP a b c) (DecE a' b' c') = getSubs a a' <> getSubs b b' <> getSubs c c'
-getSubs _ _ = []
+getSubs _ _ = M.empty
 
 -- NoMatch isn't fatal but OverlappingMatches is (i.e. we need to stop when we encounter it)
-data MatchError
+data MatchResult
   = NoMatch
   | OverlappingMatches [Rule Pat]
+  | MatchFound (Rule Pat)
 
 -- for SolveM, since we catch NoMatch
 data Overlap = Overlap (Constraint Exp) [Rule Pat]
   deriving stock (Show, Eq)
 
-selectMatchingInstance :: Exp -> Class -> [Rule Pat] -> Either MatchError (Rule Pat)
+selectMatchingInstance :: Exp -> Class -> [Rule Pat] -> MatchResult
 selectMatchingInstance e c rs = case filter matchPatAndClass rs of
-  [] -> Left NoMatch
-  [r] -> Right r
-  overlaps -> Left $ OverlappingMatches overlaps
+  [] -> NoMatch
+  [r] -> MatchFound r
+  overlaps -> OverlappingMatches overlaps
   where
     matchPatAndClass :: Rule Pat -> Bool
     matchPatAndClass r =
@@ -103,10 +101,9 @@ solveM (C _ (LitE (TyVar _))) = pure ()
 solveM cst@(C c pat) =
   ask >>= \inScope ->
     case selectMatchingInstance pat c inScope of
-      Left e -> case e of
-        NoMatch -> tell $ S.singleton cst
-        OverlappingMatches olps -> throwError $ Overlap cst olps
-      Right rule -> case subst rule pat of
+      NoMatch -> tell $ S.singleton cst
+      OverlappingMatches olps -> throwError $ Overlap cst olps
+      MatchFound rule -> case subst rule pat of
         C _ p :<= [] -> solveClassesFor p (csupers c)
         C _ _ :<= is -> do
           traverse_ solveM is

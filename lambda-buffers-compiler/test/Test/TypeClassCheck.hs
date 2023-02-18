@@ -128,31 +128,31 @@ solveTests :: TestTree
 solveTests =
   testGroup
     "Solver tests"
-    [ testCase "1: C [Maybe Int] (completeRules)" $
+    [ testCase "C [Maybe Int] (completeRules)" $
         solveTest1 @?= solved
-    , testCase "2: D [Maybe Int] (partialRules)" $
+    , testCase "D [Maybe Int] (partialRules)" $
         solveTest2 @?= Right [cListMaybeInt, cMaybeInt, dInt]
-    , testCase "3: D [Maybe Int] (complete D, partial C)" $
+    , testCase "D [Maybe Int] (complete D, partial C)" $
         solveTest3 @?= Right [cInt]
-    , testCase "4: C [[[Bool]]] (completeRules)" $
+    , testCase "C [[[Bool]]] (completeRules)" $
         solveTest4 @?= solved
-    , testCase "5: C (Either (Either Int Bool) (Either Bool Int)) (completeRules)" $
+    , testCase "C (Either (Either Int Bool) (Either Bool Int)) (completeRules)" $
         solveTest5 @?= solved
-    , testCase "6: C (Either l x) (completeRules)" $
+    , testCase "C (Either l x) (completeRules)" $
         solveTest6 @?= solved
-    , testCase "7: Sum test (completeRules)" $
+    , testCase "Sum test (completeRules)" $
         solveTest7 @?= solved
-    , testCase "8: Sum test (partialRules)" $
+    , testCase "Sum test (partialRules)" $
         solveTest8 @?= Right [cBool, cInt]
-    , testCase "9: Rec test (completeRules)" $
+    , testCase "Rec test (completeRules)" $
         solveTest9 @?= solved
-    , testCase "10: Rec test (partialRules)" $
+    , testCase "Rec test (partialRules)" $
         solveTest10 @?= Right [cBool, cInt]
-    , testCase "11: Prod test (completeRules)" $
+    , testCase "Prod test (completeRules)" $
         solveTest11 @?= solved
-    , testCase "12: Prod test (partialRules)" $
+    , testCase "Prod test (partialRules)" $
         solveTest12 @?= Right [cBool, cInt]
-    , testCase "13: Overlap test (specialRules)" $
+    , testCase "Overlap test (specialRules)" $
         solveTest13
           @?= Left
             ( Overlap

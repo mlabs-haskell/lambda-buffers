@@ -79,7 +79,7 @@ data TypeClassError
   | ClassNotFoundInModule Text [Text]
   | LocalTyRefNotFound T.Text P.ModuleName
   | SuperclassCycleDetected [[FQClassName]]
-  | CouldntSolveConstraints P.ModuleName [Constraint Exp] Instance
+  | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance
   | MalformedTyDef P.ModuleName Exp
   | BadInstance BasicConditionViolation
   deriving stock (Show, Eq, Generic)
@@ -114,7 +114,7 @@ instance Pretty TypeClassError where
               . map (hcat . punctuate " => " . map pretty)
               $ crs
           )
-    CouldntSolveConstraints mn cs i ->
+    FailedToSolveConstraints mn cs i ->
       "Error: Could not derive instance:"
         <+> pointies (pretty i)
           <> line
