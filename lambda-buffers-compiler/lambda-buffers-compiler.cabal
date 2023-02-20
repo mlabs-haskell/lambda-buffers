@@ -120,11 +120,14 @@ library
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Types
-    LambdaBuffers.Compiler.TypeClass.Pat
-    LambdaBuffers.Compiler.TypeClass.Pretty
-    LambdaBuffers.Compiler.TypeClass.Rules
-    LambdaBuffers.Compiler.TypeClass.Solve
     LambdaBuffers.Compiler.TypeClassCheck
+    LambdaBuffers.Compiler.TypeClassCheck.Compat
+    LambdaBuffers.Compiler.TypeClassCheck.Pat
+    LambdaBuffers.Compiler.TypeClassCheck.Pretty
+    LambdaBuffers.Compiler.TypeClassCheck.Rules
+    LambdaBuffers.Compiler.TypeClassCheck.Solve
+    LambdaBuffers.Compiler.TypeClassCheck.Utils
+    LambdaBuffers.Compiler.TypeClassCheck.Validate
 
   hs-source-dirs:  src
 
@@ -150,7 +153,8 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , containers                  >=0.6
+    , containers
+    , generic-lens
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , proto-lens                  >=0.7
@@ -161,6 +165,7 @@ test-suite tests
     , text                        >=1.2
 
   other-modules:
+    Test.DeriveCheck
     Test.KindCheck
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
