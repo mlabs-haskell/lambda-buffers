@@ -157,6 +157,7 @@ test-suite tests
     , generic-lens
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , nonempty-containers
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
