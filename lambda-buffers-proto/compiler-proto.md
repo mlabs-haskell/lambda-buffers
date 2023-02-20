@@ -61,9 +61,9 @@
     - [TyVar](#lambdabuffers-compiler-TyVar)
     - [Tys](#lambdabuffers-compiler-Tys)
     - [VarName](#lambdabuffers-compiler-VarName)
-  
+
     - [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef)
-  
+
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -185,6 +185,34 @@ Output of the Compiler.
 
 ### CompilerResult
 Compiler Result ~ a successful Compilation Output.
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerOutput"></a>
+
+### CompilerOutput
+Output of the Compiler.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| compilation_error | [CompilerError](#lambdabuffers-compiler-CompilerError) |  |  |
+| compilation_result | [CompilerResult](#lambdabuffers-compiler-CompilerResult) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-CompilerResult"></a>
+
+### CompilerResult
+Compiler Result ~ a successful Compilation Output.
+
+equivalent of unit.
 
 
 
@@ -1172,7 +1200,7 @@ Type variable name
 
 
 
- 
+
 
 
 <a name="lambdabuffers-compiler-Kind-KindRef"></a>
@@ -1186,11 +1214,11 @@ A built-in kind.
 | KIND_REF_TYPE | 1 | A `Type` kind (also know as `*` in Haskell) built-in. |
 
 
- 
 
- 
 
- 
+
+
+
 
 
 

@@ -1,7 +1,8 @@
 module Test.Utils.Constructors (
-  _tyName,
-  _varName,
-  _tyVar,
+  _TyName,
+  _VarName,
+  _TyVar,
+  _TyVar',
   _TyVarI,
   _TupleI,
   _Constructor,
@@ -16,12 +17,18 @@ module Test.Utils.Constructors (
   _CompilerInput,
   _ModuleName,
   _ModuleNamePart,
+  _TyVarI',
+  _SourceInfo,
+  _LocalRef,
+  _LocalRef',
+  _ForeignRef',
 ) where
 
 import Control.Lens ((^.))
 import Data.Map qualified as Map
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
 
 _CompilerInput :: [P.Module] -> P.CompilerInput
 _CompilerInput ms =
@@ -50,17 +57,31 @@ _ModuleName ps =
 _ModuleNamePart :: Text -> P.ModuleNamePart
 _ModuleNamePart n = P.ModuleNamePart n P.defSourceInfo
 
-_tyName :: Text -> P.TyName
-_tyName x = P.TyName x P.defSourceInfo
+_TyName :: Text -> P.TyName
+_TyName x = P.TyName x P.defSourceInfo
 
-_varName :: Text -> P.VarName
-_varName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
+_VarName :: Text -> P.VarName
+_VarName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
 
-_tyVar :: Text -> P.TyVar
-_tyVar x = P.TyVar {P.varName = _varName x, P.sourceInfo = P.defSourceInfo}
+_TyVar :: Text -> P.TyVar
+_TyVar x = P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+
+-- | TyVar with Source Info - for error precision testing.
+_TyVar' :: Text -> SourceInfo -> P.TyVar
+_TyVar' x s = P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
 
 _TyVarI :: Text -> P.Ty
-_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _varName x, P.sourceInfo = P.defSourceInfo}
+_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+
+-- | TyVar with Source Info - for error precision testing.
+_TyVarI' :: Text -> SourceInfo -> P.Ty
+_TyVarI' x s = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
+
+_SourceInfo :: Int -> Int -> P.SourceInfo
+_SourceInfo x y = P.SourceInfo {P.file = "DefaultFile", P.posFrom = _SourcePosition x, P.posTo = _SourcePosition y}
+
+_SourcePosition :: Int -> P.SourcePosition
+_SourcePosition x = P.SourcePosition x (x + 1)
 
 _TupleI :: [P.Ty] -> P.Product
 _TupleI x =
@@ -115,10 +136,26 @@ _TyDef :: P.TyName -> P.TyAbs -> P.TyDef
 _TyDef name ab = P.TyDef {P.tyName = name, P.tyAbs = ab, sourceInfo = P.defSourceInfo}
 
 _TyRefILocal :: Text -> P.Ty
-_TyRefILocal x =
-  P.TyRefI $
-    P.LocalI $
-      P.LocalRef
-        { P.tyName = P.TyName {P.name = x, sourceInfo = P.defSourceInfo}
-        , P.sourceInfo = P.defSourceInfo
-        }
+_TyRefILocal x = P.TyRefI $ P.LocalI $ _LocalRef x
+
+_LocalRef :: Text -> P.LocalRef
+_LocalRef = flip _LocalRef' P.defSourceInfo
+
+-- | LocalRef with Source Info - for error precision testing.
+_LocalRef' :: Text -> P.SourceInfo -> P.LocalRef
+_LocalRef' x s =
+  P.LocalRef
+    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
+    , P.sourceInfo = s
+    }
+
+_ForeignRef :: Text -> [Text] -> P.ForeignRef
+_ForeignRef n m = _ForeignRef' n (_ModuleName m) P.defSourceInfo
+
+_ForeignRef' :: Text -> P.ModuleName -> P.SourceInfo -> P.ForeignRef
+_ForeignRef' x m s =
+  P.ForeignRef
+    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
+    , P.moduleName = m
+    , P.sourceInfo = s
+    }
