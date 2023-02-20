@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Pat (
+module LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Pat (..),
   Exp (..),
   Literal (..),

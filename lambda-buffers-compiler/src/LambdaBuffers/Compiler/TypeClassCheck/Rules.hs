@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module LambdaBuffers.Compiler.TypeClass.Rules (
+module LambdaBuffers.Compiler.TypeClassCheck.Rules (
   FQClassName (..),
   Class (..),
   Constraint (..),

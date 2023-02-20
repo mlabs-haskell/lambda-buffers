@@ -11,7 +11,8 @@ import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import LambdaBuffers.Compiler.TypeClass.Pat (
+import LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck)
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, DecE, LitE, NilE, RefE),
   ExpressionLike (nil, (*:), (*=)),
   Literal (ModuleName, Name, Opaque, TyVar),
@@ -19,19 +20,18 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
   toProdE,
   toSumE,
  )
-import LambdaBuffers.Compiler.TypeClass.Rules (
+import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Class (Class),
   Constraint (C),
   FQClassName (FQClassName),
   Rule ((:<=)),
  )
-import LambdaBuffers.Compiler.TypeClass.Utils (
+import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   Instance,
   ModuleBuilder (ModuleBuilder, mbClasses, mbInstances, mbScope, mbTyDefs),
   TypeClassError,
  )
-import LambdaBuffers.Compiler.TypeClass.Validate (_X)
-import LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck)
+import LambdaBuffers.Compiler.TypeClassCheck.Validate (_X)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, assertBool, testCase)
 

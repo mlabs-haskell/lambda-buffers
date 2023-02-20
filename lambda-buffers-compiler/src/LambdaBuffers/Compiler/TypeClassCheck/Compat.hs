@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLabels #-}
 
-module LambdaBuffers.Compiler.TypeClass.Compat (
+module LambdaBuffers.Compiler.TypeClassCheck.Compat (
   modulename,
   defToExp,
   tyToExp,
@@ -17,7 +17,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
-import LambdaBuffers.Compiler.TypeClass.Pat (
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, DecE, LitE, NilE, RefE),
   ExpressionLike (nil, (*:), (*=)),
   Literal (ModuleName, Name, Opaque, TyVar),

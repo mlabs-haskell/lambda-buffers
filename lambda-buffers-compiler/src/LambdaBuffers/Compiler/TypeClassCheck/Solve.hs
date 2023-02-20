@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClass.Solve (solve, inst, Overlap (..)) where
+module LambdaBuffers.Compiler.TypeClassCheck.Solve (solve, inst, Overlap (..)) where
 
 import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -11,8 +11,8 @@ import Data.Foldable (traverse_)
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
-import LambdaBuffers.Compiler.TypeClass.Pat (Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE), ExpressionLike ((*:), (*=)), Literal (TyVar), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), matches)
-import LambdaBuffers.Compiler.TypeClass.Rules (Class (csupers), Constraint (C), Rule ((:<=)), ruleClass, ruleHead)
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE), ExpressionLike ((*:), (*=)), Literal (TyVar), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), matches)
+import LambdaBuffers.Compiler.TypeClassCheck.Rules (Class (csupers), Constraint (C), Rule ((:<=)), ruleClass, ruleHead)
 
 {- Pattern/Template/Unification variable  substitution.
    Given a string that represents a variable name,

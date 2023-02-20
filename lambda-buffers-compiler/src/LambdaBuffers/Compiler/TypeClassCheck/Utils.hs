@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLabels #-}
 
-module LambdaBuffers.Compiler.TypeClass.Utils (
+module LambdaBuffers.Compiler.TypeClassCheck.Utils (
   -- exports for Validate & Tests
   type Instance,
   TypeClassError (..),
@@ -27,12 +27,12 @@ import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text qualified as T
 
-import LambdaBuffers.Compiler.TypeClass.Compat (
+import LambdaBuffers.Compiler.TypeClassCheck.Compat (
   defToExp,
   modulename,
   tyToPat,
  )
-import LambdaBuffers.Compiler.TypeClass.Rules (
+import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Class (Class),
   Constraint (C),
   FQClassName (FQClassName),
@@ -50,10 +50,10 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   SourceInfo,
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClass.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
 
-import LambdaBuffers.Compiler.TypeClass.Pretty (pointies, (<///>))
-import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap))
+import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
   Pretty (pretty),
   hcat,

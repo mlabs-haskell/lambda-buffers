@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.TypeClass.Validate (
+module LambdaBuffers.Compiler.TypeClassCheck.Validate (
   -- structural rules
   mkStructuralRules,
   -- pattern vars (for tests)
@@ -18,14 +18,14 @@ import Control.Monad.Except (throwError)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ModuleName,
  )
-import LambdaBuffers.Compiler.TypeClass.Pat (Exp (DecE), Literal (Opaque), Pat (ConsP, LabelP, LitP, NilP, ProdP, RecP, SumP, VarP), getLocalRefE)
-import LambdaBuffers.Compiler.TypeClass.Rules (
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (DecE), Literal (Opaque), Pat (ConsP, LabelP, LitP, NilP, ProdP, RecP, SumP, VarP), getLocalRefE)
+import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Class,
   Constraint (C),
   Rule ((:<=)),
  )
-import LambdaBuffers.Compiler.TypeClass.Solve (Overlap, inst, solve)
-import LambdaBuffers.Compiler.TypeClass.Utils (
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap, inst, solve)
+import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   BasicConditionViolation (OverlapDetected),
   ModuleBuilder (mbInstances, mbScope, mbTyDefs),
   TypeClassError (BadInstance, LocalTyRefNotFound, MalformedTyDef),

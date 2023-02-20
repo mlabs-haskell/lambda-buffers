@@ -19,15 +19,15 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (
   LocalClassRef (LocalClassRef),
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClass.Pretty (spaced, (<//>))
-import LambdaBuffers.Compiler.TypeClass.Utils (
+import LambdaBuffers.Compiler.TypeClassCheck.Pretty (spaced, (<//>))
+import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   Instance,
   ModuleBuilder (mbInstances),
   TypeClassError (FailedToSolveConstraints),
   checkInstance,
   mkBuilders,
  )
-import LambdaBuffers.Compiler.TypeClass.Validate (checkDerive)
+import LambdaBuffers.Compiler.TypeClassCheck.Validate (checkDerive)
 import Prettyprinter (
   Doc,
   Pretty (pretty),

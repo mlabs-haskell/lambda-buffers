@@ -10,7 +10,8 @@ import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat (runFromProto)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import LambdaBuffers.Compiler.TypeClass.Pat (
+import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, LabelE, LitE, NilE, RefE),
   Literal (Name, TyVar),
   Pat (AppP, LitP, NilP, RefP),
@@ -18,20 +19,19 @@ import LambdaBuffers.Compiler.TypeClass.Pat (
   toRecE,
   toSumE,
  )
-import LambdaBuffers.Compiler.TypeClass.Rules (
+import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Class (Class),
   Constraint (C),
   FQClassName (FQClassName),
   Rule ((:<=)),
  )
-import LambdaBuffers.Compiler.TypeClass.Rules qualified as R
-import LambdaBuffers.Compiler.TypeClass.Solve (Overlap (Overlap), solve)
-import LambdaBuffers.Compiler.TypeClass.Validate (
+import LambdaBuffers.Compiler.TypeClassCheck.Rules qualified as R
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap), solve)
+import LambdaBuffers.Compiler.TypeClassCheck.Validate (
   mkStructuralRules,
   _L,
   _X,
  )
-import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
 import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
 import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, kindRef, localClassRef, moduleName, modules, name, parts, supers, tyVar, varName)
 import Test.Tasty (TestTree, testGroup)
