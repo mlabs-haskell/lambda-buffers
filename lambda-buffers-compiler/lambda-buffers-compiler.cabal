@@ -171,6 +171,8 @@ test-suite tests
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Gen
+    Test.LambdaBuffers.Compiler.Gen.Mutation
+    Test.LambdaBuffers.Compiler.Gen.Utils
     Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors

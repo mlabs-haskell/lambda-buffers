@@ -7,8 +7,6 @@ import Data.Foldable (Foldable (toList))
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.Map.NonEmpty (NEMap)
-import Data.Map.NonEmpty qualified as NEMap
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Field (HasField)
 import Data.Set (Set)
@@ -22,6 +20,7 @@ import GHC.Enum qualified as Int
 import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
 import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, ntuple, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
+import Test.LambdaBuffers.Compiler.Gen.Utils (distribute, indexBy, nesetOf, setOf, vecOf)
 import Test.QuickCheck qualified as QC (arbitraryPrintableChar)
 import Test.QuickCheck.Gen qualified as QC
 
@@ -231,48 +230,6 @@ genCompilerInput = do
   return $ defMessage & modules .~ toList ms
 
 -- | Utils
-
--- | Distributes values (first argument) over the keys (second) randomly.
-distribute :: Foldable t => Ord k => t v -> Set k -> QC.Gen (Map k (NonEmpty v))
-distribute vals keys = do
-  (leftover, distributed) <- distributeSingle vals keys
-  if null leftover
-    then return distributed
-    else do
-      distributed' <- distribute leftover keys
-      return $ Map.unionWith (<>) distributed distributed'
-
-distributeSingle :: Foldable t => Ord k => t v -> Set k -> QC.Gen ([v], Map k (NonEmpty v))
-distributeSingle vals =
-  foldM
-    ( \(vals', dist) key ->
-        case vals' of
-          [] -> return (vals', dist)
-          (v : vals'') -> do
-            (chosenVals, leftoverVals) <- partition vals''
-            return (leftoverVals, Map.insert key (v :| chosenVals) dist)
-    )
-    (toList vals, mempty)
-
--- | Partition a list randomly.
-partition :: forall {a}. [a] -> QC.Gen ([a], [a])
-partition xs = go xs []
-  where
-    go :: [a] -> [a] -> QC.Gen ([a], [a])
-    go [] outs = return (outs, [])
-    go (i : ins) outs = do
-      b <- QC.chooseAny
-      if b
-        then go ins (i : outs)
-        else return (outs, i : ins)
-
-_indexBy :: Ord k => (a -> k) -> NonEmpty a -> NEMap k a
-_indexBy keyF (x :| xs) = foldl (\t x' -> NEMap.insert (keyF x') x' t) (NEMap.singleton (keyF x) x) xs
-
--- | Index a list given a key function.
-indexBy :: Foldable t => Ord k => (a -> k) -> t a -> Map k a
-indexBy keyF = foldl (\t x -> Map.insert (keyF x) x t) mempty
-
 withSourceInfo :: HasField a "sourceInfo" SourceInfo => a -> QC.Gen a
 withSourceInfo msg = do
   f <- Text.pack <$> vecOf QC.arbitraryPrintableChar 10
@@ -286,18 +243,3 @@ withSourceInfo msg = do
       & sourceInfo . file .~ f
       & sourceInfo . posFrom .~ pos
       & sourceInfo . posTo .~ pos
-
-vecOf :: forall {a}. QC.Gen a -> Int -> QC.Gen [a]
-vecOf = flip QC.vectorOf
-
-nevecOf :: forall {a}. QC.Gen a -> Int -> QC.Gen (NonEmpty a)
-nevecOf g n =
-  g >>= \x -> do
-    xs <- QC.vectorOf (n - 1) g
-    return $ x :| xs
-
-nesetOf :: forall {a}. Ord a => QC.Gen a -> Int -> QC.Gen (NESet a)
-nesetOf g n = NESet.fromList <$> nevecOf g n
-
-setOf :: forall {a}. Ord a => QC.Gen a -> Int -> QC.Gen (Set a)
-setOf g n = Set.fromList <$> vecOf g n

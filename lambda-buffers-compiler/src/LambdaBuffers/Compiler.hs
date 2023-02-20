@@ -1,16 +1,17 @@
 module LambdaBuffers.Compiler (runCompiler) where
 
+import Control.Lens ((&), (.~))
 import Data.ProtoLens (Message (defMessage))
-import LambdaBuffers.Compiler.KindCheck (check_)
+import LambdaBuffers.Compiler.KindCheck qualified as KindCheck
 import LambdaBuffers.Compiler.ProtoCompat.FromProto (
   runFromProto,
   toProto,
  )
-import Proto.Compiler (CompilerError, CompilerInput, CompilerResult)
+import Proto.Compiler (CompilerInput, CompilerOutput)
+import Proto.Compiler_Fields qualified as P
 
-runCompiler :: CompilerInput -> Either CompilerError CompilerResult
+runCompiler :: CompilerInput -> CompilerOutput
 runCompiler compInp = do
-  compInp' <- runFromProto compInp
-  case check_ compInp' of
-    Left err -> Left $ toProto err
-    Right _ -> Right defMessage
+  case runFromProto compInp of
+    Left err -> defMessage & P.compilerError .~ err
+    Right compInp' -> toProto $ KindCheck.check compInp'
