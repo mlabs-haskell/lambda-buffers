@@ -121,7 +121,7 @@ library
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.FromProto
-    LambdaBuffers.Compiler.ProtoCompat.SILEq
+    LambdaBuffers.Compiler.ProtoCompat.SILId
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Compat
