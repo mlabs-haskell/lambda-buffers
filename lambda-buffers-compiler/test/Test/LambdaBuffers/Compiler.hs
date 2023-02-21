@@ -16,7 +16,7 @@ import Test.Tasty.Hedgehog (testProperty)
 test :: TestTree
 test =
   testGroup
-    "Compiler Proto API tests"
+    "Compiler API tests"
     [ allCorrectCompInpCompile
     , allCorrectCompInpCompileAfterBenignMut
     ]
@@ -40,10 +40,11 @@ allCorrectCompInpCompileAfterBenignMut =
             [ Mut.shuffleModules
             , Mut.shuffleTyDefs
             ]
-      (compInp', _) <- H.forAllWith (const "mutation") (Mut.mutFn mut compInp)
+      compInp' <- H.forAllWith (const "") (Mut.mutFn mut compInp)
       let compOut = runCompiler compInp
           compOut' = runCompiler compInp'
       compilationOk compOut
       compilationOk compOut'
+      Mut.mutAssert mut compOut'
 
 -- TODO(bladyjoker): Add error producing mutations.

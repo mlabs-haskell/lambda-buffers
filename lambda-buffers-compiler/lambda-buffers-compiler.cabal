@@ -153,8 +153,8 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , containers
-    , generic-lens
+    , containers                  >=0.6
+    , generic-lens                >=2.2
     , hedgehog
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
