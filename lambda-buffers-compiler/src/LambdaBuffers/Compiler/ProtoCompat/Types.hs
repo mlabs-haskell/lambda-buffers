@@ -48,16 +48,16 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyVar (..),
   VarName (..),
   defSourceInfo,
+  InferenceErr,
+  KindCheckErr,
 ) where
 
 import Control.Exception (Exception)
-import Data.Default (Default (def))
 import Data.Map (Map)
 import Data.Set (Set)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Generics.SOP qualified as SOP
-import LambdaBuffers.Compiler.ProtoCompat.SILId (SILId (silId))
 import Test.QuickCheck (Gen, oneof, resize, sized)
 import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
 import Test.QuickCheck.Instances.Semigroup ()
@@ -67,16 +67,11 @@ data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: 
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary SourceInfo
   deriving anyclass (SOP.Generic)
-instance SILId SourceInfo where
-  silId = const def
-instance Default SourceInfo where
-  def = defSourceInfo
 
 data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary SourcePosition
   deriving anyclass (SOP.Generic)
-instance SILId SourcePosition
 
 defSourceInfo :: SourceInfo
 defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
@@ -89,54 +84,44 @@ data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
   deriving (Arbitrary) via GenericArbitrary LBName
   deriving anyclass (SOP.Generic)
 
-instance SILId LBName
-
 data TyName = TyName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyName
   deriving anyclass (SOP.Generic)
-instance SILId TyName
 
 data ConstrName = ConstrName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ConstrName
   deriving anyclass (SOP.Generic)
-instance SILId ConstrName
 
 data ModuleName = ModuleName {parts :: [ModuleNamePart], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ModuleName
   deriving anyclass (SOP.Generic)
-instance SILId ModuleName
 
 data ModuleNamePart = ModuleNamePart {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ModuleNamePart
   deriving anyclass (SOP.Generic)
-instance SILId ModuleNamePart
 
 data VarName = VarName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary VarName
   deriving anyclass (SOP.Generic)
-instance SILId VarName
 
 data FieldName = FieldName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary FieldName
   deriving anyclass (SOP.Generic)
-instance SILId FieldName
 
 data ClassName = ClassName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ClassName
   deriving anyclass (SOP.Generic)
-instance SILId ClassName
 
 newtype Kind = Kind {kind :: KindType}
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-instance SILId Kind
 instance Arbitrary Kind where
   arbitrary = sized fn
     where
@@ -145,7 +130,6 @@ instance Arbitrary Kind where
 data KindType = KindRef KindRefType | KindArrow Kind Kind
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-instance SILId KindType
 instance Arbitrary KindType where
   arbitrary = sized fn
     where
@@ -157,18 +141,15 @@ data KindRefType = KUnspecified | KType
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindRefType
   deriving anyclass (SOP.Generic)
-instance SILId KindRefType
 
 data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyVar
   deriving anyclass (SOP.Generic)
-instance SILId TyVar
 
 data Ty = TyVarI TyVar | TyAppI TyApp | TyRefI TyRef
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-instance SILId Ty
 instance Arbitrary Ty where
   arbitrary = sized fn
     where
@@ -186,85 +167,71 @@ data TyApp = TyApp {tyFunc :: Ty, tyArgs :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyApp
   deriving anyclass (SOP.Generic)
-instance SILId TyApp
 
 data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ForeignRef
   deriving anyclass (SOP.Generic)
-instance SILId ForeignRef
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary LocalRef
   deriving anyclass (SOP.Generic)
-instance SILId LocalRef
 
 data TyRef = LocalI LocalRef | ForeignI ForeignRef
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyRef
   deriving anyclass (SOP.Generic)
-instance SILId TyRef
 
 data TyDef = TyDef {tyName :: TyName, tyAbs :: TyAbs, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyDef
   deriving anyclass (SOP.Generic)
-instance SILId TyDef
 
 data TyAbs = TyAbs {tyArgs :: Map VarName TyArg, tyBody :: TyBody, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyAbs
   deriving anyclass (SOP.Generic)
-instance SILId TyAbs
 
 data TyArg = TyArg {argName :: VarName, argKind :: Kind, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyArg
   deriving anyclass (SOP.Generic)
-instance SILId TyArg
 
 data TyBody = OpaqueI SourceInfo | SumI Sum
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyBody
   deriving anyclass (SOP.Generic)
-instance SILId TyBody
 
 data Constructor = Constructor {constrName :: ConstrName, product :: Product}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Constructor
   deriving anyclass (SOP.Generic)
-instance SILId Constructor
 
 data Sum = Sum {constructors :: Map ConstrName Constructor, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Sum
   deriving anyclass (SOP.Generic)
-instance SILId Sum
 
 data Field = Field {fieldName :: FieldName, fieldTy :: Ty}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Field
   deriving anyclass (SOP.Generic)
-instance SILId Field
 
 data Record = Record {fields :: Map FieldName Field, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Record
   deriving anyclass (SOP.Generic)
-instance SILId Record
 
 data Tuple = Tuple {fields :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Tuple
   deriving anyclass (SOP.Generic)
-instance SILId Tuple
 
 data Product = RecordI Record | TupleI Tuple
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Product
   deriving anyclass (SOP.Generic)
-instance SILId Product
 
 data ForeignClassRef = ForeignClassRef
   { className :: ClassName
@@ -274,13 +241,11 @@ data ForeignClassRef = ForeignClassRef
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ForeignClassRef
   deriving anyclass (SOP.Generic)
-instance SILId ForeignClassRef
 
 data LocalClassRef = LocalClassRef {className :: ClassName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary LocalClassRef
   deriving anyclass (SOP.Generic)
-instance SILId LocalClassRef
 
 data TyClassRef
   = LocalCI LocalClassRef
@@ -288,7 +253,6 @@ data TyClassRef
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyClassRef
   deriving anyclass (SOP.Generic)
-instance SILId TyClassRef
 
 data ClassDef = ClassDef
   { className :: ClassName
@@ -300,7 +264,6 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ClassDef
   deriving anyclass (SOP.Generic)
-instance SILId ClassDef
 
 data InstanceClause = InstanceClause
   { classRef :: TyClassRef
@@ -310,7 +273,6 @@ data InstanceClause = InstanceClause
   }
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-instance SILId InstanceClause
 
 instance Arbitrary InstanceClause where
   arbitrary = sized fn
@@ -330,7 +292,6 @@ data Constraint = Constraint
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Constraint
   deriving anyclass (SOP.Generic)
-instance SILId Constraint
 
 data Module = Module
   { moduleName :: ModuleName
@@ -342,7 +303,7 @@ data Module = Module
   }
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-instance SILId Module
+
 instance Arbitrary Module where
   arbitrary = sized fn
     where
@@ -363,7 +324,7 @@ data InferenceErr
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary InferenceErr
   deriving anyclass (SOP.Generic)
-instance SILId InferenceErr
+
 instance Exception InferenceErr
 
 data KindCheckErr
@@ -372,7 +333,6 @@ data KindCheckErr
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindCheckErr
   deriving anyclass (SOP.Generic)
-instance SILId KindCheckErr
 
 instance Exception KindCheckErr
 
@@ -380,7 +340,6 @@ newtype CompilerInput = CompilerInput {modules :: Map ModuleName Module}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
   deriving anyclass (SOP.Generic)
-instance SILId CompilerInput
 
 instance Arbitrary CompilerInput where
   arbitrary = sized fn
@@ -397,7 +356,6 @@ data KindCheckError
   deriving (Arbitrary) via GenericArbitrary KindCheckError
   deriving anyclass (SOP.Generic)
 instance Exception KindCheckError
-instance SILId KindCheckError
 
 -- | All the compiler errors.
 data CompilerError
@@ -407,12 +365,9 @@ data CompilerError
   deriving (Arbitrary) via GenericArbitrary CompilerError
   deriving anyclass (SOP.Generic)
 
-instance SILId CompilerError
-
 data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary CompilerResult
   deriving anyclass (SOP.Generic)
-instance SILId CompilerResult
 
 type CompilerOutput = Either CompilerError CompilerResult
