@@ -9,6 +9,7 @@
 }:
 let
   inherit pkgs;
+  tests = 10000;
   project = {
     src = ./.;
 
@@ -28,6 +29,12 @@ let
 
           # Enable strict compilation
           lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+
+          # Set the number of QuickCheck and Hedgehog tests
+          lambda-buffers-compiler.components.tests.lambda-buffers-compiler-tests.configureFlags = [
+            "--hedgehog-tests=${tests}"
+            "--quickcheck-tests=${tests}"
+          ];
         };
       })
     ];
