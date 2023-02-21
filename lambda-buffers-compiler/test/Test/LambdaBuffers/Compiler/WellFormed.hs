@@ -25,9 +25,19 @@ import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors
 import Proto.Compiler_Fields qualified as P
 import Test.LambdaBuffers.Compiler.Utils (distribute, indexBy)
 
+
+-- | Default constant range
+defRange = HR.constant lowerBound upperBound
+-- or defSize
+
 -- | Upper bound on various generators
-limit :: Int
-limit = 5
+upperBound :: Int
+upperBound = 5
+
+-- | Lower bound on various generators
+lowerBound :: Int
+lowerBound = 1
+
 
 -- | Names
 genAlphaNum :: H.Gen Char
@@ -36,7 +46,7 @@ genAlphaNum = H.alphaNum
 genUpperCamelCase :: H.Gen Text
 genUpperCamelCase = do
   h <- H.upper
-  t <- H.list (HR.constant 1 limit) genAlphaNum
+  t <- H.list defRange genAlphaNum
   return $ Text.pack $ h : t
 
 genModuleNamePart :: H.Gen ModuleNamePart
@@ -46,7 +56,7 @@ genModuleNamePart = do
 
 genModuleName :: H.Gen ModuleName
 genModuleName = do
-  ps <- H.list (HR.constant 1 limit) genModuleNamePart
+  ps <- H.list defRange genModuleNamePart
   return $ defMessage & parts .~ ps
 
 genTyName :: H.Gen TyName
@@ -67,7 +77,7 @@ genConstrName = do
 genVarName :: H.Gen VarName
 genVarName = do
   h <- H.lower
-  t <- H.list (HR.constant 1 4) H.lower
+  t <- H.list defRange H.lower
   return $ defMessage & name .~ Text.pack (h : t)
 
 starKind :: Kind
