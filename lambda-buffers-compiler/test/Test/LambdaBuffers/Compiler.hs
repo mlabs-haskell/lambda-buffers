@@ -2,15 +2,16 @@ module Test.LambdaBuffers.Compiler (test) where
 
 import Control.Lens ((&), (.~))
 import Data.ProtoLens (Message (defMessage))
+import Hedgehog qualified as H
+import Hedgehog.Gen qualified as H
 import LambdaBuffers.Compiler (runCompiler)
 import Proto.Compiler (CompilerOutput)
 import Proto.Compiler_Fields (compilerResult)
 import Test.LambdaBuffers.Compiler.Gen (genCompilerInput)
 import Test.LambdaBuffers.Compiler.Gen.Mutation qualified as Mut
-import Test.QuickCheck (forAll, forAllBlind)
-import Test.QuickCheck qualified as QC
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.QuickCheck (testProperty)
+import Test.Tasty.HUnit (HasCallStack)
+import Test.Tasty.Hedgehog (testProperty)
 
 test :: TestTree
 test =
@@ -20,34 +21,29 @@ test =
     , allCorrectCompInpCompileAfterBenignMut
     ]
 
-compilationOk :: CompilerOutput -> Bool
-compilationOk compOut = compOut == (defMessage & compilerResult .~ defMessage)
+compilationOk :: H.MonadTest m => CompilerOutput -> m ()
+compilationOk compOut = compOut H.=== (defMessage & compilerResult .~ defMessage)
 
-allCorrectCompInpCompile :: TestTree
-allCorrectCompInpCompile = testProperty "All correct CompilerInputs must compile" (forAll genCompilerInput (compilationOk . runCompiler))
+allCorrectCompInpCompile :: HasCallStack => TestTree
+allCorrectCompInpCompile = testProperty "All correct CompilerInputs must compile" (H.property $ H.forAll genCompilerInput >>= compilationOk . runCompiler)
 
-allCorrectCompInpCompileAfterBenignMut :: TestTree
+allCorrectCompInpCompileAfterBenignMut :: HasCallStack => TestTree
 allCorrectCompInpCompileAfterBenignMut =
   testProperty
     "All correct CompilerInputs must compile after a benign mutation"
-    $ forAll
-      genCompilerInput
-      ( \compInp ->
-          forAll
-            ( QC.elements
-                [ Mut.shuffleModules
-                , Mut.shuffleTyDefs
-                ]
-            )
-            ( \mut ->
-                forAllBlind
-                  (Mut.mutFn mut compInp)
-                  ( \(compInp', _) ->
-                      let compOut = runCompiler compInp
-                          compOut' = runCompiler compInp'
-                       in compilationOk compOut && compilationOk compOut'
-                  )
-            )
-      )
+    $ H.property
+    $ do
+      compInp <- H.forAll genCompilerInput
+      mut <-
+        H.forAll $
+          H.element
+            [ Mut.shuffleModules
+            , Mut.shuffleTyDefs
+            ]
+      (compInp', _) <- H.forAllWith (const "mutation") (Mut.mutFn mut compInp)
+      let compOut = runCompiler compInp
+          compOut' = runCompiler compInp'
+      compilationOk compOut
+      compilationOk compOut'
 
 -- TODO(bladyjoker): Add error producing mutations.

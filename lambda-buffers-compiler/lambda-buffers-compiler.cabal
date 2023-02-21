@@ -155,12 +155,14 @@ test-suite tests
   build-depends:
     , containers
     , generic-lens
+    , hedgehog
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , nonempty-containers
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
+    , tasty-hedgehog
     , tasty-hunit                 >=0.10
     , tasty-quickcheck            >=0.10
     , text                        >=1.2

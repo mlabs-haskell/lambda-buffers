@@ -17,56 +17,58 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import GHC.Enum qualified as Int
+import Hedgehog qualified as H
+import Hedgehog.Gen qualified as H
+import Hedgehog.Range qualified as H
 import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
 import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, ntuple, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
-import Test.LambdaBuffers.Compiler.Gen.Utils (distribute, indexBy, nesetOf, setOf, vecOf)
-import Test.QuickCheck qualified as QC (arbitraryPrintableChar)
-import Test.QuickCheck.Gen qualified as QC
+import Test.LambdaBuffers.Compiler.Gen.Utils (distribute, indexBy)
+import Test.Tasty.Hedgehog ()
 
 -- | Upper bound on various generators
 limit :: Int
 limit = 5
 
 -- | Names
-genAlphaNum :: QC.Gen Char
-genAlphaNum = QC.oneof [QC.chooseEnum ('a', 'z'), QC.chooseEnum ('A', 'Z'), QC.chooseEnum ('0', '9')]
+genAlphaNum :: H.Gen Char
+genAlphaNum = H.alphaNum
 
-genUpperCamelCase :: Int -> QC.Gen Text
-genUpperCamelCase len = do
-  h <- QC.chooseEnum ('A', 'Z')
-  t <- QC.vectorOf len genAlphaNum
+genUpperCamelCase :: H.Gen Text
+genUpperCamelCase = do
+  h <- H.upper
+  t <- H.list (H.linear 1 limit) genAlphaNum
   return $ Text.pack $ h : t
 
-genModuleNamePart :: QC.Gen ModuleNamePart
+genModuleNamePart :: H.Gen ModuleNamePart
 genModuleNamePart = do
-  mnp <- genUpperCamelCase 10
+  mnp <- genUpperCamelCase
   return $ defMessage & name .~ mnp
 
-genModuleName :: QC.Gen ModuleName
+genModuleName :: H.Gen ModuleName
 genModuleName = do
-  ps <- QC.chooseInt (1, limit) >>= vecOf genModuleNamePart
+  ps <- H.list (H.linear 1 limit) genModuleNamePart
   return $ defMessage & parts .~ ps
 
-genTyName :: QC.Gen TyName
+genTyName :: H.Gen TyName
 genTyName = do
-  n <- genUpperCamelCase 10
+  n <- genUpperCamelCase
   return $ defMessage & name .~ n
 
-_genClassName :: QC.Gen ClassName
+_genClassName :: H.Gen ClassName
 _genClassName = do
-  n <- genUpperCamelCase 10
+  n <- genUpperCamelCase
   return $ defMessage & name .~ n
 
-genConstrName :: QC.Gen ConstrName
+genConstrName :: H.Gen ConstrName
 genConstrName = do
-  n <- genUpperCamelCase 10
+  n <- genUpperCamelCase
   return $ defMessage & name .~ n
 
-genVarName :: QC.Gen VarName
+genVarName :: H.Gen VarName
 genVarName = do
-  h <- QC.chooseEnum ('a', 'z')
-  t <- QC.vectorOf 4 (QC.chooseEnum ('a', 'z'))
+  h <- H.lower
+  t <- H.list (H.linear 1 4) H.lower
   return $ defMessage & name .~ Text.pack (h : t)
 
 starKind :: Kind
@@ -80,33 +82,33 @@ kindOf tyabs = case tyabs ^. tyArgs of
       & kindArrow . left .~ (a ^. argKind)
       & kindArrow . right .~ kindOf (tyabs & tyArgs .~ args)
 
-genTyArg :: VarName -> QC.Gen TyArg
+genTyArg :: VarName -> H.Gen TyArg
 genTyArg vn = do
   return $
     defMessage
       & argName .~ vn
       & argKind .~ starKind -- TODO(bladyjoker): Gen arbitrary kinds.
 
-genSum :: TyDefs -> Set TyArg -> NESet ConstrName -> QC.Gen Sum
+genSum :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen Sum
 genSum tydefs args ctorNs = do
   let (ctorN :| ctorNs') = NESet.toList ctorNs
-  ctorNs'' <- QC.sublistOf (toList ctorNs')
+  ctorNs'' <- H.subsequence ctorNs'
   ctors <- for (ctorN :| ctorNs'') (genConstructor tydefs args)
   return $ defMessage & constructors .~ toList ctors
 
-genTy :: Kind -> TyDefs -> Set TyArg -> QC.Gen Ty
+genTy :: Kind -> TyDefs -> Set TyArg -> H.Gen Ty
 genTy kind tydefs tyargs =
-  QC.oneof $
+  H.choice $
     NESet.withNonEmpty [] (genTyVar kind) tyargs
       <> genTyRef kind tydefs
       <> genTyApp kind tydefs tyargs
 
-genTyRef :: Kind -> TyDefs -> [QC.Gen Ty]
+genTyRef :: Kind -> TyDefs -> [H.Gen Ty]
 genTyRef kind tydefs = case [tyd | tyd <- Map.toList tydefs, kindOf (snd tyd ^. tyAbs) == kind] of
   [] -> []
   tyds ->
     [ do
-        tydef <- QC.elements tyds
+        tydef <- H.element tyds
         case fst tydef of
           Left (mn, tyn) ->
             return $
@@ -116,16 +118,16 @@ genTyRef kind tydefs = case [tyd | tyd <- Map.toList tydefs, kindOf (snd tyd ^. 
           Right tyn -> return $ defMessage & tyRef . localTyRef . tyName .~ tyn
     ]
 
-genTyVar :: Kind -> NESet TyArg -> [QC.Gen Ty]
+genTyVar :: Kind -> NESet TyArg -> [H.Gen Ty]
 genTyVar kind args = case [tyarg | tyarg <- toList args, tyarg ^. argKind == kind] of
   [] -> []
   tyargs ->
     [ do
-        tyarg <- QC.elements tyargs
+        tyarg <- H.element tyargs
         return $ defMessage & tyVar . varName .~ (tyarg ^. argName)
     ]
 
-genTyApp :: Kind -> TyDefs -> Set TyArg -> [QC.Gen Ty]
+genTyApp :: Kind -> TyDefs -> Set TyArg -> [H.Gen Ty]
 genTyApp kind tydefs args =
   let kindFunc =
         defMessage
@@ -143,36 +145,36 @@ genTyApp kind tydefs args =
                   & tyApp . tyArgs .~ [tyarg] -- TODO(bladyjoker): Generate list arguments
           ]
 
-genConstructor :: TyDefs -> Set TyArg -> ConstrName -> QC.Gen Sum'Constructor
+genConstructor :: TyDefs -> Set TyArg -> ConstrName -> H.Gen Sum'Constructor
 genConstructor tydefs args cn = do
-  tys <- QC.chooseInt (0, limit) >>= vecOf (genTy starKind tydefs args)
+  tys <- H.list (H.linear 0 limit) (genTy starKind tydefs args)
   return $
     defMessage
       & constrName .~ cn
       & P.product . ntuple . fields .~ tys
 
-genTyBodySum :: TyDefs -> Set TyArg -> NESet ConstrName -> QC.Gen TyBody
+genTyBodySum :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen TyBody
 genTyBodySum tydefs args ctors = do
   b <- genSum tydefs args ctors
   return $ defMessage & P.sum .~ b
 
-genTyBodyOpaque :: QC.Gen TyBody
+genTyBodyOpaque :: H.Gen TyBody
 genTyBodyOpaque = return $ defMessage & P.opaque .~ defMessage
 
-genTyBody :: TyDefs -> Set TyArg -> NESet ConstrName -> QC.Gen TyBody
+genTyBody :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen TyBody
 genTyBody tydefs args ctorNs =
-  QC.oneof $
+  H.choice $
     [ genTyBodyOpaque
     ]
       -- Gen TyBody'Sum only if there's some TyDefs and TyArgs available
       <> [genTyBodySum tydefs args ctorNs | not (tydefs == mempty && args == mempty)]
 
-genTyAbs :: TyDefs -> NESet ConstrName -> QC.Gen TyAbs
+genTyAbs :: TyDefs -> NESet ConstrName -> H.Gen TyAbs
 genTyAbs tydefs ctorNs = do
   vns <-
     if tydefs == mempty
       then return mempty
-      else QC.chooseInt (0, limit) >>= setOf genVarName
+      else H.set (H.linear 0 limit) genVarName
   args <- for (Set.toList vns) genTyArg
   body <- genTyBody tydefs (Set.fromList args) ctorNs
   return $
@@ -182,7 +184,7 @@ genTyAbs tydefs ctorNs = do
 
 type TyDefs = Map (Either (ModuleName, TyName) TyName) TyDef
 
-genTyDef :: TyDefs -> TyName -> NESet ConstrName -> QC.Gen TyDef
+genTyDef :: TyDefs -> TyName -> NESet ConstrName -> H.Gen TyDef
 genTyDef tydefs tyn ctors = do
   tyabs <- genTyAbs tydefs ctors
   withSourceInfo $
@@ -190,10 +192,10 @@ genTyDef tydefs tyn ctors = do
       & tyName .~ tyn
       & tyAbs .~ tyabs
 
-genModule :: Map ModuleName Module -> ModuleName -> QC.Gen Module
+genModule :: Map ModuleName Module -> ModuleName -> H.Gen Module
 genModule availableMods mn = do
-  tyNs <- QC.chooseInt (0, limit) >>= nesetOf genTyName
-  ctorNs <- QC.chooseInt (length tyNs, length tyNs * limit) >>= nesetOf genConstrName
+  tyNs <- NESet.fromList <$> H.nonEmpty (H.linear 0 limit) genTyName
+  ctorNs <- H.set (H.linear (length tyNs) (length tyNs * limit)) genConstrName
   tyNsWithCtorNs <- Map.map NESet.fromList <$> distribute (toList ctorNs) (NESet.toSet tyNs)
   let foreignTyDefs = collectTyDefs availableMods
   tydefs <-
@@ -216,9 +218,9 @@ genModule availableMods mn = do
           (\(m, tydef) -> Left (m ^. moduleName, tydef ^. tyName))
           [(m, tydef) | m <- toList mods, tydef <- m ^. typeDefs]
 
-genCompilerInput :: QC.Gen CompilerInput
+genCompilerInput :: H.Gen CompilerInput
 genCompilerInput = do
-  mns <- QC.chooseInt (0, limit) >>= setOf genModuleName
+  mns <- H.set (H.linear 0 limit) genModuleName
   ms <-
     foldM
       ( \availableMods mn -> do
@@ -230,10 +232,10 @@ genCompilerInput = do
   return $ defMessage & modules .~ toList ms
 
 -- | Utils
-withSourceInfo :: HasField a "sourceInfo" SourceInfo => a -> QC.Gen a
+withSourceInfo :: HasField a "sourceInfo" SourceInfo => a -> H.Gen a
 withSourceInfo msg = do
-  f <- Text.pack <$> vecOf QC.arbitraryPrintableChar 10
-  i <- QC.chooseInt (0, Int.maxBound)
+  f <- Text.pack <$> H.list (H.linear 1 10) H.unicodeAll
+  i <- H.int (H.linear 0 Int.maxBound)
   let pos =
         defMessage
           & row .~ fromIntegral i
