@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Compiler.Gen (genCompilerInput) where
+module Test.LambdaBuffers.Compiler.WellFormed (genCompilerInput) where
 
 import Control.Lens ((&), (.~), (^.))
 import Control.Monad (foldM)
@@ -23,7 +23,7 @@ import Hedgehog.Range qualified as HR
 import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
 import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, ntuple, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
-import Test.LambdaBuffers.Compiler.Gen.Utils (distribute, indexBy)
+import Test.LambdaBuffers.Compiler.Utils (distribute, indexBy)
 
 -- | Upper bound on various generators
 limit :: Int

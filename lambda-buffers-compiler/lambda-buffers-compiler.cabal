@@ -173,9 +173,9 @@ test-suite tests
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
-    Test.LambdaBuffers.Compiler.Gen
-    Test.LambdaBuffers.Compiler.Gen.Mutation
-    Test.LambdaBuffers.Compiler.Gen.Utils
+    Test.LambdaBuffers.Compiler.Mutation
+    Test.LambdaBuffers.Compiler.Utils
+    Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors

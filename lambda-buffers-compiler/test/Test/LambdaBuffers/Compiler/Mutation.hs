@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Compiler.Gen.Mutation (shuffleModules, shuffleTyDefs, Mutation (..)) where
+module Test.LambdaBuffers.Compiler.Mutation (shuffleModules, shuffleTyDefs, Mutation (..)) where
 
 import Control.Lens ((&), (.~), (^.))
 import Data.List.NonEmpty (nonEmpty)
@@ -9,7 +9,7 @@ import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Proto.Compiler (CompilerError, CompilerInput, CompilerOutput, CompilerOutput'CompilerOutput (CompilerOutput'CompilerError, CompilerOutput'CompilerResult), CompilerResult)
 import Proto.Compiler_Fields (maybe'compilerOutput, modules, typeDefs)
-import Test.LambdaBuffers.Compiler.Gen.Utils (pick)
+import Test.LambdaBuffers.Compiler.Utils (pick)
 import Test.Tasty (TestName)
 
 data Mutation m = MkMutation

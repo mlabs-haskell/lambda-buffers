@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Compiler.Gen.Utils (distribute, partition, indexBy, pick) where
+module Test.LambdaBuffers.Compiler.Utils (distribute, partition, indexBy, pick) where
 
 import Control.Monad (foldM)
 import Data.Foldable (Foldable (toList))

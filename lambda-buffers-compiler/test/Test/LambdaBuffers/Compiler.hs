@@ -8,8 +8,8 @@ import LambdaBuffers.Compiler (runCompiler)
 import Proto.Compiler (CompilerOutput)
 import Proto.Compiler_Fields (compilerResult)
 import Test.LambdaBuffers.Compiler.Coverage (coverage)
-import Test.LambdaBuffers.Compiler.Gen (genCompilerInput)
-import Test.LambdaBuffers.Compiler.Gen.Mutation qualified as Mut
+import Test.LambdaBuffers.Compiler.Mutation qualified as Mut
+import Test.LambdaBuffers.Compiler.WellFormed (genCompilerInput)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (HasCallStack)
 import Test.Tasty.Hedgehog (testProperty)
@@ -18,27 +18,27 @@ test :: TestTree
 test =
   testGroup
     "Compiler API tests"
-    [ allCorrectCompInpCompile
-    , allCorrectCompInpCompileAfterBenignMut
+    [ allWellFormedCompInpCompile
+    , allWellFormedCompInpCompileAfterBenignMut
     ]
 
 compilationOk :: H.MonadTest m => CompilerOutput -> m ()
 compilationOk compOut = compOut H.=== (defMessage & compilerResult .~ defMessage)
 
-allCorrectCompInpCompile :: HasCallStack => TestTree
-allCorrectCompInpCompile =
+allWellFormedCompInpCompile :: HasCallStack => TestTree
+allWellFormedCompInpCompile =
   testProperty
-    "All correct CompilerInputs must compile"
+    "All well formed CompilerInputs must compile"
     ( H.property $ do
         compInp <- H.forAll genCompilerInput
         coverage compInp
         compilationOk . runCompiler $ compInp
     )
 
-allCorrectCompInpCompileAfterBenignMut :: HasCallStack => TestTree
-allCorrectCompInpCompileAfterBenignMut =
+allWellFormedCompInpCompileAfterBenignMut :: HasCallStack => TestTree
+allWellFormedCompInpCompileAfterBenignMut =
   testProperty
-    "All correct CompilerInputs must compile after a benign mutation"
+    "All well formed CompilerInputs must compile after a benign mutation"
     $ H.property
     $ do
       compInp <- H.forAll genCompilerInput
