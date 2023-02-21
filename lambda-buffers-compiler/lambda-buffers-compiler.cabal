@@ -94,9 +94,11 @@ library
   import:          common-imports
   build-depends:
     , containers                  >=0.6.5.1
+    , data-default                >=0.7
     , freer-simple                >=1.2
     , generic-arbitrary
     , generic-lens                >=2.2
+    , generics-sop                >=0.5
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
     , parsec                      >=3.1
@@ -119,6 +121,7 @@ library
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.FromProto
+    LambdaBuffers.Compiler.ProtoCompat.SILEq
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Compat
