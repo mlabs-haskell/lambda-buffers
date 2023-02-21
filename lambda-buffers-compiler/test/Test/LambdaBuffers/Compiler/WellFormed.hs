@@ -25,19 +25,9 @@ import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors
 import Proto.Compiler_Fields qualified as P
 import Test.LambdaBuffers.Compiler.Utils (distribute, indexBy)
 
-
--- | Default constant range
-defRange = HR.constant lowerBound upperBound
--- or defSize
-
--- | Upper bound on various generators
-upperBound :: Int
-upperBound = 5
-
--- | Lower bound on various generators
-lowerBound :: Int
-lowerBound = 1
-
+-- | Default constant range used in various generators
+defRange :: H.Range Int
+defRange = HR.constant 0 5
 
 -- | Names
 genAlphaNum :: H.Gen Char
@@ -156,7 +146,7 @@ genTyApp kind tydefs args =
 
 genConstructor :: TyDefs -> Set TyArg -> ConstrName -> H.Gen Sum'Constructor
 genConstructor tydefs args cn = do
-  tys <- H.list (HR.constant 0 limit) (genTy starKind tydefs args)
+  tys <- H.list defRange (genTy starKind tydefs args)
   return $
     defMessage
       & constrName .~ cn
@@ -183,7 +173,7 @@ genTyAbs tydefs ctorNs = do
   vns <-
     if tydefs == mempty
       then return mempty
-      else H.set (HR.constant 0 limit) genVarName
+      else H.set defRange genVarName
   args <- for (Set.toList vns) genTyArg
   body <- genTyBody tydefs (Set.fromList args) ctorNs
   return $
@@ -203,8 +193,8 @@ genTyDef tydefs tyn ctors = do
 
 genModule :: Map ModuleName Module -> ModuleName -> H.Gen Module
 genModule availableMods mn = do
-  tyNs <- NESet.fromList <$> H.nonEmpty (HR.constant 0 limit) genTyName
-  ctorNs <- H.set (HR.constant (length tyNs) (length tyNs * limit)) genConstrName
+  tyNs <- NESet.fromList <$> H.nonEmpty defRange genTyName
+  ctorNs <- H.set (HR.constant (length tyNs) (length tyNs * 10)) genConstrName
   tyNsWithCtorNs <- Map.map NESet.fromList <$> distribute (toList ctorNs) (NESet.toSet tyNs)
   let foreignTyDefs = collectTyDefs availableMods
   tydefs <-
@@ -229,7 +219,7 @@ genModule availableMods mn = do
 
 genCompilerInput :: H.Gen CompilerInput
 genCompilerInput = do
-  mns <- H.set (HR.constant 0 limit) genModuleName
+  mns <- H.set defRange genModuleName
   ms <-
     foldM
       ( \availableMods mn -> do
