@@ -20,11 +20,11 @@ import GHC.Enum qualified as Int
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Hedgehog.Range qualified as H
+import Hedgehog.Range qualified as HR
 import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
 import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, ntuple, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
 import Test.LambdaBuffers.Compiler.Gen.Utils (distribute, indexBy)
-import Test.Tasty.Hedgehog ()
 
 -- | Upper bound on various generators
 limit :: Int
@@ -37,7 +37,7 @@ genAlphaNum = H.alphaNum
 genUpperCamelCase :: H.Gen Text
 genUpperCamelCase = do
   h <- H.upper
-  t <- H.list (H.linear 1 limit) genAlphaNum
+  t <- H.list (HR.constant 1 limit) genAlphaNum
   return $ Text.pack $ h : t
 
 genModuleNamePart :: H.Gen ModuleNamePart
@@ -47,7 +47,7 @@ genModuleNamePart = do
 
 genModuleName :: H.Gen ModuleName
 genModuleName = do
-  ps <- H.list (H.linear 1 limit) genModuleNamePart
+  ps <- H.list (HR.constant 1 limit) genModuleNamePart
   return $ defMessage & parts .~ ps
 
 genTyName :: H.Gen TyName
@@ -68,7 +68,7 @@ genConstrName = do
 genVarName :: H.Gen VarName
 genVarName = do
   h <- H.lower
-  t <- H.list (H.linear 1 4) H.lower
+  t <- H.list (HR.constant 1 4) H.lower
   return $ defMessage & name .~ Text.pack (h : t)
 
 starKind :: Kind
@@ -147,7 +147,7 @@ genTyApp kind tydefs args =
 
 genConstructor :: TyDefs -> Set TyArg -> ConstrName -> H.Gen Sum'Constructor
 genConstructor tydefs args cn = do
-  tys <- H.list (H.linear 0 limit) (genTy starKind tydefs args)
+  tys <- H.list (HR.constant 0 limit) (genTy starKind tydefs args)
   return $
     defMessage
       & constrName .~ cn
@@ -174,7 +174,7 @@ genTyAbs tydefs ctorNs = do
   vns <-
     if tydefs == mempty
       then return mempty
-      else H.set (H.linear 0 limit) genVarName
+      else H.set (HR.constant 0 limit) genVarName
   args <- for (Set.toList vns) genTyArg
   body <- genTyBody tydefs (Set.fromList args) ctorNs
   return $
@@ -194,8 +194,8 @@ genTyDef tydefs tyn ctors = do
 
 genModule :: Map ModuleName Module -> ModuleName -> H.Gen Module
 genModule availableMods mn = do
-  tyNs <- NESet.fromList <$> H.nonEmpty (H.linear 0 limit) genTyName
-  ctorNs <- H.set (H.linear (length tyNs) (length tyNs * limit)) genConstrName
+  tyNs <- NESet.fromList <$> H.nonEmpty (HR.constant 0 limit) genTyName
+  ctorNs <- H.set (HR.constant (length tyNs) (length tyNs * limit)) genConstrName
   tyNsWithCtorNs <- Map.map NESet.fromList <$> distribute (toList ctorNs) (NESet.toSet tyNs)
   let foreignTyDefs = collectTyDefs availableMods
   tydefs <-
@@ -220,7 +220,7 @@ genModule availableMods mn = do
 
 genCompilerInput :: H.Gen CompilerInput
 genCompilerInput = do
-  mns <- H.set (H.linear 0 limit) genModuleName
+  mns <- H.set (HR.constant 0 limit) genModuleName
   ms <-
     foldM
       ( \availableMods mn -> do
@@ -234,8 +234,8 @@ genCompilerInput = do
 -- | Utils
 withSourceInfo :: HasField a "sourceInfo" SourceInfo => a -> H.Gen a
 withSourceInfo msg = do
-  f <- Text.pack <$> H.list (H.linear 1 10) H.unicodeAll
-  i <- H.int (H.linear 0 Int.maxBound)
+  f <- Text.pack <$> H.list (HR.constant 1 10) H.unicodeAll
+  i <- H.int (HR.constant 0 Int.maxBound)
   let pos =
         defMessage
           & row .~ fromIntegral i

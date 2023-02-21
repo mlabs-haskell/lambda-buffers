@@ -7,6 +7,7 @@ import Hedgehog.Gen qualified as H
 import LambdaBuffers.Compiler (runCompiler)
 import Proto.Compiler (CompilerOutput)
 import Proto.Compiler_Fields (compilerResult)
+import Test.LambdaBuffers.Compiler.Coverage (coverage)
 import Test.LambdaBuffers.Compiler.Gen (genCompilerInput)
 import Test.LambdaBuffers.Compiler.Gen.Mutation qualified as Mut
 import Test.Tasty (TestTree, testGroup)
@@ -25,7 +26,14 @@ compilationOk :: H.MonadTest m => CompilerOutput -> m ()
 compilationOk compOut = compOut H.=== (defMessage & compilerResult .~ defMessage)
 
 allCorrectCompInpCompile :: HasCallStack => TestTree
-allCorrectCompInpCompile = testProperty "All correct CompilerInputs must compile" (H.property $ H.forAll genCompilerInput >>= compilationOk . runCompiler)
+allCorrectCompInpCompile =
+  testProperty
+    "All correct CompilerInputs must compile"
+    ( H.property $ do
+        compInp <- H.forAll genCompilerInput
+        coverage compInp
+        compilationOk . runCompiler $ compInp
+    )
 
 allCorrectCompInpCompileAfterBenignMut :: HasCallStack => TestTree
 allCorrectCompInpCompileAfterBenignMut =
@@ -34,6 +42,7 @@ allCorrectCompInpCompileAfterBenignMut =
     $ H.property
     $ do
       compInp <- H.forAll genCompilerInput
+      coverage compInp
       mut <-
         H.forAll $
           H.element
