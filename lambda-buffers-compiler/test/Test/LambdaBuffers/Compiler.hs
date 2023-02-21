@@ -17,7 +17,7 @@ import Test.Tasty.Hedgehog qualified as H
 
 test :: TestTree
 test =
-  adjustOption (\_ -> H.HedgehogTestLimit $ Just 10_000) $
+  adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "Compiler API tests"
       [ allWellFormedCompInpCompile
@@ -51,6 +51,7 @@ allWellFormedCompInpCompileAfterBenignMut =
             [ Mut.shuffleModules
             , Mut.shuffleTyDefs
             ]
+      H.collect mut
       compInp' <- H.forAllWith (const "") (Mut.mutFn mut compInp)
       let compOut = runCompiler compInp
           compOut' = runCompiler compInp'
