@@ -10,17 +10,19 @@ import Proto.Compiler_Fields (compilerResult)
 import Test.LambdaBuffers.Compiler.Coverage (coverage)
 import Test.LambdaBuffers.Compiler.Mutation qualified as Mut
 import Test.LambdaBuffers.Compiler.WellFormed (genCompilerInput)
-import Test.Tasty (TestTree, testGroup)
+import Test.Tasty (TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (HasCallStack)
 import Test.Tasty.Hedgehog (testProperty)
+import Test.Tasty.Hedgehog qualified as H
 
 test :: TestTree
 test =
-  testGroup
-    "Compiler API tests"
-    [ allWellFormedCompInpCompile
-    , allWellFormedCompInpCompileAfterBenignMut
-    ]
+  adjustOption (\_ -> H.HedgehogTestLimit $ Just 10_000) $
+    testGroup
+      "Compiler API tests"
+      [ allWellFormedCompInpCompile
+      , allWellFormedCompInpCompileAfterBenignMut
+      ]
 
 compilationOk :: H.MonadTest m => CompilerOutput -> m ()
 compilationOk compOut = compOut H.=== (defMessage & compilerResult .~ defMessage)
