@@ -153,13 +153,16 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , containers
-    , generic-lens
+    , containers                  >=0.6
+    , generic-lens                >=2.2
+    , hedgehog                    >=1.2
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , nonempty-containers         >=0.3
     , proto-lens                  >=0.7
     , QuickCheck                  >=2.14
     , tasty                       >=1.4
+    , tasty-hedgehog              >=1.4
     , tasty-hunit                 >=0.10
     , tasty-quickcheck            >=0.10
     , text                        >=1.2
@@ -169,7 +172,10 @@ test-suite tests
     Test.KindCheck
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
-    Test.LambdaBuffers.Compiler.Gen
+    Test.LambdaBuffers.Compiler.Coverage
+    Test.LambdaBuffers.Compiler.Mutation
+    Test.LambdaBuffers.Compiler.Utils
+    Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors
