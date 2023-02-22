@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
+
 module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), gen) where
 
 import Control.Lens (makeLenses)
