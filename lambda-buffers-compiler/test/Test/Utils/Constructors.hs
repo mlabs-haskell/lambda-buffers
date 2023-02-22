@@ -61,21 +61,24 @@ _TyName :: Text -> P.TyName
 _TyName x = P.TyName x P.defSourceInfo
 
 _VarName :: Text -> P.VarName
-_VarName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
+_VarName = flip _VarName' P.defSourceInfo
+
+_VarName' :: Text -> P.SourceInfo -> P.VarName
+_VarName' x s = P.VarName {P.name = x, P.sourceInfo = s}
 
 _TyVar :: Text -> P.TyVar
-_TyVar x = P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+_TyVar = P.TyVar . _VarName
 
 -- | TyVar with Source Info - for error precision testing.
-_TyVar' :: Text -> SourceInfo -> P.TyVar
-_TyVar' x s = P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
+_TyVar' :: Text -> P.SourceInfo -> P.TyVar
+_TyVar' x s = P.TyVar {P.varName = _VarName' x s}
 
 _TyVarI :: Text -> P.Ty
-_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+_TyVarI = P.TyVarI . _TyVar
 
 -- | TyVar with Source Info - for error precision testing.
 _TyVarI' :: Text -> SourceInfo -> P.Ty
-_TyVarI' x s = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
+_TyVarI' x s = P.TyVarI $ P.TyVar {P.varName = _VarName' x s}
 
 _SourceInfo :: Int -> Int -> P.SourceInfo
 _SourceInfo x y = P.SourceInfo {P.file = "DefaultFile", P.posFrom = _SourcePosition x, P.posTo = _SourcePosition y}

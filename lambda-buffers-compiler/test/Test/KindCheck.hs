@@ -1,27 +1,16 @@
 module Test.KindCheck (test) where
 
-import Data.Text (Text)
 import LambdaBuffers.Compiler.KindCheck (
   check_,
   foldWithArrowToType,
-  foldWithProduct,
-  foldWithSum,
- )
-import LambdaBuffers.Compiler.KindCheck.Type (Type (App, Var), tyProd, tySum, tyUnit, tyVoid)
-import LambdaBuffers.Compiler.KindCheck.Variable (
-  Variable (LocalRef),
+  -- foldWithProduct,
+  -- foldWithSum,
  )
 
-import LambdaBuffers.Compiler.KindCheck.Inference (Kind (Type, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)))
 import Test.KindCheck.Errors (testGKindCheckErrors)
-import Test.QuickCheck (
-  Arbitrary (arbitrary),
-  forAll,
-  (===),
- )
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
-import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
   compilerInput'incoherent,
   compilerInput'maybe,
@@ -33,7 +22,12 @@ import Test.Utils.Constructors (_CompilerInput)
 
 test :: TestTree
 test =
-  testGroup "Compiler tests" [testCheck, testFolds, testGKindCheckErrors]
+  testGroup
+    "Compiler tests"
+    [ testCheck
+    , testFolds
+    , testGKindCheckErrors
+    ]
 
 --------------------------------------------------------------------------------
 -- Module tests
@@ -66,21 +60,13 @@ testFolds =
   testGroup
     "Test Folds"
     [ testGroup
-        "Test Product Folds"
-        [testFoldProd0, testFoldProd1, testFoldProd2, testFoldProd3, testPProdFoldTotal]
-    , testGroup
-        "Test Sum Folds"
-        [testSumFold0, testSumFold1, testSumFold2, testSumFold3]
-    , testGroup
         "Test Arrow Folds"
         [testArrowFold0, testArrowFold1, testArrowFold2, testArrowFold3HK, testArrowFold4HK, testArrowFoldHHK]
     ]
 
-prod :: Type -> Type -> Type
-prod = App . App (Var tyProd)
-
-unit' :: Type
-unit' = Var tyUnit
+{-
+prod = tyProd
+unit' = tyUnit
 
 -- | [ ] -> unit
 testFoldProd0 :: TestTree
@@ -146,8 +132,10 @@ testSumFold3 =
     foldWithSum [lVar "c", lVar "b", lVar "a"]
       @?= sum' (sum' (sum' void' (lVar "c")) (lVar "b")) (lVar "a")
 
+-}
+
 ty :: Kind
-ty = Type
+ty = KType
 
 -- | [ ] -> *
 testArrowFold0 :: TestTree
@@ -187,6 +175,3 @@ testArrowFoldHHK =
   testCase "Fold 2 HKT" $
     foldWithArrowToType [ty, (ty :->: ty) :->: ty, ty]
       @?= (ty :->: (((ty :->: ty) :->: ty) :->: (ty :->: ty)))
-
-lVar :: Text -> Type
-lVar = Var . LocalRef

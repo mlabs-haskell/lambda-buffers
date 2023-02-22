@@ -142,7 +142,7 @@ data KindRefType = KUnspecified | KType
   deriving (Arbitrary) via GenericArbitrary KindRefType
   deriving anyclass (SOP.Generic)
 
-data TyVar = TyVar {varName :: VarName, sourceInfo :: SourceInfo}
+newtype TyVar = TyVar {varName :: VarName}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyVar
   deriving anyclass (SOP.Generic)

@@ -14,7 +14,7 @@ import Data.Default (Default (def))
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
-import Generics.SOP (All2, Generic (Code, from, to), Proxy (..), hcmap, mapII)
+import Generics.SOP (All2, Generic (Code, from, to), Proxy (Proxy), hcmap, mapII)
 import LambdaBuffers.Compiler.ProtoCompat.Types (
   ClassDef,
   ClassName,
@@ -99,7 +99,6 @@ instance InfoLessC Text where
   silId = id
 
 instance (Ord k, InfoLessC k, InfoLessC v) => InfoLessC (M.Map k v) where
-  silId :: forall k v. (Ord k, InfoLessC k, InfoLessC v) => M.Map k v -> M.Map k v
   silId = M.fromList . fmap (bimap silId silId) . M.toList
 
 instance (Ord a, InfoLessC a) => InfoLessC (S.Set a) where
