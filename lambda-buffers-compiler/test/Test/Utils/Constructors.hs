@@ -36,7 +36,7 @@ _CompilerInput ms =
     { P.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]
     }
 
-_Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.InstanceClause] -> P.Module
+_Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.DeriveClause] -> P.Module
 _Module mn tds cds ins =
   P.Module
     { P.moduleName = mn

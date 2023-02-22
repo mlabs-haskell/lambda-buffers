@@ -44,7 +44,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ClassDef,
   CompilerInput (CompilerInput),
   Constraint (Constraint),
-  InstanceClause (InstanceClause),
+  DeriveClause (DeriveClause),
   Module,
   ModuleName,
   SourceInfo,
@@ -276,29 +276,30 @@ buildClasses cis = foldM go M.empty (concat $ M.elems cis)
 
 type Instances = S.Set Instance
 
-getInstances :: M.Map FQClassName Class -> P.ModuleName -> [P.InstanceClause] -> Either TypeClassError Instances
+getInstances :: M.Map FQClassName Class -> P.ModuleName -> [P.DeriveClause] -> Either TypeClassError Instances
 getInstances ctable mn = foldM go S.empty
   where
-    go :: S.Set Instance -> P.InstanceClause -> Either TypeClassError Instances
-    go acc (P.InstanceClause cn h csts si') = case ctable ^? ix cref of
+    go :: S.Set Instance -> P.DeriveClause -> Either TypeClassError Instances
+    go acc (P.DeriveClause cn h si') = case ctable ^? ix cref of
       Nothing -> throwError $ UnknownClass cref si'
       Just cls -> do
         let p = tyToPat h
-        cs <- traverse goConstraint csts
-        let inst = C cls p :<= cs
+        let inst = C cls p :<= []
         checkInstance inst
         pure $ S.insert inst acc
       where
         cref = tyRefToFQClassName (modulename mn) cn
 
-    goConstraint :: P.Constraint -> Either TypeClassError (Constraint Pat)
-    goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
-      Nothing -> throwError $ UnknownClass cref si'
-      Just cls -> do
-        let p = tyToPat arg
-        pure $ C cls p
-      where
-        cref = tyRefToFQClassName (modulename mn) cn
+{- No longer necessary, I think?
+goConstraint :: P.Constraint -> Either TypeClassError (Constraint Pat)
+goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
+  Nothing -> throwError $ UnknownClass cref si'
+  Just cls -> do
+    let p = tyToPat arg
+    pure $ C cls p
+  where
+    cref = tyRefToFQClassName (modulename mn) cn
+-}
 
 mkModuleClasses :: P.CompilerInput -> M.Map P.ModuleName [ClassInfo]
 mkModuleClasses (P.CompilerInput ms) = mkClassInfos (M.elems ms)

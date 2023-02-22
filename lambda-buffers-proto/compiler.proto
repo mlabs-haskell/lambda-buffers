@@ -463,19 +463,16 @@ message TyClassRef {
   }
 }
 
-/* Type class instances (rules)
+/* Type class instance deriving clauses
 
-Instance clauses enable users to specify 'semantic' rules for their types.
+Deriving clauses enable users to specify 'semantic' rules for their types.
 */
-message InstanceClause {
+message DeriveClause {
   // Type class name.
   TyClassRef class_ref = 1;
-  // Instance (rule) arguments.
-  // Instance clause with no arguments is a trivial instance clause.
+  // Derive clause arguments .
   // Compiler MAY report an error.
   repeated Ty args = 2;
-  // Instance (rule) body, conjunction of constraints.
-  repeated Constraint constraints = 3;
   // Source information.
   SourceInfo source_info = 4;
 }
@@ -508,7 +505,7 @@ message Module {
   // `ProtoParseError.MultipleClassDefError`.
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
-  repeated InstanceClause instances = 4;
+  repeated DeriveClause instances = 4;
   // Imported modules the Compiler consults when searching for
   // instance clauses.
   // Duplicate imports MUST be reported with

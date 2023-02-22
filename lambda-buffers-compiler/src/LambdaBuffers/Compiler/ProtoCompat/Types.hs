@@ -19,7 +19,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   FieldName (..),
   ForeignRef (..),
   ForeignClassRef (..),
-  InstanceClause (..),
+  DeriveClause (..),
   Kind (..),
   KindRefType (..),
   KindCheckError (..),
@@ -240,21 +240,19 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ClassDef
 
-data InstanceClause = InstanceClause
+data DeriveClause = DeriveClause
   { classRef :: TyClassRef
   , head :: Ty
-  , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
 
-instance Arbitrary InstanceClause where
+instance Arbitrary DeriveClause where
   arbitrary = sized fn
     where
       fn n =
-        InstanceClause
+        DeriveClause
           <$> resize n arbitrary
-          <*> resize n arbitrary
           <*> resize n arbitrary
           <*> resize n arbitrary
 
@@ -270,7 +268,7 @@ data Module = Module
   { moduleName :: ModuleName
   , typeDefs :: Map TyName TyDef
   , classDefs :: Map ClassName ClassDef
-  , instances :: [InstanceClause]
+  , instances :: [DeriveClause]
   , imports :: Set ModuleName
   , sourceInfo :: SourceInfo
   }

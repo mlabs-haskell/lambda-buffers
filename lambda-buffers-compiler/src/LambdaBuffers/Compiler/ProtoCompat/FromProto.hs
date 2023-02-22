@@ -553,23 +553,21 @@ instance IsMessage P.ClassDef PC.ClassDef where
       & P.documentation .~ doc
       & P.sourceInfo .~ toProto si
 
-instance IsMessage P.InstanceClause PC.InstanceClause where
+instance IsMessage P.DeriveClause PC.DeriveClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
     cnm <- fromProto $ ic ^. P.classRef
-    csts <- traverse fromProto $ ic ^. P.constraints
     args <- traverse fromProto $ ic ^. P.args
     arg <- case args of
       [] -> throwInternalError "Zero instance arguments, but zero parameter type classes are not supported"
       [x] -> return x
       _ -> throwInternalError "Multiple instance arguments, but multi parameter type classes are not supported"
-    pure $ PC.InstanceClause cnm arg csts si
+    pure $ PC.DeriveClause cnm arg si
 
-  toProto (PC.InstanceClause cnm hd csts si) =
+  toProto (PC.DeriveClause cnm hd si) =
     defMessage
       & P.classRef .~ toProto cnm
       & P.args .~ pure (toProto hd)
-      & P.constraints .~ (toProto <$> csts)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.Constraint PC.Constraint where
