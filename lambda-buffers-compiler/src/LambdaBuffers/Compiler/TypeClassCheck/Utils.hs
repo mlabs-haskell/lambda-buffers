@@ -43,7 +43,6 @@ import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ClassDef,
   CompilerInput (CompilerInput),
-  Constraint (Constraint),
   DeriveClause (DeriveClause),
   Module,
   ModuleName,
