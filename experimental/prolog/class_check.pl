@@ -183,42 +183,42 @@ prolog:message(checking_cycle(G, Trace)) --> {
                                          trace_to_indentation(Trace, I),
                                          pretty_goal(G, PG)
                                      }, [
-                                         '~w Checking cycle for for goal ~w '-[I, PG]
+                                         '~w ~w Checking cycle for for goal'-[I, PG]
                                      ].
 
 prolog:message(lookup(G, Trace)) --> {
                                          trace_to_indentation(Trace, I),
                                          pretty_goal(G, PG)
                                      }, [
-                                         '~w Looking up rule for goal ~w '-[I, PG]
+                                         '~w ~w Looking up rule for goal'-[I, PG]
                                      ].
 prolog:message(running(G, Trace)) --> {
                                                            trace_to_indentation(Trace, I),
                                                            pretty_goal(G, PG)
                                                        }, [
-                                                           '~w Running goal ~w '-[I, PG]
+                                                           '~w ~w Running goal'-[I, PG]
                                                        ].
 prolog:message(goal_ok(G, Trace)) --> {
                                           trace_to_indentation(Trace, I),
                                           pretty_goal(G, PG)
                                       }, [
-                                          '~w Done with goal ~w'-[I, PG]
+                                          '~w ~w Done with goal'-[I, PG]
                                       ].
 prolog:message(goal_ok_cycle(G, Trace)) --> {
                                                 trace_to_indentation(Trace, I),
                                                 pretty_goal(G, PG),
                                                 pretty_trace(Trace, PTrace)
                                             }, [
-                                                '~w Done with goal because cycle ~w ~w '-[I, PG, PTrace]
+                                                '~w ~w Done with goal because cycle ~w '-[I, PG, PTrace]
                                             ].
 prolog:message(goal_true(Trace)) --> { trace_to_indentation(Trace, I) }, [ '~w Done because bottom'-[I]].
 prolog:message(missing_rule(G, Trace)) --> {
                                                trace_to_indentation(Trace, I),
                                                pretty_goal(G, PG)
                                            }, [
-                                               '~w Missing rule for goal ~w'-[I, PG]
+                                               '~w ~w Missing rule for goal'-[I, PG]
                                            ].
-prolog:message(goal_failed(G)) --> {pretty_goal(G, PG)}, ['Failed goal ~w'-[PG]].
+prolog:message(goal_failed(G)) --> {pretty_goal(G, PG)}, ['~w Failed goal'-[PG]].
 
 %% Pretty represenationts
 %% ?- pretty_ty(ty_app(ty_app(ty_ref(either), ty_ref(int)), B), P).
