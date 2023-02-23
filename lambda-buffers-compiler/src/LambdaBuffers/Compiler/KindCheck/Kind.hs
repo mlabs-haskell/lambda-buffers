@@ -1,8 +1,10 @@
 module LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:), KVar), kind2ProtoKind, protoKind2Kind) where
 
+import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Pretty (pretty), parens, (<+>))
+import Test.QuickCheck.Arbitrary.Generic (Arbitrary, GenericArbitrary (GenericArbitrary))
 
 infixr 8 :->:
 
@@ -10,7 +12,8 @@ data Kind
   = KType
   | Kind :->: Kind
   | KVar Atom
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving (Arbitrary) via GenericArbitrary Kind
 
 instance Pretty Kind where
   pretty = \case

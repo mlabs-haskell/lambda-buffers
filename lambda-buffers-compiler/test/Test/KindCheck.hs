@@ -9,8 +9,10 @@ import LambdaBuffers.Compiler.KindCheck (
 
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)))
 import Test.KindCheck.Errors (testGKindCheckErrors)
+import Test.QuickCheck (Arbitrary (arbitrary), forAll, (===))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
+import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
   compilerInput'incoherent,
   compilerInput'maybe,
@@ -61,7 +63,7 @@ testFolds =
     "Test Folds"
     [ testGroup
         "Test Arrow Folds"
-        [testArrowFold0, testArrowFold1, testArrowFold2, testArrowFold3HK, testArrowFold4HK, testArrowFoldHHK]
+        [testArrowFold0, testArrowFold1, testArrowFold2, testArrowFold3HK, testArrowFold4HK, testArrowFoldHHK, testFoldWithArrowToTypeTotal]
     ]
 
 {-
@@ -175,3 +177,9 @@ testArrowFoldHHK =
   testCase "Fold 2 HKT" $
     foldWithArrowToType [ty, (ty :->: ty) :->: ty, ty]
       @?= (ty :->: (((ty :->: ty) :->: ty) :->: (ty :->: ty)))
+
+testFoldWithArrowToTypeTotal :: TestTree
+testFoldWithArrowToTypeTotal =
+  testProperty "foldWithArrowToType is total" $
+    forAll arbitrary $
+      \ts -> foldWithArrowToType ts === foldWithArrowToType ts
