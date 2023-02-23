@@ -1,16 +1,14 @@
 module LambdaBuffers.Compiler.Cli.Compile (CompileOpts (..), compile) where
 
-import Control.Lens (makeLenses, (&), (.~))
-import Control.Lens.Getter ((^.))
+import Control.Lens (makeLenses, (^.))
 import Data.ByteString qualified as BS
-import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler (runCompiler)
-import Proto.Compiler (CompilerError, CompilerInput, CompilerOutput)
-import Proto.Compiler_Fields (compilerError, compilerResult)
+import Proto.Compiler (CompilerInput, CompilerOutput)
+import Proto.Compiler_Fields (maybe'compilerError)
 import System.FilePath.Lens (extension)
 
 data CompileOpts = CompileOpts
@@ -27,14 +25,13 @@ makeLenses ''CompileOpts
 compile :: CompileOpts -> IO ()
 compile opts = do
   compInp <- readCompilerInput (opts ^. input)
-  case runCompiler compInp of
-    Left compErr -> do
-      putStrLn "Encountered errors during Compilation"
-      writeCompilerError (opts ^. output) compErr
-    Right compRes -> do
+  let compOut = runCompiler compInp
+  case compOut ^. maybe'compilerError of
+    Nothing -> do
       putStrLn "Compilation succeeded"
-      writeCompilerOutput (opts ^. output) (defMessage & compilerResult .~ compRes)
-  return ()
+    Just _ -> do
+      putStrLn "Compilation failed"
+  writeCompilerOutput (opts ^. output) compOut
 
 readCompilerInput :: FilePath -> IO CompilerInput
 readCompilerInput fp = do
@@ -47,9 +44,6 @@ readCompilerInput fp = do
       content <- Text.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> error $ "Unknown CompilerInput format " <> ext
-
-writeCompilerError :: FilePath -> CompilerError -> IO ()
-writeCompilerError fp err = writeCompilerOutput fp (defMessage & compilerError .~ err)
 
 writeCompilerOutput :: FilePath -> CompilerOutput -> IO ()
 writeCompilerOutput fp cr = do
