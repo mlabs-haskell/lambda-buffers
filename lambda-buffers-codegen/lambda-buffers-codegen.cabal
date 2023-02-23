@@ -41,7 +41,9 @@ common common-language
     DeriveLift
     DeriveTraversable
     DerivingStrategies
+    DerivingVia
     DoAndIfThenElse
+    DuplicateRecordFields
     EmptyCase
     EmptyDataDecls
     EmptyDataDeriving
@@ -52,6 +54,7 @@ common common-language
     FlexibleInstances
     ForeignFunctionInterface
     GADTSyntax
+    GeneralizedNewtypeDeriving
     HexFloatLiterals
     ImportQualifiedPost
     InstanceSigs
@@ -62,12 +65,14 @@ common common-language
     NamedFieldPuns
     NamedWildCards
     NumericUnderscores
+    OverloadedLabels
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
     PolyKinds
     PostfixOperators
     RankNTypes
+    RecordWildCards
     RelaxedPolyRec
     ScopedTypeVariables
     StandaloneDeriving
@@ -87,8 +92,13 @@ library
   import:          common-language
   build-depends:
     , base                     >=4.16
+    , containers               >=0.6
+    , generic-lens             >=2.2
     , lambda-buffers-compiler  >=0.1
+    , lens                     >=5.2
+    , mtl                      >=2.2
     , prettyprinter            >=1.7
+    , text                     >=1.2
 
   hs-source-dirs:  src
   exposed-modules:
