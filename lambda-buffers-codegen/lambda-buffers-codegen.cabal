@@ -85,11 +85,17 @@ common common-language
 
 library
   import:          common-language
-  build-depends:   base >=4.16
-  hs-source-dirs:  src
-  exposed-modules: LambdaBuffers.Codegen
+  build-depends:
+    , base                     >=4.16
+    , lambda-buffers-compiler  >=0.1
+    , prettyprinter            >=1.7
 
-executable lbc
+  hs-source-dirs:  src
+  exposed-modules:
+    LambdaBuffers.Codegen
+    LambdaBuffers.Codegen.Haskell
+
+executable lbg
   import:         common-language
   build-depends:
     , base                  >=4.16
