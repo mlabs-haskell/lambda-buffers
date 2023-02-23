@@ -43,7 +43,7 @@ parseTyRef' = withSourceInfo . label' "type reference" $ do
   TyRef mayAlias <$> parseTyName
 
 parseTyVar :: Stream s m Char => Parser s m (Ty SourceInfo)
-parseTyVar = withSourceInfo . label' "type variable" $ TyVar <$> parseTyVarName
+parseTyVar = label' "type variable" $ TyVar <$> parseTyVarName
 
 parseTyRef :: Stream s m Char => Parser s m (Ty SourceInfo)
 parseTyRef = withSourceInfo . label' "type reference" $ TyRef' <$> parseTyRef'
