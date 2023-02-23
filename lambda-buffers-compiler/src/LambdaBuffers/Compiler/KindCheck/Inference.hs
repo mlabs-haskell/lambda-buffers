@@ -22,13 +22,13 @@ import Data.Foldable (foldrM)
 import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
 import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom, Implication), dTopKind, dType)
 import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
-import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, KVar, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, KVar, (:->:)), protoKind2Kind)
 import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Constructor, Opaque, Product, Sum, Var, VoidT))
 import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (ForeignRef, TyVar))
 
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
-import Control.Monad.Freer.Reader (Reader, ask, asks, runReader)
+import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 
@@ -37,7 +37,7 @@ import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Data.String (fromString)
 import Data.Text qualified as T
 
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens ((%~), (&), (.~), (^.))
 import Data.Map qualified as M
 
 import LambdaBuffers.Compiler.ProtoCompat (localRef2ForeignRef)
@@ -140,15 +140,22 @@ derive x = deriveTyAbs x
       case M.toList (tyabs ^. #tyArgs) of
         [] -> deriveTyBody (x ^. #tyBody)
         a@(n, _) : as -> do
-          vK <- getBinding (TyVar n)
+          vK <- protoKind2Kind <$> getVarAnnotation tyabs n
           freshT <- KVar <$> fresh
+          ctx <- ask
+
+          let newContext = ctx & addContext %~ (<> M.singleton (TyVar n) vK)
           let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
           let restAbs = tyabs & #tyArgs .~ M.fromList as
-          restF <- deriveTyAbs restAbs
+
+          restF <- local (const newContext) $ deriveTyAbs restAbs
+
           let uK = restF ^. dTopKind
           tell [Constraint (freshT, uK)]
-          ctx <- ask
           pure $ Abstraction (Judgement (ctx, Abs newAbs, vK :->: freshT)) restF
+
+    getVarAnnotation :: PC.TyAbs -> PC.VarName -> Derive PC.Kind
+    getVarAnnotation tyabs varname = pure $ ((tyabs ^. #tyArgs) M.! varname) ^. #argKind
 
     deriveTyBody :: PC.TyBody -> Derive Derivation
     deriveTyBody = \case

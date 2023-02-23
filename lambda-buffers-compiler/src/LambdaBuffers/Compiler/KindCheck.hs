@@ -66,7 +66,13 @@ makeEffect ''KindCheck
 
 -- | The Check effect runner.
 runCheck :: Eff '[Check, Err] a -> Either CompilerErr a
-runCheck = run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
+runCheck =
+  run
+    . runError
+    . runKindCheck
+    . localStrategy
+    . moduleStrategy
+    . globalStrategy
 
 {- | Run the check - return the validated context or the failure. The main API
  function of the library.
@@ -168,9 +174,8 @@ resolveCreateContext ::
   Member Err effs =>
   PC.CompilerInput ->
   Eff effs Context
-resolveCreateContext ci = do
-  ctxs <- traverse module2Context (toList $ ci ^. #modules)
-  pure $ mconcat ctxs
+resolveCreateContext ci =
+  mconcat <$> traverse module2Context (toList $ ci ^. #modules)
 
 module2Context ::
   forall effs.
@@ -180,7 +185,9 @@ module2Context ::
   Eff effs Context
 module2Context m = do
   let typeDefinitions = toList $ m ^. #typeDefs
-  ctxs <- runReader (m ^. #moduleName) $ traverse tyDef2Context typeDefinitions
+  ctxs <-
+    runReader (m ^. #moduleName) $
+      traverse tyDef2Context typeDefinitions
   pure $ mconcat ctxs
 
 -- | Creates a Context entry from one type definition.
@@ -193,9 +200,9 @@ tyDef2Context ::
 tyDef2Context tyDef = do
   curModName <- ask @PC.ModuleName
   r <- tyDef2NameAndKind curModName tyDef
-  ctx2 <- tyDefArgs2Context tyDef
-  pure $ mempty & context .~ uncurry M.singleton r <> ctx2
+  pure $ mempty & context .~ uncurry M.singleton r
 
+{-
 {- | Gets the kind of the variables from the definition and adds them to the
  context.
 -}
@@ -209,6 +216,7 @@ tyDefArgs2Context tydef = do
       where
         v = TyVar (tyarg ^. #argName)
         k = pKind2Kind (tyarg ^. #argKind)
+-}
 
 tyDef2NameAndKind :: forall effs. PC.ModuleName -> PC.TyDef -> Eff effs (Variable, Kind)
 tyDef2NameAndKind curModName tyDef = do
