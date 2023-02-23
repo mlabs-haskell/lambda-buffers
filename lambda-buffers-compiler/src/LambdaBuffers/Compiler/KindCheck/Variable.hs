@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.KindCheck.Variable (Variable (LocalRef, ForeignRef, TyVar), Atom) where
+module LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, TyVar), Atom) where
 
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -11,8 +11,9 @@ import Test.QuickCheck.Instances.Text ()
 type Atom = Text
 
 data Variable
-  = LocalRef PC.LocalRef
-  | ForeignRef PC.ForeignRef
+  = -- | Notionally all Refs. are fully qualified. The context determines if
+    -- they're local or not.
+    ForeignRef PC.ForeignRef
   | TyVar PC.VarName
   deriving stock (Eq, Ord, Show, Generic)
   deriving (Arbitrary) via GenericArbitrary Variable

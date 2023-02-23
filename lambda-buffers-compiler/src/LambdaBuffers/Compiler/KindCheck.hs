@@ -9,7 +9,7 @@ module LambdaBuffers.Compiler.KindCheck (
   foldWithArrowToType,
 ) where
 
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens (view, (&), (.~), (^.))
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, interpret, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -21,7 +21,7 @@ import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Context (Context, context)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)), kind2ProtoKind)
-import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, LocalRef, TyVar))
+import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, TyVar))
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 --------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ localStrategy = reinterpret $ \case
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
   -- TypesFromTyDef modName tydef -> runReader modName (tyDef2Types tydef)
-  InferTypeKind modName tyDef ctx k -> either (handleErr modName tyDef) pure $ I.infer ctx tyDef k
+  InferTypeKind modName tyDef ctx k -> either (handleErr modName tyDef) pure $ I.infer ctx tyDef k modName
   CheckKindConsistency modName def ctx k -> runReader modName $ resolveKindConsistency def ctx k
   GetSpecifiedKind modName tyDef -> do
     (_, k) <- tyDef2NameAndKind modName tyDef
@@ -120,11 +120,15 @@ runKindCheck = interpret $ \case
     handleErr modName td = \case
       I.InferUnboundTermErr uA -> do
         case uA of
-          LocalRef lr -> throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.LocalI lr) modName
-          ForeignRef fr -> throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.ForeignI fr) modName
+          ForeignRef fr ->
+            if (fr ^. #moduleName) == modName
+              then -- We're looking at the local module.
+                throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. PC.foreignRef2LocalRef) modName
+              else -- We're looking at a foreign module.
+                throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.ForeignI fr) modName
           TyVar tv -> throwError . PC.CompKindCheckError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
       I.InferUnifyTermErr (I.Constraint (k1, k2)) ->
-        throwError . PC.CompKindCheckError $ {-- error $ show k1 <>" <-> " <> show k2 --} PC.IncorrectApplicationError td (kind2ProtoKind k1) (kind2ProtoKind k2) modName
+        throwError . PC.CompKindCheckError $ PC.IncorrectApplicationError td (kind2ProtoKind k1) (kind2ProtoKind k2) modName
       I.InferRecursiveSubstitutionErr _ ->
         throwError . PC.CompKindCheckError $ PC.RecursiveKindError td modName
       I.InferImpossibleErr t ->
@@ -207,9 +211,8 @@ tyDefArgs2Context tydef = do
         k = pKind2Kind (tyarg ^. #argKind)
 
 tyDef2NameAndKind :: forall effs. PC.ModuleName -> PC.TyDef -> Eff effs (Variable, Kind)
-tyDef2NameAndKind _curModName tyDef = do
-  -- Names are local.
-  let name = LocalRef $ PC.LocalRef (tyDef ^. #tyName) (tyDef ^. #sourceInfo)
+tyDef2NameAndKind curModName tyDef = do
+  let name = ForeignRef $ view (PC.localRef2ForeignRef curModName) $ PC.LocalRef (tyDef ^. #tyName) (tyDef ^. #sourceInfo)
   let k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
   pure (name, k)
 

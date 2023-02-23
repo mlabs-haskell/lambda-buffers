@@ -24,7 +24,7 @@ import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, App
 import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Constructor, Opaque, Product, Sum, Var, VoidT))
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (ForeignRef, LocalRef, TyVar))
+import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (ForeignRef, TyVar))
 
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -40,6 +40,7 @@ import Data.Text qualified as T
 import Control.Lens ((&), (.~), (^.))
 import Data.Map qualified as M
 
+import LambdaBuffers.Compiler.ProtoCompat (localRef2ForeignRef)
 import Prettyprinter (
   Pretty (pretty),
   (<+>),
@@ -76,6 +77,7 @@ type Derive a =
   Members
     '[ Reader Context
      , Reader Kind
+     , Reader PC.ModuleName
      , State DerivationContext
      , Writer [Constraint]
      , Error InferErr
@@ -87,12 +89,30 @@ type Derive a =
 -- Runners
 
 -- | Run derivation builder - not unified yet.
-runDerive :: Context -> PC.TyAbs -> Kind -> Either InferErr (Derivation, [Constraint])
-runDerive ctx t k = run $ runError $ runWriter $ evalState (DC atoms) $ runReader ctx $ runReader k (derive t)
+runDerive ::
+  Context ->
+  PC.TyAbs ->
+  Kind ->
+  PC.ModuleName ->
+  Either InferErr (Derivation, [Constraint])
+runDerive ctx t k localMod =
+  run $
+    runError $
+      runWriter $
+        evalState (DC atoms) $
+          runReader ctx $
+            runReader k $
+              runReader localMod $
+                derive t
 
-infer :: Context -> PC.TyDef -> Kind -> Either InferErr Kind
-infer ctx t k = do
-  (d, c) <- runDerive (defContext <> ctx) (t ^. #tyAbs) k
+infer ::
+  Context ->
+  PC.TyDef ->
+  Kind ->
+  PC.ModuleName ->
+  Either InferErr Kind
+infer ctx t k localMod = do
+  (d, c) <- runDerive (defContext <> ctx) (t ^. #tyAbs) k localMod
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. dTopKind
@@ -178,7 +198,8 @@ derive x = deriveTyAbs x
     deriveTyRef :: PC.TyRef -> Derive Derivation
     deriveTyRef = \case
       PC.LocalI r -> do
-        let ty = LocalRef r
+        localModule <- ask
+        let ty = ForeignRef $ r ^. localRef2ForeignRef localModule
         v <- getBinding ty
         c <- ask
         pure . Axiom . Judgement $ (c, Var ty, v)
