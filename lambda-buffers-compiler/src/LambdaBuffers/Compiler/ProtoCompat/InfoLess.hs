@@ -7,6 +7,7 @@ module LambdaBuffers.Compiler.ProtoCompat.InfoLess (
   withInfoLess,
   withInfoLessF,
   mkInfoLess,
+  InfoLessC,
 ) where
 
 import Data.Bifunctor (Bifunctor (bimap))
@@ -67,7 +68,7 @@ newtype InfoLess a = InfoLess {unsafeInfoLess :: a}
   deriving stock (Functor, Traversable, Foldable)
 
 {- | SourceInfo Less ID.
- A TypeClass that provides id for types with SourceInfo - where SI is defaulted - therefore ignored. Not exported for obvious unsafe reasons.
+ A TypeClass that provides id for types with SourceInfo - where SI is defaulted - therefore ignored. Can only be derived.
 -}
 class Eq a => InfoLessC a where
   silId :: a -> a

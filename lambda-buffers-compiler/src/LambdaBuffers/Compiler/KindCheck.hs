@@ -14,14 +14,15 @@ import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, interpret, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, runReader)
-import Control.Monad.Freer.State (State, evalState)
 import Control.Monad.Freer.TH (makeEffect)
+import Data.Default (Default (def))
 import Data.Foldable (Foldable (toList), traverse_)
 import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Context (Context, context)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)), kind2ProtoKind)
 import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, TyVar))
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 --------------------------------------------------------------------------------
@@ -102,7 +103,7 @@ globalStrategy = reinterpret $ \case
 
 moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
-  CreateContext ci -> evalState (mempty @(M.Map Variable PC.TyDef)) . resolveCreateContext $ ci
+  CreateContext ci -> resolveCreateContext ci
   ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (md ^. #moduleName) cx) (md ^. #typeDefs)
 
@@ -117,9 +118,9 @@ runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a ->
 runKindCheck = interpret $ \case
   -- TypesFromTyDef modName tydef -> runReader modName (tyDef2Types tydef)
   InferTypeKind modName tyDef ctx k -> either (handleErr modName tyDef) pure $ I.infer ctx tyDef k modName
-  CheckKindConsistency modName def ctx k -> runReader modName $ resolveKindConsistency def ctx k
+  CheckKindConsistency modName tydef ctx k -> runReader modName $ resolveKindConsistency tydef ctx k
   GetSpecifiedKind modName tyDef -> do
-    (_, k) <- tyDef2NameAndKind modName tyDef
+    (_, k) <- runReader modName $ tyDef2NameAndKind tyDef
     pure k
   where
     handleErr :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
@@ -150,7 +151,7 @@ resolveKindConsistency ::
   Eff effs Kind
 resolveKindConsistency tydef _ctx inferredKind = do
   modname <- ask @PC.ModuleName
-  (_, k) <- tyDef2NameAndKind modname tydef
+  (_, k) <- tyDef2NameAndKind tydef
   guard tydef k inferredKind modname
   pure inferredKind
   where
@@ -165,64 +166,38 @@ resolveKindConsistency tydef _ctx inferredKind = do
 --------------------------------------------------------------------------------
 -- Context Creation
 
-{- | Resolver function for the context creation - it fails if two identical
- declarations are found.
--}
-resolveCreateContext ::
-  forall effs.
-  Member (State (M.Map Variable PC.TyDef)) effs =>
-  Member Err effs =>
-  PC.CompilerInput ->
-  Eff effs Context
+-- | Resolver function for the context creation. There is a guarantee from ProtoCompat that the input is sanitised.
+resolveCreateContext :: forall effs. PC.CompilerInput -> Eff effs Context
 resolveCreateContext ci =
   mconcat <$> traverse module2Context (toList $ ci ^. #modules)
 
-module2Context ::
-  forall effs.
-  Member (State (M.Map Variable PC.TyDef)) effs =>
-  Member Err effs =>
-  PC.Module ->
-  Eff effs Context
+module2Context :: forall effs. PC.Module -> Eff effs Context
 module2Context m = do
   let typeDefinitions = toList $ m ^. #typeDefs
-  ctxs <-
-    runReader (m ^. #moduleName) $
-      traverse tyDef2Context typeDefinitions
+  ctxs <- runReader (m ^. #moduleName) $ traverse tyDef2Context typeDefinitions
   pure $ mconcat ctxs
 
 -- | Creates a Context entry from one type definition.
 tyDef2Context ::
   forall effs.
   Member (Reader PC.ModuleName) effs =>
-  Member Err effs =>
   PC.TyDef ->
   Eff effs Context
 tyDef2Context tyDef = do
-  curModName <- ask @PC.ModuleName
-  r <- tyDef2NameAndKind curModName tyDef
+  r <- tyDef2NameAndKind tyDef
   pure $ mempty & context .~ uncurry M.singleton r
 
-{-
-{- | Gets the kind of the variables from the definition and adds them to the
- context.
--}
-tyDefArgs2Context :: PC.TyDef -> Eff effs (M.Map Variable Kind)
-tyDefArgs2Context tydef = do
-  let ds = g <$> M.elems (tydef ^. #tyAbs . #tyArgs)
-  pure $ M.fromList ds
-  where
-    g :: PC.TyArg -> (Variable, Kind)
-    g tyarg = (v, k)
-      where
-        v = TyVar (tyarg ^. #argName)
-        k = pKind2Kind (tyarg ^. #argKind)
--}
-
-tyDef2NameAndKind :: forall effs. PC.ModuleName -> PC.TyDef -> Eff effs (Variable, Kind)
-tyDef2NameAndKind curModName tyDef = do
-  let name = ForeignRef $ view (PC.localRef2ForeignRef curModName) $ PC.LocalRef (tyDef ^. #tyName) (tyDef ^. #sourceInfo)
+tyDef2NameAndKind ::
+  forall effs.
+  Member (Reader PC.ModuleName) effs =>
+  PC.TyDef ->
+  Eff effs (InfoLess Variable, Kind)
+tyDef2NameAndKind tyDef = do
+  curModName <- ask
+  let tyname = tyDef ^. #tyName
+  let name = ForeignRef $ view (PC.localRef2ForeignRef curModName) $ PC.LocalRef tyname def
   let k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
-  pure (name, k)
+  pure (mkInfoLess name, k)
 
 tyAbsLHS2Kind :: PC.TyAbs -> Kind
 tyAbsLHS2Kind tyAbs = foldWithArrowToType $ pKind2Kind . (\x -> x ^. #argKind) <$> toList (tyAbs ^. #tyArgs)

@@ -31,13 +31,14 @@ import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (mkInfoLess)
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 
 import Data.String (fromString)
 import Data.Text qualified as T
 
-import Control.Lens ((%~), (&), (.~), (^.))
+import Control.Lens (view, (%~), (&), (.~), (^.))
 import Data.Map qualified as M
 
 import LambdaBuffers.Compiler.ProtoCompat (localRef2ForeignRef)
@@ -144,7 +145,7 @@ derive x = deriveTyAbs x
           freshT <- KVar <$> fresh
           ctx <- ask
 
-          let newContext = ctx & addContext %~ (<> M.singleton (TyVar n) vK)
+          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) vK)
           let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
           let restAbs = tyabs & #tyArgs .~ M.fromList as
 
@@ -206,7 +207,7 @@ derive x = deriveTyAbs x
     deriveTyRef = \case
       PC.LocalI r -> do
         localModule <- ask
-        let ty = ForeignRef $ r ^. localRef2ForeignRef localModule
+        let ty = ForeignRef . view (localRef2ForeignRef localModule) $ r
         v <- getBinding ty
         c <- ask
         pure . Axiom . Judgement $ (c, Var ty, v)
@@ -273,7 +274,7 @@ derive x = deriveTyAbs x
 getBinding :: Variable -> Derive Kind
 getBinding t = do
   ctx <- asks getAllContext
-  case ctx M.!? t of
+  case ctx M.!? mkInfoLess t of
     Just x -> pure x
     Nothing -> throwError $ InferUnboundTermErr t
 
