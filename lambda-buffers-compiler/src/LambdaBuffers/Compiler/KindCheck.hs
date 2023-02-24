@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module LambdaBuffers.Compiler.KindCheck (
-  -- * Kindchecking functions.
+  -- * Kind checking functions.
   check,
   check_,
 
-  -- * Testing functions
+  -- * Tested functions
   foldWithArrowToType,
 ) where
 
@@ -64,16 +64,12 @@ data KindCheck a where
 makeEffect ''KindCheck
 
 --------------------------------------------------------------------------------
+-- Runners
 
 -- | The Check effect runner.
 runCheck :: Eff '[Check, Err] a -> Either CompilerErr a
 runCheck =
-  run
-    . runError
-    . runKindCheck
-    . localStrategy
-    . moduleStrategy
-    . globalStrategy
+  run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
 {- | Run the check - return the validated context or the failure. The main API
  function of the library.
@@ -86,12 +82,14 @@ check_ :: PC.CompilerInput -> Either CompilerErr ()
 check_ = void . runCheck . kCheck
 
 --------------------------------------------------------------------------------
+-- Transformations
 
 {- | A transformation (in the context of the Kind Checker) is a mapping from one
- Effect to another. All effects can fial via the `Err` effect - which is
+ Effect to another. All effects can fail via the `Err` effect - which is
  essentially the Kind Check failure.
 -}
-type Transform x y = forall effs {a}. Member Err effs => Eff (x ': effs) a -> Eff (y ': effs) a
+type Transform x y =
+  forall effs {a}. Member Err effs => Eff (x ': effs) a -> Eff (y ': effs) a
 
 -- Transformation strategies
 globalStrategy :: Transform Check GlobalCheck
@@ -103,25 +101,26 @@ globalStrategy = reinterpret $ \case
 
 moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
-  CreateContext ci -> resolveCreateContext ci
-  ValidateModule cx md -> do
+  CreateContext ci ->
+    resolveCreateContext ci
+  ValidateModule cx md ->
     traverse_ (kCTypeDefinition (md ^. #moduleName) cx) (md ^. #typeDefs)
 
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
-  KCTypeDefinition mname ctx tydef -> do
-    desiredK <- getSpecifiedKind mname tydef
-    k <- inferTypeKind mname tydef ctx desiredK
-    checkKindConsistency mname tydef ctx k
+  KCTypeDefinition modName ctx tyDef -> do
+    desiredK <- getSpecifiedKind modName tyDef
+    k <- inferTypeKind modName tyDef ctx desiredK
+    checkKindConsistency modName tyDef ctx k
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
-  -- TypesFromTyDef modName tydef -> runReader modName (tyDef2Types tydef)
-  InferTypeKind modName tyDef ctx k -> either (handleErr modName tyDef) pure $ I.infer ctx tyDef k modName
-  CheckKindConsistency modName tydef ctx k -> runReader modName $ resolveKindConsistency tydef ctx k
-  GetSpecifiedKind modName tyDef -> do
-    (_, k) <- runReader modName $ tyDef2NameAndKind tyDef
-    pure k
+  InferTypeKind modName tyDef ctx k ->
+    either (handleErr modName tyDef) pure $ I.infer ctx tyDef k modName
+  CheckKindConsistency modName tyDef ctx k ->
+    runReader modName $ resolveKindConsistency tyDef ctx k
+  GetSpecifiedKind modName tyDef ->
+    fmap snd $ runReader modName $ tyDef2NameAndKind tyDef
   where
     handleErr :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
     handleErr modName td = \case
@@ -130,17 +129,32 @@ runKindCheck = interpret $ \case
           ForeignRef fr ->
             if (fr ^. #moduleName) == modName
               then -- We're looking at the local module.
-                throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. PC.foreignRef2LocalRef) modName
-              else -- We're looking at a foreign module.
-                throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td (PC.ForeignI fr) modName
-          TyVar tv -> throwError . PC.CompKindCheckError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
-      I.InferUnifyTermErr (I.Constraint (k1, k2)) ->
-        throwError . PC.CompKindCheckError $ PC.IncorrectApplicationError td (kind2ProtoKind k1) (kind2ProtoKind k2) modName
-      I.InferRecursiveSubstitutionErr _ ->
-        throwError . PC.CompKindCheckError $ PC.RecursiveKindError td modName
-      I.InferImpossibleErr t ->
-        throwError . PC.InternalError $ t
 
+                throwError
+                  . PC.CompKindCheckError
+                  $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. PC.foreignRef2LocalRef) modName
+              else -- We're looking at a foreign module.
+
+                throwError
+                  . PC.CompKindCheckError
+                  $ PC.UnboundTyRefError td (PC.ForeignI fr) modName
+          TyVar tv ->
+            throwError
+              . PC.CompKindCheckError
+              $ PC.UnboundTyVarError td (PC.TyVar tv) modName
+      I.InferUnifyTermErr (I.Constraint (k1, k2)) ->
+        throwError
+          . PC.CompKindCheckError
+          $ PC.IncorrectApplicationError td (kind2ProtoKind k1) (kind2ProtoKind k2) modName
+      I.InferRecursiveSubstitutionErr _ ->
+        throwError
+          . PC.CompKindCheckError
+          $ PC.RecursiveKindError td modName
+      I.InferImpossibleErr t ->
+        throwError $
+          PC.InternalError t
+
+--------------------------------------------------------------------------------
 -- Resolvers
 resolveKindConsistency ::
   forall effs.
@@ -149,16 +163,16 @@ resolveKindConsistency ::
   Context ->
   Kind ->
   Eff effs Kind
-resolveKindConsistency tydef _ctx inferredKind = do
-  modname <- ask @PC.ModuleName
-  (_, k) <- tyDef2NameAndKind tydef
-  guard tydef k inferredKind modname
+resolveKindConsistency tyDef _ctx inferredKind = do
+  (_, k) <- tyDef2NameAndKind tyDef
+  guard tyDef k inferredKind
   pure inferredKind
   where
-    guard :: PC.TyDef -> Kind -> Kind -> PC.ModuleName -> Eff effs ()
-    guard t i d mn
+    guard :: PC.TyDef -> Kind -> Kind -> Eff effs ()
+    guard t i d
       | i == d = pure ()
-      | otherwise =
+      | otherwise = do
+          mn <- ask
           throwError
             . PC.CompKindCheckError
             $ PC.InconsistentTypeError t (kind2ProtoKind i) (kind2ProtoKind d) mn
@@ -194,9 +208,15 @@ tyDef2NameAndKind ::
   Eff effs (InfoLess Variable, Kind)
 tyDef2NameAndKind tyDef = do
   curModName <- ask
-  let tyname = tyDef ^. #tyName
-  let name = ForeignRef $ view (PC.localRef2ForeignRef curModName) $ PC.LocalRef tyname def
-  let k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
+
+  -- InfoLess name - the SourceInfo doesn't matter therefore it is defaulted.
+  let name =
+        ForeignRef
+          . view (PC.localRef2ForeignRef curModName)
+          $ PC.LocalRef (tyDef ^. #tyName) def
+
+      k = tyAbsLHS2Kind (tyDef ^. #tyAbs)
+
   pure (mkInfoLess name, k)
 
 tyAbsLHS2Kind :: PC.TyAbs -> Kind
@@ -220,7 +240,7 @@ foldWithArrowToType = foldWithArrowToKind KType
 foldWithArrowToKind :: Kind -> [Kind] -> Kind
 foldWithArrowToKind = foldr (:->:)
 
--- =============================================================================
+--------------------------------------------------------------------------------
 -- To Kind Conversion functions
 
 pKind2Kind :: PC.Kind -> Kind
@@ -228,5 +248,4 @@ pKind2Kind k =
   case k ^. #kind of
     PC.KindRef PC.KType -> KType
     PC.KindArrow l r -> pKind2Kind l :->: pKind2Kind r
-    -- NOTE(cstml): What is an undefined Kind type meant to mean?
-    _ -> error "Fixme undefined type"
+    PC.KindRef PC.KUnspecified -> KType -- (for now) defaulting unspecified kinds to Type
