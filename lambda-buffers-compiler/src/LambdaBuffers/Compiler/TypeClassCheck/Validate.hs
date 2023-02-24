@@ -27,9 +27,13 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap, inst, solve)
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   BasicConditionViolation (OverlapDetected),
+  Instance,
   ModuleBuilder (mbInstances, mbScope, mbTyDefs),
+  Tagged (Tag),
   TypeClassError (BadInstance, LocalTyRefNotFound, MalformedTyDef),
+  getTag,
   lookupOr,
+  unTag,
  )
 
 -- hardcoded PATTERN variables, easier to read than (VarP "blah") everywhere
@@ -63,8 +67,8 @@ constraintClass (C c _) = c
 -- NOTE: Practically this enforces the "must define instances where types are defined"
 --       half of Haskell's orphan instances rule. We could relax that in various ways
 --       but it would require reworking a lot of the utilities above.
-checkDerive :: P.ModuleName -> ModuleBuilder -> Rule Pat -> Either TypeClassError [Constraint Exp]
-checkDerive mn mb i = concat <$> secondPass
+checkDerive :: P.ModuleName -> ModuleBuilder -> Tagged Instance -> Either TypeClassError [Constraint Exp]
+checkDerive mn mb ti = concat <$> secondPass
   where
     secondPass :: Either TypeClassError [[Constraint Exp]]
     secondPass = traverse solveRef =<< firstPass
@@ -73,8 +77,12 @@ checkDerive mn mb i = concat <$> secondPass
     firstPass = catchOverlap (solve assumptions c)
 
     catchOverlap :: Either Overlap a -> Either TypeClassError a
-    catchOverlap = either (Left . BadInstance . OverlapDetected) pure
+    catchOverlap = \case
+      Left ovlp -> Left $ BadInstance (OverlapDetected ovlp) si
+      Right x -> pure x
 
+    i = unTag ti
+    si = getTag ti
     (c', cs') = splitInstance i
     c = fmap inst c'
 
@@ -87,13 +95,13 @@ checkDerive mn mb i = concat <$> secondPass
     solveRef :: Constraint Exp -> Either TypeClassError [Constraint Exp]
     solveRef (C cx ty) = case getLocalRefE ty of
       Just t -> do
-        lookupOr t localTyDefs (LocalTyRefNotFound t mn) >>= \case
-          DecE _ _ body -> catchOverlap $ solve assumptions (C cx body)
-          xp -> throwError $ MalformedTyDef mn xp
+        lookupOr t localTyDefs (LocalTyRefNotFound t mn si) >>= \case
+          (Tag _ (DecE _ _ body)) -> catchOverlap $ solve assumptions (C cx body)
+          xp -> throwError $ MalformedTyDef mn (unTag xp) (getTag xp)
       _ -> pure [C cx ty]
 
     assumptions =
       S.toList . S.fromList $
         S.toList inScopeInstances -- the basic set of in-scope instances
           <> concatMap (mkStructuralRules . constraintClass) (c' : cs') -- structural rules for all in scope classes
-          <> S.toList (S.filter (/= i) localInstances) -- all instances in the current module that aren't the one we're trying to check
+          <> S.toList (S.filter (/= i) . S.mapMonotonic unTag $ localInstances) -- all instances in the current module that aren't the one we're trying to check

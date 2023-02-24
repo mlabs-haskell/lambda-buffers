@@ -23,9 +23,12 @@ import LambdaBuffers.Compiler.TypeClassCheck.Pretty (spaced, (<//>))
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   Instance,
   ModuleBuilder (mbInstances),
+  Tagged,
   TypeClassError (FailedToSolveConstraints),
   checkInstance,
+  getTag,
   mkBuilders,
+  unTag,
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Validate (checkDerive)
 import Prettyprinter (
@@ -83,13 +86,16 @@ detectSuperclassCycles cds = case detectSuperclassCycles' cds of
 runDeriveCheck :: P.ModuleName -> ModuleBuilder -> Either TypeClassError ()
 runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
   where
-    go :: Instance -> Either TypeClassError ()
-    go i =
-      checkInstance i
-        >> checkDerive mn mb i
+    go :: Tagged Instance -> Either TypeClassError ()
+    go ti =
+      checkInstance si i
+        >> checkDerive mn mb ti
         >>= \case
           [] -> pure ()
-          xs -> Left $ FailedToSolveConstraints mn xs i
+          xs -> Left $ FailedToSolveConstraints mn xs i si
+      where
+        si = getTag ti
+        i = unTag ti
 
 -- ModuleBuilder is suitable codegen input,
 -- and is (relatively) computationally expensive to

@@ -27,19 +27,37 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Rule ((:<=)),
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
+  BasicConditionViolation (OverlapDetected, TyConInContext),
   Instance,
   ModuleBuilder (ModuleBuilder, mbClasses, mbInstances, mbScope, mbTyDefs),
-  TypeClassError,
+  Tagged (Tag),
+  TypeClassError (BadInstance),
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Validate (_X)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, assertBool, testCase)
+
+tagDef :: forall a. a -> Tagged a
+tagDef = Tag PC.defSourceInfo
+
+tagDefSet :: forall a. S.Set a -> S.Set (Tagged a)
+tagDefSet = S.mapMonotonic tagDef
 
 assertPrism :: forall s t a b. String -> Prism s t a b -> s -> Assertion
 assertPrism str p s = assertBool str $ is p s
 
 assertCtor :: forall l s t a b. (AsConstructor l s t a b) => String -> Either s () -> Assertion
 assertCtor str = assertPrism str (_Left . _Ctor @l @s @t @a @b)
+
+tyConInContext :: String -> Either TypeClassError () -> Assertion
+tyConInContext msg e = assertBool msg $ case e of
+  Left (BadInstance (TyConInContext _ _) _) -> True
+  _ -> False
+
+overlapDetected :: String -> Either TypeClassError () -> Assertion
+overlapDetected msg e = assertBool msg $ case e of
+  Left (BadInstance (OverlapDetected _) _) -> True
+  _ -> False
 
 test :: TestTree
 test =
@@ -74,16 +92,14 @@ test =
 
     test4 =
       testCase "Circular constraints" $
-        assertPrism
+        tyConInContext
           "FAIL!"
-          (_Left . _Ctor @"BadInstance" . _Ctor @"TyConInContext")
           (runTest moduleB'3)
 
     test5 =
       testCase "Overlapping instances" $
-        assertPrism
+        overlapDetected
           "FAIL!"
-          (_Left . _Ctor @"BadInstance" . _Ctor @"OverlapDetected")
           (runTest moduleB'4)
 
     test6 =
@@ -94,9 +110,8 @@ test =
 
     test7 =
       testCase "Constr in instance constraint" $
-        assertPrism
+        tyConInContext
           "FAIL!"
-          (_Left . _Ctor @"BadInstance" . _Ctor @"TyConInContext")
           (runTest moduleB'6)
 
     test8 =
@@ -194,8 +209,8 @@ instance C a => C (Maybe a)
 moduleA'1 :: ModuleBuilder
 moduleA'1 =
   ModuleBuilder
-    { mbTyDefs = tyDefsA
-    , mbInstances = instancesA
+    { mbTyDefs = tagDef <$> tyDefsA
+    , mbInstances = tagDefSet instancesA
     , mbClasses = classesA
     , mbScope = S.empty
     }
@@ -239,8 +254,8 @@ instance C Foo
 moduleB'1 :: ModuleBuilder
 moduleB'1 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = scopeB
     }
@@ -281,8 +296,8 @@ instance C a => C (Foo a)
 moduleB'2 :: ModuleBuilder
 moduleB'2 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = scopeB
     }
@@ -316,8 +331,8 @@ instance C (Foo a) => C (Foo a)
 moduleB'3 :: ModuleBuilder
 moduleB'3 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = S.empty
     }
@@ -353,8 +368,8 @@ instance C Foo
 moduleB'4 :: ModuleBuilder
 moduleB'4 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = scopeB
     }
@@ -385,8 +400,8 @@ same as moduleB'2 w/ the imported (C Int) instance removed
 moduleB'5 :: ModuleBuilder
 moduleB'5 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = scopeB
     }
@@ -417,8 +432,8 @@ instance C (Maybe Int) => C Foo
 moduleB'6 :: ModuleBuilder
 moduleB'6 =
   ModuleBuilder
-    { mbTyDefs = tyDefsB
-    , mbInstances = instancesB
+    { mbTyDefs = tagDef <$> tyDefsB
+    , mbInstances = tagDefSet instancesB
     , mbClasses = S.empty
     , mbScope = S.empty
     }
@@ -450,8 +465,8 @@ instance C (Bar a b)
 moduleC'1 :: ModuleBuilder
 moduleC'1 =
   ModuleBuilder
-    { mbTyDefs = tyDefsC
-    , mbInstances = instancesC
+    { mbTyDefs = tagDef <$> tyDefsC
+    , mbInstances = tagDefSet instancesC
     , mbClasses = S.empty
     , mbScope = scopeC
     }
@@ -486,8 +501,8 @@ instance C (Bar a b)
 moduleD'1 :: ModuleBuilder
 moduleD'1 =
   ModuleBuilder
-    { mbTyDefs = tyDefsD
-    , mbInstances = instancesD
+    { mbTyDefs = tagDef <$> tyDefsD
+    , mbInstances = tagDefSet instancesD
     , mbClasses = S.empty
     , mbScope = scopeD
     }
@@ -522,8 +537,8 @@ instance C (Bar a Bool)
 moduleD'2 :: ModuleBuilder
 moduleD'2 =
   ModuleBuilder
-    { mbTyDefs = tyDefsD
-    , mbInstances = instancesD
+    { mbTyDefs = tagDef <$> tyDefsD
+    , mbInstances = tagDefSet instancesD
     , mbClasses = S.empty
     , mbScope = scopeD
     }
@@ -561,8 +576,8 @@ instance C (Bar a Bool)
 moduleD'3 :: ModuleBuilder
 moduleD'3 =
   ModuleBuilder
-    { mbTyDefs = tyDefsD
-    , mbInstances = instancesD
+    { mbTyDefs = tagDef <$> tyDefsD
+    , mbInstances = tagDefSet instancesD
     , mbClasses = S.empty
     , mbScope = S.empty
     }

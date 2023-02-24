@@ -7,6 +7,9 @@ module LambdaBuffers.Compiler.TypeClassCheck.Utils (
   BasicConditionViolation (..),
   lookupOr,
   checkInstance,
+  Tagged (..),
+  unTag,
+  getTag,
   -- for the superclass cycle check
   mkClassInfos,
   toClassMap,
@@ -52,6 +55,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
 
+import Data.Kind (Type)
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
@@ -66,22 +70,47 @@ import Prettyprinter (
   (<+>),
  )
 
+-- I believe this is a comonad, but the import isn't worth it here
+data Tagged :: Type -> Type where
+  Tag :: P.SourceInfo -> a -> Tagged a
+
+instance Functor Tagged where
+  fmap f (Tag si a) = Tag si (f a)
+
+unTag :: forall a. Tagged a -> a
+unTag (Tag _ a) = a
+
+getTag :: forall a. Tagged a -> P.SourceInfo
+getTag (Tag si _) = si
+
+instance Eq a => Eq (Tagged a) where
+  (Tag _ a) == (Tag _ a') = a == a'
+
+instance Ord a => Ord (Tagged a) where
+  (Tag _ a) <= (Tag _ a') = a <= a'
+
+-- DEGENERATE but need for debugging
+instance Show a => Show (Tagged a) where
+  show (Tag _ a) = show a
+
+instance Pretty a => Pretty (Tagged a) where
+  pretty (Tag _ a) = pretty a
 -- *Here* it's useful to distinguish them
 type Instance = Rule Pat
 
 {- Some of these are perfunctory & used to keep functions total.
 -}
 data TypeClassError
-  = UnknownClass FQClassName P.SourceInfo
-  | UnknownModule P.ModuleName
-  | MissingModuleInstances P.ModuleName
-  | MissingModuleScope P.ModuleName
-  | ClassNotFoundInModule Text [Text]
-  | LocalTyRefNotFound T.Text P.ModuleName
-  | SuperclassCycleDetected [[FQClassName]]
-  | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance
-  | MalformedTyDef P.ModuleName Exp
-  | BadInstance BasicConditionViolation
+  = UnknownClass FQClassName P.SourceInfo -- this might need split into two, investigate further
+  | UnknownModule P.ModuleName -- internal, no sourceInfo (doesn't make sense)
+  | MissingModuleInstances P.ModuleName -- internal, no sourceInfo (doesn't make sense)
+  | MissingModuleScope P.ModuleName -- internal, no sourceinfo (doesn't make sense)
+  | ClassNotFoundInModule Text [Text] -- this one's weird. there's not really one place in the source that triggers it. come back to it later
+  | LocalTyRefNotFound T.Text P.ModuleName P.SourceInfo -- SI is the instance clause that triggered the tyref lookup
+  | SuperclassCycleDetected [[FQClassName]] -- No sourceinfo, it's not very useful due to the nature of cycles
+  | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance P.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
+  | MalformedTyDef P.ModuleName Exp P.SourceInfo -- SI is the BODY of the exp
+  | BadInstance BasicConditionViolation P.SourceInfo -- SI is the source of the rule that triggered the violation. This might be weird
   deriving stock (Show, Eq, Generic)
 
 instance Pretty TypeClassError where
@@ -100,7 +129,7 @@ instance Pretty TypeClassError where
         <+> "in module"
         <+> pretty mn
         <+> "but it isn't there!"
-    LocalTyRefNotFound txt mn ->
+    LocalTyRefNotFound txt mn _ ->
       "Error: Expected to find a type definition for a type named"
         <+> pretty txt
         <+> "in module"
@@ -114,7 +143,7 @@ instance Pretty TypeClassError where
               . map (hcat . punctuate " => " . map pretty)
               $ crs
           )
-    FailedToSolveConstraints mn cs i ->
+    FailedToSolveConstraints mn cs i _ ->
       "Error: Could not derive instance:"
         <+> pointies (pretty i)
           <> line
@@ -127,13 +156,13 @@ instance Pretty TypeClassError where
           <> line
           <> line
           <> indent 2 (vcat $ map pretty cs)
-    MalformedTyDef mn xp ->
+    MalformedTyDef mn xp _ ->
       "Error: Encountered malformed type definition:"
         <> line
         <> indent 2 (pretty xp)
         <> line
         <> indent 2 ("in module" <+> pretty mn)
-    BadInstance bcv -> pretty bcv
+    BadInstance bcv _ -> pretty bcv
 
 data BasicConditionViolation
   = TyConInContext Instance (Constraint Pat)
@@ -173,12 +202,12 @@ all the type variables are distinct.
 3. The instance declarations must not overlap.
 -}
 
-checkInstance :: Rule Pat -> Either TypeClassError ()
-checkInstance rule@(C cls hd :<= constraints) =
+checkInstance :: P.SourceInfo -> Rule Pat -> Either TypeClassError ()
+checkInstance si rule@(C cls hd :<= constraints) =
   case traverse cond1 constraints of
     Left e -> Left e
     Right _ -> case hd of
-      VarP _ -> Left . BadInstance $ OnlyTyVarsInHead rule (C cls hd)
+      VarP _ -> Left $ BadInstance (OnlyTyVarsInHead rule (C cls hd)) si
       -- NOTE: THIS ASSUMES THAT EVERYTHING HAS BEEN KIND-CHECKED AND
       --       THAT NO TYVARS HAVE KIND (* -> *). If every tyvar
       --       is of kind * and we have no MPTCs then the
@@ -189,17 +218,17 @@ checkInstance rule@(C cls hd :<= constraints) =
     cond1 :: Constraint Pat -> Either TypeClassError ()
     cond1 cst@(C _ p) = case p of
       VarP _ -> Right ()
-      _ -> Left . BadInstance $ TyConInContext rule cst
+      _ -> Left $ BadInstance (TyConInContext rule cst) si
 
 {- This contains:
      - Everything needed to validate instances (in the form needed to do so)
      - Everything needed for codegen (modulo sourceInfo)
 -}
 data ModuleBuilder = ModuleBuilder
-  { mbTyDefs :: M.Map T.Text Exp -- sourceInfo needs to be in here somehow (these are all local refs)
-  , mbInstances :: Instances -- instances to be generated
+  { mbTyDefs :: M.Map T.Text (Tagged Exp) -- sourceInfo needs to be in here somehow (these are all local refs)
+  , mbInstances :: S.Set (Tagged Instance) -- instances to be generated
   , mbClasses :: Classes -- classes to be generated
-  , mbScope :: Instances -- Instances to use as rules when checking instance clauses in the module
+  , mbScope :: S.Set Instance -- Instances to use as rules when checking instance clauses in the module
   }
   deriving stock (Show, Eq, Generic)
 
@@ -207,7 +236,7 @@ instance Pretty ModuleBuilder where
   pretty (ModuleBuilder defs insts clss scop) =
     vcat
       [ "Type Defs:" <+> nest 2 (prettyList $ M.elems defs)
-      , "Instances:" <+> nest 2 (prettyList $ S.toList insts)
+      , "Instances:" <+> nest 2 (prettyList . S.toList $ insts)
       , "Classes:" <+> nest 2 (prettyList $ S.toList clss)
       , "Scope:" <+> nest 2 (prettyList $ S.toList scop)
       ]
@@ -276,29 +305,27 @@ buildClasses cis = foldM go M.empty (concat $ M.elems cis)
 
 type Instances = S.Set Instance
 
-getInstances :: M.Map FQClassName Class -> P.ModuleName -> [P.InstanceClause] -> Either TypeClassError Instances
-getInstances ctable mn = foldM go S.empty
+getInstance :: M.Map FQClassName Class -> P.ModuleName -> P.InstanceClause -> Either TypeClassError (Tagged Instance)
+getInstance ctable mn (P.InstanceClause cn h csts si') = case ctable ^? ix cref of
+  Nothing -> throwError $ UnknownClass cref si'
+  Just cls -> do
+    let p = tyToPat h
+
+    cs <- traverse goConstraint csts
+    let inst = C cls p :<= cs
+    checkInstance si' inst
+    pure $ Tag si' inst
   where
-    go :: S.Set Instance -> P.InstanceClause -> Either TypeClassError Instances
-    go acc (P.InstanceClause cn h csts si') = case ctable ^? ix cref of
-      Nothing -> throwError $ UnknownClass cref si'
-      Just cls -> do
-        let p = tyToPat h
-        cs <- traverse goConstraint csts
-        let inst = C cls p :<= cs
-        checkInstance inst
-        pure $ S.insert inst acc
-      where
-        cref = tyRefToFQClassName (modulename mn) cn
+    cref = tyRefToFQClassName (modulename mn) cn
 
     goConstraint :: P.Constraint -> Either TypeClassError (Constraint Pat)
-    goConstraint (P.Constraint cn arg si') = case ctable ^? ix cref of
-      Nothing -> throwError $ UnknownClass cref si'
+    goConstraint (P.Constraint cnx arg six') = case ctable ^? ix cref of
+      Nothing -> throwError $ UnknownClass crefx six'
       Just cls -> do
         let p = tyToPat arg
         pure $ C cls p
       where
-        cref = tyRefToFQClassName (modulename mn) cn
+        crefx = tyRefToFQClassName (modulename mn) cnx
 
 mkModuleClasses :: P.CompilerInput -> M.Map P.ModuleName [ClassInfo]
 mkModuleClasses (P.CompilerInput ms) = mkClassInfos (M.elems ms)
@@ -309,13 +336,13 @@ This constructs the instances defined in each module (NOT the instances in scope
 mkModuleInstances ::
   P.CompilerInput ->
   M.Map FQClassName Class ->
-  Either TypeClassError (M.Map P.ModuleName Instances)
+  Either TypeClassError (M.Map P.ModuleName (S.Set (Tagged Instance)))
 mkModuleInstances (P.CompilerInput ms) ctable = foldM go M.empty ms
   where
-    go :: M.Map P.ModuleName Instances -> P.Module -> Either TypeClassError (M.Map P.ModuleName Instances)
-    go acc modl = case getInstances ctable (modl ^. #moduleName) (modl ^. #instances) of
+    go :: M.Map P.ModuleName (S.Set (Tagged Instance)) -> P.Module -> Either TypeClassError (M.Map P.ModuleName (S.Set (Tagged Instance)))
+    go acc modl = case traverse (getInstance ctable (modl ^. #moduleName)) (modl ^. #instances) of
       Left e -> Left e
-      Right is -> Right $ M.insert (modl ^. #moduleName) is acc
+      Right is -> Right $ M.insert (modl ^. #moduleName) (S.fromList is) acc
 
 moduleMap :: P.CompilerInput -> M.Map P.ModuleName P.Module
 moduleMap (P.CompilerInput ms) = foldl' (\acc m -> M.insert (m ^. #moduleName) m acc) M.empty ms
@@ -326,12 +353,12 @@ for a given module.
 -}
 moduleScope ::
   M.Map P.ModuleName P.Module ->
-  M.Map P.ModuleName Instances ->
+  M.Map P.ModuleName (S.Set (Tagged Instance)) ->
   P.ModuleName ->
-  Either TypeClassError (S.Set (Rule Pat))
-moduleScope modls is = go
+  Either TypeClassError (S.Set Instance)
+moduleScope modls is = fmap (S.map unTag) . go
   where
-    go :: P.ModuleName -> Either TypeClassError Instances
+    go :: P.ModuleName -> Either TypeClassError (S.Set (Tagged Instance))
     go mn = case modls ^? (ix mn . #imports) of
       Nothing -> Left $ UnknownModule mn
       Just impts -> mconcat <$> traverse goImport (S.toList impts)
@@ -340,7 +367,7 @@ moduleScope modls is = go
     --       If a user wants an instance rule in scope, they
     --       have to import the module (or something from it)
     --       (this is how it works in haskell/ps/rust)
-    goImport :: P.ModuleName -> Either TypeClassError Instances
+    goImport :: P.ModuleName -> Either TypeClassError (S.Set (Tagged Instance))
     goImport mn = case is ^? ix mn of
       Nothing -> Left $ UnknownModule mn
       Just insts -> Right $ contextualize mn insts
@@ -349,8 +376,8 @@ moduleScope modls is = go
 -- i.e. they might be a RefP Nil (Name t), which indicates a local reference,
 -- but should be a RefP (ModuleName ...) (Name t) in the scope of the
 -- module that imports them
-contextualize :: P.ModuleName -> Instances -> Instances
-contextualize mn = S.map (fmap go)
+contextualize :: P.ModuleName -> S.Set (Tagged Instance) -> S.Set (Tagged Instance)
+contextualize mn = S.map (fmap (fmap go))
   where
     go :: Pat -> Pat
     go (RefP NilP t) = RefP (LitP . ModuleName $ modulename mn) t
@@ -383,7 +410,7 @@ mkBuilders ci = do
 
     go ::
       M.Map FQClassName Class ->
-      M.Map P.ModuleName Instances ->
+      M.Map P.ModuleName (S.Set (Tagged Instance)) ->
       M.Map P.ModuleName Instances ->
       M.Map P.ModuleName ModuleBuilder ->
       P.ModuleName ->
@@ -398,7 +425,7 @@ mkBuilders ci = do
               ( \accM t ->
                   M.insert
                     (t ^. #tyName . #name)
-                    (defToExp t)
+                    (Tag (t ^. #sourceInfo) $ defToExp t)
                     accM
               )
               M.empty
