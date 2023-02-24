@@ -18,6 +18,11 @@ import Control.Monad.Except (throwError)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ModuleName,
  )
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (
+  BasicConditionViolation (OverlapDetected),
+  Instance,
+  TypeClassError (BadInstance, LocalTyRefNotFound, MalformedTyDef),
+ )
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (DecE), Literal (Opaque), Pat (ConsP, LabelP, LitP, NilP, ProdP, RecP, SumP, VarP), getLocalRefE)
 import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Class,
@@ -26,11 +31,8 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap, inst, solve)
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
-  BasicConditionViolation (OverlapDetected),
-  Instance,
   ModuleBuilder (mbInstances, mbScope, mbTyDefs),
   Tagged (Tag),
-  TypeClassError (BadInstance, LocalTyRefNotFound, MalformedTyDef),
   getTag,
   lookupOr,
   unTag,

@@ -19,12 +19,14 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (
   LocalClassRef (LocalClassRef),
   TyClassRef (ForeignCI, LocalCI),
  )
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (
+  Instance,
+  TypeClassError (FailedToSolveConstraints),
+ )
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (spaced, (<//>))
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
-  Instance,
   ModuleBuilder (mbInstances),
   Tagged,
-  TypeClassError (FailedToSolveConstraints),
   checkInstance,
   getTag,
   mkBuilders,

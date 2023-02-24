@@ -122,6 +122,7 @@ library
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Compat
+    LambdaBuffers.Compiler.TypeClassCheck.Errors
     LambdaBuffers.Compiler.TypeClassCheck.Pat
     LambdaBuffers.Compiler.TypeClassCheck.Pretty
     LambdaBuffers.Compiler.TypeClassCheck.Rules

@@ -12,6 +12,11 @@ import Data.Set qualified as S
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck)
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (
+  BasicConditionViolation (OverlapDetected, TyConInContext),
+  Instance,
+  TypeClassError (BadInstance),
+ )
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, DecE, LitE, NilE, RefE),
   ExpressionLike (nil, (*:), (*=)),
@@ -27,11 +32,8 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Rule ((:<=)),
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
-  BasicConditionViolation (OverlapDetected, TyConInContext),
-  Instance,
   ModuleBuilder (ModuleBuilder, mbClasses, mbInstances, mbScope, mbTyDefs),
   Tagged (Tag),
-  TypeClassError (BadInstance),
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Validate (_X)
 import Test.Tasty (TestTree, testGroup)
