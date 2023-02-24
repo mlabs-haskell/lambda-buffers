@@ -10,7 +10,7 @@ module LambdaBuffers.Codegen.Haskell (
 
 import Control.Lens (makeLenses, view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Except (Except, runExcept)
+import Control.Monad.Except (runExcept)
 import Control.Monad.RWS (MonadReader (local), MonadWriter (tell))
 import Control.Monad.RWS.Class (asks)
 import Control.Monad.Reader (ReaderT (runReaderT))
@@ -41,7 +41,12 @@ data PrintConfig = PrintConfig
 
 makeLenses 'PrintConfig
 
-data PrintCtx = ModuleCtx | TyDefCtx TyDef | InstanceClauseCtx ModuleName deriving stock (Eq, Ord, Show)
+data PrintCtx
+  = ModuleCtx
+  | TyDefCtx TyDef
+  | InstanceClauseCtx ModuleName
+  deriving stock (Eq, Ord, Show)
+
 type PrintRead = (PrintConfig, PrintCtx)
 
 type PrintWrite = [PrintCommand]
@@ -55,11 +60,10 @@ type PrintErr = String
 
 type MonadPrint m = (MonadWriter PrintWrite m, MonadReader PrintRead m, MonadError PrintErr m)
 
-type PrintM a = ReaderT PrintRead (WriterT PrintWrite (Except PrintErr)) a
-
-runPrint :: PrintM a -> Either PrintErr (a, PrintWrite)
-runPrint p =
-  let p' = runReaderT p (PrintConfig mempty mempty, ModuleCtx)
+runPrint :: Module -> Either PrintErr (HaskModuleName, PrintWrite)
+runPrint m =
+  let p = printModule m
+      p' = runReaderT p (PrintConfig mempty mempty, ModuleCtx)
       p'' = runWriterT p'
       p''' = runExcept p''
    in p'''
@@ -86,14 +90,13 @@ askInstCtx = do
 
 printModule :: MonadPrint m => Module -> m HaskModuleName
 printModule m = do
-  for_ (m ^. #typeDefs) printTyDef
-  for_ (m ^. #classDefs) printClassDef
-  for_ (m ^. #instances) printInstanceClause
+  for_ (m ^. #typeDefs) (\td -> local (\(cfg, _) -> (cfg, TyDefCtx td)) (printTyDef td))
+  for_ (m ^. #classDefs) $ local (\(cfg, _) -> (cfg, ModuleCtx)) . printClassDef
+  for_ (m ^. #instances) $ local (\(cfg, _) -> (cfg, InstanceClauseCtx $ m ^. #moduleName)) . printInstanceClause
   return $ lbModuleNameToHaskModName (m ^. #moduleName)
 
 printTyDef :: MonadPrint m => TyDef -> m ()
-printTyDef td = do
-  local (\(cfg, _) -> (cfg, TyDefCtx td)) (printTyAbs $ td ^. #tyAbs)
+printTyDef td = printTyAbs $ td ^. #tyAbs
 
 printTyAbs :: MonadPrint m => TyAbs -> m ()
 printTyAbs (TyAbs _ (OpaqueI _) _) = do
