@@ -20,6 +20,7 @@ import Test.Utils.Constructors (
   _SourceInfo,
   _TupleI,
   _TyAbs,
+  _TyApp,
   _TyDef,
   _TyName,
   _TyRefILocal,
@@ -53,6 +54,7 @@ tyDef'either =
         ]
     )
 
+-- data F a = Rec F (F a)
 tyDef'recDef :: P.TyDef
 tyDef'recDef =
   _TyDef
@@ -60,7 +62,13 @@ tyDef'recDef =
     ( _TyAbs
         [ ("a", _Type)
         ]
-        [ ("Rec", _TupleI [_TyRefILocal "F"])
+        [
+          ( "Rec"
+          , _TupleI
+              [ _TyApp (_TyRefILocal "F") $
+                  _TyApp (_TyRefILocal "F") (_TyVarI "a")
+              ]
+          )
         ]
     )
 

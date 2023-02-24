@@ -43,7 +43,7 @@ testCheck =
     , kcTestFailing
     , kcTestEither
     , kcTestMaybe'n'Either
-    , kcTestFix
+    , kcTestRec
     ]
 
 trivialKCTest :: TestTree
@@ -86,7 +86,14 @@ testFolds =
     "Test Folds"
     [ testGroup
         "Test Arrow Folds"
-        [testArrowFold0, testArrowFold1, testArrowFold2, testArrowFold3HK, testArrowFold4HK, testArrowFoldHHK, testFoldWithArrowToTypeTotal]
+        [ testArrowFold0
+        , testArrowFold1
+        , testArrowFold2
+        , testArrowFold3HK
+        , testArrowFold4HK
+        , testArrowFoldHHK
+        , testFoldWithArrowToTypeTotal
+        ]
     ]
 
 ty :: Kind

@@ -86,15 +86,15 @@ common common-language
 
 common common-imports
   build-depends:
-    , base  >=4.16
-    , lens  >=5.2
+    , base          >=4.16
+    , data-default  >=0.7
+    , lens          >=5.2
 
 library
   import:          common-language
   import:          common-imports
   build-depends:
     , containers                  >=0.6.5.1
-    , data-default                >=0.7
     , freer-simple                >=1.2
     , generic-arbitrary
     , generic-lens                >=2.2

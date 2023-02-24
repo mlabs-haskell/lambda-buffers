@@ -22,6 +22,7 @@ module Test.Utils.Constructors (
   _LocalRef,
   _LocalRef',
   _ForeignRef',
+  _TyApp,
 ) where
 
 import Control.Lens ((^.))
@@ -29,6 +30,9 @@ import Data.Map qualified as Map
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
+import Proto.Compiler_Fields ()
+
+import Data.Default (def)
 
 _CompilerInput :: [PC.Module] -> PC.CompilerInput
 _CompilerInput ms =
@@ -116,8 +120,14 @@ _Sum cs =
       , sourceInfo = PC.defSourceInfo
       }
 
-_TyApp :: PC.Ty
-_TyApp = PC.TyAppI
+_TyApp :: PC.Ty -> PC.Ty -> PC.Ty
+_TyApp ty1 ty2 =
+  PC.TyAppI $
+    PC.TyApp
+      { PC.tyFunc = ty1
+      , PC.tyArgs = [ty2]
+      , PC.sourceInfo = def
+      }
 
 _TyAbs :: [(Text, PC.KindType)] -> [(Text, PC.Product)] -> PC.TyAbs
 _TyAbs args body =
