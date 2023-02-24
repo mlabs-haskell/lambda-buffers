@@ -12,8 +12,10 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
 import Test.Tasty.QuickCheck (testProperty)
 import Test.Utils.CompilerInput (
+  compilerInput'either,
   compilerInput'incoherent,
   compilerInput'maybe,
+  compilerInput'recDef,
  )
 import Test.Utils.Constructors (_CompilerInput)
 
@@ -34,17 +36,40 @@ test =
 
 testCheck :: TestTree
 testCheck =
-  testGroup "KindChecker Tests" [trivialKCTest, kcTestMaybe, kcTestFailing]
+  testGroup
+    "KindChecker Tests"
+    [ trivialKCTest
+    , kcTestMaybe
+    , kcTestFailing
+    , kcTestEither
+    , kcTestMaybe'n'Either
+    , kcTestFix
+    ]
 
 trivialKCTest :: TestTree
 trivialKCTest =
-  testCase "Empty CompInput should check" $
+  testCase "Empty Compiler Input kind checks." $
     check_ (_CompilerInput []) @?= Right ()
 
 kcTestMaybe :: TestTree
 kcTestMaybe =
-  testCase "Maybe should pass" $
+  testCase "Kind check Maybe." $
     check_ compilerInput'maybe @?= Right ()
+
+kcTestEither :: TestTree
+kcTestEither =
+  testCase "Kind check Either." $
+    check_ compilerInput'either @?= Right ()
+
+kcTestMaybe'n'Either :: TestTree
+kcTestMaybe'n'Either =
+  testCase "Kind check Maybe and Either." $
+    check_ (compilerInput'maybe <> compilerInput'either) @?= Right ()
+
+kcTestRec :: TestTree
+kcTestRec =
+  testCase "Kind check recursive def." $
+    check_ compilerInput'recDef @?= Right ()
 
 kcTestFailing :: TestTree
 kcTestFailing =

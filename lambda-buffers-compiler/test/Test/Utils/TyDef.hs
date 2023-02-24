@@ -7,6 +7,8 @@ module Test.Utils.TyDef (
   tyDef'undefinedLocalTyRef'TyRef,
   tyDef'undefinedForeignTyRef,
   tyDef'undefinedForeignTyRef'TyRef,
+  tyDef'recDef,
+  tyDef'either,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat.Types (Ty (TyVarI))
@@ -35,6 +37,30 @@ tyDef'maybe =
         [("a", _Type)]
         [ ("Nothing", _TupleI [])
         , ("Just", _TupleI [_TyVarI "a"])
+        ]
+    )
+
+tyDef'either :: P.TyDef
+tyDef'either =
+  _TyDef
+    (_TyName "Either")
+    ( _TyAbs
+        [ ("a", _Type)
+        , ("b", _Type)
+        ]
+        [ ("Left", _TupleI [_TyVarI "a"])
+        , ("Right", _TupleI [_TyVarI "b"])
+        ]
+    )
+
+tyDef'recDef :: P.TyDef
+tyDef'recDef =
+  _TyDef
+    (_TyName "F")
+    ( _TyAbs
+        [ ("a", _Type)
+        ]
+        [ ("Rec", _TupleI [_TyRefILocal "F"])
         ]
     )
 

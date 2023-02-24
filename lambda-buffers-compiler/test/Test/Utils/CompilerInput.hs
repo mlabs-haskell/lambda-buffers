@@ -3,16 +3,34 @@ module Test.Utils.CompilerInput (
   compilerInput'maybe,
   compilerInput'undefinedVariable,
   compilerInput'undefinedLocalTyRef,
+  compilerInput'either,
   compilerInput'undefinedForeignTyRef,
+  compilerInput'recDef,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.Constructors (_CompilerInput)
-import Test.Utils.Module (module'incoherent, module'maybe, module'undefinedForeignTyRef, module'undefinedLocalTyRef, module'undefinedVar)
+import Test.Utils.Module (
+  module'either,
+  module'incoherent,
+  module'maybe,
+  module'recDef,
+  module'undefinedForeignTyRef,
+  module'undefinedLocalTyRef,
+  module'undefinedVar,
+ )
 
 -- | Compiler Input containing 1 module with 1 definition - Maybe.
 compilerInput'maybe :: P.CompilerInput
 compilerInput'maybe = _CompilerInput [module'maybe]
+
+-- | Compiler Input containing 1 module with 1 definition - Either.
+compilerInput'either :: P.CompilerInput
+compilerInput'either = _CompilerInput [module'either]
+
+-- | Compiler Input containing 1 module with 1 definition - Either.
+compilerInput'recDef :: P.CompilerInput
+compilerInput'recDef = _CompilerInput [module'recDef]
 
 -- | Contains 2 definitions - 1 wrong one.
 compilerInput'incoherent :: P.CompilerInput
