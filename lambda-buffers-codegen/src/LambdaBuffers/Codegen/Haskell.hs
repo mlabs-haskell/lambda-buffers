@@ -5,12 +5,16 @@ module LambdaBuffers.Codegen.Haskell (
   HaskModuleName (..),
   HaskTyName (..),
   printModule,
+  runPrint,
 ) where
 
 import Control.Lens (makeLenses, view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Except (Except, runExcept)
 import Control.Monad.RWS (MonadReader (local), MonadWriter (tell))
 import Control.Monad.RWS.Class (asks)
+import Control.Monad.Reader (ReaderT (runReaderT))
+import Control.Monad.Writer (WriterT (runWriterT))
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList), for_)
 import Data.Generics.Labels ()
@@ -37,7 +41,7 @@ data PrintConfig = PrintConfig
 
 makeLenses 'PrintConfig
 
-data PrintCtx = TyDefCtx TyDef | InstanceClauseCtx ModuleName deriving stock (Eq, Ord, Show)
+data PrintCtx = ModuleCtx | TyDefCtx TyDef | InstanceClauseCtx ModuleName deriving stock (Eq, Ord, Show)
 type PrintRead = (PrintConfig, PrintCtx)
 
 type PrintWrite = [PrintCommand]
@@ -50,6 +54,15 @@ data PrintCommand
 type PrintErr = String
 
 type MonadPrint m = (MonadWriter PrintWrite m, MonadReader PrintRead m, MonadError PrintErr m)
+
+type PrintM a = ReaderT PrintRead (WriterT PrintWrite (Except PrintErr)) a
+
+runPrint :: PrintM a -> Either PrintErr (a, PrintWrite)
+runPrint p =
+  let p' = runReaderT p (PrintConfig mempty mempty, ModuleCtx)
+      p'' = runWriterT p'
+      p''' = runExcept p''
+   in p'''
 
 askConfig :: MonadReader PrintRead m => m PrintConfig
 askConfig = asks fst
