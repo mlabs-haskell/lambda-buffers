@@ -1,6 +1,13 @@
-module LambdaBuffers.Codegen.Haskell (printTyDef, printSum, CabalPackageName (..), HaskModuleName (..), HaskTyName (..), printModule) where
+module LambdaBuffers.Codegen.Haskell (
+  printTyDef,
+  printSum,
+  CabalPackageName (..),
+  HaskModuleName (..),
+  HaskTyName (..),
+  printModule,
+) where
 
-import Control.Lens (view, (^.))
+import Control.Lens (makeLenses, view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.RWS (MonadReader (local), MonadWriter (tell))
 import Control.Monad.RWS.Class (asks)
@@ -12,23 +19,34 @@ import Data.Map qualified as Map
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Compiler.ProtoCompat.Types (ConstrName (ConstrName), Constructor (Constructor), Field (Field), FieldName (FieldName), ForeignRef (ForeignRef), LocalRef (LocalRef), Module, ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (RecordI, TupleI), Record (Record), Sum (Sum), Tuple (Tuple), Ty (TyAppI, TyRefI, TyVarI), TyAbs (TyAbs), TyApp (TyApp), TyArg (TyArg), TyBody (OpaqueI, SumI), TyDef, TyName (TyName), TyRef (ForeignI, LocalI), TyVar (TyVar), VarName (VarName))
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, squote, surround, (<+>))
+import LambdaBuffers.Compiler.ProtoCompat.Types (ClassDef, ClassName, ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Field (Field), FieldName (FieldName), ForeignRef (ForeignRef), InstanceClause, LocalRef (LocalRef), Module, ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (RecordI, TupleI), Record (Record), Sum (Sum), Tuple (Tuple), Ty (TyAppI, TyRefI, TyVarI), TyAbs (TyAbs), TyApp (TyApp), TyArg (TyArg), TyBody (OpaqueI, SumI), TyClassRef (ForeignCI, LocalCI), TyDef, TyName (TyName), TyRef (ForeignI, LocalI), TyVar (TyVar), VarName (VarName))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, surround, vsep, (<+>))
 
-newtype CabalPackageName = MkCabalPackageName Text
-newtype HaskModuleName = MkHaskModuleName Text
-newtype HaskTyName = MkHaskTyName Text
+newtype CabalPackageName = MkCabalPackageName Text deriving stock (Eq, Ord, Show)
+newtype HaskModuleName = MkHaskModuleName Text deriving stock (Eq, Ord, Show)
+newtype HaskTyName = MkHaskTyName Text deriving stock (Eq, Ord, Show)
+newtype HaskClassName = MkHaskClassName Text deriving stock (Eq, Ord, Show)
+newtype HaskFunctionName = MkHaskFunctionName Text deriving stock (Eq, Ord, Show)
 type QualifiedHaskTyRef = (CabalPackageName, HaskModuleName, HaskTyName)
 
-newtype PrintConfig = PrintConfig
+data PrintConfig = PrintConfig
   { _opaques :: Map TyName QualifiedHaskTyRef
+  , _classes :: Map (ModuleName, ClassName) (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
   }
+  deriving stock (Eq, Ord, Show)
 
-newtype PrintCtx = TyDefCtx TyDef
+makeLenses 'PrintConfig
+
+data PrintCtx = TyDefCtx TyDef | InstanceClauseCtx ModuleName deriving stock (Eq, Ord, Show)
 type PrintRead = (PrintConfig, PrintCtx)
 
 type PrintWrite = [PrintCommand]
-data PrintCommand = AddTyDef (Doc ()) | AddImport QualifiedHaskTyRef | AddTyExport HaskTyName
+data PrintCommand
+  = AddTyDef (Doc ())
+  | AddTyImport QualifiedHaskTyRef
+  | AddTyExport HaskTyName
+  | AddClassImport (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
+
 type PrintErr = String
 
 type MonadPrint m = (MonadWriter PrintWrite m, MonadReader PrintRead m, MonadError PrintErr m)
@@ -39,15 +57,25 @@ askConfig = asks fst
 askCtx :: MonadReader PrintRead m => m PrintCtx
 askCtx = asks snd
 
-askTyDef :: MonadReader PrintRead m => m TyDef
-askTyDef = do
+askTyDefCtx :: MonadPrint m => m TyDef
+askTyDefCtx = do
   ctx <- askCtx
   case ctx of
     TyDefCtx td -> return td
+    other -> throwError $ "Internal error, wanted TyDefCtx got " <> show other
+
+askInstCtx :: MonadPrint m => m ModuleName
+askInstCtx = do
+  ctx <- askCtx
+  case ctx of
+    InstanceClauseCtx mn -> return mn
+    other -> throwError $ "Internal error, wanted InstanceClauseCtx got " <> show other
 
 printModule :: MonadPrint m => Module -> m HaskModuleName
 printModule m = do
   for_ (m ^. #typeDefs) printTyDef
+  for_ (m ^. #classDefs) printClassDef
+  for_ (m ^. #instances) printInstanceClause
   return $ lbModuleNameToHaskModName (m ^. #moduleName)
 
 printTyDef :: MonadPrint m => TyDef -> m ()
@@ -56,18 +84,18 @@ printTyDef td = do
 
 printTyAbs :: MonadPrint m => TyAbs -> m ()
 printTyAbs (TyAbs _ (OpaqueI _) _) = do
-  PrintConfig cfg <- askConfig
-  tn <- view #tyName <$> askTyDef
-  qhsRef@(_, _, hsTyName) <- case Map.lookup tn cfg of
+  cfg <- askConfig
+  tn <- view #tyName <$> askTyDefCtx
+  qhsRef@(_, _, hsTyName) <- case Map.lookup tn (cfg ^. opaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured" <> show tn
     Just qhsRef -> return qhsRef
   tell
     [ AddTyExport hsTyName
-    , AddImport qhsRef
+    , AddTyImport qhsRef
     ]
 printTyAbs (TyAbs args (SumI s) _) = do
   sumDoc <- printSum s
-  td <- askTyDef
+  td <- askTyDefCtx
   let argsDoc = sep (printTyArg <$> toList args) -- FIXME(bladyjoker): OMap on Constructors
       tdDoc = group $ printTyName (td ^. #tyName) <+> argsDoc <+> equals <+> sumDoc
   tell
@@ -98,9 +126,9 @@ printCtor (Constructor ctorName prod) = do
  translates to
  data Sum = Sum'Foo Int | Sum'Bar String
 -}
-printCtorName :: (MonadReader PrintRead m) => ConstrName -> m (Doc a)
+printCtorName :: MonadPrint m => ConstrName -> m (Doc a)
 printCtorName (ConstrName n _) = do
-  tn <- view #tyName <$> askTyDef
+  tn <- view #tyName <$> askTyDefCtx
   return $ group $ printTyName tn <> squote <> pretty n
 
 printProd :: MonadPrint m => Product -> m (Doc a)
@@ -128,9 +156,9 @@ printField (Field fn ty) = do
  translates to
  data Rec = MkRec { rec'foo :: Int, rec'bar :: String }
 -}
-printFieldName :: (MonadReader PrintRead m, MonadError PrintErr m) => FieldName -> m (Doc a)
+printFieldName :: MonadPrint m => FieldName -> m (Doc a)
 printFieldName (FieldName n _) = do
-  tn <- view #tyName <$> askTyDef
+  tn <- view #tyName <$> askTyDefCtx
   _ <- case Text.uncons (tn ^. #name) of
     Nothing -> throwError $ "Internal error: received an empty TyName: " <> show tn
     Just (h, t) -> return $ Text.cons (Char.toLower h) t
@@ -150,7 +178,7 @@ printTyApp (TyApp f args _) = do
 printTyRef :: (MonadReader PrintRead m, MonadWriter PrintWrite m) => TyRef -> m (Doc a)
 printTyRef (LocalI (LocalRef tn _)) = return $ group $ printTyName tn
 printTyRef (ForeignI fr@(ForeignRef tn mn _)) = do
-  tell [AddImport (foreignTyRefToHaskImport fr)]
+  tell [AddTyImport (foreignTyRefToHaskImport fr)]
   return $ group $ printModName mn <> dot <> printTyName tn
 
 foreignTyRefToHaskImport :: ForeignRef -> QualifiedHaskTyRef
@@ -177,3 +205,58 @@ printTyName (TyName n _) = pretty n
 
 printModName :: ModuleName -> Doc a
 printModName (ModuleName parts _) = group $ concatWith (surround dot) [pretty p | ModuleNamePart p _ <- parts]
+
+{- Typeclasses -}
+
+{- | Print a ClassDef
+ Checks whether the mapping is configured and doesn't print anything.
+-}
+printClassDef :: MonadPrint m => ClassDef -> m ()
+printClassDef cd = do
+  cfg <- askConfig
+  localModName <- askInstCtx
+  case Map.lookup (localModName, cd ^. #className) (cfg ^. classes) of
+    Nothing -> throwError $ "TODO(bladyjoker): Type class not configured" <> show cd
+    Just _ -> return ()
+
+-- FIXME(bladyjoker): Reformulate InstanceClause into InstanceDef
+-- message InstanceDef {
+--   Constraint head = 1;
+--   repeated Constraint body = 2;
+-- }
+printInstanceClause :: MonadPrint m => InstanceClause -> m (Doc a)
+printInstanceClause ic = do
+  headDoc <- printConstraint (Constraint (ic ^. #classRef) (ic ^. #head) (ic ^. #sourceInfo))
+  cDocs <- for (ic ^. #constraints) printConstraint
+  (_, _, _, fnNs) <- resolveClassRef $ ic ^. #classRef
+  let bodyDoc = if null cDocs then mempty else encloseSep lparen rparen comma cDocs <> space
+      implDoc =
+        if null fnNs
+          then mempty
+          else space <> "where" <> line <> space <> space <> align (vsep (implDoc' <$> fnNs))
+      implDoc' :: HaskFunctionName -> Doc ann
+      implDoc' (MkHaskFunctionName fnN) = pretty fnN <+> equals <+> "error \"not implemented\""
+  return $ "instance" <+> bodyDoc <> headDoc <> implDoc
+
+printConstraint :: MonadPrint m => Constraint -> m (Doc a)
+printConstraint c = do
+  crefDoc <- printClassRef (c ^. #classRef)
+  headDoc <- printTy $ c ^. #argument
+  return $ crefDoc <+> headDoc
+
+printClassRef :: MonadPrint m => TyClassRef -> m (Doc a)
+printClassRef cr = do
+  (_, MkHaskModuleName hmn, MkHaskClassName hcn, _) <- resolveClassRef cr
+  return $ pretty hmn <> dot <> pretty hcn
+
+resolveClassRef :: MonadPrint m => TyClassRef -> m (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
+resolveClassRef cr = do
+  cfg <- askConfig
+  mc <- case cr of
+    LocalCI lcr -> (,lcr ^. #className) <$> askInstCtx
+    ForeignCI fcr -> return (fcr ^. #moduleName, fcr ^. #className)
+  case Map.lookup mc (cfg ^. classes) of
+    Nothing -> throwError $ "TODO(bladyjoker): Failed resolving a ty class reference " <> show cr
+    Just qcr -> do
+      tell [AddClassImport qcr]
+      return qcr
