@@ -91,19 +91,23 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , base                     >=4.16
-    , containers               >=0.6
-    , generic-lens             >=2.2
-    , lambda-buffers-compiler  >=0.1
-    , lens                     >=5.2
-    , mtl                      >=2.2
-    , prettyprinter            >=1.7
-    , text                     >=1.2
+    , base                        >=4.16
+    , containers                  >=0.6
+    , generic-lens                >=2.2
+    , lambda-buffers-compiler     >=0.1
+    , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
+    , mtl                         >=2.2
+    , prettyprinter               >=1.7
+    , proto-lens                  >=0.7
+    , text                        >=1.2
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Codegen
     LambdaBuffers.Codegen.Haskell
+    LambdaBuffers.Codegen.Haskell.Config
+    LambdaBuffers.Codegen.Haskell.Syntax
 
 executable lbg
   import:         common-language

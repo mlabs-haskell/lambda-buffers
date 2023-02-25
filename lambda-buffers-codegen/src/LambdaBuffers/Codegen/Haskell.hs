@@ -1,14 +1,11 @@
 module LambdaBuffers.Codegen.Haskell (
   printTyDef,
   printSum,
-  CabalPackageName (..),
-  HaskModuleName (..),
-  HaskTyName (..),
   printModule,
   runPrint,
 ) where
 
-import Control.Lens (makeLenses, view, (^.))
+import Control.Lens (view, (&), (.~), (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (runExcept)
 import Control.Monad.RWS (MonadReader (local), MonadWriter (tell))
@@ -18,28 +15,19 @@ import Control.Monad.Writer (WriterT (runWriterT))
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList), for_)
 import Data.Generics.Labels ()
-import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Compiler.ProtoCompat.Types (ClassDef, ClassName, ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Field (Field), FieldName (FieldName), ForeignRef (ForeignRef), InstanceClause, LocalRef (LocalRef), Module, ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (RecordI, TupleI), Record (Record), Sum (Sum), Tuple (Tuple), Ty (TyAppI, TyRefI, TyVarI), TyAbs (TyAbs), TyApp (TyApp), TyArg (TyArg), TyBody (OpaqueI, SumI), TyClassRef (ForeignCI, LocalCI), TyDef, TyName (TyName), TyRef (ForeignI, LocalI), TyVar (TyVar), VarName (VarName))
+import LambdaBuffers.Codegen.Haskell.Config (Config (MkConfig), classes, opaques)
+import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Compiler.ProtoCompat (CompilerInput, runFromProto)
+import LambdaBuffers.Compiler.ProtoCompat.Types (ClassDef, ClassName (ClassName), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Field (Field), FieldName (FieldName), ForeignRef (ForeignRef), InstanceClause, LocalRef (LocalRef), Module, ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (RecordI, TupleI), Record (Record), Sum (Sum), Tuple (Tuple), Ty (TyAppI, TyRefI, TyVarI), TyAbs (TyAbs), TyApp (TyApp), TyArg (TyArg), TyBody (OpaqueI, SumI), TyClassRef (ForeignCI, LocalCI), TyDef, TyName (TyName), TyRef (ForeignI, LocalI), TyVar (TyVar), VarName (VarName))
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, surround, vsep, (<+>))
-
-newtype CabalPackageName = MkCabalPackageName Text deriving stock (Eq, Ord, Show)
-newtype HaskModuleName = MkHaskModuleName Text deriving stock (Eq, Ord, Show)
-newtype HaskTyName = MkHaskTyName Text deriving stock (Eq, Ord, Show)
-newtype HaskClassName = MkHaskClassName Text deriving stock (Eq, Ord, Show)
-newtype HaskFunctionName = MkHaskFunctionName Text deriving stock (Eq, Ord, Show)
-type QualifiedHaskTyRef = (CabalPackageName, HaskModuleName, HaskTyName)
-
-data PrintConfig = PrintConfig
-  { _opaques :: Map TyName QualifiedHaskTyRef
-  , _classes :: Map (ModuleName, ClassName) (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
-  }
-  deriving stock (Eq, Ord, Show)
-
-makeLenses 'PrintConfig
+import Proto.Compiler qualified as P
+import Proto.Compiler_Fields qualified as P
 
 data PrintCtx
   = ModuleCtx
@@ -47,28 +35,30 @@ data PrintCtx
   | InstanceClauseCtx ModuleName
   deriving stock (Eq, Ord, Show)
 
-type PrintRead = (PrintConfig, PrintCtx)
+type PrintRead = (Config, PrintCtx)
 
 type PrintWrite = [PrintCommand]
 data PrintCommand
   = AddTyDef (Doc ())
-  | AddTyImport QualifiedHaskTyRef
-  | AddTyExport HaskTyName
-  | AddClassImport (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
+  | AddTyImport (H.CabalPackageName, H.ModuleName, H.TyName)
+  | AddTyExport H.TyName
+  | AddClassImport (H.CabalPackageName, H.ModuleName, H.ClassName, [H.FunctionName])
+  | AddInstanceDef (Doc ())
+  deriving stock (Show)
 
 type PrintErr = String
 
 type MonadPrint m = (MonadWriter PrintWrite m, MonadReader PrintRead m, MonadError PrintErr m)
 
-runPrint :: Module -> Either PrintErr (HaskModuleName, PrintWrite)
-runPrint m =
+runPrint :: Config -> Module -> Either PrintErr (H.ModuleName, PrintWrite)
+runPrint cfg m =
   let p = printModule m
-      p' = runReaderT p (PrintConfig mempty mempty, ModuleCtx)
+      p' = runReaderT p (cfg, ModuleCtx)
       p'' = runWriterT p'
       p''' = runExcept p''
    in p'''
 
-askConfig :: MonadReader PrintRead m => m PrintConfig
+askConfig :: MonadReader PrintRead m => m Config
 askConfig = asks fst
 
 askCtx :: MonadReader PrintRead m => m PrintCtx
@@ -88,10 +78,10 @@ askInstCtx = do
     InstanceClauseCtx mn -> return mn
     other -> throwError $ "Internal error, wanted InstanceClauseCtx got " <> show other
 
-printModule :: MonadPrint m => Module -> m HaskModuleName
+printModule :: MonadPrint m => Module -> m H.ModuleName
 printModule m = do
   for_ (m ^. #typeDefs) (\td -> local (\(cfg, _) -> (cfg, TyDefCtx td)) (printTyDef td))
-  for_ (m ^. #classDefs) $ local (\(cfg, _) -> (cfg, ModuleCtx)) . printClassDef
+  for_ (m ^. #classDefs) $ local (\(cfg, _) -> (cfg, InstanceClauseCtx $ m ^. #moduleName)) . printClassDef
   for_ (m ^. #instances) $ local (\(cfg, _) -> (cfg, InstanceClauseCtx $ m ^. #moduleName)) . printInstanceClause
   return $ lbModuleNameToHaskModName (m ^. #moduleName)
 
@@ -113,9 +103,9 @@ printTyAbs (TyAbs args (SumI s) _) = do
   sumDoc <- printSum s
   td <- askTyDefCtx
   let argsDoc = sep (printTyArg <$> toList args) -- FIXME(bladyjoker): OMap on Constructors
-      tdDoc = group $ printTyName (td ^. #tyName) <+> argsDoc <+> equals <+> sumDoc
+      tdDoc = group $ "data" <+> printTyName (td ^. #tyName) <+> argsDoc <+> equals <+> sumDoc
   tell
-    [ AddTyExport (MkHaskTyName $ td ^. #tyName . #name)
+    [ AddTyExport (H.MkTyName $ td ^. #tyName . #name)
     , AddTyDef tdDoc
     ]
   where
@@ -197,18 +187,18 @@ printTyRef (ForeignI fr@(ForeignRef tn mn _)) = do
   tell [AddTyImport (foreignTyRefToHaskImport fr)]
   return $ group $ printModName mn <> dot <> printTyName tn
 
-foreignTyRefToHaskImport :: ForeignRef -> QualifiedHaskTyRef
+foreignTyRefToHaskImport :: ForeignRef -> (H.CabalPackageName, H.ModuleName, H.TyName)
 foreignTyRefToHaskImport fr =
   ( lbModuleNameToCabalPackageName $ fr ^. #moduleName
   , lbModuleNameToHaskModName $ fr ^. #moduleName
-  , MkHaskTyName $ fr ^. #tyName . #name
+  , H.MkTyName $ fr ^. #tyName . #name
   )
 
-lbModuleNameToHaskModName :: ModuleName -> HaskModuleName
-lbModuleNameToHaskModName mn = MkHaskModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
+lbModuleNameToHaskModName :: ModuleName -> H.ModuleName
+lbModuleNameToHaskModName mn = H.MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
 
-lbModuleNameToCabalPackageName :: ModuleName -> CabalPackageName
-lbModuleNameToCabalPackageName mn = MkCabalPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
+lbModuleNameToCabalPackageName :: ModuleName -> H.CabalPackageName
+lbModuleNameToCabalPackageName mn = H.MkCabalPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
 
 printTyVar :: TyVar -> Doc a
 printTyVar (TyVar vn _) = printVarName vn
@@ -240,7 +230,7 @@ printClassDef cd = do
 --   Constraint head = 1;
 --   repeated Constraint body = 2;
 -- }
-printInstanceClause :: MonadPrint m => InstanceClause -> m (Doc a)
+printInstanceClause :: MonadPrint m => InstanceClause -> m ()
 printInstanceClause ic = do
   headDoc <- printConstraint (Constraint (ic ^. #classRef) (ic ^. #head) (ic ^. #sourceInfo))
   cDocs <- for (ic ^. #constraints) printConstraint
@@ -250,9 +240,9 @@ printInstanceClause ic = do
         if null fnNs
           then mempty
           else space <> "where" <> line <> space <> space <> align (vsep (implDoc' <$> fnNs))
-      implDoc' :: HaskFunctionName -> Doc ann
-      implDoc' (MkHaskFunctionName fnN) = pretty fnN <+> equals <+> "error \"not implemented\""
-  return $ "instance" <+> bodyDoc <> headDoc <> implDoc
+      implDoc' :: H.FunctionName -> Doc ann
+      implDoc' (H.MkFunctionName fnN) = pretty fnN <+> equals <+> "error \"not implemented\""
+  tell [AddInstanceDef $ "instance" <+> bodyDoc <> headDoc <> implDoc]
 
 printConstraint :: MonadPrint m => Constraint -> m (Doc a)
 printConstraint c = do
@@ -262,10 +252,10 @@ printConstraint c = do
 
 printClassRef :: MonadPrint m => TyClassRef -> m (Doc a)
 printClassRef cr = do
-  (_, MkHaskModuleName hmn, MkHaskClassName hcn, _) <- resolveClassRef cr
+  (_, H.MkModuleName hmn, H.MkClassName hcn, _) <- resolveClassRef cr
   return $ pretty hmn <> dot <> pretty hcn
 
-resolveClassRef :: MonadPrint m => TyClassRef -> m (CabalPackageName, HaskModuleName, HaskClassName, [HaskFunctionName])
+resolveClassRef :: MonadPrint m => TyClassRef -> m (H.CabalPackageName, H.ModuleName, H.ClassName, [H.FunctionName])
 resolveClassRef cr = do
   cfg <- askConfig
   mc <- case cr of
@@ -276,3 +266,83 @@ resolveClassRef cr = do
     Just qcr -> do
       tell [AddClassImport qcr]
       return qcr
+
+testCompInp :: Either P.CompilerError CompilerInput
+testCompInp =
+  runFromProto $
+    defMessage
+      & P.modules
+        .~ [ defMessage
+              & P.moduleName . P.parts .~ [defMessage & P.name .~ "TestMod"]
+              & P.typeDefs
+                .~ [ defMessage
+                      & P.tyName . P.name .~ "Int8"
+                      & P.tyAbs . P.tyBody . P.opaque .~ defMessage
+                   , defMessage
+                      & P.tyName . P.name .~ "Set"
+                      & P.tyAbs . P.tyArgs .~ [mkArg "a"]
+                      & P.tyAbs . P.tyBody . P.opaque .~ defMessage
+                   , defMessage
+                      & P.tyName . P.name .~ "Maybe"
+                      & P.tyAbs . P.tyArgs .~ [mkArg "a"]
+                      & P.tyAbs . P.tyBody . P.sum . P.constructors
+                        .~ [ defMessage
+                              & P.constrName . P.name .~ "Nothing"
+                              & P.product . P.ntuple . P.fields .~ []
+                           , defMessage
+                              & P.constrName . P.name .~ "Just"
+                              & P.product . P.ntuple . P.fields .~ [mkTyVar "a"]
+                           ]
+                   , defMessage
+                      & P.tyName . P.name .~ "Either"
+                      & P.tyAbs . P.tyArgs .~ [mkArg "a", mkArg "b"]
+                      & P.tyAbs . P.tyBody . P.sum . P.constructors
+                        .~ [ defMessage
+                              & P.constrName . P.name .~ "Left"
+                              & P.product . P.ntuple . P.fields .~ [mkTyVar "a"]
+                           , defMessage
+                              & P.constrName . P.name .~ "Right"
+                              & P.product . P.ntuple . P.fields .~ [mkTyVar "b"]
+                           ]
+                   ]
+              & P.classDefs
+                .~ [ defMessage
+                      & P.className . P.name .~ "Eq"
+                      & P.classArgs .~ [mkArg "a"]
+                   , defMessage
+                      & P.className . P.name .~ "Ord"
+                      & P.classArgs .~ [mkArg "a"]
+                   ]
+              & P.instances
+                .~ [ defMessage
+                      & P.classRef . P.localClassRef . P.className . P.name .~ "Eq"
+                      & P.args
+                        .~ [ defMessage
+                              & P.tyApp . P.tyFunc . P.tyRef . P.localTyRef . P.tyName . P.name .~ "Maybe"
+                              & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
+                           ]
+                   ]
+           ]
+  where
+    mkArg :: Text -> P.TyArg
+    mkArg vn =
+      defMessage
+        & P.argName . P.name .~ vn
+        & P.argKind . P.kindRef .~ P.Kind'KIND_REF_TYPE
+
+    mkTyVar :: Text -> P.Ty
+    mkTyVar vn = defMessage & P.tyVar . P.varName . P.name .~ vn
+
+testConfig :: Config
+testConfig =
+  MkConfig
+    ( Map.fromList
+        [ (TyName "Int8" PC.defSourceInfo, (H.MkCabalPackageName "base", H.MkModuleName "Data.Int", H.MkTyName "Int8"))
+        , (TyName "Set" PC.defSourceInfo, (H.MkCabalPackageName "containers", H.MkModuleName "Data.Set", H.MkTyName "Set"))
+        ]
+    )
+    ( Map.fromList
+        [ ((ModuleName [ModuleNamePart "TestMod" PC.defSourceInfo] PC.defSourceInfo, ClassName "Eq" PC.defSourceInfo), (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Eq", [H.MkFunctionName "(==)"]))
+        , ((ModuleName [ModuleNamePart "TestMod" PC.defSourceInfo] PC.defSourceInfo, ClassName "Ord" PC.defSourceInfo), (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Ord", [H.MkFunctionName "compare"]))
+        ]
+    )
