@@ -125,12 +125,13 @@ printTyAbs :: MonadPrint m => TyAbs -> m ()
 printTyAbs (TyAbs _ (OpaqueI _) _) = do
   cfg <- askConfig
   tn <- view #tyName <$> askTyDefCtx
-  qhsRef@(_, _, hsTyName) <- case Map.lookup tn (cfg ^. opaques) of
+  qhsRef@(_, H.MkModuleName hsMn, H.MkTyName hsTn) <- case Map.lookup tn (cfg ^. opaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured" <> show tn
     Just qhsRef -> return qhsRef
   tell
-    [ AddTyExport hsTyName
+    [ AddTyExport (H.MkTyName $ tn ^. #name)
     , AddTyImport qhsRef
+    , AddTyDef $ "type" <+> printTyName tn <+> equals <+> pretty hsMn <> dot <> pretty hsTn
     ]
 printTyAbs (TyAbs args (SumI s) _) = do
   sumDoc <- printSum s
@@ -309,7 +310,7 @@ testCompInp =
               & P.moduleName . P.parts .~ [defMessage & P.name .~ "TestMod"]
               & P.typeDefs
                 .~ [ defMessage
-                      & P.tyName . P.name .~ "Int8"
+                      & P.tyName . P.name .~ "I8"
                       & P.tyAbs . P.tyBody . P.opaque .~ defMessage
                    , defMessage
                       & P.tyName . P.name .~ "Set"
@@ -370,7 +371,7 @@ testConfig :: Config
 testConfig =
   MkConfig
     ( Map.fromList
-        [ (TyName "Int8" PC.defSourceInfo, (H.MkCabalPackageName "base", H.MkModuleName "Data.Int", H.MkTyName "Int8"))
+        [ (TyName "I8" PC.defSourceInfo, (H.MkCabalPackageName "base", H.MkModuleName "Data.Int", H.MkTyName "Int8"))
         , (TyName "Set" PC.defSourceInfo, (H.MkCabalPackageName "containers", H.MkModuleName "Data.Set", H.MkTyName "Set"))
         ]
     )
