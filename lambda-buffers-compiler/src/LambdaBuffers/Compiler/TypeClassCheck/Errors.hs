@@ -43,7 +43,7 @@ data TypeClassError
   | UnknownModule P.ModuleName -- internal, no sourceInfo (doesn't make sense)
   | MissingModuleInstances P.ModuleName -- internal, no sourceInfo (doesn't make sense)
   | MissingModuleScope P.ModuleName -- internal, no sourceinfo (doesn't make sense)
-  | ClassNotFoundInModule Text [Text] -- this one's weird. there's not really one place in the source that triggers it. come back to it later
+  | ClassNotFoundInModule Text [Text] -- internal-ish? this one's weird. there's not really one place in the source that triggers it. come back to it later
   | LocalTyRefNotFound T.Text P.ModuleName P.SourceInfo -- SI is the instance clause that triggered the tyref lookup
   | SuperclassCycleDetected [[FQClassName]] -- No sourceinfo, it's not very useful due to the nature of cycles
   | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance P.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)

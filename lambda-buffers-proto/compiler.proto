@@ -633,6 +633,75 @@ message ProtoParseError {
   }
 }
 
+// Non-internal errors that can be thrown during
+// type class checking. Because these errors involve
+// TyClassCheck types, which cannot be converted back into
+// proto messages, the error message is constructed in the
+// TypeClassCheck modules in LambdaBuffers.Compiler
+message TypeClassError {
+  // Error which indicates that a class referred to in an instance
+  // or deriving clause does not exist. (Maybe this should be internal?)
+  message UnknownClassError {
+    string msg = 1;
+    SourceInfo source_info = 2;
+  }
+
+  // Error which indicates that the TyDef referred to by a TyRef cannot be found
+  message LocalTyRefNotFoundError {
+    string msg = 1;
+    // SourceInfo points to the clause that triggered the tyref lookup
+    SourceInfo source_info = 2;
+  }
+
+  // Error which indicates a cycle of superclasses. SourceInfo
+  // isn't particularly meaningful here - we could include the SourceInfo
+  // for each class in the cycle, but given the large amount of work
+  // required to define a LB class, this should be more than adequate
+  message SuperclassCycleError {
+    string msg  = 1;
+  }
+
+  // Error that indicates a constraint cannot be solved with
+  // the in-scope set of instance rules.
+  message FailedToSolveConstraintError {
+    string msg = 1;
+    // SourceInfo points to the clause that triggered the subgoal failure
+    // (The failure could potentially be a structural rule, so pointing
+    // to the clause that triggered the exception is the best we can do)
+    SourceInfo source_info = 2;
+  }
+
+  // Error that indicates the body of a tydef is malformed in some way.
+  // Quasi-internal; indicates that something went wrong converting from
+  // a TyDef to a Pat or Exp, and cannot be ameliorated by the user.
+  // (I am putting it here because it has a meaningful SourceInfo)
+  message MalformedTyDefError {
+    string msg = 1;
+    // SourceInfo points at the body of the malformed type.
+    SourceInfo source_info = 2;
+  }
+
+  // Error that indicates an instance does not conform to one of the three
+  // basic conditions for instance validity. See the NOTE for `checkInstance`
+  // in LambdaBuffers.Compiler.TypeClassCheck.Utils. These conditions are all
+  // very straightforward and the message thoroughly explains what went wrong
+  message BadInstanceError {
+    string msg = 1;
+    // Points at the instance that triggered the violation
+    SourceInfo source_info = 2;
+  }
+
+  oneof typeclass_error {
+    UnknownClassError unknown_class = 1;
+    LocalTyRefNotFoundError ref_not_found = 2;
+    SuperclassCycleError superclass_cycle = 3;
+    FailedToSolveConstraintError failed_to_solve_constraint = 4;
+    MalformedTyDefError malformed_ty_def = 5;
+    BadInstanceError bad_instance = 6;
+  }
+
+}
+
 // Kind checking errors.
 message KindCheckError {
 
