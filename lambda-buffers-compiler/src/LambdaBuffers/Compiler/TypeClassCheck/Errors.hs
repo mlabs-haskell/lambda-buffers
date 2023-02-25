@@ -2,6 +2,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Errors (
   type Instance,
   TypeClassError (UnknownClass, UnknownModule, MissingModuleInstances, MissingModuleScope, ClassNotFoundInModule, LocalTyRefNotFound, SuperclassCycleDetected, FailedToSolveConstraints, MalformedTyDef, BadInstance),
   BasicConditionViolation (TyConInContext, OverlapDetected, OnlyTyVarsInHead),
+  tcErrToProto,
 ) where
 
 import GHC.Generics (Generic)
@@ -15,7 +16,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
  )
 
 import Data.Text (Text)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC (
   ModuleName,
   SourceInfo,
  )
@@ -25,8 +26,10 @@ import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
   Pretty (pretty),
+  defaultLayoutOptions,
   hcat,
   indent,
+  layoutPretty,
   line,
   nest,
   punctuate,
@@ -34,21 +37,29 @@ import Prettyprinter (
   (<+>),
  )
 
+import Control.Lens.Lens ((&))
+import Control.Lens.Operators ((.~))
+import Data.ProtoLens (defMessage)
+import LambdaBuffers.Compiler.ProtoCompat.FromProto (toProto)
+import Prettyprinter.Render.Text (renderStrict)
+import Proto.Compiler qualified as P
+import Proto.Compiler_Fields qualified as P
+
 type Instance = Rule Pat
 
 {- Some of these are perfunctory & used to keep functions total.
 -}
 data TypeClassError
-  = UnknownClass FQClassName P.SourceInfo -- this might need split into two, investigate further
-  | UnknownModule P.ModuleName -- internal, no sourceInfo (doesn't make sense)
-  | MissingModuleInstances P.ModuleName -- internal, no sourceInfo (doesn't make sense)
-  | MissingModuleScope P.ModuleName -- internal, no sourceinfo (doesn't make sense)
+  = UnknownClass FQClassName PC.SourceInfo -- this might need split into two, investigate further
+  | UnknownModule PC.ModuleName -- internal, no sourceInfo (doesn't make sense)
+  | MissingModuleInstances PC.ModuleName -- internal, no sourceInfo (doesn't make sense)
+  | MissingModuleScope PC.ModuleName -- internal, no sourceinfo (doesn't make sense)
   | ClassNotFoundInModule Text [Text] -- internal-ish? this one's weird. there's not really one place in the source that triggers it. come back to it later
-  | LocalTyRefNotFound T.Text P.ModuleName P.SourceInfo -- SI is the instance clause that triggered the tyref lookup
+  | LocalTyRefNotFound T.Text PC.ModuleName PC.SourceInfo -- SI is the instance clause that triggered the tyref lookup
   | SuperclassCycleDetected [[FQClassName]] -- No sourceinfo, it's not very useful due to the nature of cycles
-  | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance P.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
-  | MalformedTyDef P.ModuleName Exp P.SourceInfo -- SI is the BODY of the exp
-  | BadInstance BasicConditionViolation P.SourceInfo -- SI is the source of the rule that triggered the violation. This might be weird
+  | FailedToSolveConstraints PC.ModuleName [Constraint Exp] Instance PC.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
+  | MalformedTyDef PC.ModuleName Exp PC.SourceInfo -- SI is the BODY of the exp
+  | BadInstance BasicConditionViolation PC.SourceInfo -- SI is the source of the rule that triggered the violation. This might be weird
   deriving stock (Show, Eq, Generic)
 
 instance Pretty TypeClassError where
@@ -127,3 +138,55 @@ instance Pretty BasicConditionViolation where
         <+> pretty cst
           <> line
           <> indent 2 (vcat (map pretty rules))
+
+mkMsg :: TypeClassError -> Text
+mkMsg = renderStrict . layoutPretty defaultLayoutOptions . pretty
+
+-- One way conversion; don't think we'll ever need to convert back into Haskell types (also: we can't)
+tcErrToProto :: TypeClassError -> Either P.InternalError P.TypeClassError
+tcErrToProto = \case
+  unknownClass@(UnknownClass _ si) ->
+    Right $
+      defMessage
+        & P.unknownClass
+          .~ ( defMessage
+                & P.msg .~ mkMsg unknownClass
+                & P.sourceInfo .~ toProto si
+             )
+  refNotFound@(LocalTyRefNotFound _ _ si) ->
+    Right $
+      defMessage
+        & P.refNotFound
+          .~ ( defMessage
+                & P.msg .~ mkMsg refNotFound
+                & P.sourceInfo .~ toProto si
+             )
+  scCycles@(SuperclassCycleDetected _) ->
+    Right $
+      defMessage
+        & P.superclassCycle .~ (defMessage & P.msg .~ mkMsg scCycles)
+  failedToSolve@(FailedToSolveConstraints _ _ _ si) ->
+    Right $
+      defMessage
+        & P.failedToSolveConstraint
+          .~ ( defMessage
+                & P.msg .~ mkMsg failedToSolve
+                & P.sourceInfo .~ toProto si
+             )
+  malformedDef@(MalformedTyDef _ _ si) ->
+    Right $
+      defMessage
+        & P.malformedTyDef
+          .~ ( defMessage
+                & P.msg .~ mkMsg malformedDef
+                & P.sourceInfo .~ toProto si
+             )
+  badInst@(BadInstance _ si) ->
+    Right $
+      defMessage
+        & P.malformedTyDef
+          .~ ( defMessage
+                & P.msg .~ mkMsg badInst
+                & P.sourceInfo .~ toProto si
+             )
+  internal -> Left $ defMessage & P.msg .~ mkMsg internal
