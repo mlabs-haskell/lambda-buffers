@@ -17,6 +17,7 @@ import Data.Foldable (Foldable (toList), for_)
 import Data.Generics.Labels ()
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
@@ -50,13 +51,45 @@ type PrintErr = String
 
 type MonadPrint m = (MonadWriter PrintWrite m, MonadReader PrintRead m, MonadError PrintErr m)
 
-runPrint :: Config -> Module -> Either PrintErr (H.ModuleName, PrintWrite)
+runPrint :: Config -> Module -> Either PrintErr (Doc ())
 runPrint cfg m =
   let p = printModule m
       p' = runReaderT p (cfg, ModuleCtx)
       p'' = runWriterT p'
       p''' = runExcept p''
-   in p'''
+   in uncurry printAll <$> p'''
+  where
+    printHeader :: H.ModuleName -> [PrintCommand] -> Doc ()
+    printHeader (H.MkModuleName mn) cs =
+      let typeExports = Set.fromList [tn | AddTyExport (H.MkTyName tn) <- cs]
+          typeExportsDoc = encloseSep lparen rparen comma (pretty <$> toList typeExports)
+       in "module" <+> pretty mn <+> typeExportsDoc <+> "where"
+
+    printImports :: [PrintCommand] -> Doc ()
+    printImports cs =
+      let typeImports = Map.unionsWith Set.union [Map.singleton (c, mn) (Set.singleton tn) | AddTyImport (c, mn, tn) <- cs]
+          typeImportsDocs = (\((_, H.MkModuleName mn), tns) -> "import qualified" <+> pretty mn <+> encloseSep lparen rparen comma ((\(H.MkTyName tn) -> pretty tn) <$> toList tns)) <$> Map.toList typeImports
+          typeImportsDoc = vsep typeImportsDocs
+       in typeImportsDoc
+
+    printTyDefs :: [PrintCommand] -> Doc ()
+    printTyDefs cs = vsep [d | AddTyDef d <- cs]
+
+    printInstanceDefs :: [PrintCommand] -> Doc ()
+    printInstanceDefs cs = vsep [d | AddInstanceDef d <- cs]
+
+    printAll :: H.ModuleName -> [PrintCommand] -> Doc ()
+    printAll mn cs =
+      vsep
+        [ printHeader mn cs
+        , line
+        , printImports cs
+        , line
+        , printTyDefs cs
+        , line
+        , printInstanceDefs cs
+        , line
+        ]
 
 askConfig :: MonadReader PrintRead m => m Config
 askConfig = asks fst
