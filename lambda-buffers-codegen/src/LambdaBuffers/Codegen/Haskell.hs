@@ -250,6 +250,7 @@ printModName (ModuleName parts _) = group $ concatWith (surround dot) [pretty p 
 
 {- | Print a ClassDef
  Checks whether the mapping is configured and doesn't print anything.
+ TODO(bladyjoker): Do we need to import all the superclasses?
 -}
 printClassDef :: MonadPrint m => ClassDef -> m ()
 printClassDef cd = do

@@ -107,6 +107,7 @@ library
     LambdaBuffers.Codegen
     LambdaBuffers.Codegen.Haskell
     LambdaBuffers.Codegen.Haskell.Config
+    LambdaBuffers.Codegen.Haskell.Eq
     LambdaBuffers.Codegen.Haskell.Syntax
 
 executable lbg
