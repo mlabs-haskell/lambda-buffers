@@ -1,13 +1,13 @@
 module LambdaBuffers.Compiler.ProtoCompat.FromProto (
   runFromProto,
   toProto,
+  stripSourceInfo,
 ) where
 
 import Control.Lens ((&), (.~), (^.))
 import Control.Monad.Except (Except, MonadError (throwError), runExcept)
 import Control.Monad.Reader (MonadReader (ask, local), ReaderT (runReaderT))
 import Data.Foldable (foldlM, toList)
-import Data.Generics.Labels ()
 import Data.Generics.Product (HasField)
 import Data.Kind (Type)
 import Data.Map (Map)

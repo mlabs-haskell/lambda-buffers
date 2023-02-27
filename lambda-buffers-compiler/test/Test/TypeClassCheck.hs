@@ -2,15 +2,12 @@
 
 module Test.TypeClassCheck (test) where
 
-import Control.Lens ((.~), (^.))
-import Data.Foldable (Foldable (toList))
+import Control.Lens ((.~))
 import Data.Function ((&))
-import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat (runFromProto)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
-import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, LabelE, LitE, NilE, RefE),
   Literal (Name, TyVar),
@@ -27,6 +24,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Rules qualified as R
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap), solve)
+import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as Superclass
 import LambdaBuffers.Compiler.TypeClassCheck.Validate (
   mkStructuralRules,
   _L,
@@ -36,7 +34,6 @@ import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (
 import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, kindRef, localClassRef, moduleName, modules, name, parts, supers, tyVar, varName)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
-import Test.Utils.Constructors (_ModuleName)
 
 test :: TestTree
 test =
@@ -56,17 +53,13 @@ noCycleDetected :: TestTree
 noCycleDetected =
   testCase "No cycle detected" $ do
     nocycles' <- fromProto' nocycles
-    case Map.lookup (_ModuleName ["ModuleWithNoClassCycles"]) (nocycles' ^. #modules) of
-      Nothing -> assertFailure "Failed lookup to ModuleWithClassNoClassCycles"
-      Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= []
+    Superclass.runCheck nocycles' @?= Right ()
 
 cycleDetected :: TestTree
 cycleDetected =
   testCase "Cycle detected" $ do
     cycles' <- fromProto' cycles
-    case Map.lookup (_ModuleName ["ModuleWithClassCycles"]) (cycles' ^. #modules) of
-      Nothing -> assertFailure "Failed lookup to ModuleWithClassCycles"
-      Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= [["Bar", "Foo", "Bop", "Bar"], ["Bop", "Bar", "Foo", "Bop"], ["Foo", "Bop", "Bar", "Foo"]]
+    Superclass.runCheck cycles' @?= Left []
 
 fromProto' :: CompilerInput -> IO ProtoCompat.CompilerInput
 fromProto' compInp =
@@ -105,6 +98,9 @@ cycles =
               .~ [ mkclass "Foo" ["Bar", "Baz", "Beep"]
                  , mkclass "Bar" ["Bip", "Bop"]
                  , mkclass "Bop" ["Foo"]
+                 , mkclass "Bip" []
+                 , mkclass "Baz" []
+                 , mkclass "Beep" ["Beep"]
                  ]
          ]
 
@@ -119,6 +115,7 @@ nocycles =
                  , mkclass "Applicative" ["Functor"]
                  , mkclass "Monad" ["Applicative"]
                  , mkclass "Traversable" ["Foldable", "Functor"]
+                 , mkclass "Foldable" []
                  ]
          ]
 
