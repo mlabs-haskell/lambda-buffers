@@ -84,7 +84,7 @@ instance Pretty info => Pretty (TyRef info) where
   pretty (TyRef mayModAl tn _info) = maybe "" (\al -> pretty al <> ".") mayModAl <> pretty tn
 
 instance Pretty info => Pretty (Ty info) where
-  pretty (TyVar vn _info) = pretty vn
+  pretty (TyVar vn) = pretty vn
   pretty (TyRef' tr _info) = pretty tr
   pretty (TyApp tyF tyAs _info) = group $ encloseSep lparen rparen space (pretty <$> tyF : tyAs)
 

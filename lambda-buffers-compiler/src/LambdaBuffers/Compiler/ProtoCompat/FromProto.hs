@@ -209,13 +209,11 @@ instance IsMessage P.VarName PC.VarName where
 instance IsMessage P.TyVar PC.TyVar where
   fromProto tv = do
     vn <- fromProto $ tv ^. P.varName
-    si <- fromProto $ tv ^. P.sourceInfo
-    pure $ PC.TyVar vn si
+    pure $ PC.TyVar vn
 
-  toProto (PC.TyVar vn si) =
+  toProto (PC.TyVar vn) =
     defMessage
       & P.varName .~ toProto vn
-      & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyApp PC.TyApp where
   fromProto ta = do

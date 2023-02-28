@@ -42,7 +42,7 @@ data Import info = Import
   deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data Ty info
-  = TyVar (VarName info) info
+  = TyVar (VarName info)
   | TyApp (Ty info) [Ty info] info
   | TyRef' (TyRef info) info
   deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)

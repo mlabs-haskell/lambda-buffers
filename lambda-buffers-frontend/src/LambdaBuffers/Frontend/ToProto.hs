@@ -92,11 +92,10 @@ toProduct (Product tys info) = do
       & ntuple . sourceInfo .~ toSourceInfo info
 
 toTy :: Ty SourceInfo -> ToProto P.Ty
-toTy (TyVar vn info) =
+toTy (TyVar vn) =
   return $
     defMessage
       & tyVar . varName .~ toVarName vn
-      & tyVar . sourceInfo .~ toSourceInfo info
 toTy (TyApp ty tys info) = do
   ty' <- toTy ty
   tys' <- for tys toTy
