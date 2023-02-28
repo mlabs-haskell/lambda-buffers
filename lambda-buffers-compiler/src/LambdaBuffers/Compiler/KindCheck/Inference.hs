@@ -16,6 +16,7 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   Constraint (..),
 ) where
 
+import Control.Lens (view, (%~), (&), (.~), (^.))
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
@@ -23,21 +24,26 @@ import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 import Data.Bifunctor (Bifunctor (second))
 import Data.Foldable (foldrM)
-import LambdaBuffers.Compiler.KindCheck.Derivation (Context (Context), Derivation (Abstraction, Application, Axiom, Implication), Judgement (Judgement), addContext, context, d'kind, d'type)
-import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KType, KVar, (:->:)))
-import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Constructor, Opaque, Product, Sum, Var, VoidT), Variable (QualifiedTyRef, TyVar))
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
-import Prettyprinter (Pretty (pretty), (<+>))
-
-import Data.Text qualified as T
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-
-import Control.Lens (view, (%~), (&), (.~), (^.))
 import Data.Map qualified as M
-
-import LambdaBuffers.Compiler.ProtoCompat.Types (
-  localRef2ForeignRef,
+import Data.Text qualified as T
+import LambdaBuffers.Compiler.KindCheck.Derivation (
+  Context (Context),
+  Derivation (Abstraction, Application, Axiom, Implication),
+  Judgement (Judgement),
+  addContext,
+  context,
+  d'kind,
+  d'type,
  )
+import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KType, KVar, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Type (
+  Type (Abs, App, Constructor, Opaque, Product, Sum, UnitT, Var, VoidT),
+  Variable (QualifiedTyRef, TyVar),
+ )
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
+import LambdaBuffers.Compiler.ProtoCompat.Types (localRef2ForeignRef)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import Prettyprinter (Pretty (pretty), (<+>))
 
 -- | Utility to unify the two.
 getAllContext :: Context -> M.Map (InfoLess Variable) Kind
@@ -132,33 +138,23 @@ derive x = deriveTyAbs x
       pure a
 
     deriveTyAbs :: PC.TyAbs -> Derive Derivation
-    deriveTyAbs tyabs =
+    deriveTyAbs tyabs = do
       case M.toList (tyabs ^. #tyArgs) of
         [] -> deriveTyBody (x ^. #tyBody)
-        a@(n, _) : as -> do
-          vK <- protoKind2Kind =<< getVarAnnotation tyabs n
-          rK <- KVar <$> fresh
+        a@(n, ar) : as -> do
+          let argK = protoKind2Kind (ar ^. #argKind)
+          bodyK <- KVar <$> fresh
           ctx <- ask
 
-          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) vK)
+          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) argK)
           let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
           let restAbs = tyabs & #tyArgs .~ M.fromList as
 
           restF <- local (const newContext) $ deriveTyAbs restAbs
 
           let uK = restF ^. d'kind
-          tell [Constraint (rK, uK)]
-          pure $ Abstraction (Judgement ctx (Abs newAbs) (vK :->: rK)) restF
-
-    --  Convert from internal Kind to Proto Kind.
-    protoKind2Kind :: PC.Kind -> Derive Kind
-    protoKind2Kind = \case
-      PC.Kind k -> case k of
-        PC.KindArrow k1 k2 -> (:->:) <$> protoKind2Kind k1 <*> protoKind2Kind k2
-        PC.KindRef PC.KType -> pure KType
-        PC.KindRef PC.KUnspecified -> KVar <$> fresh -- unspecified kinds get inferred and unified
-    getVarAnnotation :: PC.TyAbs -> PC.VarName -> Derive PC.Kind
-    getVarAnnotation tyabs varname = pure $ ((tyabs ^. #tyArgs) M.! varname) ^. #argKind
+          tell [Constraint (bodyK, uK)]
+          pure $ Abstraction (Judgement ctx (Abs newAbs) (argK :->: bodyK)) restF
 
     deriveTyBody :: PC.TyBody -> Derive Derivation
     deriveTyBody = \case
@@ -191,7 +187,7 @@ derive x = deriveTyAbs x
     deriveRecord :: PC.Record -> Derive Derivation
     deriveRecord r = do
       case M.toList (r ^. #fields) of
-        [] -> voidDerivation
+        [] -> unitDerivation
         f : fs -> do
           d1 <- deriveField $ snd f
           d2 <- deriveRecord $ r & #fields .~ M.fromList fs
@@ -240,9 +236,10 @@ derive x = deriveTyAbs x
       foldrM productDerivation voidD ds
 
     voidDerivation :: Derive Derivation
-    voidDerivation = do
-      ctx <- ask
-      pure $ Axiom $ Judgement ctx VoidT KType
+    voidDerivation = (\ctx -> Axiom $ Judgement ctx VoidT KType) <$> ask
+
+    unitDerivation :: Derive Derivation
+    unitDerivation = (\ctx -> Axiom $ Judgement ctx UnitT KType) <$> ask
 
     productDerivation :: Derivation -> Derivation -> Derive Derivation
     productDerivation d1 d2 = do
@@ -380,3 +377,11 @@ substitute s d = case d of
 -- | Fresh startAtom
 startAtom :: Atom
 startAtom = 0
+
+--  Convert from internal Kind to Proto Kind.
+protoKind2Kind :: PC.Kind -> Kind
+protoKind2Kind = \case
+  PC.Kind k -> case k of
+    PC.KindArrow k1 k2 -> protoKind2Kind k1 :->: protoKind2Kind k2
+    PC.KindRef PC.KType -> KType
+    PC.KindRef PC.KUnspecified -> KType -- unspecified kinds get inferred and unified

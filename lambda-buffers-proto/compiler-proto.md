@@ -18,10 +18,11 @@
     - [Kind](#lambdabuffers-compiler-Kind)
     - [Kind.KindArrow](#lambdabuffers-compiler-Kind-KindArrow)
     - [KindCheckError](#lambdabuffers-compiler-KindCheckError)
-    - [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError)
+    - [KindCheckError.CyclicKindError](#lambdabuffers-compiler-KindCheckError-CyclicKindError)
     - [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError)
-    - [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError)
-    - [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError)
+    - [KindCheckError.UnboundTyRefError](#lambdabuffers-compiler-KindCheckError-UnboundTyRefError)
+    - [KindCheckError.UnboundTyVarError](#lambdabuffers-compiler-KindCheckError-UnboundTyVarError)
+    - [KindCheckError.UnificationError](#lambdabuffers-compiler-KindCheckError-UnificationError)
     - [Module](#lambdabuffers-compiler-Module)
     - [ModuleName](#lambdabuffers-compiler-ModuleName)
     - [ModuleNamePart](#lambdabuffers-compiler-ModuleNamePart)
@@ -61,9 +62,9 @@
     - [TyVar](#lambdabuffers-compiler-TyVar)
     - [Tys](#lambdabuffers-compiler-Tys)
     - [VarName](#lambdabuffers-compiler-VarName)
-
+  
     - [Kind.KindRef](#lambdabuffers-compiler-Kind-KindRef)
-
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -185,34 +186,6 @@ Output of the Compiler.
 
 ### CompilerResult
 Compiler Result ~ a successful Compilation Output.
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-CompilerOutput"></a>
-
-### CompilerOutput
-Output of the Compiler.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| compilation_error | [CompilerError](#lambdabuffers-compiler-CompilerError) |  |  |
-| compilation_result | [CompilerResult](#lambdabuffers-compiler-CompilerResult) |  |  |
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-CompilerResult"></a>
-
-### CompilerResult
-Compiler Result ~ a successful Compilation Output.
-
-equivalent of unit.
 
 
 
@@ -348,9 +321,10 @@ Kind checking errors.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| unbound_term_error | [KindCheckError.UnboundTermError](#lambdabuffers-compiler-KindCheckError-UnboundTermError) |  |  |
-| unification_error | [KindCheckError.ImpossibleUnificationError](#lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError) |  |  |
-| recursive_subs_error | [KindCheckError.RecursiveKindError](#lambdabuffers-compiler-KindCheckError-RecursiveKindError) |  |  |
+| unbound_ty_ref_error | [KindCheckError.UnboundTyRefError](#lambdabuffers-compiler-KindCheckError-UnboundTyRefError) |  |  |
+| unbound_ty_var_error | [KindCheckError.UnboundTyVarError](#lambdabuffers-compiler-KindCheckError-UnboundTyVarError) |  |  |
+| unification_error | [KindCheckError.UnificationError](#lambdabuffers-compiler-KindCheckError-UnificationError) |  |  |
+| cyclic_kind_error | [KindCheckError.CyclicKindError](#lambdabuffers-compiler-KindCheckError-CyclicKindError) |  |  |
 | inconsistent_type_error | [KindCheckError.InconsistentTypeError](#lambdabuffers-compiler-KindCheckError-InconsistentTypeError) |  |  |
 
 
@@ -358,24 +332,28 @@ Kind checking errors.
 
 
 
-<a name="lambdabuffers-compiler-KindCheckError-ImpossibleUnificationError"></a>
+<a name="lambdabuffers-compiler-KindCheckError-CyclicKindError"></a>
 
-### KindCheckError.ImpossibleUnificationError
-Unification has failed - type is incorrectly defined. Error reads as
-follows:
-&gt; In ty_name definition an error has occurred when trying to unify kind
-&gt; ty_kind_1 with ty_kind_2.
+### KindCheckError.CyclicKindError
+A cyclic kind was encountered. Infinite kinds like this are not acceptable,
+and we do not support them. We could not construct infinite kind in ty_def.
 
-FIXME(cstml): add source of constraint to the error such that user can see
-where the constraint was generated - therefore where the error precisely
-is.
+As the implementation currently stands such an error is (most likely) not
+representable - therefore not reachable. Such an error would usually occur
+for a term like: λa. a a - in which case the inference would try to unify
+two kinds of the form: m and m -&gt; n - because m appears in both terms -
+the cyclic unification error would be thrown.
+
+In the case of LambdaBuffers - such an error is not (currently) achievable
+as the kind of the variable is given by the context - (i.e. λa : m . a a,
+where m is a kind) therefore the unification would fail with Unification
+Error. Nevertheless - future features might require it.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-| ty_kind_1 | [Kind](#lambdabuffers-compiler-Kind) |  |  |
-| ty_kind_2 | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  |  |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
 
 
 
@@ -385,46 +363,72 @@ is.
 <a name="lambdabuffers-compiler-KindCheckError-InconsistentTypeError"></a>
 
 ### KindCheckError.InconsistentTypeError
-The inferred type differs from the type as defined.
+The actual_kind differs from the expected_kind.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-| inferred_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
-| defined_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  |  |
+| actual_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| expected_kind | [Kind](#lambdabuffers-compiler-Kind) |  |  |
 
 
 
 
 
 
-<a name="lambdabuffers-compiler-KindCheckError-RecursiveKindError"></a>
+<a name="lambdabuffers-compiler-KindCheckError-UnboundTyRefError"></a>
 
-### KindCheckError.RecursiveKindError
-Inifinitely recursive term detected in definition ty_name.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-KindCheckError-UnboundTermError"></a>
-
-### KindCheckError.UnboundTermError
-Error referring to an unbound term. This usually means that the term was
-not defined.
+### KindCheckError.UnboundTyRefError
+Unbound type reference ty_ref detected in term ty_def.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ty_name | [TyName](#lambdabuffers-compiler-TyName) |  |  |
-| var_name | [VarName](#lambdabuffers-compiler-VarName) |  |  |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  |  |
+| ty_ref | [TyRef](#lambdabuffers-compiler-TyRef) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-UnboundTyVarError"></a>
+
+### KindCheckError.UnboundTyVarError
+Unbound variable ty_var detected in term ty_def.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  |  |
+| ty_var | [TyVar](#lambdabuffers-compiler-TyVar) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-KindCheckError-UnificationError"></a>
+
+### KindCheckError.UnificationError
+In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
+with ty_kind_rhs.
+
+FIXME(cstml): Add source of constraint to the error such that user can see
+where the constraint was generated - therefore where the error precisely
+is.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  |  |
+| ty_kind_lhs | [Kind](#lambdabuffers-compiler-Kind) |  |  |
+| ty_kind_rhs | [Kind](#lambdabuffers-compiler-Kind) |  |  |
 
 
 
@@ -1163,7 +1167,6 @@ Type variable
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | var_name | [VarName](#lambdabuffers-compiler-VarName) |  | Variable name. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
 
@@ -1200,7 +1203,7 @@ Type variable name
 
 
 
-
+ 
 
 
 <a name="lambdabuffers-compiler-Kind-KindRef"></a>
@@ -1214,11 +1217,11 @@ A built-in kind.
 | KIND_REF_TYPE | 1 | A `Type` kind (also know as `*` in Haskell) built-in. |
 
 
+ 
 
+ 
 
-
-
-
+ 
 
 
 

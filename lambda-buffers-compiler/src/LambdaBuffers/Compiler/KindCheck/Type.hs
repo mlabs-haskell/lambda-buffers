@@ -15,6 +15,9 @@ import Prettyprinter (Pretty (pretty), viaShow)
 import Test.QuickCheck (Arbitrary)
 import Test.QuickCheck.Arbitrary.Generic (GenericArbitrary (GenericArbitrary))
 
+-- NOTE(cstml): Let's remove the Arbitrary instances and replaces them with
+-- Gens.
+
 data Variable
   = -- | All TyRefs are fully qualified. The context determines if they're local
     -- or not.
