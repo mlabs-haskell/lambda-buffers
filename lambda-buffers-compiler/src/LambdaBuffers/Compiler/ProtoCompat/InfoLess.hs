@@ -71,16 +71,16 @@ newtype InfoLess a = InfoLess {unsafeInfoLess :: a}
  A TypeClass that provides id for types with SourceInfo - where SI is defaulted - therefore ignored. Can only be derived.
 -}
 class Eq a => InfoLessC a where
-  silId :: a -> a
-  default silId :: (Generic a, All2 InfoLessC (Code a)) => a -> a
-  silId = gsilId
+  infoLessId :: a -> a
+  default infoLessId :: (Generic a, All2 InfoLessC (Code a)) => a -> a
+  infoLessId = ginfoLessId
 
 -- | Make InfoLess Datatype.
 mkInfoLess :: InfoLessC a => a -> InfoLess a
-mkInfoLess = InfoLess . silId
+mkInfoLess = InfoLess . infoLessId
 
-gsilId :: (Generic a, All2 InfoLessC (Code a)) => a -> a
-gsilId = to . hcmap (Proxy :: Proxy InfoLessC) (mapII silId) . from
+ginfoLessId :: (Generic a, All2 InfoLessC (Code a)) => a -> a
+ginfoLessId = to . hcmap (Proxy :: Proxy InfoLessC) (mapII infoLessId) . from
 
 -- | Work with Info Less.
 withInfoLess :: InfoLessC a => InfoLess a -> (a -> b) -> b
@@ -91,22 +91,22 @@ withInfoLessF :: forall f {a} {b}. InfoLessC a => InfoLess a -> (a -> f b) -> f 
 withInfoLessF (InfoLess a) f = f . unsafeInfoLess . mkInfoLess $ a
 
 instance InfoLessC a => InfoLessC [a] where
-  silId = fmap silId
+  infoLessId = fmap infoLessId
 
 instance InfoLessC Int where
-  silId = id
+  infoLessId = id
 
 instance InfoLessC Text where
-  silId = id
+  infoLessId = id
 
 instance (Ord k, InfoLessC k, InfoLessC v) => InfoLessC (M.Map k v) where
-  silId = M.fromList . fmap (bimap silId silId) . M.toList
+  infoLessId = M.fromList . fmap (bimap infoLessId infoLessId) . M.toList
 
 instance (Ord a, InfoLessC a) => InfoLessC (S.Set a) where
-  silId = S.fromList . fmap silId . S.toList
+  infoLessId = S.fromList . fmap infoLessId . S.toList
 
 instance InfoLessC SourceInfo where
-  silId = const def
+  infoLessId = const def
 
 instance Default SourceInfo where
   def = defSourceInfo

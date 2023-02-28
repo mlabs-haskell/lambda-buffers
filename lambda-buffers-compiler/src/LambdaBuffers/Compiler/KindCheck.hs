@@ -9,7 +9,7 @@ module LambdaBuffers.Compiler.KindCheck (
   foldWithArrowToType,
 ) where
 
-import Control.Lens (view, (&), (.~), (^.))
+import Control.Lens (Getter, to, view, (&), (.~), (^.))
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, interpret, reinterpret, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
@@ -18,10 +18,11 @@ import Control.Monad.Freer.TH (makeEffect)
 import Data.Default (Default (def))
 import Data.Foldable (Foldable (toList), traverse_)
 import Data.Map qualified as M
-import LambdaBuffers.Compiler.KindCheck.Context (Context, context)
+
+import LambdaBuffers.Compiler.KindCheck.Derivation (Context, context)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)), kind2ProtoKind)
-import LambdaBuffers.Compiler.KindCheck.Variable (Variable (ForeignRef, TyVar))
+import LambdaBuffers.Compiler.KindCheck.Type (Variable (QualifiedTyRef, TyVar))
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
@@ -126,13 +127,13 @@ runKindCheck = interpret $ \case
     handleErr modName td = \case
       I.InferUnboundTermErr uA -> do
         case uA of
-          ForeignRef fr ->
+          QualifiedTyRef fr ->
             if (fr ^. #moduleName) == modName
               then -- We're looking at the local module.
 
                 throwError
                   . PC.CompKindCheckError
-                  $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. PC.foreignRef2LocalRef) modName
+                  $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. foreignRef2LocalRef) modName
               else -- We're looking at a foreign module.
 
                 throwError
@@ -153,6 +154,16 @@ runKindCheck = interpret $ \case
       I.InferImpossibleErr t ->
         throwError $
           PC.InternalError t
+
+    foreignRef2LocalRef :: Getter PC.ForeignRef PC.LocalRef
+    foreignRef2LocalRef =
+      to
+        ( \fr ->
+            PC.LocalRef
+              { tyName = fr ^. #tyName
+              , sourceInfo = fr ^. #sourceInfo
+              }
+        )
 
 --------------------------------------------------------------------------------
 -- Resolvers
@@ -211,7 +222,7 @@ tyDef2NameAndKind tyDef = do
 
   -- InfoLess name - the SourceInfo doesn't matter therefore it is defaulted.
   let name =
-        ForeignRef
+        QualifiedTyRef
           . view (PC.localRef2ForeignRef curModName)
           $ PC.LocalRef (tyDef ^. #tyName) def
 

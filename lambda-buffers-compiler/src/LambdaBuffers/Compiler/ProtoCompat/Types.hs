@@ -6,7 +6,6 @@
 {-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
-  foreignRef2LocalRef,
   localRef2ForeignRef,
   ClassDef (..),
   ClassName (..),
@@ -176,16 +175,6 @@ data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, source
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary ForeignRef
   deriving anyclass (SOP.Generic)
-
-foreignRef2LocalRef :: Getter ForeignRef LocalRef
-foreignRef2LocalRef =
-  to
-    ( \fr ->
-        LocalRef
-          { tyName = fr ^. #tyName
-          , sourceInfo = fr ^. #sourceInfo
-          }
-    )
 
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)

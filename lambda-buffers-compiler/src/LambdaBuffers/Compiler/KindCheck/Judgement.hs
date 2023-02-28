@@ -1,25 +1,20 @@
-module LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement), getJudgement, jType, jKind) where
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 
-import Control.Lens (Lens', lens)
+module LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement), j'type, j'kind, j'ctx) where
+
+import Control.Lens (makeLenses, (^.))
 import LambdaBuffers.Compiler.KindCheck.Context (Context)
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind)
 import LambdaBuffers.Compiler.KindCheck.Type (Type)
 import Prettyprinter (Pretty (pretty), (<+>))
 
-newtype Judgement = Judgement {getJudgement :: (Context, Type, Kind)}
+data Judgement = Judgement
+  { _j'ctx :: Context
+  , _j'type :: Type
+  , _j'kind :: Kind
+  }
   deriving stock (Show, Eq)
-
-jType :: Lens' Judgement Type
-jType = lens from to
-  where
-    from = (\(_, x, _) -> x) . getJudgement
-    to (Judgement (c, _, k)) t = Judgement (c, t, k)
-
-jKind :: Lens' Judgement Kind
-jKind = lens from to
-  where
-    from = (\(_, _, k) -> k) . getJudgement
-    to (Judgement (c, t, _)) k = Judgement (c, t, k)
+makeLenses ''Judgement
 
 instance Pretty Judgement where
-  pretty (Judgement (c, t, k)) = pretty c <> " ⊢ " <> pretty t <+> ":" <+> pretty k
+  pretty j = pretty (j ^. j'ctx) <+> "⊢" <+> pretty (j ^. j'type) <+> ":" <+> pretty (j ^. j'kind)

@@ -1,7 +1,7 @@
-{-# OPTIONS_GHC -Wno-missing-local-signatures #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
--- This pragma^ is needed due to redundant constraint in Getter.
+-- This pragma^ is needed due to redundant constraint in Getters and Eff.
+
 module LambdaBuffers.Compiler.KindCheck.Inference (
   Kind (..),
   Context (..),
@@ -16,36 +16,32 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   Constraint (..),
 ) where
 
-import Data.Bifunctor (Bifunctor (second))
-import Data.Foldable (foldrM)
-
-import LambdaBuffers.Compiler.KindCheck.Context (Context (Context), addContext, context, getAllContext)
-import LambdaBuffers.Compiler.KindCheck.Derivation (Derivation (Abstraction, Application, Axiom, Implication), dTopKind, dType)
-import LambdaBuffers.Compiler.KindCheck.Judgement (Judgement (Judgement))
-import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, KVar, (:->:)), protoKind2Kind)
-import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Constructor, Opaque, Product, Sum, Var, VoidT))
-import LambdaBuffers.Compiler.KindCheck.Variable (Atom, Variable (ForeignRef, TyVar))
-
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (mkInfoLess)
+import Data.Bifunctor (Bifunctor (second))
+import Data.Foldable (foldrM)
+import LambdaBuffers.Compiler.KindCheck.Derivation (Context (Context), Derivation (Abstraction, Application, Axiom, Implication), Judgement (Judgement), addContext, context, d'kind, d'type)
+import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KType, KVar, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Type (Type (Abs, App, Constructor, Opaque, Product, Sum, Var, VoidT), Variable (QualifiedTyRef, TyVar))
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
+import Prettyprinter (Pretty (pretty), (<+>))
 
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-
-import Data.String (fromString)
 import Data.Text qualified as T
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 import Control.Lens (view, (%~), (&), (.~), (^.))
 import Data.Map qualified as M
 
-import LambdaBuffers.Compiler.ProtoCompat (localRef2ForeignRef)
-import Prettyprinter (
-  Pretty (pretty),
-  (<+>),
+import LambdaBuffers.Compiler.ProtoCompat.Types (
+  localRef2ForeignRef,
  )
+
+-- | Utility to unify the two.
+getAllContext :: Context -> M.Map (InfoLess Variable) Kind
+getAllContext c = c ^. context <> c ^. addContext
 
 data InferErr
   = InferUnboundTermErr Variable
@@ -66,7 +62,7 @@ instance Pretty Substitution where
   pretty (Substitution (a, k)) = pretty a <+> "↦" <+> pretty k
 
 newtype DerivationContext = DC
-  { _freshVarStream :: [Atom]
+  { _startAtom :: Atom
   }
 
 type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error InferErr]
@@ -100,7 +96,7 @@ runDerive ctx t k localMod =
   run $
     runError $
       runWriter $
-        evalState (DC atoms) $
+        evalState (DC startAtom) $
           runReader ctx $
             runReader k $
               runReader localMod $
@@ -116,7 +112,7 @@ infer ctx t k localMod = do
   (d, c) <- runDerive (defContext <> ctx) (t ^. #tyAbs) k localMod
   s <- runUnify' c
   let res = foldl (flip substitute) d s
-  pure $ res ^. dTopKind
+  pure $ res ^. d'kind
 
 -- | Default KC Context.
 defContext :: Context
@@ -131,18 +127,17 @@ derive x = deriveTyAbs x
   where
     fresh :: Derive Atom
     fresh = do
-      (DC vs) <- get
-      case vs of
-        a : as -> put (DC as) >> pure a
-        [] -> throwError $ InferImpossibleErr "Reached end of infinite stream."
+      DC a <- get
+      put (DC $ a + 1)
+      pure a
 
     deriveTyAbs :: PC.TyAbs -> Derive Derivation
     deriveTyAbs tyabs =
       case M.toList (tyabs ^. #tyArgs) of
         [] -> deriveTyBody (x ^. #tyBody)
         a@(n, _) : as -> do
-          vK <- protoKind2Kind <$> getVarAnnotation tyabs n
-          freshT <- KVar <$> fresh
+          vK <- protoKind2Kind =<< getVarAnnotation tyabs n
+          rK <- KVar <$> fresh
           ctx <- ask
 
           let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) vK)
@@ -151,10 +146,17 @@ derive x = deriveTyAbs x
 
           restF <- local (const newContext) $ deriveTyAbs restAbs
 
-          let uK = restF ^. dTopKind
-          tell [Constraint (freshT, uK)]
-          pure $ Abstraction (Judgement (ctx, Abs newAbs, vK :->: freshT)) restF
+          let uK = restF ^. d'kind
+          tell [Constraint (rK, uK)]
+          pure $ Abstraction (Judgement ctx (Abs newAbs) (vK :->: rK)) restF
 
+    --  Convert from internal Kind to Proto Kind.
+    protoKind2Kind :: PC.Kind -> Derive Kind
+    protoKind2Kind = \case
+      PC.Kind k -> case k of
+        PC.KindArrow k1 k2 -> (:->:) <$> protoKind2Kind k1 <*> protoKind2Kind k2
+        PC.KindRef PC.KType -> pure KType
+        PC.KindRef PC.KUnspecified -> KVar <$> fresh -- unspecified kinds get inferred and unified
     getVarAnnotation :: PC.TyAbs -> PC.VarName -> Derive PC.Kind
     getVarAnnotation tyabs varname = pure $ ((tyabs ^. #tyArgs) M.! varname) ^. #argKind
 
@@ -162,7 +164,7 @@ derive x = deriveTyAbs x
     deriveTyBody = \case
       PC.OpaqueI si -> do
         ctx <- ask
-        pure $ Axiom $ Judgement (ctx, Opaque si, KType)
+        pure $ Axiom $ Judgement ctx (Opaque si) KType
       PC.SumI s -> deriveSum s
 
     deriveSum :: PC.Sum -> Derive Derivation
@@ -178,14 +180,15 @@ derive x = deriveTyAbs x
     deriveConstructor c = do
       ctx <- ask
       d <- deriveProduct (c ^. #product)
-      tell $ Constraint <$> [(KType, d ^. dTopKind)]
-      pure $ Implication (Judgement (ctx, Constructor c, d ^. dTopKind)) d
+      tell $ Constraint <$> [(KType, d ^. d'kind)]
+      pure $ Implication (Judgement ctx (Constructor c) (d ^. d'kind)) d
 
     deriveProduct :: PC.Product -> Derive Derivation
     deriveProduct = \case
       PC.RecordI r -> deriveRecord r
       PC.TupleI t -> deriveTuple t
 
+    deriveRecord :: PC.Record -> Derive Derivation
     deriveRecord r = do
       case M.toList (r ^. #fields) of
         [] -> voidDerivation
@@ -207,28 +210,28 @@ derive x = deriveTyAbs x
     deriveTyRef = \case
       PC.LocalI r -> do
         localModule <- ask
-        let ty = ForeignRef . view (localRef2ForeignRef localModule) $ r
-        v <- getBinding ty
+        let ty = QualifiedTyRef . view (localRef2ForeignRef localModule) $ r
+        v <- getKind ty
         c <- ask
-        pure . Axiom . Judgement $ (c, Var ty, v)
+        pure . Axiom $ Judgement c (Var ty) v
       PC.ForeignI r -> do
-        let ty = ForeignRef r
-        v <- getBinding ty
+        let ty = QualifiedTyRef r
+        v <- getKind ty
         c <- ask
-        pure . Axiom . Judgement $ (c, Var ty, v)
+        pure . Axiom $ Judgement c (Var ty) v
 
     deriveTyVar :: PC.TyVar -> Derive Derivation
     deriveTyVar tv = do
       let varName = tv ^. #varName
-      v <- getBinding $ TyVar varName
+      v <- getKind $ TyVar varName
       c <- ask
-      pure . Axiom . Judgement $ (c, Var $ TyVar varName, v)
+      pure . Axiom $ Judgement c (Var $ TyVar varName) v
 
     deriveTyApp :: PC.TyApp -> Derive Derivation
     deriveTyApp ap = do
       f <- deriveTy (ap ^. #tyFunc)
       args <- deriveTy `traverse` (ap ^. #tyArgs)
-      applyDerivation $ f : args
+      applyDerivation f args
 
     deriveTuple :: PC.Tuple -> Derive Derivation
     deriveTuple t = do
@@ -239,40 +242,39 @@ derive x = deriveTyAbs x
     voidDerivation :: Derive Derivation
     voidDerivation = do
       ctx <- ask
-      pure $ Axiom $ Judgement (ctx, VoidT, KType)
+      pure $ Axiom $ Judgement ctx VoidT KType
 
     productDerivation :: Derivation -> Derivation -> Derive Derivation
     productDerivation d1 d2 = do
       ctx <- ask
-      let t1 = d1 ^. dType
-      let t2 = d2 ^. dType
-      tell $ Constraint <$> [(d1 ^. dTopKind, KType), (d2 ^. dTopKind, KType)]
-      pure $ Application (Judgement (ctx, Product t1 t2, KType)) d1 d2
+      let t1 = d1 ^. d'type
+      let t2 = d2 ^. d'type
+      tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
+      pure $ Application (Judgement ctx (Product t1 t2) KType) d1 d2
 
     sumDerivation :: Derivation -> Derivation -> Derive Derivation
     sumDerivation d1 d2 = do
       ctx <- ask
-      let t1 = d1 ^. dType
-      let t2 = d2 ^. dType
-      tell $ Constraint <$> [(d1 ^. dTopKind, KType), (d2 ^. dTopKind, KType)]
-      pure $ Application (Judgement (ctx, Sum t1 t2, KType)) d1 d2
+      let t1 = d1 ^. d'type
+      let t2 = d2 ^. d'type
+      tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
+      pure $ Application (Judgement ctx (Sum t1 t2) KType) d1 d2
 
-    applyDerivation :: [Derivation] -> Derive Derivation
-    applyDerivation = \case
-      [] -> error "Impossible"
-      [y] -> pure y
-      d1 : ys -> do
+    applyDerivation :: Derivation -> [Derivation] -> Derive Derivation
+    applyDerivation d1 = \case
+      [] -> pure d1
+      d : ds -> do
         c <- ask
-        d2 <- applyDerivation ys
+        d2 <- applyDerivation d ds
         v <- KVar <$> fresh
-        tell [Constraint ((d2 ^. dTopKind) :->: v, d1 ^. dTopKind)]
-        pure $ Application (Judgement (c, App (d1 ^. dType) (d2 ^. dType), v)) d1 d2
+        tell [Constraint ((d2 ^. d'kind) :->: v, d1 ^. d'kind)]
+        pure $ Application (Judgement c (App (d ^. d'type) (d2 ^. d'type)) v) d1 d2
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
 -}
-getBinding :: Variable -> Derive Kind
-getBinding t = do
+getKind :: Variable -> Derive Kind
+getKind t = do
   ctx <- asks getAllContext
   case ctx M.!? mkInfoLess t of
     Just x -> pure x
@@ -325,7 +327,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
     nope :: forall eff a. (Member (Error InferErr) eff) => Constraint -> Eff eff a
     nope = throwError . InferUnifyTermErr
 
-    appearsErr :: forall eff a. Member (Error InferErr) eff => T.Text -> Kind -> Eff eff a
+    appearsErr :: forall eff a. Member (Error InferErr) eff => Atom -> Kind -> Eff eff a
     appearsErr var ty =
       throwError $
         InferRecursiveSubstitutionErr $
@@ -367,7 +369,7 @@ substitute s d = case d of
   Application j d1 d2 -> Application (applySubsToJudgement s j) (substitute s d1) (substitute s d2)
   Implication j dc -> Implication (applySubsToJudgement s j) (substitute s dc)
   where
-    applySubsToJudgement sub (Judgement (ctx, t, k)) = Judgement (applySubstitutionCtx s ctx, t, applySubstitution sub k)
+    applySubsToJudgement sub (Judgement ctx t k) = Judgement (applySubstitutionCtx s ctx) t (applySubstitution sub k)
 
     applySubstitutionCtx subs c@(Context ctx addCtx) = case M.toList addCtx of
       [] -> c
@@ -375,6 +377,6 @@ substitute s d = case d of
 
 -- FIXME(cstml) not avoiding any clashes
 
--- | Fresh atoms
-atoms :: [Atom]
-atoms = ['1' ..] >>= \y -> ['a' .. 'z'] >>= \x -> pure . fromString $ [x, y]
+-- | Fresh startAtom
+startAtom :: Atom
+startAtom = 0
