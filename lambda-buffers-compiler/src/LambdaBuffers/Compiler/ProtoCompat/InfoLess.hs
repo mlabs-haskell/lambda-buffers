@@ -7,9 +7,11 @@ module LambdaBuffers.Compiler.ProtoCompat.InfoLess (
   withInfoLess,
   withInfoLessF,
   mkInfoLess,
-  InfoLessC,
+  InfoLessC (infoLessId),
 ) where
 
+import Control.Monad (join)
+import Control.Monad.Identity (Identity (Identity))
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.Default (Default (def))
 import Data.Map qualified as M
@@ -66,6 +68,8 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (
 newtype InfoLess a = InfoLess {unsafeInfoLess :: a}
   deriving stock (Show, Eq, Ord)
   deriving stock (Functor, Traversable, Foldable)
+  deriving (Applicative) via Identity
+  deriving (Monad) via Identity
 
 {- | SourceInfo Less ID.
  A TypeClass that provides id for types with SourceInfo - where SI is defaulted - therefore ignored. Can only be derived.
@@ -89,6 +93,9 @@ withInfoLess (InfoLess a) f = f . unsafeInfoLess . mkInfoLess $ a
 -- | Work with Info Less - functor way.
 withInfoLessF :: forall f {a} {b}. InfoLessC a => InfoLess a -> (a -> f b) -> f b
 withInfoLessF (InfoLess a) f = f . unsafeInfoLess . mkInfoLess $ a
+
+instance InfoLessC a => InfoLessC (InfoLess a) where
+  infoLessId = join . mkInfoLess
 
 instance InfoLessC a => InfoLessC [a] where
   infoLessId = fmap infoLessId
