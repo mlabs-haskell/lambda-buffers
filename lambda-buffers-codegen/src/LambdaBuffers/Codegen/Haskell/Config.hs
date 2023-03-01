@@ -10,8 +10,8 @@ type QTyName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.TyName)
 type QClassName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.ClassName)
 
 data Config = MkConfig
-  { _opaques :: Map QTyName (H.CabalPackageName, H.ModuleName, H.TyName)
-  , _classes :: Map QClassName (H.CabalPackageName, H.ModuleName, H.ClassName, [H.FunctionName])
+  { _opaques :: Map QTyName H.QTyName
+  , _classes :: Map QClassName (H.QClassName, [H.FunctionName])
   }
   deriving stock (Eq, Ord, Show)
 
