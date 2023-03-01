@@ -14,7 +14,6 @@ module LambdaBuffers.Extras.TH (
 ) where
 
 import Control.Lens ((^.))
-import Data.Generics.Labels ()
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat.Types (

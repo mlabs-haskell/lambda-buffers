@@ -6,7 +6,6 @@ module LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles, detectSupe
 import Control.Lens.Combinators (view)
 import Control.Lens.Operators ((^.))
 import Control.Monad (void)
-import Data.Generics.Labels ()
 import Data.List (foldl')
 import Data.Map (traverseWithKey)
 import Data.Map qualified as M

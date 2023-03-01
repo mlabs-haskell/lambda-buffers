@@ -52,6 +52,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 ) where
 
 import Control.Exception (Exception)
+import Data.Generics.Labels ()
 import Data.Map (Map)
 import Data.Set (Set)
 import Data.Text (Text)

@@ -10,7 +10,6 @@ module LambdaBuffers.Compiler.TypeClassCheck.Pretty (
 ) where
 
 import Control.Lens.Operators ((^.))
-import Data.Generics.Labels ()
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (

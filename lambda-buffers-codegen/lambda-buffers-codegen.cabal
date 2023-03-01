@@ -93,7 +93,6 @@ library
   build-depends:
     , base                        >=4.16
     , containers                  >=0.6
-    , generic-lens                >=2.2
     , lambda-buffers-compiler     >=0.1
     , lambda-buffers-compiler-pb  >=0.1
     , lens                        >=5.2
@@ -107,9 +106,9 @@ library
     LambdaBuffers.Codegen
     LambdaBuffers.Codegen.Haskell
     LambdaBuffers.Codegen.Haskell.Config
-    LambdaBuffers.Codegen.Haskell.Eq
+    LambdaBuffers.Codegen.Haskell.Print
+    LambdaBuffers.Codegen.Haskell.PrintM
     LambdaBuffers.Codegen.Haskell.Syntax
-    LambdaBuffers.Codegen.Haskell.TyDef
 
 executable lbg
   import:         common-language
@@ -128,7 +127,18 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base   >=4.16
-    , tasty  >=1.4
+    , base                        >=4.16
+    , containers                  >=0.6
+    , lambda-buffers-codegen
+    , lambda-buffers-compiler     >=0.1
+    , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
+    , prettyprinter               >=1.7
+    , proto-lens                  >=0.7
+    , tasty                       >=1.4
+    , tasty-hunit                 >=0.10
+    , text                        >=1.2
 
-  other-modules:  Test.LambdaBuffers.Codegen
+  other-modules:
+    Test.LambdaBuffers.Codegen
+    Test.LambdaBuffers.Codegen.Haskell

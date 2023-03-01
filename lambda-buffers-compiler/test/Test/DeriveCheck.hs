@@ -5,7 +5,6 @@ module Test.DeriveCheck (test) where
 
 import Control.Lens (Prism, _Left, _Right)
 import Control.Lens.Extras (is)
-import Data.Generics.Labels ()
 import Data.Generics.Sum.Constructors (AsConstructor (_Ctor))
 import Data.Map qualified as M
 import Data.Set qualified as S
