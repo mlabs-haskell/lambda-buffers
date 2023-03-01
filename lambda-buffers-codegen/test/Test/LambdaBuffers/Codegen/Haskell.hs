@@ -8,11 +8,12 @@ import Data.Text (Text)
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Haskell.Config (Config (MkConfig))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Compiler.ProtoCompat.Types (ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), TyName (TyName))
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
+import Data.Default (Default (def))
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
 import LambdaBuffers.Codegen.Haskell.PrintM qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
@@ -54,22 +55,22 @@ testConfig =
     ( Map.fromList
         [
           (
-            ( PC.ModuleName [PC.ModuleNamePart "TestMod" PC.defSourceInfo] PC.defSourceInfo
-            , PC.TyName "I8" PC.defSourceInfo
+            ( PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart "TestMod" def] def
+            , PC.mkInfoLess $ PC.TyName "I8" def
             )
           , (H.MkCabalPackageName "base", H.MkModuleName "Data.Int", H.MkTyName "Int8")
           )
         ,
           (
-            ( PC.ModuleName [PC.ModuleNamePart "TestMod2" PC.defSourceInfo] PC.defSourceInfo
-            , PC.TyName "I16" PC.defSourceInfo
+            ( PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart "TestMod2" def] def
+            , PC.mkInfoLess $ PC.TyName "I16" def
             )
           , (H.MkCabalPackageName "base", H.MkModuleName "Data.Int", H.MkTyName "Int16")
           )
         ,
           (
-            ( ModuleName [ModuleNamePart "TestMod" PC.defSourceInfo] PC.defSourceInfo
-            , TyName "Set" PC.defSourceInfo
+            ( PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart "TestMod" def] def
+            , PC.mkInfoLess $ PC.TyName "Set" def
             )
           , (H.MkCabalPackageName "containers", H.MkModuleName "Data.Set", H.MkTyName "Set")
           )

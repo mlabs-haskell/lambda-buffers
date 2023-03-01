@@ -3,11 +3,11 @@ module LambdaBuffers.Codegen.Haskell.Config (QTyName, QClassName, Config (..), o
 import Control.Lens (makeLenses)
 import Data.Map (Map)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
--- FIXME(bladyjoker): Must be InfoLess.
-type QTyName = (PC.ModuleName, PC.TyName)
-type QClassName = (PC.ModuleName, PC.ClassName)
+type QTyName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.TyName)
+type QClassName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.ClassName)
 
 data Config = MkConfig
   { _opaques :: Map QTyName (H.CabalPackageName, H.ModuleName, H.TyName)

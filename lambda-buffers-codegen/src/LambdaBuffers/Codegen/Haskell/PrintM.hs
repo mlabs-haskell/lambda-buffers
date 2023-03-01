@@ -19,6 +19,7 @@ import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Config (Config, opaques)
 import LambdaBuffers.Codegen.Haskell.Print qualified as Print
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types (Module, TyAbs (TyAbs), TyBody (OpaqueI, SumI), TyDef)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc)
@@ -102,8 +103,7 @@ goTyAbs :: MonadPrint m => TyAbs -> m ()
 goTyAbs (TyAbs _ (OpaqueI _) _) = do
   cfg <- askConfig
   (currentModuleName, currentTyDef) <- askTyDefCtx
-  -- FIXME(bladyjoker): Must be infoLess.
-  qhTyRef <- case Map.lookup (currentModuleName, currentTyDef ^. #tyName) (cfg ^. opaques) of
+  qhTyRef <- case Map.lookup (PC.mkInfoLess currentModuleName, PC.mkInfoLess $ currentTyDef ^. #tyName) (cfg ^. opaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured" <> show (currentTyDef ^. #tyName)
     Just qhsTyRef -> return qhsTyRef
   exportTy (H.fromLbTyName (currentTyDef ^. #tyName))

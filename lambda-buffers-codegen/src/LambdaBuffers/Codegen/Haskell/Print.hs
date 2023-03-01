@@ -9,6 +9,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, surround, vsep, (<+>))
 
@@ -61,13 +62,13 @@ type Maybe = Prelude.Maybe
 printTyDefOpaque :: PC.TyName -> (H.CabalPackageName, H.ModuleName, H.TyName) -> Doc a
 printTyDefOpaque tyN hsTyRef = "type" <+> printTyName tyN <+> equals <+> printHsTyRef hsTyRef
 
-printHsTyRef :: (H.CabalPackageName, H.ModuleName, H.TyName) -> Doc a
+printHsTyRef :: H.QTyName -> Doc a
 printHsTyRef (_, H.MkModuleName hsModName, H.MkTyName hsTyName) = pretty hsModName <> dot <> pretty hsTyName
 
 -- | Used to distinguish from Opaques.
 newtype NonOpaqueTyBody = Sum PC.Sum
 
-printTyDefNonOpaque :: PC.TyName -> Map PC.VarName PC.TyArg -> NonOpaqueTyBody -> Doc a
+printTyDefNonOpaque :: PC.TyName -> Map (PC.InfoLess PC.VarName) PC.TyArg -> NonOpaqueTyBody -> Doc a
 printTyDefNonOpaque tyN args body =
   let argsDoc = sep (printTyArg <$> toList args) -- FIXME(bladyjoker): OMap on Constructors
       (keyword, bodyDoc) = printTyBody tyN body
