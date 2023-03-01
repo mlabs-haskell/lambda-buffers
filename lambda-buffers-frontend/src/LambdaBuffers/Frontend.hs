@@ -160,7 +160,7 @@ checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
     checkConstructor (Constructor _ (Product tys _) _) = for tys checkTy
 
     checkTy (TyApp tyF tyAs _) = checkTy tyF >> for_ tyAs checkTy
-    checkTy (TyVar _ _) = return ()
+    checkTy (TyVar _) = return ()
     checkTy (TyRef' tyR _) =
       if Map.member (strip tyR) scope
         then return ()

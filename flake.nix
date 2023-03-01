@@ -67,7 +67,7 @@
           };
 
           index-state = "2022-12-01T00:00:00Z";
-          compiler-nix-name = "ghc924";
+          compiler-nix-name = "ghc925";
 
           # Common build abstraction for the components.
           buildAbstraction = { import-location, additional ? { } }:
