@@ -39,7 +39,7 @@ printModule modName tyExports tyImports tyDefDocs =
     ]
 
 printTyVar :: PC.TyVar -> Doc a
-printTyVar (PC.TyVar vn _) = printVarName vn
+printTyVar (PC.TyVar vn) = printVarName vn
 
 printVarName :: PC.VarName -> Doc a
 printVarName (PC.VarName n _) = pretty n
