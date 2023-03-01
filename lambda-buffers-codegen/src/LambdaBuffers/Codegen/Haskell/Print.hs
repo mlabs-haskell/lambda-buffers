@@ -3,7 +3,6 @@ module LambdaBuffers.Codegen.Haskell.Print (printTyDefOpaque, printTyDefNonOpaqu
 import Control.Lens ((^.))
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList))
-import Data.Map qualified as Map
 import Data.Map.Ordered (OMap)
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -20,8 +19,8 @@ printModuleHeader (H.MkModuleName mn) exports =
 
 printImports :: Set H.QTyName -> Doc a
 printImports imports =
-  let grouped = Map.unionsWith Set.union [Map.singleton (c, mn) (Set.singleton tn) | (c, mn, tn) <- toList imports]
-      typeImportsDocs = (\((_, H.MkModuleName mn), tns) -> "import qualified" <+> pretty mn <+> encloseSep lparen rparen comma ((\(H.MkTyName tn) -> pretty tn) <$> toList tns)) <$> Map.toList grouped
+  let grouped = Set.fromList [(c, mn) | (c, mn, _tn) <- toList imports]
+      typeImportsDocs = (\(_, H.MkModuleName mn) -> "import qualified" <+> pretty mn) <$> toList grouped
       typeImportsDoc = vsep typeImportsDocs
    in typeImportsDoc
 
