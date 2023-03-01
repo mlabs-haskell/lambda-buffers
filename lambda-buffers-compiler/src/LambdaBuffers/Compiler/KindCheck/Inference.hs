@@ -141,12 +141,12 @@ derive x = deriveTyAbs x
     deriveTyAbs tyabs = do
       case M.toList (tyabs ^. #tyArgs) of
         [] -> deriveTyBody (x ^. #tyBody)
-        a@(n, ar) : as -> do
+        a@(_, ar) : as -> do
           let argK = protoKind2Kind (ar ^. #argKind)
           bodyK <- KVar <$> fresh
           ctx <- ask
 
-          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) argK)
+          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar (ar ^. #argName))) argK)
           let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
           let restAbs = tyabs & #tyArgs .~ M.fromList as
 

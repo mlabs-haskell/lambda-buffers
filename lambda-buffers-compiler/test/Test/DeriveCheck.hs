@@ -5,10 +5,12 @@ module Test.DeriveCheck (test) where
 
 import Control.Lens (Prism, _Left, _Right)
 import Control.Lens.Extras (is)
+import Data.Default (Default (def))
 import Data.Generics.Sum.Constructors (AsConstructor (_Ctor))
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck)
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
@@ -167,12 +169,10 @@ tyVarP :: Text -> Pat
 tyVarP t = LitP (TyVar t)
 
 runTest :: ModuleBuilder -> Either TypeClassError ()
-runTest = runDeriveCheck (moduleName1 "")
+runTest = runDeriveCheck (PC.mkInfoLess $ moduleName1 "")
   where
     moduleName1 :: Text -> PC.ModuleName
-    moduleName1 nm = PC.ModuleName [PC.ModuleNamePart nm si] si
-    si = PC.SourceInfo "" pos pos
-    pos = PC.SourcePosition 0 0
+    moduleName1 nm = PC.ModuleName [PC.ModuleNamePart nm def] def
 
 {- Test 1: Basic test. Should pass
 module A where

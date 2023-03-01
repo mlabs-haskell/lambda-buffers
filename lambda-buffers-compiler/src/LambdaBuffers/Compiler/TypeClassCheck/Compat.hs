@@ -52,13 +52,13 @@ defToExp (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecE (LitE . Name $ tName ^
   P.SumI constrs -> toSumE . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitE Opaque
   where
-    collectFreeTyVars :: [P.VarName] -> Exp
-    collectFreeTyVars = foldr (\x acc -> LitE (TyVar (x ^. #name)) *: acc) nil
+    collectFreeTyVars :: [P.InfoLess P.VarName] -> Exp
+    collectFreeTyVars = foldr (\x' acc -> P.withInfoLess x' (\x -> LitE (TyVar (x ^. #name)) *: acc)) nil
 
     vars = collectFreeTyVars (M.keys tArgs)
 
-    goConstr :: P.ConstrName -> P.Product -> Exp
-    goConstr (P.ConstrName n _) p = LitE (Name n) *= goProduct p
+    goConstr :: P.InfoLess P.ConstrName -> P.Product -> Exp
+    goConstr cn' p = P.withInfoLess cn' (\cn -> LitE (Name $ cn ^. #name) *= goProduct p)
 
     goProduct :: P.Product -> Exp
     goProduct = \case
@@ -92,13 +92,13 @@ defToPat (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecP (LitP . Name $ tName ^
   P.SumI constrs -> toSumP . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitP Opaque
   where
-    collectFreeTyVars :: [P.VarName] -> Pat
-    collectFreeTyVars = foldr (\x acc -> LitP (TyVar (x ^. #name)) *: acc) nil
+    collectFreeTyVars :: [P.InfoLess P.VarName] -> Pat
+    collectFreeTyVars = foldr (\x' acc -> P.withInfoLess x' (\x -> LitP (TyVar (x ^. #name)) *: acc)) nil
 
     vars = collectFreeTyVars (M.keys tArgs)
 
-    goConstr :: P.ConstrName -> P.Product -> Pat
-    goConstr (P.ConstrName n _) p = LitP (Name n) *= goProduct p
+    goConstr :: P.InfoLess P.ConstrName -> P.Product -> Pat
+    goConstr cn' p = P.withInfoLess cn' (\cn -> LitP (Name $ cn ^. #name) *= goProduct p)
 
     goProduct :: P.Product -> Pat
     goProduct = \case

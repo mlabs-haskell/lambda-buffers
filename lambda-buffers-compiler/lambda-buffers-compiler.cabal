@@ -101,6 +101,7 @@ library
     , generics-sop                >=0.5
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
+    , ordered-containers
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7

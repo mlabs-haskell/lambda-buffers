@@ -48,19 +48,19 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyRef (..),
   TyVar (..),
   VarName (..),
-  defSourceInfo,
   InferenceErr,
   KindCheckErr,
 ) where
 
 import Control.Exception (Exception)
 import Control.Lens (Getter, to, (^.))
+import Data.Default (Default (def))
 import Data.Generics.Labels ()
 import Data.Map (Map)
-import Data.Set (Set)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Generics.SOP qualified as SOP
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, InfoLessC (infoLessId))
 import Test.QuickCheck (Gen, oneof, resize, sized)
 import Test.QuickCheck.Arbitrary.Generic (Arbitrary (arbitrary), GenericArbitrary (GenericArbitrary))
 import Test.QuickCheck.Instances.Semigroup ()
@@ -76,8 +76,8 @@ data SourcePosition = SourcePosition {column :: Int, row :: Int}
   deriving (Arbitrary) via GenericArbitrary SourcePosition
   deriving anyclass (SOP.Generic)
 
-defSourceInfo :: SourceInfo
-defSourceInfo = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
+instance Default SourceInfo where
+  def = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
 
 {- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
  shouldn't be used anywhere outside of that
@@ -202,7 +202,7 @@ data TyDef = TyDef {tyName :: TyName, tyAbs :: TyAbs, sourceInfo :: SourceInfo}
   deriving (Arbitrary) via GenericArbitrary TyDef
   deriving anyclass (SOP.Generic)
 
-data TyAbs = TyAbs {tyArgs :: Map VarName TyArg, tyBody :: TyBody, sourceInfo :: SourceInfo}
+data TyAbs = TyAbs {tyArgs :: Map (InfoLess VarName) TyArg, tyBody :: TyBody, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary TyAbs
   deriving anyclass (SOP.Generic)
@@ -222,7 +222,7 @@ data Constructor = Constructor {constrName :: ConstrName, product :: Product}
   deriving (Arbitrary) via GenericArbitrary Constructor
   deriving anyclass (SOP.Generic)
 
-data Sum = Sum {constructors :: Map ConstrName Constructor, sourceInfo :: SourceInfo}
+data Sum = Sum {constructors :: Map (InfoLess ConstrName) Constructor, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Sum
   deriving anyclass (SOP.Generic)
@@ -232,7 +232,7 @@ data Field = Field {fieldName :: FieldName, fieldTy :: Ty}
   deriving (Arbitrary) via GenericArbitrary Field
   deriving anyclass (SOP.Generic)
 
-data Record = Record {fields :: Map FieldName Field, sourceInfo :: SourceInfo}
+data Record = Record {fields :: Map (InfoLess FieldName) Field, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary Record
   deriving anyclass (SOP.Generic)
@@ -309,10 +309,10 @@ data Constraint = Constraint
 
 data Module = Module
   { moduleName :: ModuleName
-  , typeDefs :: Map TyName TyDef
-  , classDefs :: Map ClassName ClassDef
+  , typeDefs :: Map (InfoLess TyName) TyDef
+  , classDefs :: Map (InfoLess ClassName) ClassDef
   , instances :: [InstanceClause]
-  , imports :: Set ModuleName
+  , imports :: Map (InfoLess ModuleName) ModuleName
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -350,7 +350,7 @@ data KindCheckErr
 
 instance Exception KindCheckErr
 
-newtype CompilerInput = CompilerInput {modules :: Map ModuleName Module}
+newtype CompilerInput = CompilerInput {modules :: Map (InfoLess ModuleName) Module}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Monoid, Semigroup)
   deriving anyclass (SOP.Generic)
@@ -385,3 +385,49 @@ data CompilerResult = CompilerResult
   deriving anyclass (SOP.Generic)
 
 type CompilerOutput = Either CompilerError CompilerResult
+
+-- | InfoLess instances
+instance InfoLessC SourceInfo where
+  infoLessId = const def
+
+instance InfoLessC SourcePosition
+instance InfoLessC LBName
+instance InfoLessC TyName
+instance InfoLessC ConstrName
+instance InfoLessC ModuleName
+instance InfoLessC ModuleNamePart
+instance InfoLessC VarName
+instance InfoLessC FieldName
+instance InfoLessC ClassName
+instance InfoLessC Kind
+instance InfoLessC KindType
+instance InfoLessC KindRefType
+instance InfoLessC TyVar
+instance InfoLessC Ty
+instance InfoLessC TyApp
+instance InfoLessC ForeignRef
+instance InfoLessC LocalRef
+instance InfoLessC TyRef
+instance InfoLessC TyDef
+instance InfoLessC TyAbs
+instance InfoLessC TyArg
+instance InfoLessC TyBody
+instance InfoLessC Constructor
+instance InfoLessC Sum
+instance InfoLessC Field
+instance InfoLessC Record
+instance InfoLessC Tuple
+instance InfoLessC Product
+instance InfoLessC ForeignClassRef
+instance InfoLessC LocalClassRef
+instance InfoLessC TyClassRef
+instance InfoLessC ClassDef
+instance InfoLessC InstanceClause
+instance InfoLessC Constraint
+instance InfoLessC Module
+instance InfoLessC InferenceErr
+instance InfoLessC KindCheckErr
+instance InfoLessC CompilerInput
+instance InfoLessC KindCheckError
+instance InfoLessC CompilerError
+instance InfoLessC CompilerResult
