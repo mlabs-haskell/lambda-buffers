@@ -14,7 +14,7 @@ import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
-import LambdaBuffers.Codegen.Haskell.TyDef qualified as H
+import LambdaBuffers.Codegen.Haskell.PrintM qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
 import Prettyprinter (vsep)
 import Test.Tasty (TestTree, testGroup)
@@ -38,6 +38,7 @@ testPrint compInp cfg want = do
           Left err -> assertFailure (show err)
           Right res -> return res
       )
+  print @String ""
   print $ vsep (toList modDocs)
   assertEqual "" want (show $ vsep (toList modDocs))
 
