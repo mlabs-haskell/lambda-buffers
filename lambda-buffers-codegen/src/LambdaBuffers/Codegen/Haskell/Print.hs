@@ -3,8 +3,8 @@ module LambdaBuffers.Codegen.Haskell.Print (printTyDefOpaque, printTyDefNonOpaqu
 import Control.Lens ((^.))
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList))
-import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Map.Ordered (OMap)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
@@ -68,9 +68,9 @@ printHsTyRef (_, H.MkModuleName hsModName, H.MkTyName hsTyName) = pretty hsModNa
 -- | Used to distinguish from Opaques.
 newtype NonOpaqueTyBody = Sum PC.Sum
 
-printTyDefNonOpaque :: PC.TyName -> Map (PC.InfoLess PC.VarName) PC.TyArg -> NonOpaqueTyBody -> Doc a
+printTyDefNonOpaque :: PC.TyName -> OMap (PC.InfoLess PC.VarName) PC.TyArg -> NonOpaqueTyBody -> Doc a
 printTyDefNonOpaque tyN args body =
-  let argsDoc = sep (printTyArg <$> toList args) -- FIXME(bladyjoker): OMap on Constructors
+  let argsDoc = sep (printTyArg <$> toList args)
       (keyword, bodyDoc) = printTyBody tyN body
    in group $ keyword <+> printTyName tyN <+> argsDoc <+> equals <+> bodyDoc
 
@@ -83,7 +83,7 @@ printTyArg (PC.TyArg vn _ _) = printVarName vn
 
 printTyBodySum :: PC.TyName -> PC.Sum -> Doc a
 printTyBodySum tyN (PC.Sum ctors _) =
-  let ctorDocs = printCtor tyN <$> toList ctors -- FIXME(bladyjoker): OMap on Constructors
+  let ctorDocs = printCtor tyN <$> toList ctors
    in group $
         if null ctors
           then mempty
@@ -109,7 +109,7 @@ printProd _ (PC.TupleI tup) = printTup tup
 
 printRec :: PC.TyName -> PC.Record -> Doc a
 printRec tyN (PC.Record fields _) =
-  let fieldDocs = printField tyN <$> toList fields -- FIXME(bladyjoker): OMap on Fields
+  let fieldDocs = printField tyN <$> toList fields
    in group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
 
 printTup :: PC.Tuple -> Doc a

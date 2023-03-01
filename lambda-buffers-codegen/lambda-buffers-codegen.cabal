@@ -97,6 +97,7 @@ library
     , lambda-buffers-compiler-pb  >=0.1
     , lens                        >=5.2
     , mtl                         >=2.2
+    , ordered-containers          >=0.2
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , text                        >=1.2
