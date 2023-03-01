@@ -1,6 +1,5 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.InfoLess (
   InfoLess,
@@ -10,18 +9,17 @@ module LambdaBuffers.Compiler.ProtoCompat.InfoLess (
   InfoLessC (infoLessId),
 ) where
 
-import Data.Bifunctor (Bifunctor (bimap))
-import Data.Map qualified as M
+import Data.Map (Map)
+import Data.Map.Ordered (OMap)
+import Data.Set (Set)
 import Data.Set qualified as S
 import Data.Text (Text)
 import Generics.SOP (All2, Generic (Code, from, to), Proxy (Proxy), hcmap, mapII)
-import Test.QuickCheck (Arbitrary)
 
 -- | InfoLess newtype. Constructor is not exported to not allow the construction of types with the Info. InfoLess a can only be constructed via its class instance and deconstructed using the exported function.
 newtype InfoLess a = InfoLess {unsafeInfoLess :: a}
   deriving stock (Show, Eq, Ord)
   deriving stock (Functor, Traversable, Foldable)
-  deriving newtype (Arbitrary, InfoLessC)
 
 {- | SourceInfo Less ID.
  A TypeClass that provides id for types with SourceInfo - where SI is defaulted - therefore ignored. Can only be derived.
@@ -55,8 +53,11 @@ instance InfoLessC Int where
 instance InfoLessC Text where
   infoLessId = id
 
-instance (Ord k, InfoLessC k, InfoLessC v) => InfoLessC (M.Map k v) where
-  infoLessId = M.fromList . fmap (bimap infoLessId infoLessId) . M.toList
+instance (Ord k, InfoLessC v) => InfoLessC (Map k v) where
+  infoLessId m = infoLessId <$> m
 
-instance (Ord a, InfoLessC a) => InfoLessC (S.Set a) where
+instance (Ord a, InfoLessC a) => InfoLessC (Set a) where
   infoLessId = S.fromList . fmap infoLessId . S.toList
+
+instance (Ord k, InfoLessC v) => InfoLessC (OMap k v) where
+  infoLessId om = infoLessId <$> om

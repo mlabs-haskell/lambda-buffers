@@ -96,17 +96,14 @@ library
     , containers                  >=0.6.5.1
     , data-default                >=0.7
     , freer-simple                >=1.2
-    , generic-arbitrary
     , generic-lens                >=2.2
     , generics-sop                >=0.5
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , mtl                         >=2.2
-    , ordered-containers
+    , ordered-containers          >=0.2
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
-    , QuickCheck                  >=2.14
-    , quickcheck-instances        >=0.3
     , text                        >=1.2
 
   exposed-modules:
@@ -161,12 +158,11 @@ test-suite tests
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
     , nonempty-containers         >=0.3
+    , ordered-containers          >=0.2
     , proto-lens                  >=0.7
-    , QuickCheck                  >=2.14
     , tasty                       >=1.4
     , tasty-hedgehog              >=1.4
     , tasty-hunit                 >=0.10
-    , tasty-quickcheck            >=0.10
     , text                        >=1.2
 
   other-modules:

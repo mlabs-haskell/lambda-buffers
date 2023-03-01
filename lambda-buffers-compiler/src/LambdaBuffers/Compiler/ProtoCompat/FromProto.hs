@@ -10,6 +10,8 @@ import Data.Foldable (foldlM, toList)
 import Data.Kind (Type)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Map.Ordered (OMap)
+import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (messageName), MessageEnum (showEnum), defMessage)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
@@ -85,6 +87,18 @@ parseAndIndex key =
           else return (Map.insert k x indexed, multiples)
     )
     (mempty, mempty)
+
+parseAndIndex' :: forall {t :: Type -> Type} {proto} {a} {k}. (Foldable t, IsMessage proto a, Ord k) => (a -> k) -> t proto -> FromProto (OMap k a, Map k [proto])
+parseAndIndex' key =
+  foldlM
+    ( \(indexed, multiples) px -> do
+        x <- fromProto px
+        let k = key x
+        if OMap.member k indexed
+          then return (indexed, Map.insertWith (++) k [px] multiples)
+          else return (OMap.alter (const (Just x)) k indexed, multiples)
+    )
+    (OMap.empty, mempty)
 
 {-
     SourceInfo
@@ -292,7 +306,7 @@ instance IsMessage P.TyDef PC.TyDef where
 
 instance IsMessage P.TyAbs PC.TyAbs where
   fromProto ta = do
-    (tyargs, mulTyArgs) <- parseAndIndex (\a -> mkInfoLess $ a ^. #argName) (ta ^. P.tyArgs)
+    (tyargs, mulTyArgs) <- parseAndIndex' (\a -> mkInfoLess $ a ^. #argName) (ta ^. P.tyArgs)
     tybody <- fromProto $ ta ^. P.tyBody
     si <- fromProto $ ta ^. P.sourceInfo
     ctx <- ask
@@ -381,7 +395,7 @@ instance IsMessage P.TyBody PC.TyBody where
 
 instance IsMessage P.Sum PC.Sum where
   fromProto s = do
-    (ctors, mulCtors) <- parseAndIndex (\c -> mkInfoLess $ c ^. #constrName) (s ^. P.constructors)
+    (ctors, mulCtors) <- parseAndIndex' (\c -> mkInfoLess $ c ^. #constrName) (s ^. P.constructors)
     si <- fromProto $ s ^. P.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
@@ -417,7 +431,7 @@ instance IsMessage P.Sum'Constructor PC.Constructor where
 
 instance IsMessage P.Product'Record PC.Record where
   fromProto r = do
-    (fields, mulFields) <- parseAndIndex (\f -> mkInfoLess $ f ^. #fieldName) (r ^. P.fields)
+    (fields, mulFields) <- parseAndIndex' (\f -> mkInfoLess $ f ^. #fieldName) (r ^. P.fields)
     si <- fromProto $ r ^. P.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of

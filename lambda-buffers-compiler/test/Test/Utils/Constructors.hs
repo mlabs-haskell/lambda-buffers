@@ -33,6 +33,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
 import Proto.Compiler_Fields ()
 
 import Data.Default (def)
+import Data.Map.Ordered qualified as OMap
 
 _CompilerInput :: [PC.Module] -> PC.CompilerInput
 _CompilerInput ms =
@@ -116,7 +117,7 @@ _Sum :: [(Text, PC.Product)] -> PC.TyBody
 _Sum cs =
   PC.SumI $
     PC.Sum
-      { constructors = Map.fromList [(PC.mkInfoLess $ ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
+      { constructors = OMap.fromList [(PC.mkInfoLess $ ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
       , sourceInfo = def
       }
 
@@ -132,7 +133,7 @@ _TyApp ty1 ty2 =
 _TyAbs :: [(Text, PC.KindType)] -> [(Text, PC.Product)] -> PC.TyAbs
 _TyAbs args body =
   PC.TyAbs
-    { PC.tyArgs = Map.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
+    { PC.tyArgs = OMap.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
     , PC.tyBody = _Sum body
     , sourceInfo = def
     }

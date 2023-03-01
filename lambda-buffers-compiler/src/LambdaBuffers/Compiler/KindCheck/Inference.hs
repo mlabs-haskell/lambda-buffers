@@ -25,6 +25,7 @@ import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 import Data.Bifunctor (Bifunctor (second))
 import Data.Foldable (foldrM)
 import Data.Map qualified as M
+import Data.Map.Ordered qualified as OMap
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.KindCheck.Derivation (
   Context (Context),
@@ -139,16 +140,15 @@ derive x = deriveTyAbs x
 
     deriveTyAbs :: PC.TyAbs -> Derive Derivation
     deriveTyAbs tyabs = do
-      case M.toList (tyabs ^. #tyArgs) of
+      case OMap.assocs (tyabs ^. #tyArgs) of
         [] -> deriveTyBody (x ^. #tyBody)
         a@(_, ar) : as -> do
           let argK = protoKind2Kind (ar ^. #argKind)
           bodyK <- KVar <$> fresh
           ctx <- ask
-
           let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar (ar ^. #argName))) argK)
-          let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
-          let restAbs = tyabs & #tyArgs .~ M.fromList as
+              newAbs = tyabs & #tyArgs .~ OMap.singleton a
+              restAbs = tyabs & #tyArgs .~ OMap.fromList as
 
           restF <- local (const newContext) $ deriveTyAbs restAbs
 
@@ -165,11 +165,11 @@ derive x = deriveTyAbs x
 
     deriveSum :: PC.Sum -> Derive Derivation
     deriveSum s = do
-      case M.toList (s ^. #constructors) of
+      case OMap.assocs (s ^. #constructors) of
         [] -> voidDerivation
         c : cs -> do
           dc <- deriveConstructor $ snd c
-          restDc <- deriveSum $ s & #constructors .~ M.fromList cs
+          restDc <- deriveSum $ s & #constructors .~ OMap.fromList cs
           sumDerivation dc restDc
 
     deriveConstructor :: PC.Constructor -> Derive Derivation
@@ -186,11 +186,11 @@ derive x = deriveTyAbs x
 
     deriveRecord :: PC.Record -> Derive Derivation
     deriveRecord r = do
-      case M.toList (r ^. #fields) of
+      case OMap.assocs (r ^. #fields) of
         [] -> unitDerivation
         f : fs -> do
           d1 <- deriveField $ snd f
-          d2 <- deriveRecord $ r & #fields .~ M.fromList fs
+          d2 <- deriveRecord $ r & #fields .~ OMap.fromList fs
           productDerivation d1 d2
 
     deriveField :: PC.Field -> Derive Derivation
