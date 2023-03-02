@@ -633,17 +633,17 @@ message ProtoParseError {
   }
 }
 
-message TypeClassError {
+message TypeClassCheckError {
   // A class referred to in an instance
   // or deriving clause does not exist. (Maybe this should be internal?)
-  message UnknownClassError {
+  message UnboundClassError {
     // The reference that could not be resolved
     // NOTE: the class_ref contains valid/"real" source info
     TyClassRef class_ref = 1;
   }
 
   // The TyDef referred to by a TyRef cannot be found
-  message LocalTyRefNotFoundError {
+  message UnboundTyRefError {
     // NOTE: Has defaulted SourceInfo
     TyName ty_name = 1;
     // The module where the missing reference was searched for
@@ -665,7 +665,9 @@ message TypeClassError {
     // Name of the module where the failure to solve occurred
     ModuleName module_name = 1;
     // The constraints that could not be solved
-    // NOTE: ALL SourceInfos are defaulted here
+    // NOTE: Some SourceInfos are defaulted, some aren't,
+    //       there's no clear way to discern which ones are.
+    //       (I think this is a bad idea fwiw)
     repeated Constraint constraints = 2;
     // The initial InstanceClause that triggered the failures
     // NOTE: The outermost SourceInfo is correct for the clause,
@@ -673,27 +675,11 @@ message TypeClassError {
     InstanceClause instance = 3;
   }
 
-  // The body of a tydef is malformed in some way.
-  // Quasi-internal; indicates that something went wrong converting from
-  // a TyDef to a Pat or Exp, and cannot be ameliorated by the user.
-  // (I am putting it here because it has a meaningful SourceInfo)
-  message MalformedTyDefError {
-    ModuleName module_name = 1;
-
-    // Ideally we'd have the Exp here but since it's not representable
-    // in protos (b/c malformed), we can't put anything meaningful here.
-
-    // SourceInfo points at malformed type definition
-    SourceInfo source_info = 2;
-  }
-
   // Self explanatory
   message OverlappingInstancesError {
 
-
     // The constraint we were trying to solve when we detected overlap
     Constraint constraint = 1;
-
 
     // The overlapping rules
     // NOTE: *ALL* of the SourceInfos here are defaulted
@@ -707,12 +693,11 @@ message TypeClassError {
 
 
   oneof typeclass_error {
-    UnknownClassError unknown_class = 1;
-    LocalTyRefNotFoundError ref_not_found = 2;
+    UnboundClassError unknown_class = 1;
+    UnboundTyRefError ref_not_found = 2;
     SuperclassCycleError superclass_cycle = 3;
     FailedToSolveConstraintsError failed_to_solve_constraints = 4;
-    MalformedTyDefError malformed_ty_def = 5;
-    OverlappingInstancesError overlapping_instances = 6;
+    OverlappingInstancesError overlapping_instances = 5;
   }
 
 }

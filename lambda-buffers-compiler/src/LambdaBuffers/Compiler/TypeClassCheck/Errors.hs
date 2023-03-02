@@ -39,7 +39,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC (
   TyVar (TyVar),
   VarName (..),
  )
-import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, LitE, NilE, RefE), Literal (ModuleName, Name, TyVar), Pat (AppP, LitP, NilP, RefP), unTyFunE, unTyFunP)
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, LitE, NilE, RefE), Literal (ModuleName, Name, TyVar), Pat (AppP, LitP, NilP, RefP), Tagged, getTag, unTag, unTyFunE, unTyFunP)
 
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
@@ -71,6 +71,11 @@ import Control.Monad.Except (
   MonadTrans (lift),
   runExceptT,
  )
+import Control.Monad.Reader (
+  MonadReader (reader),
+  Reader,
+  runReader,
+ )
 import Data.Generics.Labels (Field')
 import LambdaBuffers.Compiler.ProtoCompat.Types (defSourceInfo)
 
@@ -86,7 +91,7 @@ data TypeClassError
   | ClassNotFoundInModule Text [Text] -- internal-ish? this one's weird. there's not really one place in the source that triggers it. come back to it later
   | LocalTyRefNotFound T.Text PC.ModuleName PC.SourceInfo -- SI is the instance clause that triggered the tyref lookup
   | SuperclassCycleDetected [[FQClassName]] -- No sourceinfo, it's not very useful due to the nature of cycles
-  | FailedToSolveConstraints PC.ModuleName [Constraint Exp] Instance PC.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
+  | FailedToSolveConstraints PC.ModuleName [Tagged (Constraint Exp)] Instance PC.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
   | MalformedTyDef PC.ModuleName Exp PC.SourceInfo -- SI is tydef
   | BadInstance BasicConditionViolation PC.SourceInfo -- SI is the source of the rule that triggered the violation. This might be weird
   deriving stock (Show, Eq, Generic)
@@ -175,7 +180,7 @@ renderP :: Doc () -> Text
 renderP = renderStrict . layoutPretty defaultLayoutOptions
 
 -- One way conversion; don't think we'll ever need to convert back into Haskell types (also: we can't)
-tcErrToProto :: TypeClassError -> Either P.InternalError P.TypeClassError
+tcErrToProto :: TypeClassError -> Either P.InternalError P.TypeClassCheckError
 tcErrToProto = \case
   UnknownClass fqn i ->
     Right $
@@ -197,10 +202,10 @@ tcErrToProto = \case
     Right $
       defMessage
         & P.superclassCycle .~ (defMessage & P.msg .~ mkMsg scCycles)
-  FailedToSolveConstraints mn cs inst i -> case traverse convertConstraintE' cs of
-    Left e -> undefined e
+  FailedToSolveConstraints mn cs inst i -> case traverse (\x -> convertConstraintE (getTag x) (unTag x)) cs of
+    Left e -> Left $ handleErr e
     Right cs' -> case convertInstance i inst of
-      Left e -> undefined e
+      Left e -> Left $ handleErr e
       Right inst' ->
         Right $
           defMessage
@@ -210,17 +215,9 @@ tcErrToProto = \case
                     & P.constraints .~ map toProto cs'
                     & P.instance' .~ toProto inst'
                  )
-  MalformedTyDef mn _exp i ->
-    Right $
-      defMessage
-        & P.malformedTyDef
-          .~ ( defMessage
-                & P.moduleName .~ toProto mn
-                & P.sourceInfo .~ toProto i
-             )
-  BadInstance (OverlapDetected (Overlap cst rules)) i -> case convertConstraintE i cst of
+  BadInstance (OverlapDetected (Overlap cst rules)) _ -> case convertConstraintE (getTag cst) (unTag cst) of
     Left e -> Left $ handleErr e
-    Right cst' -> case traverse (convertInstance defSourceInfo) rules of
+    Right cst' -> case traverse (\x -> convertInstance (getTag x) (unTag x)) rules of
       Left e -> Left $ handleErr e
       Right insts' ->
         Right $
@@ -256,27 +253,13 @@ data ConversionError
   | NotATy (Either Pat Exp) -- If we get a failure on a rule where the head doesn't correspond to any possible PC.Ty, e.g. structural rules
 
 -- Yes, this is actually 1000x more convenient than doing it by hand
-newtype SI t = SI (PC.SourceInfo -> t)
+type SI = Reader PC.SourceInfo
 
 unSI :: PC.SourceInfo -> SI t -> t
-unSI i (SI f) = f i
-
-instance Functor SI where
-  fmap f (SI g) = SI $ fmap f g
-
-instance Applicative SI where
-  pure x = SI (const x)
-
-  (SI f) <*> (SI g) = SI $ \i -> f i (g i)
-
-instance Monad SI where
-  return = pure
-
-  (SI x) >>= f = SI $ \i -> case f (x i) of
-    SI z -> z i
+unSI = flip runReader
 
 si :: (PC.SourceInfo -> t) -> SI t
-si = SI
+si = reader
 
 siModulename :: [Text] -> SI PC.ModuleName
 siModulename xs = traverse siName xs >>= si . PC.ModuleName
@@ -300,9 +283,6 @@ def = unSI defSourceInfo
 
 convertConstraintE :: PC.SourceInfo -> Constraint Exp -> Either ConversionError PC.Constraint
 convertConstraintE i = unSI i . runExceptT . siConstraintE
-
-convertConstraintE' :: Constraint Exp -> Either ConversionError PC.Constraint
-convertConstraintE' = convertConstraintE defSourceInfo
 
 siConstraintP :: Constraint Pat -> ExceptT ConversionError SI PC.Constraint
 siConstraintP (C (Class fqcn _) xp) = do
@@ -393,4 +373,4 @@ instance NameLike PC.ClassName where
   ctorName = PC.ClassName
 
 siName :: NameLike s => Text -> SI s
-siName = SI . ctorName
+siName = reader . ctorName

@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LambdaBuffers.Compiler.TypeClassCheck.Solve (solve, inst, Overlap (..)) where
+module LambdaBuffers.Compiler.TypeClassCheck.Solve (solve, inst, defTag, Overlap (..)) where
 
 import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -11,7 +11,8 @@ import Data.Foldable (traverse_)
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text (Text)
-import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE), ExpressionLike ((*:), (*=)), Literal (TyVar), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), matches)
+import LambdaBuffers.Compiler.ProtoCompat (defSourceInfo)
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, ConsE, DecE, LabelE, LitE, NilE, ProdE, RecE, RefE, SumE), ExpressionLike ((*:), (*=)), Literal (TyVar), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), Tagged (Tag), matches)
 import LambdaBuffers.Compiler.TypeClassCheck.Rules (Class (csupers), Constraint (C), Rule ((:<=)), ruleClass, ruleHead)
 
 {- Pattern/Template/Unification variable  substitution.
@@ -64,26 +65,29 @@ getSubs _ _ = M.empty
 -- NoMatch isn't fatal but OverlappingMatches is (i.e. we need to stop when we encounter it)
 data MatchResult
   = NoMatch
-  | OverlappingMatches [Rule Pat]
-  | MatchFound (Rule Pat)
+  | OverlappingMatches [Tagged (Rule Pat)]
+  | MatchFound (Tagged (Rule Pat))
 
 -- for SolveM, since we catch NoMatch
-data Overlap = Overlap (Constraint Exp) [Rule Pat]
+data Overlap = Overlap (Tagged (Constraint Exp)) [Tagged (Rule Pat)]
   deriving stock (Show, Eq)
 
-selectMatchingInstance :: Exp -> Class -> [Rule Pat] -> MatchResult
+selectMatchingInstance :: Exp -> Class -> [Tagged (Rule Pat)] -> MatchResult
 selectMatchingInstance e c rs = case filter matchPatAndClass rs of
   [] -> NoMatch
   [r] -> MatchFound r
   overlaps -> OverlappingMatches overlaps
   where
-    matchPatAndClass :: Rule Pat -> Bool
-    matchPatAndClass r =
+    matchPatAndClass :: Tagged (Rule Pat) -> Bool
+    matchPatAndClass (Tag _ r) =
       ruleClass r == c
         && ruleHead r
         `matches` e
 
-type SolveM = ReaderT [Rule Pat] (WriterT (S.Set (Constraint Exp)) (Either Overlap))
+type SolveM = ReaderT [Tagged (Rule Pat)] (WriterT (S.Set (Tagged (Constraint Exp))) (Either Overlap))
+
+defTag :: a -> Tagged a
+defTag = Tag defSourceInfo
 
 {- Given a list of instances (the initial scope), determines whether we can derive
    an instance of the Class argument for the Pat argument. A result of [] indicates that there are
@@ -95,24 +99,24 @@ type SolveM = ReaderT [Rule Pat] (WriterT (S.Set (Constraint Exp)) (Either Overl
          it doesn't b/c it's *impossible* to have `instance Foo X` if the definition of Foo is
          `class Bar y => Foo y` without an `instance Bar X`)
 -}
-solveM :: Constraint Exp -> SolveM ()
+solveM :: Tagged (Constraint Exp) -> SolveM ()
 -- TODO(@gnumonik): Explain why we have this TyVar rule here
-solveM (C _ (LitE (TyVar _))) = pure ()
-solveM cst@(C c pat) =
+solveM (Tag _ (C _ (LitE (TyVar _)))) = pure ()
+solveM cst@(Tag _ (C c pat)) =
   ask >>= \inScope ->
     case selectMatchingInstance pat c inScope of
       NoMatch -> tell $ S.singleton cst
       OverlappingMatches olps -> throwError $ Overlap cst olps
-      MatchFound rule -> case subst rule pat of
-        C _ p :<= [] -> solveClassesFor p (csupers c)
-        C _ _ :<= is -> do
-          traverse_ solveM is
+      MatchFound rule -> case flip subst pat <$> rule of
+        Tag _ (C _ p :<= []) -> solveClassesFor p (csupers c)
+        Tag _ (C _ _ :<= is) -> do
+          traverse_ (solveM . defTag) is
           solveClassesFor pat (csupers c)
   where
     -- Given a Pat and a list of Classes, attempt to solve the constraints
     -- constructed from the Pat and each Class
     solveClassesFor :: Exp -> [Class] -> SolveM ()
-    solveClassesFor p = traverse_ (\cls -> solveM (C cls p))
+    solveClassesFor p = traverse_ (\cls -> solveM (defTag $ C cls p))
 
-solve :: [Rule Pat] -> Constraint Exp -> Either Overlap [Constraint Exp]
+solve :: [Tagged (Rule Pat)] -> Tagged (Constraint Exp) -> Either Overlap [Tagged (Constraint Exp)]
 solve rules c = fmap S.toList $ execWriterT $ runReaderT (solveM c) rules

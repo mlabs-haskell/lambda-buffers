@@ -15,6 +15,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, LabelE, LitE, NilE, RefE),
   Literal (Name, TyVar),
   Pat (AppP, LitP, NilP, RefP),
+  Tagged,
   toProdE,
   toRecE,
   toSumE,
@@ -26,7 +27,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Rule ((:<=)),
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Rules qualified as R
-import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap), solve)
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap), defTag, solve)
 import LambdaBuffers.Compiler.TypeClassCheck.Validate (
   mkStructuralRules,
   _L,
@@ -131,9 +132,9 @@ solveTests =
     [ testCase "C [Maybe Int] (completeRules)" $
         solveTest1 @?= solved
     , testCase "D [Maybe Int] (partialRules)" $
-        solveTest2 @?= Right [cListMaybeInt, cMaybeInt, dInt]
+        solveTest2 @?= Right (defTag <$> [cListMaybeInt, cMaybeInt, dInt])
     , testCase "D [Maybe Int] (complete D, partial C)" $
-        solveTest3 @?= Right [cInt]
+        solveTest3 @?= Right (defTag <$> [cInt])
     , testCase "C [[[Bool]]] (completeRules)" $
         solveTest4 @?= solved
     , testCase "C (Either (Either Int Bool) (Either Bool Int)) (completeRules)" $
@@ -143,27 +144,29 @@ solveTests =
     , testCase "Sum test (completeRules)" $
         solveTest7 @?= solved
     , testCase "Sum test (partialRules)" $
-        solveTest8 @?= Right [cBool, cInt]
+        solveTest8 @?= Right (defTag <$> [cBool, cInt])
     , testCase "Rec test (completeRules)" $
         solveTest9 @?= solved
     , testCase "Rec test (partialRules)" $
-        solveTest10 @?= Right [cBool, cInt]
+        solveTest10 @?= Right (defTag <$> [cBool, cInt])
     , testCase "Prod test (completeRules)" $
         solveTest11 @?= solved
     , testCase "Prod test (partialRules)" $
-        solveTest12 @?= Right [cBool, cInt]
+        solveTest12 @?= Right (defTag <$> [cBool, cInt])
     , testCase "Overlap test (specialRules)" $
         solveTest13
           @?= Left
             ( Overlap
-                cMaybeInt
-                [ C _c (MaybeP _X) :<= [C _c _X]
-                , C _c (MaybeP IntP) :<= []
-                ]
+                (defTag cMaybeInt)
+                ( defTag
+                    <$> [ C _c (MaybeP _X) :<= [C _c _X]
+                        , C _c (MaybeP IntP) :<= []
+                        ]
+                )
             )
     ]
   where
-    solved :: Either Overlap [R.Constraint Exp]
+    solved :: Either Overlap [Tagged (R.Constraint Exp)]
     solved = Right []
     cListMaybeInt = C _c (ListE (MaybeE IntE))
     cMaybeInt = C _c (MaybeE IntE)
@@ -227,26 +230,28 @@ pattern BoolE = LocalRefE "Bool"
 pattern LabeledE :: Text -> Exp -> Exp
 pattern LabeledE nm p = LabelE (LitE (Name nm)) p
 
-userRules1 :: Class -> [Rule Pat]
+userRules1 :: Class -> [Tagged (Rule Pat)]
 userRules1 c =
-  [ NoConstraints c IntP
-  , NoConstraints c BoolP
-  , C c (MaybeP _X) :<= [C c _X]
-  , C c (EitherP _L _X) :<= [C c _L, C c _X]
-  , C c (ListP _X) :<= [C c _X]
-  ]
+  defTag
+    <$> [ NoConstraints c IntP
+        , NoConstraints c BoolP
+        , C c (MaybeP _X) :<= [C c _X]
+        , C c (EitherP _L _X) :<= [C c _L, C c _X]
+        , C c (ListP _X) :<= [C c _X]
+        ]
 
-userRules2 :: Class -> [Rule Pat]
+userRules2 :: Class -> [Tagged (Rule Pat)]
 userRules2 c =
-  [ C c (MaybeP _X) :<= [C c _X]
-  , C c (EitherP _L _X) :<= [C c _L, C c _X]
-  , C c (ListP _X) :<= [C c _X]
-  ]
+  defTag
+    <$> [ C c (MaybeP _X) :<= [C c _X]
+        , C c (EitherP _L _X) :<= [C c _L, C c _X]
+        , C c (ListP _X) :<= [C c _X]
+        ]
 
-completeRules :: Class -> [Rule Pat]
+completeRules :: Class -> [Tagged (Rule Pat)]
 completeRules c = mkStructuralRules c <> userRules1 c
 
-partialRules :: Class -> [Rule Pat]
+partialRules :: Class -> [Tagged (Rule Pat)]
 partialRules c = mkStructuralRules c <> userRules2 c
 
 -- No supers
@@ -258,38 +263,37 @@ _d :: Class
 _d = Class (FQClassName "D" []) [_c]
 
 -- C [Maybe Int] w/ complete rules (expected: [])
-solveTest1 :: Either Overlap [R.Constraint Exp]
-solveTest1 = solve (completeRules _c) (C _c $ ListE (MaybeE IntE))
+solveTest1 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest1 = solve (completeRules _c) (defTag $ C _c $ ListE (MaybeE IntE))
 
 -- D [Maybe Int] w/ incomplete rules (expected: [C [Maybe Int], C (Maybe Int), D Int])
-solveTest2 :: Either Overlap [R.Constraint Exp]
-solveTest2 = solve (partialRules _d) (C _d $ ListE (MaybeE IntE))
+solveTest2 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest2 = solve (partialRules _d) (defTag $ C _d $ ListE (MaybeE IntE))
 
+solveTest3 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- D [Maybe Int] w/ complete D rules & incomplete C rules (expected: [C Int])
-solveTest3 :: Either Overlap [R.Constraint Exp]
-solveTest3 = solve rules (C _d $ ListE (MaybeE IntE))
+solveTest3 = solve rules (defTag $ C _d $ ListE (MaybeE IntE))
   where
     rules = completeRules _d <> partialRules _c
-
+solveTest4 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- C [[[Bool]]] w/ complete rules (expected: [])
-solveTest4 :: Either Overlap [R.Constraint Exp]
-solveTest4 = solve (completeRules _c) $ C _c $ ListE (ListE (ListE BoolE))
+solveTest5 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest4 = solve (completeRules _c) $ defTag $ C _c $ ListE (ListE (ListE BoolE))
 
 -- C (Either (Either Int Bool) (Either Bool Int)) w/ complete rules (expected: [])
-solveTest5 :: Either Overlap [R.Constraint Exp]
-solveTest5 = solve (completeRules _c) $ C _c $ EitherE (EitherE IntE BoolE) (EitherE BoolE IntE)
+solveTest5 = solve (completeRules _c) $ defTag $ C _c $ EitherE (EitherE IntE BoolE) (EitherE BoolE IntE)
 
 -- NOTE: This passes as a result of our hack where we assume that instances
 --       for bare type variables are satisfied.
 -- C (Either l x) w/ complete rules (expected: [])
-solveTest6 :: Either Overlap [R.Constraint Exp]
-solveTest6 = solve (completeRules _c) $ C _c $ EitherE vl vr
+solveTest6 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest6 = solve (completeRules _c) $ defTag $ C _c $ EitherE vl vr
 
 -- tests for structural subcomponents of types. Can't write Haskell equivalents (w/o row-types)
 
 -- expected: []
-solveTest7 :: Either Overlap [R.Constraint Exp]
-solveTest7 = solve (completeRules _c) $ C _c sumBody
+solveTest7 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest7 = solve (completeRules _c) $ defTag $ C _c sumBody
   where
     sumBody =
       toSumE
@@ -297,9 +301,9 @@ solveTest7 = solve (completeRules _c) $ C _c sumBody
         , LabeledE "Ctor2" (ListE BoolE)
         ]
 
+solveTest8 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- expected [C Bool, C Int]
-solveTest8 :: Either Overlap [R.Constraint Exp]
-solveTest8 = solve (partialRules _c) $ C _c sumBody
+solveTest8 = solve (partialRules _c) $ defTag $ C _c sumBody
   where
     sumBody =
       toSumE
@@ -308,8 +312,8 @@ solveTest8 = solve (partialRules _c) $ C _c sumBody
         ]
 
 -- expected []
-solveTest9 :: Either Overlap [R.Constraint Exp]
-solveTest9 = solve (completeRules _c) $ C _c recBody
+solveTest9 :: Either Overlap [Tagged (R.Constraint Exp)]
+solveTest9 = solve (completeRules _c) $ defTag $ C _c recBody
   where
     recBody =
       toRecE
@@ -317,9 +321,9 @@ solveTest9 = solve (completeRules _c) $ C _c recBody
         , LabeledE "field2" (EitherE IntE (ListE IntE))
         ]
 
+solveTest10 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- expected [C Bool, C Int]
-solveTest10 :: Either Overlap [R.Constraint Exp]
-solveTest10 = solve (partialRules _c) $ C _c recBody
+solveTest10 = solve (partialRules _c) $ defTag $ C _c recBody
   where
     recBody =
       toRecE
@@ -327,25 +331,25 @@ solveTest10 = solve (partialRules _c) $ C _c recBody
         , LabeledE "field2" (EitherE IntE (ListE IntE))
         ]
 
+solveTest11 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- expected []
-solveTest11 :: Either Overlap [R.Constraint Exp]
-solveTest11 = solve (completeRules _c) $ C _c prodBody
+solveTest11 = solve (completeRules _c) $ defTag $ C _c prodBody
   where
     prodBody = toProdE [ListE BoolE, EitherE IntE BoolE]
-
+solveTest12 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- expected [C Bool, C Int]
-solveTest12 :: Either Overlap [R.Constraint Exp]
-solveTest12 = solve (partialRules _c) $ C _c prodBody
+solveTest12 = solve (partialRules _c) $ defTag $ C _c prodBody
   where
     prodBody = toProdE [ListE BoolE, EitherE IntE BoolE]
 
+solveTest13 :: Either Overlap [Tagged (R.Constraint Exp)]
 -- expected overlap
-solveTest13 :: Either Overlap [R.Constraint Exp]
-solveTest13 = solve cOverlapRules (C _c $ ListE (MaybeE IntE))
+solveTest13 = solve cOverlapRules (defTag $ C _c $ ListE (MaybeE IntE))
   where
     cOverlapRules =
-      [ C _c (MaybeP _X) :<= [C _c _X]
-      , C _c (MaybeP IntP) :<= []
-      , C _c IntP :<= []
-      , C _c (ListP _X) :<= [C _c _X]
-      ]
+      defTag
+        <$> [ C _c (MaybeP _X) :<= [C _c _X]
+            , C _c (MaybeP IntP) :<= []
+            , C _c IntP :<= []
+            , C _c (ListP _X) :<= [C _c _X]
+            ]

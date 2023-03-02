@@ -31,6 +31,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   FQClassName (FQClassName),
   Rule ((:<=)),
  )
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (defTag)
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   ModuleBuilder (ModuleBuilder, mbClasses, mbInstances, mbScope, mbTyDefs),
   Tagged (Tag),
@@ -272,10 +273,11 @@ moduleB'1 =
         ]
 
     scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Int") :<= []
+              , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+              ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo") :<= []]
 
@@ -314,9 +316,10 @@ moduleB'2 =
         ]
 
     scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+              ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo" :@ _X) :<= [C _c _X]]
 
@@ -386,11 +389,12 @@ moduleB'4 =
         ]
 
     scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
-        , C _c (ForeignRefP ["A"] "Maybe" :@ ForeignRefP ["A"] "Int") :<= []
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Int") :<= []
+              , C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+              , C _c (ForeignRefP ["A"] "Maybe" :@ ForeignRefP ["A"] "Int") :<= []
+              ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo") :<= []]
 
@@ -418,9 +422,10 @@ moduleB'5 =
         ]
 
     scopeB =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Maybe" :@ _X) :<= [C _c _X]
+              ]
 
     instancesB = S.fromList [C _c (LocalRefP "Foo") :<= []]
 
@@ -483,9 +488,10 @@ moduleC'1 =
         ]
 
     scopeC =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Int") :<= []
+              ]
 
     instancesC = S.fromList [C _c (LocalRefP "Bar" :@ tyVarP "a" :@ tyVarP "b") :<= []]
 
@@ -519,9 +525,10 @@ moduleD'1 =
         ]
 
     scopeD =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Int") :<= []
+              ]
 
     instancesD = S.fromList [C _c (LocalRefP "Bar" :@ tyVarP "a" :@ tyVarP "b") :<= []]
 
@@ -555,9 +562,10 @@ moduleD'2 =
         ]
 
     scopeD =
-      S.fromList
-        [ C _c (ForeignRefP ["A"] "Int") :<= []
-        ]
+      S.fromList $
+        defTag
+          <$> [ C _c (ForeignRefP ["A"] "Int") :<= []
+              ]
 
     instancesD =
       S.fromList

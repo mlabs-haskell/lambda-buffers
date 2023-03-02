@@ -15,6 +15,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Validate (
 import Data.Set qualified as S
 
 import Control.Monad.Except (throwError)
+import Data.Bifunctor (Bifunctor (bimap))
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ModuleName,
  )
@@ -29,7 +30,7 @@ import LambdaBuffers.Compiler.TypeClassCheck.Rules (
   Constraint (C),
   Rule ((:<=)),
  )
-import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap, inst, solve)
+import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap, defTag, inst, solve)
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (
   ModuleBuilder (mbInstances, mbScope, mbTyDefs),
   Tagged (Tag),
@@ -48,16 +49,17 @@ _L = VarP "l"
 _BODY = VarP "body"
 
 -- Create a set of structural rules for a given class
-mkStructuralRules :: Class -> [Rule Pat]
+mkStructuralRules :: Class -> [Tagged (Rule Pat)]
 mkStructuralRules c =
-  [ C c NilP :<= []
-  , C c (ConsP _X _XS) :<= [C c _X, C c _XS]
-  , C c (LabelP _L _X) :<= [C c _X]
-  , C c (RecP _XS) :<= [C c _XS]
-  , C c (ProdP _XS) :<= [C c _XS]
-  , C c (SumP _XS) :<= [C c _XS]
-  , C c (LitP Opaque) :<= []
-  ]
+  defTag
+    <$> [ C c NilP :<= []
+        , C c (ConsP _X _XS) :<= [C c _X, C c _XS]
+        , C c (LabelP _L _X) :<= [C c _X]
+        , C c (RecP _XS) :<= [C c _XS]
+        , C c (ProdP _XS) :<= [C c _XS]
+        , C c (SumP _XS) :<= [C c _XS]
+        , C c (LitP Opaque) :<= []
+        ]
 
 -- utility
 splitInstance :: Rule a -> (Constraint a, [Constraint a])
@@ -69,13 +71,13 @@ constraintClass (C c _) = c
 -- NOTE: Practically this enforces the "must define instances where types are defined"
 --       half of Haskell's orphan instances rule. We could relax that in various ways
 --       but it would require reworking a lot of the utilities above.
-checkDerive :: P.ModuleName -> ModuleBuilder -> Tagged Instance -> Either TypeClassError [Constraint Exp]
+checkDerive :: P.ModuleName -> ModuleBuilder -> Tagged Instance -> Either TypeClassError [Tagged (Constraint Exp)]
 checkDerive mn mb ti = concat <$> secondPass
   where
-    secondPass :: Either TypeClassError [[Constraint Exp]]
+    secondPass :: Either TypeClassError [[Tagged (Constraint Exp)]]
     secondPass = traverse solveRef =<< firstPass
 
-    firstPass :: Either TypeClassError [Constraint Exp]
+    firstPass :: Either TypeClassError [Tagged (Constraint Exp)]
     firstPass = catchOverlap (solve assumptions c)
 
     catchOverlap :: Either Overlap a -> Either TypeClassError a
@@ -85,8 +87,8 @@ checkDerive mn mb ti = concat <$> secondPass
 
     i = unTag ti
     si = getTag ti
-    (c', cs') = splitInstance i
-    c = fmap inst c'
+    (c', cs') = bimap defTag (map defTag) $ splitInstance i
+    c = fmap inst <$> c'
 
     localInstances = mbInstances mb
 
@@ -94,16 +96,16 @@ checkDerive mn mb ti = concat <$> secondPass
 
     inScopeInstances = mbScope mb
 
-    solveRef :: Constraint Exp -> Either TypeClassError [Constraint Exp]
-    solveRef (C cx ty) = case getLocalRefE ty of
+    solveRef :: Tagged (Constraint Exp) -> Either TypeClassError [Tagged (Constraint Exp)]
+    solveRef (Tag i' (C cx ty)) = case getLocalRefE ty of
       Just t -> do
-        lookupOr t localTyDefs (LocalTyRefNotFound t mn si) >>= \case
-          (Tag _ (DecE _ _ body)) -> catchOverlap $ solve assumptions (C cx body)
+        lookupOr t localTyDefs (LocalTyRefNotFound t mn i') >>= \case
+          (Tag _ (DecE _ _ body)) -> catchOverlap $ solve assumptions (defTag $ C cx body)
           xp -> throwError $ MalformedTyDef mn (unTag xp) (getTag xp)
-      _ -> pure [C cx ty]
+      _ -> pure [Tag i' (C cx ty)]
 
     assumptions =
       S.toList . S.fromList $
         S.toList inScopeInstances -- the basic set of in-scope instances
-          <> concatMap (mkStructuralRules . constraintClass) (c' : cs') -- structural rules for all in scope classes
-          <> S.toList (S.filter (/= i) . S.mapMonotonic unTag $ localInstances) -- all instances in the current module that aren't the one we're trying to check
+          <> concatMap (mkStructuralRules . constraintClass . unTag) (c' : cs') -- structural rules for all in scope classes
+          <> S.toList (S.filter (/= ti) localInstances) -- all instances in the current module that aren't the one we're trying to check

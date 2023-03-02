@@ -19,6 +19,9 @@ module LambdaBuffers.Compiler.TypeClassCheck.Pat (
   -- stupid utility for errors
   unTyFunP,
   unTyFunE,
+  Tagged (..),
+  unTag,
+  getTag,
   -- for tests, remove
   pattern Either,
   pattern Bool,
@@ -27,6 +30,8 @@ module LambdaBuffers.Compiler.TypeClassCheck.Pat (
 
 import Data.Kind (Type)
 import Data.Text (Text)
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
+import Prettyprinter (Pretty (pretty))
 
 {- A simple ADT to represent patterns.
 
@@ -219,3 +224,28 @@ matches (DecP t1 t2 t3) (DecE t1' t2' t3') =
   matches t1 t1' && matches t2 t2' && matches t3 t3'
 matches NilP NilE = True
 matches _ _ = False
+
+data Tagged :: Type -> Type where
+  Tag :: P.SourceInfo -> a -> Tagged a
+
+instance Functor Tagged where
+  fmap f (Tag si a) = Tag si (f a)
+
+unTag :: forall a. Tagged a -> a
+unTag (Tag _ a) = a
+
+getTag :: forall a. Tagged a -> P.SourceInfo
+getTag (Tag si _) = si
+
+instance Eq a => Eq (Tagged a) where
+  (Tag _ a) == (Tag _ a') = a == a'
+
+instance Ord a => Ord (Tagged a) where
+  (Tag _ a) <= (Tag _ a') = a <= a'
+
+-- DEGENERATE but need for debugging
+instance Show a => Show (Tagged a) where
+  show (Tag _ a) = show a
+
+instance Pretty a => Pretty (Tagged a) where
+  pretty (Tag _ a) = pretty a

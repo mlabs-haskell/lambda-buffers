@@ -49,9 +49,8 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   SourceInfo,
   TyClassRef (ForeignCI, LocalCI),
  )
-import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP), Tagged (Tag), getTag, unTag)
 
-import Data.Kind (Type)
 import Prettyprinter (
   Pretty (pretty),
   nest,
@@ -73,31 +72,6 @@ import LambdaBuffers.Compiler.TypeClassCheck.Errors (
   ),
  )
 
--- I believe this is a comonad, but the import isn't worth it here
-data Tagged :: Type -> Type where
-  Tag :: P.SourceInfo -> a -> Tagged a
-
-instance Functor Tagged where
-  fmap f (Tag si a) = Tag si (f a)
-
-unTag :: forall a. Tagged a -> a
-unTag (Tag _ a) = a
-
-getTag :: forall a. Tagged a -> P.SourceInfo
-getTag (Tag si _) = si
-
-instance Eq a => Eq (Tagged a) where
-  (Tag _ a) == (Tag _ a') = a == a'
-
-instance Ord a => Ord (Tagged a) where
-  (Tag _ a) <= (Tag _ a') = a <= a'
-
--- DEGENERATE but need for debugging
-instance Show a => Show (Tagged a) where
-  show (Tag _ a) = show a
-
-instance Pretty a => Pretty (Tagged a) where
-  pretty (Tag _ a) = pretty a
 -- *Here* it's useful to distinguish them
 
 {- NOTE: We need different conditions for MPTCs but these are correct for now
@@ -138,7 +112,7 @@ data ModuleBuilder = ModuleBuilder
   { mbTyDefs :: M.Map T.Text (Tagged Exp) -- sourceInfo needs to be in here somehow (these are all local refs)
   , mbInstances :: S.Set (Tagged Instance) -- instances to be generated
   , mbClasses :: Classes -- classes to be generated
-  , mbScope :: S.Set Instance -- Instances to use as rules when checking instance clauses in the module
+  , mbScope :: S.Set (Tagged Instance) -- Instances to use as rules when checking instance clauses in the module
   }
   deriving stock (Show, Eq, Generic)
 
@@ -213,8 +187,6 @@ buildClasses cis = foldM go M.empty (concat $ M.elems cis)
     Instances
 -}
 
-type Instances = S.Set Instance
-
 getInstance :: M.Map FQClassName Class -> P.ModuleName -> P.InstanceClause -> Either TypeClassError (Tagged Instance)
 getInstance ctable mn (P.InstanceClause cn h csts si') = case ctable ^? ix cref of
   Nothing -> throwError $ UnknownClass cref si'
@@ -265,8 +237,8 @@ moduleScope ::
   M.Map P.ModuleName P.Module ->
   M.Map P.ModuleName (S.Set (Tagged Instance)) ->
   P.ModuleName ->
-  Either TypeClassError (S.Set Instance)
-moduleScope modls is = fmap (S.map unTag) . go
+  Either TypeClassError (S.Set (Tagged Instance))
+moduleScope modls is = go
   where
     go :: P.ModuleName -> Either TypeClassError (S.Set (Tagged Instance))
     go mn = case modls ^? (ix mn . #imports) of
@@ -321,7 +293,7 @@ mkBuilders ci = do
     go ::
       M.Map FQClassName Class ->
       M.Map P.ModuleName (S.Set (Tagged Instance)) ->
-      M.Map P.ModuleName Instances ->
+      M.Map P.ModuleName (S.Set (Tagged Instance)) ->
       M.Map P.ModuleName ModuleBuilder ->
       P.ModuleName ->
       Either TypeClassError (M.Map P.ModuleName ModuleBuilder)
