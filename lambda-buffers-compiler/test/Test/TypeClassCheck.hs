@@ -62,10 +62,10 @@ cycleDetected =
     case Superclass.runCheck cycles' of
       Left errs ->
         go errs
-          @?= [ ("Foo", ["Foo", "Bop", "Bar"])
-              , ("Bop", ["Bop", "Bar", "Foo"])
+          @?= [ ("Bar", ["Bar", "Foo", "Bop"])
               , ("Beep", ["Beep"])
-              , ("Bar", ["Bar", "Foo", "Bop"])
+              , ("Bop", ["Bop", "Bar", "Foo"])
+              , ("Foo", ["Foo", "Bop", "Bar"])
               ]
       Right () -> assertFailure "Cycle detections should have failed"
   where
