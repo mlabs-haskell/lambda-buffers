@@ -12,8 +12,6 @@ import Generics.SOP qualified as SOP
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, InfoLessC, withInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Pretty (pretty), viaShow)
-import Test.QuickCheck (Arbitrary)
-import Test.QuickCheck.Arbitrary.Generic (GenericArbitrary (GenericArbitrary))
 
 -- NOTE(cstml): Let's remove the Arbitrary instances and replaces them with
 -- Gens.
@@ -24,7 +22,6 @@ data Variable
     QualifiedTyRef PC.ForeignRef
   | TyVar PC.VarName
   deriving stock (Eq, Ord, Show, Generic)
-  deriving (Arbitrary) via GenericArbitrary Variable
   deriving anyclass (SOP.Generic)
 
 instance Pretty Variable where

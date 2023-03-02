@@ -20,7 +20,6 @@ import Control.Lens.Combinators (Ixed (ix))
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.State (foldM)
 import Data.List (foldl')
-import Data.Map.Internal (traverseWithKey)
 import GHC.Generics (Generic)
 
 import Data.Map qualified as M
@@ -52,6 +51,8 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
 
+import Data.Foldable (Foldable (toList))
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as P
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
@@ -77,10 +78,10 @@ data TypeClassError
   | MissingModuleInstances P.ModuleName
   | MissingModuleScope P.ModuleName
   | ClassNotFoundInModule Text [Text]
-  | LocalTyRefNotFound T.Text P.ModuleName
+  | LocalTyRefNotFound T.Text (P.InfoLess P.ModuleName)
   | SuperclassCycleDetected [[FQClassName]]
-  | FailedToSolveConstraints P.ModuleName [Constraint Exp] Instance
-  | MalformedTyDef P.ModuleName Exp
+  | FailedToSolveConstraints (P.InfoLess P.ModuleName) [Constraint Exp] Instance
+  | MalformedTyDef (P.InfoLess P.ModuleName) Exp
   | BadInstance BasicConditionViolation
   deriving stock (Show, Eq, Generic)
 
@@ -104,7 +105,7 @@ instance Pretty TypeClassError where
       "Error: Expected to find a type definition for a type named"
         <+> pretty txt
         <+> "in module"
-        <+> pretty mn
+        <+> P.withInfoLess mn pretty
         <+> "but it isn't there!"
     SuperclassCycleDetected crs ->
       "Error: Superclass cycles detected in compiler input:"
@@ -120,7 +121,7 @@ instance Pretty TypeClassError where
           <> line
           <> line
           <> indent 2 "in module"
-        <+> pretty mn
+        <+> P.withInfoLess mn pretty
           <> line
           <> line
           <> indent 2 "because the following constraint(s) were not satisfied:"
@@ -132,7 +133,7 @@ instance Pretty TypeClassError where
         <> line
         <> indent 2 (pretty xp)
         <> line
-        <> indent 2 ("in module" <+> pretty mn)
+        <> indent 2 ("in module" <+> P.withInfoLess mn pretty)
     BadInstance bcv -> pretty bcv
 
 data BasicConditionViolation
@@ -230,8 +231,8 @@ data ClassInfo = ClassInfo {ciName :: FQClassName, ciSupers :: [FQClassName]}
 
 type Classes = S.Set Class
 
-mkClassInfos :: [P.Module] -> M.Map P.ModuleName [ClassInfo]
-mkClassInfos = foldl' (\acc mdl -> M.insert (mdl ^. #moduleName) (go mdl) acc) M.empty
+mkClassInfos :: [P.Module] -> M.Map (P.InfoLess P.ModuleName) [ClassInfo]
+mkClassInfos = foldl' (\acc mdl -> M.insert (P.mkInfoLess $ mdl ^. #moduleName) (go mdl) acc) M.empty
   where
     go :: P.Module -> [ClassInfo]
     go m = map (defToClassInfo $ m ^. #moduleName) (M.elems $ m ^. #classDefs)
@@ -255,7 +256,7 @@ toClassMap = foldl' (\acc (ClassInfo nm sups) -> M.insert nm sups acc) M.empty
 This constructs a Map where the keys are fully qualified class names and the
 values are values of the Class data type from TypeClass.Rules
 -}
-buildClasses :: M.Map P.ModuleName [ClassInfo] -> Either TypeClassError (M.Map FQClassName Class)
+buildClasses :: M.Map (P.InfoLess P.ModuleName) [ClassInfo] -> Either TypeClassError (M.Map FQClassName Class)
 buildClasses cis = foldM go M.empty (concat $ M.elems cis)
   where
     superclasses = foldl' M.union M.empty $ M.elems (toClassMap <$> cis)
@@ -300,7 +301,7 @@ getInstances ctable mn = foldM go S.empty
       where
         cref = tyRefToFQClassName (modulename mn) cn
 
-mkModuleClasses :: P.CompilerInput -> M.Map P.ModuleName [ClassInfo]
+mkModuleClasses :: P.CompilerInput -> M.Map (P.InfoLess P.ModuleName) [ClassInfo]
 mkModuleClasses (P.CompilerInput ms) = mkClassInfos (M.elems ms)
 
 {- |
@@ -309,39 +310,36 @@ This constructs the instances defined in each module (NOT the instances in scope
 mkModuleInstances ::
   P.CompilerInput ->
   M.Map FQClassName Class ->
-  Either TypeClassError (M.Map P.ModuleName Instances)
+  Either TypeClassError (M.Map (P.InfoLess P.ModuleName) Instances)
 mkModuleInstances (P.CompilerInput ms) ctable = foldM go M.empty ms
   where
-    go :: M.Map P.ModuleName Instances -> P.Module -> Either TypeClassError (M.Map P.ModuleName Instances)
+    go :: M.Map (P.InfoLess P.ModuleName) Instances -> P.Module -> Either TypeClassError (M.Map (P.InfoLess P.ModuleName) Instances)
     go acc modl = case getInstances ctable (modl ^. #moduleName) (modl ^. #instances) of
       Left e -> Left e
-      Right is -> Right $ M.insert (modl ^. #moduleName) is acc
-
-moduleMap :: P.CompilerInput -> M.Map P.ModuleName P.Module
-moduleMap (P.CompilerInput ms) = foldl' (\acc m -> M.insert (m ^. #moduleName) m acc) M.empty ms
+      Right is -> Right $ M.insert (P.mkInfoLess $ modl ^. #moduleName) is acc
 
 {- |
 This fetches the *Rules* used as the scope for constraint solving
 for a given module.
 -}
 moduleScope ::
-  M.Map P.ModuleName P.Module ->
-  M.Map P.ModuleName Instances ->
+  M.Map (P.InfoLess P.ModuleName) P.Module ->
+  M.Map (P.InfoLess P.ModuleName) Instances ->
   P.ModuleName ->
   Either TypeClassError (S.Set (Rule Pat))
 moduleScope modls is = go
   where
     go :: P.ModuleName -> Either TypeClassError Instances
-    go mn = case modls ^? (ix mn . #imports) of
+    go mn = case modls ^? (ix (P.mkInfoLess mn) . #imports) of
       Nothing -> Left $ UnknownModule mn
-      Just impts -> mconcat <$> traverse goImport (S.toList impts)
+      Just impts -> mconcat <$> traverse goImport (toList impts)
 
     -- NOTE: This doesn't do recursive scope fetching anymore.
     --       If a user wants an instance rule in scope, they
     --       have to import the module (or something from it)
     --       (this is how it works in haskell/ps/rust)
     goImport :: P.ModuleName -> Either TypeClassError Instances
-    goImport mn = case is ^? ix mn of
+    goImport mn = case is ^? ix (P.mkInfoLess mn) of
       Nothing -> Left $ UnknownModule mn
       Just insts -> Right $ contextualize mn insts
 
@@ -368,31 +366,28 @@ lookupOr k m e = case M.lookup k m of
   Nothing -> Left e
   Just v -> Right v
 
-mkBuilders :: P.CompilerInput -> Either TypeClassError (M.Map P.ModuleName ModuleBuilder)
+mkBuilders :: P.CompilerInput -> Either TypeClassError (M.Map (P.InfoLess P.ModuleName) ModuleBuilder)
 mkBuilders ci = do
   classTable <- buildClasses classInfos
   insts <- mkModuleInstances ci classTable
-  scope <- traverseWithKey (\k _ -> moduleScope modTable insts k) modTable
-  foldM (go classTable insts scope) M.empty (M.keys modTable)
+  scope <- traverse (\m -> moduleScope (ci ^. #modules) insts (m ^. #moduleName)) (ci ^. #modules)
+  foldM (go classTable insts scope) M.empty (ci ^. #modules)
   where
-    modTable :: M.Map P.ModuleName P.Module
-    modTable = moduleMap ci
-
-    classInfos :: M.Map P.ModuleName [ClassInfo]
+    classInfos :: M.Map (P.InfoLess P.ModuleName) [ClassInfo]
     classInfos = mkModuleClasses ci
 
     go ::
       M.Map FQClassName Class ->
-      M.Map P.ModuleName Instances ->
-      M.Map P.ModuleName Instances ->
-      M.Map P.ModuleName ModuleBuilder ->
-      P.ModuleName ->
-      Either TypeClassError (M.Map P.ModuleName ModuleBuilder)
-    go classTable insts scope acc mn = do
-      mbinsts <- lookupOr mn insts $ MissingModuleInstances mn
-      mbscope <- lookupOr mn scope $ MissingModuleScope mn
-      mdule <- lookupOr mn modTable $ UnknownModule mn
-      mbclasses <- resolveClasses classTable mn . M.elems $ mdule ^. #classDefs
+      M.Map (P.InfoLess P.ModuleName) Instances ->
+      M.Map (P.InfoLess P.ModuleName) Instances ->
+      M.Map (P.InfoLess P.ModuleName) ModuleBuilder ->
+      P.Module ->
+      Either TypeClassError (M.Map (P.InfoLess P.ModuleName) ModuleBuilder)
+    go classTable insts scope acc m = do
+      mbinsts <- lookupOr (P.mkInfoLess $ m ^. #moduleName) insts $ MissingModuleInstances $ m ^. #moduleName
+      mbscope <- lookupOr (P.mkInfoLess $ m ^. #moduleName) scope $ MissingModuleScope $ m ^. #moduleName
+      mdule <- lookupOr (P.mkInfoLess $ m ^. #moduleName) (ci ^. #modules) $ UnknownModule $ m ^. #moduleName
+      mbclasses <- resolveClasses classTable (m ^. #moduleName) . M.elems $ mdule ^. #classDefs
       let mbtydefs =
             foldl'
               ( \accM t ->
@@ -410,7 +405,7 @@ mkBuilders ci = do
               , mbClasses = mbclasses
               , mbScope = mbscope
               }
-      pure $ M.insert mn mb acc
+      pure $ M.insert (P.mkInfoLess $ m ^. #moduleName) mb acc
 
     resolveClasses ::
       M.Map FQClassName Class ->

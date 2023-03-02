@@ -33,39 +33,40 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
 import Proto.Compiler_Fields ()
 
 import Data.Default (def)
+import Data.Map.Ordered qualified as OMap
 
 _CompilerInput :: [PC.Module] -> PC.CompilerInput
 _CompilerInput ms =
   PC.CompilerInput
-    { PC.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]
+    { PC.modules = Map.fromList [(PC.mkInfoLess $ m ^. #moduleName, m) | m <- ms]
     }
 
 _Module :: PC.ModuleName -> [PC.TyDef] -> [PC.ClassDef] -> [PC.InstanceClause] -> PC.Module
 _Module mn tds cds ins =
   PC.Module
     { PC.moduleName = mn
-    , PC.typeDefs = Map.fromList [(td ^. #tyName, td) | td <- tds]
-    , PC.classDefs = Map.fromList [(cd ^. #className, cd) | cd <- cds]
+    , PC.typeDefs = Map.fromList [(PC.mkInfoLess $ td ^. #tyName, td) | td <- tds]
+    , PC.classDefs = Map.fromList [(PC.mkInfoLess $ cd ^. #className, cd) | cd <- cds]
     , PC.instances = ins
     , PC.imports = mempty
-    , PC.sourceInfo = PC.defSourceInfo
+    , PC.sourceInfo = def
     }
 
 _ModuleName :: [Text] -> PC.ModuleName
 _ModuleName ps =
   PC.ModuleName
     { PC.parts = _ModuleNamePart <$> ps
-    , PC.sourceInfo = PC.defSourceInfo
+    , PC.sourceInfo = def
     }
 
 _ModuleNamePart :: Text -> PC.ModuleNamePart
-_ModuleNamePart n = PC.ModuleNamePart n PC.defSourceInfo
+_ModuleNamePart n = PC.ModuleNamePart n def
 
 _TyName :: Text -> PC.TyName
-_TyName x = PC.TyName x PC.defSourceInfo
+_TyName x = PC.TyName x def
 
 _VarName :: Text -> PC.VarName
-_VarName = flip _VarName' PC.defSourceInfo
+_VarName = flip _VarName' def
 
 _VarName' :: Text -> PC.SourceInfo -> PC.VarName
 _VarName' x s = PC.VarName {PC.name = x, PC.sourceInfo = s}
@@ -95,7 +96,7 @@ _TupleI x =
   PC.TupleI $
     PC.Tuple
       { PC.fields = x
-      , PC.sourceInfo = PC.defSourceInfo
+      , PC.sourceInfo = def
       }
 
 _Constructor :: Text -> PC.Product -> PC.Constructor
@@ -109,15 +110,15 @@ _ConstrName :: Text -> PC.ConstrName
 _ConstrName x =
   PC.ConstrName
     { PC.name = x
-    , PC.sourceInfo = PC.defSourceInfo
+    , PC.sourceInfo = def
     }
 
 _Sum :: [(Text, PC.Product)] -> PC.TyBody
 _Sum cs =
   PC.SumI $
     PC.Sum
-      { constructors = Map.fromList [(ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
-      , sourceInfo = PC.defSourceInfo
+      { constructors = OMap.fromList [(PC.mkInfoLess $ ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
+      , sourceInfo = def
       }
 
 _TyApp :: PC.Ty -> PC.Ty -> PC.Ty
@@ -132,30 +133,30 @@ _TyApp ty1 ty2 =
 _TyAbs :: [(Text, PC.KindType)] -> [(Text, PC.Product)] -> PC.TyAbs
 _TyAbs args body =
   PC.TyAbs
-    { PC.tyArgs = Map.fromList [(ta ^. #argName, ta) | ta <- _TyArg <$> args]
+    { PC.tyArgs = OMap.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
     , PC.tyBody = _Sum body
-    , sourceInfo = PC.defSourceInfo
+    , sourceInfo = def
     }
 
 _TyArg :: (Text, PC.KindType) -> PC.TyArg
 _TyArg (a, k) =
   PC.TyArg
-    { PC.argName = PC.VarName a PC.defSourceInfo
+    { PC.argName = PC.VarName a def
     , PC.argKind = PC.Kind {PC.kind = k}
-    , PC.sourceInfo = PC.defSourceInfo
+    , PC.sourceInfo = def
     }
 
 _Type :: PC.KindType
 _Type = PC.KindRef PC.KType
 
 _TyDef :: PC.TyName -> PC.TyAbs -> PC.TyDef
-_TyDef name ab = PC.TyDef {PC.tyName = name, PC.tyAbs = ab, sourceInfo = PC.defSourceInfo}
+_TyDef name ab = PC.TyDef {PC.tyName = name, PC.tyAbs = ab, sourceInfo = def}
 
 _TyRefILocal :: Text -> PC.Ty
 _TyRefILocal x = PC.TyRefI $ PC.LocalI $ _LocalRef x
 
 _LocalRef :: Text -> PC.LocalRef
-_LocalRef = flip _LocalRef' PC.defSourceInfo
+_LocalRef = flip _LocalRef' def
 
 -- | LocalRef with Source Info - for error precision testing.
 _LocalRef' :: Text -> PC.SourceInfo -> PC.LocalRef
@@ -166,7 +167,7 @@ _LocalRef' x s =
     }
 
 _ForeignRef :: Text -> [Text] -> PC.ForeignRef
-_ForeignRef n m = _ForeignRef' n (_ModuleName m) PC.defSourceInfo
+_ForeignRef n m = _ForeignRef' n (_ModuleName m) def
 
 _ForeignRef' :: Text -> PC.ModuleName -> PC.SourceInfo -> PC.ForeignRef
 _ForeignRef' x m s =

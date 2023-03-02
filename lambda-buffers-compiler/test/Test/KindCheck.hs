@@ -5,12 +5,14 @@ import LambdaBuffers.Compiler.KindCheck (
   foldWithArrowToType,
  )
 
-import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)))
+import Hedgehog (Gen, forAll, property, (===))
+import Hedgehog.Gen (choice, int, list)
+import Hedgehog.Range qualified as R
+import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, KVar, (:->:)))
 import Test.KindCheck.Errors (testGKindCheckErrors)
-import Test.QuickCheck (Arbitrary (arbitrary), forAll, (===))
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertBool, testCase, (@?=))
-import Test.Tasty.QuickCheck (testProperty)
+import Test.Tasty.HUnit (HasCallStack, assertBool, testCase, (@?=))
+import Test.Tasty.Hedgehog (testProperty)
 import Test.Utils.CompilerInput (
   compilerInput'either,
   compilerInput'incoherent,
@@ -138,8 +140,22 @@ testArrowFoldHHK =
     foldWithArrowToType [ty, (ty :->: ty) :->: ty, ty]
       @?= (ty :->: (((ty :->: ty) :->: ty) :->: (ty :->: ty)))
 
-testFoldWithArrowToTypeTotal :: TestTree
+testFoldWithArrowToTypeTotal :: HasCallStack => TestTree
 testFoldWithArrowToTypeTotal =
-  testProperty "foldWithArrowToType is total" $
-    forAll arbitrary $
-      \ts -> foldWithArrowToType ts === foldWithArrowToType ts
+  testProperty
+    "foldWithArrowToType is total"
+    ( property $ do
+        ts <- forAll genKinds
+        foldWithArrowToType ts === foldWithArrowToType ts
+    )
+  where
+    genKind :: Gen Kind
+    genKind =
+      choice
+        [ return KType
+        , KVar . toInteger <$> int (R.constant 0 100)
+        , (:->:) <$> genKind <*> genKind
+        ]
+
+    genKinds :: Gen [Kind]
+    genKinds = list (R.constant 0 10) genKind

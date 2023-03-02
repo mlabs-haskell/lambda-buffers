@@ -86,7 +86,6 @@ library
   hs-source-dirs:  src
   build-depends:
     , base                     >=4.16
-    , generic-lens             >=2.2.1.0
     , lambda-buffers-compiler  >=0.1
     , lens                     >=5.2
     , template-haskell         >=2.18

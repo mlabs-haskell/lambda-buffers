@@ -9,6 +9,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat (runFromProto)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import LambdaBuffers.Compiler.TypeClassCheck (detectSuperclassCycles')
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
@@ -56,7 +57,7 @@ noCycleDetected :: TestTree
 noCycleDetected =
   testCase "No cycle detected" $ do
     nocycles' <- fromProto' nocycles
-    case Map.lookup (_ModuleName ["ModuleWithNoClassCycles"]) (nocycles' ^. #modules) of
+    case Map.lookup (PC.mkInfoLess $ _ModuleName ["ModuleWithNoClassCycles"]) (nocycles' ^. #modules) of
       Nothing -> assertFailure "Failed lookup to ModuleWithClassNoClassCycles"
       Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= []
 
@@ -64,7 +65,7 @@ cycleDetected :: TestTree
 cycleDetected =
   testCase "Cycle detected" $ do
     cycles' <- fromProto' cycles
-    case Map.lookup (_ModuleName ["ModuleWithClassCycles"]) (cycles' ^. #modules) of
+    case Map.lookup (PC.mkInfoLess $ _ModuleName ["ModuleWithClassCycles"]) (cycles' ^. #modules) of
       Nothing -> assertFailure "Failed lookup to ModuleWithClassCycles"
       Just m -> detectSuperclassCycles' (toList $ m ^. #classDefs) @?= [["Bar", "Foo", "Bop", "Bar"], ["Bop", "Bar", "Foo", "Bop"], ["Foo", "Bop", "Bar", "Foo"]]
 
