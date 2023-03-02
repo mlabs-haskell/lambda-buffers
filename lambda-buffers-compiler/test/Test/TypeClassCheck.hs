@@ -2,12 +2,11 @@
 
 module Test.TypeClassCheck (test) where
 
-import Control.Lens ((.~))
+import Control.Lens ((.~), (^.))
 import Data.Function ((&))
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat (runFromProto)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as ProtoCompat
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Exp (AppE, LabelE, LitE, NilE, RefE),
@@ -31,8 +30,8 @@ import LambdaBuffers.Compiler.TypeClassCheck.Validate (
   _L,
   _X,
  )
-import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE))
-import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, kindRef, localClassRef, moduleName, modules, name, parts, supers, tyVar, varName)
+import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), TyClassCheckError)
+import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, cycledClassRefs, kindRef, localClassRef, moduleName, modules, name, parts, superclassCycleErr, supers, tyVar, varName)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -60,7 +59,24 @@ cycleDetected :: TestTree
 cycleDetected =
   testCase "Cycle detected" $ do
     cycles' <- fromProto' cycles
-    Superclass.runCheck cycles' @?= Left []
+    case Superclass.runCheck cycles' of
+      Left errs ->
+        go errs
+          @?= [ ("Foo", ["Foo", "Bop", "Bar"])
+              , ("Bop", ["Bop", "Bar", "Foo"])
+              , ("Beep", ["Beep"])
+              , ("Bar", ["Bar", "Foo", "Bop"])
+              ]
+      Right () -> assertFailure "Cycle detections should have failed"
+  where
+    go :: [TyClassCheckError] -> [(Text, [Text])]
+    go (e : errs) =
+      ( e ^. superclassCycleErr . className . name
+      , [ cr ^. localClassRef . className . name | cr <- e ^. superclassCycleErr . cycledClassRefs
+        ]
+      )
+        : go errs
+    go [] = []
 
 fromProto' :: CompilerInput -> IO ProtoCompat.CompilerInput
 fromProto' compInp =
