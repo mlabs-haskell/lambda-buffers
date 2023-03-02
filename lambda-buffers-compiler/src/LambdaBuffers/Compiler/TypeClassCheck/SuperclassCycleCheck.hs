@@ -1,7 +1,7 @@
 module LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck (runCheck) where
 
 import Control.Lens ((&), (.~), (^.))
-import Control.Monad (when)
+import Control.Monad (void, when)
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (runExcept)
 import Control.Monad.Reader (ReaderT (runReaderT))
@@ -73,17 +73,20 @@ checkClassDef (PC.ClassDef cn _ sups _ _) = do
 checkCycle :: MonadCheck m => PC.ClassName -> m ()
 checkCycle cn = do
   trace <- asks trace
-  when (Set.member (PC.mkInfoLess cn) trace) $ do
-    mn <- asks currentModuleName
-    currcn <- asks currentClassName
-    rtrace <- asks reportingTrace
-    throwError $
-      defMessage
-        & P.superclassCycleErr . P.moduleName .~ PC.toProto mn
-        & P.superclassCycleErr . P.className .~ PC.toProto currcn
-        & P.superclassCycleErr . P.cycledClassRefs .~ (PC.toProto <$> rtrace)
+  when (Set.member (PC.mkInfoLess cn) trace) (void throwCycleDetected)
 
-throwUnboundTyClassRef :: MonadCheck m => PC.Constraint -> m ()
+throwCycleDetected :: MonadCheck m => m a
+throwCycleDetected = do
+  mn <- asks currentModuleName
+  currcn <- asks currentClassName
+  rtrace <- asks reportingTrace
+  throwError $
+    defMessage
+      & P.superclassCycleErr . P.moduleName .~ PC.toProto mn
+      & P.superclassCycleErr . P.className .~ PC.toProto currcn
+      & P.superclassCycleErr . P.cycledClassRefs .~ (PC.toProto <$> rtrace)
+
+throwUnboundTyClassRef :: MonadCheck m => PC.Constraint -> m a
 throwUnboundTyClassRef c = do
   mn <- asks currentModuleName
   throwError $
