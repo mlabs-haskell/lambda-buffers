@@ -1,5 +1,6 @@
 module LambdaBuffers.Compiler.KindCheck.Derivation (
   Derivation (Axiom, Abstraction, Application, Implication),
+  QClassName (QClassName),
   d'type,
   d'kind,
   Judgement (Judgement),
@@ -10,12 +11,15 @@ module LambdaBuffers.Compiler.KindCheck.Derivation (
   context,
   addContext,
   getAllContext,
+  constraintContext,
 ) where
 
 import Control.Lens (Lens', lens, makeLenses, (&), (.~), (^.))
+import Control.Lens.Operators ((%~))
 import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind)
 import LambdaBuffers.Compiler.KindCheck.Type (Type, Variable)
+import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess)
 import Prettyprinter (
   Doc,
@@ -33,9 +37,13 @@ import Prettyprinter (
   (<+>),
  )
 
+-- | Qualified Class Name.
+data QClassName = QClassName
+
 data Context = Context
   { _context :: M.Map (InfoLess Variable) Kind
   , _addContext :: M.Map (InfoLess Variable) Kind
+  , _constraintContext :: M.Map (InfoLess PC.ClassName) Kind
   }
   deriving stock (Show, Eq)
 
@@ -50,12 +58,16 @@ instance Pretty Context where
       setPretty = hsep . punctuate comma . fmap (\(v, t) -> pretty v <> ":" <+> pretty t)
 
 instance Semigroup Context where
-  (Context a1 b1) <> (Context a2 b2) = Context (a1 <> a2) (b1 <> b2)
+  c1 <> c2 =
+    c1
+      & context %~ (<> c2 ^. context)
+      & addContext %~ (<> c2 ^. addContext)
+      & constraintContext %~ (<> c2 ^. constraintContext)
 
 instance Monoid Context where
-  mempty = Context mempty mempty
+  mempty = Context mempty mempty mempty
 
--- | Utility to unify the two.
+-- | Utility to unify the two T.
 getAllContext :: Context -> M.Map (InfoLess Variable) Kind
 getAllContext c = c ^. context <> c ^. addContext
 

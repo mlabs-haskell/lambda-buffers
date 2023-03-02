@@ -3,27 +3,33 @@
 -- This pragma^ is needed due to redundant constraint in Getters and Eff.
 
 module LambdaBuffers.Compiler.KindCheck.Inference (
+  -- * API functions
+  infer,
+  runClassDefCheck,
+
+  -- * Types
   Kind (..),
   Context (..),
   Atom,
   Type (..),
-  infer,
   DeriveM,
   DeriveEff,
-  context,
-  addContext,
   InferErr (..),
   Constraint (..),
+
+  -- * Utility functions
+  protoKind2Kind,
 ) where
 
-import Control.Lens (view, (%~), (&), (.~), (^.))
+import Control.Lens ((%~), (&), (.~), (^.))
+import Control.Lens.Iso (withIso)
+import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, run)
 import Control.Monad.Freer.Error (Error, runError, throwError)
 import Control.Monad.Freer.Reader (Reader, ask, asks, local, runReader)
 import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
-import Data.Bifunctor (Bifunctor (second))
-import Data.Foldable (foldrM)
+import Data.Foldable (foldrM, traverse_)
 import Data.Map qualified as M
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.KindCheck.Derivation (
@@ -35,13 +41,14 @@ import LambdaBuffers.Compiler.KindCheck.Derivation (
   d'kind,
   d'type,
  )
-import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KType, KVar, (:->:)))
+import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
   Type (Abs, App, Constructor, Opaque, Product, Sum, UnitT, Var, VoidT),
   Variable (QualifiedTyRef, TyVar),
+  ftrISOqtr,
+  ltrISOqtr,
  )
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
-import LambdaBuffers.Compiler.ProtoCompat.Types (localRef2ForeignRef)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Pretty (pretty), (<+>))
 
@@ -79,7 +86,6 @@ type Derive a =
   forall effs.
   Members
     '[ Reader Context
-     , Reader Kind
      , Reader PC.ModuleName
      , State DerivationContext
      , Writer [Constraint]
@@ -92,180 +98,183 @@ type Derive a =
 -- Runners
 
 -- | Run derivation builder - not unified yet.
-runDerive ::
-  Context ->
-  PC.TyAbs ->
-  Kind ->
-  PC.ModuleName ->
-  Either InferErr (Derivation, [Constraint])
-runDerive ctx t k localMod =
-  run $
-    runError $
-      runWriter $
-        evalState (DC startAtom) $
-          runReader ctx $
-            runReader k $
-              runReader localMod $
-                derive t
+runDerive :: Context -> PC.ModuleName -> Derive a -> Either InferErr (a, [Constraint])
+runDerive ctx localMod =
+  run . runError . runWriter . evalState (DC startAtom) . runReader ctx . runReader localMod
 
-infer ::
-  Context ->
-  PC.TyDef ->
-  Kind ->
-  PC.ModuleName ->
-  Either InferErr Kind
-infer ctx t k localMod = do
-  (d, c) <- runDerive (defContext <> ctx) (t ^. #tyAbs) k localMod
+infer :: Context -> PC.TyDef -> PC.ModuleName -> Either InferErr Kind
+infer ctx t localMod = do
+  (d, c) <- runDerive ctx localMod (deriveTyAbs (t ^. #tyAbs))
   s <- runUnify' c
   let res = foldl (flip substitute) d s
   pure $ res ^. d'kind
 
--- | Default KC Context.
-defContext :: Context
-defContext = mempty
-
 --------------------------------------------------------------------------------
 -- Implementation
 
--- | Creates the derivation
-derive :: PC.TyAbs -> Derive Derivation
-derive x = deriveTyAbs x
-  where
-    fresh :: Derive Atom
-    fresh = do
-      DC a <- get
-      put (DC $ a + 1)
-      pure a
+fresh :: Derive Atom
+fresh = do
+  DC a <- get
+  put (DC $ a + 1)
+  pure a
 
-    deriveTyAbs :: PC.TyAbs -> Derive Derivation
-    deriveTyAbs tyabs = do
-      case M.toList (tyabs ^. #tyArgs) of
-        [] -> deriveTyBody (x ^. #tyBody)
-        a@(n, ar) : as -> do
-          let argK = protoKind2Kind (ar ^. #argKind)
-          bodyK <- KVar <$> fresh
-          ctx <- ask
-
-          let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) argK)
-          let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
-          let restAbs = tyabs & #tyArgs .~ M.fromList as
-
-          restF <- local (const newContext) $ deriveTyAbs restAbs
-
-          let uK = restF ^. d'kind
-          tell [Constraint (bodyK, uK)]
-          pure $ Abstraction (Judgement ctx (Abs newAbs) (argK :->: bodyK)) restF
-
-    deriveTyBody :: PC.TyBody -> Derive Derivation
-    deriveTyBody = \case
-      PC.OpaqueI si -> do
-        ctx <- ask
-        pure $ Axiom $ Judgement ctx (Opaque si) KType
-      PC.SumI s -> deriveSum s
-
-    deriveSum :: PC.Sum -> Derive Derivation
-    deriveSum s = do
-      case M.toList (s ^. #constructors) of
-        [] -> voidDerivation
-        c : cs -> do
-          dc <- deriveConstructor $ snd c
-          restDc <- deriveSum $ s & #constructors .~ M.fromList cs
-          sumDerivation dc restDc
-
-    deriveConstructor :: PC.Constructor -> Derive Derivation
-    deriveConstructor c = do
+deriveTyAbs :: PC.TyAbs -> Derive Derivation
+deriveTyAbs tyabs = do
+  case M.toList (tyabs ^. #tyArgs) of
+    [] -> deriveTyBody (tyabs ^. #tyBody)
+    a@(n, ar) : as -> do
+      let argK = protoKind2Kind (ar ^. #argKind)
+      bodyK <- KVar <$> fresh
       ctx <- ask
-      d <- deriveProduct (c ^. #product)
-      tell $ Constraint <$> [(KType, d ^. d'kind)]
-      pure $ Implication (Judgement ctx (Constructor c) (d ^. d'kind)) d
 
-    deriveProduct :: PC.Product -> Derive Derivation
-    deriveProduct = \case
-      PC.RecordI r -> deriveRecord r
-      PC.TupleI t -> deriveTuple t
+      let newContext = ctx & addContext %~ (<> M.singleton (mkInfoLess (TyVar n)) argK)
+      let newAbs = tyabs & #tyArgs .~ uncurry M.singleton a
+      let restAbs = tyabs & #tyArgs .~ M.fromList as
 
-    deriveRecord :: PC.Record -> Derive Derivation
-    deriveRecord r = do
-      case M.toList (r ^. #fields) of
-        [] -> unitDerivation
-        f : fs -> do
-          d1 <- deriveField $ snd f
-          d2 <- deriveRecord $ r & #fields .~ M.fromList fs
-          productDerivation d1 d2
+      restF <- local (const newContext) $ deriveTyAbs restAbs
 
-    deriveField :: PC.Field -> Derive Derivation
-    deriveField f = deriveTy $ f ^. #fieldTy
+      let uK = restF ^. d'kind
+      tell [Constraint (bodyK, uK)]
+      pure $ Abstraction (Judgement ctx (Abs newAbs) (argK :->: bodyK)) restF
 
-    deriveTy :: PC.Ty -> Derive Derivation
-    deriveTy = \case
-      PC.TyVarI tv -> deriveTyVar tv
-      PC.TyAppI ta -> deriveTyApp ta
-      PC.TyRefI tr -> deriveTyRef tr
+deriveTyBody :: PC.TyBody -> Derive Derivation
+deriveTyBody = \case
+  PC.OpaqueI si -> do
+    ctx <- ask
+    pure $ Axiom $ Judgement ctx (Opaque si) KType
+  PC.SumI s -> deriveSum s
 
-    deriveTyRef :: PC.TyRef -> Derive Derivation
-    deriveTyRef = \case
-      PC.LocalI r -> do
-        localModule <- ask
-        let ty = QualifiedTyRef . view (localRef2ForeignRef localModule) $ r
-        v <- getKind ty
-        c <- ask
-        pure . Axiom $ Judgement c (Var ty) v
-      PC.ForeignI r -> do
-        let ty = QualifiedTyRef r
-        v <- getKind ty
-        c <- ask
-        pure . Axiom $ Judgement c (Var ty) v
+deriveSum :: PC.Sum -> Derive Derivation
+deriveSum s = do
+  case M.toList (s ^. #constructors) of
+    [] -> voidDerivation
+    c : cs -> do
+      dc <- deriveConstructor $ snd c
+      restDc <- deriveSum $ s & #constructors .~ M.fromList cs
+      sumDerivation dc restDc
 
-    deriveTyVar :: PC.TyVar -> Derive Derivation
-    deriveTyVar tv = do
-      let varName = tv ^. #varName
-      v <- getKind $ TyVar varName
-      c <- ask
-      pure . Axiom $ Judgement c (Var $ TyVar varName) v
+deriveConstructor :: PC.Constructor -> Derive Derivation
+deriveConstructor c = do
+  ctx <- ask
+  d <- deriveProduct (c ^. #product)
+  tell $ Constraint <$> [(KType, d ^. d'kind)]
+  pure $ Implication (Judgement ctx (Constructor c) (d ^. d'kind)) d
 
-    deriveTyApp :: PC.TyApp -> Derive Derivation
-    deriveTyApp ap = do
-      f <- deriveTy (ap ^. #tyFunc)
-      args <- deriveTy `traverse` (ap ^. #tyArgs)
-      applyDerivation f args
+deriveProduct :: PC.Product -> Derive Derivation
+deriveProduct = \case
+  PC.RecordI r -> deriveRecord r
+  PC.TupleI t -> deriveTuple t
 
-    deriveTuple :: PC.Tuple -> Derive Derivation
-    deriveTuple t = do
-      voidD <- voidDerivation
-      ds <- deriveTy `traverse` (t ^. #fields)
-      foldrM productDerivation voidD ds
+deriveRecord :: PC.Record -> Derive Derivation
+deriveRecord r = do
+  case M.toList (r ^. #fields) of
+    [] -> unitDerivation
+    f : fs -> do
+      d1 <- deriveField $ snd f
+      d2 <- deriveRecord $ r & #fields .~ M.fromList fs
+      productDerivation d1 d2
 
-    voidDerivation :: Derive Derivation
-    voidDerivation = (\ctx -> Axiom $ Judgement ctx VoidT KType) <$> ask
+deriveField :: PC.Field -> Derive Derivation
+deriveField f = deriveTy $ f ^. #fieldTy
 
-    unitDerivation :: Derive Derivation
-    unitDerivation = (\ctx -> Axiom $ Judgement ctx UnitT KType) <$> ask
+deriveTy :: PC.Ty -> Derive Derivation
+deriveTy = \case
+  PC.TyVarI tv -> deriveTyVar tv
+  PC.TyAppI ta -> deriveTyApp ta
+  PC.TyRefI tr -> deriveTyRef tr
 
-    productDerivation :: Derivation -> Derivation -> Derive Derivation
-    productDerivation d1 d2 = do
-      ctx <- ask
-      let t1 = d1 ^. d'type
-      let t2 = d2 ^. d'type
-      tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
-      pure $ Application (Judgement ctx (Product t1 t2) KType) d1 d2
+deriveTyRef :: PC.TyRef -> Derive Derivation
+deriveTyRef = \case
+  PC.LocalI r -> do
+    localModule <- ask
+    let ty = QualifiedTyRef . withIso ltrISOqtr const $ (r, localModule)
+    v <- getKind ty
+    c <- ask
+    pure . Axiom $ Judgement c (Var ty) v
+  PC.ForeignI r -> do
+    let ty = QualifiedTyRef . withIso ftrISOqtr const $ r
+    v <- getKind ty
+    c <- ask
+    pure . Axiom $ Judgement c (Var ty) v
 
-    sumDerivation :: Derivation -> Derivation -> Derive Derivation
-    sumDerivation d1 d2 = do
-      ctx <- ask
-      let t1 = d1 ^. d'type
-      let t2 = d2 ^. d'type
-      tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
-      pure $ Application (Judgement ctx (Sum t1 t2) KType) d1 d2
+deriveTyVar :: PC.TyVar -> Derive Derivation
+deriveTyVar tv = do
+  let varName = tv ^. #varName
+  v <- getKind $ TyVar varName
+  c <- ask
+  pure . Axiom $ Judgement c (Var $ TyVar varName) v
 
-    applyDerivation :: Derivation -> [Derivation] -> Derive Derivation
-    applyDerivation d1 = \case
-      [] -> pure d1
-      d : ds -> do
-        c <- ask
-        d2 <- applyDerivation d ds
-        v <- KVar <$> fresh
-        tell [Constraint ((d2 ^. d'kind) :->: v, d1 ^. d'kind)]
-        pure $ Application (Judgement c (App (d ^. d'type) (d2 ^. d'type)) v) d1 d2
+deriveTyApp :: PC.TyApp -> Derive Derivation
+deriveTyApp ap = do
+  f <- deriveTy (ap ^. #tyFunc)
+  args <- deriveTy `traverse` (ap ^. #tyArgs)
+  applyDerivation f args
+
+deriveTuple :: PC.Tuple -> Derive Derivation
+deriveTuple t = do
+  voidD <- voidDerivation
+  ds <- deriveTy `traverse` (t ^. #fields)
+  foldrM productDerivation voidD ds
+
+voidDerivation :: Derive Derivation
+voidDerivation = (\ctx -> Axiom $ Judgement ctx VoidT KType) <$> ask
+
+unitDerivation :: Derive Derivation
+unitDerivation = (\ctx -> Axiom $ Judgement ctx UnitT KType) <$> ask
+
+productDerivation :: Derivation -> Derivation -> Derive Derivation
+productDerivation d1 d2 = do
+  ctx <- ask
+  let t1 = d1 ^. d'type
+  let t2 = d2 ^. d'type
+  tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
+  pure $ Application (Judgement ctx (Product t1 t2) KType) d1 d2
+
+sumDerivation :: Derivation -> Derivation -> Derive Derivation
+sumDerivation d1 d2 = do
+  ctx <- ask
+  let t1 = d1 ^. d'type
+  let t2 = d2 ^. d'type
+  tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
+  pure $ Application (Judgement ctx (Sum t1 t2) KType) d1 d2
+
+applyDerivation :: Derivation -> [Derivation] -> Derive Derivation
+applyDerivation d1 = \case
+  [] -> pure d1
+  d : ds -> do
+    c <- ask
+    d2 <- applyDerivation d ds
+    v <- KVar <$> fresh
+    tell [Constraint ((d2 ^. d'kind) :->: v, d1 ^. d'kind)]
+    pure $ Application (Judgement c (App (d ^. d'type) (d2 ^. d'type)) v) d1 d2
+
+--------------------------------------------------------------------------------
+-- Class Checking
+
+runClassDefCheck :: Context -> PC.ModuleName -> PC.ClassDef -> Either InferErr ()
+runClassDefCheck ctx modName classDef = do
+  (_, c) <- runDerive ctx modName $ deriveClassDef classDef
+  void $ runUnify' c
+
+-- | Checks the class definition for correct typedness.
+deriveClassDef :: PC.ClassDef -> Derive ()
+deriveClassDef classDef = traverse_ deriveConstraint (classDef ^. #supers)
+
+deriveConstraint :: PC.Constraint -> Derive Derivation
+deriveConstraint _constraint = do
+  --  ctx <- ask
+  -- FIXME
+  --  k2 <- getKind (ConstraintT undefined)
+  --  argD <- deriveTy (constraint ^. #argument)
+  pure $ error "NOTE(cstml): fixme."
+
+--    Application
+--      (Judgement ctx (App (Var (QualifiedConstraint undefined))) k2)
+--      (Judgement ctx (App (Var (QualifiedConstraint undefined) k2)))
+--      argD
+
+--------------------------------------------------------------------------------
+--
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.
@@ -284,6 +293,7 @@ type Unifier a = forall effs. Member (Error InferErr) effs => Eff effs a
 getVariables :: Kind -> [Atom]
 getVariables = \case
   KType -> mempty
+  KConstraint -> mempty
   x :->: y -> getVariables x <> getVariables y
   KVar x -> [x]
 
@@ -294,14 +304,25 @@ getVariables = \case
 unify :: [Constraint] -> Unifier [Substitution]
 unify [] = pure []
 unify (constraint@(Constraint (l, r)) : xs) = case l of
+  -- Constants
   KType -> case r of
     KType -> unify xs
+    KConstraint -> nope constraint
     (_ :->: _) -> nope constraint
     KVar v ->
       let sub = Substitution (v, KType)
        in (sub :) <$> unify (sub `substituteIn` xs)
+  KConstraint -> case r of
+    KType -> nope constraint
+    KConstraint -> unify xs
+    (_ :->: _) -> nope constraint
+    KVar v ->
+      let sub = Substitution (v, KConstraint)
+       in (sub :) <$> unify (sub `substituteIn` xs)
+  -- Arrows
   x :->: y -> case r of
     KType -> nope constraint
+    KConstraint -> nope constraint
     KVar v ->
       if v `appearsIn` l
         then appearsErr v l
@@ -312,6 +333,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
       let c1 = Constraint (x, m)
           c2 = Constraint (y, n)
        in unify (c1 : c2 : xs)
+  -- Variables
   KVar a -> case r of
     KVar b ->
       if a == b
@@ -349,6 +371,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
 applySubstitution :: Substitution -> Kind -> Kind
 applySubstitution s@(Substitution (a, t)) k = case k of
   KType -> KType
+  KConstraint -> KConstraint
   l :->: r -> applySubstitution s l :->: applySubstitution s r
   KVar v -> if v == a then t else k
 
@@ -368,9 +391,7 @@ substitute s d = case d of
   where
     applySubsToJudgement sub (Judgement ctx t k) = Judgement (applySubstitutionCtx s ctx) t (applySubstitution sub k)
 
-    applySubstitutionCtx subs c@(Context ctx addCtx) = case M.toList addCtx of
-      [] -> c
-      xs -> Context ctx $ M.fromList $ second (applySubstitution subs) <$> xs
+    applySubstitutionCtx subs ctx = ctx & addContext %~ fmap (applySubstitution subs)
 
 -- FIXME(cstml) not avoiding any clashes
 
@@ -384,4 +405,5 @@ protoKind2Kind = \case
   PC.Kind k -> case k of
     PC.KindArrow k1 k2 -> protoKind2Kind k1 :->: protoKind2Kind k2
     PC.KindRef PC.KType -> KType
-    PC.KindRef PC.KUnspecified -> KType -- unspecified kinds get inferred and unified
+    PC.KindRef PC.KUnspecified -> KType -- unspecified kinds get defaulted
+    PC.KindRef PC.KConstraint -> KConstraint

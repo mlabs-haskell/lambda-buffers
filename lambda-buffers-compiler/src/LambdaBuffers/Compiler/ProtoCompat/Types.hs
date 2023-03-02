@@ -6,7 +6,6 @@
 {-# OPTIONS_GHC -fconstraint-solver-iterations=0 #-}
 
 module LambdaBuffers.Compiler.ProtoCompat.Types (
-  localRef2ForeignRef,
   ClassDef (..),
   ClassName (..),
   CompilerError (..),
@@ -54,7 +53,6 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 ) where
 
 import Control.Exception (Exception)
-import Control.Lens (Getter, to, (^.))
 import Data.Generics.Labels ()
 import Data.Map (Map)
 import Data.Set (Set)
@@ -140,7 +138,7 @@ instance Arbitrary KindType where
         | n <= 0 = KindRef <$> arbitrary
         | otherwise = KindArrow <$> resize (n `div` 2) arbitrary <*> resize (n `div` 2) arbitrary
 
-data KindRefType = KUnspecified | KType
+data KindRefType = KUnspecified | KType | KConstraint
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary KindRefType
   deriving anyclass (SOP.Generic)
@@ -180,17 +178,6 @@ data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving (Arbitrary) via GenericArbitrary LocalRef
   deriving anyclass (SOP.Generic)
-
-localRef2ForeignRef :: ModuleName -> Getter LocalRef ForeignRef
-localRef2ForeignRef modName =
-  to
-    ( \lr ->
-        ForeignRef
-          { tyName = lr ^. #tyName
-          , sourceInfo = lr ^. #sourceInfo
-          , moduleName = modName
-          }
-    )
 
 data TyRef = LocalI LocalRef | ForeignI ForeignRef
   deriving stock (Show, Eq, Ord, Generic)

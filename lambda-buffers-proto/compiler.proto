@@ -251,6 +251,8 @@ message Kind {
     KIND_REF_UNSPECIFIED = 0;
     // A `Type` kind (also know as `*` in Haskell) built-in.
     KIND_REF_TYPE = 1;
+    // A `Constraint` kind - relating to the kind of a Type Class.
+    KIND_REF_CONSTRAINT = 2;
   };
   // A kind arrow.
   message KindArrow {
@@ -648,7 +650,7 @@ message KindCheckError {
     TyRef ty_ref = 3;
   }
 
-  // In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
+  // In ty_def an error has occurred when trying to unify kind ty_kind_lhs
   // with ty_kind_rhs.
   //
   // FIXME(cstml): Add source of constraint to the error such that user can see
@@ -663,7 +665,7 @@ message KindCheckError {
 
   // A cyclic kind was encountered. Infinite kinds like this are not acceptable,
   // and we do not support them. We could not construct infinite kind in ty_def.
-  // 
+  //
   // As the implementation currently stands such an error is (most likely) not
   // representable - therefore not reachable. Such an error would usually occur
   // for a term like: λa. a a - in which case the inference would try to unify

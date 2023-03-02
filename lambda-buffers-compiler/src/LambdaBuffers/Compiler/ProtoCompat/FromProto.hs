@@ -330,6 +330,7 @@ instance IsMessage P.Kind'KindRef PC.KindRefType where
     ( \case
         P.Kind'KIND_REF_TYPE -> pure PC.KType
         P.Kind'KIND_REF_UNSPECIFIED -> pure PC.KUnspecified
+        P.Kind'KIND_REF_CONSTRAINT -> pure PC.KConstraint
         P.Kind'KindRef'Unrecognized v ->
           throwError
             [ FPProtoParseError $
@@ -343,6 +344,7 @@ instance IsMessage P.Kind'KindRef PC.KindRefType where
   toProto = \case
     PC.KType -> P.Kind'KIND_REF_TYPE
     PC.KUnspecified -> P.Kind'KIND_REF_UNSPECIFIED
+    PC.KConstraint -> P.Kind'KIND_REF_CONSTRAINT
 
 instance IsMessage P.Kind PC.Kind where
   fromProto k = do
