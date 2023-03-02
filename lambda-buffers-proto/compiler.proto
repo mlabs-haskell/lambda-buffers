@@ -726,6 +726,7 @@ message TyClassCheckError {
     ClassName class_name = 2;
     repeated TyClassRef cycled_class_refs = 3;
   }
+
   // One of the errors occurred during type class checking.
   oneof tyclass_check_error {
     UnboundClassRefError unbound_class_ref_err = 1;

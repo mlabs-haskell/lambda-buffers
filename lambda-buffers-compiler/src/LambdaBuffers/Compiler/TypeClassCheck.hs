@@ -4,7 +4,6 @@ module LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck, runCheck) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad (void)
-import Data.Generics.Labels ()
 import Data.Map (traverseWithKey)
 import Data.Map qualified as M
 import Data.ProtoLens (Message (defMessage))
