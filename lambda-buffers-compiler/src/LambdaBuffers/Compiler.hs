@@ -18,5 +18,5 @@ runCompiler compInp = do
     Right compInp' -> case KindCheck.runCheck compInp' of
       Left err -> defMessage & P.compilerError .~ toProto err
       Right _ -> case TyClassCheck.runCheck compInp' of
-        Just err -> defMessage & P.compilerError .~ err
-        Nothing -> defMessage & P.compilerResult .~ defMessage
+        Left err -> defMessage & P.compilerError .~ err
+        Right _ -> defMessage & P.compilerResult .~ defMessage

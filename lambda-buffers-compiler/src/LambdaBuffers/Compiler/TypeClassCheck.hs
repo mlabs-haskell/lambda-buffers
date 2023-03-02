@@ -53,12 +53,12 @@ runDeriveCheck' ci = do
   void $ traverseWithKey runDeriveCheck moduleBuilders
   pure moduleBuilders
 
-runCheck :: PC.CompilerInput -> Maybe P.CompilerError
+runCheck :: PC.CompilerInput -> Either P.CompilerError ()
 runCheck ci = case Super.runCheck ci of
-  Left errs -> Just $ defMessage & P.tyClassCheckErrors .~ errs
+  Left errs -> Left $ defMessage & P.tyClassCheckErrors .~ errs
   Right () -> case runDeriveCheck' ci of
-    Left err -> Just $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ ("TODO(bladyjoker): Use proper errors" <> (Text.pack . show $ err))]
-    Right _ -> Nothing
+    Left err -> Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ ("TODO(bladyjoker): Use proper errors" <> (Text.pack . show $ err))]
+    Right _ -> Right ()
 
 _validateTypeClasses :: PC.CompilerInput -> IO (M.Map (PC.InfoLess PC.ModuleName) ModuleBuilder)
 _validateTypeClasses ci = case runDeriveCheck' ci of
