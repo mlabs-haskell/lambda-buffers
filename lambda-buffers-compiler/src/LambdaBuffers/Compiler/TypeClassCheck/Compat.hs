@@ -14,7 +14,7 @@ import Control.Lens ((^.))
 import Control.Lens.Combinators (view)
 import Data.Bifunctor (second)
 import Data.List.NonEmpty qualified as NE
-import Data.Map qualified as M
+import Data.Map.Ordered qualified as OMap
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (
@@ -49,20 +49,20 @@ making the resulting Pat suitable for substitution into Rules.
 -}
 defToExp :: P.TyDef -> Exp
 defToExp (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecE (LitE . Name $ tName ^. #name) vars $ case tBody of
-  P.SumI constrs -> toSumE . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
+  P.SumI constrs -> toSumE . fmap (uncurry goConstr . second (view #product)) . OMap.assocs $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitE Opaque
   where
-    collectFreeTyVars :: [P.VarName] -> Exp
-    collectFreeTyVars = foldr (\x acc -> LitE (TyVar (x ^. #name)) *: acc) nil
+    collectFreeTyVars :: [P.InfoLess P.VarName] -> Exp
+    collectFreeTyVars = foldr (\x' acc -> P.withInfoLess x' (\x -> LitE (TyVar (x ^. #name)) *: acc)) nil
 
-    vars = collectFreeTyVars (M.keys tArgs)
+    vars = collectFreeTyVars (fst <$> OMap.assocs tArgs)
 
-    goConstr :: P.ConstrName -> P.Product -> Exp
-    goConstr (P.ConstrName n _) p = LitE (Name n) *= goProduct p
+    goConstr :: P.InfoLess P.ConstrName -> P.Product -> Exp
+    goConstr cn' p = P.withInfoLess cn' (\cn -> LitE (Name $ cn ^. #name) *= goProduct p)
 
     goProduct :: P.Product -> Exp
     goProduct = \case
-      P.RecordI (P.Record rMap _) -> toRecE . fmap goField . M.elems $ rMap
+      P.RecordI (P.Record rMap _) -> toRecE . fmap goField $ (snd <$> OMap.assocs rMap)
       P.TupleI (P.Tuple pList _) -> toProdE $ fmap tyToExp pList
 
     goField :: P.Field -> Exp
@@ -89,20 +89,20 @@ appToExp fun (p : ps) = case NE.nonEmpty ps of
 
 defToPat :: P.TyDef -> Pat
 defToPat (P.TyDef tName (P.TyAbs tArgs tBody _) _) = DecP (LitP . Name $ tName ^. #name) vars $ case tBody of
-  P.SumI constrs -> toSumP . fmap (uncurry goConstr . second (view #product)) . M.toList $ (constrs ^. #constructors)
+  P.SumI constrs -> toSumP . fmap (uncurry goConstr . second (view #product)) . OMap.assocs $ (constrs ^. #constructors)
   P.OpaqueI _ -> LitP Opaque
   where
-    collectFreeTyVars :: [P.VarName] -> Pat
-    collectFreeTyVars = foldr (\x acc -> LitP (TyVar (x ^. #name)) *: acc) nil
+    collectFreeTyVars :: [P.InfoLess P.VarName] -> Pat
+    collectFreeTyVars = foldr (\x' acc -> P.withInfoLess x' (\x -> LitP (TyVar (x ^. #name)) *: acc)) nil
 
-    vars = collectFreeTyVars (M.keys tArgs)
+    vars = collectFreeTyVars (fst <$> OMap.assocs tArgs)
 
-    goConstr :: P.ConstrName -> P.Product -> Pat
-    goConstr (P.ConstrName n _) p = LitP (Name n) *= goProduct p
+    goConstr :: P.InfoLess P.ConstrName -> P.Product -> Pat
+    goConstr cn' p = P.withInfoLess cn' (\cn -> LitP (Name $ cn ^. #name) *= goProduct p)
 
     goProduct :: P.Product -> Pat
     goProduct = \case
-      P.RecordI (P.Record rMap _) -> toRecP . fmap goField . M.elems $ rMap
+      P.RecordI (P.Record rMap _) -> toRecP . fmap goField $ (snd <$> OMap.assocs rMap)
       P.TupleI (P.Tuple pList _) -> toProdP $ fmap tyToPat pList
 
     goField :: P.Field -> Pat

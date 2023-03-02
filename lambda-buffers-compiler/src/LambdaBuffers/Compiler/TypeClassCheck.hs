@@ -31,7 +31,7 @@ import Prettyprinter (
 data ClassInfo = ClassInfo {ciName :: Text, ciSupers :: [Text]}
   deriving stock (Show, Eq, Ord)
 
-runDeriveCheck :: P.ModuleName -> ModuleBuilder -> Either TypeClassError ()
+runDeriveCheck :: P.InfoLess P.ModuleName -> ModuleBuilder -> Either TypeClassError ()
 runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
   where
     go :: Instance -> Either TypeClassError ()
@@ -45,7 +45,7 @@ runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
 -- ModuleBuilder is suitable codegen input,
 -- and is (relatively) computationally expensive to
 -- construct, so we return it here if successful.
-validateTypeClasses' :: P.CompilerInput -> Either TypeClassError (M.Map P.ModuleName ModuleBuilder)
+validateTypeClasses' :: P.CompilerInput -> Either TypeClassError (M.Map (P.InfoLess P.ModuleName) ModuleBuilder)
 validateTypeClasses' ci = do
   -- detectSuperclassCycles ci
   moduleBuilders <- mkBuilders ci
@@ -53,16 +53,16 @@ validateTypeClasses' ci = do
   pure moduleBuilders
 
 -- maybe use Control.Exception? Tho if we're not gonna catch it i guess this is fine
-validateTypeClasses :: P.CompilerInput -> IO (M.Map P.ModuleName ModuleBuilder)
+validateTypeClasses :: P.CompilerInput -> IO (M.Map (P.InfoLess P.ModuleName) ModuleBuilder)
 validateTypeClasses ci = case validateTypeClasses' ci of
   Left err -> print (spaced $ pretty err) >> error "\nCompilation aborted due to TypeClass Error"
   Right mbs -> print (prettyBuilders mbs) >> pure mbs
 
-prettyBuilders :: forall a. M.Map P.ModuleName ModuleBuilder -> Doc a
+prettyBuilders :: forall a. M.Map (P.InfoLess P.ModuleName) ModuleBuilder -> Doc a
 prettyBuilders = spaced . vcat . punctuate line . map (uncurry go) . M.toList
   where
-    go :: P.ModuleName -> ModuleBuilder -> Doc a
+    go :: P.InfoLess P.ModuleName -> ModuleBuilder -> Doc a
     go mn mb =
       "MODULE"
-        <+> pretty mn
+        <+> P.withInfoLess mn pretty
         <//> indent 2 (pretty mb)

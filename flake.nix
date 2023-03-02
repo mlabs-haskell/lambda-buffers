@@ -67,7 +67,7 @@
           };
 
           index-state = "2022-12-01T00:00:00Z";
-          compiler-nix-name = "ghc924";
+          compiler-nix-name = "ghc925";
 
           # Common build abstraction for the components.
           buildAbstraction = { import-location, additional ? { } }:
@@ -101,6 +101,15 @@
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
+          # Codegen Build
+          codegenBuild = buildAbstraction {
+            import-location = ./lambda-buffers-codegen/build.nix;
+            additional = {
+              lambda-buffers-compiler = ./lambda-buffers-compiler;
+            };
+          };
+          codegenFlake = flakeAbstraction codegenBuild;
+
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
@@ -109,7 +118,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // extrasFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages // extrasFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -118,12 +127,13 @@
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
+            dev-codegen = codegenFlake.devShell;
             dev-common = extrasFlake.devShell;
             default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (frontendFlake.checks // compilerFlake.checks // extrasFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // extrasFlake.checks);
 
         }
       ) // {

@@ -22,140 +22,157 @@ module Test.Utils.Constructors (
   _LocalRef,
   _LocalRef',
   _ForeignRef',
+  _TyApp,
 ) where
 
 import Control.Lens ((^.))
 import Data.Map qualified as Map
 import Data.Text (Text)
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
+import Proto.Compiler_Fields ()
 
-_CompilerInput :: [P.Module] -> P.CompilerInput
+import Data.Default (def)
+import Data.Map.Ordered qualified as OMap
+
+_CompilerInput :: [PC.Module] -> PC.CompilerInput
 _CompilerInput ms =
-  P.CompilerInput
-    { P.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]
+  PC.CompilerInput
+    { PC.modules = Map.fromList [(PC.mkInfoLess $ m ^. #moduleName, m) | m <- ms]
     }
 
-_Module :: P.ModuleName -> [P.TyDef] -> [P.ClassDef] -> [P.InstanceClause] -> P.Module
+_Module :: PC.ModuleName -> [PC.TyDef] -> [PC.ClassDef] -> [PC.InstanceClause] -> PC.Module
 _Module mn tds cds ins =
-  P.Module
-    { P.moduleName = mn
-    , P.typeDefs = Map.fromList [(td ^. #tyName, td) | td <- tds]
-    , P.classDefs = Map.fromList [(cd ^. #className, cd) | cd <- cds]
-    , P.instances = ins
-    , P.imports = mempty
-    , P.sourceInfo = P.defSourceInfo
+  PC.Module
+    { PC.moduleName = mn
+    , PC.typeDefs = Map.fromList [(PC.mkInfoLess $ td ^. #tyName, td) | td <- tds]
+    , PC.classDefs = Map.fromList [(PC.mkInfoLess $ cd ^. #className, cd) | cd <- cds]
+    , PC.instances = ins
+    , PC.imports = mempty
+    , PC.sourceInfo = def
     }
 
-_ModuleName :: [Text] -> P.ModuleName
+_ModuleName :: [Text] -> PC.ModuleName
 _ModuleName ps =
-  P.ModuleName
-    { P.parts = _ModuleNamePart <$> ps
-    , P.sourceInfo = P.defSourceInfo
+  PC.ModuleName
+    { PC.parts = _ModuleNamePart <$> ps
+    , PC.sourceInfo = def
     }
 
-_ModuleNamePart :: Text -> P.ModuleNamePart
-_ModuleNamePart n = P.ModuleNamePart n P.defSourceInfo
+_ModuleNamePart :: Text -> PC.ModuleNamePart
+_ModuleNamePart n = PC.ModuleNamePart n def
 
-_TyName :: Text -> P.TyName
-_TyName x = P.TyName x P.defSourceInfo
+_TyName :: Text -> PC.TyName
+_TyName x = PC.TyName x def
 
-_VarName :: Text -> P.VarName
-_VarName x = P.VarName {P.name = x, P.sourceInfo = P.defSourceInfo}
+_VarName :: Text -> PC.VarName
+_VarName = flip _VarName' def
 
-_TyVar :: Text -> P.TyVar
-_TyVar x = P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+_VarName' :: Text -> PC.SourceInfo -> PC.VarName
+_VarName' x s = PC.VarName {PC.name = x, PC.sourceInfo = s}
 
--- | TyVar with Source Info - for error precision testing.
-_TyVar' :: Text -> SourceInfo -> P.TyVar
-_TyVar' x s = P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
-
-_TyVarI :: Text -> P.Ty
-_TyVarI x = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = P.defSourceInfo}
+_TyVar :: Text -> PC.TyVar
+_TyVar = PC.TyVar . _VarName
 
 -- | TyVar with Source Info - for error precision testing.
-_TyVarI' :: Text -> SourceInfo -> P.Ty
-_TyVarI' x s = P.TyVarI $ P.TyVar {P.varName = _VarName x, P.sourceInfo = s}
+_TyVar' :: Text -> PC.SourceInfo -> PC.TyVar
+_TyVar' x s = PC.TyVar {PC.varName = _VarName' x s}
 
-_SourceInfo :: Int -> Int -> P.SourceInfo
-_SourceInfo x y = P.SourceInfo {P.file = "DefaultFile", P.posFrom = _SourcePosition x, P.posTo = _SourcePosition y}
+_TyVarI :: Text -> PC.Ty
+_TyVarI = PC.TyVarI . _TyVar
 
-_SourcePosition :: Int -> P.SourcePosition
-_SourcePosition x = P.SourcePosition x (x + 1)
+-- | TyVar with Source Info - for error precision testing.
+_TyVarI' :: Text -> SourceInfo -> PC.Ty
+_TyVarI' x s = PC.TyVarI $ PC.TyVar {PC.varName = _VarName' x s}
 
-_TupleI :: [P.Ty] -> P.Product
+_SourceInfo :: Int -> Int -> PC.SourceInfo
+_SourceInfo x y = PC.SourceInfo {PC.file = "DefaultFile", PC.posFrom = _SourcePosition x, PC.posTo = _SourcePosition y}
+
+_SourcePosition :: Int -> PC.SourcePosition
+_SourcePosition x = PC.SourcePosition x (x + 1)
+
+_TupleI :: [PC.Ty] -> PC.Product
 _TupleI x =
-  P.TupleI $
-    P.Tuple
-      { P.fields = x
-      , P.sourceInfo = P.defSourceInfo
+  PC.TupleI $
+    PC.Tuple
+      { PC.fields = x
+      , PC.sourceInfo = def
       }
 
-_Constructor :: Text -> P.Product -> P.Constructor
+_Constructor :: Text -> PC.Product -> PC.Constructor
 _Constructor c f =
-  P.Constructor
-    { P.constrName = _ConstrName c
-    , P.product = f
+  PC.Constructor
+    { PC.constrName = _ConstrName c
+    , PC.product = f
     }
 
-_ConstrName :: Text -> P.ConstrName
+_ConstrName :: Text -> PC.ConstrName
 _ConstrName x =
-  P.ConstrName
-    { P.name = x
-    , P.sourceInfo = P.defSourceInfo
+  PC.ConstrName
+    { PC.name = x
+    , PC.sourceInfo = def
     }
 
-_Sum :: [(Text, P.Product)] -> P.TyBody
+_Sum :: [(Text, PC.Product)] -> PC.TyBody
 _Sum cs =
-  P.SumI $
-    P.Sum
-      { constructors = Map.fromList [(ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
-      , sourceInfo = P.defSourceInfo
+  PC.SumI $
+    PC.Sum
+      { constructors = OMap.fromList [(PC.mkInfoLess $ ctor ^. #constrName, ctor) | (cn, cp) <- cs, ctor <- [_Constructor cn cp]]
+      , sourceInfo = def
       }
 
-_TyAbs :: [(Text, P.KindType)] -> [(Text, P.Product)] -> P.TyAbs
+_TyApp :: PC.Ty -> PC.Ty -> PC.Ty
+_TyApp ty1 ty2 =
+  PC.TyAppI $
+    PC.TyApp
+      { PC.tyFunc = ty1
+      , PC.tyArgs = [ty2]
+      , PC.sourceInfo = def
+      }
+
+_TyAbs :: [(Text, PC.KindType)] -> [(Text, PC.Product)] -> PC.TyAbs
 _TyAbs args body =
-  P.TyAbs
-    { P.tyArgs = Map.fromList [(ta ^. #argName, ta) | ta <- _TyArg <$> args]
-    , P.tyBody = _Sum body
-    , sourceInfo = P.defSourceInfo
+  PC.TyAbs
+    { PC.tyArgs = OMap.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
+    , PC.tyBody = _Sum body
+    , sourceInfo = def
     }
 
-_TyArg :: (Text, P.KindType) -> P.TyArg
+_TyArg :: (Text, PC.KindType) -> PC.TyArg
 _TyArg (a, k) =
-  P.TyArg
-    { P.argName = P.VarName a P.defSourceInfo
-    , P.argKind = P.Kind {P.kind = k}
-    , P.sourceInfo = P.defSourceInfo
+  PC.TyArg
+    { PC.argName = PC.VarName a def
+    , PC.argKind = PC.Kind {PC.kind = k}
+    , PC.sourceInfo = def
     }
 
-_Type :: P.KindType
-_Type = P.KindRef P.KType
+_Type :: PC.KindType
+_Type = PC.KindRef PC.KType
 
-_TyDef :: P.TyName -> P.TyAbs -> P.TyDef
-_TyDef name ab = P.TyDef {P.tyName = name, P.tyAbs = ab, sourceInfo = P.defSourceInfo}
+_TyDef :: PC.TyName -> PC.TyAbs -> PC.TyDef
+_TyDef name ab = PC.TyDef {PC.tyName = name, PC.tyAbs = ab, sourceInfo = def}
 
-_TyRefILocal :: Text -> P.Ty
-_TyRefILocal x = P.TyRefI $ P.LocalI $ _LocalRef x
+_TyRefILocal :: Text -> PC.Ty
+_TyRefILocal x = PC.TyRefI $ PC.LocalI $ _LocalRef x
 
-_LocalRef :: Text -> P.LocalRef
-_LocalRef = flip _LocalRef' P.defSourceInfo
+_LocalRef :: Text -> PC.LocalRef
+_LocalRef = flip _LocalRef' def
 
 -- | LocalRef with Source Info - for error precision testing.
-_LocalRef' :: Text -> P.SourceInfo -> P.LocalRef
+_LocalRef' :: Text -> PC.SourceInfo -> PC.LocalRef
 _LocalRef' x s =
-  P.LocalRef
-    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
-    , P.sourceInfo = s
+  PC.LocalRef
+    { PC.tyName = PC.TyName {PC.name = x, sourceInfo = s}
+    , PC.sourceInfo = s
     }
 
-_ForeignRef :: Text -> [Text] -> P.ForeignRef
-_ForeignRef n m = _ForeignRef' n (_ModuleName m) P.defSourceInfo
+_ForeignRef :: Text -> [Text] -> PC.ForeignRef
+_ForeignRef n m = _ForeignRef' n (_ModuleName m) def
 
-_ForeignRef' :: Text -> P.ModuleName -> P.SourceInfo -> P.ForeignRef
+_ForeignRef' :: Text -> PC.ModuleName -> PC.SourceInfo -> PC.ForeignRef
 _ForeignRef' x m s =
-  P.ForeignRef
-    { P.tyName = P.TyName {P.name = x, sourceInfo = s}
-    , P.moduleName = m
-    , P.sourceInfo = s
+  PC.ForeignRef
+    { PC.tyName = PC.TyName {PC.name = x, sourceInfo = s}
+    , PC.moduleName = m
+    , PC.sourceInfo = s
     }

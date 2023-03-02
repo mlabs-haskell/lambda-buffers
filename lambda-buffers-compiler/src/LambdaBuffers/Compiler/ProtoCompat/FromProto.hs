@@ -1,24 +1,24 @@
 module LambdaBuffers.Compiler.ProtoCompat.FromProto (
   runFromProto,
   toProto,
-  stripSourceInfo,
 ) where
 
 import Control.Lens ((&), (.~), (^.))
 import Control.Monad.Except (Except, MonadError (throwError), runExcept)
 import Control.Monad.Reader (MonadReader (ask, local), ReaderT (runReaderT))
 import Data.Foldable (foldlM, toList)
-import Data.Generics.Product (HasField)
 import Data.Kind (Type)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Map.Ordered (OMap)
+import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (messageName), MessageEnum (showEnum), defMessage)
 import Data.Proxy (Proxy (Proxy))
-import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkModuleNamePart, checkTyName, checkVarName)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (mkInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Proto.Compiler (NamingError)
 import Proto.Compiler qualified as P
@@ -88,11 +88,17 @@ parseAndIndex key =
     )
     (mempty, mempty)
 
--- WARN(bladyjoker): This function is used to 'strip' the SourceInfo from types that end up as Map keys.
---   This can cause confusion and errors and we should rather parametrize types with `info` and
---   maintain `Map (TyName ()) (TyDef SourceInfo)`
-stripSourceInfo :: HasField "sourceInfo" s t a PC.SourceInfo => s -> t
-stripSourceInfo x = x & #sourceInfo .~ PC.defSourceInfo
+parseAndIndex' :: forall {t :: Type -> Type} {proto} {a} {k}. (Foldable t, IsMessage proto a, Ord k) => (a -> k) -> t proto -> FromProto (OMap k a, Map k [proto])
+parseAndIndex' key =
+  foldlM
+    ( \(indexed, multiples) px -> do
+        x <- fromProto px
+        let k = key x
+        if OMap.member k indexed
+          then return (indexed, Map.insertWith (++) k [px] multiples)
+          else return (OMap.alter (const (Just x)) k indexed, multiples)
+    )
+    (OMap.empty, mempty)
 
 {-
     SourceInfo
@@ -209,13 +215,11 @@ instance IsMessage P.VarName PC.VarName where
 instance IsMessage P.TyVar PC.TyVar where
   fromProto tv = do
     vn <- fromProto $ tv ^. P.varName
-    si <- fromProto $ tv ^. P.sourceInfo
-    pure $ PC.TyVar vn si
+    pure $ PC.TyVar vn
 
-  toProto (PC.TyVar vn si) =
+  toProto (PC.TyVar vn) =
     defMessage
       & P.varName .~ toProto vn
-      & P.sourceInfo .~ toProto si
 
 instance IsMessage P.TyApp PC.TyApp where
   fromProto ta = do
@@ -302,7 +306,7 @@ instance IsMessage P.TyDef PC.TyDef where
 
 instance IsMessage P.TyAbs PC.TyAbs where
   fromProto ta = do
-    (tyargs, mulTyArgs) <- parseAndIndex (\a -> stripSourceInfo $ a ^. #argName) (ta ^. P.tyArgs)
+    (tyargs, mulTyArgs) <- parseAndIndex' (\a -> mkInfoLess $ a ^. #argName) (ta ^. P.tyArgs)
     tybody <- fromProto $ ta ^. P.tyBody
     si <- fromProto $ ta ^. P.sourceInfo
     ctx <- ask
@@ -391,7 +395,7 @@ instance IsMessage P.TyBody PC.TyBody where
 
 instance IsMessage P.Sum PC.Sum where
   fromProto s = do
-    (ctors, mulCtors) <- parseAndIndex (\c -> stripSourceInfo $ c ^. #constrName) (s ^. P.constructors)
+    (ctors, mulCtors) <- parseAndIndex' (\c -> mkInfoLess $ c ^. #constrName) (s ^. P.constructors)
     si <- fromProto $ s ^. P.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
@@ -427,7 +431,7 @@ instance IsMessage P.Sum'Constructor PC.Constructor where
 
 instance IsMessage P.Product'Record PC.Record where
   fromProto r = do
-    (fields, mulFields) <- parseAndIndex (\f -> stripSourceInfo $ f ^. #fieldName) (r ^. P.fields)
+    (fields, mulFields) <- parseAndIndex' (\f -> mkInfoLess $ f ^. #fieldName) (r ^. P.fields)
     si <- fromProto $ r ^. P.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
@@ -601,9 +605,9 @@ instance IsMessage P.Module PC.Module where
       _ -> throwInternalError "Expected to be in CompilerInput Context"
     local (const $ CtxModule (m ^. P.moduleName)) $ do
       mnm <- fromProto $ m ^. P.moduleName
-      (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> stripSourceInfo $ tyDef ^. #tyName) (m ^. P.typeDefs)
-      (cldefs, mulClDefs) <- parseAndIndex (\cldef -> stripSourceInfo $ cldef ^. #className) (m ^. P.classDefs)
-      (impts, mulImpts) <- parseAndIndex stripSourceInfo (m ^. P.imports)
+      (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> mkInfoLess $ tyDef ^. #tyName) (m ^. P.typeDefs)
+      (cldefs, mulClDefs) <- parseAndIndex (\cldef -> mkInfoLess $ cldef ^. #className) (m ^. P.classDefs)
+      (impts, mulImpts) <- parseAndIndex mkInfoLess (m ^. P.imports)
       insts <- traverse fromProto $ m ^. P.instances
       si <- fromProto $ m ^. P.sourceInfo
       let mulTyDefsErrs =
@@ -629,7 +633,7 @@ instance IsMessage P.Module PC.Module where
             ]
           protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
       if null protoParseErrs
-        then pure $ PC.Module mnm tydefs cldefs insts (Map.keysSet impts) si
+        then pure $ PC.Module mnm tydefs cldefs insts impts si
         else throwError protoParseErrs
 
   toProto (PC.Module mnm tdefs cdefs insts impts si) =
@@ -638,13 +642,13 @@ instance IsMessage P.Module PC.Module where
       & P.typeDefs .~ (toProto <$> toList tdefs)
       & P.classDefs .~ (toProto <$> toList cdefs)
       & P.instances .~ (toProto <$> insts)
-      & P.imports .~ (toProto <$> Set.toList impts)
+      & P.imports .~ (toProto <$> toList impts)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.CompilerInput PC.CompilerInput where
   fromProto ci = do
     local (const CtxCompilerInput) $ do
-      (mods, mulModules) <- parseAndIndex (\m -> stripSourceInfo $ m ^. #moduleName) (ci ^. P.modules)
+      (mods, mulModules) <- parseAndIndex (\m -> mkInfoLess $ m ^. #moduleName) (ci ^. P.modules)
       let mulModulesErrs =
             [ FPProtoParseError $
               defMessage & P.multipleModuleError . P.modules .~ ms

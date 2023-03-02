@@ -38,30 +38,47 @@ subst(Ctx, ty_app(TyAbs, TyArg), ty_app(AbsRes, ArgRes)) :-
 %% Structural rules for types of kind `*`
 struct_rule(class(ClassName, class_arg(_, kind(*)), _), Rule) :-
     member(Rule, [
-               (rule(ClassName, opaque(_, kind(*), _)) :- true),
-               (rule(ClassName, ty_ref(unit)) :- true),
-               (rule(ClassName, ty_ref(void)) :- true),
-               (rule(ClassName, ty_app(ty_app(ty_ref(prod), A), B)) :-
+               (goal(ClassName, opaque(_, kind(*), _)) :- true),
+               (goal(ClassName, ty_ref(unit)) :- true),
+               (goal(ClassName, ty_ref(void)) :- true),
+               (goal(ClassName, ty_app(ty_app(ty_ref(prod), A), B)) :-
                     (
-                        rule(ClassName, A),
-                        rule(ClassName, B)
+                        goal(ClassName, A),
+                        goal(ClassName, B)
                     )),
-               (rule(ClassName, ty_app(ty_app(ty_ref(either), A), B)) :-
+               (goal(ClassName, ty_app(ty_app(ty_ref(either), A), B)) :-
                     (
-                        rule(ClassName, A),
-                        rule(ClassName, B)
+                        goal(ClassName, A),
+                        goal(ClassName, B)
                     ))
            ]).
 
+conj(Goal, (Goal, Conj), Conj).
+
+superclass_goal(Ty, Cl_, Conj) :-
+    copy_term(Cl_, Cl),
+    class(_ClassName, class_arg(Ty, _K), ClassSups) = Cl,
+    findall(R, (
+                member(Sup_, ClassSups),
+                copy_term(Sup_, Sup),
+                Sup =.. [SupName, Ty],
+                R = goal(SupName, Ty)
+            ),
+            Rules),
+    foldl(conj, Rules, Conj, true).
+
+
 %% User specifiable `derive` rules (the same for any kind?)
 %% NOTE(bladyjoker): TyAbs can't be derived for non `*` kinds.
-derive_rule(ty_ref(RefName), class(ClassName, _, _), Rule) :-
+derive_rule(ty_ref(RefName), class(ClassName, ClassArgs, ClassSups), Rule) :-
     ty_def(RefName, Ty),
-    Rule = (rule(ClassName, ty_ref(RefName)) :- rule(ClassName, Ty)).
+    superclass_goal(ty_ref(RefName), class(ClassName, ClassArgs, ClassSups), SupGoals),
+    Rule = (goal(ClassName, ty_ref(RefName)) :- goal(ClassName, Ty), SupGoals).
 
-derive_rule(ty_app(F, A), class(ClassName, _, _), Rule) :-
+derive_rule(ty_app(F, A), class(ClassName, ClassArgs, ClassSups), Rule) :-
     apply(F, A, Res),
-    Rule =  (rule(ClassName, ty_app(F, A)) :- rule(ClassName, Res)).
+    superclass_goal(ty_app(F, A), class(ClassName, ClassArgs, ClassSups), SupGoals),
+    Rule =  (goal(ClassName, ty_app(F, A)) :- goal(ClassName, Res), SupGoals).
 
 %% Experimental structural rules for types of kind * -> *
 % Haskell: Functor Deriving https://mail.haskell.org/pipermail/haskell-prime/2007-March/002137.html
@@ -82,10 +99,10 @@ derive_rule(ty_app(F, A), class(ClassName, _, _), Rule) :-
 
 
 
-class_def(eq, class_arg(a, kind(*)), []).
-class_def(ord, class_arg(a, kind(*)), [eq(a)]).
-class_def(json, class_arg(a, kind(*)), []).
-class_def(functor, class_arg(a, kind(arr(*, *))), []).
+class_def(eq, class_arg(_A, kind(*)), []).
+class_def(ord, class_arg(A, kind(*)), [eq(A)]).
+class_def(json, class_arg(_A, kind(*)), []).
+class_def(functor, class_arg(_A, kind(arr(*, *))), []).
 
 
 derive(Tys, CName, StructRules, UserRules) :-
@@ -114,47 +131,118 @@ derive(Tys, CName, StructRules, UserRules) :-
 solve(StructRules, UserRules, Goal) :-
     Goal =.. [ClassName, Ty],
     append(StructRules, UserRules, Rules),
-    eval_rule(Rules, [], rule(ClassName, Ty)) -> true;
-        (
-            print_message(error, rule_failed(Goal)),
-            fail
-        ).
+    solve_goal(Rules, [], goal(ClassName, Ty)) ->( true;
+                                                  print_message(error, goal_failed(goal(ClassName, Ty))),
+                                                  fail
+                                                ).
 
-eval_rule(_, _, true) :-
-    print_message(informational, rule_true).
+solve_goal(_, Trace, true) :-
+    print_message(informational, goal_true(Trace)).
 
-eval_rule(Rules, Trace, (RL,RR)) :-
-    eval_rule(Rules, Trace, RL),
-    eval_rule(Rules, Trace, RR).
+solve_goal(Rules, Trace, (GL,GR)) :-
+    solve_goal(Rules, Trace, GL),
+    solve_goal(Rules, Trace, GR).
 
-eval_rule(Rules, Trace, rule(ClassName, Ty)) :-
-    var(Ty) -> print_message(informational, rule_ok(rule(ClassName, Ty))), true;
-    first(rule(ClassName, Ty), Trace) -> print_message(informational, rule_ok_cycle(rule(ClassName, Ty))), true;
+solve_goal(Rules, Trace, goal(ClassName, Ty)) :-
+    var(Ty) -> print_message(informational, goal_ok(goal(ClassName, Ty), Trace)), true;
+    check_cycle(Trace, goal(ClassName, Ty)) -> true;
     (
-        print_message(informational, lookup(rule(ClassName, Ty))),
+        print_message(informational,
+                      lookup(goal(ClassName, Ty), Trace)
+                     ),
         copy_term(Rules, Rules_), %% WARN(bladyjoker): Without this, Rules get unified and instantiated leading to a cycle and just wrong.
-        first((rule(ClassName, Ty) :- RuleBody), Rules_) -> (
-            print_message(informational, trying(rule(ClassName, Ty))),
-            eval_rule(Rules, [rule(ClassName, Ty)|Trace], RuleBody),
-            print_message(informational, rule_ok(rule(ClassName, Ty)))
+        first((goal(ClassName, Ty) :- RuleBody), Rules_) -> (
+            print_message(informational,
+                          running(goal(ClassName, Ty), Trace)
+                         ),
+            solve_goal(Rules, [goal(ClassName, Ty)|Trace], RuleBody),
+            print_message(informational,
+                          goal_ok(goal(ClassName, Ty), Trace)
+                         )
         );
         (
-            print_message(error, missing_rule(rule(ClassName, Ty), Trace)),
+            print_message(error, missing_rule(goal(ClassName, Ty), Trace)),
             fail
         )
     ).
 
+check_cycle(Trace, Goal) :-
+    copy_term(Trace, Trace_), %% WARN(bladyjoker): Without this, Trace gets unified and instantiated.
+    print_message(informational, checking_cycle(Goal, Trace)),
+    (member(TracedGoal, Trace_), TracedGoal =@= Goal) -> print_message(informational, goal_ok_cycle(Goal, Trace)); fail.
+
+
 :- multifile prolog:message//1.
 
-prolog:message(wrong_kind(Ty, got(Got), wanted(Want))) --> [ '~w is of kind ~w but wanted kind ~w'-[Ty, Got, Want]].
-prolog:message(normalization_failed(_, Ty)) --> [ 'Normalizing ~w failed'-[Ty]].
-prolog:message(lookup(rule(ClassName, Ty))) --> [ 'Looking up rule ~w ~w'-[ClassName, Ty]].
-prolog:message(trying(rule(ClassName, Ty))) --> [ 'Trying rule ~w ~w'-[ClassName, Ty]].
-prolog:message(rule_ok(rule(ClassName, Ty))) --> [ 'Done with rule ~w ~w'-[ClassName, Ty]].
-prolog:message(rule_ok_cycle(rule(ClassName, Ty))) --> [ 'Done with rule because cycle ~w ~w'-[ClassName, Ty]].
-prolog:message(rule_true) --> [ 'Done because bottom'].
-prolog:message(missing_rule(rule(ClassName, Ty), _)) --> [ 'Missing rule ~w ~w'-[ClassName, Ty]].
-prolog:message(rule_failed(rule(ClassName, Ty))) --> [ 'Failed rule ~w ~w'-[ClassName, Ty]].
+trace_to_indentation([], "").
+trace_to_indentation([_|Xs], I) :-
+    trace_to_indentation(Xs, Is),
+    string_concat(".", Is, I).
+
+prolog:message(checking_cycle(G, Trace)) --> {
+                                         trace_to_indentation(Trace, I),
+                                         pretty_goal(G, PG)
+                                     }, [
+                                         '~w ~w Checking cycle for for goal'-[I, PG]
+                                     ].
+
+prolog:message(lookup(G, Trace)) --> {
+                                         trace_to_indentation(Trace, I),
+                                         pretty_goal(G, PG)
+                                     }, [
+                                         '~w ~w Looking up rule for goal'-[I, PG]
+                                     ].
+prolog:message(running(G, Trace)) --> {
+                                                           trace_to_indentation(Trace, I),
+                                                           pretty_goal(G, PG)
+                                                       }, [
+                                                           '~w ~w Running goal'-[I, PG]
+                                                       ].
+prolog:message(goal_ok(G, Trace)) --> {
+                                          trace_to_indentation(Trace, I),
+                                          pretty_goal(G, PG)
+                                      }, [
+                                          '~w ~w Done with goal'-[I, PG]
+                                      ].
+prolog:message(goal_ok_cycle(G, Trace)) --> {
+                                                trace_to_indentation(Trace, I),
+                                                pretty_goal(G, PG),
+                                                pretty_trace(Trace, PTrace)
+                                            }, [
+                                                '~w ~w Done with goal because cycle ~w '-[I, PG, PTrace]
+                                            ].
+prolog:message(goal_true(Trace)) --> { trace_to_indentation(Trace, I) }, [ '~w Done because bottom'-[I]].
+prolog:message(missing_rule(G, Trace)) --> {
+                                               trace_to_indentation(Trace, I),
+                                               pretty_goal(G, PG)
+                                           }, [
+                                               '~w ~w Missing rule for goal'-[I, PG]
+                                           ].
+prolog:message(goal_failed(G)) --> {pretty_goal(G, PG)}, ['~w Failed goal'-[PG]].
+
+%% Pretty represenationts
+%% ?- pretty_ty(ty_app(ty_app(ty_ref(either), ty_ref(int)), B), P).
+%% P = either(int, B).
+pretty_ty(TyVar, TyVar) :-
+    var(TyVar).
+pretty_ty(opaque(N, _, _), P) :-
+    atom_concat('_', N, OpaqueN),
+    P =.. [OpaqueN].
+pretty_ty(ty_ref(RefName), P) :-
+    P =.. [RefName].
+pretty_ty(ty_app(TyF, TyA), P) :-
+    (var(TyF) -> PTyF = TyF; pretty_ty(TyF, PTyF)),
+    (var(TyA) -> PTyA = TyA; pretty_ty(TyA, PTyA)),
+    PTyF =.. [N|Args],
+    append(Args, [PTyA], PArgs),
+    P =.. [N|PArgs].
+
+pretty_goal(goal(ClassName, Ty), P) :-
+    pretty_ty(Ty, PTy),
+    P =.. [ClassName, PTy].
+
+pretty_trace(Trace, PTrace) :-
+    findall(P, (member(R, Trace), pretty_goal(R, P)), PTrace).
 
 :- begin_tests(class_check).
 
@@ -203,18 +291,67 @@ test("should_succeed: derive Eq Recfoo, Eq Recbar)", [ ]) :-
               ], eq, S, U),
     solve(S, U, eq(ty_ref(recfoo))).
 
-test("should_succeed: derive Maybe (Maybe Int8))", [ ]) :-
+test("should_succeed: derive Eq Maybe (Maybe Int8))", [ ]) :-
     derive([
                   ty_ref(int8),
                   ty_app(ty_ref(maybe), _A)
               ], eq, S, U),
     solve(S, U, eq(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
 
-test("should_succeed: derive Maybe (Maybe a)", [ ]) :-
+test("should_succeed: derive Eq Maybe (Maybe a)", [ ]) :-
     derive([
                   ty_ref(int8),
                   ty_app(ty_ref(maybe), _A)
               ], eq, S, U),
     solve(S, U, eq(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), _B)))).
+
+test("should_fail: derive Ord (Maybe Int)", [ fail ]) :-
+    derive([
+                  ty_app(ty_ref(maybe), _A)
+              ], ord, S, U),
+    solve(S, U, ord(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
+
+test("should_fail: derive Ord (Maybe Int)", [ fail ]) :-
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), _A)
+              ], ord, S, U),
+    solve(S, U, ord(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
+
+test("should_succeed: derive Ord (Maybe a)", [ fail ]) :-
+    derive([
+                  ty_ref(int8)
+              ], eq, EqS, EqU),
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), __A)
+              ], ord, OrdS, OrdU),
+    append(EqS, OrdS, S),
+    append(EqU, OrdU, U),
+    solve(S, U, ord(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
+
+test("should_succeed: derive Ord (Maybe a)", [ ]) :-
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), _A)
+              ], eq, EqS, EqU),
+    derive([
+                  ty_ref(int8),
+                  ty_app(ty_ref(maybe), __A)
+              ], ord, OrdS, OrdU),
+    append(EqS, OrdS, S),
+    append(EqU, OrdU, U),
+    solve(S, U, ord(ty_app(ty_ref(maybe), ty_app(ty_ref(maybe), ty_ref(int8))))).
+
+test("should_fails: Eq List a => Eq List a", [ ]) :-
+    solve([
+                 (
+                     goal(eq, ty_app(ty_ref(list), A)) :-
+                         (goal(eq, ty_app(ty_ref(list), A)),true)
+                 )
+             ],
+          [],
+          eq(ty_app(ty_ref(list), _B))
+         ).
 
 :- end_tests(class_check).

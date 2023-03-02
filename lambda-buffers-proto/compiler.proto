@@ -65,8 +65,6 @@ message Ty {
 message TyVar {
   // Variable name.
   VarName var_name = 1;
-  // Source information.
-  SourceInfo source_info = 2;
 }
 
 /* Type abstraction

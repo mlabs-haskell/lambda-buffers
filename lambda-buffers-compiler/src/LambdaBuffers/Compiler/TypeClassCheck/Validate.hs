@@ -15,6 +15,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Validate (
 import Data.Set qualified as S
 
 import Control.Monad.Except (throwError)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as P
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
   ModuleName,
  )
@@ -63,7 +64,7 @@ constraintClass (C c _) = c
 -- NOTE: Practically this enforces the "must define instances where types are defined"
 --       half of Haskell's orphan instances rule. We could relax that in various ways
 --       but it would require reworking a lot of the utilities above.
-checkDerive :: P.ModuleName -> ModuleBuilder -> Rule Pat -> Either TypeClassError [Constraint Exp]
+checkDerive :: P.InfoLess P.ModuleName -> ModuleBuilder -> Rule Pat -> Either TypeClassError [Constraint Exp]
 checkDerive mn mb i = concat <$> secondPass
   where
     secondPass :: Either TypeClassError [[Constraint Exp]]
