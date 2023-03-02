@@ -37,16 +37,12 @@ runCheck ci =
           , (cn, cd) <- Map.toList $ m ^. #classDefs
           ]
       -- Process each type class definitions under the appropriate reader context and collect errors
-      allErrors =
-        foldl'
-          ( \errs (mn, cd) ->
-              let errM = runReaderT (checkClassDef cd) (MkCheckRead mn (cd ^. #className) classDefs Set.empty [])
-               in case runExcept errM of
-                    Left err -> err : errs
-                    Right _ -> errs
-          )
-          []
-          [(m ^. #moduleName, cd) | m <- toList $ ci ^. #modules, cd <- toList $ m ^. #classDefs]
+      runClassDef (mn, cd) =
+        let errM = runReaderT (checkClassDef cd) (MkCheckRead mn (cd ^. #className) classDefs Set.empty [])
+         in case runExcept errM of
+              Left err -> [err]
+              Right _ -> []
+      allErrors = concat $ runClassDef <$> [(m ^. #moduleName, cd) | m <- toList $ ci ^. #modules, cd <- toList $ m ^. #classDefs]
    in if null allErrors then Right () else Left allErrors
 
 checkClassDef :: MonadCheck m => PC.ClassDef -> m ()
