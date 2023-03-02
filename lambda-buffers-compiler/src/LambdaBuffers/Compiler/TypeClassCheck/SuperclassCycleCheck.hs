@@ -6,7 +6,7 @@ import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (runExcept)
 import Control.Monad.Reader (ReaderT (runReaderT))
 import Control.Monad.Reader.Class (MonadReader, asks, local)
-import Data.Foldable (Foldable (foldl', toList), for_)
+import Data.Foldable (Foldable (toList), for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
