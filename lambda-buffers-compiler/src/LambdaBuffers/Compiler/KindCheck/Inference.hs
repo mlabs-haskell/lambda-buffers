@@ -12,7 +12,6 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   Context (..),
   Atom,
   Type (..),
-  DeriveM,
   DeriveEff,
   InferErr (..),
   Constraint (..),
@@ -31,30 +30,33 @@ import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 import Data.Foldable (foldrM, traverse_)
 import Data.Map qualified as M
+import Data.Text (Text)
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.KindCheck.Derivation (
   Context (Context),
   Derivation (Abstraction, Application, Axiom, Implication),
   Judgement (Judgement),
   addContext,
-  context,
   d'kind,
   d'type,
+  getAllContext,
  )
 import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
   Type (Abs, App, Constructor, Opaque, Product, Sum, UnitT, Var, VoidT),
-  Variable (QualifiedTyRef, TyVar),
+  Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
+  fcrISOqtcr,
   ftrISOqtr,
+  lcrISOftcr,
+  lcrISOqtcr,
   ltrISOqtr,
  )
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess (mkInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Pretty (pretty), (<+>))
 
--- | Utility to unify the two.
-getAllContext :: Context -> M.Map (InfoLess Variable) Kind
-getAllContext c = c ^. context <> c ^. addContext
+--------------------------------------------------------------------------------
+-- Types
 
 data InferErr
   = InferUnboundTermErr Variable
@@ -74,30 +76,20 @@ newtype Substitution = Substitution {getSubstitution :: (Atom, Kind)}
 instance Pretty Substitution where
   pretty (Substitution (a, k)) = pretty a <+> "↦" <+> pretty k
 
-newtype DerivationContext = DC
-  { _startAtom :: Atom
-  }
+--------------------------------------------------------------------------------
+-- Effects
 
-type DeriveEff = '[State Context, State DerivationContext, State [Constraint], Error InferErr]
+newtype DerivationContext = DC {_startAtom :: Atom}
 
-type DeriveM a = Eff DeriveEff a
+type DeriveEff =
+  '[Reader Context, Reader PC.ModuleName, State DerivationContext, Writer [Constraint], Error InferErr]
 
-type Derive a =
-  forall effs.
-  Members
-    '[ Reader Context
-     , Reader PC.ModuleName
-     , State DerivationContext
-     , Writer [Constraint]
-     , Error InferErr
-     ]
-    effs =>
-  Eff effs a
+type Derive a = forall effs. Members DeriveEff effs => Eff effs a
 
 --------------------------------------------------------------------------------
 -- Runners
 
--- | Run derivation builder - not unified yet.
+-- | Run Derive Monad - not unified.
 runDerive :: Context -> PC.ModuleName -> Derive a -> Either InferErr (a, [Constraint])
 runDerive ctx localMod =
   run . runError . runWriter . evalState (DC startAtom) . runReader ctx . runReader localMod
@@ -261,17 +253,24 @@ deriveClassDef :: PC.ClassDef -> Derive ()
 deriveClassDef classDef = traverse_ deriveConstraint (classDef ^. #supers)
 
 deriveConstraint :: PC.Constraint -> Derive Derivation
-deriveConstraint _constraint = do
-  --  ctx <- ask
-  -- FIXME
-  --  k2 <- getKind (ConstraintT undefined)
-  --  argD <- deriveTy (constraint ^. #argument)
-  pure $ error "NOTE(cstml): fixme."
+deriveConstraint constraint = do
+  mn <- ask
+  ctx <- ask
+  let qcr = case constraint ^. #classRef of
+        PC.LocalCI lcr -> QualifiedTyClassRef . withIso lcrISOqtcr const $ (lcr, mn)
+        PC.ForeignCI fcr -> QualifiedTyClassRef . withIso fcrISOqtcr const $ fcr
+  dConstraint <- deriveVar qcr
+  argD <- deriveTy (constraint ^. #argument)
+  let argTy = argD ^. d'type
+  freshK <- KVar <$> fresh
+  tell [Constraint (dConstraint ^. d'kind, (argD ^. d'kind) :->: freshK)]
+  pure $ Application (Judgement ctx (App (dConstraint ^. d'type) argTy) freshK) dConstraint argD
 
---    Application
---      (Judgement ctx (App (Var (QualifiedConstraint undefined))) k2)
---      (Judgement ctx (App (Var (QualifiedConstraint undefined) k2)))
---      argD
+deriveVar :: Variable -> Derive Derivation
+deriveVar v = do
+  ctx <- ask
+  k <- getKind v
+  pure . Axiom $ Judgement ctx (Var v) k
 
 --------------------------------------------------------------------------------
 --
@@ -348,19 +347,13 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
 
     appearsErr :: forall eff a. Member (Error InferErr) eff => Atom -> Kind -> Eff eff a
     appearsErr var ty =
-      throwError $
-        InferRecursiveSubstitutionErr $
-          mconcat
-            [ "Cannot unify: "
-            , T.pack . show . pretty $ var
-            , " with "
-            , T.pack . show . pretty $ ty
-            , ". "
-            , T.pack . show . pretty $ var
-            , " appears in: "
-            , T.pack . show . pretty $ ty
-            , "."
-            ]
+      throwError
+        $ InferRecursiveSubstitutionErr
+          . mconcat
+        $ ["Cannot unify: ", p var, " with ", p ty, ". ", p var, " appears in: ", p ty, "."]
+      where
+        p :: forall b. Pretty b => b -> Text
+        p = T.pack . show . pretty
 
     appearsIn a ty = a `elem` getVariables ty
 
@@ -393,8 +386,6 @@ substitute s d = case d of
 
     applySubstitutionCtx subs ctx = ctx & addContext %~ fmap (applySubstitution subs)
 
--- FIXME(cstml) not avoiding any clashes
-
 -- | Fresh startAtom
 startAtom :: Atom
 startAtom = 0
@@ -405,5 +396,5 @@ protoKind2Kind = \case
   PC.Kind k -> case k of
     PC.KindArrow k1 k2 -> protoKind2Kind k1 :->: protoKind2Kind k2
     PC.KindRef PC.KType -> KType
-    PC.KindRef PC.KUnspecified -> KType -- unspecified kinds get defaulted
+    PC.KindRef PC.KUnspecified -> KType
     PC.KindRef PC.KConstraint -> KConstraint

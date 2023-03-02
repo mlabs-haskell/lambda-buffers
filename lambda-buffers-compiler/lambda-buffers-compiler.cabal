@@ -172,6 +172,7 @@ test-suite tests
     Test.DeriveCheck
     Test.KindCheck
     Test.KindCheck.Errors
+    Test.KindCheck.TyClass
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
     Test.LambdaBuffers.Compiler.Mutation

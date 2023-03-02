@@ -24,7 +24,7 @@ import LambdaBuffers.Compiler.KindCheck.Inference (protoKind2Kind)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
-  Variable (QualifiedConstraint, QualifiedTyRef, TyVar),
+  Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
   ftrISOqtr,
   ltrISOqtr,
   qTyRef'moduleName,
@@ -136,7 +136,8 @@ runKindCheck = interpret $ \case
   CheckClassDefinition modName classDef ctx ->
     either (handleErr2 modName classDef) pure $ I.runClassDefCheck ctx modName classDef
   where
-    handleErr2 = undefined
+    handleErr2 :: forall {b}. PC.ModuleName -> PC.ClassDef -> I.InferErr -> Eff effs b
+    handleErr2 _ _ _err = error "Throw an error"
 
     handleErr :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
     handleErr modName td = \case
@@ -155,7 +156,7 @@ runKindCheck = interpret $ \case
                 throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td foreignRef modName
           TyVar tv ->
             throwError . PC.CompKindCheckError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
-          QualifiedConstraint _ -> error "NOTE(cstml): FIXME."
+          QualifiedTyClassRef _ -> error "NOTE(cstml): FIXME."
       I.InferUnifyTermErr (I.Constraint (k1, k2)) -> do
         err <- PC.IncorrectApplicationError td <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
         throwError $ PC.CompKindCheckError err

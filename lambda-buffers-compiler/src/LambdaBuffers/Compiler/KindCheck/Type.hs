@@ -6,15 +6,20 @@ module LambdaBuffers.Compiler.KindCheck.Type (
   tyUnit,
   tySum,
   tyVoid,
-  Variable (TyVar, QualifiedTyRef, QualifiedConstraint),
+  Variable (TyVar, QualifiedTyRef, QualifiedTyClassRef),
   QualifiedTyRefName (..),
-  QualifiedClassName (..),
+  QualifiedTyClassRefName (..),
   qTyRef'tyName,
   qTyRef'moduleName,
   qTyRef'sourceInfo,
+
+  -- * Isomorphisms.
   ltrISOqtr,
   ftrISOqtr,
   ltrISOftr,
+  fcrISOqtcr,
+  lcrISOftcr,
+  lcrISOqtcr,
 ) where
 
 import Control.Lens (iso, makeLenses, withIso, (^.))
@@ -25,8 +30,7 @@ import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, InfoLessC, withInf
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Pretty (pretty), viaShow)
 
--- NOTE(cstml): Let's remove the Arbitrary instances and replaces them with
--- Gens.
+-- NOTE(cstml): Remove the Arbitrary instances and replaces them with Gens.
 
 data QualifiedTyRefName = QualifiedTyRefName
   { _qTyRef'tyName :: PC.TyName
@@ -39,13 +43,27 @@ instance InfoLessC QualifiedTyRefName
 
 makeLenses ''QualifiedTyRefName
 
+data QualifiedTyClassRefName = QualifiedTyClassRefName
+  { _qTyClass'className :: PC.ClassName
+  , _qTyClass'moduleName :: PC.ModuleName
+  , _qTyClass'sourceInfo :: PC.SourceInfo
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (SOP.Generic)
+instance InfoLessC QualifiedTyClassRefName
+
+makeLenses ''QualifiedTyClassRefName
+
+instance Pretty (InfoLess Variable) where
+  pretty x = withInfoLess x pretty
+
 {- | All TyRefs and ClassNames are fully qualified. The context determines if
  they are local or not.
 -}
 data Variable
   = QualifiedTyRef QualifiedTyRefName
+  | QualifiedTyClassRef QualifiedTyClassRefName
   | TyVar PC.VarName
-  | QualifiedConstraint QualifiedClassName
   deriving stock (Eq, Show, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
@@ -53,14 +71,6 @@ instance InfoLessC Variable
 
 instance Pretty Variable where
   pretty = viaShow
-
-data QualifiedClassName = QualifiedClassName PC.ClassName PC.ModuleName
-  deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (SOP.Generic)
-instance InfoLessC QualifiedClassName
-
-instance Pretty (InfoLess Variable) where
-  pretty x = withInfoLess x pretty
 
 data Type
   = Abs PC.TyAbs
@@ -89,7 +99,9 @@ tyVoid = VoidT
 instance Pretty Type where
   pretty = viaShow
 
--- | (PC.LocalRef, PC.ModuleName) isomorphism with QualifiedTyRefName.
+--------------------------------------------------------------------------------
+-- Qualified TyRef ISOs.
+
 ltrISOqtr :: Iso' (PC.LocalRef, PC.ModuleName) QualifiedTyRefName
 ltrISOqtr = iso goRight goLeft
   where
@@ -101,7 +113,6 @@ ltrISOqtr = iso goRight goLeft
       , qtr ^. qTyRef'moduleName
       )
 
--- | LocalTyRef isomorphism with ForeignTyRef
 ltrISOftr :: Iso' (PC.LocalRef, PC.ModuleName) PC.ForeignRef
 ltrISOftr = iso goRight goLeft
   where
@@ -119,3 +130,36 @@ ftrISOqtr = iso goRight goLeft
 
     goLeft :: QualifiedTyRefName -> PC.ForeignRef
     goLeft = withIso ltrISOftr $ \l2f _ -> withIso ltrISOqtr $ \_ q2l -> l2f . q2l
+
+--------------------------------------------------------------------------------
+-- Qualified TyClass Name ISOs.
+
+lcrISOqtcr :: Iso' (PC.LocalClassRef, PC.ModuleName) QualifiedTyClassRefName
+lcrISOqtcr = iso goRight goLeft
+  where
+    goRight :: (PC.LocalClassRef, PC.ModuleName) -> QualifiedTyClassRefName
+    goRight (lcr, mn) = QualifiedTyClassRefName (lcr ^. #className) mn (lcr ^. #sourceInfo)
+
+    goLeft :: QualifiedTyClassRefName -> (PC.LocalClassRef, PC.ModuleName)
+    goLeft qtcn =
+      ( PC.LocalClassRef (qtcn ^. qTyClass'className) (qtcn ^. qTyClass'sourceInfo)
+      , qtcn ^. qTyClass'moduleName
+      )
+
+lcrISOftcr :: Iso' (PC.LocalClassRef, PC.ModuleName) PC.ForeignClassRef
+lcrISOftcr = iso goRight goLeft
+  where
+    goRight :: (PC.LocalClassRef, PC.ModuleName) -> PC.ForeignClassRef
+    goRight (lr, mn) = PC.ForeignClassRef (lr ^. #className) mn (lr ^. #sourceInfo)
+
+    goLeft :: PC.ForeignClassRef -> (PC.LocalClassRef, PC.ModuleName)
+    goLeft fr = (PC.LocalClassRef (fr ^. #className) (fr ^. #sourceInfo), fr ^. #moduleName)
+
+fcrISOqtcr :: Iso' PC.ForeignClassRef QualifiedTyClassRefName
+fcrISOqtcr = iso goRight goLeft
+  where
+    goRight :: PC.ForeignClassRef -> QualifiedTyClassRefName
+    goRight = withIso lcrISOftcr $ \_ f2l -> withIso lcrISOqtcr $ \l2q _ -> l2q . f2l
+
+    goLeft :: QualifiedTyClassRefName -> PC.ForeignClassRef
+    goLeft = withIso lcrISOftcr $ \l2f _ -> withIso lcrISOqtcr $ \_ q2l -> l2f . q2l
