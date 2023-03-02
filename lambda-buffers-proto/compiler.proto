@@ -633,71 +633,86 @@ message ProtoParseError {
   }
 }
 
-// Non-internal errors that can be thrown during
-// type class checking. Because these errors involve
-// TyClassCheck types, which cannot be converted back into
-// proto messages, the error message is constructed in the
-// TypeClassCheck modules in LambdaBuffers.Compiler
 message TypeClassError {
-  // Error which indicates that a class referred to in an instance
+  // A class referred to in an instance
   // or deriving clause does not exist. (Maybe this should be internal?)
   message UnknownClassError {
-    string msg = 1;
-    SourceInfo source_info = 2;
+    // The reference that could not be resolved
+    // NOTE: the class_ref contains valid/"real" source info
+    TyClassRef class_ref = 1;
   }
 
-  // Error which indicates that the TyDef referred to by a TyRef cannot be found
+  // The TyDef referred to by a TyRef cannot be found
   message LocalTyRefNotFoundError {
-    string msg = 1;
+    // NOTE: Has defaulted SourceInfo
+    TyName ty_name = 1;
+    // The module where the missing reference was searched for
+    ModuleName module_name = 2;
     // SourceInfo points to the clause that triggered the tyref lookup
-    SourceInfo source_info = 2;
+    SourceInfo source_info = 3;
   }
 
-  // Error which indicates a cycle of superclasses. SourceInfo
-  // isn't particularly meaningful here - we could include the SourceInfo
-  // for each class in the cycle, but given the large amount of work
-  // required to define a LB class, this should be more than adequate
+  // Detected a superclass cycle
   message SuperclassCycleError {
+    // TODO(@gnumonik): fix later if drazen is OK w/ the other ones,
+    // this one is not that important
     string msg  = 1;
   }
 
-  // Error that indicates a constraint cannot be solved with
+  // A constraint cannot be solved with
   // the in-scope set of instance rules.
-  message FailedToSolveConstraintError {
-    string msg = 1;
-    // SourceInfo points to the clause that triggered the subgoal failure
-    // (The failure could potentially be a structural rule, so pointing
-    // to the clause that triggered the exception is the best we can do)
-    SourceInfo source_info = 2;
+  message FailedToSolveConstraintsError {
+    // Name of the module where the failure to solve occurred
+    ModuleName module_name = 1;
+    // The constraints that could not be solved
+    // NOTE: ALL SourceInfos are defaulted here
+    repeated Constraint constraints = 2;
+    // The initial InstanceClause that triggered the failures
+    // NOTE: The outermost SourceInfo is correct for the clause,
+    //       but all inner SourceInfos are defaulted
+    InstanceClause instance = 3;
   }
 
-  // Error that indicates the body of a tydef is malformed in some way.
+  // The body of a tydef is malformed in some way.
   // Quasi-internal; indicates that something went wrong converting from
   // a TyDef to a Pat or Exp, and cannot be ameliorated by the user.
   // (I am putting it here because it has a meaningful SourceInfo)
   message MalformedTyDefError {
-    string msg = 1;
-    // SourceInfo points at the body of the malformed type.
+    ModuleName module_name = 1;
+
+    // Ideally we'd have the Exp here but since it's not representable
+    // in protos (b/c malformed), we can't put anything meaningful here.
+
+    // SourceInfo points at malformed type definition
     SourceInfo source_info = 2;
   }
 
-  // Error that indicates an instance does not conform to one of the three
-  // basic conditions for instance validity. See the NOTE for `checkInstance`
-  // in LambdaBuffers.Compiler.TypeClassCheck.Utils. These conditions are all
-  // very straightforward and the message thoroughly explains what went wrong
-  message BadInstanceError {
-    string msg = 1;
-    // Points at the instance that triggered the violation
-    SourceInfo source_info = 2;
+  // Self explanatory
+  message OverlappingInstancesError {
+
+
+    // The constraint we were trying to solve when we detected overlap
+    Constraint constraint = 1;
+
+
+    // The overlapping rules
+    // NOTE: *ALL* of the SourceInfos here are defaulted
+    repeated InstanceClause overlaps = 2;
   }
+
+  // NOTE: If we only permit derive statements (and not user-defined
+  //       instance rules), then this set of errors is sufficient.
+  //       If we permit instance rule definitions,  we also need errors
+  //       for violations of basic conditions 1 & 2 (see Utils.hs)
+
 
   oneof typeclass_error {
     UnknownClassError unknown_class = 1;
     LocalTyRefNotFoundError ref_not_found = 2;
     SuperclassCycleError superclass_cycle = 3;
-    FailedToSolveConstraintError failed_to_solve_constraint = 4;
+    FailedToSolveConstraintsError failed_to_solve_constraints = 4;
     MalformedTyDefError malformed_ty_def = 5;
-    BadInstanceError bad_instance = 6;
+    OverlappingInstancesError overlapping_instances = 6;
   }
 
 }

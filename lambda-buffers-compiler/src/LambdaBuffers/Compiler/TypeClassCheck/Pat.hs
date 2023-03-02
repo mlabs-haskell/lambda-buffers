@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module LambdaBuffers.Compiler.TypeClassCheck.Pat (
   Pat (..),
@@ -15,6 +16,13 @@ module LambdaBuffers.Compiler.TypeClassCheck.Pat (
   getLocalRefE,
   expList,
   matches,
+  -- stupid utility for errors
+  unTyFunP,
+  unTyFunE,
+  -- for tests, remove
+  pattern Either,
+  pattern Bool,
+  pattern Int,
 ) where
 
 import Data.Kind (Type)
@@ -154,6 +162,39 @@ getLocalRefE = \case
     Just (RefE NilE (LitE (Name t))) -> Just t
     _ -> Nothing
   _ -> Nothing
+
+pattern Bool :: Pat
+pattern Bool = RefP NilP (LitP (Name "Bool"))
+
+pattern Int :: Pat
+pattern Int = RefP NilP (LitP (Name "Int"))
+
+pattern Either :: Pat -> Pat -> Pat
+pattern Either a b = AppP (AppP (RefP NilP (LitP (Name "Either"))) a) b
+
+unTyFunP :: Pat -> Maybe (Pat, [Pat])
+unTyFunP = \case
+  AppP f args -> case unTyFunP f of
+    Nothing -> Just (f, apToList args)
+    Just (f', args') -> Just (f', args' <> apToList args)
+  _ -> Nothing
+  where
+    apToList :: Pat -> [Pat]
+    apToList = \case
+      AppP p1 p2 -> p1 : apToList p2
+      other -> [other]
+
+unTyFunE :: Exp -> Maybe (Exp, [Exp])
+unTyFunE = \case
+  AppE f args -> case unTyFunE f of
+    Nothing -> Just (f, apToList args)
+    Just (f', args') -> Just (f', args' <> apToList args)
+  _ -> Nothing
+  where
+    apToList :: Exp -> [Exp]
+    apToList = \case
+      AppE p1 p2 -> p1 : apToList p2
+      other -> [other]
 
 {- Converts a pattern that consists of a well formed pattern list
    (i.e. patterns formed from :* and Nil) into a list of patterns.

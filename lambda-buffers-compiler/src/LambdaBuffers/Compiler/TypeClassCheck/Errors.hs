@@ -10,21 +10,41 @@ import GHC.Generics (Generic)
 import Data.Text qualified as T
 
 import LambdaBuffers.Compiler.TypeClassCheck.Rules (
-  Constraint,
-  FQClassName,
-  Rule,
+  Class (Class),
+  Constraint (C),
+  FQClassName (FQClassName),
+  Rule ((:<=)),
  )
 
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC (
-  ModuleName,
+  ClassName (ClassName),
+  ConstrName (ConstrName),
+  Constraint (Constraint),
+  FieldName (FieldName),
+  ForeignClassRef (ForeignClassRef),
+  ForeignRef (ForeignRef),
+  InstanceClause (InstanceClause),
+  LBName (LBName),
+  LocalClassRef (LocalClassRef),
+  LocalRef (LocalRef),
+  ModuleName (ModuleName),
+  ModuleNamePart (ModuleNamePart),
   SourceInfo,
+  Ty (TyAppI, TyRefI, TyVarI),
+  TyApp (TyApp),
+  TyClassRef (ForeignCI, LocalCI),
+  TyName (TyName),
+  TyRef (ForeignI, LocalI),
+  TyVar (TyVar),
+  VarName (..),
  )
-import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Pat)
+import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp (AppE, LitE, NilE, RefE), Literal (ModuleName, Name, TyVar), Pat (AppP, LitP, NilP, RefP), unTyFunE, unTyFunP)
 
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
+  Doc,
   Pretty (pretty),
   defaultLayoutOptions,
   hcat,
@@ -45,6 +65,15 @@ import Prettyprinter.Render.Text (renderStrict)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
+import Control.Monad.Except (
+  ExceptT,
+  MonadError (throwError),
+  MonadTrans (lift),
+  runExceptT,
+ )
+import Data.Generics.Labels (Field')
+import LambdaBuffers.Compiler.ProtoCompat.Types (defSourceInfo)
+
 type Instance = Rule Pat
 
 {- Some of these are perfunctory & used to keep functions total.
@@ -58,14 +87,14 @@ data TypeClassError
   | LocalTyRefNotFound T.Text PC.ModuleName PC.SourceInfo -- SI is the instance clause that triggered the tyref lookup
   | SuperclassCycleDetected [[FQClassName]] -- No sourceinfo, it's not very useful due to the nature of cycles
   | FailedToSolveConstraints PC.ModuleName [Constraint Exp] Instance PC.SourceInfo -- SI is the instance clause that triggered the subgoal that failed (subgoal itself may not exist anywhere in the source)
-  | MalformedTyDef PC.ModuleName Exp PC.SourceInfo -- SI is the BODY of the exp
+  | MalformedTyDef PC.ModuleName Exp PC.SourceInfo -- SI is tydef
   | BadInstance BasicConditionViolation PC.SourceInfo -- SI is the source of the rule that triggered the violation. This might be weird
   deriving stock (Show, Eq, Generic)
 
 instance Pretty TypeClassError where
   pretty = \case
-    UnknownClass cref si ->
-      "Error at" <+> pretty si <+> nest 2 ("Unknown class: " <> pretty cref)
+    UnknownClass cref i ->
+      "Error at" <+> pretty i <+> nest 2 ("Unknown class: " <> pretty cref)
     UnknownModule mn ->
       "INTERNAL ERROR: Unknown Module" <+> pretty mn
     MissingModuleInstances mn ->
@@ -139,54 +168,229 @@ instance Pretty BasicConditionViolation where
           <> line
           <> indent 2 (vcat (map pretty rules))
 
-mkMsg :: TypeClassError -> Text
-mkMsg = renderStrict . layoutPretty defaultLayoutOptions . pretty
+mkMsg :: Pretty a => a -> Text
+mkMsg = renderP . pretty
+
+renderP :: Doc () -> Text
+renderP = renderStrict . layoutPretty defaultLayoutOptions
 
 -- One way conversion; don't think we'll ever need to convert back into Haskell types (also: we can't)
 tcErrToProto :: TypeClassError -> Either P.InternalError P.TypeClassError
 tcErrToProto = \case
-  unknownClass@(UnknownClass _ si) ->
+  UnknownClass fqn i ->
     Right $
       defMessage
         & P.unknownClass
           .~ ( defMessage
-                & P.msg .~ mkMsg unknownClass
-                & P.sourceInfo .~ toProto si
+                & P.classRef .~ toProto (unSI i (siClassRef fqn))
              )
-  refNotFound@(LocalTyRefNotFound _ _ si) ->
+  LocalTyRefNotFound tn mn i ->
     Right $
       defMessage
         & P.refNotFound
           .~ ( defMessage
-                & P.msg .~ mkMsg refNotFound
-                & P.sourceInfo .~ toProto si
+                & P.tyName .~ toProto (def $ siName @PC.TyName tn)
+                & P.moduleName .~ toProto mn
+                & P.sourceInfo .~ toProto i
              )
   scCycles@(SuperclassCycleDetected _) ->
     Right $
       defMessage
         & P.superclassCycle .~ (defMessage & P.msg .~ mkMsg scCycles)
-  failedToSolve@(FailedToSolveConstraints _ _ _ si) ->
-    Right $
-      defMessage
-        & P.failedToSolveConstraint
-          .~ ( defMessage
-                & P.msg .~ mkMsg failedToSolve
-                & P.sourceInfo .~ toProto si
-             )
-  malformedDef@(MalformedTyDef _ _ si) ->
-    Right $
-      defMessage
-        & P.malformedTyDef
-          .~ ( defMessage
-                & P.msg .~ mkMsg malformedDef
-                & P.sourceInfo .~ toProto si
-             )
-  badInst@(BadInstance _ si) ->
+  FailedToSolveConstraints mn cs inst i -> case traverse convertConstraintE' cs of
+    Left e -> undefined e
+    Right cs' -> case convertInstance i inst of
+      Left e -> undefined e
+      Right inst' ->
+        Right $
+          defMessage
+            & P.failedToSolveConstraints
+              .~ ( defMessage
+                    & P.moduleName .~ toProto mn
+                    & P.constraints .~ map toProto cs'
+                    & P.instance' .~ toProto inst'
+                 )
+  MalformedTyDef mn _exp i ->
     Right $
       defMessage
         & P.malformedTyDef
           .~ ( defMessage
-                & P.msg .~ mkMsg badInst
-                & P.sourceInfo .~ toProto si
+                & P.moduleName .~ toProto mn
+                & P.sourceInfo .~ toProto i
              )
+  BadInstance (OverlapDetected (Overlap cst rules)) i -> case convertConstraintE i cst of
+    Left e -> Left $ handleErr e
+    Right cst' -> case traverse (convertInstance defSourceInfo) rules of
+      Left e -> Left $ handleErr e
+      Right insts' ->
+        Right $
+          defMessage
+            & P.overlappingInstances
+              .~ ( defMessage
+                    & P.constraint .~ toProto @P.Constraint cst'
+                    & P.overlaps .~ map toProto insts'
+                 )
   internal -> Left $ defMessage & P.msg .~ mkMsg internal
+  where
+    handleErr :: ConversionError -> P.InternalError
+    handleErr = \case
+      MalformedTypeApplication e ->
+        defMessage
+          & P.msg
+            .~ renderP
+              ( "INTERNAL ERROR: Malformed type application "
+                  <+> either pretty pretty e
+              )
+      NotATy e ->
+        defMessage
+          & P.msg
+            .~ renderP
+              ( "INTERNAL ERROR: Not a type "
+                  <+> either pretty pretty e
+              )
+
+-- TOOLS FOR DEALING W/ SOURCEINFO & CONVERSIONS
+
+data ConversionError
+  = MalformedTypeApplication (Either Pat Exp) -- this is actually impossible in the context where it's thrown but need it for totality
+  | NotATy (Either Pat Exp) -- If we get a failure on a rule where the head doesn't correspond to any possible PC.Ty, e.g. structural rules
+
+-- Yes, this is actually 1000x more convenient than doing it by hand
+newtype SI t = SI (PC.SourceInfo -> t)
+
+unSI :: PC.SourceInfo -> SI t -> t
+unSI i (SI f) = f i
+
+instance Functor SI where
+  fmap f (SI g) = SI $ fmap f g
+
+instance Applicative SI where
+  pure x = SI (const x)
+
+  (SI f) <*> (SI g) = SI $ \i -> f i (g i)
+
+instance Monad SI where
+  return = pure
+
+  (SI x) >>= f = SI $ \i -> case f (x i) of
+    SI z -> z i
+
+si :: (PC.SourceInfo -> t) -> SI t
+si = SI
+
+siModulename :: [Text] -> SI PC.ModuleName
+siModulename xs = traverse siName xs >>= si . PC.ModuleName
+
+siClassRef :: FQClassName -> SI PC.TyClassRef
+siClassRef (FQClassName cn mn) =
+  siName cn >>= \cn' -> case mn of
+    [] -> si $ PC.LocalCI . PC.LocalClassRef cn'
+    _ ->
+      siModulename mn >>= \mn' ->
+        si $ PC.ForeignCI . PC.ForeignClassRef cn' mn'
+
+siConstraintE :: Constraint Exp -> ExceptT ConversionError SI PC.Constraint
+siConstraintE (C (Class fqcn _) xp) = do
+  cref <- lift $ siClassRef fqcn
+  ty <- expToTy xp
+  lift . si $ PC.Constraint cref ty
+
+def :: SI t -> t
+def = unSI defSourceInfo
+
+convertConstraintE :: PC.SourceInfo -> Constraint Exp -> Either ConversionError PC.Constraint
+convertConstraintE i = unSI i . runExceptT . siConstraintE
+
+convertConstraintE' :: Constraint Exp -> Either ConversionError PC.Constraint
+convertConstraintE' = convertConstraintE defSourceInfo
+
+siConstraintP :: Constraint Pat -> ExceptT ConversionError SI PC.Constraint
+siConstraintP (C (Class fqcn _) xp) = do
+  cref <- lift $ siClassRef fqcn
+  ty <- patToTy xp
+  lift . si $ PC.Constraint cref ty
+
+convertConstraintP :: PC.SourceInfo -> Constraint Pat -> Either ConversionError PC.Constraint
+convertConstraintP i = unSI i . runExceptT . siConstraintP
+
+convertConstraintP' :: Constraint Pat -> Either ConversionError PC.Constraint
+convertConstraintP' = convertConstraintP defSourceInfo
+
+convertInstance :: PC.SourceInfo -> Instance -> Either ConversionError PC.InstanceClause
+convertInstance i (C (Class cr _) xp :<= rest) = do
+  let cr' = def $ siClassRef cr
+  hd <- def $ runExceptT (patToTy xp)
+  cxt <- traverse convertConstraintP' rest
+  pure $ PC.InstanceClause cr' hd cxt i
+
+expToTy :: Exp -> ExceptT ConversionError SI PC.Ty
+expToTy = \case
+  LitE (TyVar t) -> do
+    t' <- lift $ siName t
+    tv <- lift . si $ PC.TyVar t'
+    pure $ PC.TyVarI tv
+  app@(AppE _ _) -> case unTyFunE app of
+    Nothing -> throwError $ MalformedTypeApplication (Right app) -- unTyFunE succeeds for every AppE, this really is impossible here
+    Just (f, args) -> do
+      tfunc <- expToTy f
+      targs <- traverse expToTy args
+      tapp <- lift . si $ PC.TyApp tfunc targs
+      pure $ PC.TyAppI tapp
+  RefE NilE (LitE (Name t)) -> do
+    t' <- lift $ siName t
+    lift . si $ PC.TyRefI . PC.LocalI . PC.LocalRef t'
+  RefE (LitE (ModuleName xs)) (LitE (Name t)) -> do
+    mn <- lift $ siModulename xs
+    t' <- lift $ siName t
+    lift . si $ PC.TyRefI . PC.ForeignI . PC.ForeignRef t' mn
+  other -> throwError $ NotATy (Right other)
+
+patToTy :: Pat -> ExceptT ConversionError SI PC.Ty
+patToTy = \case
+  LitP (TyVar t) -> do
+    t' <- lift $ siName t
+    tv <- lift . si $ PC.TyVar t'
+    pure $ PC.TyVarI tv
+  app@(AppP _ _) -> case unTyFunP app of
+    Nothing -> throwError $ MalformedTypeApplication (Left app) -- unTyFunE succeeds for every AppE, this really is impossible here
+    Just (f, args) -> do
+      tfunc <- patToTy f
+      targs <- traverse patToTy args
+      tapp <- lift . si $ PC.TyApp tfunc targs
+      pure $ PC.TyAppI tapp
+  RefP NilP (LitP (Name t)) -> do
+    t' <- lift $ siName t
+    lift . si $ PC.TyRefI . PC.LocalI . PC.LocalRef t'
+  RefP (LitP (ModuleName xs)) (LitP (Name t)) -> do
+    mn <- lift $ siModulename xs
+    t' <- lift $ siName t
+    lift . si $ PC.TyRefI . PC.ForeignI . PC.ForeignRef t' mn
+  other -> throwError $ NotATy (Left other)
+
+-- Helper type class for conversions. Ripped this out of one of my old PRs
+class (Field' "name" s Text, Field' "sourceInfo" s PC.SourceInfo) => NameLike s where
+  ctorName :: Text -> PC.SourceInfo -> s
+
+instance NameLike PC.LBName where
+  ctorName = PC.LBName
+
+instance NameLike PC.TyName where
+  ctorName = PC.TyName
+
+instance NameLike PC.ConstrName where
+  ctorName = PC.ConstrName
+
+instance NameLike PC.ModuleNamePart where
+  ctorName = PC.ModuleNamePart
+
+instance NameLike PC.VarName where
+  ctorName = PC.VarName
+
+instance NameLike PC.FieldName where
+  ctorName = PC.FieldName
+
+instance NameLike PC.ClassName where
+  ctorName = PC.ClassName
+
+siName :: NameLike s => Text -> SI s
+siName = SI . ctorName
