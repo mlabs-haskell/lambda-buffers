@@ -1,0 +1,37 @@
+module Prelude
+
+opaque Bool
+
+opaque Integer
+
+opaque Int8
+
+opaque Int16
+
+opaque Int32
+
+opaque Int64
+
+opaque UInt8
+
+opaque UInt16
+
+opaque UInt32
+
+opaque UInt64
+
+opaque Bytes
+
+opaque Char
+
+opaque Text
+
+opaque Maybe a
+
+opaque Either a b
+
+opaque List a
+
+opaque Map a b
+
+opaque Set a

@@ -332,11 +332,6 @@ modules {
                         pos_to { column: 21 row: 14 }
                       }
                     }
-                    source_info {
-                      file: "good/Test.lbf"
-                      pos_from { column: 20 row: 14 }
-                      pos_to { column: 21 row: 14 }
-                    }
                   }
                 }
                 source_info {
@@ -431,11 +426,6 @@ modules {
                         pos_to { column: 24 row: 16 }
                       }
                     }
-                    source_info {
-                      file: "good/Test.lbf"
-                      pos_from { column: 23 row: 16 }
-                      pos_to { column: 24 row: 16 }
-                    }
                   }
                 }
                 source_info {
@@ -466,11 +456,6 @@ modules {
                         pos_from { column: 33 row: 16 }
                         pos_to { column: 34 row: 16 }
                       }
-                    }
-                    source_info {
-                      file: "good/Test.lbf"
-                      pos_from { column: 33 row: 16 }
-                      pos_to { column: 34 row: 16 }
                     }
                   }
                 }
@@ -557,11 +542,6 @@ modules {
                         pos_to { column: 26 row: 18 }
                       }
                     }
-                    source_info {
-                      file: "good/Test.lbf"
-                      pos_from { column: 25 row: 18 }
-                      pos_to { column: 26 row: 18 }
-                    }
                   }
                 }
                 fields {
@@ -594,11 +574,6 @@ modules {
                             pos_from { column: 33 row: 18 }
                             pos_to { column: 34 row: 18 }
                           }
-                        }
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 33 row: 18 }
-                          pos_to { column: 34 row: 18 }
                         }
                       }
                     }

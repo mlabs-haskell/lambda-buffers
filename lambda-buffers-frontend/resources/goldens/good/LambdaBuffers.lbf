@@ -1,0 +1,47 @@
+module LambdaBuffers
+
+import Prelude
+
+sum Kind = KindType | KindArrow Kind Kind
+
+sum Ty = TyApp Ty Ty | TyVar VarName | TyRef
+
+sum TyAbs = MkTyAbs (List TyArg) TyBody
+
+sum TyArg = MkTyArg VarName Kind
+
+sum TyDef = MkTyDef TyName TyAbs
+
+sum TyBody = Opaque | Sum (Map ConstrName Constructor)
+
+sum Constructor = MkConstructor ConstrName Product
+
+sum Product = MkTuple (List Ty) | MkRecord (Map FieldName Field)
+
+sum Field = MkField FieldName Ty
+
+sum TyRef = LocalTyRef TyName | ForeignTyRef ModuleName TyName
+
+sum ClassDef = MkClassDef ClassName (List TyArg) (List ClassConstraint)
+
+sum ClassConstraint = MkClassConstraint ClassRef (List TyArg)
+
+sum InstanceClause = MkInstanceClause Goal (List Goal)
+
+sum Derive = MkDerive Goal
+
+sum Goal = MkGoal ClassRef (List Ty)
+
+sum ClassRef = LocalClassRef ClassName | ForeignClassRef ModuleName ClassName
+
+sum Module = MkModule ModuleName (Map TyName TyDef) (Map ClassName ClassDef) (Set ModuleName) (List InstanceClause) (List Derive)
+
+sum CompilerInput = MkCompilerInput (Map ModuleName Module)
+
+sum TyName = MkTyName Text
+sum VarName = MkVarName Text
+sum ConstrName = MkConstrName Text
+sum FieldName = MkFieldName Text
+sum ModuleName = MkModuleName (List ModuleNamePart)
+sum ModuleNamePart = MkModuleNamePart Text
+sum ClassName = MkClassName Text
