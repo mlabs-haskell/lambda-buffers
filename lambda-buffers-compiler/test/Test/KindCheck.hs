@@ -72,17 +72,17 @@ kcTestEither =
 kcWrappedTestEither :: TestTree
 kcWrappedTestEither =
   testCase "Kind check Either + Wrapped Either." $
-    check_ compilerInput'newTypeEither @?= Right ()
+    runCheck compilerInput'newTypeEither @?= Right ()
 
 kcWrappedTestEither' :: TestTree
 kcWrappedTestEither' =
   testCase "Kind check Either (defined Opaque) + Wrapped Either." $
-    check_ compilerInput'newTypeEither' @?= Right ()
+    runCheck compilerInput'newTypeEither' @?= Right ()
 
 kcWrappedTestEither'' :: TestTree
 kcWrappedTestEither'' =
   testCase "Kind check Either + Wrapped (Either Int Int) ." $
-    check_ compilerInput'newTypeEither'' @?= Right ()
+    runCheck compilerInput'newTypeEither'' @?= Right ()
 
 kcTestMaybe'n'Either :: TestTree
 kcTestMaybe'n'Either =
