@@ -7,35 +7,35 @@ import Data.Map.Ordered (OMap)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
+import LambdaBuffers.Codegen.Haskell.Syntax (fromLbModuleName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, surround, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, hsep, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, vsep, (<+>))
 
-printModuleHeader :: H.ModuleName -> Set H.TyName -> Doc a
-printModuleHeader (H.MkModuleName mn) exports =
-  let typeExportsDoc = align $ group $ encloseSep lparen rparen comma ((\(H.MkTyName tn) -> pretty tn) <$> toList exports)
-   in "module" <+> pretty mn <+> typeExportsDoc <+> "where"
+printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc a
+printModuleHeader mn exports =
+  let typeExportsDoc = align $ group $ encloseSep lparen rparen comma ((`PC.withInfoLess` printTyName) <$> toList exports)
+   in "module" <+> printModName mn <+> typeExportsDoc <+> "where"
 
-printImports :: Set H.QTyName -> Doc a
+printImports :: Set PC.QTyName -> Doc a
 printImports imports =
-  let grouped = Set.fromList [(c, mn) | (c, mn, _tn) <- toList imports]
-      typeImportsDocs = (\(_, H.MkModuleName mn) -> "import qualified" <+> pretty mn) <$> toList grouped
+  let grouped = Set.fromList [PC.withInfoLess mn id | (mn, _tn) <- toList imports]
+      typeImportsDocs = (\mn -> "import qualified" <+> printModName mn) <$> toList grouped
       typeImportsDoc = vsep typeImportsDocs
    in typeImportsDoc
 
 printTyDefs :: [Doc a] -> Doc a
 printTyDefs = vsep
 
-printModule :: H.ModuleName -> Set H.TyName -> Set H.QTyName -> [Doc a] -> Doc a
+printModule :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Set PC.QTyName -> [Doc a] -> Doc a
 printModule modName tyExports tyImports tyDefDocs =
-  vsep
+  align . vsep $
     [ printModuleHeader modName tyExports
     , line
     , printImports tyImports
     , line
     , printTyDefs tyDefDocs
-    , line
     ]
 
 printTyVar :: PC.TyVar -> Doc a
@@ -48,7 +48,7 @@ printTyName :: PC.TyName -> Doc a
 printTyName (PC.TyName n _) = pretty n
 
 printModName :: PC.ModuleName -> Doc a
-printModName (PC.ModuleName parts _) = group $ concatWith (surround dot) [pretty p | PC.ModuleNamePart p _ <- parts]
+printModName mn = let H.MkModuleName hmn = fromLbModuleName mn in pretty hmn
 
 {- | Creates an alias to the specified 'native' type.
 
@@ -112,7 +112,7 @@ printRec tyN (PC.Record fields _) =
    in group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
 
 printTup :: PC.Tuple -> Doc a
-printTup (PC.Tuple fields _) = group $ sep (printTy <$> fields)
+printTup (PC.Tuple fields _) = group $ hsep (printTy <$> fields)
 
 printField :: PC.TyName -> PC.Field -> Doc a
 printField tyN (PC.Field fn ty) = printFieldName tyN fn <+> colon <> colon <+> printTy ty
@@ -142,4 +142,4 @@ printTyApp (PC.TyApp f args _) =
 
 printTyRef :: PC.TyRef -> Doc a
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI (PC.ForeignRef tn mn _)) = group $ printModName mn <> dot <> printTyName tn
+printTyRef (PC.ForeignI fr) = let (_, H.MkModuleName hmn, H.MkTyName htn) = H.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn

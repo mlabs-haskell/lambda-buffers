@@ -91,8 +91,10 @@ common common-language
 library
   import:          common-language
   build-depends:
+    , aeson
     , base                        >=4.16
     , containers                  >=0.6
+    , data-default                >=0.7
     , lambda-buffers-compiler     >=0.1
     , lambda-buffers-compiler-pb  >=0.1
     , lens                        >=5.2
@@ -114,13 +116,23 @@ library
 executable lbg
   import:         common-language
   build-depends:
-    , base                  >=4.16
-    , lens                  >=5.2
-    , optparse-applicative  >=0.17
+    , aeson
+    , base                        >=4.16
+    , bytestring                  >=0.11
+    , containers
+    , lambda-buffers-codegen
+    , lambda-buffers-compiler     >=0.1
+    , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
+    , optparse-applicative        >=0.17
+    , proto-lens                  >=0.7
+    , text                        >=1.2
 
   hs-source-dirs: app
   main-is:        Main.hs
-  other-modules:  LambdaBuffers.Codegen.Cli.Gen
+  other-modules:
+    LambdaBuffers.Codegen.Cli.Gen
+    LambdaBuffers.Codegen.Cli.GenHaskell
 
 test-suite tests
   import:         common-language

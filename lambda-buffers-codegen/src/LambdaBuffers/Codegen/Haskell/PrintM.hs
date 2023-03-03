@@ -18,7 +18,6 @@ import Data.Set qualified as Set
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Config (Config, opaques)
 import LambdaBuffers.Codegen.Haskell.Print qualified as Print
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc)
@@ -42,9 +41,8 @@ data PrintCommand
 type PrintErr = String
 
 data PrintState = MkPrintState
-  { moduleTyImports :: Set H.QTyName
-  , moduleTyExports :: Set H.TyName
-  , moduleClassImports :: Set (H.QClassName, [H.FunctionName])
+  { moduleTyImports :: Set PC.QTyName
+  , moduleTyExports :: Set (PC.InfoLess PC.TyName)
   }
   deriving stock (Eq, Ord, Show)
 
@@ -52,12 +50,12 @@ type MonadPrint m = (MonadRWS PrintRead PrintWrite PrintState m, MonadError Prin
 
 runPrint :: Config -> PC.Module -> Either P.CompilerError (Doc ())
 runPrint cfg m =
-  let p = runRWST (goModule m) (cfg, ModuleCtx $ m ^. #moduleName) (MkPrintState mempty mempty mempty)
+  let p = runRWST (goModule m) (cfg, ModuleCtx $ m ^. #moduleName) (MkPrintState mempty mempty)
       p' = runExcept p
    in go p'
   where
-    go :: Either PrintErr (H.ModuleName, PrintState, [PrintCommand]) -> Either P.CompilerError (Doc ())
-    go (Right (mn, MkPrintState ti te _, pw)) = Right $ Print.printModule mn te ti [tdDoc | AddTyDef tdDoc <- pw]
+    go :: Either PrintErr (PC.ModuleName, PrintState, [PrintCommand]) -> Either P.CompilerError (Doc ())
+    go (Right (mn, MkPrintState ti te, pw)) = Right $ Print.printModule mn te ti [tdDoc | AddTyDef tdDoc <- pw]
     go (Left printErr) = Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ Text.pack printErr]
 
 askConfig :: MonadPrint m => m Config
@@ -80,20 +78,17 @@ _askInstCtx = do
     InstanceClauseCtx mn -> return mn
     other -> throwError $ "Internal error, wanted InstanceClauseCtx got " <> show other
 
-exportTy :: MonadPrint m => H.TyName -> m ()
+exportTy :: MonadPrint m => PC.InfoLess PC.TyName -> m ()
 exportTy htyN = modify (\s -> s {moduleTyExports = Set.union (moduleTyExports s) (Set.singleton htyN)})
 
-importTy :: MonadPrint m => (H.CabalPackageName, H.ModuleName, H.TyName) -> m ()
+importTy :: MonadPrint m => PC.QTyName -> m ()
 importTy qhTyRef = modify (\s -> s {moduleTyImports = Set.union (moduleTyImports s) (Set.singleton qhTyRef)})
 
-_importClass :: MonadPrint m => (H.QClassName, [H.FunctionName]) -> m ()
-_importClass qhClassRef = modify (\s -> s {moduleClassImports = Set.union (moduleClassImports s) (Set.singleton qhClassRef)})
-
 -- | Traverse the module and collect imports, exports and type definition documents.
-goModule :: MonadPrint m => PC.Module -> m H.ModuleName
+goModule :: MonadPrint m => PC.Module -> m PC.ModuleName
 goModule m = do
   for_ (m ^. #typeDefs) (\td -> local (\(cfg, _) -> (cfg, TyDefCtx (m ^. #moduleName) td)) (goTyDef td))
-  return $ H.fromLbModuleName (m ^. #moduleName)
+  return $ m ^. #moduleName
 
 goTyDef :: MonadPrint m => PC.TyDef -> m ()
 goTyDef td = goTyAbs $ td ^. #tyAbs
@@ -102,18 +97,19 @@ goTyAbs :: MonadPrint m => PC.TyAbs -> m ()
 goTyAbs (PC.TyAbs _ (PC.OpaqueI _) _) = do
   cfg <- askConfig
   (currentModuleName, currentTyDef) <- askTyDefCtx
-  qhTyRef <- case Map.lookup (PC.mkInfoLess currentModuleName, PC.mkInfoLess $ currentTyDef ^. #tyName) (cfg ^. opaques) of
+  let qtyn = (PC.mkInfoLess currentModuleName, PC.mkInfoLess $ currentTyDef ^. #tyName)
+  qhTyRef <- case Map.lookup qtyn (cfg ^. opaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured" <> show (currentTyDef ^. #tyName)
     Just qhsTyRef -> return qhsTyRef
-  exportTy (H.fromLbTyName (currentTyDef ^. #tyName))
-  importTy qhTyRef
+  exportTy (PC.mkInfoLess (currentTyDef ^. #tyName))
+  importTy qtyn
   tell
     [ AddTyDef $ Print.printTyDefOpaque (currentTyDef ^. #tyName) qhTyRef
     ]
 goTyAbs (PC.TyAbs args (PC.SumI s) _) = do
   goSum s
   currentTyDef <- snd <$> askTyDefCtx
-  exportTy (H.fromLbTyName (currentTyDef ^. #tyName))
+  exportTy (PC.mkInfoLess $ currentTyDef ^. #tyName)
   tell
     [ AddTyDef $ Print.printTyDefNonOpaque (currentTyDef ^. #tyName) args (Print.Sum s)
     ]
@@ -126,6 +122,6 @@ goProduct (PC.TupleI t) = for_ (t ^. #fields) goTy
 goProduct (PC.RecordI r) = for_ (r ^. #fields) (\f -> goTy $ f ^. #fieldTy)
 
 goTy :: MonadPrint m => PC.Ty -> m ()
-goTy (PC.TyRefI (PC.ForeignI fr)) = importTy (H.fromLbForeignRef fr)
+goTy (PC.TyRefI (PC.ForeignI fr)) = importTy (PC.mkInfoLess $ fr ^. #moduleName, PC.mkInfoLess $ fr ^. #tyName)
 goTy (PC.TyAppI ta) = goTy (ta ^. #tyFunc) >> for_ (ta ^. #tyArgs) goTy
 goTy _ = return ()

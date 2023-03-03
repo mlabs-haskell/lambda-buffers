@@ -1,18 +1,81 @@
-module LambdaBuffers.Codegen.Haskell.Config (QTyName, QClassName, Config (..), opaques, classes) where
+{-# OPTIONS_GHC -Wno-orphans #-}
 
-import Control.Lens (makeLenses)
+module LambdaBuffers.Codegen.Haskell.Config (Config (..), opaques, classes) where
+
+import Control.Applicative (Alternative (empty))
+import Control.Lens (makeLenses, to, view, (^.), (^..))
+import Data.Aeson (FromJSON, ToJSON, Value (Object), object, parseJSON, (.:), (.=))
+import Data.Aeson.Types (ToJSON (toJSON))
+import Data.Default (Default (def))
+import Data.List qualified as List
 import Data.Map (Map)
+import Data.Map qualified as Map
+import Data.Text (Text)
+import Data.Text qualified as Text
+import GHC.Generics (Generic)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
-type QTyName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.TyName)
-type QClassName = (PC.InfoLess PC.ModuleName, PC.InfoLess PC.ClassName)
-
 data Config = MkConfig
-  { _opaques :: Map QTyName H.QTyName
-  , _classes :: Map QClassName (H.QClassName, [H.FunctionName])
+  { _opaques :: Map PC.QTyName H.QTyName
+  , _classes :: Map PC.QClassName (H.QClassName, [H.FunctionName])
   }
   deriving stock (Eq, Ord, Show)
 
 makeLenses 'MkConfig
+
+newtype JsonConfig = MkJsonConfig
+  { opaquesConfig :: [(Text, H.QTyName)]
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+
+lbQTyNameToText :: PC.QTyName -> Text
+lbQTyNameToText (mn, tyn) = Text.intercalate "." $ PC.withInfoLess mn (\mn' -> mn' ^. #parts ^.. traverse . #name) <> [PC.withInfoLess tyn (view #name)]
+
+lbQTyNameFromText :: MonadFail m => Text -> m PC.QTyName
+lbQTyNameFromText qtyn =
+  let xs = Text.split (== '.') qtyn
+   in case List.reverse xs of
+        [] -> fail "Got an empty text but wanted a qualified LambdaBuffers type name (<module name>.<type name>)"
+        [x] -> fail $ "Got a single text " <> show x <> " but wanted a qualified LambdaBuffers type name (<module name>.<type name>)"
+        (tyn : mn) ->
+          return
+            ( PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart p def | p <- List.reverse mn] def
+            , PC.mkInfoLess $ PC.TyName tyn def
+            )
+
+toOpaquesConfig :: Map PC.QTyName H.QTyName -> [(Text, H.QTyName)]
+toOpaquesConfig opqs =
+  [ ( lbQTyNameToText lqtyn
+    , hqtyn
+    )
+  | (lqtyn, hqtyn) <- Map.toList opqs
+  ]
+
+fromOpaquesConfig :: MonadFail m => [(Text, H.QTyName)] -> m (Map PC.QTyName H.QTyName)
+fromOpaquesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> lbQTyNameFromText ltyn <*> pure htyn) opqs
+
+toJsonConfig :: Config -> JsonConfig
+toJsonConfig (MkConfig opqs _) = MkJsonConfig (toOpaquesConfig opqs)
+
+fromJsonConfig :: MonadFail m => JsonConfig -> m Config
+fromJsonConfig (MkJsonConfig opqs) = MkConfig <$> fromOpaquesConfig opqs <*> pure mempty
+
+instance ToJSON H.TyName
+instance FromJSON H.TyName
+
+instance ToJSON H.ModuleName
+instance FromJSON H.ModuleName
+
+instance ToJSON H.CabalPackageName
+instance FromJSON H.CabalPackageName
+
+instance ToJSON JsonConfig
+instance FromJSON JsonConfig
+
+instance ToJSON Config where
+  toJSON = toJSON . toJsonConfig
+
+instance FromJSON Config where
+  parseJSON v = parseJSON v >>= fromJsonConfig

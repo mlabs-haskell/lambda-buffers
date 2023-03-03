@@ -46,6 +46,8 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   VarName (..),
   InferenceErr,
   KindCheckErr,
+  QTyName,
+  QClassName,
 ) where
 
 import Control.Exception (Exception)
@@ -69,6 +71,12 @@ data SourcePosition = SourcePosition {column :: Int, row :: Int}
 
 instance Default SourceInfo where
   def = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
+
+-- | Qualified type name mostly used in maintaining various contexts
+type QTyName = (InfoLess ModuleName, InfoLess TyName)
+
+-- | Qualified type class name mostly used in maintaining various contexts
+type QClassName = (InfoLess ModuleName, InfoLess ClassName)
 
 {- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
  shouldn't be used anywhere outside of that
@@ -137,6 +145,7 @@ data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
+-- TODO(bladyjoker): Cleanup.
 localRef2ForeignRef :: ModuleName -> Getter LocalRef ForeignRef
 localRef2ForeignRef modName =
   to
@@ -282,7 +291,9 @@ data KindCheckError
 
 instance Exception KindCheckError
 
--- | All the compiler errors.
+{- | All the compiler errors.
+ TODO(bladyjoker): Add all the missing errors and adjust to contain a list of errors as per the API.
+-}
 data CompilerError
   = CompKindCheckError KindCheckError
   | InternalError Text
