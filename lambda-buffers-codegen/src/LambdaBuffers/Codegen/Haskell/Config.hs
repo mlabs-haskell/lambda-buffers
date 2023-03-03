@@ -2,9 +2,8 @@
 
 module LambdaBuffers.Codegen.Haskell.Config (Config (..), opaques, classes) where
 
-import Control.Applicative (Alternative (empty))
-import Control.Lens (makeLenses, to, view, (^.), (^..))
-import Data.Aeson (FromJSON, ToJSON, Value (Object), object, parseJSON, (.:), (.=))
+import Control.Lens (makeLenses, view, (^.), (^..))
+import Data.Aeson (FromJSON, ToJSON, parseJSON)
 import Data.Aeson.Types (ToJSON (toJSON))
 import Data.Default (Default (def))
 import Data.List qualified as List
@@ -26,7 +25,7 @@ data Config = MkConfig
 makeLenses 'MkConfig
 
 newtype JsonConfig = MkJsonConfig
-  { opaquesConfig :: [(Text, H.QTyName)]
+  { opaquesConfig :: Map Text H.QTyName
   }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -45,16 +44,11 @@ lbQTyNameFromText qtyn =
             , PC.mkInfoLess $ PC.TyName tyn def
             )
 
-toOpaquesConfig :: Map PC.QTyName H.QTyName -> [(Text, H.QTyName)]
-toOpaquesConfig opqs =
-  [ ( lbQTyNameToText lqtyn
-    , hqtyn
-    )
-  | (lqtyn, hqtyn) <- Map.toList opqs
-  ]
+toOpaquesConfig :: Map PC.QTyName H.QTyName -> Map Text H.QTyName
+toOpaquesConfig = Map.mapKeys lbQTyNameToText
 
-fromOpaquesConfig :: MonadFail m => [(Text, H.QTyName)] -> m (Map PC.QTyName H.QTyName)
-fromOpaquesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> lbQTyNameFromText ltyn <*> pure htyn) opqs
+fromOpaquesConfig :: MonadFail m => Map Text H.QTyName -> m (Map PC.QTyName H.QTyName)
+fromOpaquesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> lbQTyNameFromText ltyn <*> pure htyn) (Map.toList opqs)
 
 toJsonConfig :: Config -> JsonConfig
 toJsonConfig (MkConfig opqs _) = MkJsonConfig (toOpaquesConfig opqs)

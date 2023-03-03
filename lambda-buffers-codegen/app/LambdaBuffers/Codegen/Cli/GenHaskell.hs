@@ -45,5 +45,5 @@ readHaskellConfig :: FilePath -> IO H.Config
 readHaskellConfig f = do
   mayCfg <- decodeFileStrict f
   case mayCfg of
-    Nothing -> error $ "Invalid Haskell con figuration file " <> f
+    Nothing -> error $ "Invalid Haskell configuration file " <> f
     Just cfg -> return cfg
