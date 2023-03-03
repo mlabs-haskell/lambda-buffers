@@ -6,14 +6,21 @@ module Test.Utils.Module (
   module'undefinedForeignTyRef,
   module'either,
   module'recDef,
+  module'newTypeEither,
+  module'newTypeEither',
+  module'newTypeEither'',
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
 import Test.Utils.Constructors (_Module, _ModuleName)
 import Test.Utils.TyDef (
+  tyDef'Int,
   tyDef'either,
+  tyDef'either'opaque,
   tyDef'incoherent,
   tyDef'maybe,
+  tyDef'ntEither,
+  tyDef'ntEither'saturated,
   tyDef'recDef,
   tyDef'undefinedForeignTyRef,
   tyDef'undefinedLocalTyRef,
@@ -27,6 +34,15 @@ module'maybe = _Module (_ModuleName ["Prelude"]) [tyDef'maybe] mempty mempty
 
 module'either :: P.Module
 module'either = _Module (_ModuleName ["Prelude"]) [tyDef'either] mempty mempty
+
+module'newTypeEither :: P.Module
+module'newTypeEither = _Module (_ModuleName ["Prelude"]) [tyDef'either, tyDef'ntEither] mempty mempty
+
+module'newTypeEither' :: P.Module
+module'newTypeEither' = _Module (_ModuleName ["Prelude"]) [tyDef'either'opaque, tyDef'ntEither] mempty mempty
+
+module'newTypeEither'' :: P.Module
+module'newTypeEither'' = _Module (_ModuleName ["Prelude"]) [tyDef'either'opaque, tyDef'Int, tyDef'ntEither'saturated] mempty mempty
 
 module'recDef :: P.Module
 module'recDef = _Module (_ModuleName ["Prelude"]) [tyDef'recDef] mempty mempty

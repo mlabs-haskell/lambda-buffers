@@ -6,6 +6,9 @@ module Test.Utils.CompilerInput (
   compilerInput'either,
   compilerInput'undefinedForeignTyRef,
   compilerInput'recDef,
+  compilerInput'newTypeEither,
+  compilerInput'newTypeEither',
+  compilerInput'newTypeEither'',
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as P
@@ -14,6 +17,9 @@ import Test.Utils.Module (
   module'either,
   module'incoherent,
   module'maybe,
+  module'newTypeEither,
+  module'newTypeEither',
+  module'newTypeEither'',
   module'recDef,
   module'undefinedForeignTyRef,
   module'undefinedLocalTyRef,
@@ -27,6 +33,15 @@ compilerInput'maybe = _CompilerInput [module'maybe]
 -- | Compiler Input containing 1 module with 1 definition - Either.
 compilerInput'either :: P.CompilerInput
 compilerInput'either = _CompilerInput [module'either]
+
+compilerInput'newTypeEither :: P.CompilerInput
+compilerInput'newTypeEither = _CompilerInput [module'newTypeEither]
+
+compilerInput'newTypeEither' :: P.CompilerInput
+compilerInput'newTypeEither' = _CompilerInput [module'newTypeEither']
+
+compilerInput'newTypeEither'' :: P.CompilerInput
+compilerInput'newTypeEither'' = _CompilerInput [module'newTypeEither'']
 
 -- | Compiler Input containing 1 module with 1 definition - Either.
 compilerInput'recDef :: P.CompilerInput

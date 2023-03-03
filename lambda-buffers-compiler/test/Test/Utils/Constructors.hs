@@ -23,6 +23,8 @@ module Test.Utils.Constructors (
   _LocalRef',
   _ForeignRef',
   _TyApp,
+  _Opaque,
+  _TyAbs',
 ) where
 
 import Control.Lens ((^.))
@@ -99,6 +101,9 @@ _TupleI x =
       , PC.sourceInfo = def
       }
 
+_Opaque :: PC.TyBody
+_Opaque = PC.OpaqueI def
+
 _Constructor :: Text -> PC.Product -> PC.Constructor
 _Constructor c f =
   PC.Constructor
@@ -135,6 +140,14 @@ _TyAbs args body =
   PC.TyAbs
     { PC.tyArgs = OMap.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
     , PC.tyBody = _Sum body
+    , sourceInfo = def
+    }
+
+_TyAbs' :: [(Text, PC.KindType)] -> PC.TyBody -> PC.TyAbs
+_TyAbs' args body =
+  PC.TyAbs
+    { PC.tyArgs = OMap.fromList [(PC.mkInfoLess $ ta ^. #argName, ta) | ta <- _TyArg <$> args]
+    , PC.tyBody = body
     , sourceInfo = def
     }
 
