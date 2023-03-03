@@ -225,9 +225,17 @@ derive x = deriveTyAbs x
 
     deriveTyApp :: PC.TyApp -> Derive Derivation
     deriveTyApp ap = do
-      f <- deriveTy (ap ^. #tyFunc)
-      args <- deriveTy `traverse` (ap ^. #tyArgs)
-      applyDerivation f args
+      c <- ask
+      df <- deriveTy (ap ^. #tyFunc)
+      foldrM
+        ( \arg df' -> do
+            darg <- deriveTy arg
+            v <- KVar <$> fresh
+            tell [Constraint ((darg ^. d'kind) :->: v, df' ^. d'kind)]
+            return $ Application (Judgement c (App (df' ^. d'type) (darg ^. d'type)) v) df' darg
+        )
+        df
+        (ap ^. #tyArgs)
 
     deriveTuple :: PC.Tuple -> Derive Derivation
     deriveTuple t = do
@@ -256,16 +264,6 @@ derive x = deriveTyAbs x
       let t2 = d2 ^. d'type
       tell $ Constraint <$> [(d1 ^. d'kind, KType), (d2 ^. d'kind, KType)]
       pure $ Application (Judgement ctx (Sum t1 t2) KType) d1 d2
-
-    applyDerivation :: Derivation -> [Derivation] -> Derive Derivation
-    applyDerivation d1 = \case
-      [] -> pure d1
-      d : ds -> do
-        c <- ask
-        d2 <- applyDerivation d ds
-        v <- KVar <$> fresh
-        tell [Constraint ((d2 ^. d'kind) :->: v, d1 ^. d'kind)]
-        pure $ Application (Judgement c (App (d ^. d'type) (d2 ^. d'type)) v) d1 d2
 
 {- | Gets the binding from the context - if the variable is not bound throw an
  error.

@@ -9,6 +9,10 @@ module Test.Utils.TyDef (
   tyDef'undefinedForeignTyRef'TyRef,
   tyDef'recDef,
   tyDef'either,
+  tyDef'ntEither,
+  tyDef'either'opaque,
+  tyDef'Int,
+  tyDef'ntEither'saturated,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat.Types (Ty (TyVarI))
@@ -17,9 +21,11 @@ import Test.Utils.Constructors (
   _ForeignRef',
   _LocalRef',
   _ModuleName,
+  _Opaque,
   _SourceInfo,
   _TupleI,
   _TyAbs,
+  _TyAbs',
   _TyApp,
   _TyDef,
   _TyName,
@@ -41,6 +47,17 @@ tyDef'maybe =
         ]
     )
 
+tyDef'either'opaque :: P.TyDef
+tyDef'either'opaque =
+  _TyDef
+    (_TyName "Either")
+    ( _TyAbs'
+        [ ("a", _Type)
+        , ("b", _Type)
+        ]
+        _Opaque
+    )
+
 tyDef'either :: P.TyDef
 tyDef'either =
   _TyDef
@@ -51,6 +68,41 @@ tyDef'either =
         ]
         [ ("Left", _TupleI [_TyVarI "a"])
         , ("Right", _TupleI [_TyVarI "b"])
+        ]
+    )
+
+tyDef'Int :: P.TyDef
+tyDef'Int = _TyDef (_TyName "Int") (_TyAbs' mempty _Opaque)
+
+tyDef'ntEither'saturated :: P.TyDef
+tyDef'ntEither'saturated =
+  _TyDef
+    (_TyName "WrapEither")
+    ( _TyAbs
+        mempty
+        [
+          ( "Foo"
+          , _TupleI
+              [ _TyApp
+                  ( _TyApp
+                      (_TyRefILocal "Either")
+                      (_TyRefILocal "Int")
+                  )
+                  (_TyRefILocal "Int")
+              ]
+          )
+        ]
+    )
+
+tyDef'ntEither :: P.TyDef
+tyDef'ntEither =
+  _TyDef
+    (_TyName "WrapEither")
+    ( _TyAbs
+        [ ("a", _Type)
+        , ("b", _Type)
+        ]
+        [ ("Foo", _TupleI [_TyApp (_TyApp (_TyRefILocal "Either") (_TyVarI "a")) (_TyVarI "b")])
         ]
     )
 
