@@ -11,11 +11,12 @@ import System.FilePath ((</>))
 import Test.Tasty.HUnit (Assertion, assertFailure, testCase, (@?=))
 
 tests :: FilePath -> TestTree
-tests extraSrcFiles =
+tests dataDir =
   testGroup
     "LambdaBuffers.Frontend"
-    [ frontendErrorTests extraSrcFiles
-    , frontendSuccessTests extraSrcFiles
+    [ frontendErrorTests dataDir
+    , frontendSuccessTests dataDir
+    , goldenTests dataDir
     ]
 
 -- FIXME(bladyjoker): Seems like all the SourceInfo positions are off by one.
@@ -115,4 +116,15 @@ frontendSuccessTests dataDir =
             errOrMod' <- runFrontend [workDir] fileIn
             assertSuccess ["A", "BadFormat"] errOrMod'
         ]
+    ]
+
+goldenTests :: FilePath -> TestTree
+goldenTests dataDir =
+  testGroup
+    "Golden tests"
+    [ testCase "Goldens" $ do
+        let workDir = dataDir </> "goldens" </> "good"
+            fileIn = workDir </> "LambdaBuffers.lbf"
+        errOrMod <- runFrontend [workDir] fileIn
+        assertSuccess ["LambdaBuffers", "Prelude"] errOrMod
     ]
