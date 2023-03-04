@@ -46,6 +46,8 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   VarName (..),
   InferenceErr,
   KindCheckErr,
+  QClassName,
+  QTyName,
 ) where
 
 import Control.Exception (Exception)
@@ -69,6 +71,12 @@ data SourcePosition = SourcePosition {column :: Int, row :: Int}
 
 instance Default SourceInfo where
   def = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
+
+-- | Qualified type name mostly used in maintaining various contexts
+type QTyName = (InfoLess ModuleName, InfoLess TyName)
+
+-- | Qualified type class name mostly used in maintaining various contexts
+type QClassName = (InfoLess ModuleName, InfoLess ClassName)
 
 {- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
  shouldn't be used anywhere outside of that
