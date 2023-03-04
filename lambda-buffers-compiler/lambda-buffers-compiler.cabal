@@ -116,6 +116,7 @@ library
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.FromProto
+    LambdaBuffers.Compiler.ProtoCompat.Indexing
     LambdaBuffers.Compiler.ProtoCompat.InfoLess
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
@@ -124,6 +125,7 @@ library
     LambdaBuffers.Compiler.TypeClassCheck.Pretty
     LambdaBuffers.Compiler.TypeClassCheck.Rules
     LambdaBuffers.Compiler.TypeClassCheck.Solve
+    LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
     LambdaBuffers.Compiler.TypeClassCheck.Utils
     LambdaBuffers.Compiler.TypeClassCheck.Validate
 

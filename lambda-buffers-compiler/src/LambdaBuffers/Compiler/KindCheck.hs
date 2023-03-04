@@ -3,7 +3,7 @@
 module LambdaBuffers.Compiler.KindCheck (
   -- * Kind checking functions.
   check,
-  check_,
+  runCheck,
 
   -- * Tested functions
   foldWithArrowToType,
@@ -68,19 +68,19 @@ makeEffect ''KindCheck
 -- Runners
 
 -- | The Check effect runner.
-runCheck :: Eff '[Check, Err] a -> Either CompilerErr a
-runCheck =
+runCheck' :: Eff '[Check, Err] a -> Either CompilerErr a
+runCheck' =
   run . runError . runKindCheck . localStrategy . moduleStrategy . globalStrategy
 
 {- | Run the check - return the validated context or the failure. The main API
  function of the library.
 -}
 check :: PC.CompilerInput -> PC.CompilerOutput
-check = fmap (const PC.CompilerResult) . runCheck . kCheck
+check = fmap (const PC.CompilerResult) . runCheck' . kCheck
 
 -- | Run the check - drop the result if it succeeds - useful for testing.
-check_ :: PC.CompilerInput -> Either CompilerErr ()
-check_ = void . runCheck . kCheck
+runCheck :: PC.CompilerInput -> Either CompilerErr ()
+runCheck = void . runCheck' . kCheck
 
 --------------------------------------------------------------------------------
 -- Transformations

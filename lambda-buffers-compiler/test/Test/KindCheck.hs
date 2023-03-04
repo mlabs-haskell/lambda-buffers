@@ -1,8 +1,8 @@
 module Test.KindCheck (test) where
 
 import LambdaBuffers.Compiler.KindCheck (
-  check_,
   foldWithArrowToType,
+  runCheck,
  )
 
 import Hedgehog (Gen, forAll, property, (===))
@@ -57,48 +57,48 @@ testCheck =
 trivialKCTest :: TestTree
 trivialKCTest =
   testCase "Empty Compiler Input kind checks." $
-    check_ (_CompilerInput []) @?= Right ()
+    runCheck (_CompilerInput []) @?= Right ()
 
 kcTestMaybe :: TestTree
 kcTestMaybe =
   testCase "Kind check Maybe." $
-    check_ compilerInput'maybe @?= Right ()
+    runCheck compilerInput'maybe @?= Right ()
 
 kcTestEither :: TestTree
 kcTestEither =
   testCase "Kind check Either." $
-    check_ compilerInput'either @?= Right ()
+    runCheck compilerInput'either @?= Right ()
 
 kcWrappedTestEither :: TestTree
 kcWrappedTestEither =
   testCase "Kind check Either + Wrapped Either." $
-    check_ compilerInput'newTypeEither @?= Right ()
+    runCheck compilerInput'newTypeEither @?= Right ()
 
 kcWrappedTestEither' :: TestTree
 kcWrappedTestEither' =
   testCase "Kind check Either (defined Opaque) + Wrapped Either." $
-    check_ compilerInput'newTypeEither' @?= Right ()
+    runCheck compilerInput'newTypeEither' @?= Right ()
 
 kcWrappedTestEither'' :: TestTree
 kcWrappedTestEither'' =
   testCase "Kind check Either + Wrapped (Either Int Int) ." $
-    check_ compilerInput'newTypeEither'' @?= Right ()
+    runCheck compilerInput'newTypeEither'' @?= Right ()
 
 kcTestMaybe'n'Either :: TestTree
 kcTestMaybe'n'Either =
   testCase "Kind check Maybe and Either." $
-    check_ (compilerInput'maybe <> compilerInput'either) @?= Right ()
+    runCheck (compilerInput'maybe <> compilerInput'either) @?= Right ()
 
 kcTestRec :: TestTree
 kcTestRec =
   testCase "Kind check recursive def." $
-    check_ compilerInput'recDef @?= Right ()
+    runCheck compilerInput'recDef @?= Right ()
 
 kcTestFailing :: TestTree
 kcTestFailing =
   testCase "This should fail" $
     assertBool "Test should have failed" $
-      check_ compilerInput'incoherent /= Right ()
+      runCheck compilerInput'incoherent /= Right ()
 
 --------------------------------------------------------------------------------
 -- Fold tests

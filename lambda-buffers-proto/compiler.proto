@@ -648,7 +648,7 @@ message KindCheckError {
     TyRef ty_ref = 3;
   }
 
-  // In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
+  // In ty_def an error has occurred when trying to unify kind ty_kind_lhs
   // with ty_kind_rhs.
   //
   // FIXME(cstml): Add source of constraint to the error such that user can see
@@ -663,7 +663,7 @@ message KindCheckError {
 
   // A cyclic kind was encountered. Infinite kinds like this are not acceptable,
   // and we do not support them. We could not construct infinite kind in ty_def.
-  // 
+  //
   // As the implementation currently stands such an error is (most likely) not
   // representable - therefore not reachable. Such an error would usually occur
   // for a term like: λa. a a - in which case the inference would try to unify
@@ -710,6 +710,30 @@ message NamingError {
   }
 }
 
+// Type class checking errors.
+message TyClassCheckError {
+
+  // Unbound `class_ref` detected in `module_name`.
+  message UnboundClassRefError {
+    ModuleName module_name = 1;
+    TyClassRef class_ref = 2;
+  }
+
+  // Superclass cycle `cycled_class_refs` was detected when checking a
+  // class definition for `class_name` in module `module_name`.
+  message SuperclassCycleError {
+    ModuleName module_name = 1;
+    ClassName class_name = 2;
+    repeated TyClassRef cycled_class_refs = 3;
+  }
+
+  // One of the errors occurred during type class checking.
+  oneof tyclass_check_error {
+    UnboundClassRefError unbound_class_ref_err = 1;
+    SuperclassCycleError superclass_cycle_err = 2;
+  }
+}
+
 // Compiler Error
 message CompilerError {
   // Errors occurred during proto parsing.
@@ -718,8 +742,10 @@ message CompilerError {
   repeated NamingError naming_errors = 2;
   // Errors occurred during kind checking.
   repeated KindCheckError kind_check_errors = 4;
+  // Errors occurred during type class checking.
+  repeated TyClassCheckError ty_class_check_errors = 5;
   // Errors internal to the compiler implementation.
-  repeated InternalError internal_errors = 5;
+  repeated InternalError internal_errors = 6;
 }
 
 // Compiler Result ~ a successful Compilation Output.
