@@ -6,5 +6,5 @@ import Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
 main = do
-  extraSrcDir <- Paths.getDataFileName "extra-source-files"
-  defaultMain $ testGroup "Frontend tests" [tests extraSrcDir]
+  dataDir <- Paths.getDataFileName "data"
+  defaultMain $ testGroup "Frontend tests" [tests dataDir]

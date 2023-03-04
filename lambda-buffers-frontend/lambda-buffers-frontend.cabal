@@ -4,8 +4,8 @@ version:            0.1.0.0
 synopsis:           Lambda Buffers Frontend
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-extra-source-files: extra-source-files/**/*.lbf
-data-files:         extra-source-files/**/*.lbf
+extra-source-files: data/**/*.lbf
+data-files:         data/**/*.lbf
 
 flag dev
   description: Enable non-strict compilation for development
