@@ -13,6 +13,7 @@ import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
+import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields (unboundClassRefErr)
 import Proto.Compiler_Fields qualified as P
@@ -29,21 +30,24 @@ type MonadCheck m = (MonadReader CheckRead m, MonadError P.TyClassCheckError m)
 
 runCheck :: PC.CompilerInput -> Either [P.TyClassCheckError] ()
 runCheck ci =
-  let -- Index the class definitions by a qualified name (ModuleName, ClassName)
-      classDefs =
-        Map.fromList
-          [ ((mn, cn), cd)
-          | (mn, m) <- Map.toList $ ci ^. #modules
-          , (cn, cd) <- Map.toList $ m ^. #classDefs
-          ]
-      -- Process each type class definitions under the appropriate reader context and collect errors
-      runClassDef (mn, cd) =
-        let errM = runReaderT (checkClassDef cd) (MkCheckRead mn (cd ^. #className) classDefs Set.empty [])
-         in case runExcept errM of
-              Left err -> [err]
-              Right _ -> []
-      allErrors = concat $ runClassDef <$> [(m ^. #moduleName, cd) | m <- toList $ ci ^. #modules, cd <- toList $ m ^. #classDefs]
+  let -- Index the class definitions by a qualified name (ModuleName, ClassName).
+      classDefs = PC.indexClassDefs ci
+      -- Process each type class definitions under the appropriate reader context and collect errors.
+      allErrors =
+        concat $
+          runCheckOnClassDef classDefs
+            <$> [ (m ^. #moduleName, cd)
+                | m <- toList $ ci ^. #modules
+                , cd <- toList $ m ^. #classDefs
+                ]
    in if null allErrors then Right () else Left allErrors
+
+runCheckOnClassDef :: Map PC.QClassName PC.ClassDef -> (PC.ModuleName, PC.ClassDef) -> [P.TyClassCheckError]
+runCheckOnClassDef classDefs (mn, cd) =
+  let errM = runReaderT (checkClassDef cd) (MkCheckRead mn (cd ^. #className) classDefs Set.empty [])
+   in case runExcept errM of
+        Left err -> [err]
+        Right _ -> []
 
 checkClassDef :: MonadCheck m => PC.ClassDef -> m ()
 checkClassDef (PC.ClassDef cn _ sups _ _) = do

@@ -46,8 +46,8 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   VarName (..),
   InferenceErr,
   KindCheckErr,
-  QTyName,
   QClassName,
+  QTyName,
 ) where
 
 import Control.Exception (Exception)
@@ -145,7 +145,6 @@ data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
--- TODO(bladyjoker): Cleanup.
 localRef2ForeignRef :: ModuleName -> Getter LocalRef ForeignRef
 localRef2ForeignRef modName =
   to
@@ -291,9 +290,7 @@ data KindCheckError
 
 instance Exception KindCheckError
 
-{- | All the compiler errors.
- TODO(bladyjoker): Add all the missing errors and adjust to contain a list of errors as per the API.
--}
+-- | All the compiler errors.
 data CompilerError
   = CompKindCheckError KindCheckError
   | InternalError Text
