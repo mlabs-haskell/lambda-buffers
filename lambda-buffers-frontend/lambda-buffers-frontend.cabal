@@ -132,11 +132,13 @@ executable lbf
     LambdaBuffers.Frontend.Cli.Compile
     LambdaBuffers.Frontend.Cli.Format
 
+extra-source-files: extra-source-files
+
 test-suite tests
-  import:         common-language
-  type:           exitcode-stdio-1.0
-  hs-source-dirs: test
-  main-is:        Test.hs
+  import:          common-language
+  type:            exitcode-stdio-1.0
+  hs-source-dirs:  test
+  main-is:         Test.hs
   build-depends:
     , base                     >=4.16
     , containers               >=0.6
@@ -146,4 +148,6 @@ test-suite tests
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
 
-  other-modules:  Test.LambdaBuffers.Frontend
+  other-modules:   Paths_lambda_buffers_frontend
+  autogen-modules: Paths_lambda_buffers_frontend
+  other-modules:   Test.LambdaBuffers.Frontend

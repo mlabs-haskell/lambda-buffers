@@ -31,7 +31,7 @@ let
 
           # Enable strict compilation
           lambda-buffers-frontend.configureFlags = [ "-f-dev" ];
-          lambda-buffers-frontend.package.extraSrcFiles = [ "resources/**/*.lbf" ]; # TODO(bladyjoker): I would like to get rid of this as haskell-nix should pick it up from the Cabal file
+          lambda-buffers-frontend.package.extraSrcFiles = [ "extra-source-files/**/*.lbf" ]; # TODO(bladyjoker): I would like to get rid of this as haskell-nix should pick it up from the Cabal file
         };
       })
     ];
