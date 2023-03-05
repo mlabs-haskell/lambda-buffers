@@ -12,7 +12,7 @@ import LambdaBuffers.Codegen.Haskell.Syntax (fromLbModuleName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, hsep, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, lparen, parens, pipe, rbrace, rparen, sep, space, squote, vsep, (<+>))
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc a
 printModuleHeader mn exports =
@@ -33,9 +33,9 @@ printModule :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Set PC.QTyName ->
 printModule modName tyExports tyImports tyDefDocs =
   align . vsep $
     [ printModuleHeader modName tyExports
-    , line
+    , mempty
     , printImports tyImports
-    , line
+    , mempty
     , printTyDefs tyDefDocs
     ]
 
@@ -93,7 +93,7 @@ printCtor :: PC.TyName -> PC.Constructor -> Doc a
 printCtor tyN (PC.Constructor ctorName prod) =
   let ctorNDoc = printCtorName tyN ctorName
       prodDoc = printProd tyN prod
-   in group (ctorNDoc <+> prodDoc)
+   in group $ ctorNDoc <+> prodDoc -- FIXME(bladyjoker): Adds extra space when empty.
 
 {- | Translate LambdaBuffer sum constructor names into Haskell sum constructor names.
  sum Sum = Foo Int | Bar String
