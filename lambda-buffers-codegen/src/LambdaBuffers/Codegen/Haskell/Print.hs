@@ -19,22 +19,26 @@ printModuleHeader mn exports =
   let typeExportsDoc = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyName) <$> toList exports)
    in "module" <+> printModName mn <+> typeExportsDoc <+> "where"
 
-printImports :: Set PC.QTyName -> Doc a
-printImports imports =
-  let grouped = Set.fromList [PC.withInfoLess mn id | (mn, _tn) <- toList imports]
-      typeImportsDocs = (\mn -> "import qualified" <+> printModName mn) <$> toList grouped
-      typeImportsDoc = vsep typeImportsDocs
-   in typeImportsDoc
+printImports :: Set PC.QTyName -> Set H.QTyName -> Doc a
+printImports lbTyImports hsTyImports =
+  let groupedLbImports = Set.fromList [PC.withInfoLess mn id | (mn, _tn) <- toList lbTyImports]
+      lbImportDocs = (\mn -> "import qualified" <+> printModName mn) <$> toList groupedLbImports
+
+      groupedHsImports = Set.fromList [mn | (_cbl, mn, _tn) <- toList hsTyImports]
+      hsImportDocs = (\(H.MkModuleName mn) -> "import qualified" <+> pretty mn) <$> toList groupedHsImports
+
+      importsDoc = vsep $ lbImportDocs ++ hsImportDocs
+   in importsDoc
 
 printTyDefs :: [Doc a] -> Doc a
 printTyDefs = vsep
 
-printModule :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Set PC.QTyName -> [Doc a] -> Doc a
-printModule modName tyExports tyImports tyDefDocs =
+printModule :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Set PC.QTyName -> Set H.QTyName -> [Doc a] -> Doc a
+printModule modName tyExports lbTyImports hsTyImports tyDefDocs =
   align . vsep $
     [ printModuleHeader modName tyExports
     , mempty
-    , printImports tyImports
+    , printImports lbTyImports hsTyImports
     , mempty
     , printTyDefs tyDefDocs
     ]
