@@ -4,6 +4,7 @@ import Control.Lens ((^.))
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList))
 import Data.Map.Ordered (OMap)
+import Data.Map.Ordered qualified as OMap
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
@@ -15,7 +16,7 @@ import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc a
 printModuleHeader mn exports =
-  let typeExportsDoc = align $ group $ encloseSep lparen rparen comma ((`PC.withInfoLess` printTyName) <$> toList exports)
+  let typeExportsDoc = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyName) <$> toList exports)
    in "module" <+> printModName mn <+> typeExportsDoc <+> "where"
 
 printImports :: Set PC.QTyName -> Doc a
@@ -69,9 +70,9 @@ newtype NonOpaqueTyBody = Sum PC.Sum
 
 printTyDefNonOpaque :: PC.TyName -> OMap (PC.InfoLess PC.VarName) PC.TyArg -> NonOpaqueTyBody -> Doc a
 printTyDefNonOpaque tyN args body =
-  let argsDoc = sep (printTyArg <$> toList args)
+  let argsDoc = if OMap.empty == args then mempty else sep (printTyArg <$> toList args)
       (keyword, bodyDoc) = printTyBody tyN body
-   in group $ keyword <+> printTyName tyN <+> argsDoc <+> equals <+> bodyDoc
+   in group $ keyword <+> printTyName tyN <> argsDoc <+> align (equals <+> bodyDoc)
 
 -- TODO(bladyjoker): Add Record/Tuple.
 printTyBody :: PC.TyName -> NonOpaqueTyBody -> (Doc a, Doc a)
@@ -86,13 +87,13 @@ printTyBodySum tyN (PC.Sum ctors _) =
    in group $
         if null ctors
           then mempty
-          else align $ encloseSep mempty mempty (space <> pipe <> space) ctorDocs
+          else sep $ zipWith (<>) (mempty : repeat (pipe <> space)) ctorDocs
 
 printCtor :: PC.TyName -> PC.Constructor -> Doc a
 printCtor tyN (PC.Constructor ctorName prod) =
   let ctorNDoc = printCtorName tyN ctorName
       prodDoc = printProd tyN prod
-   in align $ group (ctorNDoc <+> prodDoc)
+   in group (ctorNDoc <+> prodDoc)
 
 {- | Translate LambdaBuffer sum constructor names into Haskell sum constructor names.
  sum Sum = Foo Int | Bar String
