@@ -109,11 +109,14 @@ printProd _ (PC.TupleI tup) = printTup tup
 
 printRec :: PC.TyName -> PC.Record -> Doc a
 printRec tyN (PC.Record fields _) =
-  let fieldDocs = printField tyN <$> toList fields
-   in group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
+  if null fields
+    then mempty
+    else
+      let fieldDocs = printField tyN <$> toList fields
+       in group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
 
 printTup :: PC.Tuple -> Doc a
-printTup (PC.Tuple fields _) = group $ hsep (printTy <$> fields)
+printTup (PC.Tuple fields _) = if null fields then mempty else group . align $ sep (printTy <$> fields)
 
 printField :: PC.TyName -> PC.Field -> Doc a
 printField tyN (PC.Field fn ty) = printFieldName tyN fn <+> colon <> colon <+> printTy ty
