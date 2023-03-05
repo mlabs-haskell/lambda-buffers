@@ -8,18 +8,21 @@ import Data.ProtoLens (Message (defMessage))
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Haskell (runPrint)
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
+import Paths_lambda_buffers_codegen qualified as Paths
 import Proto.Compiler_Fields qualified as P
 
 data GenOpts = MkGenOpts
   { _common :: Gen.GenOpts
-  , _config :: FilePath
+  , _config :: Maybe FilePath
   }
 
 makeLenses 'MkGenOpts
 
 gen :: GenOpts -> IO ()
 gen opts = do
-  cfg <- readHaskellConfig (opts ^. config)
+  cfgFp <- maybe (Paths.getDataFileName "data/haskell.json") pure (opts ^. config)
+  cfg <- readHaskellConfig cfgFp
+
   Gen.gen
     (opts ^. common)
     ( \ci ->

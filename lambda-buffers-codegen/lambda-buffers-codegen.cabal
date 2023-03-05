@@ -1,16 +1,11 @@
-cabal-version: 3.0
-name:          lambda-buffers-codegen
-version:       0.1.0.0
-synopsis:      Lambda Buffers Codegen
-
--- license:
-
-author:        MLabs LTD
-maintainer:    info@mlabs.city
-
--- A copyright notice.
--- copyright:
--- category:
+cabal-version:      3.0
+name:               lambda-buffers-codegen
+version:            0.1.0.0
+synopsis:           Lambda Buffers Codegen
+author:             MLabs LTD
+maintainer:         info@mlabs.city
+data-files:         data/**/*.json
+extra-source-files: data/**/*.json
 
 flag dev
   description: Enable non-strict compilation for development
@@ -114,7 +109,7 @@ library
     LambdaBuffers.Codegen.Haskell.Syntax
 
 executable lbg
-  import:         common-language
+  import:          common-language
   build-depends:
     , aeson
     , base                        >=4.16
@@ -128,11 +123,14 @@ executable lbg
     , proto-lens                  >=0.7
     , text                        >=1.2
 
-  hs-source-dirs: app
-  main-is:        Main.hs
+  hs-source-dirs:  app
+  main-is:         Main.hs
   other-modules:
     LambdaBuffers.Codegen.Cli.Gen
     LambdaBuffers.Codegen.Cli.GenHaskell
+    Paths_lambda_buffers_codegen
+
+  autogen-modules: Paths_lambda_buffers_codegen
 
 test-suite tests
   import:         common-language

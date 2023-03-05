@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), inputFile, outputFile, debug, workingDir, gen) where
+module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), inputFile, outputFile, debug, gen) where
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
 import Data.ByteString qualified as BS
@@ -17,7 +17,6 @@ data GenOpts = GenOpts
   { _inputFile :: FilePath
   , _outputFile :: FilePath
   , _debug :: Bool
-  , _workingDir :: Maybe FilePath
   }
   deriving stock (Eq, Show)
 

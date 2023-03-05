@@ -33,13 +33,13 @@ genOptsP :: Parser GenOpts
 genOptsP =
   GenOpts
     <$> strOption
-      ( long "input-file"
+      ( long "input"
           <> short 'i'
           <> metavar "FILEPATH"
           <> help "Compiled LambdaBuffers schema to code generate for"
       )
     <*> strOption
-      ( long "output-file"
+      ( long "output"
           <> short 'o'
           <> metavar "FILEPATH"
           <> value "codegen-output.textproto"
@@ -53,26 +53,18 @@ genOptsP =
           <> help "Run in debug mode"
           <> showDefault
       )
-    <*> optional
-      ( strOption
-          ( long "work-dir"
-              <> short 'w'
-              <> metavar "FILEPATH"
-              <> help "Working directory used to communicate with the Codegen"
-              <> value ".lbg"
-              <> showDefault
-          )
-      )
 
 haskellGenOptsP :: Parser Haskell.GenOpts
 haskellGenOptsP =
   Haskell.MkGenOpts
     <$> genOptsP
-    <*> strOption
-      ( long "config"
-          <> short 'c'
-          <> metavar "FILEPATH"
-          <> help "Configuration file for the Haskell codegen module"
+    <*> optional
+      ( strOption
+          ( long "config"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help "Configuration file for the Haskell codegen module"
+          )
       )
 
 optionsP :: Parser Command
