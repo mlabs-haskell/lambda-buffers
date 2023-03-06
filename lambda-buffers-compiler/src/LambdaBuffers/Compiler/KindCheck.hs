@@ -140,7 +140,41 @@ runKindCheck = interpret $ \case
     either (handleErrClassDef modName classDef) pure $ I.runClassDefCheck ctx modName classDef
   where
     handleErrClassDef :: forall {b}. PC.ModuleName -> PC.ClassDef -> I.InferErr -> Eff effs b
-    handleErrClassDef _ _ _err = error "Throw an error"
+    handleErrClassDef modName classDef = \case
+      I.InferUnboundTermErr ut ->
+        case ut of
+          QualifiedTyRef qtr -> do
+            if qtr ^. qTyRef'moduleName == modName
+              then do
+                -- We're looking at the local module.
+                let localRef = PC.LocalI . fst . withIso ltrISOqtr (\_ f -> f) $ qtr
+                let err = PC.UnboundTyRefError classDef localRef modName
+                throwError . PC.CKC'ClassDefError $ err
+              else do
+                -- We're looking at a foreign module.
+                let foreignRef = PC.ForeignI . withIso ftrISOqtr (\_ f -> f) $ qtr
+                throwError . PC.CKC'ClassDefError $ PC.UnboundTyRefError classDef foreignRef modName
+          TyVar tv ->
+            throwError . PC.CKC'ClassDefError $ PC.UnboundTyVarError classDef (PC.TyVar tv) modName
+          QualifiedTyClassRef qcr ->
+            if qcr ^. qTyClass'moduleName == modName
+              then do
+                -- We're looking at the local module.
+                let localClassRef = PC.LocalCI . fst . withIso lcrISOqtcr (\_ f -> f) $ qcr
+                let err = PC.UnboundTyClassRefError classDef localClassRef modName
+                throwError . PC.CKC'ClassDefError $ err
+              else do
+                -- We're looking at a foreign module.
+                let foreignRef = PC.ForeignCI . withIso fcrISOqtcr (\_ f -> f) $ qcr
+                let err = PC.UnboundTyClassRefError classDef foreignRef modName
+                throwError . PC.CKC'ClassDefError $ err
+      I.InferUnifyTermErr (I.Constraint (k1, k2)) -> do
+        err <- PC.IncorrectApplicationError classDef <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
+        throwError $ PC.CKC'ClassDefError err
+      I.InferRecursiveSubstitutionErr _ ->
+        throwError . PC.CKC'ClassDefError $ PC.RecursiveKindError classDef modName
+      I.InferImpossibleErr t ->
+        throwError $ PC.C'InternalError t
 
     handleErrTyDef :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
     handleErrTyDef modName td = \case

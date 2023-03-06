@@ -2,7 +2,7 @@ module Test.KindCheck.Errors (testGKindCheckErrors) where
 
 import LambdaBuffers.Compiler.KindCheck (check_)
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types (CompilerError (CompKindCheckError), KindCheckError (UnboundTyRefError, UnboundTyVarError))
+import LambdaBuffers.Compiler.ProtoCompat.Types (CompilerError (CKC'TyDefError), KindCheckError (UnboundTyRefError, UnboundTyVarError))
 
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
@@ -17,19 +17,19 @@ undefinedVariable :: TestTree
 undefinedVariable =
   testCase "Catch undefined(free) variable in Type Definition." $
     check_ compilerInput'undefinedVariable
-      @?= (Left . CompKindCheckError . withDefModule) (UnboundTyVarError tyDef'undefinedVar tyDef'undefinedVar'var)
+      @?= (Left . CKC'TyDefError . withDefModule) (UnboundTyVarError tyDef'undefinedVar tyDef'undefinedVar'var)
 
 undefinedLocalTyRef :: TestTree
 undefinedLocalTyRef =
   testCase "Catch undefined Local TyRef in Type Definition." $
     check_ compilerInput'undefinedLocalTyRef
-      @?= (Left . CompKindCheckError . withDefModule) (UnboundTyRefError tyDef'undefinedLocalTyRef tyDef'undefinedLocalTyRef'TyRef)
+      @?= (Left . CKC'TyDefError . withDefModule) (UnboundTyRefError tyDef'undefinedLocalTyRef tyDef'undefinedLocalTyRef'TyRef)
 
 undefinedForeignTyRef :: TestTree
 undefinedForeignTyRef =
   testCase "Catch undefined Foreign TyRef in Type Definition." $
     check_ compilerInput'undefinedForeignTyRef
-      @?= (Left . CompKindCheckError . withDefModule) (UnboundTyRefError tyDef'undefinedForeignTyRef tyDef'undefinedForeignTyRef'TyRef)
+      @?= (Left . CKC'TyDefError . withDefModule) (UnboundTyRefError tyDef'undefinedForeignTyRef tyDef'undefinedForeignTyRef'TyRef)
 
 withDefModule :: forall a. (PC.ModuleName -> a) -> a
 withDefModule f = f (_ModuleName ["Module"])

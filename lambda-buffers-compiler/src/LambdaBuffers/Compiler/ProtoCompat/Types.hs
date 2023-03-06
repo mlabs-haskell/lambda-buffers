@@ -361,8 +361,10 @@ instance (Typeable loc, Show loc) => Exception (KindCheckError loc)
 
 -- | All the compiler errors.
 data CompilerError
-  = CKC'TyDefError (KindCheckError TyDef)
-  | CKC'ClassDefError (KindCheckError ClassDef)
+  = -- | Compiler KindChecker Error - within a Type Definition.
+    CKC'TyDefError (KindCheckError TyDef)
+  | -- | Compiler KindChecker Error - within a Class Definition.
+    CKC'ClassDefError (KindCheckError ClassDef)
   | C'InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
