@@ -141,8 +141,11 @@
       herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
         herculesCI.ciSystems = [ "x86_64-linux" ];
         hercules-ci.github-pages.branch = "aciceri/gh-pages-effect";
-        perSystem = { ... }: {
-          hercules-ci.github-pages.settings.contents = ./README.md;
+        perSystem = { pkgs, ... }: {
+          hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
+            {
+              buildInputs = [ pkgs.mdbook ];
+            } "mdbook build ${self.outPath}/docs --dest-dir $out";
         };
       };
     };
