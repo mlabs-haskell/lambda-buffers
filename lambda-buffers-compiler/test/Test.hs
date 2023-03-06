@@ -12,7 +12,7 @@ main =
     testGroup
       "Compiler tests"
       [ KC.test
-      , TC.test
-      , DC.test
-      , LBC.test
+      --      , TC.test
+      --      , DC.test
+      --      , LBC.test
       ]

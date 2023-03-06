@@ -156,6 +156,7 @@ instance InfoLessC Module
 instance InfoLessC InferenceErr
 instance InfoLessC KindCheckErr
 instance InfoLessC CompilerInput
-instance InfoLessC KindCheckError
+instance InfoLessC (KindCheckError TyDef)
+instance InfoLessC (KindCheckError ClassDef)
 instance InfoLessC CompilerError
 instance InfoLessC CompilerResult

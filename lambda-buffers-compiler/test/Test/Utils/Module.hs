@@ -6,9 +6,11 @@ module Test.Utils.Module (
   module'undefinedForeignTyRef,
   module'either,
   module'recDef,
+  module'classEq,
+  module'classOrd,
 ) where
 
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Test.Utils.Constructors (_Module, _ModuleName)
 import Test.Utils.TyDef (
   tyDef'either,
@@ -20,15 +22,17 @@ import Test.Utils.TyDef (
   tyDef'undefinedVar,
  )
 
+import Test.Utils.ClassDef (classDef'Eq, classDef'Ord)
+
 -- _Module mn tds cds ins =
 
-module'maybe :: P.Module
+module'maybe :: PC.Module
 module'maybe = _Module (_ModuleName ["Prelude"]) [tyDef'maybe] mempty mempty
 
-module'either :: P.Module
+module'either :: PC.Module
 module'either = _Module (_ModuleName ["Prelude"]) [tyDef'either] mempty mempty
 
-module'recDef :: P.Module
+module'recDef :: PC.Module
 module'recDef = _Module (_ModuleName ["Prelude"]) [tyDef'recDef] mempty mempty
 
 {- | 1 Module containing
@@ -40,7 +44,7 @@ module'recDef = _Module (_ModuleName ["Prelude"]) [tyDef'recDef] mempty mempty
  Should fail as B a defaults to B :: Type -> Type and Maybe is inferred as
  Type -> Type. This is an inconsistency failure.
 -}
-module'incoherent :: P.Module
+module'incoherent :: PC.Module
 module'incoherent = _Module (_ModuleName ["Module"]) [tyDef'maybe, tyDef'incoherent] mempty mempty
 
 {- | 1 Module containing
@@ -48,7 +52,7 @@ module'incoherent = _Module (_ModuleName ["Module"]) [tyDef'maybe, tyDef'incoher
 
   Should fail as b is undefined.
 -}
-module'undefinedVar :: P.Module
+module'undefinedVar :: PC.Module
 module'undefinedVar = _Module (_ModuleName ["Module"]) [tyDef'undefinedVar] mempty mempty
 
 {- | 1 Module containing
@@ -56,7 +60,7 @@ module'undefinedVar = _Module (_ModuleName ["Module"]) [tyDef'undefinedVar] memp
               ^^^
   Should fail as Baz is a local undefined Ty Ref.
 -}
-module'undefinedLocalTyRef :: P.Module
+module'undefinedLocalTyRef :: PC.Module
 module'undefinedLocalTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedLocalTyRef] mempty mempty
 
 {- | 1 Module containing
@@ -64,5 +68,18 @@ module'undefinedLocalTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedLo
               ^^^^^^^^^^^^^^^^^^
   Should fail as Baz is a foreign undefined Ty Ref.
 -}
-module'undefinedForeignTyRef :: P.Module
+module'undefinedForeignTyRef :: PC.Module
 module'undefinedForeignTyRef = _Module (_ModuleName ["Module"]) [tyDef'undefinedForeignTyRef] mempty mempty
+
+{- | 1 Module containing:
+  class Eq a.
+-}
+module'classEq :: PC.Module
+module'classEq = _Module (_ModuleName ["Module"]) mempty [classDef'Eq] mempty
+
+{- | 1 Module containing:
+  class Eq a.
+  class Eq a => Ord a.
+-}
+module'classOrd :: PC.Module
+module'classOrd = _Module (_ModuleName ["Module"]) mempty [classDef'Ord] mempty

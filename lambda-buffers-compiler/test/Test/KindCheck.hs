@@ -7,7 +7,7 @@ import LambdaBuffers.Compiler.KindCheck (
 
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)))
 import Test.KindCheck.Errors (testGKindCheckErrors)
-import Test.KindCheck.TyClass qualified as KCTC
+import Test.KindCheck.TyClass qualified as TyClass
 import Test.QuickCheck (Arbitrary (arbitrary), forAll, (===))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, testCase, (@?=))
@@ -30,7 +30,7 @@ test =
     [ testCheck
     , testFolds
     , testGKindCheckErrors
-    , KCTC.test
+    , TyClass.test
     ]
 
 --------------------------------------------------------------------------------

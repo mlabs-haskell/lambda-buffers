@@ -179,6 +179,7 @@ test-suite tests
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
+    Test.Utils.ClassDef
     Test.Utils.CompilerInput
     Test.Utils.Constructors
     Test.Utils.Module

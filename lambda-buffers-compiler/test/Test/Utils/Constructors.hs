@@ -23,22 +23,26 @@ module Test.Utils.Constructors (
   _LocalRef',
   _ForeignRef',
   _TyApp,
+
+  -- * Class related.
+  _ClassDef,
+  _ClassName,
+  _LocalClassRef,
+  _ForeignCI,
+  _Constraint,
 ) where
 
 import Control.Lens ((^.))
+import Data.Default (def)
 import Data.Map qualified as Map
 import Data.Text (Text)
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
 import Proto.Compiler_Fields ()
 
-import Data.Default (def)
-
 _CompilerInput :: [PC.Module] -> PC.CompilerInput
 _CompilerInput ms =
-  PC.CompilerInput
-    { PC.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]
-    }
+  PC.CompilerInput {PC.modules = Map.fromList [(m ^. #moduleName, m) | m <- ms]}
 
 _Module :: PC.ModuleName -> [PC.TyDef] -> [PC.ClassDef] -> [PC.InstanceClause] -> PC.Module
 _Module mn tds cds ins =
@@ -175,3 +179,40 @@ _ForeignRef' x m s =
     , PC.moduleName = m
     , PC.sourceInfo = s
     }
+
+--------------------------------------------------------------------------------
+-- Class related.
+
+_ClassDef :: Text -> (Text, PC.KindType) -> [PC.Constraint] -> PC.ClassDef
+_ClassDef n tyArg cs =
+  PC.ClassDef
+    { className = _ClassName n
+    , classArgs = _TyArg tyArg
+    , supers = cs
+    , documentation = mempty
+    , sourceInfo = def
+    }
+
+_ClassName :: Text -> PC.ClassName
+_ClassName n = PC.ClassName {name = n, sourceInfo = def}
+
+_Constraint :: PC.TyClassRef -> PC.Ty -> PC.Constraint
+_Constraint cr t =
+  PC.Constraint
+    { classRef = cr
+    , argument = t
+    , sourceInfo = def
+    }
+
+_LocalClassRef :: Text -> PC.TyClassRef
+_LocalClassRef n =
+  PC.LocalCI $ PC.LocalClassRef {className = _ClassName n, sourceInfo = def}
+
+_ForeignCI :: Text -> PC.ModuleName -> PC.TyClassRef
+_ForeignCI n mn =
+  PC.ForeignCI $
+    PC.ForeignClassRef
+      { className = _ClassName n
+      , moduleName = mn
+      , sourceInfo = def
+      }

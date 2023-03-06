@@ -53,6 +53,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
 ) where
 
 import Control.Exception (Exception)
+import Data.Data (Typeable)
 import Data.Generics.Labels ()
 import Data.Map (Map)
 import Data.Set (Set)
@@ -347,28 +348,27 @@ instance Arbitrary CompilerInput where
     where
       fn n = CompilerInput <$> resize n arbitrary
 
-data KindCheckError
-  = UnboundTyVarError TyDef TyVar ModuleName
-  | UnboundTyRefError TyDef TyRef ModuleName
-  | IncorrectApplicationError TyDef Kind Kind ModuleName
-  | RecursiveKindError TyDef ModuleName
-  | InconsistentTypeError TyDef Kind Kind ModuleName
+data KindCheckError loc
+  = UnboundTyVarError loc TyVar ModuleName
+  | UnboundTyRefError loc TyRef ModuleName
+  | UnboundTyClassRefError loc TyClassRef ModuleName
+  | IncorrectApplicationError loc Kind Kind ModuleName
+  | RecursiveKindError loc ModuleName
+  | InconsistentTypeError loc Kind Kind ModuleName
   deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary KindCheckError
   deriving anyclass (SOP.Generic)
-instance Exception KindCheckError
+instance (Typeable loc, Show loc) => Exception (KindCheckError loc)
 
 -- | All the compiler errors.
 data CompilerError
-  = CompKindCheckError KindCheckError
-  | InternalError Text
+  = CKC'TyDefError (KindCheckError TyDef)
+  | CKC'ClassDefError (KindCheckError ClassDef)
+  | C'InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary CompilerError
   deriving anyclass (SOP.Generic)
 
 data CompilerResult = CompilerResult
   deriving stock (Show, Eq, Ord, Generic)
-  deriving (Arbitrary) via GenericArbitrary CompilerResult
   deriving anyclass (SOP.Generic)
 
 type CompilerOutput = Either CompilerError CompilerResult

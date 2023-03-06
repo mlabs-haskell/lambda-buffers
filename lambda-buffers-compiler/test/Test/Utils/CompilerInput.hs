@@ -6,11 +6,15 @@ module Test.Utils.CompilerInput (
   compilerInput'either,
   compilerInput'undefinedForeignTyRef,
   compilerInput'recDef,
+  compilerInput'classEq,
+  compilerInput'classOrd,
 ) where
 
-import LambdaBuffers.Compiler.ProtoCompat qualified as P
+import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Test.Utils.Constructors (_CompilerInput)
 import Test.Utils.Module (
+  module'classEq,
+  module'classOrd,
   module'either,
   module'incoherent,
   module'maybe,
@@ -21,29 +25,35 @@ import Test.Utils.Module (
  )
 
 -- | Compiler Input containing 1 module with 1 definition - Maybe.
-compilerInput'maybe :: P.CompilerInput
+compilerInput'maybe :: PC.CompilerInput
 compilerInput'maybe = _CompilerInput [module'maybe]
 
 -- | Compiler Input containing 1 module with 1 definition - Either.
-compilerInput'either :: P.CompilerInput
+compilerInput'either :: PC.CompilerInput
 compilerInput'either = _CompilerInput [module'either]
 
 -- | Compiler Input containing 1 module with 1 definition - Either.
-compilerInput'recDef :: P.CompilerInput
+compilerInput'recDef :: PC.CompilerInput
 compilerInput'recDef = _CompilerInput [module'recDef]
 
 -- | Contains 2 definitions - 1 wrong one.
-compilerInput'incoherent :: P.CompilerInput
+compilerInput'incoherent :: PC.CompilerInput
 compilerInput'incoherent = _CompilerInput [module'maybe, module'incoherent]
 
 -- | Contains 1 undefined variable.
-compilerInput'undefinedVariable :: P.CompilerInput
+compilerInput'undefinedVariable :: PC.CompilerInput
 compilerInput'undefinedVariable = _CompilerInput [module'undefinedVar]
 
 -- | Contains 1 undefined Local TyRef.
-compilerInput'undefinedLocalTyRef :: P.CompilerInput
+compilerInput'undefinedLocalTyRef :: PC.CompilerInput
 compilerInput'undefinedLocalTyRef = _CompilerInput [module'undefinedLocalTyRef]
 
 -- | Contains 1 undefined Foreign TyRef.
-compilerInput'undefinedForeignTyRef :: P.CompilerInput
+compilerInput'undefinedForeignTyRef :: PC.CompilerInput
 compilerInput'undefinedForeignTyRef = _CompilerInput [module'undefinedForeignTyRef]
+
+compilerInput'classEq :: PC.CompilerInput
+compilerInput'classEq = _CompilerInput [module'classEq]
+
+compilerInput'classOrd :: PC.CompilerInput
+compilerInput'classOrd = _CompilerInput [module'classOrd]

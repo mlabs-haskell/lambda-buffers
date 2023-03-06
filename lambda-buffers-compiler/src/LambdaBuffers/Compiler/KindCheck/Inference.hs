@@ -250,7 +250,8 @@ runClassDefCheck ctx modName classDef = do
 
 -- | Checks the class definition for correct typedness.
 deriveClassDef :: PC.ClassDef -> Derive ()
-deriveClassDef classDef = traverse_ deriveConstraint (classDef ^. #supers)
+deriveClassDef classDef =
+  traverse_ deriveConstraint (classDef ^. #supers)
 
 deriveConstraint :: PC.Constraint -> Derive Derivation
 deriveConstraint constraint = do

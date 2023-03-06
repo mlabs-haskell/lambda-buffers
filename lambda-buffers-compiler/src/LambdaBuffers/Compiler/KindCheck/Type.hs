@@ -9,14 +9,19 @@ module LambdaBuffers.Compiler.KindCheck.Type (
   Variable (TyVar, QualifiedTyRef, QualifiedTyClassRef),
   QualifiedTyRefName (..),
   QualifiedTyClassRefName (..),
+
+  -- * Qualified TyRef
   qTyRef'tyName,
   qTyRef'moduleName,
   qTyRef'sourceInfo,
-
-  -- * Isomorphisms.
   ltrISOqtr,
   ftrISOqtr,
   ltrISOftr,
+
+  -- * Qualified TyClass
+  qTyClass'className,
+  qTyClass'moduleName,
+  qTyClass'sourceInfo,
   fcrISOqtcr,
   lcrISOftcr,
   lcrISOqtcr,

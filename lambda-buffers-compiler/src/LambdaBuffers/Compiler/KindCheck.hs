@@ -25,8 +25,11 @@ import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
   Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
+  fcrISOqtcr,
   ftrISOqtr,
+  lcrISOqtcr,
   ltrISOqtr,
+  qTyClass'moduleName,
   qTyRef'moduleName,
  )
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
@@ -112,8 +115,9 @@ moduleStrategy :: Transform GlobalCheck ModuleCheck
 moduleStrategy = reinterpret $ \case
   CreateContext ci ->
     resolveCreateContext ci
-  ValidateModule cx md ->
+  ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (md ^. #moduleName) cx) (md ^. #typeDefs)
+    traverse_ (kCClassInstance (md ^. #moduleName) cx) (md ^. #classDefs)
 
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
@@ -121,26 +125,25 @@ localStrategy = reinterpret $ \case
     desiredK <- getSpecifiedKind modName tyDef
     k <- inferTypeKind modName tyDef ctx desiredK
     checkKindConsistency modName tyDef ctx k
-  KCClassInstance modName ctx classDef -> do
-    _ <- checkClassDefinition modName classDef ctx
-    pure ()
+  KCClassInstance modName ctx classDef ->
+    checkClassDefinition modName classDef ctx
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
   InferTypeKind modName tyDef ctx _k ->
-    either (handleErr modName tyDef) pure $ I.infer ctx tyDef modName
+    either (handleErrTyDef modName tyDef) pure $ I.infer ctx tyDef modName
   CheckKindConsistency modName tyDef ctx k ->
     runReader modName $ resolveKindConsistency tyDef ctx k
   GetSpecifiedKind modName tyDef ->
     fmap snd $ runReader modName $ tyDef2NameAndKind tyDef
   CheckClassDefinition modName classDef ctx ->
-    either (handleErr2 modName classDef) pure $ I.runClassDefCheck ctx modName classDef
+    either (handleErrClassDef modName classDef) pure $ I.runClassDefCheck ctx modName classDef
   where
-    handleErr2 :: forall {b}. PC.ModuleName -> PC.ClassDef -> I.InferErr -> Eff effs b
-    handleErr2 _ _ _err = error "Throw an error"
+    handleErrClassDef :: forall {b}. PC.ModuleName -> PC.ClassDef -> I.InferErr -> Eff effs b
+    handleErrClassDef _ _ _err = error "Throw an error"
 
-    handleErr :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
-    handleErr modName td = \case
+    handleErrTyDef :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
+    handleErrTyDef modName td = \case
       I.InferUnboundTermErr ut ->
         case ut of
           QualifiedTyRef qtr -> do
@@ -149,21 +152,32 @@ runKindCheck = interpret $ \case
                 -- We're looking at the local module.
                 let localRef = PC.LocalI . fst . withIso ltrISOqtr (\_ f -> f) $ qtr
                 let err = PC.UnboundTyRefError td localRef modName
-                throwError . PC.CompKindCheckError $ err
+                throwError . PC.CKC'TyDefError $ err
               else do
                 -- We're looking at a foreign module.
                 let foreignRef = PC.ForeignI . withIso ftrISOqtr (\_ f -> f) $ qtr
-                throwError . PC.CompKindCheckError $ PC.UnboundTyRefError td foreignRef modName
+                throwError . PC.CKC'TyDefError $ PC.UnboundTyRefError td foreignRef modName
           TyVar tv ->
-            throwError . PC.CompKindCheckError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
-          QualifiedTyClassRef _ -> error "NOTE(cstml): FIXME."
+            throwError . PC.CKC'TyDefError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
+          QualifiedTyClassRef qcr ->
+            if qcr ^. qTyClass'moduleName == modName
+              then do
+                -- We're looking at the local module.
+                let localClassRef = PC.LocalCI . fst . withIso lcrISOqtcr (\_ f -> f) $ qcr
+                let err = PC.UnboundTyClassRefError td localClassRef modName
+                throwError . PC.CKC'TyDefError $ err
+              else do
+                -- We're looking at a foreign module.
+                let foreignRef = PC.ForeignCI . withIso fcrISOqtcr (\_ f -> f) $ qcr
+                let err = PC.UnboundTyClassRefError td foreignRef modName
+                throwError . PC.CKC'TyDefError $ err
       I.InferUnifyTermErr (I.Constraint (k1, k2)) -> do
         err <- PC.IncorrectApplicationError td <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
-        throwError $ PC.CompKindCheckError err
+        throwError $ PC.CKC'TyDefError err
       I.InferRecursiveSubstitutionErr _ ->
-        throwError . PC.CompKindCheckError $ PC.RecursiveKindError td modName
+        throwError . PC.CKC'TyDefError $ PC.RecursiveKindError td modName
       I.InferImpossibleErr t ->
-        throwError $ PC.InternalError t
+        throwError $ PC.C'InternalError t
 
 --------------------------------------------------------------------------------
 -- Resolvers
@@ -184,7 +198,7 @@ resolveKindConsistency tyDef _ctx inferredKind = do
       | i == d = pure ()
       | otherwise = do
           err <- PC.InconsistentTypeError t <$> kind2ProtoKind i <*> kind2ProtoKind d <*> ask
-          throwError $ PC.CompKindCheckError err
+          throwError $ PC.CKC'TyDefError err
 
 --------------------------------------------------------------------------------
 -- Context Creation
