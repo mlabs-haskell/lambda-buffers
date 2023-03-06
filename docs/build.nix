@@ -2,7 +2,7 @@
 pkgs.mkShell {
   name = "docs-env";
 
-  packages = [ commonTools.markdownlint-cli commonTools.typos ];
+  packages = [ commonTools.markdownlint-cli commonTools.typos pkgs.mdbook ];
 
   inherit shellHook;
 }

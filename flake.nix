@@ -7,9 +7,10 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
+    hci-effects.url = "github:hercules-ci/hercules-ci-effects";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, ... }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ]
       (system:
         let
@@ -137,7 +138,15 @@
 
         }
       ) // {
-      # Instruction for the Hercules CI to build on x86_64-linux only, to avoid errors about systems without agents.
-      herculesCI.ciSystems = [ "x86_64-linux" ];
+      herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
+        herculesCI.ciSystems = [ "x86_64-linux" ];
+        hercules-ci.github-pages.branch = "main";
+        perSystem = { pkgs, ... }: {
+          hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
+            {
+              buildInputs = [ pkgs.mdbook ];
+            } "mdbook build ${self.outPath}/docs --dest-dir $out";
+        };
+      };
     };
 }
