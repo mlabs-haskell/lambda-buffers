@@ -1,3 +1,0 @@
-module A
-
-import B (A, B, C)

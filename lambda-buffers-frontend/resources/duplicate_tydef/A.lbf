@@ -1,5 +1,0 @@
-module A
-
-sum A = MkA
-
-sum A = MkA

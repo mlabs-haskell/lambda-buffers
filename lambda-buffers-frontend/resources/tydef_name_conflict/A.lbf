@@ -1,5 +1,0 @@
-module A
-
-import B
-
-sum A = MkA

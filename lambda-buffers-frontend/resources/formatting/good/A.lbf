@@ -1,7 +1,0 @@
-module A
-
-sum X = MkX
-
-sum Y = MkY
-
-sum Z = MkZ
