@@ -102,11 +102,13 @@ library
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Codegen
+    LambdaBuffers.Codegen.Check
+    LambdaBuffers.Codegen.Config
     LambdaBuffers.Codegen.Haskell
     LambdaBuffers.Codegen.Haskell.Config
     LambdaBuffers.Codegen.Haskell.Print
-    LambdaBuffers.Codegen.Haskell.PrintM
     LambdaBuffers.Codegen.Haskell.Syntax
+    LambdaBuffers.Codegen.Print
 
 executable lbg
   import:          common-language

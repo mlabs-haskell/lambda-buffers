@@ -6,7 +6,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Haskell.Config (Config (MkConfig))
+import LambdaBuffers.Codegen.Config (Config (MkConfig))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -14,8 +14,8 @@ import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
 import Data.Default (Default (def))
+import LambdaBuffers.Codegen.Haskell qualified as H
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
-import LambdaBuffers.Codegen.Haskell.PrintM qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
 import Prettyprinter (vsep)
 import Test.Tasty (TestTree, testGroup)
