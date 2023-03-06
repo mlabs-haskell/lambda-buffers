@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Codegen - Lambda Buffers documentation</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">1.</strong> Design</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html" class="active"><strong aria-hidden="true">3.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">4.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">5.</strong> Comparison matrix</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Lambda Buffers documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="lambdabuffers-codegen"><a class="header" href="#lambdabuffers-codegen">LambdaBuffers Codegen</a></h1>
+<p>NOTE: The implementation of the code generation framework is still in early
+stages and will likely undergo substantial changes as development
+continues. This document serves to outline general principles that any
+implementation of the LambdaBuffers code generation framework ought to adhere
+to.</p>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<ol>
+<li>Modular &amp; reusable components</li>
+<li>Ergonomic interface</li>
+<li>Extensible to new opaque types</li>
+<li>Extensible to new type classes</li>
+</ol>
+<h3 id="modular--reusable-components"><a class="header" href="#modular--reusable-components">Modular &amp; Reusable Components</a></h3>
+<p>Because the code generation modules for each target language will almost
+certainly constitute the bulk of the final LambdaBuffers codebase, it is
+essential that components of the code generation framework be as modular and
+reusable as is practicable.</p>
+<p>Although each target language has its own distinct syntax and semantics, many
+syntactic forms exist in multiple target languages. For example, Haskell and
+PureScript both use a comma-separated set enclosed in square brackets
+(e.g. <code>[1,2,3]</code>) to represent a <code>List _/[_]</code> value, while Rust uses a similar
+form (in conjunction with a macro, e.g. <code>vec![1,2,3]</code>) to represent a
+<code>Vector&lt;_&gt;</code> value. To reduce redundant and superfluous code, common syntactic
+patterns such at this should be abstracted out into a set of functions that can
+be reused across languages.</p>
+<h3 id="ergonomic-interface"><a class="header" href="#ergonomic-interface">Ergonomic Interface</a></h3>
+<p>While the LambdaBuffers team will support a finite set of specific target
+languages, adding support for an additional language should be as painless as
+possible (ceteris paribus) to encourage and facilitate open source contributions
+by third parties. A basic set of tools which can be used to write code
+generation modules for any target language should be developed, and all code
+generation modules written by the LambdaBuffers team should employ those tools
+(in order to provide a robust set of examples for future contributors, among
+other benefits).</p>
+<h3 id="extensible-to-new-opaque-types"><a class="header" href="#extensible-to-new-opaque-types">Extensible to New Opaque Types</a></h3>
+<p>Users and contributors should be able to easily extend the default set of
+supported opaque types to support additional opaque types. In the context of
+code generation, this means: Users should have the ability to specify the target
+type for a given opaque type in the target language (including the package or
+module that contains the target type if the target type is not part of the
+language's standard library).</p>
+<p>Because type class instances must be derived structurally, and because an opaque
+type is by definition a type with no visible internal structure, users should be
+provided with an ergonomic interface for noting the presence of a type class
+instance for an opaque type's target type in a particular language (if the
+instance exists in the standard library), or for referring to the module where
+such an instance is located (if the instance is defined in a library or by the
+user in one of their own modules).</p>
+<h3 id="extensible-to-new-type-classes"><a class="header" href="#extensible-to-new-type-classes">Extensible to New Type Classes</a></h3>
+<p>Users and contributors should be able to easily extend the default set of
+supported type classes to support additional type classes and facilitate the
+derivation of instances for newly defined classes.</p>
+<p>In practice, the type class code generation machinery must consist of two
+distinct parts: First, a set of deriving rules which correspond to instances
+that already exist (in some module or in a language's standard
+library/prelude). Second, code generation functions that operate on user-defined
+types which satisfy those rules.</p>
+<p>Each of these parts should be ergonomic, well-documented, and the implementation
+of the default set of supported type classes ought to be thoroughly commented in
+order that users have a diverse set of real examples to work from.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="compiler.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="command-line-interface.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="compiler.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="command-line-interface.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

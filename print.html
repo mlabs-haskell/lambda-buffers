@@ -1,0 +1,646 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Lambda Buffers documentation</title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">1.</strong> Design</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">3.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">4.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">5.</strong> Comparison matrix</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Lambda Buffers documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="lambdabuffers-design"><a class="header" href="#lambdabuffers-design">LambdaBuffers Design</a></h1>
+<p>The goal of the LambdaBuffers project is to enable software developers to
+specify their application types in a common format that can be conveniently
+shared and their values effectively communicated across language barriers.</p>
+<h2 id="problem-statement"><a class="header" href="#problem-statement">Problem Statement</a></h2>
+<p>Software projects that span multiple language environments often interact in a
+sub-optimal manner. Significant effort is spent in making application messages
+declared in one language environment available to other language environments.</p>
+<p>This burden is particularly onerous in manually written and managed
+serialization/encoding code which is used to communicate application values
+in the context of networking, configuration and databases.</p>
+<p>Ensuring compatibility, consistency and correctness of application messages is a
+difficult, tedious and error prone process that often results in unwarranted
+costs to the business and unsustainable technical debt.</p>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<ol>
+<li>Expressive types,</li>
+<li>Expressive semantics annotation,</li>
+<li>Extensible to new types,</li>
+<li>Extensible to new semantics,</li>
+<li>Universally consistent semantics,</li>
+<li>Modular API architecture.</li>
+</ol>
+<h3 id="expressive-types"><a class="header" href="#expressive-types">Expressive Types</a></h3>
+<p>Application types that users can define should be expressive enough to
+facilitate type driven domain modeling and to express application
+programming interfaces.</p>
+<p>Taking inspiration from existing type systems, LambdaBuffers supports <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic
+data types</a> that facilitate
+elegant type composition. Such types are well studied and widely used in
+functional programming languages such as Haskell.</p>
+<p>LambdaBuffers supports first class sum, product and record types. Types can be
+parameterized, effectively enabling generic types. LambdaBuffers also supports
+recursive type definitions, which allow users to succinctly define elegant and
+expressive data structures.</p>
+<h3 id="expressive-semantics-annotation"><a class="header" href="#expressive-semantics-annotation">Expressive Semantics Annotation</a></h3>
+<p>Enabling users to manage the <em>semantics</em> associated with their types is
+essential for adapting LambdaBuffers to a variety of different domains and use
+cases.</p>
+<p>While most existing schema systems only facilitate type declarations in a
+variety of languages, LambdaBuffers takes a further step and provides users with
+the capability to manage the <em>semantics</em> of the types defined in schemata by
+indicating which basic operations and functions a type ought to support.</p>
+<p>For example, suppose a user would like some types to support certain encoding
+(e.g. JSON or CBOR). In order to support a particular encoding, functions that
+serialize and deserialize the types are needed in the target language(s).
+Another example: Users may wish to declare that certain types are numeric - i.e.
+that values of these types can be added, subtracted or multiplied in a given
+target language. Most types could be declared to support an equality relation,
+which requires a function that can check values for equality in the target
+language(s).</p>
+<p>In order to provide users the capability to manage the <em>semantics</em> of the types
+they define, LambdaBuffers supports <a href="https://en.wikipedia.org/wiki/Type_class">type
+classes</a>, also known as <em>type
+constraints</em>. Type classes are a well-established mechanism for supporting ad
+hoc polymorphism, backed by a large amount of academic research and widely used
+in functional programming languages such as Haskell, PureScript, and (albeit
+under a different name) Rust.</p>
+<p>One essential difference between LambdaBuffers type classes and type classes as
+implemented in Haskell/PureScript/Rust is that LambdaBuffers does not allow
+users to declare the implementation of type class instances. Instead, users
+declare <em>instance clauses</em> for their types which signify the <em>semantics</em> (i.e.
+functions, methods) they wish to be generated in the target language. All
+implementation are generated uniformly as elaborated in the specification
+document for a given type class.</p>
+<p>For each new type class declared, code generation tooling must be updated to
+handle the new type class.</p>
+<h3 id="extensible-to-new-types"><a class="header" href="#extensible-to-new-types">Extensible to New Types</a></h3>
+<p>Enabling users to introduce new <em>built-in</em> types allows LambdaBuffers to be
+adapted in many different domains and use cases.</p>
+<p>These types have special treatment <em>under the hood</em> and are generally mapped onto
+existing types and their value representations in the targeted language
+environments. For example, a primitive <code>Int</code> type in the LambdaBuffers schema
+language may be mapped to <code>Int</code> in Haskell and <code>i32</code> in Rust. Primitive
+parameterized types are also possible: A primitive <code>Maybe</code> type might be mapped
+to <code>Maybe</code> in Haskell and to <code>Option&lt;_&gt;</code> in Rust.</p>
+<p>LambdaBuffers supports <a href="https://en.wikipedia.org/wiki/Opaque_data_type">opaque
+types</a> to provide users with the
+power to define their own primitive or builtin types.</p>
+<p>Example opaque types include various integer types, sequence types, text types,
+sets, maps and other semantically richer data types. Generally, such types are
+already well-defined and widely used in various language environments and come
+equipped with rich libraries that work with them. Redefining them <em>ab ovo</em> would
+be counterproductive as users would have to re-implement and reinvent the rich
+support for such types.</p>
+<h3 id="extensible-to-new-semantics"><a class="header" href="#extensible-to-new-semantics">Extensible to New Semantics</a></h3>
+<p>Enabling users to introduce new <em>type semantics</em> facilitates LambdaBuffers to be
+adapted in many different domains and use cases.</p>
+<p>In LambdaBuffers, introducing new <em>type semantics</em> works by first declaring a
+<em>type class</em>, which is simply the name of the class bundled with any
+super-classes (should they exist). Next, specification document that elaborates
+how instances are to be generated for members of the class must be created,
+taking care to ensure that instances are always generated uniformly. Finally, a
+code generation module for the class must be written that implements compliant
+code generation for different target languages.</p>
+<p>Concretely, serialization has special treatment in most technologies in this
+space, however in LambdaBuffers, this is just a new type class.</p>
+<p>For each new type class, deliberate effort must be invested to support
+that 'semantics' in different target language environments in a compliant manner.
+(Because type class instances are generated uniformly relative to the
+structure of the original type, in accordance with a set of deriving rules
+provided in the code generation implementation, the amount of boilerplate
+required to implement a new class is substantially reduced if not
+entirely eliminated.)</p>
+<p>The LambdaBuffers team will officially support a certain set of type classes and
+provide code generation modules for a set of officially supported language
+environments. However, modular design will hopefully facilitate community
+contributions in a sustainable fashion.</p>
+<h3 id="universally-consistent-semantics"><a class="header" href="#universally-consistent-semantics">Universally Consistent Semantics</a></h3>
+<p>The types specified by users must be handled in a compatible manner across
+language environments. This is a critical requirement that underpins this
+project.</p>
+<p>If two values of a LambdaBuffers type are considered as 'equal' in one language
+environment, they should be considered equal in all others. In a similar
+fashion, if LambdaBuffers type has a declared JSON serialization semantics,
+values encoded as JSON in one language environment have to have the same
+encoding performed in all other language environments.</p>
+<p>LambdaBuffers does not provide a way to formally verify consistency across languages,
+however, a comprehensive test suite will be developed to ensure that new code
+generation modules are indeed implemented correctly.</p>
+<h3 id="modular-api-architecture"><a class="header" href="#modular-api-architecture">Modular API Architecture</a></h3>
+<p>LambdaBuffers establishes three separate components of the architecture, namely
+<em>Frontend</em>, <em>Compiler</em> and <em>Codegen</em>*.</p>
+<p><em>Frontend</em> is a user facing component that features a way to input, specify or
+otherwise construct application types. <em>Frontend</em> also orchestrates the overall
+work that includes the <em>Compiler</em> and <em>Codegen</em>, invoking each of these
+components as required by different workflows the <em>Frontend</em> supports.
+LambdaBuffers officially supports a <em>Frontend</em> component implementation that
+features a text based language for specifying LambdaBuffers types. However,
+because of the modular API architecture approach, a <em>Frontend</em> can be
+implemented in any language and in any fashion as long as they are able to
+interface with the <em>Compiler</em> and <em>Codegen</em> components.</p>
+<p>The <em>Compiler</em> is a key component that is made available via the <em>Compiler
+Input</em> specified via <a href="https://protobuf.dev/">Google Protocol Buffers</a>. It
+performs all the necessary checks to ensure that the naming, type definitions
+and their declared semantics are indeed valid.</p>
+<p>The <em>Codegen</em> component consumes the <em>Compiler Output</em> that contains all the
+information necessary to perform valid and robust code generation. <em>Frontend</em>
+communicates with the <em>Codegen</em> to understand its <em>Capabilities</em>, enabling each
+<em>Codegen</em> module to gradually build up support for desired opaque types and
+declared semantics.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="lambdabuffers-compiler"><a class="header" href="#lambdabuffers-compiler">LambdaBuffers Compiler</a></h1>
+<p>The <em>Compiler</em> component sits between the <em>Frontend</em> component and the code
+generation component named <em>Codegen</em>. The purpose of the <em>Compiler</em> is to
+perform various checks on the <a href="../lambda-buffers-proto/compiler-proto.html#lambdabuffers-compiler-CompilerInput">Compiler
+input</a>
+provided by the <em>Frontend</em> ensuring that supplied type, class and instance
+clause definitions are valid or otherwise communicate any error conditions
+determined during processing.</p>
+<p>The end goal of the <em>Compiler</em> is to ensure that the <em>Codegen</em> component is
+capable of processing the <em>Compiler Output</em> by providing correct and complete
+information.</p>
+<h2 id="compiler-interface"><a class="header" href="#compiler-interface">Compiler Interface</a></h2>
+<p>The <em>Compiler</em> operates on the <em>Compiler Input</em> message specified in the
+<a href="../lambda-buffers-proto/compiler.proto">compiler.proto</a> <a href="https://protobuf.dev/">Google Protocol
+Buffers</a> schema - enabling, any <em>Frontend</em> to interface
+with the <em>Compiler</em> in a language agnostic manner.</p>
+<p>Similarly, the <em>Compiler Output</em> message is also specified in the
+<a href="../lambda-buffers-proto/compiler.proto">compiler.proto</a> <a href="https://protobuf.dev/">Google Protocol
+Buffers</a> schema that is then consumed by <em>Codegen</em>
+modules, able to be written in any programming environment capable of
+communicating via <a href="https://protobuf.dev/">Google Protocol Buffers</a>.</p>
+<p>Refer to the <a href="../lambda-buffers-proto/compiler-proto.html">Compiler Proto
+documentation</a> for more information.</p>
+<h2 id="checking-type-definitions"><a class="header" href="#checking-type-definitions">Checking Type Definitions</a></h2>
+<p>The first step the Compiler performs is <em>kind checking and inference</em> on <a href="../lambda-buffers-proto/compiler-proto.html#lambdabuffers-compiler-TyDef">type
+definitions</a>
+provided by the <em>Frontend</em> and otherwise raises <a href="compiler.html#missing-link">kind checking errors</a>.</p>
+<p>When successful, the Compiler outputs a <a href="compiler.html#missing-link">Compiler Output</a> that
+annotates each <a href="../lambda-buffers-proto/compiler-proto.html#lambdabuffers-compiler-Ty">type
+term</a> with
+<a href="../lambda-buffers-proto/compiler-proto.html#lambdabuffers-compiler-Kind">kind</a>
+information.</p>
+<p>In standard <em>type checking</em> terminology LambdaBuffers 'terms' are <a href="https://en.wikipedia.org/wiki/Abstract_data_type">abstract data
+type</a> declarations and their
+'types' are <em>kinds</em>.</p>
+<p>Currently, the <em>Compiler</em> accepts:</p>
+<ol>
+<li>
+<p>type terms of kind <code>Type</code> (such as <code>Int</code> or <code>Bool</code>),</p>
+</li>
+<li>
+<p>type function terms of kind <code>Type → Type</code> (such as <code>Maybe</code> or <code>Either</code> -
+though note that type functions are not &quot;first class&quot; in the sense that they
+cannot be passed as arguments to other type functions).</p>
+</li>
+</ol>
+<p>There are future plans to expand this to Higher Kinded Types (such as <code>MaybeT</code>,
+<code>StateT</code> etc - i.e. types parameterized on type function terms) - subject to
+research into <em>Codegen</em> of such types in the target languages.</p>
+<p>The <em>Compiler</em> supports recursive types.</p>
+<p>All LambdaBuffers <a href="../lambda-buffers-proto/compiler-proto.html#lambdabuffers-compiler-TyArg">type
+variables</a>
+terms must be monomorphically kinded, with polymorphic kinds defaulting to
+monomorphic ones. For example <code>Phantom a = Phantom</code> would resolve to the
+monomorphic kind <code>Type → Type</code> rather than the polymorphic kind <code>∀a. a → Type</code>.</p>
+<h3 id="kind-checker"><a class="header" href="#kind-checker">Kind Checker</a></h3>
+<p>The kind checker is designed around a simply typed lambda calculus type system
+with inference via unification (<em>John Alan Robinson's</em> unification algorithm is
+being currently used). We've also introduced a <code>let</code> binding rule that allows
+later additions to the typing context. The typing rules are the following:</p>
+<pre><code class="language-text"> x : σ ∈ Γ
+----------- [Variable]
+ Γ ⊢ x : σ
+
+
+      Γ,x:σ ⊢ e:τ
+------------------------ [Abstraction]
+ Γ ⊢ (λ x:σ. e):(σ → τ)
+
+
+Γ ⊢ x:(σ → τ)    Γ ⊢ y:σ
+------------------------- [Application]
+       Γ ⊢ x y : τ
+
+
+Γ ⊢ e₁:σ    Γ, e₁ : σ ⊢ e₂:τ
+----------------------------- [Let]
+   Γ ⊢ let x = e₁ in e₂ : τ
+</code></pre>
+<p>The type checking strategy is as follows:</p>
+<ol>
+<li>
+<p>A context is built from the type definitions. Type variables which are not
+annotated with any further kind information are defaulted to be of kind
+<code>Type</code>.</p>
+</li>
+<li>
+<p>The RHS of the type terms are converted into their <em>Sums of Products</em>
+canonical representation. The variables from the left hand side of the term
+are introduced to the right hand side as abstractions.</p>
+</li>
+<li>
+<p>The derivation for each term is built.</p>
+</li>
+<li>
+<p>Then the unification tries to find a solution.</p>
+</li>
+</ol>
+<p>Terms for which unification cannot find a consistent derivation are deemed
+incorrect and a kind checking error is thrown. Note that currently all of the
+inferred kinds have a restriction to be monomorphic - therefore no free or
+universally quantified variables can appear in the final kind signature.</p>
+<h2 id="checking-type-cardinality"><a class="header" href="#checking-type-cardinality">Checking Type Cardinality</a></h2>
+<p>In addition to <em>kind checking</em>, the Compiler could perform a special check for
+types to determine their cardinality. This is especially useful to catch and
+report on <em>non inhabited</em> types that users might define.</p>
+<p>For example, <code>data F a = F (F a)</code> declares a <em>non-inhabited recursive type</em> that
+can't be constructed. LambdaBuffers Compiler <em>SHOULD</em> reject such types as they
+can't possibly be constructed and generated typeclass instances would in turn be
+ill-defined.</p>
+<p>This problem is equivalent to a problem of <a href="https://en.wikipedia.org/wiki/Component_(graph_theory)">calculating graph
+components</a>.</p>
+<h2 id="normalizing-type-definitions"><a class="header" href="#normalizing-type-definitions">Normalizing Type Definitions</a></h2>
+<p>Finally, the compiler should be able to <em>normalize</em> expressions. For example, it
+may be possible to define a data type in the schema language in a form similar
+to: <code>data G a = G ((Either) ((Maybe) a) Int)</code>, where the bracketing indicates
+the order of application within the term. The example term would normalize to
+<code>data G a = G (Either (Maybe a) Int)</code> - resulting in a cleaner (and more
+performant) code generation.</p>
+<h2 id="checking-typeclass-definitions-and-instance-clauses"><a class="header" href="#checking-typeclass-definitions-and-instance-clauses">Checking Typeclass Definitions and Instance Clauses</a></h2>
+<p>The <em>Compiler</em> should, if possible, ensure that all instance declarations for
+schemata are derivable using hard-coded derivation axioms.</p>
+<p>Other schema languages support generating type definitions in many languages
+from a single definition in the schema language. One key feature that sets
+LambdaBuffers apart from these alternatives is support for
+<a href="https://en.wikipedia.org/wiki/Type_class"><em>typeclasses</em></a>, which enable the
+generation of <a href="https://en.wikipedia.org/wiki/Ad_hoc_polymorphism">ad-hoc polymorphic
+functions</a> that operate on
+types generated from LambdaBuffers schemata.</p>
+<p>The LambdaBuffers schema language doesn't allow users to specify typeclass instance
+implementations themselves. Users, instead, will write <em>instance clauses</em> as
+part of the schema definition, and the LambdaBuffers code generator will derive
+these declared instances when generating code.</p>
+<p>Two important consequences of this design decision are:</p>
+<ol>
+<li>
+<p><em>All instances must be derived structurally</em>. As an example, consider the
+arbitrary product type <code>data P a b = P a b</code>. The semantics of the generated
+instance (i.e. the behavior of the generated code) must be determinable from the
+<em>structure of the type</em> - that it is a product - and the instances for its
+arguments <code>a</code> and <code>b</code>, and by those features alone. (Since <code>a</code> and <code>b</code> are type
+variables here, writing a direct instance for any interesting class is likely
+impossible, so LambdaBuffers supports constrained instances such as <code>instance (C a, C b) =&gt; C (P a b)</code>)</p>
+</li>
+<li>
+<p><em>All instances must be uniform across supported languages</em>. Because the
+LambdaBuffers <em>Codegen</em> component (and <em>not</em> the user) is responsible for
+generating instances, we must ensure that the codegen component is suitably
+equipped to generate instances in each language that exhibit behavior which is,
+to the greatest extent possible, equivalent to the behavior of generated
+instances in any other language. We <em>must</em> have an extensive test quite to
+verify uniform behavior of generated instances.</p>
+</li>
+</ol>
+<p>In languages with a typeclass system (Haskell, PureScript) or equivalent (Rust's
+Traits), we will utilize the existing system and <em>should</em> (to the extent that
+doing so is feasible) utilize existing typeclasses and instances from commonly
+used or standard libraries. In languages lacking a type system that is
+sufficiently rich to express typeclass relations, we will generate instances
+using idiomatic language features. (The details will depend on the particular
+language.)</p>
+<h2 id="missing-link"><a class="header" href="#missing-link">Missing link</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="lambdabuffers-codegen"><a class="header" href="#lambdabuffers-codegen">LambdaBuffers Codegen</a></h1>
+<p>NOTE: The implementation of the code generation framework is still in early
+stages and will likely undergo substantial changes as development
+continues. This document serves to outline general principles that any
+implementation of the LambdaBuffers code generation framework ought to adhere
+to.</p>
+<h2 id="requirements-1"><a class="header" href="#requirements-1">Requirements</a></h2>
+<ol>
+<li>Modular &amp; reusable components</li>
+<li>Ergonomic interface</li>
+<li>Extensible to new opaque types</li>
+<li>Extensible to new type classes</li>
+</ol>
+<h3 id="modular--reusable-components"><a class="header" href="#modular--reusable-components">Modular &amp; Reusable Components</a></h3>
+<p>Because the code generation modules for each target language will almost
+certainly constitute the bulk of the final LambdaBuffers codebase, it is
+essential that components of the code generation framework be as modular and
+reusable as is practicable.</p>
+<p>Although each target language has its own distinct syntax and semantics, many
+syntactic forms exist in multiple target languages. For example, Haskell and
+PureScript both use a comma-separated set enclosed in square brackets
+(e.g. <code>[1,2,3]</code>) to represent a <code>List _/[_]</code> value, while Rust uses a similar
+form (in conjunction with a macro, e.g. <code>vec![1,2,3]</code>) to represent a
+<code>Vector&lt;_&gt;</code> value. To reduce redundant and superfluous code, common syntactic
+patterns such at this should be abstracted out into a set of functions that can
+be reused across languages.</p>
+<h3 id="ergonomic-interface"><a class="header" href="#ergonomic-interface">Ergonomic Interface</a></h3>
+<p>While the LambdaBuffers team will support a finite set of specific target
+languages, adding support for an additional language should be as painless as
+possible (ceteris paribus) to encourage and facilitate open source contributions
+by third parties. A basic set of tools which can be used to write code
+generation modules for any target language should be developed, and all code
+generation modules written by the LambdaBuffers team should employ those tools
+(in order to provide a robust set of examples for future contributors, among
+other benefits).</p>
+<h3 id="extensible-to-new-opaque-types"><a class="header" href="#extensible-to-new-opaque-types">Extensible to New Opaque Types</a></h3>
+<p>Users and contributors should be able to easily extend the default set of
+supported opaque types to support additional opaque types. In the context of
+code generation, this means: Users should have the ability to specify the target
+type for a given opaque type in the target language (including the package or
+module that contains the target type if the target type is not part of the
+language's standard library).</p>
+<p>Because type class instances must be derived structurally, and because an opaque
+type is by definition a type with no visible internal structure, users should be
+provided with an ergonomic interface for noting the presence of a type class
+instance for an opaque type's target type in a particular language (if the
+instance exists in the standard library), or for referring to the module where
+such an instance is located (if the instance is defined in a library or by the
+user in one of their own modules).</p>
+<h3 id="extensible-to-new-type-classes"><a class="header" href="#extensible-to-new-type-classes">Extensible to New Type Classes</a></h3>
+<p>Users and contributors should be able to easily extend the default set of
+supported type classes to support additional type classes and facilitate the
+derivation of instances for newly defined classes.</p>
+<p>In practice, the type class code generation machinery must consist of two
+distinct parts: First, a set of deriving rules which correspond to instances
+that already exist (in some module or in a language's standard
+library/prelude). Second, code generation functions that operate on user-defined
+types which satisfy those rules.</p>
+<p>Each of these parts should be ergonomic, well-documented, and the implementation
+of the default set of supported type classes ought to be thoroughly commented in
+order that users have a diverse set of real examples to work from.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="lambdabuffers-command-line-interface"><a class="header" href="#lambdabuffers-command-line-interface">LambdaBuffers Command Line Interface</a></h1>
+<p>LambdaBuffers consists of three runtime command line interface components:</p>
+<ul>
+<li><a href="lambda-buffers-frontend-cli">lambda-buffers-frontend-cli</a></li>
+<li><a href="lambda-buffers-compiler-cli">lambda-buffers-compiler-cli</a></li>
+<li><a href="todo-link">lambda-buffers-codegen-cli</a></li>
+</ul>
+<p>The <em>Frontend</em> CLI orchestrates work between the user and the <em>Compiler</em> and
+<em>Codegen</em> components.</p>
+<p>It's desirable to have both the <em>Compiler</em> CLI and the <em>Codegen</em> CLI subject to
+a strict API with a specified set of flags to enable CLI implementation from
+various sources. This would be especially helpful with <em>Codegen</em> modules that
+bring about support for new targets, opaque types and typeclasses.</p>
+<!-- TODO(bladyjoker): Complete this chapter -->
+<div style="break-before: page; page-break-before: always;"></div><!-- markdownlint-disable-file -->
+<h1 id="comparison-matrix"><a class="header" href="#comparison-matrix">Comparison Matrix</a></h1>
+<p>Legend:</p>
+<ul>
+<li>🟢 Available (grading added in some cases spanning: Bad, Average, Good, Excellent)</li>
+<li>🟡 In development</li>
+<li>🔵 Potential future feature</li>
+<li>🔴 Not currently available</li>
+<li>❔ Not clear</li>
+</ul>
+<div class="table-wrapper"><table><thead><tr><th><strong>Feature</strong></th><th><strong>Proto Buffers</strong></th><th><strong>ADL</strong></th><th><strong>JSON Schema</strong></th><th><strong>Lambda Buffers</strong></th><th><strong>CDDL</strong></th><th><strong>ASN.1</strong></th></tr></thead><tbody>
+<tr><td>Sum types</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🟢</td><td>🟢</td></tr>
+<tr><td>Record types</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td></tr>
+<tr><td>Product types</td><td>🔴</td><td>🔴</td><td>🔴</td><td>🟢</td><td>❔</td><td>🔴</td></tr>
+<tr><td>Recursive types</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🟢</td><td>❔</td></tr>
+<tr><td>Parameterized types (generic types)</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🟢</td><td>🔴</td></tr>
+<tr><td>Type annotations/constraints</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🔵</td><td>🟢</td><td>🟢</td></tr>
+<tr><td>Add new builtin types</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Add new type semantics (e.g. different encodings)</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🟢</td></tr>
+<tr><td>Manage type semantics (at language level)</td><td>🔴</td><td>🔴</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Codegen support</td><td>🟢 (Excellent)</td><td>🟢 (Average)</td><td>🟢 (Excellent)</td><td>🟡</td><td>🟢 (Bad)</td><td>🟢 (Average)</td></tr>
+<tr><td>DevOps tooling - build system integration</td><td>🟢</td><td>🔴</td><td>❔</td><td>🟡</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Documentation tooling</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🔵</td><td>🔴</td><td>❔</td></tr>
+<tr><td>Formatting, linting, and development environment tools</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Language checker API</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Codegen API</td><td>🟢</td><td>🟢</td><td>🔴</td><td>🟢</td><td>🔴</td><td>🔴</td></tr>
+<tr><td>Language specification</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td><td>🟢</td></tr>
+<tr><td>Backwards compatibility strategy</td><td>🟢</td><td>🔴</td><td>🔴</td><td>🔴</td><td>🔴</td><td>🔴</td></tr>
+</tbody></table>
+</div>
+<h2 id="descriptions"><a class="header" href="#descriptions">Descriptions</a></h2>
+<h3 id="sum-types"><a class="header" href="#sum-types">Sum Types</a></h3>
+<p>Types of the form <code>Time = Present | Past | Future</code>, which allow a type do be
+constructed by one of many variants. Think Rust's <code>enums</code>.</p>
+<h3 id="product-types"><a class="header" href="#product-types">Product Types</a></h3>
+<p>Types of the form <code>Person = MkPerson Age Name</code>, where <code>MkPerson</code> is of Kind
+<code>Type-&gt;Type-&gt;Type</code>. Product types combine multiple elements into one data type
+without tagging the elements.</p>
+<h3 id="record-types"><a class="header" href="#record-types">Record Types</a></h3>
+<p>Types of the form <code>Person = MkPerson { age :: Age, name :: Name }</code>. Record types
+are similar to <code>structs</code> in most programming languages.</p>
+<h3 id="recursive-types"><a class="header" href="#recursive-types">Recursive Types</a></h3>
+<p>Recursive types are defined by the presence of the LHS type in its RHS
+definition. A classic example is:</p>
+<pre><code class="language-text">List a = Nil | Cons a (List a)
+^^^^^^                 ^^^^^^
+</code></pre>
+<h3 id="parameterized-types-generics"><a class="header" href="#parameterized-types-generics">Parameterized Types (Generics)</a></h3>
+<p>Type functions allow for the introduction of type variables in the LHS definition
+of the term - creating a parametrised type definition. The classic example is
+<code>Maybe a</code> which is the equivalento of <code>Option &lt;A&gt;</code> in rust:</p>
+<pre><code class="language-text">Maybe a = Nothing | Just a
+</code></pre>
+<p>Using the above type definition we can now define another type that uses <code>Maybe</code>
+and instantiates it to use <code>Integer</code></p>
+<pre><code class="language-text">Time_Saved_via_LambdaBuffers = Maybe Integer
+</code></pre>
+<h3 id="type-annotations--constraints"><a class="header" href="#type-annotations--constraints">Type Annotations / Constraints</a></h3>
+<p>There exists a system of constraining or further annotating types - enriching
+the type's specification.</p>
+<h3 id="add-new-built-in-types"><a class="header" href="#add-new-built-in-types">Add New Built-in Types</a></h3>
+<p>Refer to <a href="design.html#extensible-to-new-types">design document</a>.</p>
+<h3 id="add-new-type-semantics"><a class="header" href="#add-new-type-semantics">Add New Type Semantics</a></h3>
+<p>Refer to the <a href="design.html#extensible-to-new-semantics">design document</a>.</p>
+<h3 id="manage-type-semantics-at-language-level"><a class="header" href="#manage-type-semantics-at-language-level">Manage Type Semantics (at Language Level)</a></h3>
+<p>Refer to the <a href="design.html#expressive-semantics-annotation">design document</a>..</p>
+<h3 id="codegen-support"><a class="header" href="#codegen-support">Codegen Support</a></h3>
+<p>Codegen support relates to the language being able to generate types for other
+programming languages.</p>
+<h3 id="devops-tooling---build-system-integration"><a class="header" href="#devops-tooling---build-system-integration">DevOps Tooling - Build System Integration</a></h3>
+<p>The framework/language provides a seamless way of integrating with normal build
+tools and systems (eg. Bazel, Nix, etc.).</p>
+<h3 id="documentation-tooling"><a class="header" href="#documentation-tooling">Documentation Tooling</a></h3>
+<p>The language can generate human readable documentation in an easy to share and
+view format. For example HTML, or Markdown.</p>
+<h3 id="formatting-linting-and-development-environment-tools"><a class="header" href="#formatting-linting-and-development-environment-tools">Formatting, Linting, and Development Environment Tools</a></h3>
+<p>Tools that allow formatting, linting, and automating standardisation of the
+language specific files.</p>
+<h3 id="language-checker-api"><a class="header" href="#language-checker-api">Language Checker API</a></h3>
+<p>The language checker component exposes an API to interface with itself in a
+language agnostic manner.</p>
+<h3 id="codegen-api"><a class="header" href="#codegen-api">Codegen API</a></h3>
+<p>The language codegen component exposes an API to interface with itself in a
+language agnostic manner.</p>
+<h3 id="language-specification"><a class="header" href="#language-specification">Language Specification</a></h3>
+<p>There exists a well defined language specification document. </p>
+<h3 id="backwards-compatibility-strategy"><a class="header" href="#backwards-compatibility-strategy">Backwards Compatibility Strategy</a></h3>
+<p>The language makes certain backwards compatibility guarantees between versions of
+the same type definition.</p>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ul>
+<li>https://json-schema.org/implementations.html</li>
+<li>https://www.rfc-editor.org/rfc/rfc8610</li>
+<li>https://github.com/timbod7/adl</li>
+<li>https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx</li>
+<li>https://protobuf.dev/</li>
+<li>https://github.com/dcSpark/cddl-codegen</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>
