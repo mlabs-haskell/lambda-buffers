@@ -57,34 +57,51 @@ printModName mn = let H.MkModuleName hmn = fromLbModuleName mn in pretty hmn
 printHsQTyName :: H.QTyName -> Doc a
 printHsQTyName (_, H.MkModuleName hsModName, H.MkTyName hsTyName) = pretty hsModName <> dot <> pretty hsTyName
 
+{- | Prints the type definition.
+
+sum Foo a b = MkFoo a | MkBar b
+opaque Maybe a
+
+translates to
+
+data Foo a b = Foo'MkFoo a | Foo'MkBar b
+type Maybe a = Prelude.Maybe a
+-}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc a)
 printTyDef (PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
   return $ group $ kw <+> printTyName tyN <+> absDoc
 
-{- | Creates an alias to the specified 'native' type.
+{- | Prints the type abstraction.
 
-opaque Maybe a
+For the above examples it prints
 
-translates to
-
-type Maybe = Prelude.Maybe
+a b = Foo'MkFoo a | Foo'MkBar b
+a = Prelude.Maybe a
 -}
 printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc a, Doc a)
 printTyAbs tyN (PC.TyAbs args body _) = do
-  let argsDoc = if OMap.empty == args then mempty else sep (printTyArg <$> toList args)
-  (kw, bodyDoc) <- printTyBody tyN body
-  return (kw, group $ argsDoc <+> align (equals <+> bodyDoc))
+  let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
+  (kw, bodyDoc) <- printTyBody tyN (toList args) body
+  return (kw, group $ argsDoc <> align (equals <+> bodyDoc))
 
--- TODO(bladyjoker): Add Record/Tuple.
-printTyBody :: MonadPrint m => PC.TyName -> PC.TyBody -> m (Doc a, Doc a)
-printTyBody tyN (PC.SumI s) = ("data",) <$> printTyBodySum tyN s
-printTyBody tyN (PC.OpaqueI si) = do
+{- | Prints the type body.
+
+For the above examples it prints
+
+Foo'MkFoo a | Foo'MkBar b
+Prelude.Maybe a
+
+TODO(bladyjoker): Add Record/Tuple.
+-}
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc a, Doc a)
+printTyBody tyN _ (PC.SumI s) = ("data",) <$> printTyBodySum tyN s
+printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ ctxConfig . opaques)
   mn <- asks (view $ ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
-    Just hqtyn -> return ("type", printHsQTyName hqtyn)
+    Just hqtyn -> return ("type", printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: forall {a}. PC.TyArg -> Doc a
 printTyArg (PC.TyArg vn _ _) = printVarName vn

@@ -25,7 +25,7 @@ tests :: TestTree
 tests =
   testGroup
     "LambdaBuffers.Codegen.Haskell"
-    [testCase "should succeed" $ testPrint testCompInp testConfig "module LambdaBuffers.TestMod (Either,I8,Maybe,Set) where\n\n\nimport qualified LambdaBuffers.TestMod\n\n\ndata Either a b = Either'Left a | Either'Right b\ntype I8 = Data.Int.Int8\ndata Maybe a = Maybe'Just a | Maybe'Nothing \ntype Set = Data.Set.Set\nmodule LambdaBuffers.TestMod2 (Foo,I16) where\n\n\nimport qualified LambdaBuffers.TestMod\nimport qualified LambdaBuffers.TestMod2\n\n\ndata Foo a = Foo'MkFoo a I16 LambdaBuffers.TestMod.I8\ntype I16 = Data.Int.Int16"]
+    [testCase "should succeed" $ testPrint testCompInp testConfig "module LambdaBuffers.TestMod (Either, I8, Maybe, Set) where\n\nimport qualified Data.Int\nimport qualified Data.Set\n\ndata Either a b = Either'Left a | Either'Right b\ntype I8 = Data.Int.Int8\ndata Maybe a = Maybe'Just a | Maybe'Nothing \ntype Set a = Data.Set.Set a\nmodule LambdaBuffers.TestMod2 (Foo, I16) where\n\nimport qualified LambdaBuffers.TestMod\nimport qualified Data.Int\n\ndata Foo a = Foo'MkFoo a I16 LambdaBuffers.TestMod.I8\ntype I16 = Data.Int.Int16"]
 
 testPrint :: P.CompilerInput -> H.Config -> String -> Assertion
 testPrint compInp cfg want = do
