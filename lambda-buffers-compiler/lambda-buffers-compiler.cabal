@@ -115,6 +115,7 @@ library
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.Eval
     LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Indexing
     LambdaBuffers.Compiler.ProtoCompat.InfoLess
