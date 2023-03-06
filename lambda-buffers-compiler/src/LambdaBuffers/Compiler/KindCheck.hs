@@ -19,11 +19,12 @@ import Control.Monad.Freer.TH (makeEffect)
 import Data.Default (Default (def))
 import Data.Foldable (Foldable (toList), traverse_)
 import Data.Map qualified as M
-import LambdaBuffers.Compiler.KindCheck.Derivation (Context, constraintContext, context)
+import LambdaBuffers.Compiler.KindCheck.Derivation (Context, classContext, context)
 import LambdaBuffers.Compiler.KindCheck.Inference (protoKind2Kind)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
+  QualifiedTyClassRefName (QualifiedTyClassRefName),
   Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
   fcrISOqtcr,
   ftrISOqtr,
@@ -302,11 +303,13 @@ kind2ProtoKind = \case
 --------------------------------------------------------------------------------
 -- Class Definition Based Context Building.
 
-classDef2Context :: forall effs. PC.ClassDef -> Eff effs Context
+classDef2Context :: forall effs. Member (Reader PC.ModuleName) effs => PC.ClassDef -> Eff effs Context
 classDef2Context cDef = do
-  let className = mkInfoLess . view #className $ cDef
+  modName <- ask
+  let className = cDef ^. #className
+  let qtcn = mkInfoLess . QualifiedTyClassRef $ QualifiedTyClassRefName className modName def
   let classArg = tyArg2Kind . view #classArgs $ cDef
-  pure $ mempty & constraintContext .~ M.singleton className classArg
+  pure $ mempty & classContext .~ M.singleton qtcn (classArg :->: KConstraint)
 
 --------------------------------------------------------------------------------
 -- utilities

@@ -806,8 +806,8 @@ instance IsMessage P.CompilerError PC.CompilerError where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
   toProto = \case
-    PC.CKC'TyDefError err -> defMessage & P.kindCheckErrorsTyDef .~ [toProto err]
-    PC.CKC'ClassDefError err -> defMessage & P.kindCheckErrorsClassDef .~ [toProto err]
+    PC.CKC'TyDefError err -> defMessage & P.kindCheckErrorsTyDefs .~ [toProto err]
+    PC.CKC'ClassDefError err -> defMessage & P.kindCheckErrorsClassDefs .~ [toProto err]
     PC.C'InternalError err -> defMessage & P.internalErrors .~ [defMessage & P.msg .~ err]
 
 instance IsMessage P.CompilerResult PC.CompilerResult where

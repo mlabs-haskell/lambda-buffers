@@ -21,6 +21,7 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
 ) where
 
 import Control.Lens ((%~), (&), (.~), (^.))
+import Control.Lens.Combinators (to)
 import Control.Lens.Iso (withIso)
 import Control.Monad (void)
 import Control.Monad.Freer (Eff, Member, Members, run)
@@ -47,7 +48,6 @@ import LambdaBuffers.Compiler.KindCheck.Type (
   Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
   fcrISOqtcr,
   ftrISOqtr,
-  lcrISOftcr,
   lcrISOqtcr,
   ltrISOqtr,
  )
@@ -250,8 +250,17 @@ runClassDefCheck ctx modName classDef = do
 
 -- | Checks the class definition for correct typedness.
 deriveClassDef :: PC.ClassDef -> Derive ()
-deriveClassDef classDef =
-  traverse_ deriveConstraint (classDef ^. #supers)
+deriveClassDef classDef = do
+  vars <- createLocalConstraintContext classDef
+  traverse_ (local (<> vars) . deriveConstraint) (classDef ^. #supers)
+
+-- | Adds the kind of the variable to the local context.
+createLocalConstraintContext :: PC.ClassDef -> Derive Context
+createLocalConstraintContext cd = do
+  let arg = cd ^. #classArgs
+  let n = mkInfoLess $ TyVar $ arg ^. #argName
+  let k = arg ^. #argKind . to protoKind2Kind
+  return $ mempty & addContext .~ M.singleton n k
 
 deriveConstraint :: PC.Constraint -> Derive Derivation
 deriveConstraint constraint = do
@@ -397,5 +406,5 @@ protoKind2Kind = \case
   PC.Kind k -> case k of
     PC.KindArrow k1 k2 -> protoKind2Kind k1 :->: protoKind2Kind k2
     PC.KindRef PC.KType -> KType
-    PC.KindRef PC.KUnspecified -> KType
     PC.KindRef PC.KConstraint -> KConstraint
+    PC.KindRef PC.KUnspecified -> KType

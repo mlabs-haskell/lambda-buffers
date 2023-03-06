@@ -82,4 +82,4 @@ module'classEq = _Module (_ModuleName ["Module"]) mempty [classDef'Eq] mempty
   class Eq a => Ord a.
 -}
 module'classOrd :: PC.Module
-module'classOrd = _Module (_ModuleName ["Module"]) mempty [classDef'Ord] mempty
+module'classOrd = _Module (_ModuleName ["Module"]) mempty [classDef'Eq, classDef'Ord] mempty

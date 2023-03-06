@@ -1,7 +1,6 @@
 module Test.KindCheck.TyClass (test) where
 
 import LambdaBuffers.Compiler.KindCheck (check_)
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types (CompilerInput)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, testCase, (@?=))
