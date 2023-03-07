@@ -6,6 +6,7 @@ module LambdaBuffers.Compiler.KindCheck.Inference (
   -- * API functions
   infer,
   runClassDefCheck,
+  runClassInstanceCheck,
 
   -- * Types
   Kind (..),
@@ -44,6 +45,7 @@ import LambdaBuffers.Compiler.KindCheck.Derivation (
  )
 import LambdaBuffers.Compiler.KindCheck.Kind (Atom, Kind (KConstraint, KType, KVar, (:->:)))
 import LambdaBuffers.Compiler.KindCheck.Type (
+  QualifiedTyClassRefName,
   Type (Abs, App, Constructor, Opaque, Product, Sum, UnitT, Var, VoidT),
   Variable (QualifiedTyClassRef, QualifiedTyRef, TyVar),
   fcrISOqtcr,
@@ -248,6 +250,27 @@ runClassDefCheck ctx modName classDef = do
   (_, c) <- runDerive ctx modName $ deriveClassDef classDef
   void $ runUnify' c
 
+runClassInstanceCheck :: Context -> PC.ModuleName -> PC.InstanceClause -> Either InferErr ()
+runClassInstanceCheck ctx modName classInst = do
+  (_, c) <- runDerive ctx modName $ deriveClassInst classInst
+  void $ runUnify' c
+
+deriveClassInst :: PC.InstanceClause -> Derive ()
+deriveClassInst instClause = do
+  void $ deriveClassInstDef instClause
+  traverse_ deriveConstraint $ instClause ^. #constraints
+  where
+    deriveClassInstDef :: PC.InstanceClause -> Derive Derivation
+    deriveClassInstDef ic = do
+      ctx <- ask
+      qcr <- QualifiedTyClassRef <$> classRef2Quantified (ic ^. #classRef)
+      dConstraint <- deriveVar qcr
+      argD <- deriveTy (ic ^. #head)
+      let argTy = argD ^. d'type
+      freshK <- KVar <$> fresh
+      tell [Constraint (dConstraint ^. d'kind, (argD ^. d'kind) :->: freshK)]
+      pure $ Application (Judgement ctx (App (dConstraint ^. d'type) argTy) freshK) dConstraint argD
+
 -- | Checks the class definition for correct typedness.
 deriveClassDef :: PC.ClassDef -> Derive ()
 deriveClassDef classDef = do
@@ -262,13 +285,18 @@ createLocalConstraintContext cd = do
   let k = arg ^. #argKind . to protoKind2Kind
   return $ mempty & addContext .~ M.singleton n k
 
+classRef2Quantified :: PC.TyClassRef -> Derive QualifiedTyClassRefName
+classRef2Quantified cr = do
+  mn <- ask
+  let qcr = case cr of
+        PC.LocalCI lcr -> withIso lcrISOqtcr const (lcr, mn)
+        PC.ForeignCI fcr -> withIso fcrISOqtcr const fcr
+  pure qcr
+
 deriveConstraint :: PC.Constraint -> Derive Derivation
 deriveConstraint constraint = do
-  mn <- ask
+  qcr <- QualifiedTyClassRef <$> classRef2Quantified (constraint ^. #classRef)
   ctx <- ask
-  let qcr = case constraint ^. #classRef of
-        PC.LocalCI lcr -> QualifiedTyClassRef . withIso lcrISOqtcr const $ (lcr, mn)
-        PC.ForeignCI fcr -> QualifiedTyClassRef . withIso fcrISOqtcr const $ fcr
   dConstraint <- deriveVar qcr
   argD <- deriveTy (constraint ^. #argument)
   let argTy = argD ^. d'type

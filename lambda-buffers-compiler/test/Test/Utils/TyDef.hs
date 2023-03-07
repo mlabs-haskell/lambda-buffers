@@ -9,6 +9,7 @@ module Test.Utils.TyDef (
   tyDef'undefinedForeignTyRef'TyRef,
   tyDef'recDef,
   tyDef'either,
+  tyDef'Int,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat.Types (Ty (TyVarI))
@@ -17,9 +18,11 @@ import Test.Utils.Constructors (
   _ForeignRef',
   _LocalRef',
   _ModuleName,
+  _Opaque,
   _SourceInfo,
   _TupleI,
   _TyAbs,
+  _TyAbs',
   _TyApp,
   _TyDef,
   _TyName,
@@ -142,3 +145,7 @@ tyDef'undefinedForeignTyRef =
 -}
 tyDef'undefinedForeignTyRef'TyRef :: P.TyRef
 tyDef'undefinedForeignTyRef'TyRef = P.ForeignI $ _ForeignRef' "Baz" (_ModuleName ["Foreign", "Module"]) (_SourceInfo 1 2)
+
+-- Int
+tyDef'Int :: P.TyDef
+tyDef'Int = _TyDef (_TyName "Int") (_TyAbs' [] _Opaque)

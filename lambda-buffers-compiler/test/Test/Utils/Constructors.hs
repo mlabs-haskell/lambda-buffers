@@ -23,6 +23,8 @@ module Test.Utils.Constructors (
   _LocalRef',
   _ForeignRef',
   _TyApp,
+  _Opaque,
+  _TyAbs',
 
   -- * Class related.
   _ClassDef,
@@ -30,6 +32,7 @@ module Test.Utils.Constructors (
   _LocalClassRef,
   _ForeignCI,
   _Constraint,
+  _InstanceClause,
 ) where
 
 import Control.Lens ((^.))
@@ -141,6 +144,14 @@ _TyAbs args body =
     , sourceInfo = PC.defSourceInfo
     }
 
+_TyAbs' :: [(Text, PC.KindType)] -> PC.TyBody -> PC.TyAbs
+_TyAbs' args body =
+  PC.TyAbs
+    { PC.tyArgs = Map.fromList [(ta ^. #argName, ta) | ta <- _TyArg <$> args]
+    , PC.tyBody = body
+    , sourceInfo = PC.defSourceInfo
+    }
+
 _TyArg :: (Text, PC.KindType) -> PC.TyArg
 _TyArg (a, k) =
   PC.TyArg
@@ -216,3 +227,15 @@ _ForeignCI n mn =
       , moduleName = mn
       , sourceInfo = def
       }
+
+_InstanceClause :: Text -> PC.Ty -> PC.InstanceClause
+_InstanceClause n ty =
+  PC.InstanceClause
+    { classRef = _LocalClassRef n
+    , head = ty
+    , constraints = mempty
+    , sourceInfo = def
+    }
+
+_Opaque :: PC.TyBody
+_Opaque = PC.OpaqueI def

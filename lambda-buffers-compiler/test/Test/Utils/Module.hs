@@ -7,12 +7,15 @@ module Test.Utils.Module (
   module'either,
   module'recDef,
   module'classEq,
+  module'unboundEq,
   module'classOrd,
+  module'IntEqInstance,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Test.Utils.Constructors (_Module, _ModuleName)
 import Test.Utils.TyDef (
+  tyDef'Int,
   tyDef'either,
   tyDef'incoherent,
   tyDef'maybe,
@@ -22,7 +25,7 @@ import Test.Utils.TyDef (
   tyDef'undefinedVar,
  )
 
-import Test.Utils.ClassDef (classDef'Eq, classDef'Ord)
+import Test.Utils.ClassDef (classDef'Eq, classDef'Ord, classInstance'IntEq)
 
 -- _Module mn tds cds ins =
 
@@ -83,3 +86,15 @@ module'classEq = _Module (_ModuleName ["Module"]) mempty [classDef'Eq] mempty
 -}
 module'classOrd :: PC.Module
 module'classOrd = _Module (_ModuleName ["Module"]) mempty [classDef'Eq, classDef'Ord] mempty
+
+module'unboundEq :: PC.Module
+module'unboundEq = _Module (_ModuleName ["Module"]) mempty [classDef'Ord] mempty
+
+module'Int :: PC.Module
+module'Int = _Module (_ModuleName ["Module"]) [] mempty mempty
+
+{- | 1 Module containing:
+  instance Eq Int.
+-}
+module'IntEqInstance :: PC.Module
+module'IntEqInstance = _Module (_ModuleName ["Module"]) [tyDef'Int] [classDef'Eq] [classInstance'IntEq]

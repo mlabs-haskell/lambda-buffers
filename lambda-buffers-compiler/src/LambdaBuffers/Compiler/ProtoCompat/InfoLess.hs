@@ -158,5 +158,6 @@ instance InfoLessC KindCheckErr
 instance InfoLessC CompilerInput
 instance InfoLessC (KindCheckError TyDef)
 instance InfoLessC (KindCheckError ClassDef)
+instance InfoLessC (KindCheckError InstanceClause)
 instance InfoLessC CompilerError
 instance InfoLessC CompilerResult

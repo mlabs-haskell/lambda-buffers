@@ -33,6 +33,7 @@ import LambdaBuffers.Compiler.KindCheck.Type (
   qTyClass'moduleName,
   qTyRef'moduleName,
  )
+import LambdaBuffers.Compiler.ProtoCompat (KindCheckError)
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
@@ -60,7 +61,8 @@ makeEffect ''GlobalCheck
 -- | Interactions that happen at the level of the
 data ModuleCheck a where -- Module
   KCTypeDefinition :: PC.ModuleName -> Context -> PC.TyDef -> ModuleCheck Kind
-  KCClassInstance :: PC.ModuleName -> Context -> PC.ClassDef -> ModuleCheck ()
+  KCClassDef :: PC.ModuleName -> Context -> PC.ClassDef -> ModuleCheck ()
+  KCClassInstance :: PC.ModuleName -> Context -> PC.InstanceClause -> ModuleCheck ()
 
 --  KCClass :: Context -> P.ClassDef -> ModuleCheck ()
 
@@ -70,6 +72,7 @@ data KindCheck a where
   GetSpecifiedKind :: PC.ModuleName -> PC.TyDef -> KindCheck Kind
   InferTypeKind :: PC.ModuleName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
   CheckClassDefinition :: PC.ModuleName -> PC.ClassDef -> Context -> KindCheck ()
+  CheckClassInstance :: PC.ModuleName -> PC.InstanceClause -> Context -> KindCheck ()
   CheckKindConsistency :: PC.ModuleName -> PC.TyDef -> Context -> Kind -> KindCheck Kind
 
 --  CheckClassInstance :: PC.ModuleName -> KindCheck Kind
@@ -118,7 +121,8 @@ moduleStrategy = reinterpret $ \case
     resolveCreateContext ci
   ValidateModule cx md -> do
     traverse_ (kCTypeDefinition (md ^. #moduleName) cx) (md ^. #typeDefs)
-    traverse_ (kCClassInstance (md ^. #moduleName) cx) (md ^. #classDefs)
+    traverse_ (kCClassDef (md ^. #moduleName) cx) (md ^. #classDefs)
+    traverse_ (kCClassInstance (md ^. #moduleName) cx) (md ^. #instances)
 
 localStrategy :: Transform ModuleCheck KindCheck
 localStrategy = reinterpret $ \case
@@ -126,8 +130,10 @@ localStrategy = reinterpret $ \case
     desiredK <- getSpecifiedKind modName tyDef
     k <- inferTypeKind modName tyDef ctx desiredK
     checkKindConsistency modName tyDef ctx k
-  KCClassInstance modName ctx classDef ->
+  KCClassDef modName ctx classDef ->
     checkClassDefinition modName classDef ctx
+  KCClassInstance modName ctx inst ->
+    checkClassInstance modName inst ctx
 
 runKindCheck :: forall effs {a}. Member Err effs => Eff (KindCheck ': effs) a -> Eff effs a
 runKindCheck = interpret $ \case
@@ -139,46 +145,20 @@ runKindCheck = interpret $ \case
     fmap snd $ runReader modName $ tyDef2NameAndKind tyDef
   CheckClassDefinition modName classDef ctx ->
     either (handleErrClassDef modName classDef) pure $ I.runClassDefCheck ctx modName classDef
+  CheckClassInstance modName classInst ctx ->
+    either (handleErrClassInst modName classInst) pure $ I.runClassInstanceCheck ctx modName classInst
   where
+    handleErrClassInst :: forall {b}. PC.ModuleName -> PC.InstanceClause -> I.InferErr -> Eff effs b
+    handleErrClassInst = handleErr PC.CKC'ClassInstanceError
+
     handleErrClassDef :: forall {b}. PC.ModuleName -> PC.ClassDef -> I.InferErr -> Eff effs b
-    handleErrClassDef modName classDef = \case
-      I.InferUnboundTermErr ut ->
-        case ut of
-          QualifiedTyRef qtr -> do
-            if qtr ^. qTyRef'moduleName == modName
-              then do
-                -- We're looking at the local module.
-                let localRef = PC.LocalI . fst . withIso ltrISOqtr (\_ f -> f) $ qtr
-                let err = PC.UnboundTyRefError classDef localRef modName
-                throwError . PC.CKC'ClassDefError $ err
-              else do
-                -- We're looking at a foreign module.
-                let foreignRef = PC.ForeignI . withIso ftrISOqtr (\_ f -> f) $ qtr
-                throwError . PC.CKC'ClassDefError $ PC.UnboundTyRefError classDef foreignRef modName
-          TyVar tv ->
-            throwError . PC.CKC'ClassDefError $ PC.UnboundTyVarError classDef (PC.TyVar tv) modName
-          QualifiedTyClassRef qcr ->
-            if qcr ^. qTyClass'moduleName == modName
-              then do
-                -- We're looking at the local module.
-                let localClassRef = PC.LocalCI . fst . withIso lcrISOqtcr (\_ f -> f) $ qcr
-                let err = PC.UnboundTyClassRefError classDef localClassRef modName
-                throwError . PC.CKC'ClassDefError $ err
-              else do
-                -- We're looking at a foreign module.
-                let foreignRef = PC.ForeignCI . withIso fcrISOqtcr (\_ f -> f) $ qcr
-                let err = PC.UnboundTyClassRefError classDef foreignRef modName
-                throwError . PC.CKC'ClassDefError $ err
-      I.InferUnifyTermErr (I.Constraint (k1, k2)) -> do
-        err <- PC.IncorrectApplicationError classDef <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
-        throwError $ PC.CKC'ClassDefError err
-      I.InferRecursiveSubstitutionErr _ ->
-        throwError . PC.CKC'ClassDefError $ PC.RecursiveKindError classDef modName
-      I.InferImpossibleErr t ->
-        throwError $ PC.C'InternalError t
+    handleErrClassDef = handleErr PC.CKC'ClassDefError
 
     handleErrTyDef :: forall {b}. PC.ModuleName -> PC.TyDef -> I.InferErr -> Eff effs b
-    handleErrTyDef modName td = \case
+    handleErrTyDef = handleErr PC.CKC'TyDefError
+
+    handleErr :: forall {loc} {b}. (KindCheckError loc -> CompilerErr) -> PC.ModuleName -> loc -> I.InferErr -> Eff effs b
+    handleErr constructor modName loc = \case
       I.InferUnboundTermErr ut ->
         case ut of
           QualifiedTyRef qtr -> do
@@ -186,33 +166,31 @@ runKindCheck = interpret $ \case
               then do
                 -- We're looking at the local module.
                 let localRef = PC.LocalI . fst . withIso ltrISOqtr (\_ f -> f) $ qtr
-                let err = PC.UnboundTyRefError td localRef modName
-                throwError . PC.CKC'TyDefError $ err
+                let err = PC.UnboundTyRefError loc localRef modName
+                throwError . constructor $ err
               else do
                 -- We're looking at a foreign module.
                 let foreignRef = PC.ForeignI . withIso ftrISOqtr (\_ f -> f) $ qtr
-                throwError . PC.CKC'TyDefError $ PC.UnboundTyRefError td foreignRef modName
+                throwError . constructor $ PC.UnboundTyRefError loc foreignRef modName
           TyVar tv ->
-            throwError . PC.CKC'TyDefError $ PC.UnboundTyVarError td (PC.TyVar tv) modName
+            throwError . constructor $ PC.UnboundTyVarError loc (PC.TyVar tv) modName
           QualifiedTyClassRef qcr ->
             if qcr ^. qTyClass'moduleName == modName
               then do
                 -- We're looking at the local module.
                 let localClassRef = PC.LocalCI . fst . withIso lcrISOqtcr (\_ f -> f) $ qcr
-                let err = PC.UnboundTyClassRefError td localClassRef modName
-                throwError . PC.CKC'TyDefError $ err
+                let err = PC.UnboundTyClassRefError loc localClassRef modName
+                throwError . constructor $ err
               else do
                 -- We're looking at a foreign module.
                 let foreignRef = PC.ForeignCI . withIso fcrISOqtcr (\_ f -> f) $ qcr
-                let err = PC.UnboundTyClassRefError td foreignRef modName
-                throwError . PC.CKC'TyDefError $ err
+                let err = PC.UnboundTyClassRefError loc foreignRef modName
+                throwError . constructor $ err
       I.InferUnifyTermErr (I.Constraint (k1, k2)) -> do
-        err <- PC.IncorrectApplicationError td <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
-        throwError $ PC.CKC'TyDefError err
-      I.InferRecursiveSubstitutionErr _ ->
-        throwError . PC.CKC'TyDefError $ PC.RecursiveKindError td modName
-      I.InferImpossibleErr t ->
-        throwError $ PC.C'InternalError t
+        err <- PC.IncorrectApplicationError loc <$> kind2ProtoKind k1 <*> kind2ProtoKind k2 <*> pure modName
+        throwError $ constructor err
+      I.InferRecursiveSubstitutionErr _ -> throwError . constructor $ PC.RecursiveKindError loc modName
+      I.InferImpossibleErr t -> throwError $ PC.C'InternalError t
 
 --------------------------------------------------------------------------------
 -- Resolvers

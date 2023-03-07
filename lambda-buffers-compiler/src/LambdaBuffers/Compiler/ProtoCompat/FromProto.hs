@@ -802,12 +802,83 @@ instance IsMessage P.KindCheckErrorClassDef (PC.KindCheckError PC.ClassDef) wher
         & (P.inconsistentTypeError . P.expectedKind) .~ toProto kd
         & (P.inconsistentTypeError . P.moduleName) .~ toProto modname
 
+instance IsMessage P.KindCheckErrorClassInstance (PC.KindCheckError PC.InstanceClause) where
+  fromProto kce =
+    case kce ^. P.maybe'kindCheckError of
+      Just x -> case x of
+        P.KindCheckErrorClassInstance'UnboundTyVarError' err ->
+          PC.UnboundTyVarError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.tyVar)
+            <*> fromProto (err ^. P.moduleName)
+        P.KindCheckErrorClassInstance'UnboundTyRefError' err ->
+          PC.UnboundTyRefError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.tyRef)
+            <*> fromProto (err ^. P.moduleName)
+        P.KindCheckErrorClassInstance'UnboundTyClassRefError' err ->
+          PC.UnboundTyClassRefError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.tyClassRef)
+            <*> fromProto (err ^. P.moduleName)
+        P.KindCheckErrorClassInstance'UnificationError' err ->
+          PC.IncorrectApplicationError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.tyKindLhs)
+            <*> fromProto (err ^. P.tyKindRhs)
+            <*> fromProto (err ^. P.moduleName)
+        P.KindCheckErrorClassInstance'CyclicKindError' err ->
+          PC.RecursiveKindError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.moduleName)
+        P.KindCheckErrorClassInstance'InconsistentTypeError' err ->
+          PC.InconsistentTypeError
+            <$> fromProto (err ^. P.instanceClause)
+            <*> fromProto (err ^. P.actualKind)
+            <*> fromProto (err ^. P.expectedKind)
+            <*> fromProto (err ^. P.moduleName)
+      Nothing -> throwOneOfError (messageName (Proxy @P.KindCheckErrorClassInstance)) "kind_check_error"
+
+  toProto = \case
+    PC.UnboundTyVarError instanceClause tyvar modname ->
+      defMessage
+        & (P.unboundTyVarError . P.instanceClause) .~ toProto instanceClause
+        & (P.unboundTyVarError . P.tyVar) .~ toProto tyvar
+        & (P.unboundTyVarError . P.moduleName) .~ toProto modname
+    PC.UnboundTyRefError instanceClause tyref modname ->
+      defMessage
+        & (P.unboundTyRefError . P.instanceClause) .~ toProto instanceClause
+        & (P.unboundTyRefError . P.tyRef) .~ toProto tyref
+        & (P.unboundTyRefError . P.moduleName) .~ toProto modname
+    PC.UnboundTyClassRefError instanceClause classRef modName ->
+      defMessage
+        & (P.unboundTyClassRefError . P.instanceClause) .~ toProto instanceClause
+        & (P.unboundTyClassRefError . P.tyClassRef) .~ toProto classRef
+        & (P.unboundTyClassRefError . P.moduleName) .~ toProto modName
+    PC.IncorrectApplicationError instanceClause k1 k2 modname ->
+      defMessage
+        & (P.unificationError . P.instanceClause) .~ toProto instanceClause
+        & (P.unificationError . P.tyKindLhs) .~ toProto k1
+        & (P.unificationError . P.tyKindRhs) .~ toProto k2
+        & (P.unificationError . P.moduleName) .~ toProto modname
+    PC.RecursiveKindError instanceClause modname ->
+      defMessage
+        & (P.cyclicKindError . P.instanceClause) .~ toProto instanceClause
+        & (P.cyclicKindError . P.moduleName) .~ toProto modname
+    PC.InconsistentTypeError instanceClause ki kd modname ->
+      defMessage
+        & (P.inconsistentTypeError . P.instanceClause) .~ toProto instanceClause
+        & (P.inconsistentTypeError . P.actualKind) .~ toProto ki
+        & (P.inconsistentTypeError . P.expectedKind) .~ toProto kd
+        & (P.inconsistentTypeError . P.moduleName) .~ toProto modname
+
 instance IsMessage P.CompilerError PC.CompilerError where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
   toProto = \case
     PC.CKC'TyDefError err -> defMessage & P.kindCheckErrorsTyDefs .~ [toProto err]
     PC.CKC'ClassDefError err -> defMessage & P.kindCheckErrorsClassDefs .~ [toProto err]
+    PC.CKC'ClassInstanceError err -> defMessage & P.kindCheckErrorsClassInstances .~ [toProto err]
     PC.C'InternalError err -> defMessage & P.internalErrors .~ [defMessage & P.msg .~ err]
 
 instance IsMessage P.CompilerResult PC.CompilerResult where
