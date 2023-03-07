@@ -175,6 +175,8 @@ test-suite tests
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
     Test.LambdaBuffers.Compiler.Mutation
+    Test.LambdaBuffers.Compiler.ProtoCompat.Eval
+    Test.LambdaBuffers.Compiler.ProtoCompat.Utils
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
