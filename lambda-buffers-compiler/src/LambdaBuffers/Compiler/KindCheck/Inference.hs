@@ -255,6 +255,10 @@ runClassInstanceCheck ctx modName classInst = do
   (_, c) <- runDerive ctx modName $ deriveClassInst classInst
   void $ runUnify' c
 
+{- | NOTE(cstml): This is a partial solution because I am not clear where to pluck
+   the variables from and how to work with the constraints in this case. same
+   applies to the above definition check.
+-}
 deriveClassInst :: PC.InstanceClause -> Derive ()
 deriveClassInst instClause = do
   void $ deriveClassInstDef instClause
