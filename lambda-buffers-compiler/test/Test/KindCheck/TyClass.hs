@@ -5,7 +5,14 @@ import LambdaBuffers.Compiler.ProtoCompat.Types (CompilerInput)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, testCase, (@?=))
 import Test.Tasty.Providers (TestName)
-import Test.Utils.CompilerInput (compilerInput'IntEqInstance, compilerInput'classEq, compilerInput'classOrd, compilerInput'unboundEq)
+import Test.Utils.CompilerInput (
+  compilerInput'IntEqInstance,
+  compilerInput'classEq,
+  compilerInput'classOrd,
+  compilerInput'classOrdInstanceEq,
+  compilerInput'failingAdditionalVarConstraint,
+  compilerInput'unboundEq,
+ )
 import Test.Utils.Constructors ()
 import Test.Utils.TyDef ()
 
@@ -14,7 +21,7 @@ test =
   testGroup
     "KC Class Error."
     [ testGroup "Class Defs." [ok'Eq, ok'Ord, fail'Ord]
-    , testGroup "Class Instances." [ok'IntEqInstance]
+    , testGroup "Class Instances." [ok'IntEqInstance, ok'OrdInstanceEq, fail'RedundantVar]
     ]
 
 --------------------------------------------------------------------------------
@@ -33,7 +40,13 @@ fail'Ord = failCase "Unbound reference to eq." compilerInput'unboundEq
 -- Class Instances
 
 ok'IntEqInstance :: TestTree
-ok'IntEqInstance = oKCase "Int Eq Instance." compilerInput'IntEqInstance
+ok'IntEqInstance = oKCase "instance Int Eq." compilerInput'IntEqInstance
+
+ok'OrdInstanceEq :: TestTree
+ok'OrdInstanceEq = oKCase "instance Ord a => Eq a." compilerInput'classOrdInstanceEq
+
+fail'RedundantVar :: TestTree
+fail'RedundantVar = failCase "instance Ord b => Eq a." compilerInput'failingAdditionalVarConstraint
 
 --------------------------------------------------------------------------------
 -- Utils

@@ -365,7 +365,8 @@ data CompilerError
     CKC'TyDefError (KindCheckError TyDef)
   | -- | Compiler KindChecker Error - within a Class Definition.
     CKC'ClassDefError (KindCheckError ClassDef)
-  | CKC'ClassInstanceError (KindCheckError InstanceClause)
+  | -- | Compiler KindChecker Error - within a Class Instance.
+    CKC'ClassInstanceError (KindCheckError InstanceClause)
   | C'InternalError Text
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)

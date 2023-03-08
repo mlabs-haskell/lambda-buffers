@@ -33,6 +33,7 @@ module Test.Utils.Constructors (
   _ForeignCI,
   _Constraint,
   _InstanceClause,
+  _InstanceClause',
 ) where
 
 import Control.Lens ((^.))
@@ -227,6 +228,15 @@ _ForeignCI n mn =
       , moduleName = mn
       , sourceInfo = def
       }
+
+_InstanceClause' :: Text -> PC.Ty -> [PC.Constraint] -> PC.InstanceClause
+_InstanceClause' n ty cs =
+  PC.InstanceClause
+    { classRef = _LocalClassRef n
+    , head = ty
+    , constraints = cs
+    , sourceInfo = def
+    }
 
 _InstanceClause :: Text -> PC.Ty -> PC.InstanceClause
 _InstanceClause n ty =

@@ -10,13 +10,17 @@ module Test.Utils.CompilerInput (
   compilerInput'classOrd,
   compilerInput'unboundEq,
   compilerInput'IntEqInstance,
+  compilerInput'classOrdInstanceEq,
+  compilerInput'failingAdditionalVarConstraint,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Test.Utils.Constructors (_CompilerInput)
 import Test.Utils.Module (
+  module'AdditionalVarEqInstance,
   module'Int,
   module'IntEqInstance,
+  module'OrdEqInstance,
   module'classEq,
   module'classOrd,
   module'either,
@@ -63,8 +67,14 @@ compilerInput'classEq = _CompilerInput [module'classEq]
 compilerInput'classOrd :: PC.CompilerInput
 compilerInput'classOrd = _CompilerInput [module'classOrd]
 
+compilerInput'classOrdInstanceEq :: PC.CompilerInput
+compilerInput'classOrdInstanceEq = _CompilerInput [module'OrdEqInstance]
+
 compilerInput'unboundEq :: PC.CompilerInput
 compilerInput'unboundEq = _CompilerInput [module'unboundEq]
 
 compilerInput'IntEqInstance :: PC.CompilerInput
 compilerInput'IntEqInstance = _CompilerInput [module'classEq, module'IntEqInstance, module'Int]
+
+compilerInput'failingAdditionalVarConstraint :: PC.CompilerInput
+compilerInput'failingAdditionalVarConstraint = _CompilerInput [module'AdditionalVarEqInstance]

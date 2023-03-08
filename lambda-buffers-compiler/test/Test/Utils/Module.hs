@@ -11,6 +11,8 @@ module Test.Utils.Module (
   module'classOrd,
   module'IntEqInstance,
   module'Int,
+  module'OrdEqInstance,
+  module'AdditionalVarEqInstance,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
@@ -26,7 +28,13 @@ import Test.Utils.TyDef (
   tyDef'undefinedVar,
  )
 
-import Test.Utils.ClassDef (classDef'Eq, classDef'Ord, classInstance'IntEq)
+import Test.Utils.ClassDef (
+  classDef'Eq,
+  classDef'Ord,
+  classInstance'IntEq,
+  classInstance'OrdEq,
+  classInstance'OrdEqFailing,
+ )
 
 -- _Module mn tds cds ins =
 
@@ -99,3 +107,9 @@ module'Int = _Module (_ModuleName ["Module"]) [] mempty mempty
 -}
 module'IntEqInstance :: PC.Module
 module'IntEqInstance = _Module (_ModuleName ["Module"]) [tyDef'Int] [classDef'Eq] [classInstance'IntEq]
+
+module'OrdEqInstance :: PC.Module
+module'OrdEqInstance = _Module (_ModuleName ["Module"]) mempty [classDef'Eq, classDef'Ord] [classInstance'OrdEq]
+
+module'AdditionalVarEqInstance :: PC.Module
+module'AdditionalVarEqInstance = _Module (_ModuleName ["Module"]) mempty [classDef'Eq, classDef'Ord] [classInstance'OrdEqFailing]

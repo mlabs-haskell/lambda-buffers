@@ -32,6 +32,7 @@ import Control.Monad.Freer.State (State, evalState, get, put)
 import Control.Monad.Freer.Writer (Writer, runWriter, tell)
 import Data.Foldable (foldrM, traverse_)
 import Data.Map qualified as M
+import Data.Set qualified as S
 import Data.Text (Text)
 import Data.Text qualified as T
 import LambdaBuffers.Compiler.KindCheck.Derivation (
@@ -255,15 +256,28 @@ runClassInstanceCheck ctx modName classInst = do
   (_, c) <- runDerive ctx modName $ deriveClassInst classInst
   void $ runUnify' c
 
-{- | NOTE(cstml): This is a partial solution because I am not clear where to pluck
-   the variables from and how to work with the constraints in this case. same
-   applies to the above definition check.
--}
 deriveClassInst :: PC.InstanceClause -> Derive ()
 deriveClassInst instClause = do
-  void $ deriveClassInstDef instClause
-  traverse_ deriveConstraint $ instClause ^. #constraints
+  let vs = getTyVariables (instClause ^. #head)
+  extraContext <- generateKinds vs
+  void $ local (<> extraContext) $ do
+    void $ deriveClassInstDef instClause
+    traverse_ deriveConstraint $ instClause ^. #constraints
   where
+    getTyVariables :: PC.Ty -> S.Set PC.TyVar
+    getTyVariables = \case
+      PC.TyVarI v -> S.singleton v
+      PC.TyAppI l -> getTyVariables (l ^. #tyFunc) <> mconcat (getTyVariables <$> l ^. #tyArgs)
+      PC.TyRefI _ -> mempty
+
+    generateKinds :: S.Set PC.TyVar -> Derive Context
+    generateKinds s = fmap mconcat $ traverse generateKind $ S.toList s
+      where
+        generateKind :: PC.TyVar -> Derive Context
+        generateKind tv = do
+          freshK <- KVar <$> fresh
+          pure $ mempty & addContext .~ M.singleton (mkInfoLess $ TyVar $ tv ^. #varName) freshK
+
     deriveClassInstDef :: PC.InstanceClause -> Derive Derivation
     deriveClassInstDef ic = do
       ctx <- ask
