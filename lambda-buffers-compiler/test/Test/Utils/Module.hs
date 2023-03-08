@@ -10,6 +10,7 @@ module Test.Utils.Module (
   module'unboundEq,
   module'classOrd,
   module'IntEqInstance,
+  module'Int,
 ) where
 
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC

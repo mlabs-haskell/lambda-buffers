@@ -15,6 +15,7 @@ module Test.Utils.CompilerInput (
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import Test.Utils.Constructors (_CompilerInput)
 import Test.Utils.Module (
+  module'Int,
   module'IntEqInstance,
   module'classEq,
   module'classOrd,
@@ -66,4 +67,4 @@ compilerInput'unboundEq :: PC.CompilerInput
 compilerInput'unboundEq = _CompilerInput [module'unboundEq]
 
 compilerInput'IntEqInstance :: PC.CompilerInput
-compilerInput'IntEqInstance = _CompilerInput [module'classEq, module'IntEqInstance]
+compilerInput'IntEqInstance = _CompilerInput [module'classEq, module'IntEqInstance, module'Int]
