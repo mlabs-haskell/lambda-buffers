@@ -1,7 +1,7 @@
 {- | MiniLog is a simple first order syntax encoding of a Prolog-like logic language without non-determinism and backtracking abilities.
  It is used to represent LambdaBuffers Type Class rules (InstanceClause and Derive) and to check for their logical consistency.
 -}
-module LambdaBuffers.Compiler.MiniLog (VarName, Term (..), Clause (..), MiniLogError (..), struct, (@), (@<=), MiniLogSolver) where
+module LambdaBuffers.Compiler.MiniLog (VarName, Term (..), Clause (..), MiniLogError (..), struct, (@), (@<=), MiniLogTrace (..), MiniLogSolver) where
 
 import Data.Map (Map)
 import Data.Text (Text)
@@ -32,16 +32,32 @@ struct = Struct
 (@<=) :: forall {f} {a}. Term f a -> [Term f a] -> Clause f a
 (@<=) = MkClause
 
--- | An interface definition for MiniLog solvers. Given a knowledge base (clauses) and a list of goals to solve, returns either the solution (variable to term binding) ro a `MiniLogError`.
+{- | An interface definition for MiniLog solvers.
+ Given a knowledge base (clauses) and a list of goals to solve, returns either
+ the solution (variable to term binding) or a `MiniLogError`. In any case, it
+ returns a `MiniLogTrace` that can help in understanding the underlying
+ reasoning path.
+-}
 type MiniLogSolver f a =
   (Eq f, Eq a) =>
   [Clause f a] ->
   [Term f a] ->
-  Either (MiniLogError f a) (Map VarName (Term f a))
+  (Either (MiniLogError f a) (Map VarName (Term f a)), [MiniLogTrace f a])
 
 -- | Interface errors that `MiniLogSolver` implementations must provide.
 data MiniLogError f a
   = MissingGoalError (Term f a)
   | OverlappingClausesError [Clause f a]
   | InternalError Text -- Can be used by implementations to signal their internal error conditions.
+  deriving stock (Eq, Ord, Show)
+
+-- | Interface traces that the `MiniLogSolver` must provide.
+data MiniLogTrace fun atom
+  = LookupClause (Term fun atom)
+  | FoundClause (Term fun atom) (Clause fun atom)
+  | SolveGoal (Term fun atom)
+  | DoneGoal (Term fun atom)
+  | CallClause (Clause fun atom) (Term fun atom)
+  | DoneClause (Clause fun atom) (Term fun atom)
+  | InternalTrace String -- Can be used by implementations to add their internal tracing.
   deriving stock (Eq, Ord, Show)
