@@ -105,6 +105,7 @@ library
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , text                        >=1.2
+    , unification-fd
 
   exposed-modules:
     LambdaBuffers.Compiler
@@ -113,6 +114,9 @@ library
     LambdaBuffers.Compiler.KindCheck.Inference
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
+    LambdaBuffers.Compiler.MiniLog
+    LambdaBuffers.Compiler.MiniLog.LambdaBuffers
+    LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
     LambdaBuffers.Compiler.ProtoCompat.Eval
@@ -174,6 +178,7 @@ test-suite tests
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
+    Test.LambdaBuffers.Compiler.MiniLog
     Test.LambdaBuffers.Compiler.Mutation
     Test.LambdaBuffers.Compiler.ProtoCompat.Eval
     Test.LambdaBuffers.Compiler.ProtoCompat.Utils
