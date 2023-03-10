@@ -46,9 +46,14 @@ type MiniLogSolver f a =
 
 -- | Interface errors that `MiniLogSolver` implementations must provide.
 data MiniLogError f a
-  = MissingGoalError (Term f a)
-  | OverlappingClausesError [Clause f a]
-  | InternalError Text -- Can be used by implementations to signal their internal error conditions.
+  = -- | No `Clause` was found for goal.
+    MissingClauseError (Term f a)
+  | -- | Multiple overlapping `Clauses` were found.
+    OverlappingClausesError [Clause f a]
+  | -- | A goal cycle was detected.
+    CycledGoalsError [Term f a]
+  | -- | Implementation/provider internal error conditions.
+    InternalError Text
   deriving stock (Eq, Ord, Show)
 
 -- | Interface traces that the `MiniLogSolver` must provide.
@@ -59,5 +64,6 @@ data MiniLogTrace fun atom
   | DoneGoal (Term fun atom)
   | CallClause (Clause fun atom) (Term fun atom)
   | DoneClause (Clause fun atom) (Term fun atom)
-  | InternalTrace String -- Can be used by implementations to add their internal tracing.
+  | -- |Can be used by implementations to add their internal tracing.
+    InternalTrace String
   deriving stock (Eq, Ord, Show)

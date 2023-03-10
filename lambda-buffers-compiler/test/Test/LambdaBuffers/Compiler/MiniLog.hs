@@ -2,7 +2,7 @@ module Test.LambdaBuffers.Compiler.MiniLog (test) where
 
 import Control.Monad (void)
 import Data.Map qualified as Map
-import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (MissingGoalError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
+import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve)
 import Test.Tasty (TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (Assertion, assertEqual, assertFailure, testCase)
@@ -19,128 +19,138 @@ shouldFailToSolve :: TestTree
 shouldFailToSolve =
   testGroup
     "Should fail to solve"
-    [ testCase "?- animal(X). % overlaps on human(plato|socrates)" $
+    [ testCase "greek ?- animal(X). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [animal (Var "X")]
           (OverlappingClausesError [socratesIsHuman, platoIsHuman])
-    , testCase "?- animal(Y). % overlaps on human(plato|socrates)" $
+    , testCase "greek ?- animal(Y). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [animal (Var "Y")]
           (OverlappingClausesError [socratesIsHuman, platoIsHuman])
-    , testCase "?- human(X). % overlaps on human(plato|socrates)" $
+    , testCase "greek ?- human(X). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [human (Var "X")]
           (OverlappingClausesError [socratesIsHuman, platoIsHuman])
-    , testCase "?- human(X),human(Y). % overlaps on human(plato|socrates)" $
+    , testCase "greek ?- human(X),human(Y). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [human (Var "X"), human (Var "Y")]
           (OverlappingClausesError [socratesIsHuman, platoIsHuman])
-    , testCase "?- animal(aristotle). % missing goal human(ariostotle)" $
+    , testCase "greek ?- animal(aristotle). % missing goal human(ariostotle)" $
         failsWith
           greekKnowledge
           [animal (Atom "aristotle")]
-          (MissingGoalError (human (Atom "aristotle")))
-    , testCase "human(plato).;human(plato). ?- human(plato). % overlaps on human(plato|socrates)" $
+          (MissingClauseError (human (Atom "aristotle")))
+    , testCase "human(plato).;human(plato). greek ?- human(plato). % overlaps on human(plato|socrates)" $
         failsWith
           (platoIsHuman : greekKnowledge)
           [human (Atom "plato")]
           (OverlappingClausesError [platoIsHuman, platoIsHuman])
-    , testCase "human(plato).;human(plato). ?- animal(plato).  % overlaps on human(plato|plato)" $
+    , testCase "human(plato).;human(plato). greek ?- animal(plato).  % overlaps on human(plato|plato)" $
         failsWith
           (platoIsHuman : greekKnowledge)
           [animal (Atom "plato")]
           (OverlappingClausesError [platoIsHuman, platoIsHuman])
-    , testCase " ?- ancestor(vlado, nenad). % overlaps on ancestor rules NOTE(bladyjoker): Unsupported feature." $
+    , testCase " family ?- ancestor(vlado, nenad). % overlaps on ancestor rules NOTE(bladyjoker): Could be supported." $
         failsWith
           familyKnowledge
           [ancestor (Atom "vlado") (Atom "nenad")]
           (OverlappingClausesError [ancestorIsParent, ancestorTransitive])
-    , testCase " ?- eq(maybe(X)). % overlaps on all eq(X)" $
+    , testCase "typeclasses ?- eq(maybe(X)). % overlaps on all eq(X)" $
         failsWith
           eqTypeClassKnowledge
           [eq (Struct "maybe" [Var "X"])]
           (OverlappingClausesError eqTypeClassKnowledge)
-    , testCase " ?- animal(plato), animal(socrates), human(plato), human(socrates), animal(aristotle) % missing goal human(aristotle)" $
+    , testCase "greek ?- animal(plato), animal(socrates), human(plato), human(socrates), animal(aristotle) % missing goal human(aristotle)" $
         failsWith
           greekKnowledge
           [animal (Atom "plato"), animal (Atom "socrates"), human (Atom "plato"), human (Atom "socrates"), animal (Atom "aristotle")]
-          (MissingGoalError (human (Atom "aristotle")))
+          (MissingClauseError (human (Atom "aristotle")))
+    , testCase "cyclic ?- eq(beep(int))." $
+        failsWith
+          cycleKnowledge
+          [eq (Struct "beep" [Atom "int"])]
+          (CycledGoalsError [eq (Struct "beep" [Atom "int"])])
+    , testCase "cyclic ?- eq(foo(int))." $
+        failsWith
+          cycleKnowledge
+          [eq (Struct "foo" [Atom "int"])]
+          (CycledGoalsError [eq (Struct "foo" [Atom "int"]), eq (Struct "bar" [Atom "int"]), eq (Struct "baz" [Atom "int"])])
     ]
 
 shouldSolve :: TestTree
 shouldSolve =
   testGroup
     "Should be solvable"
-    [ testCase "?- animal(socrates)." $
+    [ testCase "greek ?- animal(socrates)." $
         succeedsWith
           greekKnowledge
           [animal (Atom "socrates")]
           mempty
-    , testCase "?- animal(plato)." $
+    , testCase "greek ?- animal(plato)." $
         succeedsWith
           greekKnowledge
           [animal (Atom "plato")]
           mempty
-    , testCase "?- human(socrates)." $
+    , testCase "greek ?- human(socrates)." $
         succeedsWith
           greekKnowledge
           [human (Atom "socrates")]
           mempty
-    , testCase "?- human(plato)." $
+    , testCase "greek ?- human(plato)." $
         succeedsWith
           greekKnowledge
           [human (Atom "plato")]
           mempty
-    , testCase "?- animal(socrates),animal(plato)." $
+    , testCase "greek ?- animal(socrates),animal(plato)." $
         succeedsWith
           greekKnowledge
           [animal (Atom "socrates"), animal (Atom "plato")]
           mempty
-    , testCase " ?- parent(slavka, nenad)." $
+    , testCase "family ?- parent(slavka, nenad)." $
         succeedsWith
           familyKnowledge
           [parent (Atom "slavka") (Atom "nenad")]
           mempty
-    , testCase " ?- eq(maybe(var('A')))." $
+    , testCase "typeclasses ?- eq(maybe(var('A')))." $
         succeedsWith
           eqTypeClassKnowledge
           [eq (Struct "maybe" [Struct "var" [Atom "A"]])]
           mempty
-    , testCase " ?- eq(var('A'))." $
+    , testCase "typeclasses ?- eq(var('A'))." $
         succeedsWith
           eqTypeClassKnowledge
           [eq (Struct "var" [Atom "A"])]
           mempty
-    , testCase " ?- eq(var(A))." $
+    , testCase "typeclasses ?- eq(var(A))." $
         succeedsWith
           eqTypeClassKnowledge
           [eq (Struct "var" [Var "A"])]
           [("A", Var "-9223372036854775808")]
-    , testCase " ?- grandparent(vlado, nenad)." $
+    , testCase "family ?- grandparent(vlado, nenad)." $
         succeedsWith
           familyKnowledge
           [grandparent (Atom "vlado") (Atom "nenad")]
           mempty
-    , testCase " ?- grandparent(vlado, X)." $
+    , testCase "family ?- grandparent(vlado, X)." $
         succeedsWith
           familyKnowledge
           [grandparent (Atom "vlado") (Var "X")]
           [("X", Atom "nenad")]
-    , testCase " ?- parent(zdravka, X)." $
+    , testCase "family ?- parent(zdravka, X)." $
         succeedsWith
           familyKnowledge
           [parent (Atom "zdravka") (Var "X")]
           [("X", Atom "slavka")]
-    , testCase " ?- ggrandparent(dusan, X)." $
+    , testCase "family ?- ggrandparent(dusan, X)." $
         succeedsWith
           familyKnowledge
           [Struct "ggrandparent" [Atom "dusan", Var "X"]]
           [("X", Atom "nenad")]
-    , testCase " ?- ggrandparent2(dusan, X)." $
+    , testCase "family ?- ggrandparent2(dusan, X)." $
         succeedsWith
           familyKnowledge
           [Struct "ggrandparent2" [Atom "mitar", Var "X"]]
@@ -149,6 +159,16 @@ shouldSolve =
         succeedsWith
           eqTypeClassKnowledge
           [eq (Atom "int")]
+          mempty
+    , testCase "cyclic ?- eq(list(list(int)))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "list" [Struct "list" [Atom "int"]])]
+          mempty
+    , testCase "cyclic ?- eq(list(list(list(int))))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "list" [Struct "list" [Struct "list" [Atom "int"]]])]
           mempty
     ]
 
@@ -235,6 +255,16 @@ eqTypeClassKnowledge =
   , eq (Struct "maybe" [Var "A"]) @<= [eq (Var "A")]
   , eq (Struct "either" [Var "A", Var "B"]) @<= [eq (Var "A"), eq (Var "B")]
   , eq (Struct "var" [Var "X"]) @<= []
+  ]
+
+cycleKnowledge :: [TestClause]
+cycleKnowledge =
+  [ eq (Struct "list" [Var "X"]) @<= [eq (Var "X")]
+  , eq (Struct "foo" [Var "X"]) @<= [eq (Struct "bar" [Var "X"])]
+  , eq (Struct "bar" [Var "X"]) @<= [eq (Struct "baz" [Var "X"])]
+  , eq (Struct "baz" [Var "X"]) @<= [eq (Struct "foo" [Var "X"])]
+  , eq (Struct "beep" [Var "X"]) @<= [eq (Struct "beep" [Var "X"])]
+  , eq (Atom "int") @<= []
   ]
 
 -- | Testing actions.

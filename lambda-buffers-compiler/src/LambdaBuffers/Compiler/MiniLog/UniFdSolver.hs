@@ -1,10 +1,10 @@
 -- | unification-fd based solver.
 module LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve, runUMonad) where
 
-import Control.Monad (filterM, foldM, void)
+import Control.Monad (filterM, foldM, foldM_, void)
 import Control.Monad.Error.Class (MonadError (catchError, throwError))
 import Control.Monad.Except (ExceptT, runExceptT)
-import Control.Monad.Reader (ReaderT (runReaderT), asks)
+import Control.Monad.Reader (MonadReader (local), ReaderT (runReaderT), asks)
 import Control.Monad.Trans (MonadTrans (lift))
 import Control.Monad.Writer (MonadWriter (tell), Writer, runWriter)
 import Control.Unification (Fallible, Unifiable (zipMatch))
@@ -35,8 +35,9 @@ instance (Eq fun, Eq atom) => Unifiable (Term' fun atom) where
 data UError fun atom
   = OccursFailure IntVar (UTerm fun atom)
   | MismatchFailure (Term' fun atom (UTerm fun atom)) (Term' fun atom (UTerm fun atom))
-  | MissingGoal (ML.Term fun atom)
+  | MissingClause (ML.Term fun atom)
   | OverlappingClauses [ML.Clause fun atom]
+  | Cycle [ML.Term fun atom]
   | Internal String
   deriving stock (Show)
 
@@ -48,8 +49,11 @@ instance Fallible (Term' fun atom) IntVar (UError fun atom) where
 type UTerm fun atom = U.UTerm (Term' fun atom) IntVar
 type Scope fun atom = Map ML.VarName IntVar
 
--- | A clause context consists of available clauses (knowledge base).
-newtype ClauseContext fun atom = MkClauseCtx {cctxClauses :: [ML.Clause fun atom]}
+-- | A clause context consists of available clauses (knowledge base) and a trace of all the called goals that lead up to it.
+data ClauseContext fun atom = MkClauseCtx
+  { cctxClauses :: [ML.Clause fun atom]
+  , cctxTrace :: [UTerm fun atom]
+  }
   deriving stock (Show)
 
 type UMonad fun atom a =
@@ -66,7 +70,7 @@ type UMonad fun atom a =
 
 runUMonad :: [ML.Clause fun atom] -> UMonad fun atom a -> (Either (UError fun atom) a, [ML.MiniLogTrace fun atom])
 runUMonad clauses p =
-  let (errOrRes, logs) = runWriter . runIntBindingT . runExceptT . (`runReaderT` MkClauseCtx clauses) $ p
+  let (errOrRes, logs) = runWriter . runIntBindingT . runExceptT . (`runReaderT` MkClauseCtx clauses mempty) $ p
    in (fst errOrRes, logs)
 
 -- | Implements `MiniLog.Solver`.
@@ -74,7 +78,8 @@ solve :: (Show fun, Show atom) => ML.MiniLogSolver fun atom
 solve clauses goals = case runUMonad clauses (top goals) of
   (Left err, logs) -> case err of
     (OverlappingClauses overlaps) -> (Left $ ML.OverlappingClausesError overlaps, logs)
-    (MissingGoal missing) -> (Left $ ML.MissingGoalError missing, logs)
+    (MissingClause forGoal) -> (Left $ ML.MissingClauseError forGoal, logs)
+    (Cycle cycl) -> (Left $ ML.CycledGoalsError cycl, logs)
     other -> (Left $ ML.InternalError . Text.pack . show $ other, logs)
   (Right res, logs) -> (Right res, logs)
 
@@ -89,11 +94,16 @@ top goals = do
 
 -- | Solving a goal means looking up a matching clause and `callClause` on it with the given goal as the argument.
 solveGoal :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (UTerm fun atom)
-solveGoal goal = do
+solveGoal goal' = do
+  -- TODO(bladyjoker): Reach out to the author for this issue.
+  -- WARN(bladyjoker): Needed to resolve from UVar otherwise we try to do a lookup with a variable that everything unifies with.
+  goal <- force goal'
   mlGoal <- fromUTerm goal
   trace $ ML.SolveGoal mlGoal
   clause <- lookupClause goal
-  _ <- callClause clause goal
+  checkCycle goal
+  g <- duplicateTerm goal
+  _ <- local (\r -> r {cctxTrace = g : cctxTrace r}) (callClause clause goal)
   trace $ ML.DoneGoal mlGoal
   return goal
 
@@ -111,14 +121,35 @@ callClause clause arg = do
   trace $ ML.DoneClause clause mlArg
   return clauseHead'
 
+checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom ()
+checkCycle goal = do
+  visitedGoals <- asks cctxTrace
+  foldM_
+    ( \mayCycle visited -> do
+        visited' <- duplicateTerm visited
+        goal' <- duplicateTerm goal
+        catchError
+          ( do
+              goal' `unify` visited'
+              fromUTerm goal >>= throwError . Cycle . (: mayCycle)
+          )
+          ( \case
+              MismatchFailure _ _ -> do
+                checked <- fromUTerm visited
+                return (checked : mayCycle)
+              err -> throwError err
+          )
+    )
+    mempty
+    visitedGoals
+
 {- | Given a unifiable term and the knowledge base (clauses) find a next `MiniLog.Clause` to `callClause` on.
  This is a delicate operation, the search simply tries to unify the heads of `MiniLog.Clause`s with the given goal.
  However, before unifying with the goal, `duplicateTerm` is used to make sure the original goal variables are not affected (unified on) by the search.
 -}
 lookupClause :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (ML.Clause fun atom)
-lookupClause goal_ = do
-  -- TODO(bladyjoker): Reach out to the author for this issue.
-  goal <- force goal_ -- WARN(bladyjoker): Needed to resolve from UVar otherwise we try to do a lookup with a variable that everything unifies with.
+lookupClause goal = do
+  -- WARN(bladyjoker): Goal has to be `force`d.
   mlGoal <- fromUTerm goal
   trace $ ML.LookupClause mlGoal
   clauses <- asks cctxClauses
@@ -136,9 +167,9 @@ lookupClause goal_ = do
       )
       clauses
   case matched of
-    [] -> fromUTerm goal >>= throwError . MissingGoal
+    [] -> fromUTerm goal >>= throwError . MissingClause
     [clause] -> trace (ML.FoundClause mlGoal clause) >> return clause
-    overlaps -> throwError $ OverlappingClauses overlaps
+    overlaps -> throwError (OverlappingClauses overlaps)
 
 {- | Duplicate a unifiable term (basically copies the structure and instantiates new variables).
  See https://www.swi-prolog.org/pldoc/doc_for?object=duplicate_term/2.
