@@ -633,10 +633,10 @@ instance IsMessage P.Module PC.Module where
             ]
           protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
       if null protoParseErrs
-        then pure $ PC.Module mnm tydefs cldefs insts impts si
+        then pure $ PC.Module mnm tydefs cldefs insts [] impts si
         else throwError protoParseErrs
 
-  toProto (PC.Module mnm tdefs cdefs insts impts si) =
+  toProto (PC.Module mnm tdefs cdefs insts _ impts si) =
     defMessage
       & P.moduleName .~ toProto mnm
       & P.typeDefs .~ (toProto <$> toList tdefs)

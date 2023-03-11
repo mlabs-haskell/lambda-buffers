@@ -12,7 +12,7 @@ test :: TestTree
 test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
-      "ProtoCompat Eval checks"
+      "LambdaBuffers.Compiler.ProtoCompat.Eval checks"
       [ fooCiTestCase
           "a -> a"
           (Just 1)
@@ -91,7 +91,7 @@ test =
 fooCi :: PC.CompilerInput
 fooCi =
   U.ci
-    [ U.mod'prelude
+    [ U.mod'preludeO
     , U.mod
         ["Foo"]
         [ U.td "Foo" (U.abs ["a"] $ U.sum [("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])])

@@ -3,6 +3,7 @@
 -}
 module LambdaBuffers.Compiler.MiniLog (VarName, Term (..), Clause (..), MiniLogError (..), struct, (@), (@<=), MiniLogTrace (..), MiniLogSolver, showClauses) where
 
+import Data.List (sort)
 import Data.Map (Map)
 import Data.Text (Text)
 import Prettyprinter (Doc, Pretty (pretty), align, comma, dot, encloseSep, line, lparen, rparen, space, squote, vsep, (<+>))
@@ -89,5 +90,5 @@ instance (Show f, Show a) => Show (Clause f a) where
 instance (Show f, Show a) => Show (Term f a) where
   show = show . termToProlog
 
-showClauses :: (Show f, Show a) => [Clause f a] -> String
-showClauses = show . vsep . fmap clauseToProlog
+showClauses :: (Show f, Show a, Ord f, Ord a) => [Clause f a] -> String
+showClauses = show . vsep . fmap clauseToProlog . reverse . sort

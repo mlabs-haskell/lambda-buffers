@@ -1,10 +1,22 @@
-module LambdaBuffers.Compiler.ProtoCompat.Indexing (indexClassDefs, indexTyDefs) where
+module LambdaBuffers.Compiler.ProtoCompat.Indexing (
+  ClassRels,
+  TyDefs,
+  ClassDefs,
+  indexClassDefs,
+  indexTyDefs,
+  qualifyClassRef,
+  qualifyTyRef,
+  qualifyClassName,
+  indexClassRelations,
+) where
 
-import Control.Lens ((^.))
+import Control.Lens (view, (^.))
 import Data.Map (Map)
 import Data.Map qualified as Map
+import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
+type ClassDefs = Map PC.QClassName PC.ClassDef
 indexClassDefs :: PC.CompilerInput -> Map PC.QClassName PC.ClassDef
 indexClassDefs ci =
   Map.fromList
@@ -13,6 +25,7 @@ indexClassDefs ci =
     , (cn, cd) <- Map.toList $ m ^. #classDefs
     ]
 
+type TyDefs = Map PC.QTyName PC.TyDef
 indexTyDefs :: PC.CompilerInput -> Map PC.QTyName PC.TyDef
 indexTyDefs ci =
   Map.fromList
@@ -20,3 +33,31 @@ indexTyDefs ci =
     | (mn, m) <- Map.toList $ ci ^. #modules
     , (tn, td) <- Map.toList $ m ^. #typeDefs
     ]
+
+type ClassRels = Map PC.QClassName [PC.QClassName]
+indexClassRelations :: PC.CompilerInput -> ClassRels
+indexClassRelations ci =
+  foldr
+    ( \m classRels ->
+        foldr
+          ( \cd classRels' ->
+              let qualifiedSupers = qualifyClassRef (m ^. #moduleName) . view #classRef <$> cd ^. #supers
+                  qualifiedClassName = qualifyClassName (m ^. #moduleName) (cd ^. #className)
+               in Map.insert qualifiedClassName qualifiedSupers classRels'
+          )
+          classRels
+          (m ^. #classDefs)
+    )
+    mempty
+    (ci ^. #modules)
+
+qualifyClassRef :: PC.ModuleName -> PC.TyClassRef -> PC.QClassName
+qualifyClassRef _ (PC.ForeignCI fcr) = (PC.mkInfoLess $ fcr ^. #moduleName, PC.mkInfoLess $ fcr ^. #className)
+qualifyClassRef mn (PC.LocalCI lcr) = (PC.mkInfoLess mn, PC.mkInfoLess $ lcr ^. #className)
+
+qualifyClassName :: PC.ModuleName -> PC.ClassName -> PC.QClassName
+qualifyClassName mn cn = (PC.mkInfoLess mn, PC.mkInfoLess cn)
+
+qualifyTyRef :: PC.ModuleName -> PC.TyRef -> PC.QTyName
+qualifyTyRef _ (PC.ForeignI fr) = (PC.mkInfoLess $ fr ^. #moduleName, PC.mkInfoLess $ fr ^. #tyName)
+qualifyTyRef mn (PC.LocalI lr) = (PC.mkInfoLess mn, PC.mkInfoLess $ lr ^. #tyName)

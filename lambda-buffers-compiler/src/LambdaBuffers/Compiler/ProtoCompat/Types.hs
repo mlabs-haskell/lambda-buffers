@@ -24,6 +24,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   LBName (..),
   LocalRef (..),
   LocalClassRef (..),
+  Derive (..),
   Module (..),
   ModuleName (..),
   ModuleNamePart (..),
@@ -228,8 +229,16 @@ data ClassDef = ClassDef
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
+-- FIXME(bladyjoker): Add to Proto.
+data Derive = Derive
+  { constraint :: Constraint
+  , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (SOP.Generic)
+
 data InstanceClause = InstanceClause
-  { classRef :: TyClassRef
+  { classRef :: TyClassRef -- FIXME(bladyjoker): Turn into headConstraint.
   , head :: Ty
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
@@ -250,6 +259,7 @@ data Module = Module
   , typeDefs :: Map (InfoLess TyName) TyDef
   , classDefs :: Map (InfoLess ClassName) ClassDef
   , instances :: [InstanceClause]
+  , derive :: [Derive]
   , imports :: Map (InfoLess ModuleName) ModuleName
   , sourceInfo :: SourceInfo
   }
@@ -340,6 +350,7 @@ instance InfoLessC LocalClassRef
 instance InfoLessC TyClassRef
 instance InfoLessC ClassDef
 instance InfoLessC InstanceClause
+instance InfoLessC Derive
 instance InfoLessC Constraint
 instance InfoLessC Module
 instance InfoLessC InferenceErr

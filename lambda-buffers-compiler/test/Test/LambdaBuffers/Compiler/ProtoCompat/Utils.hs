@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (abs, sum, tv, td, lr, fr, mn, tn, (@), td'either, td'eitherO, td'maybe, td'maybeO, mod'prelude, ci, mod, td'list) where
+module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (abs, sum, tv, td, lr, fr, mn, tn, (@), td'either, td'eitherO, td'maybe, td'maybeO, mod'preludeO, cstr, ci, drv, mod', mod, td'list, mod'prelude, fcr) where
 
 import Control.Lens ((^.))
 import Data.Default (Default (def))
@@ -45,6 +45,9 @@ cn n = PC.ConstrName n def
 vn :: Text -> PC.VarName
 vn n = PC.VarName n def
 
+cln :: Text -> PC.ClassName
+cln n = PC.ClassName n def
+
 abs :: [Text] -> PC.TyBody -> PC.TyAbs
 abs args body = PC.TyAbs (OMap.fromList . fmap arg $ args) body def
   where
@@ -54,16 +57,59 @@ tv :: Text -> PC.Ty
 tv n = PC.TyVarI $ PC.TyVar (vn n)
 
 mod :: [Text] -> [PC.TyDef] -> PC.Module
-mod mn' tds = PC.Module (mn mn') (Map.fromList . fmap td' $ tds) mempty mempty mempty def
+mod mn' tds = PC.Module (mn mn') (Map.fromList . fmap td' $ tds) mempty mempty mempty mempty def
   where
     td' :: PC.TyDef -> (PC.InfoLess PC.TyName, PC.TyDef)
     td' td'' = (PC.mkInfoLess $ td'' ^. #tyName, td'')
 
-ci :: [PC.Module] -> PC.CompilerInput
-ci mods = PC.CompilerInput (Map.fromList . fmap mod' $ mods)
+mod' :: [Text] -> [PC.TyDef] -> [PC.ClassDef] -> [PC.InstanceClause] -> [PC.Derive] -> [[Text]] -> PC.Module
+mod' mn' tds cds insts drvs impts =
+  PC.Module
+    (mn mn')
+    (Map.fromList . fmap infoLessTd $ tds)
+    (Map.fromList . fmap infoLessCd $ cds)
+    insts
+    drvs
+    (Map.fromList . fmap (infoLessMn . mn) $ impts)
+    def
   where
-    mod' :: PC.Module -> (PC.InfoLess PC.ModuleName, PC.Module)
-    mod' mod'' = (PC.mkInfoLess $ mod'' ^. #moduleName, mod'')
+    infoLessTd :: PC.TyDef -> (PC.InfoLess PC.TyName, PC.TyDef)
+    infoLessTd td' = (PC.mkInfoLess $ td' ^. #tyName, td')
+
+    infoLessCd :: PC.ClassDef -> (PC.InfoLess PC.ClassName, PC.ClassDef)
+    infoLessCd cd' = (PC.mkInfoLess $ cd' ^. #className, cd')
+
+    infoLessMn :: PC.ModuleName -> (PC.InfoLess PC.ModuleName, PC.ModuleName)
+    infoLessMn mn_ = (PC.mkInfoLess mn_, mn_)
+
+fcr :: [Text] -> Text -> PC.TyClassRef
+fcr mn' cln' = PC.ForeignCI $ PC.ForeignClassRef (cln cln') (mn mn') def
+
+lcr :: Text -> PC.TyClassRef
+lcr cln' = PC.LocalCI $ PC.LocalClassRef (cln cln') def
+
+classCstr :: (PC.TyClassRef, Text) -> PC.Constraint
+classCstr (clr, an') = PC.Constraint clr (tv an') def
+
+classDef :: (Text, Text) -> [PC.Constraint] -> PC.ClassDef
+classDef (cln', an) sups = PC.ClassDef (cln cln') (mkArg an) sups "testing class def" def
+  where
+    mkArg an' = PC.TyArg (vn an') (PC.Kind $ PC.KindRef PC.KType) def
+
+inst :: PC.TyClassRef -> PC.Ty -> [PC.Constraint] -> PC.InstanceClause
+inst cr' ty' body = PC.InstanceClause cr' ty' body def
+
+cstr :: PC.TyClassRef -> PC.Ty -> PC.Constraint
+cstr cr' ty' = PC.Constraint cr' ty' def
+
+drv :: PC.Constraint -> PC.Derive
+drv cstr' = PC.Derive cstr' def
+
+ci :: [PC.Module] -> PC.CompilerInput
+ci mods = PC.CompilerInput (Map.fromList . fmap mod_ $ mods)
+  where
+    mod_ :: PC.Module -> (PC.InfoLess PC.ModuleName, PC.Module)
+    mod_ mod'' = (PC.mkInfoLess $ mod'' ^. #moduleName, mod'')
 
 -- | Some type definitions.
 td'either :: PC.TyDef
@@ -83,14 +129,118 @@ td'int8 = td "Int8" (abs [] opq)
 td'bytes :: PC.TyDef
 td'bytes = td "Bytes" (abs [] opq)
 
-td'map :: PC.TyDef
-td'map = td "Map" (abs ["k", "v"] opq)
+td'mapO :: PC.TyDef
+td'mapO = td "Map" (abs ["k", "v"] opq)
 
 td'list :: PC.TyDef
 td'list = td "List" (abs ["a"] $ sum [("Nil", []), ("Cons", [tv "a", lr "List" @ [tv "a"]])])
 td'listO :: PC.TyDef
 td'listO = td "List" (abs ["a"] opq)
 
--- | Some modules
+-- | Some class definitions.
+cd'eq :: PC.ClassDef
+cd'eq = classDef ("Eq", "a") []
+
+cd'ord :: PC.ClassDef
+cd'ord = classDef ("Ord", "b") [classCstr (lcr "Eq", "b")]
+
+-- | Some instances
+inst'eq'int8 :: PC.InstanceClause
+inst'eq'int8 = inst (lcr "Eq") (lr "Int8") []
+
+inst'ord'int8 :: PC.InstanceClause
+inst'ord'int8 = inst (lcr "Ord") (lr "Int8") []
+
+inst'eq'bytes :: PC.InstanceClause
+inst'eq'bytes = inst (lcr "Eq") (lr "Bytes") []
+
+inst'ord'bytes :: PC.InstanceClause
+inst'ord'bytes = inst (lcr "Ord") (lr "Bytes") []
+
+inst'eq'maybeO :: PC.InstanceClause
+inst'eq'maybeO = inst (lcr "Eq") (lr "Maybe" @ [tv "a"]) [cstr (lcr "Eq") (tv "a")]
+
+inst'ord'maybeO :: PC.InstanceClause
+inst'ord'maybeO = inst (lcr "Ord") (lr "Maybe" @ [tv "a"]) [cstr (lcr "Ord") (tv "a")]
+
+inst'eq'eitherO :: PC.InstanceClause
+inst'eq'eitherO = inst (lcr "Eq") (lr "Either" @ [tv "a", tv "b"]) [cstr (lcr "Eq") (tv "a"), cstr (lcr "Eq") (tv "b")]
+
+inst'ord'eitherO :: PC.InstanceClause
+inst'ord'eitherO = inst (lcr "Ord") (lr "Either" @ [tv "a", tv "b"]) [cstr (lcr "Ord") (tv "a"), cstr (lcr "Ord") (tv "b")]
+
+inst'eq'listO :: PC.InstanceClause
+inst'eq'listO = inst (lcr "Eq") (lr "List" @ [tv "a"]) [cstr (lcr "Eq") (tv "a")]
+
+inst'ord'listO :: PC.InstanceClause
+inst'ord'listO = inst (lcr "Ord") (lr "List" @ [tv "a"]) [cstr (lcr "Ord") (tv "a")]
+
+inst'eq'mapO :: PC.InstanceClause
+inst'eq'mapO = inst (lcr "Eq") (lr "Map" @ [tv "a", tv "b"]) [cstr (lcr "Eq") (tv "a"), cstr (lcr "Eq") (tv "b")]
+
+inst'ord'mapO :: PC.InstanceClause
+inst'ord'mapO = inst (lcr "Ord") (lr "Map" @ [tv "a", tv "b"]) [cstr (lcr "Ord") (tv "a"), cstr (lcr "Ord") (tv "b")]
+
+-- | Some derive statements.
+derive'eq'either :: PC.Derive
+derive'eq'either = drv $ cstr (lcr "Eq") (lr "Either" @ [tv "a", tv "b"])
+
+derive'ord'either :: PC.Derive
+derive'ord'either = drv $ cstr (lcr "Ord") (lr "Either" @ [tv "a", tv "b"])
+
+derive'eq'maybe :: PC.Derive
+derive'eq'maybe = drv $ cstr (lcr "Eq") (lr "Maybe" @ [tv "a"])
+
+derive'ord'maybe :: PC.Derive
+derive'ord'maybe = drv $ cstr (lcr "Ord") (lr "Maybe" @ [tv "a"])
+
+derive'eq'list :: PC.Derive
+derive'eq'list = drv $ cstr (lcr "Eq") (lr "List" @ [tv "a"])
+
+derive'ord'list :: PC.Derive
+derive'ord'list = drv $ cstr (lcr "Ord") (lr "List" @ [tv "a"])
+
+-- | Some modules.
+mod'preludeO :: PC.Module
+mod'preludeO =
+  mod'
+    ["Prelude"]
+    [td'eitherO, td'maybeO, td'int8, td'bytes, td'mapO, td'listO]
+    [cd'eq, cd'ord]
+    [ inst'eq'int8
+    , inst'ord'int8
+    , inst'eq'bytes
+    , inst'ord'bytes
+    , inst'eq'maybeO
+    , inst'ord'maybeO
+    , inst'eq'eitherO
+    , inst'ord'eitherO
+    , inst'eq'mapO
+    , inst'ord'mapO
+    , inst'eq'listO
+    , inst'ord'listO
+    ]
+    []
+    []
+
 mod'prelude :: PC.Module
-mod'prelude = mod ["Prelude"] [td'eitherO, td'maybeO, td'int8, td'bytes, td'map, td'listO]
+mod'prelude =
+  mod'
+    ["Prelude"]
+    [td'either, td'maybe, td'int8, td'bytes, td'mapO, td'list]
+    [cd'eq, cd'ord]
+    [ inst'eq'int8
+    , inst'ord'int8
+    , inst'eq'bytes
+    , inst'ord'bytes
+    , inst'eq'mapO
+    , inst'ord'mapO
+    ]
+    [ derive'eq'maybe
+    , derive'ord'maybe
+    , derive'eq'either
+    , derive'ord'either
+    , derive'eq'list
+    , derive'ord'list
+    ]
+    []

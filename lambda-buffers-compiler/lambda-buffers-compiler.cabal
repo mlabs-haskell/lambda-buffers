@@ -114,7 +114,6 @@ library
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.MiniLog
-    LambdaBuffers.Compiler.MiniLog.LambdaBuffers
     LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
@@ -125,6 +124,7 @@ library
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Compat
+    LambdaBuffers.Compiler.TypeClassCheck.MiniLog
     LambdaBuffers.Compiler.TypeClassCheck.Pat
     LambdaBuffers.Compiler.TypeClassCheck.Pretty
     LambdaBuffers.Compiler.TypeClassCheck.Rules
@@ -161,7 +161,6 @@ test-suite tests
     , containers                  >=0.6
     , data-default                >=0.7
     , filepath                    >=1.4
-    , generic-lens                >=2.2
     , hedgehog                    >=1.2
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
@@ -184,6 +183,7 @@ test-suite tests
     Test.LambdaBuffers.Compiler.Mutation
     Test.LambdaBuffers.Compiler.ProtoCompat.Eval
     Test.LambdaBuffers.Compiler.ProtoCompat.Utils
+    Test.LambdaBuffers.Compiler.TypeClassCheck
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
