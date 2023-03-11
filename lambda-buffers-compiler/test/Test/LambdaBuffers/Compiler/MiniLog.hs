@@ -2,8 +2,10 @@ module Test.LambdaBuffers.Compiler.MiniLog (test) where
 
 import Control.Monad (void)
 import Data.Map qualified as Map
-import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
+import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, showClauses, (@<=))
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve)
+import Paths_lambda_buffers_compiler qualified as Path
+import System.FilePath ((</>))
 import Test.Tasty (TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (Assertion, assertEqual, assertFailure, testCase)
 import Test.Tasty.Hedgehog qualified as H
@@ -13,7 +15,19 @@ test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "MiniLog checks"
-      [shouldSolve, shouldFailToSolve]
+      [shouldSolve, shouldFailToSolve, printingToPrologTests]
+
+printingToPrologTests :: TestTree
+printingToPrologTests =
+  testGroup
+    "Should print to Prolog"
+    [ shouldPrint "greeks.pl" greekKnowledge
+    , shouldPrint "family.pl" familyKnowledge
+    , shouldPrint "eq_typeclass.pl" eqTypeClassKnowledge
+    , shouldPrint "cycle.pl" cycleKnowledge
+    , shouldPrint "very_long_body.pl" [Struct "long body" [Var "X"] @<= replicate 20 (Struct "foo" [Var "X"])]
+    , shouldPrint "very_long_arguments.pl" [Struct "foo" (replicate 50 (Var "X")) @<= replicate 2 (Struct "foo" (replicate 50 (Var "X")))]
+    ]
 
 shouldFailToSolve :: TestTree
 shouldFailToSolve =
@@ -300,3 +314,15 @@ printLogs :: (Traversable t, Show a) => t a -> Assertion
 printLogs logs = do
   putStrLn ""
   void $ print `traverse` logs
+
+shouldPrint :: FilePath -> [TestClause] -> TestTree
+shouldPrint wantedFp clauses = testCase wantedFp $ do
+  let got = showClauses clauses
+  minilogGoldensDir <- Path.getDataFileName "data/minilog-goldens"
+  wanted <- readFile (minilogGoldensDir </> wantedFp)
+  if got == wanted
+    then return ()
+    else do
+      putStrLn ""
+      putStrLn got
+      assertEqual "" wanted got

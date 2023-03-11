@@ -1,12 +1,11 @@
-cabal-version: 3.0
-name:          lambda-buffers-compiler
-version:       0.1.0.0
-synopsis:      Lambda Buffers compiler
-
--- license:
-
-author:        MLabs LTD
-maintainer:    info@mlabs.city
+cabal-version:      3.0
+name:               lambda-buffers-compiler
+version:            0.1.0.0
+synopsis:           Lambda Buffers compiler
+data-files:         data/**/*.pl
+extra-source-files: data/**/*.pl
+author:             MLabs LTD
+maintainer:         info@mlabs.city
 
 flag dev
   description: Enable non-strict compilation for development
@@ -129,6 +128,7 @@ library
     LambdaBuffers.Compiler.TypeClassCheck.Pat
     LambdaBuffers.Compiler.TypeClassCheck.Pretty
     LambdaBuffers.Compiler.TypeClassCheck.Rules
+    LambdaBuffers.Compiler.TypeClassCheck.RuleSet
     LambdaBuffers.Compiler.TypeClassCheck.Solve
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
     LambdaBuffers.Compiler.TypeClassCheck.Utils
@@ -160,6 +160,7 @@ test-suite tests
   build-depends:
     , containers                  >=0.6
     , data-default                >=0.7
+    , filepath                    >=1.4
     , generic-lens                >=2.2
     , hedgehog                    >=1.2
     , lambda-buffers-compiler
@@ -173,6 +174,7 @@ test-suite tests
     , text                        >=1.2
 
   other-modules:
+    Paths_lambda_buffers_compiler
     Test.DeriveCheck
     Test.KindCheck
     Test.KindCheck.Errors

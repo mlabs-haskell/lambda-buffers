@@ -1,10 +1,11 @@
 {- | MiniLog is a simple first order syntax encoding of a Prolog-like logic language without non-determinism and backtracking abilities.
  It is used to represent LambdaBuffers Type Class rules (InstanceClause and Derive) and to check for their logical consistency.
 -}
-module LambdaBuffers.Compiler.MiniLog (VarName, Term (..), Clause (..), MiniLogError (..), struct, (@), (@<=), MiniLogTrace (..), MiniLogSolver) where
+module LambdaBuffers.Compiler.MiniLog (VarName, Term (..), Clause (..), MiniLogError (..), struct, (@), (@<=), MiniLogTrace (..), MiniLogSolver, showClauses) where
 
 import Data.Map (Map)
 import Data.Text (Text)
+import Prettyprinter (Doc, Pretty (pretty), align, comma, dot, encloseSep, line, lparen, rparen, space, squote, vsep, (<+>))
 
 -- | Variable name is just `Text`.
 type VarName = Text
@@ -14,14 +15,14 @@ data Term f a
   = Var VarName
   | Struct f [Term f a]
   | Atom a
-  deriving stock (Eq, Ord, Show, Foldable, Functor, Traversable)
+  deriving stock (Eq, Ord, Foldable, Functor, Traversable)
 
 -- | A MiniLog `Clause` is like a Prolog (Horn) clause and it has a head `Term` and a conjunction of `Term`s in the body.
 data Clause f a = MkClause
   { clauseHead :: Term f a
   , clauseBody :: [Term f a]
   }
-  deriving stock (Eq, Ord, Show, Foldable, Functor, Traversable)
+  deriving stock (Eq, Ord, Foldable, Functor, Traversable)
 
 struct :: forall {f} {a}. f -> [Term f a] -> Term f a
 struct = Struct
@@ -67,3 +68,26 @@ data MiniLogTrace fun atom
   | -- |Can be used by implementations to add their internal tracing.
     InternalTrace String
   deriving stock (Eq, Ord, Show)
+
+-- | Printing to Prolog terms.
+termToProlog :: (Show f, Show a) => Term f a -> Doc a
+termToProlog (Atom at) = squote <> pretty (toPrologAtom at) <> squote
+termToProlog (Struct f []) = squote <> pretty (toPrologAtom f) <> squote
+termToProlog (Struct f args) = squote <> pretty (toPrologAtom f) <> squote <> align (lparen <> encloseSep mempty rparen comma (termToProlog <$> args))
+termToProlog (Var vn) = "V" <> pretty vn
+
+toPrologAtom :: Show a => a -> String
+toPrologAtom = filter (/= '"') . show
+
+clauseToProlog :: (Show f, Show a) => Clause f a -> Doc a
+clauseToProlog (MkClause headt []) = termToProlog headt <> dot
+clauseToProlog (MkClause headt bodyts) = termToProlog headt <+> ":-" <> line <> space <> space <> align (encloseSep mempty mempty comma (termToProlog <$> bodyts) <> dot)
+
+instance (Show f, Show a) => Show (Clause f a) where
+  show = show . clauseToProlog
+
+instance (Show f, Show a) => Show (Term f a) where
+  show = show . termToProlog
+
+showClauses :: (Show f, Show a) => [Clause f a] -> String
+showClauses = show . vsep . fmap clauseToProlog
