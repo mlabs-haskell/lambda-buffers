@@ -50,6 +50,7 @@ _Module mn tds cds ins =
     , PC.typeDefs = Map.fromList [(PC.mkInfoLess $ td ^. #tyName, td) | td <- tds]
     , PC.classDefs = Map.fromList [(PC.mkInfoLess $ cd ^. #className, cd) | cd <- cds]
     , PC.instances = ins
+    , PC.derives = []
     , PC.imports = mempty
     , PC.sourceInfo = def
     }

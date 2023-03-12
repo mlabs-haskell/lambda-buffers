@@ -237,17 +237,15 @@ data ClassConstraint = ClassConstraint
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
--- FIXME(bladyjoker): Add to Proto.
-data Derive = Derive
+newtype Derive = Derive
   { constraint :: Constraint
-  , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
 data InstanceClause = InstanceClause
   { head :: Constraint
-  , body :: [Constraint]
+  , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -266,7 +264,7 @@ data Module = Module
   , typeDefs :: Map (InfoLess TyName) TyDef
   , classDefs :: Map (InfoLess ClassName) ClassDef
   , instances :: [InstanceClause]
-  , derive :: [Derive]
+  , derives :: [Derive]
   , imports :: Map (InfoLess ModuleName) ModuleName
   , sourceInfo :: SourceInfo
   }

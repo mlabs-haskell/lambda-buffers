@@ -194,7 +194,7 @@ mkInstanceRule :: PC.ModuleName -> PC.ClassRels -> PC.InstanceClause -> Either P
 mkInstanceRule mn clrels inst =
   let thead = tyToTerm mn . E.fromTy $ inst ^. #head . #argument
       tc = tclass (PC.qualifyClassRef mn $ inst ^. #head . #classRef)
-      body = termFromConstraint mn <$> inst ^. #body
+      body = termFromConstraint mn <$> inst ^. #constraints
    in do
         supsBody <- mkSupersBody mn clrels (inst ^. #head)
         return $ tc thead @<= (body ++ supsBody)

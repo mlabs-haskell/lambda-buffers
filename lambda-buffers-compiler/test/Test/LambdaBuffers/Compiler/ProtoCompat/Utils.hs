@@ -103,7 +103,7 @@ cstr :: PC.TyClassRef -> PC.Ty -> PC.Constraint
 cstr cr' ty' = PC.Constraint cr' ty' def
 
 drv :: PC.Constraint -> PC.Derive
-drv cstr' = PC.Derive cstr' def
+drv = PC.Derive
 
 ci :: [PC.Module] -> PC.CompilerInput
 ci mods = PC.CompilerInput (Map.fromList . fmap mod_ $ mods)

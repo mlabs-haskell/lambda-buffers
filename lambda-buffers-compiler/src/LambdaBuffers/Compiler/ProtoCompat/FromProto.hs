@@ -576,14 +576,23 @@ instance IsMessage P.InstanceClause PC.InstanceClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
     hd <- fromProto $ ic ^. P.head
-    body <- traverse fromProto $ ic ^. P.body
+    body <- traverse fromProto $ ic ^. P.constraints
     pure $ PC.InstanceClause hd body si
 
-  toProto (PC.InstanceClause hd body si) =
+  toProto (PC.InstanceClause hd cstrs si) =
     defMessage
       & P.head .~ toProto hd
-      & P.body .~ (toProto <$> body)
+      & P.constraints .~ (toProto <$> cstrs)
       & P.sourceInfo .~ toProto si
+
+instance IsMessage P.Derive PC.Derive where
+  fromProto c = do
+    cstr <- fromProto $ c ^. P.constraint
+    pure $ PC.Derive cstr
+
+  toProto (PC.Derive cstr) =
+    defMessage
+      & P.constraint .~ toProto cstr
 
 instance IsMessage P.Constraint PC.Constraint where
   fromProto c = do
@@ -645,12 +654,13 @@ instance IsMessage P.Module PC.Module where
         then pure $ PC.Module mnm tydefs cldefs insts [] impts si
         else throwError protoParseErrs
 
-  toProto (PC.Module mnm tdefs cdefs insts _ impts si) =
+  toProto (PC.Module mnm tdefs cdefs insts drv impts si) =
     defMessage
       & P.moduleName .~ toProto mnm
       & P.typeDefs .~ (toProto <$> toList tdefs)
       & P.classDefs .~ (toProto <$> toList cdefs)
       & P.instances .~ (toProto <$> insts)
+      & P.derives .~ (toProto <$> drv)
       & P.imports .~ (toProto <$> toList impts)
       & P.sourceInfo .~ toProto si
 

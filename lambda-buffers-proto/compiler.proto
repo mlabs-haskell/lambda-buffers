@@ -518,7 +518,7 @@ message InstanceClause {
   // scope of the body of the rule.
   Constraint head = 1;
   // Instance (rule) body, conjunction of constraints.
-  repeated Constraint bodies = 3;
+  repeated Constraint constraints = 3;
   // Source information.
   SourceInfo source_info = 4;
 }
@@ -586,13 +586,15 @@ message Module {
   repeated ClassDef class_defs = 3;
   // Type class instance clauses.
   repeated InstanceClause instances = 4;
+  // Type class derive statements.
+  repeated Derive derives = 5;
   // Imported modules the Compiler consults when searching for
   // instance clauses.
   // Duplicate imports MUST be reported with
   // `ProtoParseError.MultipleImportError`.
-  repeated ModuleName imports = 5;
+  repeated ModuleName imports = 6;
   // Source information.
-  SourceInfo source_info = 6;
+  SourceInfo source_info = 7;
 }
 
 /* Compiler Input

@@ -25,7 +25,7 @@ buildRuleSet' tyDefs classRels ci m = do
 
   derivedClauses <-
     for
-      (m ^. #derive)
+      (m ^. #derives)
       (mkDeriveRule (m ^. #moduleName) tyDefs classRels)
 
   -- WARN(bladyjoker): Assumes the ImportCycleDetection has been run before.
