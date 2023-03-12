@@ -121,7 +121,7 @@ testModule1 =
                             & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
                          ]
                  )
-            & P.body .~ []
+            & P.constraints .~ []
          ]
 
 testModule2 :: P.Module

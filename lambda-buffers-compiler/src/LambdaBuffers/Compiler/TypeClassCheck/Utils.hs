@@ -13,6 +13,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Utils (
   -- the point of this module
   ModuleBuilder (..),
   mkBuilders,
+  moduleNameToMiniLogFilepath,
 ) where
 
 import Control.Lens ((^.), (^?))
@@ -51,8 +52,11 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P (
  )
 import LambdaBuffers.Compiler.TypeClassCheck.Pat (Exp, Literal (ModuleName), Pat (AppP, ConsP, DecP, LabelP, LitP, NilP, ProdP, RecP, RefP, SumP, VarP))
 
+import Data.Char (toLower)
 import Data.Foldable (Foldable (toList))
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as P
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Pretty (pointies, (<///>))
 import LambdaBuffers.Compiler.TypeClassCheck.Solve (Overlap (Overlap))
 import Prettyprinter (
@@ -420,3 +424,6 @@ mkBuilders ci = do
       cls <-
         lookupOr fqNm classTable $ ClassNotFoundInModule cname mname
       S.insert cls <$> resolveClasses classTable mn cs
+
+moduleNameToMiniLogFilepath :: PC.ModuleName -> FilePath
+moduleNameToMiniLogFilepath = fmap ((\c -> if c == '.' then '_' else c) . toLower) . show . PC.prettyModuleName

@@ -23,6 +23,7 @@ import LambdaBuffers.Compiler.MiniLog.UniFdSolver qualified as ML
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
+import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
@@ -44,7 +45,7 @@ instance Show Atom where
   show (AFieldName n) = PC.withInfoLess n (show . view #name)
   show (AConstrName n) = PC.withInfoLess n (show . view #name)
   show (AVarName n) = PC.withInfoLess n (show . view #name)
-  show (ATyName (mn, tn)) = PC.withInfoLess mn (concatMap (show . view #name) . view #parts) <> "." <> PC.withInfoLess tn (show . view #name)
+  show (ATyName (mn, tn)) = PC.withInfoLess mn (show . PC.prettyModuleName) <> "." <> PC.withInfoLess tn (show . view #name)
   show ANil = "[]"
   show (AText txt) = show txt
 

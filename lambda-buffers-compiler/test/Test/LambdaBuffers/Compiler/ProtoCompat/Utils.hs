@@ -1,4 +1,30 @@
-module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (abs, sum, tv, td, lr, fr, mn, tn, (@), td'either, td'eitherO, td'maybe, td'maybeO, mod'preludeO, cstr, ci, drv, mod', mod, td'list, mod'prelude, fcr) where
+module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (
+  abs,
+  sum,
+  tv,
+  td,
+  lr,
+  fr,
+  inst,
+  mn,
+  tn,
+  (@),
+  td'either,
+  td'eitherO,
+  td'maybe,
+  td'maybeO,
+  mod'preludeO,
+  cstr,
+  opq,
+  ci,
+  drv,
+  mod',
+  mod,
+  td'list,
+  mod'prelude,
+  fcr,
+  inst',
+) where
 
 import Control.Lens ((^.))
 import Data.Default (Default (def))
@@ -98,6 +124,9 @@ classDef (cln', an) sups = PC.ClassDef (cln cln') (mkArg an) sups "testing class
 
 inst :: PC.TyClassRef -> PC.Ty -> [PC.Constraint] -> PC.InstanceClause
 inst cr' ty' body = PC.InstanceClause (cstr cr' ty') body def
+
+inst' :: PC.Constraint -> [PC.Constraint] -> PC.InstanceClause
+inst' h body = PC.InstanceClause h body def
 
 cstr :: PC.TyClassRef -> PC.Ty -> PC.Constraint
 cstr cr' ty' = PC.Constraint cr' ty' def

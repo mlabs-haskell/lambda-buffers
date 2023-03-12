@@ -12,6 +12,7 @@ import Data.Map.Ordered (OMap)
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
+import LambdaBuffers.Compiler.ProtoCompat.Utils (prettyModuleName)
 import Prettyprinter (Doc, LayoutOptions (LayoutOptions), PageWidth (Unbounded), Pretty (pretty), concatWith, dot, enclose, encloseSep, hsep, layoutPretty, lparen, pipe, rparen, space, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 import Proto.Compiler qualified as P
@@ -46,10 +47,7 @@ prettyTy (TyTuple fields _t) = hsep $ prettyTy <$> fields
 prettyTy (TyRecord fields _r) = hsep $ prettyTy <$> toList fields
 prettyTy (TyOpaque _) = "opq"
 prettyTy (TyRef (PC.LocalI lr)) = pretty $ lr ^. #tyName . #name
-prettyTy (TyRef (PC.ForeignI fr)) = prettyMn (fr ^. #moduleName) <> dot <> pretty (fr ^. #tyName . #name)
-  where
-    prettyMn :: PC.ModuleName -> Doc a
-    prettyMn mn = encloseSep mempty mempty dot $ pretty . view #name <$> mn ^. #parts
+prettyTy (TyRef (PC.ForeignI fr)) = prettyModuleName (fr ^. #moduleName) <> dot <> pretty (fr ^. #tyName . #name)
 
 sepWith :: Foldable t => Doc ann -> t (Doc ann) -> Doc ann
 sepWith d = concatWith (\l r -> l <> d <> r)
