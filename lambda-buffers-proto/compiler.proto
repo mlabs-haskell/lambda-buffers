@@ -811,10 +811,17 @@ message TyClassCheckError {
     repeated TyClassRef cycled_class_refs = 3;
   }
 
+  // Import `missing` wasn't found in `module_name`
+  message ImportNotFoundError {
+    ModuleName module_name = 1;
+    ModuleName missing = 2;
+  }
+
   // One of the errors occurred during type class checking.
   oneof tyclass_check_error {
     UnboundClassRefError unbound_class_ref_err = 1;
     SuperclassCycleError superclass_cycle_err = 2;
+    ImportNotFoundError import_not_found_err = 3;
   }
 }
 

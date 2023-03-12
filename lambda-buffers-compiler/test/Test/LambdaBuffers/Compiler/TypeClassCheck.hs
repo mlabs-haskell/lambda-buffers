@@ -232,4 +232,4 @@ succeeds title ci = testCase title $ do
         )
 
 printMiniLogs :: Map PC.ModuleName String -> IO ()
-printMiniLogs mls = for_ (Map.toList mls) (\(mn, ml) -> print ("### Module" <> show mn) >> print ml)
+printMiniLogs mls = for_ (Map.toList mls) (\(mn, ml) -> print ("### Module" <> show (moduleNameToMiniLogFilepath mn)) >> print ml)

@@ -24,6 +24,7 @@ import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (unboundTyClassRefError')
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
@@ -167,12 +168,7 @@ mkSupersBody :: PC.ModuleName -> PC.ClassRels -> PC.Constraint -> Either P.Compi
 mkSupersBody mn clrels cstr =
   let ty = tyToTerm mn . E.fromTy $ cstr ^. #argument
    in case Map.lookup (PC.qualifyClassRef mn $ cstr ^. #classRef) clrels of
-        Nothing ->
-          Left $
-            defMessage
-              & P.internalErrors
-                .~ [ defMessage & P.msg .~ ("TODO(bladyjoker): UnboundClassRef" <> (Text.pack . show . view #classRef $ cstr))
-                   ]
+        Nothing -> Left $ unboundTyClassRefError' mn (cstr ^. #classRef)
         Just sups -> Right ((`tclass` ty) <$> sups)
 
 termFromConstraint :: PC.ModuleName -> PC.Constraint -> Term
@@ -215,7 +211,7 @@ tyToTerm mn (E.TySum ctors _) = tsum $ foldr (\(cn, cp) t -> tctor (ML.Atom . AC
 tyToTerm mn (E.TyTuple fields _) = ttuple $ foldr (\fty t -> tyToTerm mn fty @| t) nilt fields
 tyToTerm mn (E.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.Atom . AFieldName $ fn) (tyToTerm mn fty) @| t) nilt (OMap.assocs fields)
 
--- | Solver.
+-- | Solve/evaluate a term (goal) given some knowledge base (clauses).
 runSolve :: PC.ModuleName -> [Clause] -> [Term] -> Either P.CompilerError ()
 runSolve _mn clauses goals = do
   let (errOrRes, _log) = ML.solve clauses goals
