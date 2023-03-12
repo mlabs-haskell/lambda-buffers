@@ -112,12 +112,16 @@ testModule1 =
          ]
     & P.instances
       .~ [ defMessage
-            & P.classRef . P.localClassRef . P.className . P.name .~ "Eq"
-            & P.args
-              .~ [ defMessage
-                    & P.tyApp . P.tyFunc . P.tyRef . P.localTyRef . P.tyName . P.name .~ "Maybe"
-                    & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
-                 ]
+            & P.head
+              .~ ( defMessage
+                    & P.classRef . P.localClassRef . P.className . P.name .~ "Eq"
+                    & P.args
+                      .~ [ defMessage
+                            & P.tyApp . P.tyFunc . P.tyRef . P.localTyRef . P.tyName . P.name .~ "Maybe"
+                            & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
+                         ]
+                 )
+            & P.body .~ []
          ]
 
 testModule2 :: P.Module
