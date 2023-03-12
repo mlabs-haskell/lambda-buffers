@@ -88,16 +88,16 @@ fcr mn' cln' = PC.ForeignCI $ PC.ForeignClassRef (cln cln') (mn mn') def
 lcr :: Text -> PC.TyClassRef
 lcr cln' = PC.LocalCI $ PC.LocalClassRef (cln cln') def
 
-classCstr :: (PC.TyClassRef, Text) -> PC.Constraint
-classCstr (clr, an') = PC.Constraint clr (tv an') def
+classCstr :: (PC.TyClassRef, Text) -> PC.ClassConstraint
+classCstr (clr, an') = PC.ClassConstraint clr (PC.TyVar . vn $ an')
 
-classDef :: (Text, Text) -> [PC.Constraint] -> PC.ClassDef
+classDef :: (Text, Text) -> [PC.ClassConstraint] -> PC.ClassDef
 classDef (cln', an) sups = PC.ClassDef (cln cln') (mkArg an) sups "testing class def" def
   where
     mkArg an' = PC.TyArg (vn an') (PC.Kind $ PC.KindRef PC.KType) def
 
 inst :: PC.TyClassRef -> PC.Ty -> [PC.Constraint] -> PC.InstanceClause
-inst cr' ty' body = PC.InstanceClause cr' ty' body def
+inst cr' ty' body = PC.InstanceClause (cstr cr' ty') body def
 
 cstr :: PC.TyClassRef -> PC.Ty -> PC.Constraint
 cstr cr' ty' = PC.Constraint cr' ty' def

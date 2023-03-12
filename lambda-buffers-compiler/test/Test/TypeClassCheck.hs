@@ -30,8 +30,8 @@ import LambdaBuffers.Compiler.TypeClassCheck.Validate (
   _L,
   _X,
  )
-import Proto.Compiler (ClassDef, CompilerInput, Constraint, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), TyClassCheckError)
-import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, cycledClassRefs, kindRef, localClassRef, moduleName, modules, name, parts, superclassCycleErr, supers, tyVar, varName)
+import Proto.Compiler (ClassConstraint, ClassDef, CompilerInput, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), TyClassCheckError)
+import Proto.Compiler_Fields (argKind, argName, args, classArgs, classDefs, className, classRef, cycledClassRefs, kindRef, localClassRef, moduleName, modules, name, parts, superclassCycleErr, supers, varName)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@?=))
 
@@ -99,11 +99,11 @@ mkclass nm sups =
          ]
     & supers .~ map constraint sups
 
-constraint :: Text -> Proto.Compiler.Constraint
+constraint :: Text -> Proto.Compiler.ClassConstraint
 constraint nm =
   defMessage
     & classRef . localClassRef . className . name .~ nm
-    & args .~ [defMessage & tyVar . varName . name .~ "a"]
+    & args .~ [defMessage & varName . name .~ "a"]
 
 cycles :: CompilerInput
 cycles =

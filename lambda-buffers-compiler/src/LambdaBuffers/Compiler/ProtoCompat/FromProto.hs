@@ -557,23 +557,32 @@ instance IsMessage P.ClassDef PC.ClassDef where
       & P.documentation .~ doc
       & P.sourceInfo .~ toProto si
 
+instance IsMessage P.ClassConstraint PC.ClassConstraint where
+  fromProto cc = do
+    cr <- fromProto $ cc ^. P.classRef
+    args <- traverse fromProto $ cc ^. P.args
+    arg <- case args of
+      [] -> throwInternalError "ClassConstraint: Zero parameter type classes are not supported"
+      [x] -> return x
+      _ -> throwInternalError "ClassConstraint: Multi parameter type classes are not supported"
+    pure $ PC.ClassConstraint cr arg
+
+  toProto (PC.ClassConstraint cr arg) =
+    defMessage
+      & P.classRef .~ toProto cr
+      & P.args .~ [toProto arg]
+
 instance IsMessage P.InstanceClause PC.InstanceClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
-    cnm <- fromProto $ ic ^. P.classRef
-    csts <- traverse fromProto $ ic ^. P.constraints
-    args <- traverse fromProto $ ic ^. P.args
-    arg <- case args of
-      [] -> throwInternalError "Zero instance arguments, but zero parameter type classes are not supported"
-      [x] -> return x
-      _ -> throwInternalError "Multiple instance arguments, but multi parameter type classes are not supported"
-    pure $ PC.InstanceClause cnm arg csts si
+    hd <- fromProto $ ic ^. P.head
+    body <- traverse fromProto $ ic ^. P.body
+    pure $ PC.InstanceClause hd body si
 
-  toProto (PC.InstanceClause cnm hd csts si) =
+  toProto (PC.InstanceClause hd body si) =
     defMessage
-      & P.classRef .~ toProto cnm
-      & P.args .~ pure (toProto hd)
-      & P.constraints .~ (toProto <$> csts)
+      & P.head .~ toProto hd
+      & P.body .~ (toProto <$> body)
       & P.sourceInfo .~ toProto si
 
 instance IsMessage P.Constraint PC.Constraint where

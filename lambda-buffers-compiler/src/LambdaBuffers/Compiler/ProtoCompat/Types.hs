@@ -4,6 +4,7 @@
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   localRef2ForeignRef,
   ClassDef (..),
+  ClassConstraint (..),
   ClassName (..),
   CompilerError (..),
   CompilerInput (..),
@@ -222,9 +223,16 @@ data TyClassRef
 data ClassDef = ClassDef
   { className :: ClassName
   , classArgs :: TyArg
-  , supers :: [Constraint]
+  , supers :: [ClassConstraint]
   , documentation :: Text
   , sourceInfo :: SourceInfo
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (SOP.Generic)
+
+data ClassConstraint = ClassConstraint
+  { classRef :: TyClassRef
+  , args :: TyVar
   }
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
@@ -238,9 +246,8 @@ data Derive = Derive
   deriving anyclass (SOP.Generic)
 
 data InstanceClause = InstanceClause
-  { classRef :: TyClassRef -- FIXME(bladyjoker): Turn into headConstraint.
-  , head :: Ty
-  , constraints :: [Constraint]
+  { head :: Constraint
+  , body :: [Constraint]
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
@@ -349,6 +356,7 @@ instance InfoLessC ForeignClassRef
 instance InfoLessC LocalClassRef
 instance InfoLessC TyClassRef
 instance InfoLessC ClassDef
+instance InfoLessC ClassConstraint
 instance InfoLessC InstanceClause
 instance InfoLessC Derive
 instance InfoLessC Constraint

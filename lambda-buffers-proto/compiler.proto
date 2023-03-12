@@ -395,24 +395,33 @@ message Product {
 
 /* Type class definition
 
-LambdaBuffers use type classes to talk about the various 'meanings' or
-'semantics' we want to associate with the types in LambdaBuffers schemata.
+   LambdaBuffers use type classes to talk about the various 'meanings' or
+   'semantics' we want to associate with the types in LambdaBuffers schemata.
 
-For instance, most types can have `Eq` semantics, meaning they can be compared
-for equality. Other can have `Json` semantics, meaning they have some encoding
-in the Json format.
+   For instance, most types can have `Eq` semantics, meaning they can be
+   compared for equality. Other can have `Ord` semantics, meaning they can be
+   ordered.
 
-Using type classes and instance declarations, much like in Haskell, users can
-specify the 'meaning' of each type they declare.
+   Using type classes and instance declarations, much like in Haskell, users can
+   specify the 'meaning' of each type they declare. For example, serialization
+   in LambdaBuffers is just another type class, it's treated the same as any
+   other type class. Concretely, if we wish to provide JSON serialization for
+   LambdaBuffers types, we declare such a type class and provide desired
+   semantic rules:
 
-Note that for each type class introduced, the entire Codegen machinery must be
-updated to support said type class. In other words, it doesn't come for free and
-for each new type class, a Codegen support must be implemented for [opaque](@ref
-Opaque) types
-used and for generic structural rules to enable generic support for user derived
-types.
+   ```lbf module Foo
 
-TODO(bladyjoker): Cleanup and reformulate with Sean.
+   class JSON a
+
+   sum Foo a b = Bar a | Baz b
+
+   derive JSON (Foo a b) ```
+
+   Note that for each type class introduced, the Codegen machinery must be
+   updated to support said type class. In other words, it doesn't come for free
+   and for each new type class, a Codegen support must be implemented for any
+   `InstanceClause` declared by the user. Once all the `InstanceClause`s have an
+   implementation provided, all the `Derive`d implementation come for free.
 */
 message ClassDef {
   // Type class name.
@@ -422,21 +431,34 @@ message ClassDef {
   // TODO(bladyjoker): MultipleClassArgError.
   repeated TyArg class_args = 2;
   // Superclass constraints.
-  repeated Constraint supers = 3;
+  repeated ClassConstraint supers = 3;
   // Documentation elaborating on the type class.
   string documentation = 4;
   // Source information.
   SourceInfo source_info = 5;
 }
 
+/* Class constraints
+
+  A special constraint type denoting the constraints that occur on the rhs of
+  class definitions. Only used to specify super class constraints in a
+  `ClassDef`.
+
+  Not to be confused with `Constraint` which denote type class rules.
+ */
+message ClassConstraint {
+  // Type class reference.
+  TyClassRef class_ref = 1;
+  // Type variables quantified over `ClassDef` arguments.
+  repeated TyVar args = 2;
+}
+
 /* Type class references
 
-It is necessary to know whether a type class is defined locally or in a
-foreign module when referring to it in an instance clause or constraint,
-this allows users (and requires the frontend) to explicitly communicate
-that information.
+   It is necessary to know whether a type class is defined locally or in a
+   foreign module when referring to it in a constraint, this allows users (and
+   requires the frontend) to explicitly communicate that information.
 */
-
 message TyClassRef {
   // Local type reference.
   message Local {
@@ -461,21 +483,78 @@ message TyClassRef {
   }
 }
 
-/* Type class instances (rules)
+/* Type class rules */
 
-Instance clauses enable users to specify 'semantic' rules for their types.
+/* Instance clause
+
+   Instance clauses enable users to specify ad-hoc 'semantic' rules for their
+   types. Each such instance must be supported explicitly in the Codegen by
+   providing runtime implementations.
+
+   This rule form is used when declaring 'opaque' implementations on `Opaque`
+   types.
+
+   ```lbf
+   module Prelude
+
+   class Eq a
+
+   opaque Maybe a
+
+   instance Eq a => Eq (Maybe a)
+   ```
+
+   The rule installed for the clause is:
+
+   ```prolog
+   eq(maybe(A)) :- eq(A).
+   ```
+
+   The instance clause is verbatim added to the rule set.
 */
 message InstanceClause {
-  // Type class name.
-  TyClassRef class_ref = 1;
-  // Instance (rule) arguments.
-  // Instance clause with no arguments is a trivial instance clause.
-  // Compiler MAY report an error.
-  repeated Ty args = 2;
+  // Head of the clause that holds only when the `body` holds.
+  // Type variables introduced in the head of the rule become available in the
+  // scope of the body of the rule.
+  Constraint head = 1;
   // Instance (rule) body, conjunction of constraints.
-  repeated Constraint constraints = 3;
+  repeated Constraint bodies = 3;
   // Source information.
   SourceInfo source_info = 4;
+}
+
+/* Derive statement
+
+  Derive statements enable user to specify 'semantic' rules for their types much
+  like `InstanceClause`s do. However, the Codegen will be able to derive an
+  implementation for any such constraint.
+
+  ```lbf
+  module Prelude
+
+  class Eq a
+
+  sum Maybe a = Just a | Nothing
+
+  derive Eq (Maybe a)
+  ```
+
+  The rule installed for the derive statement is:
+
+  ```prolog
+  eq(maybe(A)) :- eq(just(A) | Nothing).
+  ```
+
+  The rule relates the desired `Ty` expression to its (lambda calculus)
+  'evaluated' form.
+
+  > Currently, there's only support for deriving type class rules and
+    implementations for `Ty` expressions of `Kind.KIND_REF_TYPE`. That means,
+    type classes like Ord and Eq...
+*/
+message Derive {
+  // Constraint to derive.
+  Constraint constraint = 1;
 }
 
 /* Constraint expression */
@@ -528,9 +607,12 @@ message CompilerInput {
   repeated Module modules = 1;
 }
 
-// Internal errors.
+// Errors internal to the implementation.
 message InternalError {
+  // Error message.
   string msg = 1;
+  // Source information if meaningful.
+  SourceInfo source_info = 2;
 }
 
 // All errors that occur because of Google Protocol Buffer's inability to

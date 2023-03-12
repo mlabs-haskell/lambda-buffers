@@ -192,12 +192,12 @@ mkDeriveRule mn tyds clrels drv =
 
 mkInstanceRule :: PC.ModuleName -> PC.ClassRels -> PC.InstanceClause -> Either P.CompilerError Clause
 mkInstanceRule mn clrels inst =
-  let thead = tyToTerm mn . E.fromTy $ inst ^. #head
-      tc = tclass (PC.qualifyClassRef mn $ inst ^. #classRef)
-      constraints = termFromConstraint mn <$> inst ^. #constraints
+  let thead = tyToTerm mn . E.fromTy $ inst ^. #head . #argument
+      tc = tclass (PC.qualifyClassRef mn $ inst ^. #head . #classRef)
+      body = termFromConstraint mn <$> inst ^. #body
    in do
-        supsBody <- mkSupersBody mn clrels (PC.Constraint (inst ^. #classRef) (inst ^. #head) (inst ^. #sourceInfo)) -- FIXME
-        return $ tc thead @<= (constraints ++ supsBody)
+        supsBody <- mkSupersBody mn clrels (inst ^. #head)
+        return $ tc thead @<= (body ++ supsBody)
 
 mkQuery :: Term -> Term
 mkQuery (ML.Var vn) = tvar (ML.Atom . AText $ vn)

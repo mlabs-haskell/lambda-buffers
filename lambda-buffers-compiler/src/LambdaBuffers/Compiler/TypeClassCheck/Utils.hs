@@ -281,7 +281,7 @@ getInstances :: M.Map FQClassName Class -> P.ModuleName -> [P.InstanceClause] ->
 getInstances ctable mn = foldM go S.empty
   where
     go :: S.Set Instance -> P.InstanceClause -> Either TypeClassError Instances
-    go acc (P.InstanceClause cn h csts si') = case ctable ^? ix cref of
+    go acc (P.InstanceClause (P.Constraint cn h _) csts si') = case ctable ^? ix cref of
       Nothing -> throwError $ UnknownClass cref si'
       Just cls -> do
         let p = tyToPat h

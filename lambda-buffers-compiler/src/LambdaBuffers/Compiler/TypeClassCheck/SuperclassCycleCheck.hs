@@ -86,7 +86,7 @@ throwCycleDetected = do
       & P.superclassCycleErr . P.className .~ PC.toProto currcn
       & P.superclassCycleErr . P.cycledClassRefs .~ (PC.toProto <$> rtrace)
 
-throwUnboundTyClassRef :: MonadCheck m => PC.Constraint -> m a
+throwUnboundTyClassRef :: MonadCheck m => PC.ClassConstraint -> m a
 throwUnboundTyClassRef c = do
   mn <- asks currentModuleName
   throwError $
