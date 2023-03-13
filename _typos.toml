@@ -5,3 +5,7 @@ hask= "hask"
 [type.pdf]
 extend-glob = ["*.pdf"]
 check-file = false
+
+[type.png]
+extend-glob = ["*.png"]
+check-file = false
