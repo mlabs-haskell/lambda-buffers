@@ -4,9 +4,8 @@ import Control.Monad (void)
 import Data.Map qualified as Map
 import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, showClauses, (@<=))
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve)
-import Paths_lambda_buffers_compiler qualified as Path
-import System.FilePath ((</>))
-import Test.Tasty (TestTree, adjustOption, testGroup)
+import Test.LambdaBuffers.Compiler.Utils.Golden qualified as Golden
+import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (Assertion, assertEqual, assertFailure, testCase)
 import Test.Tasty.Hedgehog qualified as H
 
@@ -37,62 +36,62 @@ shouldFailToSolve =
         failsWith
           greekKnowledge
           [animal (Var "X")]
-          (OverlappingClausesError [socratesIsHuman, platoIsHuman])
+          (overlapsOn [socratesIsHuman, platoIsHuman])
     , testCase "greeks.pl ?- animal(Y). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [animal (Var "Y")]
-          (OverlappingClausesError [socratesIsHuman, platoIsHuman])
+          (overlapsOn [socratesIsHuman, platoIsHuman])
     , testCase "greeks.pl ?- human(X). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [human (Var "X")]
-          (OverlappingClausesError [socratesIsHuman, platoIsHuman])
+          (overlapsOn [socratesIsHuman, platoIsHuman])
     , testCase "greeks.pl ?- human(X),human(Y). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
           [human (Var "X"), human (Var "Y")]
-          (OverlappingClausesError [socratesIsHuman, platoIsHuman])
+          (overlapsOn [socratesIsHuman, platoIsHuman])
     , testCase "greeks.pl ?- animal(aristotle). % missing goal human(ariostotle)" $
         failsWith
           greekKnowledge
           [animal (Atom "aristotle")]
-          (MissingClauseError (human (Atom "aristotle")))
+          (missesClauseFor (human (Atom "aristotle")))
     , testCase "human(plato).;human(plato). greeks.pl ?- human(plato). % overlaps on human(plato|socrates)" $
         failsWith
           (platoIsHuman : greekKnowledge)
           [human (Atom "plato")]
-          (OverlappingClausesError [platoIsHuman, platoIsHuman])
+          (overlapsOn [platoIsHuman, platoIsHuman])
     , testCase "human(plato).;human(plato). greeks.pl ?- animal(plato).  % overlaps on human(plato|plato)" $
         failsWith
           (platoIsHuman : greekKnowledge)
           [animal (Atom "plato")]
-          (OverlappingClausesError [platoIsHuman, platoIsHuman])
+          (overlapsOn [platoIsHuman, platoIsHuman])
     , testCase " family.pl ?- ancestor(vlado, nenad). % overlaps on ancestor rules NOTE(bladyjoker): Could be supported." $
         failsWith
           familyKnowledge
           [ancestor (Atom "vlado") (Atom "nenad")]
-          (OverlappingClausesError [ancestorIsParent, ancestorTransitive])
+          (overlapsOn [ancestorIsParent, ancestorTransitive])
     , testCase "eq_typeclass.pl ?- eq(maybe(X)). % overlaps on all eq(X)" $
         failsWith
           eqTypeClassKnowledge
           [eq (Struct "maybe" [Var "X"])]
-          (OverlappingClausesError eqTypeClassKnowledge)
+          (overlapsOn eqTypeClassKnowledge)
     , testCase "greeks.pl ?- animal(plato), animal(socrates), human(plato), human(socrates), animal(aristotle) % missing goal human(aristotle)" $
         failsWith
           greekKnowledge
           [animal (Atom "plato"), animal (Atom "socrates"), human (Atom "plato"), human (Atom "socrates"), animal (Atom "aristotle")]
-          (MissingClauseError (human (Atom "aristotle")))
+          (missesClauseFor (human (Atom "aristotle")))
     , testCase "cycle.pl ?- eq(beep(int))." $
         failsWith
           cycleKnowledge
           [eq (Struct "beep" [Atom "int"])]
-          (CycledGoalsError [eq (Struct "beep" [Atom "int"])])
+          (cycledGoals [eq (Struct "beep" [Atom "int"])])
     , testCase "cycle.pl ?- eq(foo(int))." $
         failsWith
           cycleKnowledge
           [eq (Struct "foo" [Atom "int"])]
-          (CycledGoalsError [eq (Struct "foo" [Atom "int"]), eq (Struct "bar" [Atom "int"]), eq (Struct "baz" [Atom "int"])])
+          (cycledGoals [eq (Struct "foo" [Atom "int"]), eq (Struct "bar" [Atom "int"]), eq (Struct "baz" [Atom "int"])])
     ]
 
 shouldSolve :: TestTree
@@ -296,33 +295,45 @@ succeedsWith clauses goals wanted =
               printLogs logs
               assertEqual "Solutions should match" (Map.fromList wanted) got
 
-failsWith :: [TestClause] -> [TestTerm] -> MiniLogError String String -> Assertion
-failsWith clauses goals wanted =
+failsWith :: [TestClause] -> [TestTerm] -> (MiniLogError String String -> Bool) -> Assertion
+failsWith clauses goals errorPred =
   let (errOrRes, logs) = solve clauses goals
    in case errOrRes of
         Left err ->
-          if err == wanted
+          if errorPred err
             then return ()
             else do
               printLogs logs
-              assertEqual "" wanted err
+              assertFailure ("Got wrong error " <> show err)
         Right sols -> do
           printLogs logs
           assertFailure $ show ("Wanted an error but got" :: String, sols)
+
+overlapsOn :: [TestClause] -> MiniLogError String String -> Bool
+overlapsOn overlaps' (OverlappingClausesError overlaps _) = overlaps == overlaps'
+overlapsOn _ _ = False
+
+missesClauseFor :: TestTerm -> MiniLogError String String -> Bool
+missesClauseFor goal' (MissingClauseError goal) = goal' == goal
+missesClauseFor _ _ = False
+
+cycledGoals :: [TestTerm] -> MiniLogError String String -> Bool
+cycledGoals goals' (CycledGoalsError goals) = goals' == goals
+cycledGoals _ _ = False
 
 printLogs :: (Traversable t, Show a) => t a -> Assertion
 printLogs logs = do
   putStrLn ""
   void $ print `traverse` logs
 
-shouldPrint :: FilePath -> [TestClause] -> TestTree
-shouldPrint wantedFp clauses = testCase wantedFp $ do
-  let got = showClauses clauses
-  minilogGoldensDir <- Path.getDataFileName "data/minilog-goldens"
-  wanted <- readFile (minilogGoldensDir </> wantedFp)
-  if got == wanted
-    then return ()
-    else do
-      putStrLn ""
-      putStrLn got
-      assertEqual "" wanted got
+goldensDir :: FilePath
+goldensDir = "data/minilog-goldens"
+
+shouldPrint :: TestName -> [TestClause] -> TestTree
+shouldPrint title clauses =
+  Golden.succeeds
+    goldensDir
+    (\fn -> (,) <$> readFile fn <*> pure fn)
+    writeFile
+    title
+    (Right @() $ Map.singleton Nothing (showClauses clauses))

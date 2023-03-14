@@ -36,7 +36,7 @@ data UError fun atom
   = OccursFailure IntVar (UTerm fun atom)
   | MismatchFailure (Term' fun atom (UTerm fun atom)) (Term' fun atom (UTerm fun atom))
   | MissingClause (ML.Term fun atom)
-  | OverlappingClauses [ML.Clause fun atom]
+  | OverlappingClauses [ML.Clause fun atom] (ML.Term fun atom)
   | Cycle [ML.Term fun atom]
   | Internal String
   deriving stock (Show)
@@ -77,7 +77,7 @@ runUMonad clauses p =
 solve :: (Show fun, Show atom) => ML.MiniLogSolver fun atom
 solve clauses goals = case runUMonad clauses (top goals) of
   (Left err, logs) -> case err of
-    (OverlappingClauses overlaps) -> (Left $ ML.OverlappingClausesError overlaps, logs)
+    (OverlappingClauses overlaps goal) -> (Left $ ML.OverlappingClausesError overlaps goal, logs)
     (MissingClause forGoal) -> (Left $ ML.MissingClauseError forGoal, logs)
     (Cycle cycl) -> (Left $ ML.CycledGoalsError cycl, logs)
     other -> (Left $ ML.InternalError . Text.pack . show $ other, logs)
@@ -167,9 +167,9 @@ lookupClause goal = do
       )
       clauses
   case matched of
-    [] -> fromUTerm goal >>= throwError . MissingClause
+    [] -> throwError (MissingClause mlGoal)
     [clause] -> trace (ML.FoundClause mlGoal clause) >> return clause
-    overlaps -> throwError (OverlappingClauses overlaps)
+    overlaps -> throwError (OverlappingClauses overlaps mlGoal)
 
 {- | Duplicate a unifiable term (basically copies the structure and instantiates new variables).
  See https://www.swi-prolog.org/pldoc/doc_for?object=duplicate_term/2.

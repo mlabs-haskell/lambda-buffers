@@ -2,7 +2,6 @@
   'Prelude.Eq'('Prelude.Int8').
 'Prelude.Ord'('Prelude.Bytes') :-
   'Prelude.Eq'('Prelude.Bytes').
-'Prelude.Ord'('var'(VX)).
 'Prelude.Ord'('app'('Prelude.Maybe','|'(Va,'[]'))) :-
   'Prelude.Ord'(Va),'Prelude.Eq'('app'('Prelude.Maybe','|'(Va,'[]'))).
 'Prelude.Ord'('app'('Prelude.Map','|'(Va,'|'(Vb,'[]')))) :-
@@ -22,9 +21,8 @@
                          ,'[]')))
   ,'Prelude.Eq'('app'('Foo.Foo','|'(Va,'|'(Vb,'|'(Vc,'[]'))))).
 'Prelude.Ord'('app'('Foo.Bar','|'(Va,'[]'))) :-
-  'Prelude.Ord'('sum'('|'('ctor'('MkBar','tuple'('|'('Prelude.Bytes','[]')))
-                         ,'[]')))
-  ,'Prelude.Eq'('app'('Foo.Bar','|'(Va,'[]'))).
+  'Prelude.Eq'('app'('Foo.Bar','|'(Va,'[]'))).
+'Prelude.Ord'('var'(VX)).
 'Prelude.Ord'('rec'('[]')).
 'Prelude.Ord'('rec'('|'('field'(VFn,VFTy),VFs))) :-
   'Prelude.Ord'(VFTy),'Prelude.Ord'('rec'(VFs)).
@@ -36,7 +34,6 @@
   'Prelude.Ord'(VP),'Prelude.Ord'('sum'(VT)).
 'Prelude.Eq'('Prelude.Int8').
 'Prelude.Eq'('Prelude.Bytes').
-'Prelude.Eq'('var'(VX)).
 'Prelude.Eq'('app'('Prelude.Maybe','|'(Va,'[]'))) :-
   'Prelude.Eq'(Va).
 'Prelude.Eq'('app'('Prelude.Map','|'(Va,'|'(Vb,'[]')))) :-
@@ -50,9 +47,8 @@
                                ,'tuple'('|'('app'('Foo.Bar','|'(Va,'[]'))
                                            ,'[]')))
                         ,'[]'))).
-'Prelude.Eq'('app'('Foo.Bar','|'(Va,'[]'))) :-
-  'Prelude.Eq'('sum'('|'('ctor'('MkBar','tuple'('|'('Prelude.Bytes','[]')))
-                        ,'[]'))).
+'Prelude.Eq'('app'('Foo.Bar','|'(Va,'[]'))).
+'Prelude.Eq'('var'(VX)).
 'Prelude.Eq'('rec'('[]')).
 'Prelude.Eq'('rec'('|'('field'(VFn,VFTy),VFs))) :-
   'Prelude.Eq'(VFTy),'Prelude.Eq'('rec'(VFs)).

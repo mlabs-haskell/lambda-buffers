@@ -51,7 +51,7 @@ data MiniLogError f a
   = -- | No `Clause` was found for goal.
     MissingClauseError (Term f a)
   | -- | Multiple overlapping `Clauses` were found.
-    OverlappingClausesError [Clause f a]
+    OverlappingClausesError [Clause f a] (Term f a)
   | -- | A goal cycle was detected.
     CycledGoalsError [Term f a]
   | -- | Implementation/provider internal error conditions.
@@ -91,4 +91,4 @@ instance (Show f, Show a) => Show (Term f a) where
   show = show . termToProlog
 
 showClauses :: (Show f, Show a, Ord f, Ord a) => [Clause f a] -> String
-showClauses = show . vsep . fmap clauseToProlog . reverse . sort
+showClauses clauses = show $ (vsep . fmap clauseToProlog . reverse . sort $ clauses) <> line

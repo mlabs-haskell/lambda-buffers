@@ -6,6 +6,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import LambdaBuffers.Compiler.MiniLog qualified as ML
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (mappendErrs, memptyErr)
 import LambdaBuffers.Compiler.TypeClassCheck.MiniLog (runSolve)
 import LambdaBuffers.Compiler.TypeClassCheck.RuleSet (buildRuleSet)
 import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as Super
@@ -49,16 +50,3 @@ runConstraintsCheck ci =
          in case runSolve (m ^. #moduleName) clauses goals of
               Left err -> (err `mappendErrs` errs, minilogs')
               Right () -> (errs, minilogs')
-
--- TODO(bladyjoker): This is quite convenient, implement as Semigroup/Monoid and figure out how to use it properly.
-mappendErrs :: P.CompilerError -> P.CompilerError -> P.CompilerError
-mappendErrs l r =
-  defMessage
-    & P.protoParseErrors .~ l ^. P.protoParseErrors <> r ^. P.protoParseErrors
-    & P.namingErrors .~ l ^. P.namingErrors <> r ^. P.namingErrors
-    & P.kindCheckErrors .~ l ^. P.kindCheckErrors <> r ^. P.kindCheckErrors
-    & P.tyClassCheckErrors .~ l ^. P.tyClassCheckErrors <> r ^. P.tyClassCheckErrors
-    & P.internalErrors .~ l ^. P.internalErrors <> r ^. P.internalErrors
-
-memptyErr :: P.CompilerError
-memptyErr = defMessage

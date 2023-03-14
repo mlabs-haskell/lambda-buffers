@@ -8,9 +8,12 @@ module LambdaBuffers.Compiler.ProtoCompat.Indexing (
   qualifyTyRef,
   qualifyClassName,
   indexClassRelations,
+  tyRefFromQualified,
+  classRefFromQualified,
 ) where
 
 import Control.Lens (view, (^.))
+import Data.Default (Default (def))
 import Data.Map (Map)
 import Data.Map qualified as Map
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
@@ -61,3 +64,23 @@ qualifyClassName mn cn = (PC.mkInfoLess mn, PC.mkInfoLess cn)
 qualifyTyRef :: PC.ModuleName -> PC.TyRef -> PC.QTyName
 qualifyTyRef _ (PC.ForeignI fr) = (PC.mkInfoLess $ fr ^. #moduleName, PC.mkInfoLess $ fr ^. #tyName)
 qualifyTyRef mn (PC.LocalI lr) = (PC.mkInfoLess mn, PC.mkInfoLess $ lr ^. #tyName)
+
+tyRefFromQualified :: PC.ModuleName -> PC.QTyName -> PC.TyRef
+tyRefFromQualified locMn (mn, tyn)
+  | PC.mkInfoLess locMn == mn =
+      let tyn' = PC.withInfoLess tyn id
+       in PC.LocalI $ PC.LocalRef tyn' def
+tyRefFromQualified _locMn (mn, tyn) =
+  let tyn' = PC.withInfoLess tyn id
+      mn' = PC.withInfoLess mn id
+   in PC.ForeignI $ PC.ForeignRef tyn' mn' def
+
+classRefFromQualified :: PC.ModuleName -> PC.QClassName -> PC.TyClassRef
+classRefFromQualified locMn (mn, cn)
+  | PC.mkInfoLess locMn == mn =
+      let cn' = PC.withInfoLess cn id
+       in PC.LocalCI $ PC.LocalClassRef cn' def
+classRefFromQualified _locMn (mn, cn) =
+  let cn' = PC.withInfoLess cn id
+      mn' = PC.withInfoLess mn id
+   in PC.ForeignCI $ PC.ForeignClassRef cn' mn' def

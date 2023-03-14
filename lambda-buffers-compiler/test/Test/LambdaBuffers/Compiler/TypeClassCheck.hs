@@ -3,26 +3,39 @@ module Test.LambdaBuffers.Compiler.TypeClassCheck (test) where
 import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.ProtoLens.TextFormat qualified as PbText
+import Data.Text.Lazy qualified as Text
+import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck qualified as TC
 import LambdaBuffers.Compiler.TypeClassCheck.Utils (moduleNameToMiniLogFilepath)
-import Paths_lambda_buffers_compiler qualified as Path
 import System.FilePath ((<.>), (</>))
 import Test.LambdaBuffers.Compiler.ProtoCompat.Utils qualified as U
-import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
-import Test.Tasty.HUnit (assertEqual, assertFailure, testCase)
-import Test.Tasty.Hedgehog qualified as H
+import Test.LambdaBuffers.Compiler.Utils.Golden qualified as Golden
+import Test.Tasty (TestName, TestTree, testGroup)
 
 test :: TestTree
 test =
-  adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
-    testGroup
-      "LambdaBuffers.Compiler.TypeClassCheck checks"
-      [ succeeds "test1" test1
-      , succeeds "test2" test2
-      , succeeds "test3" test3
-      , succeeds "test4" test4
-      ]
+  testGroup
+    "LambdaBuffers.Compiler.TypeClassCheck checks"
+    [ testGroup
+        "Should succeed"
+        [ succeeds "test1" test1
+        , succeeds "test2" test2
+        , succeeds "test3" test3
+        , succeeds "test4" test4
+        ]
+    , testGroup
+        "Should fail"
+        [ fails "derive_opaque_1" testDeriveOpaque1
+        , fails "derive_opaque_2" testDeriveOpaque2
+        , fails "cycled_goals_1" testCycledGoals1
+        , fails "missing_rule_1" testMissingRule1
+        , fails "missing_rule_2" testMissingRule2
+        , fails "missing_rule_3" testMissingRule3
+        , fails "overlapping_rules_1" testOverlaps1
+        ]
+    ]
 
 {- Test 1 - should succeed
 
@@ -203,6 +216,303 @@ test4 =
         [["Prelude"]]
     ]
 
+{- Test Derive opaques 1 - should fail
+
+module Foo
+
+import Prelude
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+
+opaque Bar a
+
+derive Eq (Bar a)
+-}
+testDeriveOpaque1 :: PC.CompilerInput
+testDeriveOpaque1 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Bar" (U.abs ["a"] U.opq)
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveEq (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
+        ]
+        [["Prelude"]]
+    ]
+
+{- Test Derive opaque 2 - should fail
+
+module Foo
+
+import Prelude
+
+opaque Bar a
+
+derive Eq (Bar a)
+-}
+testDeriveOpaque2 :: PC.CompilerInput
+testDeriveOpaque2 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [U.td "Bar" (U.abs ["a"] U.opq)]
+        []
+        []
+        [deriveEq (U.lr "Bar" U.@ [U.tv "a"])]
+        [["Prelude"]]
+    ]
+
+{- Test Cycled goals 1 - a cycle should fail
+
+module Foo
+
+import Prelude
+
+opaque Bar a
+
+instance Eq (Baz a) => Eq (Bar a)
+derive Ord (Bar a)
+
+opaque Baz a
+
+instance Eq (Bar a) => Eq (Baz a)
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+testCycledGoals1 :: PC.CompilerInput
+testCycledGoals1 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Bar" (U.abs ["a"] U.opq)
+        , U.td "Baz" (U.abs ["a"] U.opq)
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        [ U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.lr "Baz" U.@ [U.tv "a"])]
+        , U.inst' (eqCstr (U.lr "Baz" U.@ [U.tv "a"])) [eqCstr (U.lr "Bar" U.@ [U.tv "a"])]
+        ]
+        [ deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"]]
+    ]
+
+{- Test Missing Rule1 - should fail
+
+module Foo
+
+import Prelude
+
+opaque Bar a
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+testMissingRule1 :: PC.CompilerInput
+testMissingRule1 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Bar" (U.abs ["a"] U.opq)
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"]]
+    ]
+
+{- Test Missing Rule2 - should fail
+
+module Foo
+
+import Prelude
+
+opaque Baz a
+
+sum Bar a = MkBar (Baz a)
+
+derive Eq (Bar a)
+derive Ord (Bar a)
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+testMissingRule2 :: PC.CompilerInput
+testMissingRule2 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Baz" (U.abs ["a"] U.opq)
+        , U.td
+            "Bar"
+            ( U.abs ["a"] $
+                U.sum
+                  [ ("MkBar", [U.lr "Baz" U.@ [U.tv "a"]])
+                  ]
+            )
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveEq (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
+        ]
+        [["Prelude"]]
+    ]
+
+{- Test Missing Rule 3 - should fail
+
+module Baz
+
+import Prelude
+
+opaque Baz a
+
+module Foo
+
+sum Bar a = MkBar (Baz a)
+
+derive Eq (Bar a)
+derive Ord (Bar a)
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+testMissingRule3 :: PC.CompilerInput
+testMissingRule3 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td
+            "Bar"
+            ( U.abs ["a"] $
+                U.sum
+                  [ ("MkBar", [U.fr ["Baz"] "Baz" U.@ [U.tv "a"]])
+                  ]
+            )
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveEq (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
+        ]
+        [["Prelude"], ["Baz"]]
+    , U.mod'
+        ["Baz"]
+        [U.td "Baz" (U.abs ["a"] U.opq)]
+        []
+        []
+        []
+        [["Prelude"]]
+    ]
+
+{- Test Overlaps 1 - overlapping rules should fail
+
+module Foo
+
+import Prelude
+
+opaque Bar a
+
+instance Eq (Bar a)
+instance Eq a => Eq (Bar a)
+instance Ord (Bar a)
+
+sum Foo a b c = MkFoo (Bar a)
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+testOverlaps1 :: PC.CompilerInput
+testOverlaps1 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Bar" (U.abs ["a"] U.opq)
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [ ("MkFoo", [U.lr "Bar" U.@ [U.tv "a"]])
+                  ]
+            )
+        ]
+        []
+        [ U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.tv "a")]
+        , U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) []
+        , U.inst' (ordCstr (U.lr "Bar" U.@ [U.tv "a"])) []
+        ]
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"]]
+    ]
+
 deriveEq :: PC.Ty -> PC.Derive
 deriveEq = U.drv . eqCstr
 
@@ -216,20 +526,28 @@ ordCstr :: PC.Ty -> PC.Constraint
 ordCstr = U.cstr (U.fcr ["Prelude"] "Ord")
 
 succeeds :: TestName -> PC.CompilerInput -> TestTree
-succeeds title ci = testCase title $ do
-  case TC.runCheck' ci of
-    (Left err, minilogs) -> do
-      printMiniLogs minilogs
-      assertFailure $ show ("Failed running type class checks with" :: String, err)
-    (Right _, minilogs) -> do
-      minilogGoldensDir <- Path.getDataFileName "data/minilog-goldens"
-      for_
-        (Map.toList minilogs)
-        ( \(mn, got) -> do
-            let fn = minilogGoldensDir </> title </> moduleNameToMiniLogFilepath mn <.> "pl"
-            wanted <- readFile fn
-            assertEqual ("Printed Prolog must match with " <> fn) wanted got
-        )
+succeeds title ci =
+  Golden.succeeds
+    goldensDir
+    (\baseFp -> let fn = baseFp <.> "pl" in (,) <$> readFile fn <*> pure fn)
+    writeFile
+    title
+    ( case TC.runCheck' ci of
+        (Left err, _) -> Left err
+        (Right _, minilogs) -> Right $ Map.mapKeys (Just . moduleNameToMiniLogFilepath) minilogs
+    )
 
-printMiniLogs :: Map PC.ModuleName String -> IO ()
-printMiniLogs mls = for_ (Map.toList mls) (\(mn, ml) -> print ("### Module" <> show (moduleNameToMiniLogFilepath mn)) >> print ml)
+fails :: TestName -> PC.CompilerInput -> TestTree
+fails title ci =
+  Golden.fails
+    goldensDir
+    (\tdir -> let fn = tdir </> "compiler_error" <.> "textproto" in (,) <$> (PbText.readMessageOrDie <$> Text.readFile fn) <*> pure fn)
+    (\otherFn gotErr -> Text.writeFile otherFn (Text.pack . show $ PbText.pprintMessage gotErr))
+    title
+    (fst $ TC.runCheck' ci)
+
+_printMiniLogs :: Map PC.ModuleName String -> IO ()
+_printMiniLogs mls = for_ (Map.toList mls) (\(mn, ml) -> print ("### Module" <> show (moduleNameToMiniLogFilepath mn)) >> print ml)
+
+goldensDir :: FilePath
+goldensDir = "data/typeclasscheck-goldens"
