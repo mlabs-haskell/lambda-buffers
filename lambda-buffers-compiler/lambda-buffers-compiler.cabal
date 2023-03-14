@@ -2,8 +2,14 @@ cabal-version:      3.0
 name:               lambda-buffers-compiler
 version:            0.1.0.0
 synopsis:           Lambda Buffers compiler
-data-files:         data/**/*.pl
-extra-source-files: data/**/*.pl
+data-files:
+  data/**/*.pl
+  data/**/*.textproto
+
+extra-source-files:
+  data/**/*.pl
+  data/**/*.textproto
+
 author:             MLabs LTD
 maintainer:         info@mlabs.city
 
