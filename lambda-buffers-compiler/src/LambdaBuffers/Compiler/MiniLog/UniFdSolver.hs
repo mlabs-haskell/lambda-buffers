@@ -130,7 +130,7 @@ checkCycle goal = do
         goal' <- duplicateTerm goal
         catchError
           ( do
-              goal' `unify` visited'
+              goal' `unify` visited' -- NOTE(bladyjoker): Perhaps subsumes?
               fromUTerm goal >>= throwError . MLError . ML.CycledGoalsError . (: mayCycle)
           )
           ( \case

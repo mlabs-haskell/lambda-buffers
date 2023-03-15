@@ -21,6 +21,8 @@ test =
         , succeeds "test2" test2
         , succeeds "test3" test3
         , succeeds "test4" test4
+        , succeeds "test5" test5
+        , succeeds "test6" test6
         ]
     , testGroup
         "Should fail"
@@ -211,6 +213,176 @@ test4 =
         , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
         ]
         [["Prelude"]]
+    ]
+
+{- Test 5 - should succeed
+
+module Bar
+
+import Prelude
+
+opaque Bar a
+
+instance Eq a => Eq (Bar a)
+instance Ord a => Ord (Bar a)
+
+module Baz
+
+import Prelude
+
+opaque Baz a
+
+instance Eq a => Eq (Baz a)
+
+module Foo
+
+import Bar
+import Baz
+import Prelude
+
+sum Foo a b c = MkFoo (Bar a) (Baz Int8) b c
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+test5 :: PC.CompilerInput
+test5 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Bar"]
+        [ U.td
+            "Bar"
+            (U.abs ["a"] U.opq)
+        ]
+        []
+        [ U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.tv "a")]
+        , U.inst' (ordCstr (U.lr "Bar" U.@ [U.tv "a"])) [ordCstr (U.tv "a")]
+        ]
+        []
+        [["Prelude"]]
+    , U.mod'
+        ["Baz"]
+        [ U.td
+            "Baz"
+            (U.abs ["a"] U.opq)
+        ]
+        []
+        [ U.inst' (eqCstr (U.lr "Baz" U.@ [U.tv "a"])) [eqCstr (U.tv "a")]
+        , U.inst' (ordCstr (U.lr "Baz" U.@ [U.tv "a"])) [ordCstr (U.tv "a")]
+        ]
+        []
+        [["Prelude"]]
+    , U.mod'
+        ["Foo"]
+        [ U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [
+                    ( "MkFoo"
+                    ,
+                      [ U.fr ["Bar"] "Bar" U.@ [U.tv "a"]
+                      , U.fr ["Baz"] "Baz" U.@ [U.fr ["Prelude"] "Int8"]
+                      , U.tv "b"
+                      , U.tv "c"
+                      ]
+                    )
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"], ["Baz"], ["Bar"]]
+    ]
+
+{- Test 6 - should succeed
+
+module Bar
+
+import Prelude
+
+opaque Bar a
+
+instance Eq a => Eq (Bar a)
+instance Ord a => Ord (Bar a)
+
+module Baz
+
+import Prelude
+import Bar
+
+sum Baz a = MkBaz (Bar a)
+
+derive Eq (Baz a)
+
+module Foo
+
+import Baz
+import Prelude
+
+sum Foo a b c = MkFoo (Baz a) b c
+
+derive Eq (Foo a b c)
+derive Ord (Foo a b c)
+-}
+test6 :: PC.CompilerInput
+test6 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Bar"]
+        [ U.td
+            "Bar"
+            (U.abs ["a"] U.opq)
+        ]
+        []
+        [ U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.tv "a")]
+        , U.inst' (ordCstr (U.lr "Bar" U.@ [U.tv "a"])) [ordCstr (U.tv "a")]
+        ]
+        []
+        [["Prelude"]]
+    , U.mod'
+        ["Baz"]
+        [ U.td
+            "Baz"
+            ( U.abs ["a"] $
+                U.sum
+                  [("MkBaz", [U.fr ["Bar"] "Bar" U.@ [U.tv "a"]])]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Baz" U.@ [U.tv "a"])
+        , deriveOrd (U.lr "Baz" U.@ [U.tv "a"])
+        ]
+        [["Prelude"], ["Bar"]]
+    , U.mod'
+        ["Foo"]
+        [ U.td
+            "Foo"
+            ( U.abs ["a", "b", "c"] $
+                U.sum
+                  [
+                    ( "MkFoo"
+                    ,
+                      [ U.fr ["Baz"] "Baz" U.@ [U.tv "a"]
+                      , U.tv "b"
+                      , U.tv "c"
+                      ]
+                    )
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"], ["Baz"]]
     ]
 
 {- Test Derive opaques 1 - should fail
@@ -530,7 +702,7 @@ succeeds title ci =
     writeFile
     title
     ( case TC.runCheck' ci of
-        (Left err, _) -> Left err
+        (Left err, _printed) -> Left err
         (Right _, printed) -> Right $ Map.mapKeys Just printed
     )
 
