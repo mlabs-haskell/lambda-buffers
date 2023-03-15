@@ -1,3 +1,5 @@
+:- module('very_long_arguments',['foo'/50]).
+
 'foo'(VX
      ,VX
      ,VX

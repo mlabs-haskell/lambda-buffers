@@ -1,14 +1,11 @@
 module Test.LambdaBuffers.Compiler.TypeClassCheck (test) where
 
-import Data.Foldable (for_)
-import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck qualified as TC
-import LambdaBuffers.Compiler.TypeClassCheck.Utils (moduleNameToMiniLogFilepath)
 import System.FilePath ((<.>), (</>))
 import Test.LambdaBuffers.Compiler.ProtoCompat.Utils qualified as U
 import Test.LambdaBuffers.Compiler.Utils.Golden qualified as Golden
@@ -534,7 +531,7 @@ succeeds title ci =
     title
     ( case TC.runCheck' ci of
         (Left err, _) -> Left err
-        (Right _, minilogs) -> Right $ Map.mapKeys (Just . moduleNameToMiniLogFilepath) minilogs
+        (Right _, printed) -> Right $ Map.mapKeys Just printed
     )
 
 fails :: TestName -> PC.CompilerInput -> TestTree
@@ -545,9 +542,6 @@ fails title ci =
     (\otherFn gotErr -> Text.writeFile otherFn (Text.pack . show $ PbText.pprintMessage gotErr))
     title
     (fst $ TC.runCheck' ci)
-
-_printMiniLogs :: Map PC.ModuleName String -> IO ()
-_printMiniLogs mls = for_ (Map.toList mls) (\(mn, ml) -> print ("### Module" <> show (moduleNameToMiniLogFilepath mn)) >> print ml)
 
 goldensDir :: FilePath
 goldensDir = "data/typeclasscheck-goldens"

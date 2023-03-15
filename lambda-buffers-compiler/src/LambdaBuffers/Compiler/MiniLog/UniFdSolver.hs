@@ -1,5 +1,5 @@
 -- | unification-fd based solver.
-module LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve, runUMonad) where
+module LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve) where
 
 import Control.Monad (filterM, foldM, foldM_, void)
 import Control.Monad.Error.Class (MonadError (catchError, throwError))
@@ -35,9 +35,7 @@ instance (Eq fun, Eq atom) => Unifiable (Term' fun atom) where
 data UError fun atom
   = OccursFailure IntVar (UTerm fun atom)
   | MismatchFailure (Term' fun atom (UTerm fun atom)) (Term' fun atom (UTerm fun atom))
-  | MissingClause (ML.Term fun atom)
-  | OverlappingClauses [ML.Clause fun atom] (ML.Term fun atom)
-  | Cycle [ML.Term fun atom]
+  | MLError (ML.MiniLogError fun atom)
   | Internal String
   deriving stock (Show)
 
@@ -49,14 +47,14 @@ instance Fallible (Term' fun atom) IntVar (UError fun atom) where
 type UTerm fun atom = U.UTerm (Term' fun atom) IntVar
 type Scope fun atom = Map ML.VarName IntVar
 
--- | A clause context consists of available clauses (knowledge base) and a trace of all the called goals that lead up to it.
+-- | A clause context consists of available clauses (knowledge base) and a trace of all the called goals that led up to it.
 data ClauseContext fun atom = MkClauseCtx
-  { cctxClauses :: [ML.Clause fun atom]
-  , cctxTrace :: [UTerm fun atom]
+  { cctxTrace :: [UTerm fun atom]
+  , cctxClauses :: [ML.Clause fun atom]
   }
   deriving stock (Show)
 
-type UMonad fun atom a =
+type UniM fun atom a =
   ReaderT
     (ClauseContext fun atom)
     ( ExceptT
@@ -68,32 +66,33 @@ type UMonad fun atom a =
     )
     a
 
-runUMonad :: [ML.Clause fun atom] -> UMonad fun atom a -> (Either (UError fun atom) a, [ML.MiniLogTrace fun atom])
-runUMonad clauses p =
-  let (errOrRes, logs) = runWriter . runIntBindingT . runExceptT . (`runReaderT` MkClauseCtx clauses mempty) $ p
+runUniM ::
+  [ML.Clause fun atom] ->
+  UniM fun atom a ->
+  (Either (UError fun atom) a, [ML.MiniLogTrace fun atom])
+runUniM clauses p =
+  let (errOrRes, logs) = runWriter . runIntBindingT . runExceptT . (`runReaderT` MkClauseCtx mempty clauses) $ p
    in (fst errOrRes, logs)
 
--- | Implements `MiniLog.Solver`.
+-- | Implements `ML.MiniLogSolver`.
 solve :: (Show fun, Show atom) => ML.MiniLogSolver fun atom
-solve clauses goals = case runUMonad clauses (top goals) of
+solve clauses goals = case runUniM clauses (top goals) of
   (Left err, logs) -> case err of
-    (OverlappingClauses overlaps goal) -> (Left $ ML.OverlappingClausesError overlaps goal, logs)
-    (MissingClause forGoal) -> (Left $ ML.MissingClauseError forGoal, logs)
-    (Cycle cycl) -> (Left $ ML.CycledGoalsError cycl, logs)
+    MLError mlErr -> (Left mlErr, logs)
     other -> (Left $ ML.InternalError . Text.pack . show $ other, logs)
   (Right res, logs) -> (Right res, logs)
 
 {- | Top clause essentially analogous to `?-` in Prolog.
  Behaves as a special `callClause` that keeps the `Scope` that the `solve` can return to users for inspecting results.
 -}
-top :: (Eq fun, Eq atom, Show fun, Show atom) => [ML.Term fun atom] -> UMonad fun atom (Map ML.VarName (ML.Term fun atom))
+top :: (Eq fun, Eq atom, Show fun, Show atom) => [ML.Term fun atom] -> UniM fun atom (Map ML.VarName (ML.Term fun atom))
 top goals = do
   (goals', scope) <- interpretTerms mempty goals
   _ <- solveGoal `traverse` goals'
   (fromUTerm . U.UVar) `traverse` scope
 
 -- | Solving a goal means looking up a matching clause and `callClause` on it with the given goal as the argument.
-solveGoal :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (UTerm fun atom)
+solveGoal :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
 solveGoal goal' = do
   -- TODO(bladyjoker): Reach out to the author for this issue.
   -- WARN(bladyjoker): Needed to resolve from UVar otherwise we try to do a lookup with a variable that everything unifies with.
@@ -111,7 +110,7 @@ solveGoal goal' = do
  We simply `interpretClause` and unify the given argument with the head of the clause.
  After that we proceed to call all sub-goals in the body of the clause.
 -}
-callClause :: (Eq fun, Eq atom, Show fun, Show atom) => ML.Clause fun atom -> UTerm fun atom -> UMonad fun atom (UTerm fun atom)
+callClause :: (Eq fun, Eq atom, Show fun, Show atom) => ML.Clause fun atom -> UTerm fun atom -> UniM fun atom (UTerm fun atom)
 callClause clause arg = do
   mlArg <- fromUTerm arg
   trace $ ML.CallClause clause mlArg
@@ -121,7 +120,8 @@ callClause clause arg = do
   trace $ ML.DoneClause clause mlArg
   return clauseHead'
 
-checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom ()
+-- | Checks if the supplied goal was already visited.
+checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom ()
 checkCycle goal = do
   visitedGoals <- asks cctxTrace
   foldM_
@@ -131,7 +131,7 @@ checkCycle goal = do
         catchError
           ( do
               goal' `unify` visited'
-              fromUTerm goal >>= throwError . Cycle . (: mayCycle)
+              fromUTerm goal >>= throwError . MLError . ML.CycledGoalsError . (: mayCycle)
           )
           ( \case
               MismatchFailure _ _ -> do
@@ -147,7 +147,7 @@ checkCycle goal = do
  This is a delicate operation, the search simply tries to unify the heads of `MiniLog.Clause`s with the given goal.
  However, before unifying with the goal, `duplicateTerm` is used to make sure the original goal variables are not affected (unified on) by the search.
 -}
-lookupClause :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (ML.Clause fun atom)
+lookupClause :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (ML.Clause fun atom)
 lookupClause goal = do
   -- WARN(bladyjoker): Goal has to be `force`d.
   mlGoal <- fromUTerm goal
@@ -167,14 +167,14 @@ lookupClause goal = do
       )
       clauses
   case matched of
-    [] -> throwError (MissingClause mlGoal)
+    [] -> throwError . MLError . ML.MissingClauseError $ mlGoal
     [clause] -> trace (ML.FoundClause mlGoal clause) >> return clause
-    overlaps -> throwError (OverlappingClauses overlaps mlGoal)
+    overlaps -> throwError . MLError . ML.OverlappingClausesError overlaps $ mlGoal
 
 {- | Duplicate a unifiable term (basically copies the structure and instantiates new variables).
  See https://www.swi-prolog.org/pldoc/doc_for?object=duplicate_term/2.
 -}
-duplicateTerm :: (Eq fun, Eq atom) => UTerm fun atom -> UMonad fun atom (UTerm fun atom)
+duplicateTerm :: (Eq fun, Eq atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
 duplicateTerm (U.UVar _) = freeVar
 duplicateTerm at@(U.UTerm (Atom' _)) = return at
 duplicateTerm (U.UTerm (Struct' f args)) = U.UTerm . Struct' f <$> (duplicateTerm `traverse` args)
@@ -182,16 +182,16 @@ duplicateTerm (U.UTerm (Struct' f args)) = U.UTerm . Struct' f <$> (duplicateTer
 {- | Turn a unifiable term back into it's original MiniLog.Term.
  The term needs to be `force`d otherwise you'd get back a variable.
 -}
-fromUTerm' :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (ML.Term fun atom)
+fromUTerm' :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (ML.Term fun atom)
 fromUTerm' (U.UVar v) = return $ ML.Var $ Text.pack $ show (U.getVarID v)
 fromUTerm' (U.UTerm (Atom' at)) = return $ ML.Atom at
 fromUTerm' (U.UTerm (Struct' f args)) = ML.Struct f <$> (fromUTerm' `traverse` args)
 
-fromUTerm :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UMonad fun atom (ML.Term fun atom)
+fromUTerm :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (ML.Term fun atom)
 fromUTerm t = force t >>= fromUTerm'
 
 -- | Turn a `MiniLog.Term` into a unifiable term.
-toUTerm :: (Eq fun, Eq atom) => ML.Term fun atom -> UMonad fun atom (UTerm fun atom)
+toUTerm :: (Eq fun, Eq atom) => ML.Term fun atom -> UniM fun atom (UTerm fun atom)
 toUTerm (ML.Var _) = freeVar
 toUTerm (ML.Atom at) = return . U.UTerm . Atom' $ at
 toUTerm (ML.Struct f args) = U.UTerm . Struct' f <$> (toUTerm `traverse` args)
@@ -200,14 +200,14 @@ toUTerm (ML.Struct f args) = U.UTerm . Struct' f <$> (toUTerm `traverse` args)
  This is where the magic happens as each `MiniLog.Var` gets associated with a `Unification.Uvar`, and thus all `Unification.unify`
  operations are propagated by the underlying machinery.
 -}
-interpretClause :: (Eq fun, Eq atom) => ML.Clause fun atom -> UMonad fun atom (UTerm fun atom, [UTerm fun atom])
+interpretClause :: (Eq fun, Eq atom) => ML.Clause fun atom -> UniM fun atom (UTerm fun atom, [UTerm fun atom])
 interpretClause (ML.MkClause headT body) = do
   (body', scope) <- interpretTerms mempty body
   (headT', _scope') <- interpretTerm scope headT
   return (headT', body')
 
 -- | TODO(bladyjoker): This is ugly.
-interpretTerms :: (Eq fun, Eq atom) => Scope fun atom -> [ML.Term fun atom] -> UMonad fun atom ([UTerm fun atom], Scope fun atom)
+interpretTerms :: (Eq fun, Eq atom) => Scope fun atom -> [ML.Term fun atom] -> UniM fun atom ([UTerm fun atom], Scope fun atom)
 interpretTerms scope terms = do
   (ts', vs') <-
     foldM
@@ -223,7 +223,7 @@ interpretTerms scope terms = do
  or reused from the `Scope` if it was already instantiated.
  The collected `Scope` is used in `top` to provide
 -}
-interpretTerm :: (Eq fun, Eq atom) => Scope fun atom -> ML.Term fun atom -> UMonad fun atom (UTerm fun atom, Scope fun atom)
+interpretTerm :: (Eq fun, Eq atom) => Scope fun atom -> ML.Term fun atom -> UniM fun atom (UTerm fun atom, Scope fun atom)
 interpretTerm scope (ML.Var vn) = case Map.lookup vn scope of
   Nothing -> do
     v <- freeVar'
@@ -235,24 +235,24 @@ interpretTerm scope (ML.Struct f args) = do
 interpretTerm scope (ML.Atom at) = return (U.UTerm $ Atom' at, scope)
 
 -- | Conventiently wrapped `UMonad` actions.
-debug :: Show a => a -> UMonad fun atom ()
+debug :: Show a => a -> UniM fun atom ()
 debug = trace . ML.InternalTrace . show
 
-trace :: ML.MiniLogTrace fun atom -> UMonad fun atom ()
+trace :: ML.MiniLogTrace fun atom -> UniM fun atom ()
 trace x = lift . lift . lift $ tell [x]
 
-force :: (Eq fun, Eq atom) => UTerm fun atom -> UMonad fun atom (UTerm fun atom)
+force :: (Eq fun, Eq atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
 force = lift . U.applyBindings
 
-unify :: (Eq fun, Eq atom, Show atom, Show fun) => UTerm fun atom -> UTerm fun atom -> UMonad fun atom ()
+unify :: (Eq fun, Eq atom, Show atom, Show fun) => UTerm fun atom -> UTerm fun atom -> UniM fun atom ()
 unify l r = do
   debug ("unify" :: String, l, r)
   void $ lift $ Unif.unify l r
 
-freeVar :: (Eq fun, Eq atom) => UMonad fun atom (UTerm fun atom)
+freeVar :: (Eq fun, Eq atom) => UniM fun atom (UTerm fun atom)
 freeVar = U.UVar <$> freeVar'
 
-freeVar' :: (Eq fun, Eq atom) => UMonad fun atom IntVar
+freeVar' :: (Eq fun, Eq atom) => UniM fun atom IntVar
 freeVar' = do
   v <- lift . lift $ Unif.freeVar
   debug ("new var" :: String, v)

@@ -2,8 +2,11 @@ module Test.LambdaBuffers.Compiler.MiniLog (test) where
 
 import Control.Monad (void)
 import Data.Map qualified as Map
-import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, showClauses, (@<=))
+import Data.Text qualified as Text
+import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
+import LambdaBuffers.Compiler.MiniLog.Pretty (toPrologModule)
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve)
+import System.FilePath ((<.>))
 import Test.LambdaBuffers.Compiler.Utils.Golden qualified as Golden
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (Assertion, assertEqual, assertFailure, testCase)
@@ -20,12 +23,12 @@ printingToPrologTests :: TestTree
 printingToPrologTests =
   testGroup
     "Should print to Prolog"
-    [ shouldPrint "greeks.pl" greekKnowledge
-    , shouldPrint "family.pl" familyKnowledge
-    , shouldPrint "eq_typeclass.pl" eqTypeClassKnowledge
-    , shouldPrint "cycle.pl" cycleKnowledge
-    , shouldPrint "very_long_body.pl" [Struct "long body" [Var "X"] @<= replicate 20 (Struct "foo" [Var "X"])]
-    , shouldPrint "very_long_arguments.pl" [Struct "foo" (replicate 50 (Var "X")) @<= replicate 2 (Struct "foo" (replicate 50 (Var "X")))]
+    [ shouldPrint "greeks" greekKnowledge
+    , shouldPrint "family" familyKnowledge
+    , shouldPrint "eq_typeclass" eqTypeClassKnowledge
+    , shouldPrint "cycle" cycleKnowledge
+    , shouldPrint "very_long_body" [Struct "long body" [Var "X"] @<= replicate 20 (Struct "foo" [Var "X"])]
+    , shouldPrint "very_long_arguments" [Struct "foo" (replicate 50 (Var "X")) @<= replicate 2 (Struct "foo" (replicate 50 (Var "X")))]
     ]
 
 shouldFailToSolve :: TestTree
@@ -335,5 +338,5 @@ shouldPrint title clauses =
     goldensDir
     (\fn -> (,) <$> readFile fn <*> pure fn)
     writeFile
-    title
-    (Right @() $ Map.singleton Nothing (showClauses clauses))
+    (title <.> "pl")
+    (Right @() $ Map.mapKeys (const Nothing) $ Map.fromList [toPrologModule (Text.pack title) clauses])

@@ -116,6 +116,7 @@ library
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
     LambdaBuffers.Compiler.MiniLog
+    LambdaBuffers.Compiler.MiniLog.Pretty
     LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
