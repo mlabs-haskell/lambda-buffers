@@ -1,0 +1,7 @@
+[book]
+authors = [
+]
+language = "en"
+multilingual = false
+src = "."
+title = "Lambda Buffers documentation"

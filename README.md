@@ -1,5 +1,7 @@
 # Lambda Buffers
 
+![LambdaBuffers banner](docs/images/lambda-buffers-banner.png)
+
 ## Introduction
 
 _LambdaBuffers_ is a schema language (similar to ProtoBuffers, ADL, ASN.1, JSON
