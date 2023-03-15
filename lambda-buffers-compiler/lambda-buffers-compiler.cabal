@@ -1,12 +1,17 @@
-cabal-version: 3.0
-name:          lambda-buffers-compiler
-version:       0.1.0.0
-synopsis:      Lambda Buffers compiler
+cabal-version:      3.0
+name:               lambda-buffers-compiler
+version:            0.1.0.0
+synopsis:           Lambda Buffers compiler
+data-files:
+  data/**/*.pl
+  data/**/*.textproto
 
--- license:
+extra-source-files:
+  data/**/*.pl
+  data/**/*.textproto
 
-author:        MLabs LTD
-maintainer:    info@mlabs.city
+author:             MLabs LTD
+maintainer:         info@mlabs.city
 
 flag dev
   description: Enable non-strict compilation for development
@@ -84,27 +89,24 @@ common common-language
 
   default-language:   Haskell2010
 
-common common-imports
-  build-depends:
-    , base  >=4.16
-    , lens  >=5.2
-
 library
   import:          common-language
-  import:          common-imports
   build-depends:
+    , base                        >=4.16
     , containers                  >=0.6.5.1
     , data-default                >=0.7
     , freer-simple                >=1.2
     , generic-lens                >=2.2
     , generics-sop                >=0.5
     , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lens                        >=5.2
     , mtl                         >=2.2
     , ordered-containers          >=0.2
     , parsec                      >=3.1
     , prettyprinter               >=1.7
     , proto-lens                  >=0.7
     , text                        >=1.2
+    , unification-fd
 
   exposed-modules:
     LambdaBuffers.Compiler
@@ -113,17 +115,25 @@ library
     LambdaBuffers.Compiler.KindCheck.Inference
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
+    LambdaBuffers.Compiler.MiniLog
+    LambdaBuffers.Compiler.MiniLog.Pretty
+    LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
+    LambdaBuffers.Compiler.ProtoCompat.Eval
     LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Indexing
     LambdaBuffers.Compiler.ProtoCompat.InfoLess
     LambdaBuffers.Compiler.ProtoCompat.Types
+    LambdaBuffers.Compiler.ProtoCompat.Utils
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Compat
+    LambdaBuffers.Compiler.TypeClassCheck.Errors
+    LambdaBuffers.Compiler.TypeClassCheck.MiniLog
     LambdaBuffers.Compiler.TypeClassCheck.Pat
     LambdaBuffers.Compiler.TypeClassCheck.Pretty
     LambdaBuffers.Compiler.TypeClassCheck.Rules
+    LambdaBuffers.Compiler.TypeClassCheck.RuleSet
     LambdaBuffers.Compiler.TypeClassCheck.Solve
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
     LambdaBuffers.Compiler.TypeClassCheck.Utils
@@ -133,12 +143,13 @@ library
 
 executable lbc
   import:         common-language
-  import:         common-imports
   main-is:        Main.hs
   build-depends:
+    , base                        >=4.16
     , bytestring                  >=0.11
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lens                        >=5.2
     , optparse-applicative        >=0.17
     , proto-lens                  >=0.7
     , text                        >=1.2
@@ -148,17 +159,18 @@ executable lbc
 
 test-suite tests
   import:         common-language
-  import:         common-imports
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
+    , base                        >=4.16
     , containers                  >=0.6
     , data-default                >=0.7
-    , generic-lens                >=2.2
+    , filepath                    >=1.4
     , hedgehog                    >=1.2
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
     , nonempty-containers         >=0.3
     , ordered-containers          >=0.2
     , proto-lens                  >=0.7
@@ -168,13 +180,19 @@ test-suite tests
     , text                        >=1.2
 
   other-modules:
+    Paths_lambda_buffers_compiler
     Test.DeriveCheck
     Test.KindCheck
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
+    Test.LambdaBuffers.Compiler.MiniLog
     Test.LambdaBuffers.Compiler.Mutation
+    Test.LambdaBuffers.Compiler.ProtoCompat.Eval
+    Test.LambdaBuffers.Compiler.ProtoCompat.Utils
+    Test.LambdaBuffers.Compiler.TypeClassCheck
     Test.LambdaBuffers.Compiler.Utils
+    Test.LambdaBuffers.Compiler.Utils.Golden
     Test.LambdaBuffers.Compiler.WellFormed
     Test.TypeClassCheck
     Test.Utils.CompilerInput

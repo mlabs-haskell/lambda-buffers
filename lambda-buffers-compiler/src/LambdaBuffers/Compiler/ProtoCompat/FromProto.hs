@@ -557,24 +557,42 @@ instance IsMessage P.ClassDef PC.ClassDef where
       & P.documentation .~ doc
       & P.sourceInfo .~ toProto si
 
+instance IsMessage P.ClassConstraint PC.ClassConstraint where
+  fromProto cc = do
+    cr <- fromProto $ cc ^. P.classRef
+    args <- traverse fromProto $ cc ^. P.args
+    arg <- case args of
+      [] -> throwInternalError "ClassConstraint: Zero parameter type classes are not supported"
+      [x] -> return x
+      _ -> throwInternalError "ClassConstraint: Multi parameter type classes are not supported"
+    pure $ PC.ClassConstraint cr arg
+
+  toProto (PC.ClassConstraint cr arg) =
+    defMessage
+      & P.classRef .~ toProto cr
+      & P.args .~ [toProto arg]
+
 instance IsMessage P.InstanceClause PC.InstanceClause where
   fromProto ic = do
     si <- fromProto $ ic ^. P.sourceInfo
-    cnm <- fromProto $ ic ^. P.classRef
-    csts <- traverse fromProto $ ic ^. P.constraints
-    args <- traverse fromProto $ ic ^. P.args
-    arg <- case args of
-      [] -> throwInternalError "Zero instance arguments, but zero parameter type classes are not supported"
-      [x] -> return x
-      _ -> throwInternalError "Multiple instance arguments, but multi parameter type classes are not supported"
-    pure $ PC.InstanceClause cnm arg csts si
+    hd <- fromProto $ ic ^. P.head
+    body <- traverse fromProto $ ic ^. P.constraints
+    pure $ PC.InstanceClause hd body si
 
-  toProto (PC.InstanceClause cnm hd csts si) =
+  toProto (PC.InstanceClause hd cstrs si) =
     defMessage
-      & P.classRef .~ toProto cnm
-      & P.args .~ pure (toProto hd)
-      & P.constraints .~ (toProto <$> csts)
+      & P.head .~ toProto hd
+      & P.constraints .~ (toProto <$> cstrs)
       & P.sourceInfo .~ toProto si
+
+instance IsMessage P.Derive PC.Derive where
+  fromProto c = do
+    cstr <- fromProto $ c ^. P.constraint
+    pure $ PC.Derive cstr
+
+  toProto (PC.Derive cstr) =
+    defMessage
+      & P.constraint .~ toProto cstr
 
 instance IsMessage P.Constraint PC.Constraint where
   fromProto c = do
@@ -633,15 +651,16 @@ instance IsMessage P.Module PC.Module where
             ]
           protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
       if null protoParseErrs
-        then pure $ PC.Module mnm tydefs cldefs insts impts si
+        then pure $ PC.Module mnm tydefs cldefs insts [] impts si
         else throwError protoParseErrs
 
-  toProto (PC.Module mnm tdefs cdefs insts impts si) =
+  toProto (PC.Module mnm tdefs cdefs insts drv impts si) =
     defMessage
       & P.moduleName .~ toProto mnm
       & P.typeDefs .~ (toProto <$> toList tdefs)
       & P.classDefs .~ (toProto <$> toList cdefs)
       & P.instances .~ (toProto <$> insts)
+      & P.derives .~ (toProto <$> drv)
       & P.imports .~ (toProto <$> toList impts)
       & P.sourceInfo .~ toProto si
 

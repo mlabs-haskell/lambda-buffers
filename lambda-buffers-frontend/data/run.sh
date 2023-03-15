@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 function lbf {
    cabal run lbf -- $@
 }
@@ -19,3 +19,5 @@ lbf-comp -i tydef_name_conflict -f tydef_name_conflict/A.lbf
 lbf-comp -i tyref_not_found -f tyref_not_found/A.lbf
 
 lbf-comp -w good/work-dir -i good -f good/Test.lbf
+
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf

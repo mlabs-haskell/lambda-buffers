@@ -3,16 +3,17 @@ module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, CabalPackageNa
 import Control.Lens ((^.))
 import Data.Text (Text)
 import Data.Text qualified as Text
+import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 type QTyName = (CabalPackageName, ModuleName, TyName)
 type QClassName = (CabalPackageName, ModuleName, ClassName)
 
-newtype CabalPackageName = MkCabalPackageName Text deriving stock (Eq, Ord, Show)
-newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show)
-newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show)
-newtype ClassName = MkClassName Text deriving stock (Eq, Ord, Show)
-newtype FunctionName = MkFunctionName Text deriving stock (Eq, Ord, Show)
+newtype CabalPackageName = MkCabalPackageName Text deriving stock (Eq, Ord, Show, Generic)
+newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
+newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
+newtype ClassName = MkClassName Text deriving stock (Eq, Ord, Show, Generic)
+newtype FunctionName = MkFunctionName Text deriving stock (Eq, Ord, Show, Generic)
 
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name

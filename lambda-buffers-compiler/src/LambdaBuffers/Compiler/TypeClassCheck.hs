@@ -1,75 +1,65 @@
-{-# LANGUAGE OverloadedStrings #-}
-
-module LambdaBuffers.Compiler.TypeClassCheck (runDeriveCheck, runCheck) where
+module LambdaBuffers.Compiler.TypeClassCheck (runCheck, runCheck') where
 
 import Control.Lens ((&), (.~))
-import Control.Monad (void)
-import Data.Map (traverseWithKey)
-import Data.Map qualified as M
+import Data.Map (Map)
+import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
-import Data.Set qualified as S
 import Data.Text (Text)
 import Data.Text qualified as Text
+import LambdaBuffers.Compiler.MiniLog.Pretty qualified as ML
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.TypeClassCheck.Pretty (spaced, (<//>))
+import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (mappendErrs, memptyErr)
+import LambdaBuffers.Compiler.TypeClassCheck.MiniLog (Clause, Term, runSolve)
+import LambdaBuffers.Compiler.TypeClassCheck.RuleSet (buildRules)
 import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as Super
-import LambdaBuffers.Compiler.TypeClassCheck.Utils (
-  Instance,
-  ModuleBuilder (mbInstances),
-  TypeClassError (FailedToSolveConstraints),
-  checkInstance,
-  mkBuilders,
- )
-import LambdaBuffers.Compiler.TypeClassCheck.Validate (checkDerive)
-import Prettyprinter (
-  Doc,
-  Pretty (pretty),
-  indent,
-  line,
-  punctuate,
-  vcat,
-  (<+>),
- )
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-data ClassInfo = ClassInfo {ciName :: Text, ciSupers :: [Text]}
-  deriving stock (Show, Eq, Ord)
-
-runDeriveCheck :: PC.InfoLess PC.ModuleName -> ModuleBuilder -> Either TypeClassError ()
-runDeriveCheck mn mb = mconcat <$> traverse go (S.toList $ mbInstances mb)
-  where
-    go :: Instance -> Either TypeClassError ()
-    go i =
-      checkInstance i
-        >> checkDerive mn mb i
-        >>= \case
-          [] -> pure ()
-          xs -> Left $ FailedToSolveConstraints mn xs i
-
-runDeriveCheck' :: PC.CompilerInput -> Either TypeClassError (M.Map (PC.InfoLess PC.ModuleName) ModuleBuilder)
-runDeriveCheck' ci = do
-  moduleBuilders <- mkBuilders ci
-  void $ traverseWithKey runDeriveCheck moduleBuilders
-  pure moduleBuilders
-
 runCheck :: PC.CompilerInput -> Either P.CompilerError ()
-runCheck ci = case Super.runCheck ci of
+runCheck = fst . runCheck'
+
+runCheck' :: PC.CompilerInput -> (Either P.CompilerError (), Map FilePath String)
+runCheck' ci = case runSuperClassCycleCheck ci of
+  Left err -> (Left err, mempty)
+  Right _ -> runConstraintsCheck ci
+
+-- | Determines if type classes form a hierarchichal relation (no cycles).
+runSuperClassCycleCheck :: PC.CompilerInput -> Either P.CompilerError ()
+runSuperClassCycleCheck ci = case Super.runCheck ci of
   Left errs -> Left $ defMessage & P.tyClassCheckErrors .~ errs
-  Right () -> case runDeriveCheck' ci of
-    Left err -> Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ ("TODO(bladyjoker): Use proper errors" <> (Text.pack . show $ err))]
-    Right _ -> Right ()
+  Right _ -> Right ()
 
-_validateTypeClasses :: PC.CompilerInput -> IO (M.Map (PC.InfoLess PC.ModuleName) ModuleBuilder)
-_validateTypeClasses ci = case runDeriveCheck' ci of
-  Left err -> print (spaced $ pretty err) >> error "\nCompilation aborted due to TypeClass Error"
-  Right mbs -> print (_prettyBuilders mbs) >> pure mbs
+{- | Runs checks on type class constraints.
+ Traverses the modules and builds a rule set for each. For any
+ `PC.InstanceClause` and `PC.Derive` encountered, turn the head constraint into
+ a query goal and try to solve/evaluate it.
 
-_prettyBuilders :: forall a. M.Map (PC.InfoLess PC.ModuleName) ModuleBuilder -> Doc a
-_prettyBuilders = spaced . vcat . punctuate line . map (uncurry go) . M.toList
-  where
-    go :: PC.InfoLess PC.ModuleName -> ModuleBuilder -> Doc a
-    go mn mb =
-      "MODULE"
-        <+> PC.withInfoLess mn pretty
-        <//> indent 2 (pretty mb)
+ Errors are collected for each module and provided back to the caller along with
+ a map of Prolog rendered MiniLog clauses for each module which can be used to
+ inspect the rules if needed.
+-}
+runConstraintsCheck :: PC.CompilerInput -> (Either P.CompilerError (), Map FilePath String)
+runConstraintsCheck ci =
+  let (errs, printed) =
+        foldr
+          solveAndPrint
+          (memptyErr, mempty)
+          (Map.toList . buildRules $ ci)
+   in if errs == memptyErr
+        then (Right (), printed)
+        else (Left errs, printed)
+
+solveAndPrint :: (PC.ModuleName, Either P.CompilerError ([Clause], [Term])) -> (P.CompilerError, Map FilePath String) -> (P.CompilerError, Map FilePath String)
+solveAndPrint (mn, errOrClauses) (errs, printed) =
+  case errOrClauses of
+    Left buildErr -> (buildErr `mappendErrs` errs, printed)
+    Right (clauses, goals) ->
+      let (fp, prolog) = ML.toPrologModule (modNameToText mn) clauses
+          printed' = Map.insert fp prolog printed
+       in case runSolve mn clauses goals of
+            Left solveErr -> (solveErr `mappendErrs` errs, printed')
+            Right _ -> (errs, printed')
+
+modNameToText :: PC.ModuleName -> Text
+modNameToText = Text.pack . show . PC.prettyModuleName

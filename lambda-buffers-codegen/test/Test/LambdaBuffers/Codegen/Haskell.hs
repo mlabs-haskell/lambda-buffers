@@ -6,7 +6,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Haskell.Config (Config (MkConfig))
+import LambdaBuffers.Codegen.Config (Config (MkConfig))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -14,8 +14,8 @@ import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
 import Data.Default (Default (def))
+import LambdaBuffers.Codegen.Haskell qualified as H
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
-import LambdaBuffers.Codegen.Haskell.PrintM qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
 import Prettyprinter (vsep)
 import Test.Tasty (TestTree, testGroup)
@@ -25,7 +25,7 @@ tests :: TestTree
 tests =
   testGroup
     "LambdaBuffers.Codegen.Haskell"
-    [testCase "should succeed" $ testPrint testCompInp testConfig "module LambdaBuffers.TestMod (Either,I8,Maybe,Set) where\n\n\nimport qualified Data.Int\nimport qualified Data.Set\n\n\ndata Either a b = Either'Left a | Either'Right b\ntype I8 = Data.Int.Int8\ndata Maybe a = Maybe'Just a | Maybe'Nothing \ntype Set = Data.Set.Set\n\n\nmodule LambdaBuffers.TestMod2 (Foo,I16) where\n\n\nimport qualified Data.Int\nimport qualified LambdaBuffers.TestMod\n\n\ndata Foo a = Foo'MkFoo a I16 TestMod.I8\ntype I16 = Data.Int.Int16\n\n"]
+    [testCase "should succeed" $ testPrint testCompInp testConfig "module LambdaBuffers.TestMod (Either, I8, Maybe, Set) where\n\nimport qualified Data.Int\nimport qualified Data.Set\n\ndata Either a b = Either'Left a | Either'Right b\ntype I8 = Data.Int.Int8\ndata Maybe a = Maybe'Just a | Maybe'Nothing \ntype Set a = Data.Set.Set a\nmodule LambdaBuffers.TestMod2 (Foo, I16) where\n\nimport qualified LambdaBuffers.TestMod\nimport qualified Data.Int\n\ndata Foo a = Foo'MkFoo a I16 LambdaBuffers.TestMod.I8\ntype I16 = Data.Int.Int16"]
 
 testPrint :: P.CompilerInput -> H.Config -> String -> Assertion
 testPrint compInp cfg want = do
@@ -112,12 +112,16 @@ testModule1 =
          ]
     & P.instances
       .~ [ defMessage
-            & P.classRef . P.localClassRef . P.className . P.name .~ "Eq"
-            & P.args
-              .~ [ defMessage
-                    & P.tyApp . P.tyFunc . P.tyRef . P.localTyRef . P.tyName . P.name .~ "Maybe"
-                    & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
-                 ]
+            & P.head
+              .~ ( defMessage
+                    & P.classRef . P.localClassRef . P.className . P.name .~ "Eq"
+                    & P.args
+                      .~ [ defMessage
+                            & P.tyApp . P.tyFunc . P.tyRef . P.localTyRef . P.tyName . P.name .~ "Maybe"
+                            & P.tyApp . P.tyArgs .~ [mkTyVar "a"]
+                         ]
+                 )
+            & P.constraints .~ []
          ]
 
 testModule2 :: P.Module

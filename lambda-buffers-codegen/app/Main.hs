@@ -1,7 +1,8 @@
 module Main (main) where
 
 import Control.Applicative (optional, (<**>))
-import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts), gen)
+import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
+import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import Options.Applicative (
   Parser,
   ParserInfo,
@@ -22,19 +23,27 @@ import Options.Applicative (
   showHelpOnError,
   strOption,
   subparser,
+  value,
  )
 
 newtype Command
-  = Gen GenOpts
+  = GenHaskell Haskell.GenOpts
 
 genOptsP :: Parser GenOpts
 genOptsP =
   GenOpts
     <$> strOption
-      ( long "file"
-          <> short 'f'
+      ( long "input"
+          <> short 'i'
           <> metavar "FILEPATH"
-          <> help "Compiled LambdaBuffers schema to compile"
+          <> help "Compiled LambdaBuffers schema to code generate for"
+      )
+    <*> strOption
+      ( long "output"
+          <> short 'o'
+          <> metavar "FILEPATH"
+          <> value "codegen-output.textproto"
+          <> help "Codegen output"
       )
     <*> flag
       False
@@ -44,13 +53,17 @@ genOptsP =
           <> help "Run in debug mode"
           <> showDefault
       )
+
+haskellGenOptsP :: Parser Haskell.GenOpts
+haskellGenOptsP =
+  Haskell.MkGenOpts
+    <$> genOptsP
     <*> optional
       ( strOption
-          ( long "work-dir"
-              <> short 'w'
+          ( long "config"
+              <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Working directory used to communicate with the Codegen"
-              <> showDefault
+              <> help "Configuration file for the Haskell codegen module"
           )
       )
 
@@ -58,8 +71,8 @@ optionsP :: Parser Command
 optionsP =
   subparser $
     command
-      "gen"
-      (info (Gen <$> genOptsP <* helper) (progDesc "Generate code from a compiled LambdaBuffers schema"))
+      "gen-haskell"
+      (info (GenHaskell <$> haskellGenOptsP <* helper) (progDesc "Generate Haskell code from a compiled LambdaBuffers schema"))
 
 parserInfo :: ParserInfo Command
 parserInfo = info (optionsP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
@@ -68,4 +81,4 @@ main :: IO ()
 main = do
   cmd <- customExecParser (prefs (showHelpOnEmpty <> showHelpOnError)) parserInfo
   case cmd of
-    Gen opts -> gen opts
+    GenHaskell opts -> Haskell.gen opts

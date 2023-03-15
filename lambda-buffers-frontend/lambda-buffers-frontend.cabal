@@ -2,21 +2,14 @@ cabal-version:      3.0
 name:               lambda-buffers-frontend
 version:            0.1.0.0
 synopsis:           Lambda Buffers Frontend
-
--- license:
-
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-
--- A copyright notice.
--- copyright:
--- category:
+extra-source-files: data/**/*.lbf
+data-files:         data/**/*.lbf
 
 flag dev
   description: Enable non-strict compilation for development
   manual:      True
-
-extra-source-files: resources/**/*.lbf
 
 common common-language
   ghc-options:
@@ -123,7 +116,7 @@ executable lbf
     , prettyprinter               >=1.7
     , process                     >=1.6
     , proto-lens                  >=0.7
-    , temporary
+    , temporary                   >=1.3
     , text                        >=1.2
 
   hs-source-dirs: app
@@ -133,10 +126,10 @@ executable lbf
     LambdaBuffers.Frontend.Cli.Format
 
 test-suite tests
-  import:         common-language
-  type:           exitcode-stdio-1.0
-  hs-source-dirs: test
-  main-is:        Test.hs
+  import:          common-language
+  type:            exitcode-stdio-1.0
+  hs-source-dirs:  test
+  main-is:         Test.hs
   build-depends:
     , base                     >=4.16
     , containers               >=0.6
@@ -146,4 +139,7 @@ test-suite tests
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
 
-  other-modules:  Test.LambdaBuffers.Frontend
+  autogen-modules: Paths_lambda_buffers_frontend
+  other-modules:
+    Paths_lambda_buffers_frontend
+    Test.LambdaBuffers.Frontend

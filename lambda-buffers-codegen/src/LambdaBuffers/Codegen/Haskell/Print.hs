@@ -1,98 +1,125 @@
-module LambdaBuffers.Codegen.Haskell.Print (printTyDefOpaque, printTyDefNonOpaque, NonOpaqueTyBody (..), printModule) where
+module LambdaBuffers.Codegen.Haskell.Print (printModule) where
 
-import Control.Lens ((^.))
+import Control.Lens (view, (^.))
+import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Reader.Class (ask, asks)
 import Data.Char qualified as Char
 import Data.Foldable (Foldable (toList))
-import Data.Map.Ordered (OMap)
+import Data.Map qualified as Map
+import Data.Map.Ordered qualified as OMap
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
+import Data.Traversable (for)
+import LambdaBuffers.Codegen.Config (opaques)
+import LambdaBuffers.Codegen.Haskell.Syntax (fromLbModuleName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Print (ctxConfig, ctxModule)
+import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, dot, encloseSep, equals, group, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, squote, surround, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, lparen, parens, pipe, rbrace, rparen, sep, space, squote, vsep, (<+>))
 
-printModuleHeader :: H.ModuleName -> Set H.TyName -> Doc a
-printModuleHeader (H.MkModuleName mn) exports =
-  let typeExportsDoc = align $ group $ encloseSep lparen rparen comma ((\(H.MkTyName tn) -> pretty tn) <$> toList exports)
-   in "module" <+> pretty mn <+> typeExportsDoc <+> "where"
+type MonadPrint m = Print.MonadPrint H.QTyName H.QClassName m
 
-printImports :: Set H.QTyName -> Doc a
-printImports imports =
-  let grouped = Set.fromList [(c, mn) | (c, mn, _tn) <- toList imports]
-      typeImportsDocs = (\(_, H.MkModuleName mn) -> "import qualified" <+> pretty mn) <$> toList grouped
-      typeImportsDoc = vsep typeImportsDocs
-   in typeImportsDoc
+printModule :: MonadPrint m => m (Doc a)
+printModule = do
+  Print.MkContext m lbTyImps opTyImps tyExps _cfg <- ask
+  tyDefDocs <- for (toList $ m ^. #typeDefs) printTyDef
+  return $
+    align . vsep $
+      [ printModuleHeader (m ^. #moduleName) tyExps
+      , mempty
+      , printImports lbTyImps opTyImps
+      , mempty
+      , vsep tyDefDocs
+      ]
 
-printTyDefs :: [Doc a] -> Doc a
-printTyDefs = vsep
+printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc a
+printModuleHeader mn exports =
+  let typeExportsDoc = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyName) <$> toList exports)
+   in "module" <+> printModName mn <+> typeExportsDoc <+> "where"
 
-printModule :: H.ModuleName -> Set H.TyName -> Set H.QTyName -> [Doc a] -> Doc a
-printModule modName tyExports tyImports tyDefDocs =
-  vsep
-    [ printModuleHeader modName tyExports
-    , line
-    , printImports tyImports
-    , line
-    , printTyDefs tyDefDocs
-    , line
-    ]
+printImports :: Set PC.QTyName -> Set H.QTyName -> Doc a
+printImports lbTyImports hsTyImports =
+  let groupedLbImports = Set.fromList [PC.withInfoLess mn id | (mn, _tn) <- toList lbTyImports]
+      lbImportDocs = (\mn -> "import qualified" <+> printModName mn) <$> toList groupedLbImports
 
-printTyVar :: PC.TyVar -> Doc a
-printTyVar (PC.TyVar vn) = printVarName vn
+      groupedHsImports = Set.fromList [mn | (_cbl, mn, _tn) <- toList hsTyImports]
+      hsImportDocs = (\(H.MkModuleName mn) -> "import qualified" <+> pretty mn) <$> toList groupedHsImports
 
-printVarName :: PC.VarName -> Doc a
-printVarName (PC.VarName n _) = pretty n
-
-printTyName :: PC.TyName -> Doc a
-printTyName (PC.TyName n _) = pretty n
+      importsDoc = vsep $ lbImportDocs ++ hsImportDocs
+   in importsDoc
 
 printModName :: PC.ModuleName -> Doc a
-printModName (PC.ModuleName parts _) = group $ concatWith (surround dot) [pretty p | PC.ModuleNamePart p _ <- parts]
+printModName mn = let H.MkModuleName hmn = fromLbModuleName mn in pretty hmn
 
-{- | Creates an alias to the specified 'native' type.
+printHsQTyName :: H.QTyName -> Doc a
+printHsQTyName (_, H.MkModuleName hsModName, H.MkTyName hsTyName) = pretty hsModName <> dot <> pretty hsTyName
 
+{- | Prints the type definition.
+
+sum Foo a b = MkFoo a | MkBar b
 opaque Maybe a
 
 translates to
 
-type Maybe = Prelude.Maybe
+data Foo a b = Foo'MkFoo a | Foo'MkBar b
+type Maybe a = Prelude.Maybe a
 -}
-printTyDefOpaque :: PC.TyName -> (H.CabalPackageName, H.ModuleName, H.TyName) -> Doc a
-printTyDefOpaque tyN hsTyRef = "type" <+> printTyName tyN <+> equals <+> printHsTyRef hsTyRef
+printTyDef :: MonadPrint m => PC.TyDef -> m (Doc a)
+printTyDef (PC.TyDef tyN tyabs _) = do
+  (kw, absDoc) <- printTyAbs tyN tyabs
+  return $ group $ kw <+> printTyName tyN <+> absDoc
 
-printHsTyRef :: H.QTyName -> Doc a
-printHsTyRef (_, H.MkModuleName hsModName, H.MkTyName hsTyName) = pretty hsModName <> dot <> pretty hsTyName
+{- | Prints the type abstraction.
 
--- | Used to distinguish from Opaques.
-newtype NonOpaqueTyBody = Sum PC.Sum
+For the above examples it prints
 
-printTyDefNonOpaque :: PC.TyName -> OMap (PC.InfoLess PC.VarName) PC.TyArg -> NonOpaqueTyBody -> Doc a
-printTyDefNonOpaque tyN args body =
-  let argsDoc = sep (printTyArg <$> toList args)
-      (keyword, bodyDoc) = printTyBody tyN body
-   in group $ keyword <+> printTyName tyN <+> argsDoc <+> equals <+> bodyDoc
+a b = Foo'MkFoo a | Foo'MkBar b
+a = Prelude.Maybe a
+-}
+printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc a, Doc a)
+printTyAbs tyN (PC.TyAbs args body _) = do
+  let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
+  (kw, bodyDoc) <- printTyBody tyN (toList args) body
+  return (kw, group $ argsDoc <> align (equals <+> bodyDoc))
 
--- TODO(bladyjoker): Add Record/Tuple.
-printTyBody :: PC.TyName -> NonOpaqueTyBody -> (Doc a, Doc a)
-printTyBody tyN (Sum s) = ("data", printTyBodySum tyN s)
+{- | Prints the type body.
+
+For the above examples it prints
+
+Foo'MkFoo a | Foo'MkBar b
+Prelude.Maybe a
+
+TODO(bladyjoker): Add Record/Tuple.
+-}
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc a, Doc a)
+printTyBody tyN _ (PC.SumI s) = ("data",) <$> printTyBodySum tyN s
+printTyBody tyN args (PC.OpaqueI si) = do
+  opqs <- asks (view $ ctxConfig . opaques)
+  mn <- asks (view $ ctxModule . #moduleName)
+  case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
+    Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
+    Just hqtyn -> return ("type", printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: forall {a}. PC.TyArg -> Doc a
 printTyArg (PC.TyArg vn _ _) = printVarName vn
 
-printTyBodySum :: PC.TyName -> PC.Sum -> Doc a
-printTyBodySum tyN (PC.Sum ctors _) =
-  let ctorDocs = printCtor tyN <$> toList ctors
-   in group $
-        if null ctors
-          then mempty
-          else align $ encloseSep mempty mempty (space <> pipe <> space) ctorDocs
+printTyBodySum :: MonadPrint m => PC.TyName -> PC.Sum -> m (Doc a)
+printTyBodySum tyN (PC.Sum ctors _) = do
+  ctorDocs <- for (toList ctors) (printCtor tyN)
+  return $
+    group $
+      if null ctors
+        then mempty
+        else sep $ zipWith (<>) (mempty : repeat (pipe <> space)) ctorDocs
 
-printCtor :: PC.TyName -> PC.Constructor -> Doc a
-printCtor tyN (PC.Constructor ctorName prod) =
+printCtor :: MonadPrint m => PC.TyName -> PC.Constructor -> m (Doc a)
+printCtor tyN (PC.Constructor ctorName prod) = do
   let ctorNDoc = printCtorName tyN ctorName
-      prodDoc = printProd tyN prod
-   in align $ group (ctorNDoc <+> prodDoc)
+  prodDoc <- printProd tyN prod
+  return $ group $ ctorNDoc <+> prodDoc -- FIXME(bladyjoker): Adds extra space when empty.
 
 {- | Translate LambdaBuffer sum constructor names into Haskell sum constructor names.
  sum Sum = Foo Int | Bar String
@@ -102,32 +129,41 @@ printCtor tyN (PC.Constructor ctorName prod) =
 printCtorName :: PC.TyName -> PC.ConstrName -> Doc a
 printCtorName tyN (PC.ConstrName n _) = group $ printTyName tyN <> squote <> pretty n
 
-printProd :: PC.TyName -> PC.Product -> Doc a
+printProd :: MonadPrint m => PC.TyName -> PC.Product -> m (Doc a)
 printProd tyN (PC.RecordI rc) = printRec tyN rc
-printProd _ (PC.TupleI tup) = printTup tup
+printProd _ (PC.TupleI tup) = return $ printTup tup
 
-printRec :: PC.TyName -> PC.Record -> Doc a
-printRec tyN (PC.Record fields _) =
-  let fieldDocs = printField tyN <$> toList fields
-   in group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
+printRec :: MonadPrint m => PC.TyName -> PC.Record -> m (Doc a)
+printRec tyN (PC.Record fields _) = do
+  if null fields
+    then return mempty
+    else do
+      fieldDocs <- for (toList fields) (printField tyN)
+      return $ group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
 
 printTup :: PC.Tuple -> Doc a
-printTup (PC.Tuple fields _) = group $ sep (printTy <$> fields)
+printTup (PC.Tuple fields _) = do
+  if null fields
+    then mempty
+    else group . align $ sep (printTy <$> fields)
 
-printField :: PC.TyName -> PC.Field -> Doc a
-printField tyN (PC.Field fn ty) = printFieldName tyN fn <+> colon <> colon <+> printTy ty
+printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc a)
+printField tyN (PC.Field fn ty) = do
+  fnDoc <- printFieldName tyN fn
+  let tyDoc = printTy ty
+  return $ fnDoc <+> colon <> colon <+> tyDoc
 
 {- | Translate LambdaBuffer record field names into Haskell record field names
  rec Rec = { foo :: Int, bar :: String }
  translates to
  data Rec = MkRec { rec'foo :: Int, rec'bar :: String }
 -}
-printFieldName :: PC.TyName -> PC.FieldName -> Doc a
-printFieldName tyN (PC.FieldName n _) =
-  let prefix = case Text.uncons (tyN ^. #name) of
-        Nothing -> "<empty type name>" -- NOTE(bladyjoker): Should not happen :shrug:.
-        Just (h, t) -> Text.cons (Char.toLower h) t
-   in pretty prefix <> squote <> pretty n
+printFieldName :: MonadPrint m => PC.TyName -> PC.FieldName -> m (Doc a)
+printFieldName tyN (PC.FieldName n _) = do
+  prefix <- case Text.uncons (tyN ^. #name) of
+    Nothing -> throwError (tyN ^. #sourceInfo, "TODO(bladyjoker): Internal error: Empty type name")
+    Just (h, t) -> return $ Text.cons (Char.toLower h) t
+  return $ pretty prefix <> squote <> pretty n
 
 printTy :: PC.Ty -> Doc a
 printTy (PC.TyVarI v) = printTyVar v
@@ -142,4 +178,13 @@ printTyApp (PC.TyApp f args _) =
 
 printTyRef :: PC.TyRef -> Doc a
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI (PC.ForeignRef tn mn _)) = group $ printModName mn <> dot <> printTyName tn
+printTyRef (PC.ForeignI fr) = let (_, H.MkModuleName hmn, H.MkTyName htn) = H.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn
+
+printTyVar :: PC.TyVar -> Doc a
+printTyVar (PC.TyVar vn) = printVarName vn
+
+printVarName :: PC.VarName -> Doc a
+printVarName (PC.VarName n _) = pretty n
+
+printTyName :: PC.TyName -> Doc a
+printTyName (PC.TyName n _) = pretty n

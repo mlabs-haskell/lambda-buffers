@@ -1,6 +1,6 @@
 module LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck (runCheck) where
 
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens ((^.))
 import Control.Monad (void, when)
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (runExcept)
@@ -9,14 +9,12 @@ import Control.Monad.Reader.Class (MonadReader, asks, local)
 import Data.Foldable (Foldable (toList), for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (superClassCycleDetectedError, unboundTyClassRefError)
 import Proto.Compiler qualified as P
-import Proto.Compiler_Fields (unboundClassRefErr)
-import Proto.Compiler_Fields qualified as P
 
 data CheckRead = MkCheckRead
   { currentModuleName :: PC.ModuleName
@@ -56,7 +54,8 @@ checkClassDef (PC.ClassDef cn _ sups _ _) = do
     sups
     ( \c -> do
         cds <- asks classDefs
-        qcn <- classRefToQClassName $ c ^. #classRef
+        mn <- asks currentModuleName
+        let qcn = PC.qualifyClassRef mn (c ^. #classRef)
         case Map.lookup qcn cds of
           Nothing -> throwUnboundTyClassRef c
           Just cd -> do
@@ -80,22 +79,9 @@ throwCycleDetected = do
   mn <- asks currentModuleName
   currcn <- asks currentClassName
   rtrace <- asks reportingTrace
-  throwError $
-    defMessage
-      & P.superclassCycleErr . P.moduleName .~ PC.toProto mn
-      & P.superclassCycleErr . P.className .~ PC.toProto currcn
-      & P.superclassCycleErr . P.cycledClassRefs .~ (PC.toProto <$> rtrace)
+  throwError $ superClassCycleDetectedError mn currcn rtrace
 
-throwUnboundTyClassRef :: MonadCheck m => PC.Constraint -> m a
-throwUnboundTyClassRef c = do
+throwUnboundTyClassRef :: MonadCheck m => PC.ClassConstraint -> m a
+throwUnboundTyClassRef cc = do
   mn <- asks currentModuleName
-  throwError $
-    defMessage
-      & unboundClassRefErr . P.moduleName .~ PC.toProto mn
-      & unboundClassRefErr . P.classRef .~ PC.toProto (c ^. #classRef)
-
-classRefToQClassName :: MonadCheck m => PC.TyClassRef -> m (PC.InfoLess PC.ModuleName, PC.InfoLess PC.ClassName)
-classRefToQClassName (PC.LocalCI lcr) = do
-  mn <- asks currentModuleName
-  return (PC.mkInfoLess mn, PC.mkInfoLess $ lcr ^. #className)
-classRefToQClassName (PC.ForeignCI fcr) = return (PC.mkInfoLess $ fcr ^. #moduleName, PC.mkInfoLess $ fcr ^. #className)
+  throwError $ unboundTyClassRefError mn (cc ^. #classRef)

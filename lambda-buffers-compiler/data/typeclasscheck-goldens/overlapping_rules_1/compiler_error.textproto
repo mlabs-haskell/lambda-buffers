@@ -1,0 +1,740 @@
+ty_class_check_errors {
+  overlapping_rules_err {
+    module_name {
+      parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+      source_info { pos_from {} pos_to {} }
+    }
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    sub_constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+  }
+}
+ty_class_check_errors {
+  overlapping_rules_err {
+    module_name {
+      parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+      source_info { pos_from {} pos_to {} }
+    }
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    sub_constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+  }
+}
+ty_class_check_errors {
+  overlapping_rules_err {
+    module_name {
+      parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+      source_info { pos_from {} pos_to {} }
+    }
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Ord" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    sub_constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+  }
+}
+ty_class_check_errors {
+  overlapping_rules_err {
+    module_name {
+      parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+      source_info { pos_from {} pos_to {} }
+    }
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Foo" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "b" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "c" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    sub_constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+  }
+}
+ty_class_check_errors {
+  overlapping_rules_err {
+    module_name {
+      parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+      source_info { pos_from {} pos_to {} }
+    }
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Ord" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Foo" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "b" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "c" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    sub_constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+          module_name {
+            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+            source_info { pos_from {} pos_to {} }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                source_info { pos_from {} pos_to {} }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name { name: "a" source_info { pos_from {} pos_to {} } }
+            }
+          }
+          source_info { pos_from {} pos_to {} }
+        }
+      }
+      source_info { pos_from {} pos_to {} }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+    overlaps {
+      module_name {
+        parts { name: "Foo" source_info { pos_from {} pos_to {} } }
+        source_info { pos_from {} pos_to {} }
+      }
+      head {
+        class_ref {
+          foreign_class_ref {
+            class_name { name: "Eq" source_info { pos_from {} pos_to {} } }
+            module_name {
+              parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
+              source_info { pos_from {} pos_to {} }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        args {
+          ty_app {
+            ty_func {
+              ty_ref {
+                local_ty_ref {
+                  ty_name { name: "Bar" source_info { pos_from {} pos_to {} } }
+                  source_info { pos_from {} pos_to {} }
+                }
+              }
+            }
+            ty_args {
+              ty_var {
+                var_name { name: "a" source_info { pos_from {} pos_to {} } }
+              }
+            }
+            source_info { pos_from {} pos_to {} }
+          }
+        }
+        source_info { pos_from {} pos_to {} }
+      }
+    }
+  }
+}

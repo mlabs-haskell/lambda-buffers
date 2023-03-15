@@ -1,16 +1,11 @@
-cabal-version: 3.0
-name:          lambda-buffers-codegen
-version:       0.1.0.0
-synopsis:      Lambda Buffers Codegen
-
--- license:
-
-author:        MLabs LTD
-maintainer:    info@mlabs.city
-
--- A copyright notice.
--- copyright:
--- category:
+cabal-version:      3.0
+name:               lambda-buffers-codegen
+version:            0.1.0.0
+synopsis:           Lambda Buffers Codegen
+author:             MLabs LTD
+maintainer:         info@mlabs.city
+data-files:         data/**/*.json
+extra-source-files: data/**/*.json
 
 flag dev
   description: Enable non-strict compilation for development
@@ -91,8 +86,10 @@ common common-language
 library
   import:          common-language
   build-depends:
+    , aeson
     , base                        >=4.16
     , containers                  >=0.6
+    , data-default                >=0.7
     , lambda-buffers-compiler     >=0.1
     , lambda-buffers-compiler-pb  >=0.1
     , lens                        >=5.2
@@ -105,22 +102,37 @@ library
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Codegen
+    LambdaBuffers.Codegen.Check
+    LambdaBuffers.Codegen.Config
     LambdaBuffers.Codegen.Haskell
     LambdaBuffers.Codegen.Haskell.Config
     LambdaBuffers.Codegen.Haskell.Print
-    LambdaBuffers.Codegen.Haskell.PrintM
     LambdaBuffers.Codegen.Haskell.Syntax
+    LambdaBuffers.Codegen.Print
 
 executable lbg
-  import:         common-language
+  import:          common-language
   build-depends:
-    , base                  >=4.16
-    , lens                  >=5.2
-    , optparse-applicative  >=0.17
+    , aeson
+    , base                        >=4.16
+    , bytestring                  >=0.11
+    , containers
+    , lambda-buffers-codegen
+    , lambda-buffers-compiler     >=0.1
+    , lambda-buffers-compiler-pb  >=0.1
+    , lens                        >=5.2
+    , optparse-applicative        >=0.17
+    , proto-lens                  >=0.7
+    , text                        >=1.2
 
-  hs-source-dirs: app
-  main-is:        Main.hs
-  other-modules:  LambdaBuffers.Codegen.Cli.Gen
+  hs-source-dirs:  app
+  main-is:         Main.hs
+  other-modules:
+    LambdaBuffers.Codegen.Cli.Gen
+    LambdaBuffers.Codegen.Cli.GenHaskell
+    Paths_lambda_buffers_codegen
+
+  autogen-modules: Paths_lambda_buffers_codegen
 
 test-suite tests
   import:         common-language

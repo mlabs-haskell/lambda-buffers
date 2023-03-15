@@ -1,0 +1,3448 @@
+modules {
+  module_name {
+    parts {
+      name: "LambdaBuffers"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 8 row: 1 }
+        pos_to { column: 21 row: 1 }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 8 row: 1 }
+      pos_to { column: 21 row: 1 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Kind"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 5 }
+        pos_to { column: 9 row: 5 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "KindType"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 12 row: 5 }
+                pos_to { column: 20 row: 5 }
+              }
+            }
+            product {
+              ntuple {
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 5 }
+                  pos_to { column: 21 row: 5 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "KindArrow"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 23 row: 5 }
+                pos_to { column: 32 row: 5 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Kind"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 33 row: 5 }
+                          pos_to { column: 37 row: 5 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 33 row: 5 }
+                        pos_to { column: 37 row: 5 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Kind"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 38 row: 5 }
+                          pos_to { column: 42 row: 5 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 38 row: 5 }
+                        pos_to { column: 42 row: 5 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 33 row: 5 }
+                  pos_to { column: 42 row: 5 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 12 row: 5 }
+            pos_to { column: 42 row: 5 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 5 }
+      pos_to { column: 42 row: 5 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Ty"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 7 }
+        pos_to { column: 7 row: 7 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "TyApp"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 10 row: 7 }
+                pos_to { column: 15 row: 7 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Ty"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 16 row: 7 }
+                          pos_to { column: 18 row: 7 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 16 row: 7 }
+                        pos_to { column: 18 row: 7 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Ty"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 19 row: 7 }
+                          pos_to { column: 21 row: 7 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 19 row: 7 }
+                        pos_to { column: 21 row: 7 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 16 row: 7 }
+                  pos_to { column: 22 row: 7 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "TyVar"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 24 row: 7 }
+                pos_to { column: 29 row: 7 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "VarName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 30 row: 7 }
+                          pos_to { column: 37 row: 7 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 30 row: 7 }
+                        pos_to { column: 37 row: 7 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 30 row: 7 }
+                  pos_to { column: 38 row: 7 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "TyRef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 40 row: 7 }
+                pos_to { column: 45 row: 7 }
+              }
+            }
+            product {
+              ntuple {
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 45 row: 7 }
+                  pos_to { column: 45 row: 7 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 10 row: 7 }
+            pos_to { column: 45 row: 7 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 7 }
+      pos_to { column: 45 row: 7 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyAbs"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 9 }
+        pos_to { column: 10 row: 9 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkTyAbs"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 13 row: 9 }
+                pos_to { column: 20 row: 9 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 22 row: 9 }
+                              pos_to { column: 26 row: 9 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 22 row: 9 }
+                            pos_to { column: 26 row: 9 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "TyArg"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 27 row: 9 }
+                              pos_to { column: 32 row: 9 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 27 row: 9 }
+                            pos_to { column: 32 row: 9 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 32 row: 9 }
+                      pos_to { column: 32 row: 9 }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "TyBody"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 34 row: 9 }
+                          pos_to { column: 40 row: 9 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 34 row: 9 }
+                        pos_to { column: 40 row: 9 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 9 }
+                  pos_to { column: 40 row: 9 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 13 row: 9 }
+            pos_to { column: 40 row: 9 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 9 }
+      pos_to { column: 40 row: 9 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyArg"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 11 }
+        pos_to { column: 10 row: 11 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkTyArg"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 13 row: 11 }
+                pos_to { column: 20 row: 11 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "VarName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 21 row: 11 }
+                          pos_to { column: 28 row: 11 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 21 row: 11 }
+                        pos_to { column: 28 row: 11 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Kind"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 29 row: 11 }
+                          pos_to { column: 33 row: 11 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 29 row: 11 }
+                        pos_to { column: 33 row: 11 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 11 }
+                  pos_to { column: 33 row: 11 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 13 row: 11 }
+            pos_to { column: 33 row: 11 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 11 }
+      pos_to { column: 33 row: 11 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyDef"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 13 }
+        pos_to { column: 10 row: 13 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkTyDef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 13 row: 13 }
+                pos_to { column: 20 row: 13 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "TyName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 21 row: 13 }
+                          pos_to { column: 27 row: 13 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 21 row: 13 }
+                        pos_to { column: 27 row: 13 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "TyAbs"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 28 row: 13 }
+                          pos_to { column: 33 row: 13 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 28 row: 13 }
+                        pos_to { column: 33 row: 13 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 13 }
+                  pos_to { column: 33 row: 13 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 13 row: 13 }
+            pos_to { column: 33 row: 13 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 13 }
+      pos_to { column: 33 row: 13 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyBody"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 15 }
+        pos_to { column: 11 row: 15 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "Opaque"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 14 row: 15 }
+                pos_to { column: 20 row: 15 }
+              }
+            }
+            product {
+              ntuple {
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 15 }
+                  pos_to { column: 21 row: 15 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "Sum"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 23 row: 15 }
+                pos_to { column: 26 row: 15 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Map"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 28 row: 15 }
+                              pos_to { column: 31 row: 15 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 28 row: 15 }
+                            pos_to { column: 31 row: 15 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ConstrName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 32 row: 15 }
+                              pos_to { column: 42 row: 15 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 32 row: 15 }
+                            pos_to { column: 42 row: 15 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Constructor"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 43 row: 15 }
+                              pos_to { column: 54 row: 15 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 43 row: 15 }
+                            pos_to { column: 54 row: 15 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 54 row: 15 }
+                      pos_to { column: 54 row: 15 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 27 row: 15 }
+                  pos_to { column: 55 row: 15 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 14 row: 15 }
+            pos_to { column: 55 row: 15 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 15 }
+      pos_to { column: 55 row: 15 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Constructor"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 17 }
+        pos_to { column: 16 row: 17 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkConstructor"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 19 row: 17 }
+                pos_to { column: 32 row: 17 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ConstrName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 33 row: 17 }
+                          pos_to { column: 43 row: 17 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 33 row: 17 }
+                        pos_to { column: 43 row: 17 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Product"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 44 row: 17 }
+                          pos_to { column: 51 row: 17 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 44 row: 17 }
+                        pos_to { column: 51 row: 17 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 33 row: 17 }
+                  pos_to { column: 51 row: 17 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 19 row: 17 }
+            pos_to { column: 51 row: 17 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 17 }
+      pos_to { column: 51 row: 17 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Product"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 19 }
+        pos_to { column: 12 row: 19 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkTuple"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 15 row: 19 }
+                pos_to { column: 22 row: 19 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 24 row: 19 }
+                              pos_to { column: 28 row: 19 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 24 row: 19 }
+                            pos_to { column: 28 row: 19 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Ty"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 29 row: 19 }
+                              pos_to { column: 31 row: 19 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 29 row: 19 }
+                            pos_to { column: 31 row: 19 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 31 row: 19 }
+                      pos_to { column: 31 row: 19 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 23 row: 19 }
+                  pos_to { column: 33 row: 19 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "MkRecord"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 35 row: 19 }
+                pos_to { column: 43 row: 19 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Map"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 45 row: 19 }
+                              pos_to { column: 48 row: 19 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 45 row: 19 }
+                            pos_to { column: 48 row: 19 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "FieldName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 49 row: 19 }
+                              pos_to { column: 58 row: 19 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 49 row: 19 }
+                            pos_to { column: 58 row: 19 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Field"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 59 row: 19 }
+                              pos_to { column: 64 row: 19 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 59 row: 19 }
+                            pos_to { column: 64 row: 19 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 64 row: 19 }
+                      pos_to { column: 64 row: 19 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 44 row: 19 }
+                  pos_to { column: 65 row: 19 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 15 row: 19 }
+            pos_to { column: 65 row: 19 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 19 }
+      pos_to { column: 65 row: 19 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Field"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 21 }
+        pos_to { column: 10 row: 21 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkField"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 13 row: 21 }
+                pos_to { column: 20 row: 21 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "FieldName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 21 row: 21 }
+                          pos_to { column: 30 row: 21 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 21 row: 21 }
+                        pos_to { column: 30 row: 21 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Ty"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 31 row: 21 }
+                          pos_to { column: 33 row: 21 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 31 row: 21 }
+                        pos_to { column: 33 row: 21 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 21 row: 21 }
+                  pos_to { column: 33 row: 21 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 13 row: 21 }
+            pos_to { column: 33 row: 21 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 21 }
+      pos_to { column: 33 row: 21 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyRef"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 23 }
+        pos_to { column: 10 row: 23 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "LocalTyRef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 13 row: 23 }
+                pos_to { column: 23 row: 23 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "TyName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 24 row: 23 }
+                          pos_to { column: 30 row: 23 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 24 row: 23 }
+                        pos_to { column: 30 row: 23 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 24 row: 23 }
+                  pos_to { column: 31 row: 23 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "ForeignTyRef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 33 row: 23 }
+                pos_to { column: 45 row: 23 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ModuleName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 46 row: 23 }
+                          pos_to { column: 56 row: 23 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 46 row: 23 }
+                        pos_to { column: 56 row: 23 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "TyName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 57 row: 23 }
+                          pos_to { column: 63 row: 23 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 57 row: 23 }
+                        pos_to { column: 63 row: 23 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 46 row: 23 }
+                  pos_to { column: 63 row: 23 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 13 row: 23 }
+            pos_to { column: 63 row: 23 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 23 }
+      pos_to { column: 63 row: 23 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ClassDef"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 25 }
+        pos_to { column: 13 row: 25 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkClassDef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 16 row: 25 }
+                pos_to { column: 26 row: 25 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ClassName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 27 row: 25 }
+                          pos_to { column: 36 row: 25 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 27 row: 25 }
+                        pos_to { column: 36 row: 25 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 38 row: 25 }
+                              pos_to { column: 42 row: 25 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 38 row: 25 }
+                            pos_to { column: 42 row: 25 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "TyArg"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 43 row: 25 }
+                              pos_to { column: 48 row: 25 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 43 row: 25 }
+                            pos_to { column: 48 row: 25 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 48 row: 25 }
+                      pos_to { column: 48 row: 25 }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 51 row: 25 }
+                              pos_to { column: 55 row: 25 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 51 row: 25 }
+                            pos_to { column: 55 row: 25 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ClassConstraint"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 56 row: 25 }
+                              pos_to { column: 71 row: 25 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 56 row: 25 }
+                            pos_to { column: 71 row: 25 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 71 row: 25 }
+                      pos_to { column: 71 row: 25 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 27 row: 25 }
+                  pos_to { column: 72 row: 25 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 16 row: 25 }
+            pos_to { column: 72 row: 25 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 25 }
+      pos_to { column: 72 row: 25 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ClassConstraint"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 27 }
+        pos_to { column: 20 row: 27 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkClassConstraint"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 23 row: 27 }
+                pos_to { column: 40 row: 27 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ClassRef"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 41 row: 27 }
+                          pos_to { column: 49 row: 27 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 41 row: 27 }
+                        pos_to { column: 49 row: 27 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 51 row: 27 }
+                              pos_to { column: 55 row: 27 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 51 row: 27 }
+                            pos_to { column: 55 row: 27 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "TyArg"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 56 row: 27 }
+                              pos_to { column: 61 row: 27 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 56 row: 27 }
+                            pos_to { column: 61 row: 27 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 61 row: 27 }
+                      pos_to { column: 61 row: 27 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 41 row: 27 }
+                  pos_to { column: 62 row: 27 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 23 row: 27 }
+            pos_to { column: 62 row: 27 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 27 }
+      pos_to { column: 62 row: 27 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "InstanceClause"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 29 }
+        pos_to { column: 19 row: 29 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkInstanceClause"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 22 row: 29 }
+                pos_to { column: 38 row: 29 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Goal"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 39 row: 29 }
+                          pos_to { column: 43 row: 29 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 39 row: 29 }
+                        pos_to { column: 43 row: 29 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 45 row: 29 }
+                              pos_to { column: 49 row: 29 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 45 row: 29 }
+                            pos_to { column: 49 row: 29 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Goal"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 50 row: 29 }
+                              pos_to { column: 54 row: 29 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 50 row: 29 }
+                            pos_to { column: 54 row: 29 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 54 row: 29 }
+                      pos_to { column: 54 row: 29 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 39 row: 29 }
+                  pos_to { column: 55 row: 29 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 22 row: 29 }
+            pos_to { column: 55 row: 29 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 29 }
+      pos_to { column: 55 row: 29 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Derive"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 31 }
+        pos_to { column: 11 row: 31 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkDerive"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 14 row: 31 }
+                pos_to { column: 22 row: 31 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "Goal"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 23 row: 31 }
+                          pos_to { column: 27 row: 31 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 23 row: 31 }
+                        pos_to { column: 27 row: 31 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 23 row: 31 }
+                  pos_to { column: 27 row: 31 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 14 row: 31 }
+            pos_to { column: 27 row: 31 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 31 }
+      pos_to { column: 27 row: 31 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Goal"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 33 }
+        pos_to { column: 9 row: 33 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkGoal"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 12 row: 33 }
+                pos_to { column: 18 row: 33 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ClassRef"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 19 row: 33 }
+                          pos_to { column: 27 row: 33 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 19 row: 33 }
+                        pos_to { column: 27 row: 33 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 29 row: 33 }
+                              pos_to { column: 33 row: 33 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 29 row: 33 }
+                            pos_to { column: 33 row: 33 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Ty"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 34 row: 33 }
+                              pos_to { column: 36 row: 33 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 34 row: 33 }
+                            pos_to { column: 36 row: 33 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 36 row: 33 }
+                      pos_to { column: 36 row: 33 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 19 row: 33 }
+                  pos_to { column: 37 row: 33 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 12 row: 33 }
+            pos_to { column: 37 row: 33 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 33 }
+      pos_to { column: 37 row: 33 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ClassRef"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 35 }
+        pos_to { column: 13 row: 35 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "LocalClassRef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 16 row: 35 }
+                pos_to { column: 29 row: 35 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ClassName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 30 row: 35 }
+                          pos_to { column: 39 row: 35 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 30 row: 35 }
+                        pos_to { column: 39 row: 35 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 30 row: 35 }
+                  pos_to { column: 40 row: 35 }
+                }
+              }
+            }
+          }
+          constructors {
+            constr_name {
+              name: "ForeignClassRef"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 42 row: 35 }
+                pos_to { column: 57 row: 35 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ModuleName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 58 row: 35 }
+                          pos_to { column: 68 row: 35 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 58 row: 35 }
+                        pos_to { column: 68 row: 35 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ClassName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 69 row: 35 }
+                          pos_to { column: 78 row: 35 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 69 row: 35 }
+                        pos_to { column: 78 row: 35 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 58 row: 35 }
+                  pos_to { column: 78 row: 35 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 16 row: 35 }
+            pos_to { column: 78 row: 35 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 35 }
+      pos_to { column: 78 row: 35 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Module"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 37 }
+        pos_to { column: 11 row: 37 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkModule"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 14 row: 37 }
+                pos_to { column: 22 row: 37 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    local_ty_ref {
+                      ty_name {
+                        name: "ModuleName"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 23 row: 37 }
+                          pos_to { column: 33 row: 37 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 23 row: 37 }
+                        pos_to { column: 33 row: 37 }
+                      }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Map"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 35 row: 37 }
+                              pos_to { column: 38 row: 37 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 35 row: 37 }
+                            pos_to { column: 38 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "TyName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 39 row: 37 }
+                              pos_to { column: 45 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 39 row: 37 }
+                            pos_to { column: 45 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "TyDef"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 46 row: 37 }
+                              pos_to { column: 51 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 46 row: 37 }
+                            pos_to { column: 51 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 51 row: 37 }
+                      pos_to { column: 51 row: 37 }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Map"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 54 row: 37 }
+                              pos_to { column: 57 row: 37 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 54 row: 37 }
+                            pos_to { column: 57 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ClassName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 58 row: 37 }
+                              pos_to { column: 67 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 58 row: 37 }
+                            pos_to { column: 67 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ClassDef"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 68 row: 37 }
+                              pos_to { column: 76 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 68 row: 37 }
+                            pos_to { column: 76 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 76 row: 37 }
+                      pos_to { column: 76 row: 37 }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Set"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 79 row: 37 }
+                              pos_to { column: 82 row: 37 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 79 row: 37 }
+                            pos_to { column: 82 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ModuleName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 83 row: 37 }
+                              pos_to { column: 93 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 83 row: 37 }
+                            pos_to { column: 93 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 93 row: 37 }
+                      pos_to { column: 93 row: 37 }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 96 row: 37 }
+                              pos_to { column: 100 row: 37 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 96 row: 37 }
+                            pos_to { column: 100 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "InstanceClause"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 101 row: 37 }
+                              pos_to { column: 115 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 101 row: 37 }
+                            pos_to { column: 115 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 115 row: 37 }
+                      pos_to { column: 115 row: 37 }
+                    }
+                  }
+                }
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 118 row: 37 }
+                              pos_to { column: 122 row: 37 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 118 row: 37 }
+                            pos_to { column: 122 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Derive"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 123 row: 37 }
+                              pos_to { column: 129 row: 37 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 123 row: 37 }
+                            pos_to { column: 129 row: 37 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 129 row: 37 }
+                      pos_to { column: 129 row: 37 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 23 row: 37 }
+                  pos_to { column: 130 row: 37 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 14 row: 37 }
+            pos_to { column: 130 row: 37 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 37 }
+      pos_to { column: 130 row: 37 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "CompilerInput"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 39 }
+        pos_to { column: 18 row: 39 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkCompilerInput"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 21 row: 39 }
+                pos_to { column: 36 row: 39 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "Map"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 38 row: 39 }
+                              pos_to { column: 41 row: 39 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 38 row: 39 }
+                            pos_to { column: 41 row: 39 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ModuleName"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 42 row: 39 }
+                              pos_to { column: 52 row: 39 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 42 row: 39 }
+                            pos_to { column: 52 row: 39 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "Module"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 53 row: 39 }
+                              pos_to { column: 59 row: 39 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 53 row: 39 }
+                            pos_to { column: 59 row: 39 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 59 row: 39 }
+                      pos_to { column: 59 row: 39 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 37 row: 39 }
+                  pos_to { column: 60 row: 39 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 21 row: 39 }
+            pos_to { column: 60 row: 39 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 39 }
+      pos_to { column: 60 row: 39 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "TyName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 41 }
+        pos_to { column: 11 row: 41 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkTyName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 14 row: 41 }
+                pos_to { column: 22 row: 41 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 23 row: 41 }
+                          pos_to { column: 27 row: 41 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 23 row: 41 }
+                        pos_to { column: 27 row: 41 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 23 row: 41 }
+                  pos_to { column: 27 row: 41 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 14 row: 41 }
+            pos_to { column: 27 row: 41 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 41 }
+      pos_to { column: 27 row: 41 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "VarName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 42 }
+        pos_to { column: 12 row: 42 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkVarName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 15 row: 42 }
+                pos_to { column: 24 row: 42 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 25 row: 42 }
+                          pos_to { column: 29 row: 42 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 25 row: 42 }
+                        pos_to { column: 29 row: 42 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 25 row: 42 }
+                  pos_to { column: 29 row: 42 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 15 row: 42 }
+            pos_to { column: 29 row: 42 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 42 }
+      pos_to { column: 29 row: 42 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ConstrName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 43 }
+        pos_to { column: 15 row: 43 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkConstrName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 18 row: 43 }
+                pos_to { column: 30 row: 43 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 31 row: 43 }
+                          pos_to { column: 35 row: 43 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 31 row: 43 }
+                        pos_to { column: 35 row: 43 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 31 row: 43 }
+                  pos_to { column: 35 row: 43 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 18 row: 43 }
+            pos_to { column: 35 row: 43 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 43 }
+      pos_to { column: 35 row: 43 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "FieldName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 44 }
+        pos_to { column: 14 row: 44 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkFieldName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 17 row: 44 }
+                pos_to { column: 28 row: 44 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 29 row: 44 }
+                          pos_to { column: 33 row: 44 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 29 row: 44 }
+                        pos_to { column: 33 row: 44 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 29 row: 44 }
+                  pos_to { column: 33 row: 44 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 17 row: 44 }
+            pos_to { column: 33 row: 44 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 44 }
+      pos_to { column: 33 row: 44 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ModuleName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 45 }
+        pos_to { column: 15 row: 45 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkModuleName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 18 row: 45 }
+                pos_to { column: 30 row: 45 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_app {
+                    ty_func {
+                      ty_ref {
+                        foreign_ty_ref {
+                          ty_name {
+                            name: "List"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 32 row: 45 }
+                              pos_to { column: 36 row: 45 }
+                            }
+                          }
+                          module_name {
+                            parts {
+                              name: "Prelude"
+                              source_info {
+                                file: "goldens/good/LambdaBuffers.lbf"
+                                pos_from { column: 8 row: 3 }
+                                pos_to { column: 15 row: 3 }
+                              }
+                            }
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 8 row: 3 }
+                              pos_to { column: 15 row: 3 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 32 row: 45 }
+                            pos_to { column: 36 row: 45 }
+                          }
+                        }
+                      }
+                    }
+                    ty_args {
+                      ty_ref {
+                        local_ty_ref {
+                          ty_name {
+                            name: "ModuleNamePart"
+                            source_info {
+                              file: "goldens/good/LambdaBuffers.lbf"
+                              pos_from { column: 37 row: 45 }
+                              pos_to { column: 51 row: 45 }
+                            }
+                          }
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 37 row: 45 }
+                            pos_to { column: 51 row: 45 }
+                          }
+                        }
+                      }
+                    }
+                    source_info {
+                      file: "goldens/good/LambdaBuffers.lbf"
+                      pos_from { column: 51 row: 45 }
+                      pos_to { column: 51 row: 45 }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 31 row: 45 }
+                  pos_to { column: 52 row: 45 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 18 row: 45 }
+            pos_to { column: 52 row: 45 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 45 }
+      pos_to { column: 52 row: 45 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ModuleNamePart"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 46 }
+        pos_to { column: 19 row: 46 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkModuleNamePart"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 22 row: 46 }
+                pos_to { column: 38 row: 46 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 39 row: 46 }
+                          pos_to { column: 43 row: 46 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 39 row: 46 }
+                        pos_to { column: 43 row: 46 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 39 row: 46 }
+                  pos_to { column: 43 row: 46 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 22 row: 46 }
+            pos_to { column: 43 row: 46 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 46 }
+      pos_to { column: 43 row: 46 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "ClassName"
+      source_info {
+        file: "goldens/good/LambdaBuffers.lbf"
+        pos_from { column: 5 row: 47 }
+        pos_to { column: 14 row: 47 }
+      }
+    }
+    ty_abs {
+      ty_body {
+        sum {
+          constructors {
+            constr_name {
+              name: "MkClassName"
+              source_info {
+                file: "goldens/good/LambdaBuffers.lbf"
+                pos_from { column: 17 row: 47 }
+                pos_to { column: 28 row: 47 }
+              }
+            }
+            product {
+              ntuple {
+                fields {
+                  ty_ref {
+                    foreign_ty_ref {
+                      ty_name {
+                        name: "Text"
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 29 row: 47 }
+                          pos_to { column: 33 row: 47 }
+                        }
+                      }
+                      module_name {
+                        parts {
+                          name: "Prelude"
+                          source_info {
+                            file: "goldens/good/LambdaBuffers.lbf"
+                            pos_from { column: 8 row: 3 }
+                            pos_to { column: 15 row: 3 }
+                          }
+                        }
+                        source_info {
+                          file: "goldens/good/LambdaBuffers.lbf"
+                          pos_from { column: 8 row: 3 }
+                          pos_to { column: 15 row: 3 }
+                        }
+                      }
+                      source_info {
+                        file: "goldens/good/LambdaBuffers.lbf"
+                        pos_from { column: 29 row: 47 }
+                        pos_to { column: 33 row: 47 }
+                      }
+                    }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/LambdaBuffers.lbf"
+                  pos_from { column: 29 row: 47 }
+                  pos_to { column: 33 row: 47 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/LambdaBuffers.lbf"
+            pos_from { column: 17 row: 47 }
+            pos_to { column: 33 row: 47 }
+          }
+        }
+      }
+    }
+    source_info {
+      file: "goldens/good/LambdaBuffers.lbf"
+      pos_from { column: 1 row: 47 }
+      pos_to { column: 33 row: 47 }
+    }
+  }
+  source_info {
+    file: "goldens/good/LambdaBuffers.lbf"
+    pos_from { column: 1 row: 1 }
+    pos_to { column: 33 row: 47 }
+  }
+}
+modules {
+  module_name {
+    parts {
+      name: "Prelude"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 1 }
+        pos_to { column: 15 row: 1 }
+      }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 8 row: 1 }
+      pos_to { column: 15 row: 1 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Bool"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 3 }
+        pos_to { column: 12 row: 3 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 3 }
+      pos_to { column: 12 row: 3 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Integer"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 5 }
+        pos_to { column: 15 row: 5 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 5 }
+      pos_to { column: 15 row: 5 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Int8"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 7 }
+        pos_to { column: 12 row: 7 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 7 }
+      pos_to { column: 12 row: 7 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Int16"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 9 }
+        pos_to { column: 13 row: 9 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 9 }
+      pos_to { column: 13 row: 9 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Int32"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 11 }
+        pos_to { column: 13 row: 11 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 11 }
+      pos_to { column: 13 row: 11 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Int64"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 13 }
+        pos_to { column: 13 row: 13 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 13 }
+      pos_to { column: 13 row: 13 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "UInt8"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 15 }
+        pos_to { column: 13 row: 15 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 15 }
+      pos_to { column: 13 row: 15 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "UInt16"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 17 }
+        pos_to { column: 14 row: 17 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 17 }
+      pos_to { column: 14 row: 17 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "UInt32"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 19 }
+        pos_to { column: 14 row: 19 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 19 }
+      pos_to { column: 14 row: 19 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "UInt64"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 21 }
+        pos_to { column: 14 row: 21 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 21 }
+      pos_to { column: 14 row: 21 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Bytes"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 23 }
+        pos_to { column: 13 row: 23 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 23 }
+      pos_to { column: 13 row: 23 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Char"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 25 }
+        pos_to { column: 12 row: 25 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 25 }
+      pos_to { column: 12 row: 25 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Text"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 27 }
+        pos_to { column: 12 row: 27 }
+      }
+    }
+    ty_abs { ty_body { opaque {} } }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 27 }
+      pos_to { column: 12 row: 27 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Maybe"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 29 }
+        pos_to { column: 13 row: 29 }
+      }
+    }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 14 row: 29 }
+          pos_to { column: 15 row: 29 }
+        }
+      }
+      ty_body { opaque {} }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 29 }
+      pos_to { column: 15 row: 29 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Either"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 31 }
+        pos_to { column: 14 row: 31 }
+      }
+    }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 15 row: 31 }
+          pos_to { column: 16 row: 31 }
+        }
+      }
+      ty_args {
+        arg_name { name: "b" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 17 row: 31 }
+          pos_to { column: 18 row: 31 }
+        }
+      }
+      ty_body { opaque {} }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 31 }
+      pos_to { column: 18 row: 31 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "List"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 33 }
+        pos_to { column: 12 row: 33 }
+      }
+    }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 13 row: 33 }
+          pos_to { column: 14 row: 33 }
+        }
+      }
+      ty_body { opaque {} }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 33 }
+      pos_to { column: 14 row: 33 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Map"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 35 }
+        pos_to { column: 11 row: 35 }
+      }
+    }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 12 row: 35 }
+          pos_to { column: 13 row: 35 }
+        }
+      }
+      ty_args {
+        arg_name { name: "b" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 14 row: 35 }
+          pos_to { column: 15 row: 35 }
+        }
+      }
+      ty_body { opaque {} }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 35 }
+      pos_to { column: 15 row: 35 }
+    }
+  }
+  type_defs {
+    ty_name {
+      name: "Set"
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 8 row: 37 }
+        pos_to { column: 11 row: 37 }
+      }
+    }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 12 row: 37 }
+          pos_to { column: 13 row: 37 }
+        }
+      }
+      ty_body { opaque {} }
+    }
+    source_info {
+      file: "goldens/good/Prelude.lbf"
+      pos_from { column: 1 row: 37 }
+      pos_to { column: 13 row: 37 }
+    }
+  }
+  source_info {
+    file: "goldens/good/Prelude.lbf"
+    pos_from { column: 1 row: 1 }
+    pos_to { column: 13 row: 37 }
+  }
+}

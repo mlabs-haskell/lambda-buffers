@@ -4,6 +4,7 @@
 module LambdaBuffers.Compiler.ProtoCompat.Types (
   localRef2ForeignRef,
   ClassDef (..),
+  ClassConstraint (..),
   ClassName (..),
   CompilerError (..),
   CompilerInput (..),
@@ -24,6 +25,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   LBName (..),
   LocalRef (..),
   LocalClassRef (..),
+  Derive (..),
   Module (..),
   ModuleName (..),
   ModuleNamePart (..),
@@ -221,16 +223,28 @@ data TyClassRef
 data ClassDef = ClassDef
   { className :: ClassName
   , classArgs :: TyArg
-  , supers :: [Constraint]
+  , supers :: [ClassConstraint]
   , documentation :: Text
   , sourceInfo :: SourceInfo
   }
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
-data InstanceClause = InstanceClause
+data ClassConstraint = ClassConstraint
   { classRef :: TyClassRef
-  , head :: Ty
+  , args :: TyVar
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (SOP.Generic)
+
+newtype Derive = Derive
+  { constraint :: Constraint
+  }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (SOP.Generic)
+
+data InstanceClause = InstanceClause
+  { head :: Constraint
   , constraints :: [Constraint]
   , sourceInfo :: SourceInfo
   }
@@ -250,6 +264,7 @@ data Module = Module
   , typeDefs :: Map (InfoLess TyName) TyDef
   , classDefs :: Map (InfoLess ClassName) ClassDef
   , instances :: [InstanceClause]
+  , derives :: [Derive]
   , imports :: Map (InfoLess ModuleName) ModuleName
   , sourceInfo :: SourceInfo
   }
@@ -339,7 +354,9 @@ instance InfoLessC ForeignClassRef
 instance InfoLessC LocalClassRef
 instance InfoLessC TyClassRef
 instance InfoLessC ClassDef
+instance InfoLessC ClassConstraint
 instance InfoLessC InstanceClause
+instance InfoLessC Derive
 instance InfoLessC Constraint
 instance InfoLessC Module
 instance InfoLessC InferenceErr
