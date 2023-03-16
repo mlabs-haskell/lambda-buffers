@@ -62,8 +62,8 @@
     ],
     "Prelude.Bytes": [
       "bytestring",
-      "Data.Bytestring",
-      "Bytestring"
+      "Data.ByteString",
+      "ByteString"
     ],
     "Prelude.Maybe": [
       "base",

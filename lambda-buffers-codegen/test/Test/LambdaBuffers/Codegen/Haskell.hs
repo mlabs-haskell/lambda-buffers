@@ -89,16 +89,16 @@ testModule1 =
             "Maybe"
             ["a"]
             ( mkSum
-                [ ("Just", mkTuple [mkTyVar "a"])
-                , ("Nothing", mkTuple [])
+                [ ("Just", mkProd [mkTyVar "a"])
+                , ("Nothing", mkProd [])
                 ]
             )
          , mkTyDefSum
             "Either"
             ["a", "b"]
             ( mkSum
-                [ ("Left", mkTuple [mkTyVar "a"])
-                , ("Right", mkTuple [mkTyVar "b"])
+                [ ("Left", mkProd [mkTyVar "a"])
+                , ("Right", mkProd [mkTyVar "b"])
                 ]
             )
          ]
@@ -134,7 +134,7 @@ testModule2 =
             "Foo"
             ["a"]
             ( mkSum
-                [ ("MkFoo", mkTuple [mkTyVar "a", mkLRef "I16", mkFRef ["TestMod"] "I8"])
+                [ ("MkFoo", mkProd [mkTyVar "a", mkLRef "I16", mkFRef ["TestMod"] "I8"])
                 ]
             )
          ]
@@ -189,5 +189,5 @@ mkSum ctors =
          | (ctorN, p) <- ctors
          ]
 
-mkTuple :: [P.Ty] -> P.Product
-mkTuple tys = defMessage & P.ntuple . P.fields .~ tys
+mkProd :: [P.Ty] -> P.Product
+mkProd tys = defMessage & P.fields .~ tys
