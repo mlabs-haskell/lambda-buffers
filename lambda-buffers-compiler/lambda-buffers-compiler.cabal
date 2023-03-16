@@ -127,17 +127,10 @@ library
     LambdaBuffers.Compiler.ProtoCompat.Types
     LambdaBuffers.Compiler.ProtoCompat.Utils
     LambdaBuffers.Compiler.TypeClassCheck
-    LambdaBuffers.Compiler.TypeClassCheck.Compat
     LambdaBuffers.Compiler.TypeClassCheck.Errors
     LambdaBuffers.Compiler.TypeClassCheck.MiniLog
-    LambdaBuffers.Compiler.TypeClassCheck.Pat
-    LambdaBuffers.Compiler.TypeClassCheck.Pretty
-    LambdaBuffers.Compiler.TypeClassCheck.Rules
     LambdaBuffers.Compiler.TypeClassCheck.RuleSet
-    LambdaBuffers.Compiler.TypeClassCheck.Solve
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
-    LambdaBuffers.Compiler.TypeClassCheck.Utils
-    LambdaBuffers.Compiler.TypeClassCheck.Validate
 
   hs-source-dirs:  src
 
@@ -194,7 +187,6 @@ test-suite tests
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.Utils.Golden
     Test.LambdaBuffers.Compiler.WellFormed
-    Test.TypeClassCheck
     Test.Utils.CompilerInput
     Test.Utils.Constructors
     Test.Utils.Module

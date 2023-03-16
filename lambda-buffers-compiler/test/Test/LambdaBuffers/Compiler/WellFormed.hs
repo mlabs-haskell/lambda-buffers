@@ -21,7 +21,7 @@ import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Hedgehog.Range qualified as HR
 import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
-import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, ntuple, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
+import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
 import Proto.Compiler_Fields qualified as P
 import Test.LambdaBuffers.Compiler.Utils (distribute, indexBy)
 
@@ -150,7 +150,7 @@ genConstructor tydefs args cn = do
   return $
     defMessage
       & constrName .~ cn
-      & P.product . ntuple . fields .~ tys
+      & P.product . fields .~ tys
 
 genTyBodySum :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen TyBody
 genTyBodySum tydefs args ctors = do

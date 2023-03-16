@@ -36,14 +36,20 @@ genOptsP =
       ( long "input"
           <> short 'i'
           <> metavar "FILEPATH"
-          <> help "Compiled LambdaBuffers schema to code generate for"
+          <> help "Compiled LambdaBuffers schema to generate code for"
       )
     <*> strOption
       ( long "output"
           <> short 'o'
           <> metavar "FILEPATH"
           <> value "codegen-output.textproto"
-          <> help "Codegen output"
+          <> help "Codegen output that can be used to inspect Codegen errors"
+      )
+    <*> strOption
+      ( long "print-dir"
+          <> short 'p'
+          <> metavar "FILEPATH"
+          <> help "Directory to print code generation output to"
       )
     <*> flag
       False

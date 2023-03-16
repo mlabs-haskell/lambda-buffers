@@ -25,8 +25,8 @@ data Ty
   | TyVar PC.TyVar
   | TyOpaque PC.SourceInfo
   | TySum (OMap (PC.InfoLess PC.ConstrName) Ty) PC.Sum
-  | TyTuple [Ty] PC.Product
-  | TyRecord (OMap (PC.InfoLess PC.FieldName) Ty) PC.Product
+  | TyProduct [Ty] PC.Product
+  | TyRecord (OMap (PC.InfoLess PC.FieldName) Ty) PC.Record
   deriving stock (Eq, Ord)
 
 prettyTy :: Ty -> Doc a
@@ -43,7 +43,7 @@ prettyTy (TySum ctors _s) = enclose lparen rparen $ sepWith (space <> pipe <> sp
   where
     prettyCtor :: (PC.InfoLess PC.ConstrName, Ty) -> Doc a
     prettyCtor (cn, p) = pretty (PC.withInfoLess cn (view #name)) <+> prettyTy p
-prettyTy (TyTuple fields _t) = hsep $ prettyTy <$> fields
+prettyTy (TyProduct fields _t) = hsep $ prettyTy <$> fields
 prettyTy (TyRecord fields _r) = hsep $ prettyTy <$> toList fields
 prettyTy (TyOpaque _) = "opq"
 prettyTy (TyRef (PC.LocalI lr)) = pretty $ lr ^. #tyName . #name
@@ -74,10 +74,14 @@ fromTyBody args (PC.OpaqueI si) = TyApp (TyOpaque si) (fromTyArg <$> toList args
 fromTyBody _ (PC.SumI s) = TySum (fromTyCtor <$> s ^. #constructors) s
   where
     fromTyCtor (PC.Constructor _cn p) = fromTyProd p
+fromTyBody _ (PC.ProductI p) = fromTyProd p
+fromTyBody _ (PC.RecordI r) = fromTyRecord r
 
 fromTyProd :: PC.Product -> Ty
-fromTyProd p@(PC.TupleI (PC.Tuple fields _)) = TyTuple (fromTy <$> fields) p
-fromTyProd p@(PC.RecordI (PC.Record fields _)) = TyRecord (fromTyField <$> fields) p
+fromTyProd p@(PC.Product fields _) = TyProduct (fromTy <$> fields) p
+
+fromTyRecord :: PC.Record -> Ty
+fromTyRecord p@(PC.Record fields _) = TyRecord (fromTyField <$> fields) p
   where
     fromTyField (PC.Field _fn ty) = fromTy ty
 
@@ -108,7 +112,7 @@ eval (TyApp (TyAbs args' body _) tys _) =
    in local (\ctx -> ctx & ctxTyArgs %~ Map.union actx') (subst body)
 eval (TyApp f args t) = TyApp f <$> eval `traverse` args <*> pure t
 eval (TySum ctors s) = TySum <$> (eval `traverse` ctors) <*> pure s
-eval (TyTuple fields t) = TyTuple <$> (eval `traverse` fields) <*> pure t
+eval (TyProduct fields t) = TyProduct <$> (eval `traverse` fields) <*> pure t
 eval (TyRecord fields r) = TyRecord <$> (eval `traverse` fields) <*> pure r
 eval t = pure t
 
@@ -120,7 +124,7 @@ subst (TyAbs args' body _) = do
   local (\ctx -> ctx & ctxTyArgs .~ unbound) (subst body)
 subst (TyApp f args t) = TyApp <$> subst f <*> (subst `traverse` args) <*> pure t
 subst (TySum ctors s) = TySum <$> (subst `traverse` ctors) <*> pure s
-subst (TyTuple fields t) = TyTuple <$> (subst `traverse` fields) <*> pure t
+subst (TyProduct fields t) = TyProduct <$> (subst `traverse` fields) <*> pure t
 subst (TyRecord fields r) = TyRecord <$> (subst `traverse` fields) <*> pure r
 subst t = return t
 

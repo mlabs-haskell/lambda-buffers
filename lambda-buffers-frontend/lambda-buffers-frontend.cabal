@@ -135,6 +135,7 @@ test-suite tests
     , containers               >=0.6
     , filepath                 >=1.4
     , lambda-buffers-frontend
+    , parsec                   >=3.1
     , prettyprinter            >=1.7
     , tasty                    >=1.4
     , tasty-hunit              >=0.10
@@ -143,3 +144,4 @@ test-suite tests
   other-modules:
     Paths_lambda_buffers_frontend
     Test.LambdaBuffers.Frontend
+    Test.LambdaBuffers.Frontend.Parsec

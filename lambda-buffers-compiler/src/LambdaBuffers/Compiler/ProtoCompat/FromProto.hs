@@ -386,12 +386,16 @@ instance IsMessage P.TyBody PC.TyBody where
     Just x -> case x of
       P.TyBody'Opaque opq -> PC.OpaqueI <$> fromProto (opq ^. P.sourceInfo)
       P.TyBody'Sum sumI -> PC.SumI <$> fromProto sumI
+      P.TyBody'Product prodI -> PC.ProductI <$> fromProto prodI
+      P.TyBody'Record recI -> PC.RecordI <$> fromProto recI
 
   toProto = \case
     PC.OpaqueI si ->
       let opaque = defMessage & P.sourceInfo .~ toProto si
        in defMessage & P.opaque .~ opaque
-    PC.SumI sb -> defMessage & P.sum .~ toProto sb
+    PC.SumI s -> defMessage & P.sum .~ toProto s
+    PC.ProductI p -> defMessage & P.product .~ toProto p
+    PC.RecordI r -> defMessage & P.record .~ toProto r
 
 instance IsMessage P.Sum PC.Sum where
   fromProto s = do
@@ -429,7 +433,7 @@ instance IsMessage P.Sum'Constructor PC.Constructor where
       & P.constrName .~ toProto cnm
       & P.product .~ toProto prod
 
-instance IsMessage P.Product'Record PC.Record where
+instance IsMessage P.Record PC.Record where
   fromProto r = do
     (fields, mulFields) <- parseAndIndex' (\f -> mkInfoLess $ f ^. #fieldName) (r ^. P.fields)
     si <- fromProto $ r ^. P.sourceInfo
@@ -454,34 +458,18 @@ instance IsMessage P.Product'Record PC.Record where
       & P.fields .~ (toProto <$> toList fs)
       & P.sourceInfo .~ toProto si
 
-instance IsMessage P.Product'NTuple PC.Tuple where
+instance IsMessage P.Product PC.Product where
   fromProto r = do
     fs <- traverse fromProto $ r ^. P.fields
     si <- fromProto $ r ^. P.sourceInfo
-    pure $ PC.Tuple fs si
+    pure $ PC.Product fs si
 
-  toProto (PC.Tuple fs si) =
+  toProto (PC.Product fs si) =
     defMessage
       & P.fields .~ (toProto <$> fs)
       & P.sourceInfo .~ toProto si
 
-instance IsMessage P.Product PC.Product where
-  fromProto p = case p ^. P.maybe'product of
-    Nothing -> throwOneOfError (messageName (Proxy @P.Product)) "product"
-    Just x -> case x of
-      --- wrong, fix
-      P.Product'Record' r -> do
-        recrd <- fromProto r
-        pure $ PC.RecordI recrd
-      P.Product'Ntuple t -> do
-        tup <- fromProto t
-        pure $ PC.TupleI tup
-
-  toProto = \case
-    PC.RecordI r -> defMessage & P.record .~ toProto r
-    PC.TupleI t -> defMessage & P.ntuple .~ toProto t
-
-instance IsMessage P.Product'Record'Field PC.Field where
+instance IsMessage P.Record'Field PC.Field where
   fromProto f = do
     fnm <- fromProto $ f ^. P.fieldName
     fty <- fromProto $ f ^. P.fieldTy

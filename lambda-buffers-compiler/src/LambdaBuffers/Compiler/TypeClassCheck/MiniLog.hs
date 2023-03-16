@@ -274,7 +274,7 @@ tyToTerm _ (E.TyOpaque _) = topaque
 tyToTerm mn (E.TyAbs args body _) = tabs (foldr (\(vn, _) t -> (ML.Atom . AVarName $ vn) @| t) nilt (OMap.assocs args)) (tyToTerm mn body)
 tyToTerm mn (E.TyApp tf args _) = tapp (tyToTerm mn tf) (foldr (\ty t -> tyToTerm mn ty @| t) nilt args)
 tyToTerm mn (E.TySum ctors _) = tsum $ foldr (\(cn, cp) t -> tctor (ML.Atom . AConstrName $ cn) (tyToTerm mn cp) @| t) nilt (OMap.assocs ctors)
-tyToTerm mn (E.TyTuple fields _) = ttuple $ foldr (\fty t -> tyToTerm mn fty @| t) nilt fields
+tyToTerm mn (E.TyProduct fields _) = ttuple $ foldr (\fty t -> tyToTerm mn fty @| t) nilt fields
 tyToTerm mn (E.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.Atom . AFieldName $ fn) (tyToTerm mn fty) @| t) nilt (OMap.assocs fields)
 
 {- | Solve/evaluate terms (goals) given some knowledge base (clauses).

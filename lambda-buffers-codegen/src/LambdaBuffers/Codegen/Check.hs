@@ -88,29 +88,37 @@ checkModule m =
     (\td -> local (\(cfg, _) -> (cfg, TyDefCtx (m ^. #moduleName) td)) (checkTyDef td))
 
 checkTyDef :: (MonadCheck o c m, Ord o) => PC.TyDef -> m ()
-checkTyDef td = checkTyAbs $ td ^. #tyAbs
+checkTyDef td = do
+  checkTyAbs $ td ^. #tyAbs
+  exportTy (PC.mkInfoLess $ td ^. #tyName)
 
 checkTyAbs :: (MonadCheck o c m, Ord o) => PC.TyAbs -> m ()
-checkTyAbs (PC.TyAbs _ (PC.OpaqueI _) _) = do
+checkTyAbs (PC.TyAbs _ body _) = checkTyBody body
+
+checkTyBody :: (MonadCheck o c m, Ord o) => PC.TyBody -> m ()
+checkTyBody (PC.SumI s) = checkSum s
+checkTyBody (PC.ProductI p) = checkProduct p
+checkTyBody (PC.RecordI r) = checkRecord r
+checkTyBody (PC.OpaqueI _) = checkOpaque
+
+checkOpaque :: (MonadCheck o c m, Ord o) => m ()
+checkOpaque = do
   cfg <- askConfig
   (currentModuleName, currentTyDef) <- askTyDefCtx
   let qtyn = (PC.mkInfoLess currentModuleName, PC.mkInfoLess $ currentTyDef ^. #tyName)
   qotyn <- case Map.lookup qtyn (cfg ^. opaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured " <> show (currentTyDef ^. #tyName)
     Just qhtyn -> return qhtyn
-  exportTy (PC.mkInfoLess (currentTyDef ^. #tyName))
   importOpaqueTy qotyn
-checkTyAbs (PC.TyAbs _ (PC.SumI s) _) = do
-  checkSum s
-  currentTyDef <- snd <$> askTyDefCtx
-  exportTy (PC.mkInfoLess $ currentTyDef ^. #tyName)
 
 checkSum :: MonadCheck o c m => PC.Sum -> m ()
 checkSum s = for_ (s ^. #constructors) (\c -> checkProduct (c ^. #product))
 
 checkProduct :: MonadCheck o c m => PC.Product -> m ()
-checkProduct (PC.TupleI t) = for_ (t ^. #fields) checkTy
-checkProduct (PC.RecordI r) = for_ (r ^. #fields) (\f -> checkTy $ f ^. #fieldTy)
+checkProduct p = for_ (p ^. #fields) checkTy
+
+checkRecord :: MonadCheck o c m => PC.Record -> m ()
+checkRecord r = for_ (r ^. #fields) (\f -> checkTy $ f ^. #fieldTy)
 
 checkTy :: MonadCheck o c m => PC.Ty -> m ()
 checkTy (PC.TyRefI (PC.ForeignI fr)) = importLbTy (PC.mkInfoLess $ fr ^. #moduleName, PC.mkInfoLess $ fr ^. #tyName)

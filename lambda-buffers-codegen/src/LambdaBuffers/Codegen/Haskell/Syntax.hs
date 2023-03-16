@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), FunctionName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef) where
+module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), FunctionName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName) where
 
 import Control.Lens ((^.))
 import Data.Text (Text)
@@ -31,3 +31,6 @@ fromLbForeignRef fr =
   , fromLbModuleName $ fr ^. #moduleName
   , fromLbTyName $ fr ^. #tyName
   )
+
+filepathFromModuleName :: PC.ModuleName -> FilePath
+filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".hs"

@@ -4,7 +4,7 @@ module Test.Utils.Constructors (
   _TyVar,
   _TyVar',
   _TyVarI,
-  _TupleI,
+  _ProductI,
   _Constructor,
   _ConstrName,
   _Sum,
@@ -94,13 +94,12 @@ _SourceInfo x y = PC.SourceInfo {PC.file = "DefaultFile", PC.posFrom = _SourcePo
 _SourcePosition :: Int -> PC.SourcePosition
 _SourcePosition x = PC.SourcePosition x (x + 1)
 
-_TupleI :: [PC.Ty] -> PC.Product
-_TupleI x =
-  PC.TupleI $
-    PC.Tuple
-      { PC.fields = x
-      , PC.sourceInfo = def
-      }
+_ProductI :: [PC.Ty] -> PC.Product
+_ProductI x =
+  PC.Product
+    { PC.fields = x
+    , PC.sourceInfo = def
+    }
 
 _Opaque :: PC.TyBody
 _Opaque = PC.OpaqueI def

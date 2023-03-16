@@ -1,0 +1,19 @@
+module Plutus
+
+import Prelude (Maybe)
+
+opaque AssetClass
+
+opaque Value
+
+opaque CurrencySymbol
+
+opaque TokenName
+
+opaque Address
+
+opaque XY
+
+sum X a b c = X | Y | Z
+
+sum Y a b c = X | Y | Z (Maybe a)

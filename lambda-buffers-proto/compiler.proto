@@ -27,7 +27,7 @@ message SourcePosition {
 
 /* Type term
 
-A type expression that ocurrs in bodies of type definitions (message TyDef):
+A type term that ocurrs in bodies of type definitions (message TyDef):
 
 ```lbf
 sum Maybe a = Just a | Nothing
@@ -69,7 +69,7 @@ message TyVar {
 
 /* Type abstraction
 
-A type expression that introduces type abstractions (ie. type functions). This
+A type term that introduces type abstractions (ie. type functions). This
 type term can only be introduced in the context of a
 [type definition](@ref TyDef).
 */
@@ -88,7 +88,7 @@ message TyAbs {
 
 /* Type application
 
-A type expression that applies a type abstraction to a list of arguments.
+A type term that applies a type abstraction to a list of arguments.
 */
 message TyApp {
   // Type function. TODO(bladyjoker): Rename to ty_abs?
@@ -102,7 +102,7 @@ message TyApp {
 
 /* Type reference
 
-A type expression that denotes a reference to a type available that's declared
+A type term that denotes a reference to a type available that's declared
 locally or in foreign modules.
 */
 message TyRef {
@@ -129,7 +129,7 @@ message TyRef {
   }
 }
 
-// A list of type expressions useful for debugging
+// A list of type terms useful for debugging
 message Tys {
   repeated Ty ties = 1;
 }
@@ -265,22 +265,23 @@ message Kind {
 }
 
 
-/* Type body
+/* Type body.
 
-Lambda Buffers type bodies are enriched type terms that can only be specified in
-[type abstraction terms](@ref TyAbs).
-
-TODO: Add Tuple and Record type bodies.
+Lambda Buffers type bodies type terms that can only be specified in the
+`TyAbs` context. It's a built-in type term that can only occur enclosed
+within a `TyAbs` term which introduces `TyVar`s in the scope of the term.
 */
 message TyBody {
-  // Either a sum type or an opaque.
+  // Either an opaque, a sum/product/record type term.
   oneof ty_body {
     Opaque opaque = 1;
     Sum sum = 2;
+    Product product = 3;
+    Record record = 4;
   };
 }
 
-/* Opaque type body
+/* Opaque type.
 
 A type that has an `Opaque` body represents a 'built-in' or a 'primitive' type
 that's handled by the semantics 'under the hood'. It's called 'opaque' to denote
@@ -304,40 +305,16 @@ message Opaque {
   SourceInfo source_info = 1;
 }
 
-/* Sum
-
-It's a built-in type term that exists enclosed within a [type abstraction](@ref
-TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
-expression.
+/* A sum type term.
 
 A type defined as a Sum type is just like a Haskell algebraic data type and
 represents a sum of products.
-
-It can essentially be expressed as `Either` type enriched with [constructor
-name](@ref ConstrName) information.
-
-```haskell
-
-data Foo a b = Bar | Baz a | Bax b
-
--- corresponds to
-
-type ConstrName = String
-type Foo_ a b = Either
-  ((), ConstrName)
-  (Either
-    (a, ConstrName)
-    (b, ConstrName)
-  )
-```
 */
 message Sum {
   // Constructor of a Sum type is a Product type term.
   message Constructor {
     // Constructor name.
     ConstrName constr_name = 1;
-    // TODO(bladyjoker): Replace with ConstructorBody that's either Tuple or
-    // Record.
     // Product type term.
     Product product = 2;
   };
@@ -351,46 +328,27 @@ message Sum {
   SourceInfo source_info = 2;
 }
 
-/* Product
-
-It's a built-in type term that exists enclosed within a [type abstraction](@ref
-TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
-expression.
-
-It exists in two flavors, either a Record or a NTuple.
-
-TODO(bladyjoker): Separate into Tuple and Record.
-*/
+// A product type term.
 message Product {
-  // A record type expression.
-  message Record {
-    // Field in a record type.
-    message Field {
-      // Record field name.
-      FieldName field_name = 1;
-      // Field type.
-      Ty field_ty = 2;
-    }
-    // Record fields.
-    repeated Field fields = 1;
-    // Source information.
-    SourceInfo source_info = 2;
+  // Fields in a products are types.
+  repeated Ty fields = 1;
+  // Source information.
+  SourceInfo source_info = 2;
+}
+
+// A record type term.
+message Record {
+  // Field in a record type.
+  message Field {
+    // Record field name.
+    FieldName field_name = 1;
+    // Field type.
+    Ty field_ty = 2;
   }
-  // A tuple type expression.
-  message NTuple {
-    // Fields in a tuple are types.
-    repeated Ty fields = 1;
-    // Source information.
-    SourceInfo source_info = 2;
-  }
-  // A product is a record or a tuple.
-  // A record or a tuple with no fields means `unit`.
-  // Duplicate fields in a record MUST be reported with
-  // `ProtoParseError.MultipleFieldError`.
-  oneof product {
-    Record record = 1;
-    NTuple ntuple = 2;
-  }
+  // Record fields.
+  repeated Field fields = 1;
+  // Source information.
+  SourceInfo source_info = 2;
 }
 
 /* Type class definition
@@ -545,11 +503,11 @@ message InstanceClause {
   eq(maybe(A)) :- eq(just(A) | Nothing).
   ```
 
-  The rule relates the desired `Ty` expression to its (lambda calculus)
+  The rule relates the desired `Ty` term to its (lambda calculus)
   'evaluated' form.
 
   > Currently, there's only support for deriving type class rules and
-    implementations for `Ty` expressions of `Kind.KIND_REF_TYPE`. That means,
+    implementations for `Ty` terms of `Kind.KIND_REF_TYPE`. That means,
     type classes like Ord and Eq...
 */
 message Derive {
@@ -557,7 +515,7 @@ message Derive {
   Constraint constraint = 1;
 }
 
-/* Constraint expression */
+/* Constraint term */
 message Constraint {
   // Name of the type class.
   TyClassRef class_ref = 1;
@@ -676,7 +634,7 @@ message ProtoParseError {
     // Type definition in which the error was found.
     TyDef ty_def = 2;
     // Conflicting record fields.
-    repeated Product.Record.Field fields = 3;
+    repeated Record.Field fields = 3;
   }
 
   message MultipleImportError {

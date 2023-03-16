@@ -62,8 +62,8 @@
     ],
     "Prelude.Bytes": [
       "bytestring",
-      "Data.Bytestring",
-      "Bytestring"
+      "Data.ByteString",
+      "ByteString"
     ],
     "Prelude.Maybe": [
       "base",
@@ -76,9 +76,9 @@
       "Either"
     ],
     "Prelude.List": [
-      "base",
-      "Prelude",
-      "([])"
+      "lb-haskell-runtime",
+      "LambdaBuffers.Runtime.Haskell",
+      "List"
     ],
     "Prelude.Set": [
       "containers",

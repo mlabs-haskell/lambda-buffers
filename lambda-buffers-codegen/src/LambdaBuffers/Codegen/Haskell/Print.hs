@@ -92,10 +92,18 @@ For the above examples it prints
 Foo'MkFoo a | Foo'MkBar b
 Prelude.Maybe a
 
-TODO(bladyjoker): Add Record/Tuple.
+TODO(bladyjoker): Revisit empty records and prods.
 -}
 printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc a, Doc a)
 printTyBody tyN _ (PC.SumI s) = ("data",) <$> printTyBodySum tyN s
+printTyBody tyN _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
+  [] -> return ("data", printMkCtor tyN)
+  [_] -> return ("newtype", printMkCtor tyN <+> printProd p)
+  _ -> return ("data", printMkCtor tyN <+> printProd p)
+printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
+  [] -> return ("data", printMkCtor tyN)
+  [_] -> printRec tyN r >>= \recDoc -> return ("newtype", printMkCtor tyN <+> recDoc)
+  _ -> printRec tyN r >>= \recDoc -> return ("data", printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ ctxConfig . opaques)
   mn <- asks (view $ ctxModule . #moduleName)
@@ -118,7 +126,7 @@ printTyBodySum tyN (PC.Sum ctors _) = do
 printCtor :: MonadPrint m => PC.TyName -> PC.Constructor -> m (Doc a)
 printCtor tyN (PC.Constructor ctorName prod) = do
   let ctorNDoc = printCtorName tyN ctorName
-  prodDoc <- printProd tyN prod
+  let prodDoc = printProd prod
   return $ group $ ctorNDoc <+> prodDoc -- FIXME(bladyjoker): Adds extra space when empty.
 
 {- | Translate LambdaBuffer sum constructor names into Haskell sum constructor names.
@@ -129,10 +137,6 @@ printCtor tyN (PC.Constructor ctorName prod) = do
 printCtorName :: PC.TyName -> PC.ConstrName -> Doc a
 printCtorName tyN (PC.ConstrName n _) = group $ printTyName tyN <> squote <> pretty n
 
-printProd :: MonadPrint m => PC.TyName -> PC.Product -> m (Doc a)
-printProd tyN (PC.RecordI rc) = printRec tyN rc
-printProd _ (PC.TupleI tup) = return $ printTup tup
-
 printRec :: MonadPrint m => PC.TyName -> PC.Record -> m (Doc a)
 printRec tyN (PC.Record fields _) = do
   if null fields
@@ -141,11 +145,14 @@ printRec tyN (PC.Record fields _) = do
       fieldDocs <- for (toList fields) (printField tyN)
       return $ group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
 
-printTup :: PC.Tuple -> Doc a
-printTup (PC.Tuple fields _) = do
+printProd :: PC.Product -> Doc a
+printProd (PC.Product fields _) = do
   if null fields
     then mempty
     else group . align $ sep (printTy <$> fields)
+
+printMkCtor :: PC.TyName -> Doc a
+printMkCtor tyN = "Mk" <> printTyName tyN
 
 printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc a)
 printField tyN (PC.Field fn ty) = do

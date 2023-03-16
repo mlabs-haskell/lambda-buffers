@@ -85,13 +85,6 @@
           compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
           compilerFlake = flakeAbstraction compilerBuild;
 
-          # Extras Build
-          extrasBuild = buildAbstraction {
-            import-location = ./lambda-buffers-extras/build.nix;
-            additional = { lambda-buffers-compiler = ./lambda-buffers-compiler; };
-          };
-          extrasFlake = flakeAbstraction extrasBuild;
-
           # Frontend Build
           frontendBuild = buildAbstraction {
             import-location = ./lambda-buffers-frontend/build.nix;
@@ -119,7 +112,7 @@
           inherit pkgs;
 
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages // extrasFlake.packages;
+          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
 
           devShells = rec {
             dev-pre-commit = preCommitDevShell;
@@ -129,12 +122,11 @@
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;
-            dev-common = extrasFlake.devShell;
             default = preCommitDevShell;
           };
 
           # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // extrasFlake.checks);
+          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
 
         }
       ) // {

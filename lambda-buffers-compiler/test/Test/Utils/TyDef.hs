@@ -22,8 +22,8 @@ import Test.Utils.Constructors (
   _LocalRef',
   _ModuleName,
   _Opaque,
+  _ProductI,
   _SourceInfo,
-  _TupleI,
   _TyAbs,
   _TyAbs',
   _TyApp,
@@ -42,8 +42,8 @@ tyDef'maybe =
     (_TyName "Maybe")
     ( _TyAbs
         [("a", _Type)]
-        [ ("Nothing", _TupleI [])
-        , ("Just", _TupleI [_TyVarI "a"])
+        [ ("Nothing", _ProductI [])
+        , ("Just", _ProductI [_TyVarI "a"])
         ]
     )
 
@@ -66,8 +66,8 @@ tyDef'either =
         [ ("a", _Type)
         , ("b", _Type)
         ]
-        [ ("Left", _TupleI [_TyVarI "a"])
-        , ("Right", _TupleI [_TyVarI "b"])
+        [ ("Left", _ProductI [_TyVarI "a"])
+        , ("Right", _ProductI [_TyVarI "b"])
         ]
     )
 
@@ -82,7 +82,7 @@ tyDef'ntEither'saturated =
         mempty
         [
           ( "Foo"
-          , _TupleI
+          , _ProductI
               [ _TyApp
                   ( _TyApp
                       (_TyRefILocal "Either")
@@ -102,7 +102,7 @@ tyDef'ntEither =
         [ ("a", _Type)
         , ("b", _Type)
         ]
-        [ ("Foo", _TupleI [_TyApp (_TyApp (_TyRefILocal "Either") (_TyVarI "a")) (_TyVarI "b")])
+        [ ("Foo", _ProductI [_TyApp (_TyApp (_TyRefILocal "Either") (_TyVarI "a")) (_TyVarI "b")])
         ]
     )
 
@@ -116,7 +116,7 @@ tyDef'recDef =
         ]
         [
           ( "Rec"
-          , _TupleI
+          , _ProductI
               [ _TyApp (_TyRefILocal "F") $
                   _TyApp (_TyRefILocal "F") (_TyVarI "a")
               ]
@@ -131,8 +131,8 @@ tyDef'incoherent =
     (_TyName "B")
     ( _TyAbs
         [("a", _Type)]
-        [ ("Nothing", _TupleI [])
-        , ("B", _TupleI [_TyRefILocal "Maybe"])
+        [ ("Nothing", _ProductI [])
+        , ("B", _ProductI [_TyRefILocal "Maybe"])
         ]
     )
 
@@ -141,7 +141,7 @@ tyDef'undefinedVar :: P.TyDef
 tyDef'undefinedVar =
   _TyDef
     (_TyName "Foo")
-    (_TyAbs [] [("Bar", _TupleI [TyVarI tyDef'undefinedVar'var])])
+    (_TyAbs [] [("Bar", _ProductI [TyVarI tyDef'undefinedVar'var])])
 
 {- | The undefined var (i.e. "b") in tyDef'undefinedVar.
  Exported to see if the test identifies it correctly.
@@ -158,7 +158,7 @@ tyDef'undefinedLocalTyRef =
         [("a", _Type)]
         [
           ( "Foo"
-          , _TupleI
+          , _ProductI
               [ P.TyRefI tyDef'undefinedLocalTyRef'TyRef
               , _TyVarI "a"
               ]
@@ -181,7 +181,7 @@ tyDef'undefinedForeignTyRef =
         [("a", _Type)]
         [
           ( "Foo"
-          , _TupleI
+          , _ProductI
               [ P.TyRefI tyDef'undefinedForeignTyRef'TyRef
               , _TyVarI "a"
               ]

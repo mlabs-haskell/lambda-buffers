@@ -1,0 +1,7 @@
+module PreludeT
+
+sum Maybe a = Just a | Nothing
+
+sum Either a b = Left a | Right b
+
+sum List a = Nil | Cons a (List a)
