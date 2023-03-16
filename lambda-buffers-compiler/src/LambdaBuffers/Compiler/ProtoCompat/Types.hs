@@ -34,7 +34,6 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   SourceInfo (..),
   SourcePosition (..),
   Sum (..),
-  Tuple (..),
   Ty (..),
   TyAbs (..),
   TyApp (..),
@@ -174,7 +173,7 @@ data TyArg = TyArg {argName :: VarName, argKind :: Kind, sourceInfo :: SourceInf
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
-data TyBody = OpaqueI SourceInfo | SumI Sum
+data TyBody = OpaqueI SourceInfo | SumI Sum | ProductI Product | RecordI Record
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
@@ -194,11 +193,7 @@ data Record = Record {fields :: OMap (InfoLess FieldName) Field, sourceInfo :: S
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
-data Tuple = Tuple {fields :: [Ty], sourceInfo :: SourceInfo}
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-data Product = RecordI Record | TupleI Tuple
+data Product = Product {fields :: [Ty], sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
@@ -348,7 +343,6 @@ instance InfoLessC Constructor
 instance InfoLessC Sum
 instance InfoLessC Field
 instance InfoLessC Record
-instance InfoLessC Tuple
 instance InfoLessC Product
 instance InfoLessC ForeignClassRef
 instance InfoLessC LocalClassRef

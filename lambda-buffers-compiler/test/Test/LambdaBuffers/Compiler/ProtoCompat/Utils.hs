@@ -60,10 +60,10 @@ sum :: [(Text, [PC.Ty])] -> PC.TyBody
 sum ctors' = PC.SumI $ PC.Sum (OMap.fromList . fmap ctor $ ctors') def
 
 ctor :: (Text, [PC.Ty]) -> (PC.InfoLess PC.ConstrName, PC.Constructor)
-ctor (cn', tys) = (PC.mkInfoLess $ cn cn', PC.Constructor (cn cn') (tpl tys))
+ctor (cn', tys) = (PC.mkInfoLess $ cn cn', PC.Constructor (cn cn') (prod tys))
 
-tpl :: [PC.Ty] -> PC.Product
-tpl tys = PC.TupleI (PC.Tuple tys def)
+prod :: [PC.Ty] -> PC.Product
+prod tys = PC.Product tys def
 
 cn :: Text -> PC.ConstrName
 cn n = PC.ConstrName n def

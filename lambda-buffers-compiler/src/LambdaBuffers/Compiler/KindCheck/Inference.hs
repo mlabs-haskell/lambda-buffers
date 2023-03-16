@@ -162,6 +162,8 @@ derive x = deriveTyAbs x
         ctx <- ask
         pure $ Axiom $ Judgement ctx (Opaque si) KType
       PC.SumI s -> deriveSum s
+      PC.ProductI p -> deriveProduct p
+      PC.RecordI r -> deriveRecord r
 
     deriveSum :: PC.Sum -> Derive Derivation
     deriveSum s = do
@@ -178,11 +180,6 @@ derive x = deriveTyAbs x
       d <- deriveProduct (c ^. #product)
       tell $ Constraint <$> [(KType, d ^. d'kind)]
       pure $ Implication (Judgement ctx (Constructor c) (d ^. d'kind)) d
-
-    deriveProduct :: PC.Product -> Derive Derivation
-    deriveProduct = \case
-      PC.RecordI r -> deriveRecord r
-      PC.TupleI t -> deriveTuple t
 
     deriveRecord :: PC.Record -> Derive Derivation
     deriveRecord r = do
@@ -237,8 +234,8 @@ derive x = deriveTyAbs x
         df
         (ap ^. #tyArgs)
 
-    deriveTuple :: PC.Tuple -> Derive Derivation
-    deriveTuple t = do
+    deriveProduct :: PC.Product -> Derive Derivation
+    deriveProduct t = do
       voidD <- voidDerivation
       ds <- deriveTy `traverse` (t ^. #fields)
       foldrM productDerivation voidD ds
