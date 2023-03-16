@@ -7,10 +7,12 @@ maintainer:         info@mlabs.city
 data-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.textproto
 
 extra-source-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.textproto
 
 flag dev
   description: Enable non-strict compilation for development
