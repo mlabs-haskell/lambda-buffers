@@ -17,7 +17,7 @@ import Data.Text.IO qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
-import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo, Ty (TyApp, TyRef', TyVar), TyBody (Opaque, Sum), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef), defSourceInfo)
+import LambdaBuffers.Frontend.Syntax (Constructor (Constructor), Field (Field), Import (Import, importInfo, importModuleName), Module (moduleImports, moduleName, moduleTyDefs), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo, Sum (Sum), Ty (TyApp, TyRef', TyVar), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef, tyBody, tyDefInfo, tyName), TyName (TyName), TyRef (TyRef), defSourceInfo)
 import Prettyprinter (Doc, LayoutOptions (layoutPageWidth), PageWidth (Unbounded), Pretty (pretty), defaultLayoutOptions, layoutPretty, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 import System.Directory (findFiles)
@@ -154,7 +154,9 @@ processModule m = local
 checkReferences :: Scope -> Module SourceInfo -> FrontendT m ()
 checkReferences scope m = for_ (moduleTyDefs m) (checkBody . tyBody)
   where
-    checkBody (Sum cs _) = for_ cs checkConstructor
+    checkBody (SumBody (Sum cs _)) = for_ cs checkConstructor
+    checkBody (ProductBody (Product fields _)) = for_ fields checkTy
+    checkBody (RecordBody (Record fields _)) = for_ fields (\(Field _ ty _) -> checkTy ty)
     checkBody Opaque = return ()
 
     checkConstructor (Constructor _ (Product tys _) _) = for tys checkTy

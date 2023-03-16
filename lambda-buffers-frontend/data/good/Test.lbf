@@ -1,12 +1,9 @@
 module Test
 
 import A
-
-import qualified B
-
 import qualified A.B
 import qualified A.B as AB
-
+import qualified B
 import qualified C (A)
 import qualified C as D (A)
 import qualified C as D ()
@@ -21,11 +18,4 @@ opaque Int
 
 opaque Bytes
 
-sum Foo a = MkFoo
-    A
-    A.A
-    B.A
-    A.B.A
-    AB.A
-    C.A
-    D.A
+sum Foo a = MkFoo A A.A B.A A.B.A AB.A C.A D.A

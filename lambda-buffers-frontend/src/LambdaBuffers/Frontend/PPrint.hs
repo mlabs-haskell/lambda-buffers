@@ -8,8 +8,8 @@ module LambdaBuffers.Frontend.PPrint () where
 
 import Data.List (sort)
 import Data.Text qualified as Text
-import LambdaBuffers.Frontend.Syntax (ClassName (ClassName), ConstrName (ConstrName), Constructor (Constructor), FieldName (FieldName), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
-import Prettyprinter (Doc, Pretty (pretty), align, comma, concatWith, encloseSep, equals, group, hsep, line, lparen, pipe, rparen, space, (<+>))
+import LambdaBuffers.Frontend.Syntax (ClassName (ClassName), ConstrName (ConstrName), Constructor (Constructor), Field (Field), FieldName (FieldName), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwTyDefOpaque, tyBodyToTyDefKw)
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, encloseSep, equals, group, hsep, lbrace, line, lparen, pipe, rbrace, rparen, space, (<+>))
 import Text.Parsec qualified as Parsec
 import Text.Parsec.Error qualified as Parsec
 
@@ -49,12 +49,39 @@ instance Pretty info => Pretty (Import info) where
           Just syms -> space <> encloseSep lparen rparen comma (pretty <$> syms)
 
 instance Pretty info => Pretty (TyDef info) where
-  pretty (TyDef tn args body@(Sum _ _) _info) = group $ "sum" <+> pretty tn <+> hsep (pretty <$> args) <+> equals <+> pretty body
-  pretty (TyDef tn args Opaque _info) = "opaque" <+> pretty tn <> if null args then "" else space <> hsep (pretty <$> args)
+  pretty (TyDef tn args Opaque _info) = pretty kwTyDefOpaque <+> pretty tn <> if null args then "" else space <> hsep (pretty <$> args)
+  pretty (TyDef tn args body _info) = group $ pretty (tyBodyToTyDefKw body) <+> pretty tn <+> prettyTyAbs args body
+
+prettyTyAbs :: Pretty info => [TyArg info] -> TyBody info -> Doc ann
+prettyTyAbs [] body = equals <+> pretty body
+prettyTyAbs args body = hsep (pretty <$> args) <+> equals <+> pretty body
 
 instance Pretty info => Pretty (TyBody info) where
-  pretty (Sum cs _info) = if null cs then "" else align $ encloseSep "" "" (space <> pipe <> space) (pretty <$> cs)
-  pretty Opaque = ""
+  pretty (SumBody s) = pretty s
+  pretty (ProductBody p) = pretty p
+  pretty (RecordBody r) = pretty r
+  pretty Opaque = mempty
+
+instance Pretty info => Pretty (Record info) where
+  pretty (Record fields _info) =
+    align $
+      recordIntro
+        <> encloseSep "" "" (comma <> space) (pretty <$> fields)
+        <> recordOutro
+    where
+      recordIntro :: Doc ann
+      recordIntro = lbrace <> space
+      recordOutro :: Doc ann
+      recordOutro = space <> rbrace
+
+instance Pretty info => Pretty (Field info) where
+  pretty (Field fn ty _info) = group $ pretty fn <+> colon <+> pretty ty
+
+instance Pretty info => Pretty (Product info) where
+  pretty (Product fields _info) = align $ hsep (pretty <$> fields)
+
+instance Pretty info => Pretty (Sum info) where
+  pretty (Sum cs _info) = align $ encloseSep "" "" (space <> pipe <> space) (pretty <$> cs)
 
 instance Pretty info => Pretty (TyArg info) where
   pretty (TyArg a _info) = pretty a
@@ -89,10 +116,8 @@ instance Pretty info => Pretty (Ty info) where
   pretty (TyApp tyF tyAs _info) = group $ encloseSep lparen rparen space (pretty <$> tyF : tyAs)
 
 instance Pretty info => Pretty (Constructor info) where
-  pretty (Constructor cn p _info) = align $ group (pretty cn <> pretty p)
-
-instance Pretty info => Pretty (Product info) where
-  pretty (Product tys _info) = group $ if null tys then "" else space <> hsep (pretty <$> tys)
+  pretty (Constructor cn (Product [] _) _info) = pretty cn
+  pretty (Constructor cn p _info) = group $ hsep [pretty cn, pretty p]
 
 instance Pretty SourceInfo where
   pretty (SourceInfo fn pos pos') = pretty fn <> ":" <> "(" <> pretty pos <> ")-(" <> pretty pos' <> ")"

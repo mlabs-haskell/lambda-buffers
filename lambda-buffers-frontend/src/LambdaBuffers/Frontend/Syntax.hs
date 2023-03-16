@@ -10,15 +10,23 @@ module LambdaBuffers.Frontend.Syntax (
   TyArg (..),
   ModuleName (..),
   ModuleAlias (..),
+  Record (..),
+  Sum (..),
   ModuleNamePart (..),
   TyName (..),
   VarName (..),
   ConstrName (..),
   FieldName (..),
+  Field (..),
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
   defSourceInfo,
+  tyBodyToTyDefKw,
+  kwTyDefOpaque,
+  kwTyDefProduct,
+  kwTyDefRecord,
+  kwTyDefSum,
 ) where
 
 import Data.Text (Text)
@@ -47,6 +55,21 @@ data Ty info
   | TyRef' (TyRef info) info
   deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
+kwTyDefSum :: String
+kwTyDefSum = "sum" :: String
+kwTyDefProduct :: String
+kwTyDefProduct = "prod" :: String
+kwTyDefRecord :: String
+kwTyDefRecord = "record" :: String
+kwTyDefOpaque :: String
+kwTyDefOpaque = "opaque" :: String
+
+tyBodyToTyDefKw :: TyBody info -> String
+tyBodyToTyDefKw (SumBody _) = kwTyDefSum
+tyBodyToTyDefKw (ProductBody _) = kwTyDefProduct
+tyBodyToTyDefKw (RecordBody _) = kwTyDefRecord
+tyBodyToTyDefKw Opaque = kwTyDefOpaque
+
 data TyDef info = TyDef
   { tyName :: TyName info
   , tyArgs :: [TyArg info]
@@ -56,13 +79,21 @@ data TyDef info = TyDef
   deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data TyBody info
-  = Sum [Constructor info] info
+  = SumBody (Sum info)
+  | ProductBody (Product info)
+  | RecordBody (Record info)
   | Opaque
   deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data Sum info = Sum [Constructor info] info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data Constructor info = Constructor (ConstrName info) (Product info) info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data Product info = Product [Ty info] info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data Record info = Record [Field info] info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data Field info = Field (FieldName info) (Ty info) info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data TyArg info = TyArg Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 

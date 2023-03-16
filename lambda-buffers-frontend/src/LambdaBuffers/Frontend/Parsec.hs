@@ -1,13 +1,13 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser) where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser, parseTyInner, parseTyTopLevel, parseRecord, parseProduct, parseSum) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.String (IsString (fromString))
-import LambdaBuffers.Compiler.NamingCheck (pConstrName, pModuleNamePart, pTyName)
-import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), SourceInfo (SourceInfo), SourcePos (SourcePos), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, Sum), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName))
-import Text.Parsec (ParseError, ParsecT, SourceName, Stream, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
+import LambdaBuffers.Compiler.NamingCheck (pConstrName, pFieldName, pModuleNamePart, pTyName)
+import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Field (Field), FieldName (FieldName), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
+import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
 type Parser s m a = ParsecT s () m a
@@ -48,18 +48,34 @@ parseTyVar = label' "type variable" $ TyVar <$> parseTyVarName
 parseTyRef :: Stream s m Char => Parser s m (Ty SourceInfo)
 parseTyRef = withSourceInfo . label' "type reference" $ TyRef' <$> parseTyRef'
 
-parseTys :: Stream s m Char => Parser s m [Ty SourceInfo]
-parseTys = label' "type list" $ sepEndBy parseTy' parseLineSpaces1
+{- | Inner type expression.
+ Valid examples:
 
-parseTy' :: Stream s m Char => Parser s m (Ty SourceInfo)
-parseTy' =
-  label' "type expression" $
-    parseTyRef
-      <|> parseTyVar
-      <|> ( (char '(' >> parseLineSpaces)
-              *> (try parseTys >>= tysToTy)
-              <* (parseLineSpaces >> char ')')
-          )
+ a | (a) | ((a)) | ( a ) | (( ( a)))
+ Int | (Int) | ((Int)) | (  Int  ) | (( ( Int)))
+ (Maybe a) | ((Maybe) (a)) | ((Maybe) a) | (Maybe (a))
+
+ Invalid examples:
+ Maybe a
+-}
+parseTyInner :: forall s m. Stream s m Char => Parser s m (Ty SourceInfo)
+parseTyInner = label' "inner type expression" parseSexp
+
+parseTyTopLevel :: Stream s m Char => Parser s m (Ty SourceInfo)
+parseTyTopLevel = label' "top level type expression" $ parseTys >>= tysToTy
+
+-- | Sexp :- var | TyRef | (Sexp)
+parseSexp :: forall s m. Stream s m Char => Parser s m (Ty SourceInfo)
+parseSexp = label' "s-expression" $ between parseLineSpaces parseLineSpaces (parseSexpList <|> parseSexpAtom)
+
+parseSexpAtom :: forall s m. Stream s m Char => Parser s m (Ty SourceInfo)
+parseSexpAtom = try parseTyRef <|> try parseTyVar
+
+parseTys :: forall s m. Stream s m Char => Parser s m [Ty SourceInfo]
+parseTys = many parseSexp
+
+parseSexpList :: forall s m. Stream s m Char => Parser s m (Ty SourceInfo)
+parseSexpList = between (char '(') (char ')') (parseTys >>= tysToTy)
 
 tysToTy :: Stream s m Char => [Ty SourceInfo] -> Parser s m (Ty SourceInfo)
 tysToTy tys = withSourceInfo $ case tys of
@@ -67,47 +83,69 @@ tysToTy tys = withSourceInfo $ case tys of
   [ty] -> return $ const ty
   f : as -> return $ TyApp f as
 
-parseSumBody :: Stream s m Char => Parser s m (TyBody SourceInfo)
-parseSumBody = withSourceInfo . label' "sum type body" $ do
+parseSum :: Stream s m Char => Parser s m (Sum SourceInfo)
+parseSum = withSourceInfo . label' "sum type expression" $ do
   cs <-
     sepBy
       parseSumConstructor
-      (char '|' >> parseLineSpaces1)
+      (parseLineSpaces >> char '|' >> parseLineSpaces)
   return $ Sum cs
 
 parseSumConstructor :: Stream s m Char => Parser s m (Constructor SourceInfo)
-parseSumConstructor = withSourceInfo . label' "sum type constructor" $ Constructor <$> parseConstructorName <*> parseProduct
+parseSumConstructor = withSourceInfo . label' "sum type constructor" $ Constructor <$> parseConstructorName <*> (parseLineSpaces >> parseProduct)
 
 parseProduct :: Stream s m Char => Parser s m (Product SourceInfo)
-parseProduct = do
-  maySpace <- optionMaybe parseLineSpace
-  case maySpace of
-    Nothing -> withSourceInfo . label' "empty constructor" $ do
-      return $ Product []
-    Just _ -> withSourceInfo . label' "type product" $ do
-      _ <- parseLineSpaces
-      Product <$> parseTys
+parseProduct = withSourceInfo . label' "product type expression" $ Product <$> parseTys
+
+parseRecord :: Stream s m Char => Parser s m (Record SourceInfo)
+parseRecord = withSourceInfo . label' "record type expression" $ do
+  fields <-
+    between
+      (char '{' >> parseLineSpaces)
+      (parseLineSpaces >> char '}')
+      $ sepBy parseField (parseLineSpaces >> char ',' >> parseLineSpaces)
+  return $ Record fields
+
+parseField :: Stream s m Char => Parser s m (Field SourceInfo)
+parseField = withSourceInfo . label' "record field" $ do
+  fn <- parseFieldName
+  parseLineSpaces1
+  _ <- char ':'
+  parseLineSpaces1
+  Field fn <$> parseTyTopLevel
+
+parseFieldName :: Stream s m Char => Parser s m (FieldName SourceInfo)
+parseFieldName = withSourceInfo . label' "record field name" $ FieldName <$> pFieldName
 
 parseConstructorName :: Stream s m Char => Parser s m (ConstrName SourceInfo)
 parseConstructorName = withSourceInfo . label' "sum constructor name" $ ConstrName <$> pConstrName
 
 parseTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
-parseTyDef = label' "type definition" $ parseSumTyDef <|> parseOpaqueTyDef
+parseTyDef = label' "type definition" $ parseSumTyDef <|> parseProdTyDef <|> parseRecordTyDef <|> parseOpaqueTyDef
 
 parseSumTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
-parseSumTyDef = withSourceInfo . label' "sum type definition" $ do
-  _ <- string "sum"
+parseSumTyDef = parseTyDef' kwTyDefSum (SumBody <$> parseSum)
+
+parseProdTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
+parseProdTyDef = parseTyDef' kwTyDefProduct (ProductBody <$> parseProduct)
+
+parseRecordTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
+parseRecordTyDef = parseTyDef' kwTyDefRecord (RecordBody <$> parseRecord)
+
+parseTyDef' :: Stream s m Char => String -> Parser s m (TyBody SourceInfo) -> Parser s m (TyDef SourceInfo)
+parseTyDef' kw parseBody = withSourceInfo . label' (kw <> " type definition") $ do
+  _ <- string kw
   _ <- parseLineSpaces1
   tyN <- parseTyName
   _ <- parseLineSpaces1
   args <- sepEndBy parseTyArg parseLineSpaces1
   _ <- char '='
   _ <- parseLineSpaces1
-  TyDef tyN args <$> parseSumBody
+  TyDef tyN args <$> parseBody
 
 parseOpaqueTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
 parseOpaqueTyDef = withSourceInfo . label' "opaque type definition" $ do
-  _ <- string "opaque"
+  _ <- string kwTyDefOpaque
   _ <- parseLineSpaces1
   tyN <- parseTyName
   maySpace <- optionMaybe parseLineSpace
