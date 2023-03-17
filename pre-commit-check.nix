@@ -73,7 +73,6 @@
     typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
-
   } // protoHooks;
 
   tools = { inherit fourmolu; };
