@@ -41,14 +41,12 @@ prints goldensFp = testCase goldensFp $ do
         Right (fp', printed) -> do
           fp <- Paths.getDataFileName ("data/goldens/autogen" </> fp')
           golden <- Text.readFile fp
-          -- NOTE(bladyjoker): Needed to stop the auto formatting.
-          let pprinted = "{- ORMOLU_DISABLE -}\n{- HLINT ignore -}\n" <> printed <> "\n"
-          if golden == pprinted
+          if golden == printed
             then return ()
             else do
               let otherFp = fp <.> "other"
               -- TODO(bladyjoker): Use temp.
-              Text.writeFile otherFp pprinted
+              Text.writeFile otherFp printed
               assertFailure $
                 "Printed differs from the golden at "
                   <> fp

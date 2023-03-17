@@ -1,5 +1,3 @@
-{- ORMOLU_DISABLE -}
-{- HLINT ignore -}
 module LambdaBuffers.Prelude (Bool
                              , Bytes
                              , Char

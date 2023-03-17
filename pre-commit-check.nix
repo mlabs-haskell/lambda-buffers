@@ -60,6 +60,8 @@
     ];
   };
 
+  excludes = [ "lambda-buffers-codegen/data/.*" "experimental/.*" ];
+
   hooks = {
     nixpkgs-fmt.enable = true;
     nix-linter.enable = true;
@@ -71,6 +73,7 @@
     typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
+
   } // protoHooks;
 
   tools = { inherit fourmolu; };

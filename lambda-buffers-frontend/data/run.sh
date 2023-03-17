@@ -26,18 +26,22 @@ lbf-comp -w good/work-dir -i good -f good/Test.lbf
 lbf-form good/Test.lbf
 lbf-comp -w good/work-dir -i good -f good/Test.lbf
 
+echo "goldens/good/Prelude.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Prelude.lbf
 lbf-form goldens/good/Prelude.lbf
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Prelude.lbf
 
+echo "goldens/good/PreludeT.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/PreludeT.lbf
 lbf-form goldens/good/PreludeT.lbf
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/PreludeT.lbf
 
+echo "goldens/good/Plutus.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
 lbf-form goldens/good/Plutus.lbf
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
 
+echo "goldens/good/LambdaBuffers.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf
 lbf-form goldens/good/LambdaBuffers.lbf
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf
