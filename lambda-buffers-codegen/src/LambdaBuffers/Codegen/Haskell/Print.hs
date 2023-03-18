@@ -32,7 +32,7 @@ printModule = do
       , mempty
       , printImports lbTyImps opTyImps
       , mempty
-      , vsep tyDefDocs
+      , vsep tyDefDocs -- TODO(bladyjoker): Add additional line in between TyDefs.
       ]
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc a
@@ -116,18 +116,18 @@ printTyArg (PC.TyArg vn _ _) = printVarName vn
 
 printTyBodySum :: MonadPrint m => PC.TyName -> PC.Sum -> m (Doc a)
 printTyBodySum tyN (PC.Sum ctors _) = do
-  ctorDocs <- for (toList ctors) (printCtor tyN)
+  let ctorDocs = printCtor tyN <$> toList ctors
   return $
     group $
       if null ctors
         then mempty
-        else sep $ zipWith (<>) (mempty : repeat (pipe <> space)) ctorDocs
+        else align $ encloseSep mempty mempty (space <> pipe <> space) ctorDocs -- TODO(bladyjoker): Make it align on the ConstrName.
 
-printCtor :: MonadPrint m => PC.TyName -> PC.Constructor -> m (Doc a)
-printCtor tyN (PC.Constructor ctorName prod) = do
+printCtor :: PC.TyName -> PC.Constructor -> Doc a
+printCtor tyN (PC.Constructor ctorName prod) =
   let ctorNDoc = printCtorName tyN ctorName
-  let prodDoc = printProd prod
-  return $ group $ ctorNDoc <+> prodDoc -- FIXME(bladyjoker): Adds extra space when empty.
+      prodDoc = printProd prod
+   in group $ ctorNDoc <+> prodDoc -- TODO(bladyjoker): Adds extra space when empty.
 
 {- | Translate LambdaBuffer sum constructor names into Haskell sum constructor names.
  sum Sum = Foo Int | Bar String
@@ -135,7 +135,7 @@ printCtor tyN (PC.Constructor ctorName prod) = do
  data Sum = Sum'Foo Int | Sum'Bar String
 -}
 printCtorName :: PC.TyName -> PC.ConstrName -> Doc a
-printCtorName tyN (PC.ConstrName n _) = group $ printTyName tyN <> squote <> pretty n
+printCtorName tyN (PC.ConstrName n _) = printTyName tyN <> squote <> pretty n
 
 printRec :: MonadPrint m => PC.TyName -> PC.Record -> m (Doc a)
 printRec tyN (PC.Record fields _) = do
@@ -143,13 +143,13 @@ printRec tyN (PC.Record fields _) = do
     then return mempty
     else do
       fieldDocs <- for (toList fields) (printField tyN)
-      return $ group $ encloseSep lbrace rbrace (space <> comma <> space) fieldDocs
+      return $ group $ align $ encloseSep (lbrace <> space) rbrace (comma <> space) fieldDocs
 
 printProd :: PC.Product -> Doc a
 printProd (PC.Product fields _) = do
   if null fields
     then mempty
-    else group . align $ sep (printTy <$> fields)
+    else align $ sep (printTyInner <$> fields)
 
 printMkCtor :: PC.TyName -> Doc a
 printMkCtor tyN = "Mk" <> printTyName tyN
@@ -157,7 +157,7 @@ printMkCtor tyN = "Mk" <> printTyName tyN
 printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc a)
 printField tyN (PC.Field fn ty) = do
   fnDoc <- printFieldName tyN fn
-  let tyDoc = printTy ty
+  let tyDoc = printTyTopLevel ty
   return $ fnDoc <+> colon <> colon <+> tyDoc
 
 {- | Translate LambdaBuffer record field names into Haskell record field names
@@ -172,16 +172,27 @@ printFieldName tyN (PC.FieldName n _) = do
     Just (h, t) -> return $ Text.cons (Char.toLower h) t
   return $ pretty prefix <> squote <> pretty n
 
-printTy :: PC.Ty -> Doc a
-printTy (PC.TyVarI v) = printTyVar v
-printTy (PC.TyRefI r) = printTyRef r
-printTy (PC.TyAppI a) = printTyApp a
+printTyInner :: PC.Ty -> Doc a
+printTyInner (PC.TyVarI v) = printTyVar v
+printTyInner (PC.TyRefI r) = printTyRef r
+printTyInner (PC.TyAppI a) = printTyAppInner a
 
-printTyApp :: PC.TyApp -> Doc a
-printTyApp (PC.TyApp f args _) =
-  let fDoc = printTy f
-      argsDoc = printTy <$> args
+printTyAppInner :: PC.TyApp -> Doc a
+printTyAppInner (PC.TyApp f args _) =
+  let fDoc = printTyInner f
+      argsDoc = printTyInner <$> args
    in group $ parens $ fDoc <+> align (sep argsDoc)
+
+printTyTopLevel :: PC.Ty -> Doc a
+printTyTopLevel (PC.TyVarI v) = printTyVar v
+printTyTopLevel (PC.TyRefI r) = printTyRef r
+printTyTopLevel (PC.TyAppI a) = printTyAppTopLevel a
+
+printTyAppTopLevel :: PC.TyApp -> Doc a
+printTyAppTopLevel (PC.TyApp f args _) =
+  let fDoc = printTyInner f
+      argsDoc = printTyInner <$> args
+   in group $ fDoc <+> align (sep argsDoc)
 
 printTyRef :: PC.TyRef -> Doc a
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn

@@ -2,11 +2,11 @@ module LambdaBuffers
 
 import Prelude
 
-sum Kind = KindType | KindArrowKindKind
+sum Kind = Type | Arrow Kind Kind
 
-sum Ty = TyAppTyTy | TyVarVarName | TyRef
+sum Ty = App Ty Ty | Var VarName | Ref TyRef
 
-record TyAbs = { args : (List TyArg), body : TyBody }
+record TyAbs = { args : List TyArg, body : TyBody }
 
 record TyArg = { name : VarName, kind : Kind }
 
@@ -22,30 +22,30 @@ prod Record = (Map FieldName Field)
 
 record Field = { name : FieldName, ty : Ty }
 
-sum TyRef = LocalTyRefTyName | ForeignTyRefModuleNameTyName
+sum TyRef = Local TyName | Foreign ModuleName TyName
 
 record ClassDef = { name : ClassName
-                  , args : (List TyArg)
-                  , supers : (List ClassConstraint) }
+                  , args : List TyArg
+                  , supers : List ClassConstraint }
 
-record ClassConstraint = { class : ClassRef, args : (List TyArg) }
+record ClassConstraint = { class : ClassRef, args : List TyArg }
 
-record InstanceClause = { head : Constraint, body : (List Constraint) }
+record InstanceClause = { head : Constraint, body : List Constraint }
 
 prod Derive = Constraint
 
-record Constraint = { class : ClassRef, args : (List Ty) }
+record Constraint = { class : ClassRef, args : List Ty }
 
-sum ClassRef = LocalClassRefClassName | ForeignClassRefModuleNameClassName
+sum ClassRef = Local ClassName | Foreign ModuleName ClassName
 
 record Module = { name : ModuleName
-                , tyDefs : (Map TyName TyDef)
-                , classDefs : (Map ClassName ClassDef)
-                , ruleImports : (Set ModuleName)
-                , instanceClauses : (List InstanceClause)
-                , derives : (List Derive) }
+                , tyDefs : Map TyName TyDef
+                , classDefs : Map ClassName ClassDef
+                , ruleImports : Set ModuleName
+                , instanceClauses : List InstanceClause
+                , derives : List Derive }
 
-record CompilerInput = { modules : (Map ModuleName Module) }
+record CompilerInput = { modules : Map ModuleName Module }
 
 prod TyName = Text
 

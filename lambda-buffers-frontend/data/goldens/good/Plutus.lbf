@@ -13,7 +13,3 @@ opaque TokenName
 opaque Address
 
 opaque XY
-
-sum X a b c = X | Y | Z
-
-sum Y a b c = X | Y | Z (Maybe a)

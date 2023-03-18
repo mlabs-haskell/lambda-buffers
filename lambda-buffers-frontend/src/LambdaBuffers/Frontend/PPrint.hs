@@ -75,10 +75,10 @@ instance Pretty info => Pretty (Record info) where
       recordOutro = space <> rbrace
 
 instance Pretty info => Pretty (Field info) where
-  pretty (Field fn ty _info) = group $ pretty fn <+> colon <+> pretty ty
+  pretty (Field fn ty _info) = group $ pretty fn <+> colon <+> prettyTyTopLevel ty
 
 instance Pretty info => Pretty (Product info) where
-  pretty (Product fields _info) = align $ hsep (pretty <$> fields)
+  pretty (Product fields _info) = align $ hsep (prettyTyInner <$> fields)
 
 instance Pretty info => Pretty (Sum info) where
   pretty (Sum cs _info) = align $ encloseSep "" "" (space <> pipe <> space) (pretty <$> cs)
@@ -110,10 +110,15 @@ instance Pretty info => Pretty (ModuleAlias info) where
 instance Pretty info => Pretty (TyRef info) where
   pretty (TyRef mayModAl tn _info) = maybe "" (\al -> pretty al <> ".") mayModAl <> pretty tn
 
-instance Pretty info => Pretty (Ty info) where
-  pretty (TyVar vn) = pretty vn
-  pretty (TyRef' tr _info) = pretty tr
-  pretty (TyApp tyF tyAs _info) = group $ encloseSep lparen rparen space (pretty <$> tyF : tyAs)
+prettyTyInner :: Pretty info => Ty info -> Doc ann
+prettyTyInner (TyVar vn) = pretty vn
+prettyTyInner (TyRef' tr _info) = pretty tr
+prettyTyInner (TyApp tyF tyAs _info) = group $ encloseSep lparen rparen space (prettyTyInner <$> tyF : tyAs)
+
+prettyTyTopLevel :: Pretty info => Ty info -> Doc ann
+prettyTyTopLevel (TyVar vn) = pretty vn
+prettyTyTopLevel (TyRef' tr _info) = pretty tr
+prettyTyTopLevel (TyApp tyF tyAs _info) = group $ hsep (prettyTyInner <$> tyF : tyAs)
 
 instance Pretty info => Pretty (Constructor info) where
   pretty (Constructor cn (Product [] _) _info) = pretty cn

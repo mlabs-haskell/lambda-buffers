@@ -60,6 +60,8 @@
     ];
   };
 
+  excludes = [ "lambda-buffers-codegen/data/.*" "experimental/.*" ];
+
   hooks = {
     nixpkgs-fmt.enable = true;
     nix-linter.enable = true;
