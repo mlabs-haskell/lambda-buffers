@@ -86,6 +86,26 @@ test =
           (Just 2)
           (U.lr "List" U.@ [U.lr "Foo" U.@ [U.tv "a"]])
           "(Nil  | Cons (MkFoo (Prelude.Either Prelude.Int8 a)) (Nil  | Cons (Foo a) (List (Foo a))))"
+      , fooCiTestCase
+          "Bar 1-> Prelude.Int8"
+          (Just 1)
+          (U.lr "Bar")
+          "Prelude.Int8"
+      , fooCiTestCase
+          "Baz 1-> Prelude.Int8"
+          (Just 1)
+          (U.lr "Baz")
+          "{baz : Prelude.Int8}"
+      , fooCiTestCase
+          "Beez Text 1-> {baz : Prelude.Int8,beez : Prelude.Text}"
+          (Just 1)
+          (U.lr "Beez" U.@ [U.fr ["Prelude"] "Text"])
+          "{baz : Prelude.Int8,beez : Prelude.Text}"
+      , fooCiTestCase
+          "Beer Text 1-> Prelude.Int8 Prelude.Text"
+          (Just 1)
+          (U.lr "Beer" U.@ [U.fr ["Prelude"] "Text"])
+          "Prelude.Int8 Prelude.Text"
       ]
 
 fooCi :: PC.CompilerInput
@@ -95,6 +115,17 @@ fooCi =
     , U.mod
         ["Foo"]
         [ U.td "Foo" (U.abs ["a"] $ U.sum [("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])])
+        , U.td "Baz" (U.abs [] $ U.recrd [("baz", U.fr ["Prelude"] "Int8")])
+        , U.td "Bar" (U.abs [] $ U.prod' [U.fr ["Prelude"] "Int8"])
+        , U.td
+            "Beez"
+            ( U.abs ["a"] $
+                U.recrd
+                  [ ("baz", U.fr ["Prelude"] "Int8")
+                  , ("beez", U.tv "a")
+                  ]
+            )
+        , U.td "Beer" (U.abs ["a"] $ U.prod' [U.fr ["Prelude"] "Int8", U.tv "a"])
         , U.td'maybe
         , U.td'either
         , U.td'list
