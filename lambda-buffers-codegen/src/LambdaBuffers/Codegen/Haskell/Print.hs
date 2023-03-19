@@ -11,7 +11,6 @@ module LambdaBuffers.Codegen.Haskell.Print (MonadPrint, printModule) where
 import Control.Lens (view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (ask, asks)
-import Data.Default (Default (def))
 import Data.Foldable (Foldable (toList), foldrM)
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -20,8 +19,9 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq)
-import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDefs)
+import LambdaBuffers.Codegen.Config qualified as C
+import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printModName, printModName', printTyName)
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef)
@@ -48,20 +48,24 @@ printModule = do
       , vsep instDocs -- TODO(bladyjoker): Add additional line in between implementations.
       ]
 
-classImplementations ::
+hsClassImplPrinters ::
   Map
-    PC.QClassName
+    H.QClassName
     ( PC.ModuleName ->
       PC.TyDefs ->
-      Map H.QClassName (Doc ann -> Doc ann) ->
+      (Doc ann -> Doc ann) ->
       PC.Ty ->
       Either Text (Doc ann, Set H.QValName)
     )
-classImplementations =
+hsClassImplPrinters =
   Map.fromList
     [
-      ( (PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart "Prelude" def] def, PC.mkInfoLess $ PC.ClassName "Eq" def)
+      ( (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Eq")
       , printDeriveEq
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "ToData")
+      , printDeriveToPlutusData
       )
     ]
 
@@ -78,17 +82,26 @@ printInstances = do
     (mempty, Set.empty)
     (toList $ m ^. #derives)
 
--- TODO(bladyjoker): This is too complicated.
 printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m (Doc ann, Set H.QValName)
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
-  case Map.lookup qcn classImplementations of
+  classes <- asks (view $ Print.ctxConfig . C.classes)
+  case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
+    Just hsQClassNamesToPrint -> do
+      res <- for hsQClassNamesToPrint (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
+      return (vsep (fst <$> res), Set.unions (snd <$> res))
+
+printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann, Set H.QValName)
+printHsQClassImpl mn iTyDefs hqcn d =
+  case Map.lookup hqcn hsClassImplPrinters of
+    Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print the Haskell type class " <> (Text.pack . show $ hqcn))
     Just implPrinter -> do
-      mkInstanceDocs <- printInstanceDefs d
-      case implPrinter mn iTyDefs mkInstanceDocs (d ^. #constraint . #argument) of
-        Left err -> throwError (d ^. #constraint . #sourceInfo, "Failed printing the implementation\n" <> err)
+      let ty = d ^. #constraint . #argument
+          mkInstanceDoc = printInstanceDef hqcn ty
+      case implPrinter mn iTyDefs mkInstanceDoc ty of
+        Left err -> throwError (d ^. #constraint . #sourceInfo, "Failed printing the implementation for " <> (Text.pack . show $ hqcn) <> "\nGot error: " <> err)
         Right (instanceDefsDoc, valImps) -> return (instanceDefsDoc, valImps)
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann

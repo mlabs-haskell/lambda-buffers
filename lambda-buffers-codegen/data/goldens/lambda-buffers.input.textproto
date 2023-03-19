@@ -229,6 +229,221 @@ modules {
       }
     }
   }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Foo"
+                }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "a"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "b"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "c"}
+            }
+          }
+
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Module"
+                }
+              }
+            }
+      }
+    }
+  }
+
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyRef"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleNamePart"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "VarName"
+            }
+          }
+        }
+      }
+    }
+  }
 
   imports {
       parts {
@@ -3690,5 +3905,21 @@ modules {
     file: "goldens/good/Prelude.lbf"
     pos_from { column: 1 row: 1 }
     pos_to { column: 13 row: 37 }
+  }
+}
+modules {
+  module_name {
+    parts {
+      name: "Plutus"
+    }
+  }
+  class_defs {
+    class_name {
+      name: "PlutusData"
+    }
+    class_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+    }
   }
 }

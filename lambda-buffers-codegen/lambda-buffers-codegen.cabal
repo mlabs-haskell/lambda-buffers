@@ -124,6 +124,7 @@ library
     LambdaBuffers.Codegen.LamVal
     LambdaBuffers.Codegen.LamVal.Derive
     LambdaBuffers.Codegen.LamVal.Eq
+    LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Print
 
 executable lbg

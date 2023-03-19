@@ -27,6 +27,7 @@ module LambdaBuffers.LambdaBuffers (ClassConstraint
                                    , VarName) where
 
 import qualified LambdaBuffers.Prelude
+import qualified PlutusTx
 import qualified Prelude
 
 data ClassConstraint = MkClassConstraint { classConstraint'class :: ClassRef
@@ -106,3 +107,43 @@ instance Prelude.Eq TyName where
   (==) = (\x0 -> (\x1 -> let MkTyName x2 = x0 in let MkTyName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
 instance Prelude.Eq VarName where
   (==) = (\x0 -> (\x1 -> let MkVarName x2 = x0 in let MkVarName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance (PlutusTx.ToData a
+         ,PlutusTx.ToData b
+         ,PlutusTx.ToData c) => PlutusTx.ToData (Foo a b c) where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> case x0 of
+                                      Foo'Bar x1 x2 x3 -> ((PlutusTx.Constr 0) [(PlutusTx.toData x1)
+                                                                               ,(PlutusTx.toData x2)
+                                                                               ,(PlutusTx.toData x3)])
+                                      Foo'Baz x4 x5 x6 -> ((PlutusTx.Constr 1) [(PlutusTx.toData x4)
+                                                                               ,(PlutusTx.toData x5)
+                                                                               ,(PlutusTx.toData x6)])
+                                      Foo'Bax x7 x8 x9 -> ((PlutusTx.Constr 2) [(PlutusTx.toData x7)
+                                                                               ,(PlutusTx.toData x8)
+                                                                               ,(PlutusTx.toData x9)]) )
+instance PlutusTx.ToData Module where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> (PlutusTx.List [(PlutusTx.toData (module'name x0))
+                                                     ,(PlutusTx.toData (module'tyDefs x0))
+                                                     ,(PlutusTx.toData (module'classDefs x0))
+                                                     ,(PlutusTx.toData (module'ruleImports x0))
+                                                     ,(PlutusTx.toData (module'instanceClauses x0))
+                                                     ,(PlutusTx.toData (module'derives x0))]) )
+instance PlutusTx.ToData TyRef where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> case x0 of
+                                      TyRef'Local x1 -> ((PlutusTx.Constr 0) [(PlutusTx.toData x1)])
+                                      TyRef'Foreign x2 x3 -> ((PlutusTx.Constr 1) [(PlutusTx.toData x2)
+                                                                                  ,(PlutusTx.toData x3)]) )
+instance PlutusTx.ToData ModuleName where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> let MkModuleName x1 = x0 in (PlutusTx.toData x1) )
+instance PlutusTx.ToData ModuleNamePart where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> let MkModuleNamePart x1 = x0 in (PlutusTx.toData x1) )
+instance PlutusTx.ToData TyName where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> let MkTyName x1 = x0 in (PlutusTx.toData x1) )
+instance PlutusTx.ToData VarName where
+  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
+                              (\x0 -> let MkVarName x1 = x0 in (PlutusTx.toData x1) )

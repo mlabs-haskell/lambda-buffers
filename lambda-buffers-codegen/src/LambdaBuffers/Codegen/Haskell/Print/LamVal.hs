@@ -16,7 +16,7 @@ import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, enclose, equals, group, hsep, line, lparen, rparen, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, enclose, encloseSep, equals, group, hsep, lbracket, line, lparen, rbracket, rparen, vsep, (<+>))
 
 newtype PrintRead = MkPrintRead
   { builtins :: Map LV.ValueName H.QValName
@@ -119,6 +119,9 @@ printLetE ((_, tyN), fields, letVal) letCont = do
   return $ "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <+> "in" <+> bodyDoc
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
+printValueE (LV.ErrorE err) = throwError $ "TODO(bladyjoker): LamVal error builtin was called " <> err
+printValueE (LV.IntE i) = return $ pretty i
+printValueE (LV.ListE vals) = align . group . encloseSep lbracket rbracket comma <$> (printValueE `traverse` vals)
 printValueE (LV.RefE ref) = resolveRef ref
 printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
 printValueE (LV.LamE lamVal) = printLamE lamVal

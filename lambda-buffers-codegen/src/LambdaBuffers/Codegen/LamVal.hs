@@ -38,6 +38,9 @@ data ValueE where
   CaseE :: (PC.QTyName, Sum) -> ValueE -> ((Ctor, [ValueE]) -> ValueE) -> ValueE
   FieldE :: (PC.QTyName, PC.InfoLess PC.FieldName) -> ValueE -> ValueE
   LetE :: (PC.QTyName, Product, ValueE) -> ([ValueE] -> ValueE) -> ValueE
+  IntE :: Int -> ValueE
+  ListE :: [ValueE] -> ValueE
+  ErrorE :: String -> ValueE
 
 letE :: (PC.QTyName, Product, ValueE) -> ([ValueE] -> ValueE) -> ValueE
 letE = LetE
