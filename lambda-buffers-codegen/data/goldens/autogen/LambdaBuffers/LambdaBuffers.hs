@@ -26,6 +26,7 @@ module LambdaBuffers.LambdaBuffers (ClassConstraint
                                    , VarName) where
 
 import qualified LambdaBuffers.Prelude
+import qualified Prelude
 
 data ClassConstraint = MkClassConstraint { classConstraint'class :: ClassRef
                                          , classConstraint'args :: LambdaBuffers.Prelude.List TyArg}
@@ -68,3 +69,24 @@ data TyDef = MkTyDef { tyDef'name :: TyName, tyDef'abs :: TyAbs}
 newtype TyName = MkTyName LambdaBuffers.Prelude.Text
 data TyRef = TyRef'Local TyName | TyRef'Foreign ModuleName TyName
 newtype VarName = MkVarName LambdaBuffers.Prelude.Text
+
+instance Prelude.Eq Module where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (module'name x0)) (module'name x1)))) (((Prelude.==) (module'tyDefs x0)) (module'tyDefs x1)))) (((Prelude.==) (module'classDefs x0)) (module'classDefs x1)))) (((Prelude.==) (module'ruleImports x0)) (module'ruleImports x1)))) (((Prelude.==) (module'instanceClauses x0)) (module'instanceClauses x1)))) (((Prelude.==) (module'derives x0)) (module'derives x1))) ) )
+instance Prelude.Eq Module where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (module'name x0)) (module'name x1)))) (((Prelude.==) (module'tyDefs x0)) (module'tyDefs x1)))) (((Prelude.==) (module'classDefs x0)) (module'classDefs x1)))) (((Prelude.==) (module'ruleImports x0)) (module'ruleImports x1)))) (((Prelude.==) (module'instanceClauses x0)) (module'instanceClauses x1)))) (((Prelude.==) (module'derives x0)) (module'derives x1))) ) )
+instance Prelude.Eq TyRef where
+  (==) = (\x0 -> (\x1 -> case x0 of
+                         TyRef'Local x2 -> case x1 of
+                                           TyRef'Local x3 -> (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3))
+                                           TyRef'Foreign x4 x5 -> Prelude.False
+                         TyRef'Foreign x6 x7 -> case x1 of
+                                                TyRef'Local x8 -> Prelude.False
+                                                TyRef'Foreign x9 x10 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x6) x9))) (((Prelude.==) x7) x10)) ) )
+instance Prelude.Eq ModuleName where
+  (==) = (\x0 -> (\x1 -> let MkModuleName x2 = x0 in let MkModuleName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq ModuleNamePart where
+  (==) = (\x0 -> (\x1 -> let MkModuleNamePart x2 = x0 in let MkModuleNamePart x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq TyName where
+  (==) = (\x0 -> (\x1 -> let MkTyName x2 = x0 in let MkTyName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq VarName where
+  (==) = (\x0 -> (\x1 -> let MkVarName x2 = x0 in let MkVarName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )

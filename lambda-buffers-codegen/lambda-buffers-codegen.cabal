@@ -114,7 +114,16 @@ library
     LambdaBuffers.Codegen.Haskell
     LambdaBuffers.Codegen.Haskell.Config
     LambdaBuffers.Codegen.Haskell.Print
+    LambdaBuffers.Codegen.Haskell.Print.Derive
+    LambdaBuffers.Codegen.Haskell.Print.InstanceDef
+    LambdaBuffers.Codegen.Haskell.Print.LamVal
+    LambdaBuffers.Codegen.Haskell.Print.Monad
+    LambdaBuffers.Codegen.Haskell.Print.Names
+    LambdaBuffers.Codegen.Haskell.Print.TyDef
     LambdaBuffers.Codegen.Haskell.Syntax
+    LambdaBuffers.Codegen.LamVal
+    LambdaBuffers.Codegen.LamVal.Derive
+    LambdaBuffers.Codegen.LamVal.Eq
     LambdaBuffers.Codegen.Print
 
 executable lbg

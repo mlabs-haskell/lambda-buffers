@@ -14,8 +14,8 @@ import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
 import Proto.Compiler qualified as P
 
-runPrint :: Haskell.Config -> PC.Module -> Either P.CompilerError (FilePath, Text)
-runPrint cfg m = case runCheck cfg m of
+runPrint :: Haskell.Config -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (FilePath, Text)
+runPrint cfg ci m = case runCheck cfg ci m of
   Left err -> Left err
   Right ctx -> case Print.runPrint ctx Haskell.printModule of
     Left err -> Left err
