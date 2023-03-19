@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef, printTyTopLevel) where
+module LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef, printTyInner) where
 
 import Control.Lens (view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))

@@ -11,7 +11,7 @@ import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printHsQClassName)
-import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyTopLevel)
+import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.Print (ctxConfig, ctxModule)
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
@@ -39,7 +39,7 @@ printInstanceDef hsQClassName ty =
 printConstraint :: H.QClassName -> PC.Ty -> Doc ann
 printConstraint qcn ty =
   let crefDoc = printHsQClassName qcn
-      tyDoc = printTyTopLevel ty
+      tyDoc = printTyInner ty
    in crefDoc <+> tyDoc
 
 collectTyVars :: PC.Ty -> [PC.Ty]

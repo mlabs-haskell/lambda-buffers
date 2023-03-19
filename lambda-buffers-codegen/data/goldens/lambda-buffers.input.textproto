@@ -31,17 +31,36 @@ modules {
         }
       }
       args {
+        ty_app {
+          ty_func {
             ty_ref {
               local_ty_ref {
                 ty_name {
-                  name: "Module"
+                  name: "Foo"
                 }
               }
             }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "a"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "b"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "c"}
+            }
+          }
+
+        }
       }
     }
   }
-
   derives {
     constraint {
       class_ref {
@@ -215,6 +234,118 @@ modules {
       parts {
         name: "Prelude"
       }
+  }
+  type_defs {
+ty_name{name : "Foo"} ty_abs {
+    ty_args {
+      arg_name{name : "a"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+    ty_args {
+      arg_name{name : "b"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+    ty_args {
+      arg_name{name : "c"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+
+    ty_body {
+      sum {
+        constructors {
+          constr_name{name : "Bar"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+        constructors {
+          constr_name{name : "Baz"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+        constructors {
+          constr_name{name : "Bax"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   }
   type_defs {
     ty_name {
