@@ -24,9 +24,11 @@ module LambdaBuffers.Frontend.Syntax (
   ClassDef (..),
   ClassRef (..),
   ClassConstraint (..),
+  Name (..),
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
+  Statement (..),
   defSourceInfo,
   tyBodyToTyDefKw,
   kwTyDefOpaque,
@@ -65,7 +67,7 @@ tyBodyToTyDefKw Opaque = kwTyDefOpaque
 data Module info = Module
   { moduleName :: ModuleName info
   , moduleImports :: [Import info]
-  , moduleTyDefs :: [TyDef info]
+  , moduleStatements :: [Statement info]
   , moduleInfo :: info
   }
   deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
@@ -73,10 +75,17 @@ data Module info = Module
 data Import info = Import
   { importQualified :: Bool
   , importModuleName :: ModuleName info
-  , imported :: Maybe [TyName info]
+  , importedNames :: Maybe [Name info]
   , alias :: Maybe (ModuleAlias info)
   , importInfo :: info
   }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Statement info
+  = StTyDef (TyDef info)
+  | StClassDef (ClassDef info)
+  | StInstanceClause (InstanceClause info)
+  | StDerive (Derive info)
   deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data Ty info
@@ -111,6 +120,8 @@ data Record info = Record [Field info] info deriving stock (Show, Eq, Ord, Funct
 data Field info = Field (FieldName info) (Ty info) info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data TyArg info = TyArg Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Name info = Name Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data ModuleName info = ModuleName [ModuleNamePart info] info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 

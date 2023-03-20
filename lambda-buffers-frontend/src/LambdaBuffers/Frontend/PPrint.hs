@@ -8,16 +8,16 @@ module LambdaBuffers.Frontend.PPrint () where
 
 import Data.List (sort)
 import Data.Text qualified as Text
-import LambdaBuffers.Frontend.Syntax (ClassName (ClassName), ConstrName (ConstrName), Constructor (Constructor), Field (Field), FieldName (FieldName), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwTyDefOpaque, tyBodyToTyDefKw)
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, encloseSep, equals, group, hsep, lbrace, line, lparen, pipe, rbrace, rparen, space, (<+>))
+import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Name (Name), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Statement (StClassDef, StDerive, StInstanceClause, StTyDef), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, tyBodyToTyDefKw)
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, encloseSep, equals, group, hsep, lbrace, line, lparen, pipe, rbrace, rparen, sep, space, (<+>))
 import Text.Parsec qualified as Parsec
 import Text.Parsec.Error qualified as Parsec
 
 intercalate :: Doc a -> [Doc a] -> Doc a
-intercalate sep = concatWith (\l r -> l <> sep <> r)
+intercalate sep' = concatWith (\l r -> l <> sep' <> r)
 
 instance (Ord info, Pretty info) => Pretty (Module info) where
-  pretty (Module mn imports tyDs _info) =
+  pretty (Module mn imports stmnts _info) =
     let sortedImports = sort imports
      in "module"
           <+> pretty mn
@@ -28,25 +28,55 @@ instance (Ord info, Pretty info) => Pretty (Module info) where
                       <> line
                       <> intercalate line (pretty <$> sortedImports)
                )
-            <> ( if null tyDs
+            <> ( if null stmnts
                   then ""
                   else
                     line
                       <> line
-                      <> intercalate (line <> line) (pretty <$> tyDs)
+                      <> intercalate (line <> line) (pretty <$> stmnts)
                )
 
 instance Pretty info => Pretty (Import info) where
-  pretty (Import isQ imn maySyms mayAl _info) =
+  pretty (Import isQ imn mayNames mayAl _info) =
     "import"
       <> (if isQ then space <> "qualified" else "")
       <+> pretty imn
         <> case mayAl of
           Nothing -> ""
           Just al -> space <> "as" <+> pretty al
-        <> case maySyms of
+        <> case mayNames of
           Nothing -> ""
-          Just syms -> space <> encloseSep lparen rparen comma (pretty <$> syms)
+          Just names -> space <> encloseSep lparen rparen comma (pretty <$> names)
+
+instance Pretty info => Pretty (Statement info) where
+  pretty (StTyDef td) = pretty td
+  pretty (StClassDef cd) = pretty cd
+  pretty (StInstanceClause ic) = pretty ic
+  pretty (StDerive d) = pretty d
+
+instance Pretty info => Pretty (ClassDef info) where
+  pretty (ClassDef clName args [] _info) = pretty kwClassDef <+> pretty clName <+> (align . group . sep $ pretty <$> args)
+  pretty (ClassDef clName args sups _info) =
+    pretty kwClassDef
+      <+> (align . group . encloseSep lparen rparen comma $ (pretty <$> sups))
+      <+> "<="
+      <+> pretty clName
+      <+> (align . group . sep $ pretty <$> args)
+
+instance Pretty info => Pretty (Derive info) where
+  pretty (Derive c) = pretty kwDerive <+> pretty c
+
+instance Pretty info => Pretty (InstanceClause info) where
+  pretty (InstanceClause h [] _info) = pretty kwInstance <+> pretty h
+  pretty (InstanceClause h body _info) = pretty kwInstance <+> pretty h <+> ":-" <+> (align . group . encloseSep mempty mempty comma $ pretty <$> body)
+
+instance Pretty info => Pretty (ClassConstraint info) where
+  pretty (ClassConstraint clRef []) = pretty clRef
+  pretty (ClassConstraint clRef args) = pretty clRef <+> (align . group . sep $ pretty <$> args)
+
+instance Pretty info => Pretty (Constraint info) where
+  pretty (Constraint clRef [] _) = pretty clRef
+  pretty (Constraint clRef args _) = pretty clRef <+> (align . group . sep $ prettyTyInner <$> args)
 
 instance Pretty info => Pretty (TyDef info) where
   pretty (TyDef tn args Opaque _info) = pretty kwTyDefOpaque <+> pretty tn <> if null args then "" else space <> hsep (pretty <$> args)
@@ -89,6 +119,9 @@ instance Pretty info => Pretty (TyArg info) where
 instance Pretty info => Pretty (ModuleName info) where
   pretty (ModuleName ps _info) = pretty $ Text.intercalate "." [p | ModuleNamePart p _ <- ps]
 
+instance Pretty info => Pretty (Name info) where
+  pretty (Name n _info) = pretty n
+
 instance Pretty info => Pretty (TyName info) where
   pretty (TyName t _info) = pretty t
 
@@ -109,6 +142,9 @@ instance Pretty info => Pretty (ModuleAlias info) where
 
 instance Pretty info => Pretty (TyRef info) where
   pretty (TyRef mayModAl tn _info) = maybe "" (\al -> pretty al <> ".") mayModAl <> pretty tn
+
+instance Pretty info => Pretty (ClassRef info) where
+  pretty (ClassRef mayModAl cn _info) = maybe "" (\al -> pretty al <> ".") mayModAl <> pretty cn
 
 prettyTyInner :: Pretty info => Ty info -> Doc ann
 prettyTyInner (TyVar vn) = pretty vn

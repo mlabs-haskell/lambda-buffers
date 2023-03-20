@@ -21,7 +21,7 @@ import Data.Kind (Type)
 import Data.Maybe (fromJust, isJust)
 import Data.String (IsString (fromString))
 import LambdaBuffers.Compiler.NamingCheck (pClassName, pConstrName, pFieldName, pModuleNamePart, pTyName)
-import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
+import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Name (Name), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Statement (StClassDef, StDerive, StInstanceClause, StTyDef), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
 import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
@@ -38,6 +38,9 @@ parseModuleName = withSourceInfo . label' "module name" $ ModuleName <$> sepBy (
 
 parseTyVarName :: Stream s m Char => Parser s m (VarName SourceInfo)
 parseTyVarName = withSourceInfo . label' "type variable name" $ VarName . fromString <$> many1 lower
+
+parseName :: Stream s m Char => Parser s m (Name SourceInfo)
+parseName = withSourceInfo . label' "either class or type name" $ Name <$> pTyName
 
 parseTyName :: Stream s m Char => Parser s m (TyName SourceInfo)
 parseTyName = withSourceInfo . label' "type name" $ TyName <$> pTyName
@@ -188,7 +191,7 @@ parseConstraint :: Stream s m Char => Parser s m (Constraint SourceInfo)
 parseConstraint = withSourceInfo . label' "constraint" $ Constraint <$> parseClassRef <*> parseTys
 
 parseDerive :: Stream s m Char => Parser s m (Derive SourceInfo)
-parseDerive = string kwDerive >> parseLineSpaces >> Derive <$> parseConstraint
+parseDerive = label' "derive statement" $ string kwDerive >> parseLineSpaces >> Derive <$> parseConstraint
 
 parseInstanceClause :: Stream s m Char => Parser s m (InstanceClause SourceInfo)
 parseInstanceClause = withSourceInfo . label' "instance clause" $ do
@@ -255,6 +258,16 @@ parseClassCnstr = label' "class constraint" $ do
   args <- fromJust <$> optionMaybe (parseLineSpaces >> parseClassArgs)
   return $ ClassConstraint ref args
 
+parseStatement :: Stream s m Char => Parser s m (Statement SourceInfo)
+parseStatement =
+  (StTyDef <$> parseTyDef)
+    <|> (StClassDef <$> parseClassDef)
+    <|> (StInstanceClause <$> parseInstanceClause)
+    <|> (StDerive <$> parseDerive)
+
+parseStatements :: Stream s m Char => Parser s m [Statement SourceInfo]
+parseStatements = sepEndBy parseStatement (many1 parseNewLine)
+
 parseModule :: Stream s m Char => Parser s m (Module SourceInfo)
 parseModule = withSourceInfo . label' "module definition" $ do
   _ <- string "module"
@@ -263,9 +276,9 @@ parseModule = withSourceInfo . label' "module definition" $ do
   _ <- parseLineSpaces
   _ <- many1 parseNewLine
   imports <- sepEndBy parseImport (many1 parseNewLine)
-  tyDs <- sepEndBy parseTyDef (many1 parseNewLine)
+  stmnts <- parseStatements
   _ <- many space
-  return $ Module modName imports tyDs
+  return $ Module modName imports stmnts
 
 parseImport :: Stream s m Char => Parser s m (Import SourceInfo)
 parseImport = withSourceInfo . label' "import statement" $ do
@@ -277,20 +290,20 @@ parseImport = withSourceInfo . label' "import statement" $ do
     optionMaybe
       ( do
           mayModAlias <- optionMaybe (try $ parseLineSpaces1 >> string "as" >> parseLineSpaces1 *> parseModuleAliasInImport)
-          mayTyNs <-
+          mayNames <-
             optionMaybe
               ( try $ do
                   parseLineSpaces1 >> char '(' >> parseLineSpaces
-                  tyNs <- sepEndBy parseTyName (char ',' >> parseLineSpaces)
+                  names <- sepEndBy parseName (char ',' >> parseLineSpaces)
                   _ <- try parseLineSpaces >> char ')'
-                  return tyNs
+                  return names
               )
           _ <- try parseLineSpaces
-          return (mayModAlias, mayTyNs)
+          return (mayModAlias, mayNames)
       )
   case may of
     Nothing -> return $ Import isQual modName Nothing Nothing
-    Just (mayModAlias, mayTyNs) -> return $ Import isQual modName mayTyNs mayModAlias
+    Just (mayModAlias, mayNames) -> return $ Import isQual modName mayNames mayModAlias
 
 parseNewLine :: Stream s m Char => Parser s m ()
 parseNewLine = label' "lb new line" $ void endOfLine
