@@ -4,39 +4,73 @@ import Prelude
 
 sum Kind = Type | Arrow Kind Kind
 
+derive Eq Kind
+
 sum Ty = App Ty Ty | Var VarName | Ref TyRef
+
+derive Eq Ty
 
 record TyAbs = { args : List TyArg, body : TyBody }
 
+derive Eq TyAbs
+
 record TyArg = { name : VarName, kind : Kind }
+
+derive Eq TyArg
 
 record TyDef = { name : TyName, abs : TyAbs }
 
+derive Eq TyDef
+
 sum TyBody = Opaque | Sum (Map ConstrName Constructor)
+
+derive Eq TyBody
 
 record Constructor = { name : ConstrName, product : Product }
 
+derive Eq Constructor
+
 prod Product = (List Ty)
+
+derive Eq Product
 
 prod Record = (Map FieldName Field)
 
+derive Eq Record
+
 record Field = { name : FieldName, ty : Ty }
 
+derive Eq Field
+
 sum TyRef = Local TyName | Foreign ModuleName TyName
+
+derive Eq TyRef
 
 record ClassDef = { name : ClassName
                   , args : List TyArg
                   , supers : List ClassConstraint }
 
+derive Eq ClassDef
+
 record ClassConstraint = { class : ClassRef, args : List TyArg }
+
+derive Eq ClassConstraint
 
 record InstanceClause = { head : Constraint, body : List Constraint }
 
+derive Eq InstanceClause
+
 prod Derive = Constraint
+
+derive Eq Derive
 
 record Constraint = { class : ClassRef, args : List Ty }
 
+derive Eq Constraint
+
 sum ClassRef = Local ClassName | Foreign ModuleName ClassName
+
+derive Eq ClassRef
 
 record Module = { name : ModuleName
                 , tyDefs : Map TyName TyDef
@@ -45,18 +79,36 @@ record Module = { name : ModuleName
                 , instanceClauses : List InstanceClause
                 , derives : List Derive }
 
+derive Eq Module
+
 record CompilerInput = { modules : Map ModuleName Module }
+
+derive Eq CompilerInput
 
 prod TyName = Text
 
+derive Eq TyName
+
 prod VarName = Text
+
+derive Eq VarName
 
 prod ConstrName = Text
 
+derive Eq ConstrName
+
 prod FieldName = Text
+
+derive Eq FieldName
 
 prod ModuleName = (List ModuleNamePart)
 
+derive Eq ModuleName
+
 prod ModuleNamePart = Text
 
+derive Eq ModuleNamePart
+
 prod ClassName = Text
+
+derive Eq ClassName

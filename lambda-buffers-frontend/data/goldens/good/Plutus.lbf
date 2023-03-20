@@ -1,15 +1,35 @@
 module Plutus
 
-import Prelude (Maybe)
+import Prelude (Eq)
+
+class PlutusData a
 
 opaque AssetClass
 
+instance PlutusData AssetClass
+
+instance Eq AssetClass
+
 opaque Value
+
+instance PlutusData Value
+
+instance Eq Value
 
 opaque CurrencySymbol
 
+instance PlutusData CurrencySymbol
+
+instance Eq CurrencySymbol
+
 opaque TokenName
+
+instance PlutusData TokenName
+
+instance Eq TokenName
 
 opaque Address
 
-opaque XY
+instance PlutusData Address
+
+instance Eq Address

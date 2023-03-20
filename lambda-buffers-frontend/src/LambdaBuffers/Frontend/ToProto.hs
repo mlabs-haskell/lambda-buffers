@@ -3,8 +3,11 @@ module LambdaBuffers.Frontend.ToProto (toCompilerInput) where
 import Control.Lens ((&), (.~))
 import Control.Monad.Except (Except, MonadError (throwError), runExcept)
 import Control.Monad.Reader (MonadReader (ask), ReaderT (runReaderT))
+import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Traversable (for)
 import LambdaBuffers.Frontend (FrontendResult (FrontendResult))
 import LambdaBuffers.Frontend.Syntax (
@@ -64,6 +67,7 @@ toModule (Module mn _ stmts info) = do
   clds <- for [cd | StClassDef cd <- stmts] toClassDef
   ics <- for [ic | StInstanceClause ic <- stmts] toInstanceClause
   ds <- for [d | StDerive d <- stmts] toDerive
+  imps <- toImports
   return $
     defMessage
       & P.moduleName .~ toModuleName mn
@@ -71,7 +75,15 @@ toModule (Module mn _ stmts info) = do
       & P.classDefs .~ clds
       & P.instances .~ ics
       & P.derives .~ ds
+      & P.imports .~ toList imps
       & P.sourceInfo .~ toSourceInfo info
+
+-- FIXME(bladyjoker): Implement ImportCycle check in Compiler (otherwise Codegen does a cycled import).
+toImports :: ToProto (Set P.ModuleName)
+toImports = do
+  (currMn, (tyScope, classScope)) <- ask
+  let foreignModules = filter (/= currMn) $ toList tyScope <> toList classScope
+  return $ Set.fromList . fmap (\mn -> toModuleName (defSourceInfo <$ mn)) $ foreignModules
 
 toTypeDef :: TyDef SourceInfo -> ToProto P.TyDef
 toTypeDef (TyDef tn args body info) = do

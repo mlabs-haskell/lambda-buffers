@@ -661,19 +661,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 8 row: 3 }
-                          pos_to { column: 9 row: 3 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 8 row: 3 }
-                        pos_to { column: 9 row: 3 }
-                      }
+                      parts { name: "A" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -695,19 +684,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 8 row: 3 }
-                          pos_to { column: 9 row: 3 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 8 row: 3 }
-                        pos_to { column: 9 row: 3 }
-                      }
+                      parts { name: "A" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -729,19 +707,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "B"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 6 }
-                          pos_to { column: 19 row: 6 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 18 row: 6 }
-                        pos_to { column: 19 row: 6 }
-                      }
+                      parts { name: "B" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -763,27 +730,9 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 4 }
-                          pos_to { column: 19 row: 4 }
-                        }
-                      }
-                      parts {
-                        name: "B"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 20 row: 4 }
-                          pos_to { column: 21 row: 4 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 18 row: 4 }
-                        pos_to { column: 21 row: 4 }
-                      }
+                      parts { name: "A" source_info { pos_from {} pos_to {} } }
+                      parts { name: "B" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -805,27 +754,9 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "A"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 5 }
-                          pos_to { column: 19 row: 5 }
-                        }
-                      }
-                      parts {
-                        name: "B"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 20 row: 5 }
-                          pos_to { column: 21 row: 5 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 18 row: 5 }
-                        pos_to { column: 21 row: 5 }
-                      }
+                      parts { name: "A" source_info { pos_from {} pos_to {} } }
+                      parts { name: "B" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -847,19 +778,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "C"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 7 }
-                          pos_to { column: 19 row: 7 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 18 row: 7 }
-                        pos_to { column: 19 row: 7 }
-                      }
+                      parts { name: "C" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -881,19 +801,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts {
-                        name: "C"
-                        source_info {
-                          file: "good/Test.lbf"
-                          pos_from { column: 18 row: 8 }
-                          pos_to { column: 19 row: 8 }
-                        }
-                      }
-                      source_info {
-                        file: "good/Test.lbf"
-                        pos_from { column: 18 row: 8 }
-                        pos_to { column: 19 row: 8 }
-                      }
+                      parts { name: "C" source_info { pos_from {} pos_to {} } }
+                      source_info { pos_from {} pos_to {} }
                     }
                     source_info {
                       file: "good/Test.lbf"
@@ -923,6 +832,23 @@ modules {
       pos_from { column: 1 row: 21 }
       pos_to { column: 47 row: 21 }
     }
+  }
+  imports {
+    parts { name: "A" source_info { pos_from {} pos_to {} } }
+    source_info { pos_from {} pos_to {} }
+  }
+  imports {
+    parts { name: "A" source_info { pos_from {} pos_to {} } }
+    parts { name: "B" source_info { pos_from {} pos_to {} } }
+    source_info { pos_from {} pos_to {} }
+  }
+  imports {
+    parts { name: "B" source_info { pos_from {} pos_to {} } }
+    source_info { pos_from {} pos_to {} }
+  }
+  imports {
+    parts { name: "C" source_info { pos_from {} pos_to {} } }
+    source_info { pos_from {} pos_to {} }
   }
   source_info {
     file: "good/Test.lbf"

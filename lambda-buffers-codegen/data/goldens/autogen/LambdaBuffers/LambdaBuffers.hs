@@ -9,7 +9,6 @@ module LambdaBuffers.LambdaBuffers (ClassConstraint
                                    , Derive
                                    , Field
                                    , FieldName
-                                   , Foo
                                    , InstanceClause
                                    , Kind
                                    , Module
@@ -27,7 +26,6 @@ module LambdaBuffers.LambdaBuffers (ClassConstraint
                                    , VarName) where
 
 import qualified LambdaBuffers.Prelude
-import qualified PlutusTx
 import qualified Prelude
 
 data ClassConstraint = MkClassConstraint { classConstraint'class :: ClassRef
@@ -47,7 +45,6 @@ data Constructor = MkConstructor { constructor'name :: ConstrName
 newtype Derive = MkDerive Constraint
 data Field = MkField { field'name :: FieldName, field'ty :: Ty}
 newtype FieldName = MkFieldName LambdaBuffers.Prelude.Text
-data Foo a b c = Foo'Bar a b c | Foo'Baz a b c | Foo'Bax a b c
 data InstanceClause = MkInstanceClause { instanceClause'head :: Constraint
                                        , instanceClause'body :: LambdaBuffers.Prelude.List Constraint}
 data Kind = Kind'Type  | Kind'Arrow Kind Kind
@@ -73,24 +70,50 @@ newtype TyName = MkTyName LambdaBuffers.Prelude.Text
 data TyRef = TyRef'Local TyName | TyRef'Foreign ModuleName TyName
 newtype VarName = MkVarName LambdaBuffers.Prelude.Text
 
-instance (Prelude.Eq a,Prelude.Eq b,Prelude.Eq c) => Prelude.Eq (Foo a
-                                                                     b
-                                                                     c) where
+instance Prelude.Eq Kind where
   (==) = (\x0 -> (\x1 -> case x0 of
-                         Foo'Bar x2 x3 x4 -> case x1 of
-                                             Foo'Bar x5 x6 x7 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x5))) (((Prelude.==) x3) x6))) (((Prelude.==) x4) x7))
-                                             Foo'Baz x8 x9 x10 -> Prelude.False
-                                             Foo'Bax x11 x12 x13 -> Prelude.False
-                         Foo'Baz x14 x15 x16 -> case x1 of
-                                                Foo'Bar x17 x18 x19 -> Prelude.False
-                                                Foo'Baz x20 x21 x22 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x14) x20))) (((Prelude.==) x15) x21))) (((Prelude.==) x16) x22))
-                                                Foo'Bax x23 x24 x25 -> Prelude.False
-                         Foo'Bax x26 x27 x28 -> case x1 of
-                                                Foo'Bar x29 x30 x31 -> Prelude.False
-                                                Foo'Baz x32 x33 x34 -> Prelude.False
-                                                Foo'Bax x35 x36 x37 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x26) x35))) (((Prelude.==) x27) x36))) (((Prelude.==) x28) x37)) ) )
-instance Prelude.Eq Module where
-  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (module'name x0)) (module'name x1)))) (((Prelude.==) (module'tyDefs x0)) (module'tyDefs x1)))) (((Prelude.==) (module'classDefs x0)) (module'classDefs x1)))) (((Prelude.==) (module'ruleImports x0)) (module'ruleImports x1)))) (((Prelude.==) (module'instanceClauses x0)) (module'instanceClauses x1)))) (((Prelude.==) (module'derives x0)) (module'derives x1))) ) )
+                         Kind'Type  -> case x1 of
+                                       Kind'Type  -> Prelude.True
+                                       Kind'Arrow x2 x3 -> Prelude.False
+                         Kind'Arrow x4 x5 -> case x1 of
+                                             Kind'Type  -> Prelude.False
+                                             Kind'Arrow x6 x7 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x4) x6))) (((Prelude.==) x5) x7)) ) )
+instance Prelude.Eq Ty where
+  (==) = (\x0 -> (\x1 -> case x0 of
+                         Ty'App x2 x3 -> case x1 of
+                                         Ty'App x4 x5 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x4))) (((Prelude.==) x3) x5))
+                                         Ty'Var x6 -> Prelude.False
+                                         Ty'Ref x7 -> Prelude.False
+                         Ty'Var x8 -> case x1 of
+                                      Ty'App x9 x10 -> Prelude.False
+                                      Ty'Var x11 -> (((Prelude.&&) Prelude.True) (((Prelude.==) x8) x11))
+                                      Ty'Ref x12 -> Prelude.False
+                         Ty'Ref x13 -> case x1 of
+                                       Ty'App x14 x15 -> Prelude.False
+                                       Ty'Var x16 -> Prelude.False
+                                       Ty'Ref x17 -> (((Prelude.&&) Prelude.True) (((Prelude.==) x13) x17)) ) )
+instance Prelude.Eq TyAbs where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (tyAbs'args x0)) (tyAbs'args x1)))) (((Prelude.==) (tyAbs'body x0)) (tyAbs'body x1))) ) )
+instance Prelude.Eq TyArg where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (tyArg'name x0)) (tyArg'name x1)))) (((Prelude.==) (tyArg'kind x0)) (tyArg'kind x1))) ) )
+instance Prelude.Eq TyDef where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (tyDef'name x0)) (tyDef'name x1)))) (((Prelude.==) (tyDef'abs x0)) (tyDef'abs x1))) ) )
+instance Prelude.Eq TyBody where
+  (==) = (\x0 -> (\x1 -> case x0 of
+                         TyBody'Opaque  -> case x1 of
+                                           TyBody'Opaque  -> Prelude.True
+                                           TyBody'Sum x2 -> Prelude.False
+                         TyBody'Sum x3 -> case x1 of
+                                          TyBody'Opaque  -> Prelude.False
+                                          TyBody'Sum x4 -> (((Prelude.&&) Prelude.True) (((Prelude.==) x3) x4)) ) )
+instance Prelude.Eq Constructor where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (constructor'name x0)) (constructor'name x1)))) (((Prelude.==) (constructor'product x0)) (constructor'product x1))) ) )
+instance Prelude.Eq Product where
+  (==) = (\x0 -> (\x1 -> let MkProduct x2 = x0 in let MkProduct x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq Record where
+  (==) = (\x0 -> (\x1 -> let MkRecord x2 = x0 in let MkRecord x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq Field where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (field'name x0)) (field'name x1)))) (((Prelude.==) (field'ty x0)) (field'ty x1))) ) )
 instance Prelude.Eq TyRef where
   (==) = (\x0 -> (\x1 -> case x0 of
                          TyRef'Local x2 -> case x1 of
@@ -99,51 +122,39 @@ instance Prelude.Eq TyRef where
                          TyRef'Foreign x6 x7 -> case x1 of
                                                 TyRef'Local x8 -> Prelude.False
                                                 TyRef'Foreign x9 x10 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x6) x9))) (((Prelude.==) x7) x10)) ) )
-instance Prelude.Eq ModuleName where
-  (==) = (\x0 -> (\x1 -> let MkModuleName x2 = x0 in let MkModuleName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
-instance Prelude.Eq ModuleNamePart where
-  (==) = (\x0 -> (\x1 -> let MkModuleNamePart x2 = x0 in let MkModuleNamePart x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq ClassDef where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (classDef'name x0)) (classDef'name x1)))) (((Prelude.==) (classDef'args x0)) (classDef'args x1)))) (((Prelude.==) (classDef'supers x0)) (classDef'supers x1))) ) )
+instance Prelude.Eq ClassConstraint where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (classConstraint'class x0)) (classConstraint'class x1)))) (((Prelude.==) (classConstraint'args x0)) (classConstraint'args x1))) ) )
+instance Prelude.Eq InstanceClause where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (instanceClause'head x0)) (instanceClause'head x1)))) (((Prelude.==) (instanceClause'body x0)) (instanceClause'body x1))) ) )
+instance Prelude.Eq Derive where
+  (==) = (\x0 -> (\x1 -> let MkDerive x2 = x0 in let MkDerive x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq Constraint where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (constraint'class x0)) (constraint'class x1)))) (((Prelude.==) (constraint'args x0)) (constraint'args x1))) ) )
+instance Prelude.Eq ClassRef where
+  (==) = (\x0 -> (\x1 -> case x0 of
+                         ClassRef'Local x2 -> case x1 of
+                                              ClassRef'Local x3 -> (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3))
+                                              ClassRef'Foreign x4 x5 -> Prelude.False
+                         ClassRef'Foreign x6 x7 -> case x1 of
+                                                   ClassRef'Local x8 -> Prelude.False
+                                                   ClassRef'Foreign x9 x10 -> (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) x6) x9))) (((Prelude.==) x7) x10)) ) )
+instance Prelude.Eq Module where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) (((Prelude.&&) Prelude.True) (((Prelude.==) (module'name x0)) (module'name x1)))) (((Prelude.==) (module'tyDefs x0)) (module'tyDefs x1)))) (((Prelude.==) (module'classDefs x0)) (module'classDefs x1)))) (((Prelude.==) (module'ruleImports x0)) (module'ruleImports x1)))) (((Prelude.==) (module'instanceClauses x0)) (module'instanceClauses x1)))) (((Prelude.==) (module'derives x0)) (module'derives x1))) ) )
+instance Prelude.Eq CompilerInput where
+  (==) = (\x0 -> (\x1 -> (((Prelude.&&) Prelude.True) (((Prelude.==) (compilerInput'modules x0)) (compilerInput'modules x1))) ) )
 instance Prelude.Eq TyName where
   (==) = (\x0 -> (\x1 -> let MkTyName x2 = x0 in let MkTyName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
 instance Prelude.Eq VarName where
   (==) = (\x0 -> (\x1 -> let MkVarName x2 = x0 in let MkVarName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
-instance (PlutusTx.ToData a
-         ,PlutusTx.ToData b
-         ,PlutusTx.ToData c) => PlutusTx.ToData (Foo a b c) where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> case x0 of
-                                      Foo'Bar x1 x2 x3 -> ((PlutusTx.Constr 0) [(PlutusTx.toData x1)
-                                                                               ,(PlutusTx.toData x2)
-                                                                               ,(PlutusTx.toData x3)])
-                                      Foo'Baz x4 x5 x6 -> ((PlutusTx.Constr 1) [(PlutusTx.toData x4)
-                                                                               ,(PlutusTx.toData x5)
-                                                                               ,(PlutusTx.toData x6)])
-                                      Foo'Bax x7 x8 x9 -> ((PlutusTx.Constr 2) [(PlutusTx.toData x7)
-                                                                               ,(PlutusTx.toData x8)
-                                                                               ,(PlutusTx.toData x9)]) )
-instance PlutusTx.ToData Module where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> (PlutusTx.List [(PlutusTx.toData (module'name x0))
-                                                     ,(PlutusTx.toData (module'tyDefs x0))
-                                                     ,(PlutusTx.toData (module'classDefs x0))
-                                                     ,(PlutusTx.toData (module'ruleImports x0))
-                                                     ,(PlutusTx.toData (module'instanceClauses x0))
-                                                     ,(PlutusTx.toData (module'derives x0))]) )
-instance PlutusTx.ToData TyRef where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> case x0 of
-                                      TyRef'Local x1 -> ((PlutusTx.Constr 0) [(PlutusTx.toData x1)])
-                                      TyRef'Foreign x2 x3 -> ((PlutusTx.Constr 1) [(PlutusTx.toData x2)
-                                                                                  ,(PlutusTx.toData x3)]) )
-instance PlutusTx.ToData ModuleName where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> let MkModuleName x1 = x0 in (PlutusTx.toData x1) )
-instance PlutusTx.ToData ModuleNamePart where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> let MkModuleNamePart x1 = x0 in (PlutusTx.toData x1) )
-instance PlutusTx.ToData TyName where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> let MkTyName x1 = x0 in (PlutusTx.toData x1) )
-instance PlutusTx.ToData VarName where
-  toBuiltinData = (Prelude..) PlutusTx.dataToBuiltinData
-                              (\x0 -> let MkVarName x1 = x0 in (PlutusTx.toData x1) )
+instance Prelude.Eq ConstrName where
+  (==) = (\x0 -> (\x1 -> let MkConstrName x2 = x0 in let MkConstrName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq FieldName where
+  (==) = (\x0 -> (\x1 -> let MkFieldName x2 = x0 in let MkFieldName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq ModuleName where
+  (==) = (\x0 -> (\x1 -> let MkModuleName x2 = x0 in let MkModuleName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq ModuleNamePart where
+  (==) = (\x0 -> (\x1 -> let MkModuleNamePart x2 = x0 in let MkModuleNamePart x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
+instance Prelude.Eq ClassName where
+  (==) = (\x0 -> (\x1 -> let MkClassName x2 = x0 in let MkClassName x3 = x1 in (((Prelude.&&) Prelude.True) (((Prelude.==) x2) x3)) ) )
