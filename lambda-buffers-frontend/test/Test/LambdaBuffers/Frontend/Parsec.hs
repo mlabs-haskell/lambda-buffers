@@ -4,8 +4,8 @@ import Test.Tasty (TestTree, testGroup)
 
 import Control.Monad (void)
 import Data.Set qualified as Set
-import LambdaBuffers.Frontend.Parsec (parseConstraint, parseDerive, parseInstanceBody, parseInstanceClause, parseProduct, parseRecord, parseSum, parseTyInner, parseTyTopLevel)
-import LambdaBuffers.Frontend.Syntax (Constraint, SourceInfo)
+import LambdaBuffers.Frontend.Parsec (parseClassDef, parseClassSups, parseConstraint, parseDerive, parseInstanceBody, parseInstanceClause, parseProduct, parseRecord, parseSum, parseTyInner, parseTyTopLevel)
+import LambdaBuffers.Frontend.Syntax (ClassConstraint, Constraint, SourceInfo)
 import Test.Tasty.HUnit (assertFailure, testCase)
 import Text.Parsec (Parsec, eof, runParser)
 
@@ -22,6 +22,8 @@ tests =
     , testInstanceBodyExpression
     , testInstanceClause
     , testDerive
+    , testClassSups
+    , testClassDef
     ]
 
 testInnerTypeExpression :: TestTree
@@ -60,6 +62,21 @@ testInnerTypeExpression =
             , "(Maybe(Int))"
             , "(Maybe((Int)))"
             , "(Maybe\n ((Int)))"
+            ]
+            parseTyInner
+        , parsesEq
+            [ "(Prelude.Maybe Prelude.Numeric.Int)"
+            , " (Prelude.Maybe Prelude.Numeric.Int)"
+            , "(Prelude.Maybe Prelude.Numeric.Int) "
+            , "( Prelude.Maybe Prelude.Numeric.Int)"
+            , "(Prelude.Maybe Prelude.Numeric.Int )"
+            , "(Prelude.Maybe (Prelude.Numeric.Int))"
+            , "((Prelude.Maybe) Prelude.Numeric.Int)"
+            , "((Prelude.Maybe Prelude.Numeric.Int))"
+            , "((Prelude.Maybe) (Prelude.Numeric.Int))"
+            , "(Prelude.Maybe(Prelude.Numeric.Int))"
+            , "(Prelude.Maybe((Prelude.Numeric.Int)))"
+            , "(Prelude.Maybe\n ((Prelude.Numeric.Int)))"
             ]
             parseTyInner
         , parsesEq ["(Either a b)", "(Either (a) (b))", "(Either(a)(b))"] parseTyInner
@@ -126,6 +143,25 @@ testTopLevelTypeExpression =
             ]
             parseTyTopLevel
         , parsesEq
+            [ "Prelude.Maybe Prelude.Numeric.Int"
+            , " Prelude.Maybe Prelude.Numeric.Int"
+            , "Prelude.Maybe Prelude.Numeric.Int "
+            , " Prelude.Maybe Prelude.Numeric.Int "
+            , "(Prelude.Maybe Prelude.Numeric.Int)"
+            , " (Prelude.Maybe Prelude.Numeric.Int)"
+            , "(Prelude.Maybe Prelude.Numeric.Int) "
+            , "( Prelude.Maybe Prelude.Numeric.Int)"
+            , "(Prelude.Maybe Prelude.Numeric.Int )"
+            , "(Prelude.Maybe (Prelude.Numeric.Int))"
+            , "((Prelude.Maybe) Prelude.Numeric.Int)"
+            , "((Prelude.Maybe Prelude.Numeric.Int))"
+            , "((Prelude.Maybe) (Prelude.Numeric.Int))"
+            , "(Prelude.Maybe(Prelude.Numeric.Int))"
+            , "(Prelude.Maybe((Prelude.Numeric.Int)))"
+            , "(Prelude.Maybe\n ((Prelude.Numeric.Int)))"
+            ]
+            parseTyTopLevel
+        , parsesEq
             [ "Either a b"
             , "Either (a) (b)"
             , "Either(a)(b)"
@@ -168,6 +204,7 @@ testRecordExpression =
         , parsesEq ["{x : Maybe a}", "{ x : Maybe a}", "{x : Maybe a }", "{ x : Maybe a }", "{x : (Maybe a)}"] parseRecord
         , parsesEq ["{x : Either a b}", "{ x : Either a b}", "{x : Either a b }", "{ x : Either a b }", "{x : (Either a b)}"] parseRecord
         , parsesEq ["{x : a, y : Int, z : Maybe a}", "{  x : a,y : Int , z : Maybe a }", "{\n x : a,\n y : Int ,\n z : Maybe a\n }"] parseRecord
+        , parsesEq ["{x : a, y : Prelude.Numeric.Int, z : Prelude.Maybe a}", "{  x : a,y : Prelude.Numeric.Int , z : Prelude.Maybe a }", "{\n x : a,\n y : Prelude.Numeric.Int ,\n z : Prelude.Maybe a\n }"] parseRecord
         ]
     , testGroup
         "fails"
@@ -233,6 +270,7 @@ testSumExpression =
         , parses "A a b | B b a" parseSum
         , parses "A a b | B b a | C c d" parseSum
         , parses "A ((a) b) | B (b a) | C (c) (d)" parseSum
+        , parses "A Int (Maybe Int String) | B (Prelude.Maybe a) | C Prelude.Numeric.Int Prelude.Numeric.String" parseSum
         ]
     , testGroup
         "fails"
@@ -252,7 +290,10 @@ testConstraintExpression =
         "parses"
         [ parsesEq ["Eq a", "Eq a", "Eq  a", "Eq (a)", "Eq ((a))"] parseConstraint
         , parsesEq ["Eq Int", "Eq Int", "Eq  Int", "Eq (Int)", "Eq ((Int))"] parseConstraint
+        , parsesEq ["Eq Prelude.Numeric.Int", "Eq Prelude.Numeric.Int", "Eq  Prelude.Numeric.Int", "Eq (Prelude.Numeric.Int)", "Eq ((Prelude.Numeric.Int))"] parseConstraint
         , parsesEq ["Eq (Maybe a)", "Eq ((Maybe a))"] parseConstraint
+        , parsesEq ["Eq (Prelude.Maybe a)", "Eq ((Prelude.Maybe a))"] parseConstraint
+        , parsesEq ["Prelude.Eq (Maybe a)", "Prelude.Eq ((Maybe a))"] parseConstraint
         , parses "MPTC Int (Maybe a) a (Either a b)" parseConstraint
         , parses "Eq (Either (Maybe a) (List Int))" parseConstraint
         , parses "Trivial" parseConstraint
@@ -322,6 +363,8 @@ testInstanceClause =
         , parses "instance Eq (Maybe a) :- ()" parseInstanceClause
         , parses "instance Eq (Either a b) :- Eq a, Eq b" parseInstanceClause
         , parses "instance Eq (Either Int String) :- Eq Int, Eq String" parseInstanceClause
+        , parses "instance Prelude.Eq (Prelude.Either Prelude.Numeric.Int Prelude.String) :- Prelude.Eq Prelude.Numeric.Int, Prelude.Eq Prelude.String" parseInstanceClause
+        , parsesEq ["instance Eq (Maybe a)", "instance Eq (Maybe a) :- ()"] parseInstanceClause
         ]
     , testGroup
         "fails"
@@ -351,6 +394,81 @@ testDerive =
         ]
     ]
 
+newtype CS info = CS [ClassConstraint info] deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+testClassSups :: TestTree
+testClassSups =
+  testGroup
+    "class supers expression"
+    [ testGroup
+        "parses"
+        [ parses "" parseCS
+        , parses "Eq a" parseCS
+        , parses " Eq a" parseCS
+        , -- FIX(bladyjoker): parses "Eq a " parseCS
+          parsesEq
+            [ "Eq a"
+            , "Eq  a"
+            , " Eq a"
+            , " Eq   a"
+            , "(Eq a)"
+            , "(Eq  a)"
+            , "( Eq  a)"
+            , "(Eq  a)"
+            ]
+            parseCS
+        ]
+    , testGroup
+        "fails"
+        [ fails "\n" parseCS
+        ]
+    ]
+  where
+    parseCS :: Parsec String () (CS SourceInfo)
+    parseCS = CS <$> parseClassSups
+
+testClassDef :: TestTree
+testClassDef =
+  testGroup
+    "class definition"
+    [ testGroup
+        "parses"
+        [ parsesEq
+            [ "class Eq a"
+            , "class  Eq  a"
+            ]
+            parseClassDef
+        , parsesEq
+            [ "class (Eq a) <= Ord a"
+            , "class (Eq  a) <= Ord a"
+            , "class ( Eq  a) <= Ord a"
+            ]
+            parseClassDef
+        , parsesEq
+            [ "class Trivial"
+            , "class  Trivial"
+            , "class   Trivial"
+            ]
+            parseClassDef
+        , parsesEq
+            [ "class (MPTC1 b a, MPTC2 c b a) <= MPTC a b c"
+            , "class ((MPTC1 b a), (MPTC2 c b a)) <= MPTC a b c"
+            , "class ((MPTC1 b a, MPTC2 c b a)) <= MPTC a b c"
+            ]
+            parseClassDef
+        ]
+    , testGroup
+        "fails"
+        [ fails "\n" parseClassDef
+        , fails "" parseClassDef
+        , fails " class Eq a" parseClassDef
+        , fails "class Eq a " parseClassDef
+        , fails "class Eq a <=" parseClassDef
+        , fails "class Eq a <= " parseClassDef
+        , fails "class (Eq a)" parseClassDef
+        ]
+    ]
+
 parsesEq :: forall a info. (Functor a, Show (a ()), Ord (a ())) => [String] -> Parsec String () (a info) -> TestTree
 parsesEq inputs parser =
   testCase (show inputs <> " should parse the same") $
@@ -366,11 +484,11 @@ parsesEq inputs parser =
           (errs, ps) -> assertFailure $ show ("Wanted all to parse the same" :: String, errs, ps)
 
 parses :: String -> Parsec String () a -> TestTree
-parses input parser = testCase input $ case runParser (parser <* eof) () "test" input of
+parses input parser = testCase (show input) $ case runParser (parser <* eof) () "test" input of
   Left err -> assertFailure (show err)
   Right _ -> return ()
 
 fails :: Show a => String -> Parsec String () a -> TestTree
-fails input parser = testCase input $ case runParser (parser <* eof) () "test" input of
+fails input parser = testCase (show input) $ case runParser (parser <* eof) () "test" input of
   Left _ -> return ()
   Right res -> assertFailure (show res)

@@ -1,12 +1,27 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser, parseTyInner, parseTyTopLevel, parseRecord, parseProduct, parseSum, parseConstraint, parseInstanceBody, parseInstanceClause, parseDerive) where
+module LambdaBuffers.Frontend.Parsec (
+  parseModule,
+  parseImport,
+  runParser,
+  parseTyInner,
+  parseTyTopLevel,
+  parseRecord,
+  parseProduct,
+  parseSum,
+  parseConstraint,
+  parseInstanceBody,
+  parseInstanceClause,
+  parseDerive,
+  parseClassDef,
+  parseClassSups,
+) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
-import Data.Maybe (isJust)
+import Data.Maybe (fromJust, isJust)
 import Data.String (IsString (fromString))
 import LambdaBuffers.Compiler.NamingCheck (pClassName, pConstrName, pFieldName, pModuleNamePart, pTyName)
-import LambdaBuffers.Frontend.Syntax (ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
+import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
 import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
@@ -32,7 +47,7 @@ parseClassName = withSourceInfo . label' "class name" $ ClassName <$> pClassName
 
 parseModuleAliasInRef :: Stream s m Char => Parser s m (ModuleAlias SourceInfo)
 parseModuleAliasInRef =
-  withSourceInfo . label' "module alias in type reference" $
+  withSourceInfo . label' "module alias in type or class reference" $
     ModuleAlias <$> do
       ps <- many1 (try (parseModuleNamePart <* char '.'))
       withSourceInfo . return $ ModuleName ps
@@ -179,8 +194,10 @@ parseInstanceClause :: Stream s m Char => Parser s m (InstanceClause SourceInfo)
 parseInstanceClause = withSourceInfo . label' "instance clause" $ do
   _ <- string kwInstance
   clauseHead <- between parseLineSpaces parseLineSpaces parseConstraint
-  _ <- string ":-"
-  InstanceClause clauseHead <$> parseInstanceBody
+  mayBodyFollows <- optionMaybe (string ":-")
+  case mayBodyFollows of
+    Nothing -> return $ InstanceClause clauseHead []
+    Just _ -> InstanceClause clauseHead <$> parseInstanceBody
 
 parseInstanceBody :: Stream s m Char => Parser s m [Constraint SourceInfo]
 parseInstanceBody = parseConstraints
@@ -197,6 +214,46 @@ parseConstraintList = between (char '(') (char ')') parseConstraints
 
 parseConstraints :: Stream s m Char => Parser s m [Constraint SourceInfo]
 parseConstraints = concat <$> sepBy parseConstraintSexp (char ',')
+
+parseClassDef :: Stream s m Char => Parser s m (ClassDef SourceInfo)
+parseClassDef = withSourceInfo . label' "class definition" $ do
+  _ <- string kwClassDef
+  maySups <-
+    optionMaybe
+      ( try $ do
+          sups <- parseClassSups
+          _ <- string "<="
+          return sups
+      )
+  _ <- parseLineSpaces1
+  clName <- parseClassName
+  clArgs <- fromJust <$> optionMaybe (parseLineSpaces >> parseClassArgs)
+  case maySups of
+    Nothing -> return $ ClassDef clName clArgs []
+    Just sups -> return $ ClassDef clName clArgs sups
+
+parseClassArgs :: Stream s m Char => Parser s m [TyArg SourceInfo]
+parseClassArgs = label' "class args" $ sepBy parseTyArg (try parseLineSpaces1)
+
+-- | ClassCnstrs sexp.
+parseClassCnstrSexp :: Stream s m Char => Parser s m [ClassConstraint SourceInfo]
+parseClassCnstrSexp = between parseLineSpaces parseLineSpaces (parseClassCnstrList <|> parseClassCnstrAtom)
+
+parseClassCnstrAtom :: Stream s m Char => Parser s m [ClassConstraint SourceInfo]
+parseClassCnstrAtom = pure <$> parseClassCnstr
+
+parseClassCnstrList :: Stream s m Char => Parser s m [ClassConstraint SourceInfo]
+parseClassCnstrList = between (char '(') (char ')') parseClassSups
+
+-- FIXME(bladyjoker): Should accept "Eq a "
+parseClassSups :: Stream s m Char => Parser s m [ClassConstraint SourceInfo]
+parseClassSups = concat <$> sepBy parseClassCnstrSexp (char ',')
+
+parseClassCnstr :: Stream s m Char => Parser s m (ClassConstraint SourceInfo)
+parseClassCnstr = label' "class constraint" $ do
+  ref <- parseClassRef
+  args <- fromJust <$> optionMaybe (parseLineSpaces >> parseClassArgs)
+  return $ ClassConstraint ref args
 
 parseModule :: Stream s m Char => Parser s m (Module SourceInfo)
 parseModule = withSourceInfo . label' "module definition" $ do
