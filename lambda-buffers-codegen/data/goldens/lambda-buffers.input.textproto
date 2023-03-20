@@ -14,6 +14,554 @@ modules {
       pos_to { column: 21 row: 1 }
     }
   }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Foo"
+                }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "a"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "b"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "c"}
+            }
+          }
+
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Module"
+                }
+              }
+            }
+      }
+    }
+  }
+
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyRef"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleNamePart"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "Eq"
+          }
+          module_name {
+            parts {
+            name:
+              "Prelude"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "VarName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Foo"
+                }
+              }
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "a"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "b"}
+            }
+          }
+          ty_args {
+            ty_var {
+              var_name{name: "c"}
+            }
+          }
+
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Module"
+                }
+              }
+            }
+      }
+    }
+  }
+
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyRef"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "ModuleNamePart"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "TyName"
+            }
+          }
+        }
+      }
+    }
+  }
+  derives {
+    constraint {
+      class_ref {
+        foreign_class_ref {
+          class_name {
+          name:
+            "PlutusData"
+          }
+          module_name {
+            parts {
+            name:
+              "Plutus"
+            }
+          }
+        }
+      }
+      args {
+        ty_ref {
+          local_ty_ref {
+            ty_name {
+            name:
+              "VarName"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  imports {
+      parts {
+        name: "Prelude"
+      }
+  }
+  type_defs {
+ty_name{name : "Foo"} ty_abs {
+    ty_args {
+      arg_name{name : "a"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+    ty_args {
+      arg_name{name : "b"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+    ty_args {
+      arg_name{name : "c"} arg_kind {
+      kind_ref:
+        KIND_REF_TYPE
+      }
+    }
+
+    ty_body {
+      sum {
+        constructors {
+          constr_name{name : "Bar"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+        constructors {
+          constr_name{name : "Baz"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+        constructors {
+          constr_name{name : "Bax"} product {
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "a"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "b"
+                }
+              }
+            }
+            fields {
+              ty_var {
+                var_name {
+                name:
+                  "c"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  }
   type_defs {
     ty_name {
       name: "Kind"
@@ -2963,6 +3511,35 @@ modules {
       pos_to { column: 15 row: 1 }
     }
   }
+  instances {
+    head: {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+          }
+        }
+      }
+      args {
+        ty_ref {
+        local_ty_ref {
+          ty_name {
+            name: "Text"
+          }
+        }
+        }
+      }
+    }
+  }
+  class_defs {
+    class_name {
+      name: "Eq"
+    }
+    class_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+    }
+  }
   type_defs {
     ty_name {
       name: "Bool"
@@ -3328,5 +3905,21 @@ modules {
     file: "goldens/good/Prelude.lbf"
     pos_from { column: 1 row: 1 }
     pos_to { column: 13 row: 37 }
+  }
+}
+modules {
+  module_name {
+    parts {
+      name: "Plutus"
+    }
+  }
+  class_defs {
+    class_name {
+      name: "PlutusData"
+    }
+    class_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+    }
   }
 }

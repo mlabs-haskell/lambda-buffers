@@ -43,8 +43,8 @@ data Term f a
  ```
  Here we see 2 clauses, the first one has for the `clauseHead` a `Term`
  'animal(X)' and for the body a single `Term` 'human(X)'. Notice that they share
- a `Var` 'X'. The second clause with has the `clauseHead` a `Term`
- 'human(socrates)' and it is also called a 'fact', which simply means it's
+ a `Var` 'X'. The second clause has the `clauseHead` a `Term`
+ 'human(socrates)' and it's also called a 'fact', which simply means it's
  'true' as it has no `clauseBody` as a condition. 'socrates' is an `Atom` (a
  ground value).
 -}

@@ -2,10 +2,13 @@ module LambdaBuffers.Codegen.Print (
   runPrint,
   Context (..),
   MonadPrint,
-  ctxLbTyImports,
+  ctxTyImports,
   ctxOpaqueTyImports,
   ctxTyExports,
+  ctxClassImports,
+  ctxRuleImports,
   ctxConfig,
+  ctxCompilerInput,
   ctxModule,
 ) where
 
@@ -32,9 +35,12 @@ type PrintM o c = ReaderT (Context o c) (Except Error)
 type Error = (PC.SourceInfo, Text)
 
 data Context o c = MkContext
-  { _ctxModule :: PC.Module
-  , _ctxLbTyImports :: Set PC.QTyName
+  { _ctxCompilerInput :: PC.CompilerInput -- TODO(bladyjoker): Use proper `CodegenInput`.
+  , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
+  , _ctxTyImports :: Set PC.QTyName
   , _ctxOpaqueTyImports :: Set o
+  , _ctxClassImports :: Set c
+  , _ctxRuleImports :: Set (PC.InfoLess PC.ModuleName)
   , _ctxTyExports :: Set (PC.InfoLess PC.TyName)
   , _ctxConfig :: Config o c
   }

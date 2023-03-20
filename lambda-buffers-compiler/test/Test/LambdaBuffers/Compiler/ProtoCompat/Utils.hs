@@ -24,6 +24,8 @@ module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (
   mod'prelude,
   fcr,
   inst',
+  recrd,
+  prod',
 ) where
 
 import Control.Lens ((^.))
@@ -65,8 +67,17 @@ ctor (cn', tys) = (PC.mkInfoLess $ cn cn', PC.Constructor (cn cn') (prod tys))
 prod :: [PC.Ty] -> PC.Product
 prod tys = PC.Product tys def
 
+prod' :: [PC.Ty] -> PC.TyBody
+prod' = PC.ProductI . prod
+
+recrd :: [(Text, PC.Ty)] -> PC.TyBody
+recrd fields = PC.RecordI $ PC.Record (OMap.fromList [(PC.mkInfoLess . fn $ n, PC.Field (fn n) t) | (n, t) <- fields]) def
+
 cn :: Text -> PC.ConstrName
 cn n = PC.ConstrName n def
+
+fn :: Text -> PC.FieldName
+fn n = PC.FieldName n def
 
 vn :: Text -> PC.VarName
 vn n = PC.VarName n def

@@ -36,7 +36,7 @@ prints goldensFp = testCase goldensFp $ do
     Right res -> return res
   for_
     (ci' ^. #modules)
-    ( \m -> case H.runPrint cfg m of
+    ( \m -> case H.runPrint cfg ci' m of
         Left err -> assertFailure (show err)
         Right (fp', printed) -> do
           fp <- Paths.getDataFileName ("data/goldens/autogen" </> fp')

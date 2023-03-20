@@ -547,7 +547,8 @@ message Module {
   // Type class derive statements.
   repeated Derive derives = 5;
   // Imported modules the Compiler consults when searching for
-  // instance clauses.
+  // type class rules.
+  // TODO(bladyjoker): Rename to ruleImports.
   // Duplicate imports MUST be reported with
   // `ProtoParseError.MultipleImportError`.
   repeated ModuleName imports = 6;

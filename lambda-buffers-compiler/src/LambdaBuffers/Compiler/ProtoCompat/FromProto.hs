@@ -615,6 +615,7 @@ instance IsMessage P.Module PC.Module where
       (cldefs, mulClDefs) <- parseAndIndex (\cldef -> mkInfoLess $ cldef ^. #className) (m ^. P.classDefs)
       (impts, mulImpts) <- parseAndIndex mkInfoLess (m ^. P.imports)
       insts <- traverse fromProto $ m ^. P.instances
+      derives <- traverse fromProto $ m ^. P.derives
       si <- fromProto $ m ^. P.sourceInfo
       let mulTyDefsErrs =
             [ FPProtoParseError $
@@ -639,7 +640,7 @@ instance IsMessage P.Module PC.Module where
             ]
           protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
       if null protoParseErrs
-        then pure $ PC.Module mnm tydefs cldefs insts [] impts si
+        then pure $ PC.Module mnm tydefs cldefs insts derives impts si
         else throwError protoParseErrs
 
   toProto (PC.Module mnm tdefs cdefs insts drv impts si) =

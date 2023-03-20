@@ -83,7 +83,7 @@ solve clauses goals = case runUniM clauses (top goals) of
   (Right res, logs) -> (Right res, logs)
 
 {- | Top clause essentially analogous to `?-` in Prolog.
- Behaves as a special `callClause` that keeps the `Scope` that the `solve` can return to users for inspecting results.
+ Behaves as a special `callClause` that keeps the `Scope` that the `solve` can return to users for inspecting solutions.
 -}
 top :: (Eq fun, Eq atom, Show fun, Show atom) => [ML.Term fun atom] -> UniM fun atom (Map ML.VarName (ML.Term fun atom))
 top goals = do
@@ -120,7 +120,9 @@ callClause clause arg = do
   trace $ ML.DoneClause clause mlArg
   return clauseHead'
 
--- | Checks if the supplied goal was already visited.
+{- | Checks if the supplied goal was already visited.
+ TODO(bladyjoker): Revisit this topic, perhaps this shouldn't error out rather it could just terminate with solutions.
+-}
 checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom ()
 checkCycle goal = do
   visitedGoals <- asks cctxTrace
@@ -206,7 +208,7 @@ interpretClause (ML.MkClause headT body) = do
   (headT', _scope') <- interpretTerm scope headT
   return (headT', body')
 
--- | TODO(bladyjoker): This is ugly.
+-- | TODO(bladyjoker): This is ugly, rewrite using `State` monad.
 interpretTerms :: (Eq fun, Eq atom) => Scope fun atom -> [ML.Term fun atom] -> UniM fun atom ([UTerm fun atom], Scope fun atom)
 interpretTerms scope terms = do
   (ts', vs') <-
@@ -221,7 +223,7 @@ interpretTerms scope terms = do
 
 {- | Interpret a `MiniLog.Term` such that for each `MiniLog.Var` a new `Unification.UVar` is created and added to the `Scope`
  or reused from the `Scope` if it was already instantiated.
- The collected `Scope` is used in `top` to provide
+ The collected `Scope` is used in `top` to provide solutions to the caller.
 -}
 interpretTerm :: (Eq fun, Eq atom) => Scope fun atom -> ML.Term fun atom -> UniM fun atom (UTerm fun atom, Scope fun atom)
 interpretTerm scope (ML.Var vn) = case Map.lookup vn scope of
