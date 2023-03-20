@@ -18,6 +18,12 @@ module LambdaBuffers.Frontend.Syntax (
   ConstrName (..),
   FieldName (..),
   Field (..),
+  Derive (..),
+  InstanceClause (..),
+  Constraint (..),
+  ClassDef (..),
+  ClassRef (..),
+  ClassConstraint (..),
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
@@ -27,9 +33,33 @@ module LambdaBuffers.Frontend.Syntax (
   kwTyDefProduct,
   kwTyDefRecord,
   kwTyDefSum,
+  kwDerive,
+  kwClassDef,
+  kwInstance,
 ) where
 
 import Data.Text (Text)
+
+kwTyDefSum :: String
+kwTyDefSum = "sum" :: String
+kwTyDefProduct :: String
+kwTyDefProduct = "prod" :: String
+kwTyDefRecord :: String
+kwTyDefRecord = "record" :: String
+kwTyDefOpaque :: String
+kwTyDefOpaque = "opaque" :: String
+kwDerive :: String
+kwDerive = "derive" :: String
+kwInstance :: String
+kwInstance = "instance" :: String
+kwClassDef :: String
+kwClassDef = "class" :: String
+
+tyBodyToTyDefKw :: TyBody info -> String
+tyBodyToTyDefKw (SumBody _) = kwTyDefSum
+tyBodyToTyDefKw (ProductBody _) = kwTyDefProduct
+tyBodyToTyDefKw (RecordBody _) = kwTyDefRecord
+tyBodyToTyDefKw Opaque = kwTyDefOpaque
 
 -- | Syntax DSL
 data Module info = Module
@@ -54,21 +84,6 @@ data Ty info
   | TyApp (Ty info) [Ty info] info
   | TyRef' (TyRef info) info
   deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
-
-kwTyDefSum :: String
-kwTyDefSum = "sum" :: String
-kwTyDefProduct :: String
-kwTyDefProduct = "prod" :: String
-kwTyDefRecord :: String
-kwTyDefRecord = "record" :: String
-kwTyDefOpaque :: String
-kwTyDefOpaque = "opaque" :: String
-
-tyBodyToTyDefKw :: TyBody info -> String
-tyBodyToTyDefKw (SumBody _) = kwTyDefSum
-tyBodyToTyDefKw (ProductBody _) = kwTyDefProduct
-tyBodyToTyDefKw (RecordBody _) = kwTyDefRecord
-tyBodyToTyDefKw Opaque = kwTyDefOpaque
 
 data TyDef info = TyDef
   { tyName :: TyName info
@@ -114,6 +129,37 @@ data ConstrName info = ConstrName Text info deriving stock (Show, Eq, Ord, Funct
 data FieldName info = FieldName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data ClassName info = ClassName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassDef info = ClassDef
+  { className :: ClassName info
+  , classArgs :: [TyArg info]
+  , classSupers :: [ClassConstraint info]
+  , classInfo :: info
+  }
+  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassConstraint info = ClassConstraint (ClassRef info) [TyArg info]
+  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassRef info = ClassRef (Maybe (ModuleAlias info)) (ClassName info) info
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+newtype Derive info = Derive (Constraint info)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data InstanceClause info = InstanceClause
+  { instanceHead :: Constraint info
+  , instanceBody :: [Constraint info]
+  , instanceInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Constraint info = Constraint
+  { constraintClass :: ClassRef info
+  , constraintArgs :: [Ty info]
+  , constraintInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 -- | Source information
 data SourceInfo = SourceInfo

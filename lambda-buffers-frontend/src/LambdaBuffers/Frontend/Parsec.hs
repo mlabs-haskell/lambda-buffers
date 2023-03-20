@@ -1,12 +1,12 @@
-module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser, parseTyInner, parseTyTopLevel, parseRecord, parseProduct, parseSum) where
+module LambdaBuffers.Frontend.Parsec (parseModule, parseImport, runParser, parseTyInner, parseTyTopLevel, parseRecord, parseProduct, parseSum, parseConstraint, parseInstanceBody, parseInstanceClause, parseDerive) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.String (IsString (fromString))
-import LambdaBuffers.Compiler.NamingCheck (pConstrName, pFieldName, pModuleNamePart, pTyName)
-import LambdaBuffers.Frontend.Syntax (ConstrName (ConstrName), Constructor (Constructor), Field (Field), FieldName (FieldName), Import (Import), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
+import LambdaBuffers.Compiler.NamingCheck (pClassName, pConstrName, pFieldName, pModuleNamePart, pTyName)
+import LambdaBuffers.Frontend.Syntax (ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
 import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
@@ -26,6 +26,9 @@ parseTyVarName = withSourceInfo . label' "type variable name" $ VarName . fromSt
 
 parseTyName :: Stream s m Char => Parser s m (TyName SourceInfo)
 parseTyName = withSourceInfo . label' "type name" $ TyName <$> pTyName
+
+parseClassName :: Stream s m Char => Parser s m (ClassName SourceInfo)
+parseClassName = withSourceInfo . label' "class name" $ ClassName <$> pClassName
 
 parseModuleAliasInRef :: Stream s m Char => Parser s m (ModuleAlias SourceInfo)
 parseModuleAliasInRef =
@@ -160,6 +163,40 @@ parseTyArg :: Stream s m Char => Parser s m (TyArg SourceInfo)
 parseTyArg = withSourceInfo . label' "type argument" $ do
   VarName vn _ <- parseTyVarName
   return $ TyArg vn
+
+parseClassRef :: Stream s m Char => Parser s m (ClassRef SourceInfo)
+parseClassRef = withSourceInfo . label' "class reference" $ do
+  mayAlias <- optionMaybe parseModuleAliasInRef
+  ClassRef mayAlias <$> parseClassName
+
+parseConstraint :: Stream s m Char => Parser s m (Constraint SourceInfo)
+parseConstraint = withSourceInfo . label' "constraint" $ Constraint <$> parseClassRef <*> parseTys
+
+parseDerive :: Stream s m Char => Parser s m (Derive SourceInfo)
+parseDerive = string kwDerive >> parseLineSpaces >> Derive <$> parseConstraint
+
+parseInstanceClause :: Stream s m Char => Parser s m (InstanceClause SourceInfo)
+parseInstanceClause = withSourceInfo . label' "instance clause" $ do
+  _ <- string kwInstance
+  clauseHead <- between parseLineSpaces parseLineSpaces parseConstraint
+  _ <- string ":-"
+  InstanceClause clauseHead <$> parseInstanceBody
+
+parseInstanceBody :: Stream s m Char => Parser s m [Constraint SourceInfo]
+parseInstanceBody = parseConstraints
+
+-- | Constraints sexp.
+parseConstraintSexp :: Stream s m Char => Parser s m [Constraint SourceInfo]
+parseConstraintSexp = between parseLineSpaces parseLineSpaces (parseConstraintList <|> parseConstraintAtom)
+
+parseConstraintAtom :: Stream s m Char => Parser s m [Constraint SourceInfo]
+parseConstraintAtom = pure <$> parseConstraint
+
+parseConstraintList :: Stream s m Char => Parser s m [Constraint SourceInfo]
+parseConstraintList = between (char '(') (char ')') parseConstraints
+
+parseConstraints :: Stream s m Char => Parser s m [Constraint SourceInfo]
+parseConstraints = concat <$> sepBy parseConstraintSexp (char ',')
 
 parseModule :: Stream s m Char => Parser s m (Module SourceInfo)
 parseModule = withSourceInfo . label' "module definition" $ do
