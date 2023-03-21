@@ -4,7 +4,6 @@ module LambdaBuffers.Compiler.TypeClassCheck.Errors (
   superClassCycleDetectedError,
   unboundTyClassRefError',
   deriveOpaqueError,
-  cycledGoalsError,
   missingRuleError,
   internalError,
   internalError',
@@ -59,14 +58,6 @@ deriveOpaqueError locMn cstr subCstr =
       & P.deriveOpaqueErr . P.moduleName .~ PC.toProto locMn
       & P.deriveOpaqueErr . P.constraint .~ PC.toProto cstr
       & P.deriveOpaqueErr . P.subConstraint .~ PC.toProto subCstr
-
-cycledGoalsError :: PC.ModuleName -> PC.Constraint -> [PC.Constraint] -> P.CompilerError
-cycledGoalsError locMn cstr cycledConstraints =
-  tyClassCheckError $
-    defMessage
-      & P.constraintCycleErr . P.moduleName .~ PC.toProto locMn
-      & P.constraintCycleErr . P.constraint .~ PC.toProto cstr
-      & P.constraintCycleErr . P.cycledConstraints .~ (PC.toProto <$> cycledConstraints)
 
 missingRuleError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> P.CompilerError
 missingRuleError locMn cstr subCstr =

@@ -1,6 +1,6 @@
 #!/bin/bash
 function lbf {
-   cabal run lbf -- $@
+    cabal run lbf -- $@
 }
 
 function lbf-comp {
@@ -40,6 +40,11 @@ echo "goldens/good/Plutus.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
 lbf-form goldens/good/Plutus.lbf
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
+
+echo "goldens/good/Rules.lbf"
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Rules.lbf
+lbf-form goldens/good/Rules.lbf
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Rules.lbf
 
 echo "goldens/good/LambdaBuffers.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf

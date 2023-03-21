@@ -3,6 +3,10 @@
 'eq'('int').
 
 
+'eq'('rectype') :-
+  'eq'('int'),'eq'('rectype').
+
+
 'eq'('list'(VX)) :-
   'eq'(VX).
 
