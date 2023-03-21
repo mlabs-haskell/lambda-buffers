@@ -81,8 +81,6 @@ data MiniLogError f a
     MissingClauseError (Term f a)
   | -- | Multiple overlapping `Clauses` were found.
     OverlappingClausesError [Clause f a] (Term f a)
-  | -- | A goal cycle was detected.
-    CycledGoalsError [Term f a]
   | -- | Implementation/provider internal error conditions.
     InternalError Text
   deriving stock (Eq, Ord, Show)

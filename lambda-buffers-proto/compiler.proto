@@ -785,14 +785,6 @@ message TyClassCheckError {
     Constraint sub_constraint = 3;
   }
 
-  // In `module_name` a cycle of `cycled_constraints` was detected while trying
-  // to solve `constraint`.
-  message ConstraintCycleError {
-    ModuleName module_name = 1;
-    Constraint constraint = 2;
-    repeated Constraint cycled_constraints = 3;
-  }
-
   // In `module_name` while trying to solve `constraint` it wasn't possible to
   // find a rule (`Derive` or `InstanceClause`) for `sub_constraint`.
   message MissingRuleError {
@@ -823,9 +815,8 @@ message TyClassCheckError {
     SuperclassCycleError superclass_cycle_err = 2;
     ImportNotFoundError import_not_found_err = 3;
     DeriveOpaqueError derive_opaque_err = 4;
-    ConstraintCycleError constraint_cycle_err = 5;
-    MissingRuleError missing_rule_err = 6;
-    OverlappingRulesError overlapping_rules_err = 7;
+    MissingRuleError missing_rule_err = 5;
+    OverlappingRulesError overlapping_rules_err = 6;
   }
 }
 

@@ -28,11 +28,15 @@ test =
         "Should fail"
         [ fails "derive_opaque_1" testDeriveOpaque1
         , fails "derive_opaque_2" testDeriveOpaque2
-        , fails "cycled_goals_1" testCycledGoals1
         , fails "missing_rule_1" testMissingRule1
         , fails "missing_rule_2" testMissingRule2
         , fails "missing_rule_3" testMissingRule3
         , fails "overlapping_rules_1" testOverlaps1
+        ]
+    , testGroup
+        "Cycled goals should succeed"
+        [ succeeds "cycled_goals_1" testCycledGoals1
+        , succeeds "cycled_goals_2" testCycledGoals2
         ]
     ]
 
@@ -448,7 +452,7 @@ testDeriveOpaque2 =
         [["Prelude"]]
     ]
 
-{- Test Cycled goals 1 - a cycle should fail
+{- Test Cycled goals 1 - a cycle should succeed
 
 module Foo
 
@@ -457,7 +461,7 @@ import Prelude
 opaque Bar a
 
 instance Eq (Baz a) => Eq (Bar a)
-derive Ord (Bar a)
+instance (Eq a) => Ord (Bar a)
 
 opaque Baz a
 
@@ -487,10 +491,58 @@ testCycledGoals1 =
         []
         [ U.inst' (eqCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.lr "Baz" U.@ [U.tv "a"])]
         , U.inst' (eqCstr (U.lr "Baz" U.@ [U.tv "a"])) [eqCstr (U.lr "Bar" U.@ [U.tv "a"])]
+        , U.inst' (ordCstr (U.lr "Bar" U.@ [U.tv "a"])) [eqCstr (U.tv "a")]
         ]
-        [ deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
-        , deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
         , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+        ]
+        [["Prelude"]]
+    ]
+
+{- Test Cycled goals 1 - a cycle should succeed on recursive types
+
+module Foo
+
+import Prelude
+
+prod Bar a = Bar a
+
+derive Eq (Bar a)
+
+record Baz a b = { baz : Baz a b}
+
+derive Eq (Baz a b)
+
+sum Foo a b = FooA (Foo a b) | FooB (Foo a b)
+
+derive Eq (Foo a b)
+derive Ord (Foo a b)
+-}
+testCycledGoals2 :: PC.CompilerInput
+testCycledGoals2 =
+  U.ci
+    [ U.mod'preludeO
+    , U.mod'
+        ["Foo"]
+        [ U.td "Bar" (U.abs ["a"] $ U.prod' [U.lr "Bar" U.@ [U.tv "a"]])
+        , U.td "Baz" (U.abs ["a", "b"] $ U.recrd [("baz", U.lr "Baz" U.@ [U.tv "a", U.tv "b"])])
+        , U.td
+            "Foo"
+            ( U.abs ["a", "b"] $
+                U.sum
+                  [ ("FooA", [U.lr "Foo" U.@ [U.tv "a", U.tv "b"]])
+                  , ("FooB", [U.lr "Foo" U.@ [U.tv "a", U.tv "b"]])
+                  ]
+            )
+        ]
+        []
+        []
+        [ deriveEq (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveOrd (U.lr "Bar" U.@ [U.tv "a"])
+        , deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b"])
+        , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b"])
+        , deriveEq (U.lr "Baz" U.@ [U.tv "a", U.tv "b"])
+        , deriveOrd (U.lr "Baz" U.@ [U.tv "a", U.tv "b"])
         ]
         [["Prelude"]]
     ]

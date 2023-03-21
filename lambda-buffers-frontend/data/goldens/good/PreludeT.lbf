@@ -1,7 +1,15 @@
 module PreludeT
 
+import Prelude (Eq)
+
 sum Maybe a = Just a | Nothing
+
+derive Eq (Maybe a)
 
 sum Either a b = Left a | Right b
 
+derive Eq (Either a b)
+
 sum List a = Nil | Cons a (List a)
+
+instance Eq (List a) :- Eq a

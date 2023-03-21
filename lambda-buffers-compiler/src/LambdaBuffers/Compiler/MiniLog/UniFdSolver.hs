@@ -1,7 +1,7 @@
 -- | unification-fd based solver.
 module LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve) where
 
-import Control.Monad (filterM, foldM, foldM_, void)
+import Control.Monad (filterM, foldM)
 import Control.Monad.Error.Class (MonadError (catchError, throwError))
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.Reader (MonadReader (local), ReaderT (runReaderT), asks)
@@ -13,6 +13,7 @@ import Control.Unification qualified as Unif
 import Control.Unification.IntVar (IntBindingT, IntVar, runIntBindingT)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Maybe (isJust)
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.MiniLog qualified as ML
 
@@ -100,11 +101,12 @@ solveGoal goal' = do
   mlGoal <- fromUTerm goal
   trace $ ML.SolveGoal mlGoal
   clause <- lookupClause goal
-  checkCycle goal
-  g <- duplicateTerm goal
-  _ <- local (\r -> r {cctxTrace = g : cctxTrace r}) (callClause clause goal)
+  mayAncestor <- checkCycle goal
+  retGoal <- case mayAncestor of
+    Nothing -> local (\r -> r {cctxTrace = goal : cctxTrace r}) (callClause clause goal)
+    Just ancestorGoal -> ancestorGoal `unify` goal
   trace $ ML.DoneGoal mlGoal
-  return goal
+  return retGoal
 
 {- | In functional speak, this is like a function call (application), where clause is a function and a goal is the argument.
  We simply `interpretClause` and unify the given argument with the head of the clause.
@@ -115,34 +117,39 @@ callClause clause arg = do
   mlArg <- fromUTerm arg
   trace $ ML.CallClause clause mlArg
   (clauseHead', clauseBody') <- interpretClause clause
-  clauseHead' `unify` arg
+  retGoal <- clauseHead' `unify` arg
   _ <- solveGoal `traverse` clauseBody'
   trace $ ML.DoneClause clause mlArg
-  return clauseHead'
+  return retGoal
 
 {- | Checks if the supplied goal was already visited.
- TODO(bladyjoker): Revisit this topic, perhaps this shouldn't error out rather it could just terminate with solutions.
+
+ References:
+ - https://www.swi-prolog.org/pldoc/doc/_SWI_/library/coinduction.pl
+ - https://personal.utdallas.edu/~gupta/courses/acl/2021/other-papers/colp.pdf
+ - https://arxiv.org/pdf/1511.09394.pdf
 -}
-checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom ()
+checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (Maybe (UTerm fun atom))
 checkCycle goal = do
   visitedGoals <- asks cctxTrace
-  foldM_
+  foldM
     ( \mayCycle visited -> do
-        visited' <- duplicateTerm visited
-        goal' <- duplicateTerm goal
-        catchError
-          ( do
-              goal' `unify` visited' -- NOTE(bladyjoker): Perhaps subsumes?
-              fromUTerm goal >>= throwError . MLError . ML.CycledGoalsError . (: mayCycle)
-          )
-          ( \case
-              MismatchFailure _ _ -> do
-                checked <- fromUTerm visited
-                return (checked : mayCycle)
-              err -> throwError err
-          )
+        if isJust mayCycle
+          then return mayCycle
+          else do
+            visited' <- duplicateTerm visited
+            goal' <- duplicateTerm goal
+            catchError
+              ( do
+                  _ <- goal' `unify` visited'
+                  return $ Just visited
+              )
+              ( \case
+                  MismatchFailure _ _ -> return mayCycle
+                  err -> throwError err
+              )
     )
-    mempty
+    Nothing
     visitedGoals
 
 {- | Given a unifiable term and the knowledge base (clauses) find a next `MiniLog.Clause` to `callClause` on.
@@ -246,10 +253,10 @@ trace x = lift . lift . lift $ tell [x]
 force :: (Eq fun, Eq atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
 force = lift . U.applyBindings
 
-unify :: (Eq fun, Eq atom, Show atom, Show fun) => UTerm fun atom -> UTerm fun atom -> UniM fun atom ()
+unify :: (Eq fun, Eq atom, Show atom, Show fun) => UTerm fun atom -> UTerm fun atom -> UniM fun atom (UTerm fun atom)
 unify l r = do
   debug ("unify" :: String, l, r)
-  void $ lift $ Unif.unify l r
+  lift $ Unif.unify l r
 
 freeVar :: (Eq fun, Eq atom) => UniM fun atom (UTerm fun atom)
 freeVar = U.UVar <$> freeVar'

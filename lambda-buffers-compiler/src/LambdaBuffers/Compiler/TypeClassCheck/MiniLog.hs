@@ -17,7 +17,6 @@ import Control.Lens (view, (^.))
 import Data.Default (Default (def))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
-import Data.Maybe (maybeToList)
 import Data.Text (Text)
 import LambdaBuffers.Compiler.MiniLog ((@), (@<=))
 import LambdaBuffers.Compiler.MiniLog qualified as ML
@@ -26,7 +25,7 @@ import LambdaBuffers.Compiler.ProtoCompat qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
-import LambdaBuffers.Compiler.TypeClassCheck.Errors (cycledGoalsError, deriveOpaqueError, internalError, internalError', mappendErrs, memptyErr, missingRuleError, overlappingRulesError, unboundTyClassRefError')
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (deriveOpaqueError, internalError, internalError', mappendErrs, memptyErr, missingRuleError, overlappingRulesError, unboundTyClassRefError')
 import Proto.Compiler qualified as P
 
 type Term = ML.Term Funct Atom
@@ -305,9 +304,6 @@ runSolve' locMn clauses goal = do
 
 -- | Convert to API errors.
 fromMiniLogError :: PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> ML.MiniLogError Funct Atom -> P.CompilerError
-fromMiniLogError locMn currentCstr _trace (ML.CycledGoalsError gs) =
-  let userDefinedGoals = [c | g <- gs, c <- maybeToList (goalToConstraint locMn g)]
-   in cycledGoalsError locMn currentCstr userDefinedGoals
 fromMiniLogError locMn currentCstr _trace err@(ML.OverlappingClausesError clauses goal) =
   case originalConstraint `traverse` clauses of
     Nothing -> internalError locMn currentCstr ("Failed extracting the original `Constraint` when constructing a report for the `OverlappingRulesError`" <> show err)

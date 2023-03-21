@@ -3,7 +3,7 @@ module Test.LambdaBuffers.Compiler.MiniLog (test) where
 import Control.Monad (void)
 import Data.Map qualified as Map
 import Data.Text qualified as Text
-import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (CycledGoalsError, MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
+import LambdaBuffers.Compiler.MiniLog (Clause, MiniLogError (MissingClauseError, OverlappingClausesError), Term (Atom, Struct, Var), VarName, (@<=))
 import LambdaBuffers.Compiler.MiniLog.Pretty (toPrologModule)
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve)
 import System.FilePath ((<.>))
@@ -17,7 +17,7 @@ test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "LambdaBuffers.Compiler.MiniLog checks"
-      [shouldSolve, shouldFailToSolve, printingToPrologTests]
+      [shouldSolve, overlapTests, printingToPrologTests, missingClauseTests, cycleTests]
 
 printingToPrologTests :: TestTree
 printingToPrologTests =
@@ -31,10 +31,62 @@ printingToPrologTests =
     , shouldPrint "very_long_arguments" [Struct "foo" (replicate 50 (Var "X")) @<= replicate 2 (Struct "foo" (replicate 50 (Var "X")))]
     ]
 
-shouldFailToSolve :: TestTree
-shouldFailToSolve =
+cycleTests :: TestTree
+cycleTests =
   testGroup
-    "Should fail to solve"
+    "Cycle tests"
+    [ testCase "cycle.pl ?- eq(beep(int))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "beep" [Atom "int"])]
+          []
+    , testCase "cycle.pl ?- eq(beep(X))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "beep" [Var "X"])]
+          [("X", Var "-9223372036854775808")]
+    , testCase "cycle.pl ?- eq(foo(int))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "foo" [Atom "int"])]
+          []
+    , testCase "cycle.pl ?- eq(list(list(int)))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "list" [Struct "list" [Atom "int"]])]
+          mempty
+    , testCase "cycle.pl ?- eq(list(list(list(int))))." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "list" [Struct "list" [Struct "list" [Atom "int"]]])]
+          mempty
+    , testCase "cycle.pl ?- eq(rectype)." $
+        succeedsWith
+          cycleKnowledge
+          [eq (Struct "rectype" [])]
+          mempty
+    ]
+
+missingClauseTests :: TestTree
+missingClauseTests =
+  testGroup
+    "Should fail to solve with because overlapping rules"
+    [ testCase "greeks.pl ?- animal(aristotle). % missing goal human(ariostotle)" $
+        failsWith
+          greekKnowledge
+          [animal (Atom "aristotle")]
+          (missesClauseFor (human (Atom "aristotle")))
+    , testCase "greeks.pl ?- animal(plato), animal(socrates), human(plato), human(socrates), animal(aristotle) % missing goal human(aristotle)" $
+        failsWith
+          greekKnowledge
+          [animal (Atom "plato"), animal (Atom "socrates"), human (Atom "plato"), human (Atom "socrates"), animal (Atom "aristotle")]
+          (missesClauseFor (human (Atom "aristotle")))
+    ]
+
+overlapTests :: TestTree
+overlapTests =
+  testGroup
+    "Should fail to solve with because overlapping rules"
     [ testCase "greeks.pl ?- animal(X). % overlaps on human(plato|socrates)" $
         failsWith
           greekKnowledge
@@ -55,11 +107,6 @@ shouldFailToSolve =
           greekKnowledge
           [human (Var "X"), human (Var "Y")]
           (overlapsOn [socratesIsHuman, platoIsHuman])
-    , testCase "greeks.pl ?- animal(aristotle). % missing goal human(ariostotle)" $
-        failsWith
-          greekKnowledge
-          [animal (Atom "aristotle")]
-          (missesClauseFor (human (Atom "aristotle")))
     , testCase "human(plato).;human(plato). greeks.pl ?- human(plato). % overlaps on human(plato|socrates)" $
         failsWith
           (platoIsHuman : greekKnowledge)
@@ -80,21 +127,6 @@ shouldFailToSolve =
           eqTypeClassKnowledge
           [eq (Struct "maybe" [Var "X"])]
           (overlapsOn eqTypeClassKnowledge)
-    , testCase "greeks.pl ?- animal(plato), animal(socrates), human(plato), human(socrates), animal(aristotle) % missing goal human(aristotle)" $
-        failsWith
-          greekKnowledge
-          [animal (Atom "plato"), animal (Atom "socrates"), human (Atom "plato"), human (Atom "socrates"), animal (Atom "aristotle")]
-          (missesClauseFor (human (Atom "aristotle")))
-    , testCase "cycle.pl ?- eq(beep(int))." $
-        failsWith
-          cycleKnowledge
-          [eq (Struct "beep" [Atom "int"])]
-          (cycledGoals [eq (Struct "beep" [Atom "int"])])
-    , testCase "cycle.pl ?- eq(foo(int))." $
-        failsWith
-          cycleKnowledge
-          [eq (Struct "foo" [Atom "int"])]
-          (cycledGoals [eq (Struct "foo" [Atom "int"]), eq (Struct "bar" [Atom "int"]), eq (Struct "baz" [Atom "int"])])
     ]
 
 shouldSolve :: TestTree
@@ -175,16 +207,6 @@ shouldSolve =
         succeedsWith
           eqTypeClassKnowledge
           [eq (Atom "int")]
-          mempty
-    , testCase "cycle.pl ?- eq(list(list(int)))." $
-        succeedsWith
-          cycleKnowledge
-          [eq (Struct "list" [Struct "list" [Atom "int"]])]
-          mempty
-    , testCase "cycle.pl ?- eq(list(list(list(int))))." $
-        succeedsWith
-          cycleKnowledge
-          [eq (Struct "list" [Struct "list" [Struct "list" [Atom "int"]]])]
           mempty
     ]
 
@@ -280,6 +302,7 @@ cycleKnowledge =
   , eq (Struct "bar" [Var "X"]) @<= [eq (Struct "baz" [Var "X"])]
   , eq (Struct "baz" [Var "X"]) @<= [eq (Struct "foo" [Var "X"])]
   , eq (Struct "beep" [Var "X"]) @<= [eq (Struct "beep" [Var "X"])]
+  , eq (Struct "rectype" []) @<= [eq (Atom "int"), eq (Struct "rectype" [])]
   , eq (Atom "int") @<= []
   ]
 
@@ -319,10 +342,6 @@ overlapsOn _ _ = False
 missesClauseFor :: TestTerm -> MiniLogError String String -> Bool
 missesClauseFor goal' (MissingClauseError goal) = goal' == goal
 missesClauseFor _ _ = False
-
-cycledGoals :: [TestTerm] -> MiniLogError String String -> Bool
-cycledGoals goals' (CycledGoalsError goals) = goals' == goals
-cycledGoals _ _ = False
 
 printLogs :: (Traversable t, Show a) => t a -> Assertion
 printLogs logs = do

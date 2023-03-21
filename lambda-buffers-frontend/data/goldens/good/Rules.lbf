@@ -1,0 +1,23 @@
+module Rules
+
+import Prelude
+
+class (Eq a) <= Ord a
+
+prod X = X
+
+derive Eq X
+
+derive Ord X
+
+prod OddList a = a (EvenList a)
+
+instance Eq (OddList a) :- Eq a,Eq (EvenList a)
+
+derive Ord (OddList a)
+
+sum EvenList a = Nil | ECons a (OddList a)
+
+instance Eq (EvenList a) :- Eq a,Eq (OddList a)
+
+derive Ord (EvenList a)

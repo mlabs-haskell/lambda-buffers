@@ -38,7 +38,7 @@ let
 
       exactDeps = true;
 
-      nativeBuildInputs = builtins.attrValues commonTools;
+      nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ builtins.attrValues commonTools;
 
       tools = {
         cabal = { };
