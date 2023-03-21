@@ -18,42 +18,29 @@ module LambdaBuffers.Frontend.Syntax (
   ConstrName (..),
   FieldName (..),
   Field (..),
+  Derive (..),
+  InstanceClause (..),
+  Constraint (..),
+  ClassDef (..),
+  ClassRef (..),
+  ClassConstraint (..),
+  Name (..),
   ClassName (..),
   SourceInfo (..),
   SourcePos (..),
+  Statement (..),
   defSourceInfo,
   tyBodyToTyDefKw,
   kwTyDefOpaque,
   kwTyDefProduct,
   kwTyDefRecord,
   kwTyDefSum,
+  kwDerive,
+  kwClassDef,
+  kwInstance,
 ) where
 
 import Data.Text (Text)
-
--- | Syntax DSL
-data Module info = Module
-  { moduleName :: ModuleName info
-  , moduleImports :: [Import info]
-  , moduleTyDefs :: [TyDef info]
-  , moduleInfo :: info
-  }
-  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
-
-data Import info = Import
-  { importQualified :: Bool
-  , importModuleName :: ModuleName info
-  , imported :: Maybe [TyName info]
-  , alias :: Maybe (ModuleAlias info)
-  , importInfo :: info
-  }
-  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
-
-data Ty info
-  = TyVar (VarName info)
-  | TyApp (Ty info) [Ty info] info
-  | TyRef' (TyRef info) info
-  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 kwTyDefSum :: String
 kwTyDefSum = "sum" :: String
@@ -63,12 +50,49 @@ kwTyDefRecord :: String
 kwTyDefRecord = "record" :: String
 kwTyDefOpaque :: String
 kwTyDefOpaque = "opaque" :: String
+kwDerive :: String
+kwDerive = "derive" :: String
+kwInstance :: String
+kwInstance = "instance" :: String
+kwClassDef :: String
+kwClassDef = "class" :: String
 
 tyBodyToTyDefKw :: TyBody info -> String
 tyBodyToTyDefKw (SumBody _) = kwTyDefSum
 tyBodyToTyDefKw (ProductBody _) = kwTyDefProduct
 tyBodyToTyDefKw (RecordBody _) = kwTyDefRecord
 tyBodyToTyDefKw Opaque = kwTyDefOpaque
+
+-- | Syntax DSL
+data Module info = Module
+  { moduleName :: ModuleName info
+  , moduleImports :: [Import info]
+  , moduleStatements :: [Statement info]
+  , moduleInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Import info = Import
+  { importQualified :: Bool
+  , importModuleName :: ModuleName info
+  , importedNames :: Maybe [Name info]
+  , alias :: Maybe (ModuleAlias info)
+  , importInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Statement info
+  = StTyDef (TyDef info)
+  | StClassDef (ClassDef info)
+  | StInstanceClause (InstanceClause info)
+  | StDerive (Derive info)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Ty info
+  = TyVar (VarName info)
+  | TyApp (Ty info) [Ty info] info
+  | TyRef' (TyRef info) info
+  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data TyDef info = TyDef
   { tyName :: TyName info
@@ -97,6 +121,8 @@ data Field info = Field (FieldName info) (Ty info) info deriving stock (Show, Eq
 
 data TyArg info = TyArg Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
+data Name info = Name Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
 data ModuleName info = ModuleName [ModuleNamePart info] info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 data ModuleNamePart info = ModuleNamePart Text info deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
@@ -114,6 +140,37 @@ data ConstrName info = ConstrName Text info deriving stock (Show, Eq, Ord, Funct
 data FieldName info = FieldName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 data ClassName info = ClassName Text info deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassDef info = ClassDef
+  { className :: ClassName info
+  , classArgs :: [TyArg info]
+  , classSupers :: [ClassConstraint info]
+  , classInfo :: info
+  }
+  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassConstraint info = ClassConstraint (ClassRef info) [TyArg info]
+  deriving stock (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+data ClassRef info = ClassRef (Maybe (ModuleAlias info)) (ClassName info) info
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+newtype Derive info = Derive (Constraint info)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data InstanceClause info = InstanceClause
+  { instanceHead :: Constraint info
+  , instanceBody :: [Constraint info]
+  , instanceInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+data Constraint info = Constraint
+  { constraintClass :: ClassRef info
+  , constraintArgs :: [Ty info]
+  , constraintInfo :: info
+  }
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 -- | Source information
 data SourceInfo = SourceInfo

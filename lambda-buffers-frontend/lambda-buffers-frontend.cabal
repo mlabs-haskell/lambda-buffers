@@ -98,10 +98,15 @@ library
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Frontend
+    LambdaBuffers.Frontend.CheckReferences
+    LambdaBuffers.Frontend.Errors
+    LambdaBuffers.Frontend.Monad
     LambdaBuffers.Frontend.Parsec
     LambdaBuffers.Frontend.PPrint
+    LambdaBuffers.Frontend.Scope
     LambdaBuffers.Frontend.Syntax
     LambdaBuffers.Frontend.ToProto
+    LambdaBuffers.Frontend.Utils
 
 executable lbf
   import:         common-language

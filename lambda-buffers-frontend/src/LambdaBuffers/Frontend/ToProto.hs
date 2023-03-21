@@ -1,18 +1,27 @@
 module LambdaBuffers.Frontend.ToProto (toCompilerInput) where
 
 import Control.Lens ((&), (.~))
-import Control.Monad (void)
 import Control.Monad.Except (Except, MonadError (throwError), runExcept)
 import Control.Monad.Reader (MonadReader (ask), ReaderT (runReaderT))
+import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Traversable (for)
-import LambdaBuffers.Frontend (FrontendResult (FrontendResult), Scope)
+import LambdaBuffers.Frontend (FrontendResult (FrontendResult))
 import LambdaBuffers.Frontend.Syntax (
+  ClassConstraint (ClassConstraint),
+  ClassDef (ClassDef),
+  ClassName (ClassName),
+  ClassRef (ClassRef),
   ConstrName (ConstrName),
+  Constraint (Constraint),
   Constructor (Constructor),
+  Derive (Derive),
   Field (Field),
   FieldName (FieldName),
+  InstanceClause (InstanceClause),
   Module (Module),
   ModuleName (ModuleName),
   ModuleNamePart (ModuleNamePart),
@@ -20,6 +29,7 @@ import LambdaBuffers.Frontend.Syntax (
   Record (Record),
   SourceInfo (SourceInfo),
   SourcePos (SourcePos),
+  Statement (StClassDef, StDerive, StInstanceClause, StTyDef),
   Sum (Sum),
   Ty (TyApp, TyRef', TyVar),
   TyArg (TyArg),
@@ -28,14 +38,16 @@ import LambdaBuffers.Frontend.Syntax (
   TyName (TyName),
   TyRef (TyRef),
   VarName (VarName),
+  defSourceInfo,
  )
+import LambdaBuffers.Frontend.Utils (Scope, strip)
 import Proto.Compiler (Kind'KindRef (Kind'KIND_REF_TYPE))
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
 type ToProto a = (ReaderT (ModuleName (), Scope) (Except ToProtoError)) a
 
-newtype ToProtoError = MissingTyRef (TyRef SourceInfo)
+data ToProtoError = MissingTyRef (TyRef SourceInfo) | MissingClassRef (ClassRef SourceInfo)
   deriving stock (Show, Eq)
 
 toCompilerInput :: FrontendResult -> Either ToProtoError P.CompilerInput
@@ -50,13 +62,28 @@ toCompilerInput (FrontendResult modsWithScope) = do
   return $ defMessage & P.modules .~ mods
 
 toModule :: Module SourceInfo -> ToProto P.Module
-toModule (Module mn _ tyds info) = do
-  tyds' <- for tyds toTypeDef
+toModule (Module mn _ stmts info) = do
+  tyds <- for [td | StTyDef td <- stmts] toTypeDef
+  clds <- for [cd | StClassDef cd <- stmts] toClassDef
+  ics <- for [ic | StInstanceClause ic <- stmts] toInstanceClause
+  ds <- for [d | StDerive d <- stmts] toDerive
+  imps <- toImports
   return $
     defMessage
       & P.moduleName .~ toModuleName mn
-      & P.typeDefs .~ tyds'
+      & P.typeDefs .~ tyds
+      & P.classDefs .~ clds
+      & P.instances .~ ics
+      & P.derives .~ ds
+      & P.imports .~ toList imps
       & P.sourceInfo .~ toSourceInfo info
+
+-- FIXME(bladyjoker): Implement ImportCycle check in Compiler (otherwise Codegen does a cycled import).
+toImports :: ToProto (Set P.ModuleName)
+toImports = do
+  (currMn, (tyScope, classScope)) <- ask
+  let foreignModules = filter (/= currMn) $ toList tyScope <> toList classScope
+  return $ Set.fromList . fmap (\mn -> toModuleName (defSourceInfo <$ mn)) $ foreignModules
 
 toTypeDef :: TyDef SourceInfo -> ToProto P.TyDef
 toTypeDef (TyDef tn args body info) = do
@@ -68,6 +95,58 @@ toTypeDef (TyDef tn args body info) = do
               info
   abs' <- toTyAbs args body
   return $ tydef & P.tyAbs .~ abs'
+
+toClassDef :: ClassDef SourceInfo -> ToProto P.ClassDef
+toClassDef (ClassDef cn args sups info) = do
+  sups' <- toClassConstraint `traverse` sups
+  return $
+    defMessage
+      & P.className .~ toClassName cn
+      & P.classArgs .~ (toTyArg <$> args)
+      & P.supers .~ sups'
+      & P.sourceInfo
+        .~ toSourceInfo
+          info
+
+toInstanceClause :: InstanceClause SourceInfo -> ToProto P.InstanceClause
+toInstanceClause (InstanceClause h body info) = do
+  h' <- toConstraint h
+  body' <- for body toConstraint
+  return $
+    defMessage
+      & P.head .~ h'
+      & P.constraints .~ body'
+      & P.sourceInfo
+        .~ toSourceInfo
+          info
+
+toDerive :: Derive SourceInfo -> ToProto P.Derive
+toDerive (Derive cstr) = do
+  cstr' <- toConstraint cstr
+  return $
+    defMessage
+      & P.constraint .~ cstr'
+
+toConstraint :: Constraint SourceInfo -> ToProto P.Constraint
+toConstraint (Constraint cr args info) = do
+  cr' <- toClassRef cr
+  args' <- for args toTy
+  return $
+    defMessage
+      & P.classRef .~ cr'
+      & P.args .~ args'
+      & P.sourceInfo
+        .~ toSourceInfo
+          info
+
+-- TODO(bladyjoker): ClassConstraint should have TyVars not TyArgs.
+toClassConstraint :: ClassConstraint SourceInfo -> ToProto P.ClassConstraint
+toClassConstraint (ClassConstraint cr args) = do
+  cr' <- toClassRef cr
+  return $
+    defMessage
+      & P.classRef .~ cr'
+      & P.args .~ (toTyVar <$> args)
 
 toTyBody :: TyBody SourceInfo -> ToProto P.TyBody
 toTyBody (SumBody s) = do
@@ -136,12 +215,15 @@ toTy (TyApp ty tys info) = do
       & P.tyApp . P.tyFunc .~ ty'
       & P.tyApp . P.tyArgs .~ tys'
       & P.tyApp . P.sourceInfo .~ toSourceInfo info
-toTy (TyRef' tref@(TyRef _ tn info) _) = do
-  (currentModName, scope) <- ask
-  case Map.lookup (void tref) scope of
+toTy (TyRef' tr _) = toTyRef tr
+
+toTyRef :: TyRef SourceInfo -> ToProto P.Ty
+toTyRef tref@(TyRef mayAlias tn info) = do
+  (currentModName, (tyScope, _)) <- ask
+  case Map.lookup (strip <$> mayAlias, strip tn) tyScope of
     Nothing -> throwError $ MissingTyRef tref
     Just modName ->
-      if currentModName == void modName
+      if strip currentModName == modName
         then
           return $
             defMessage
@@ -150,9 +232,28 @@ toTy (TyRef' tref@(TyRef _ tn info) _) = do
         else
           return $
             defMessage
-              & P.tyRef . P.foreignTyRef . P.moduleName .~ toModuleName modName
+              & P.tyRef . P.foreignTyRef . P.moduleName .~ toModuleName (defSourceInfo <$ modName) -- NOTE(bladyjoker): ModuleName in ForeignTyRef don't have a Frontend Syntax representation.
               & P.tyRef . P.foreignTyRef . P.tyName .~ toTyName tn
               & P.tyRef . P.foreignTyRef . P.sourceInfo .~ toSourceInfo info
+
+toClassRef :: ClassRef SourceInfo -> ToProto P.TyClassRef
+toClassRef tref@(ClassRef mayAlias cn info) = do
+  (currentModName, (_, classScope)) <- ask
+  case Map.lookup (strip <$> mayAlias, strip cn) classScope of
+    Nothing -> throwError $ MissingClassRef tref
+    Just modName ->
+      if strip currentModName == modName
+        then
+          return $
+            defMessage
+              & P.localClassRef . P.className .~ toClassName cn
+              & P.localClassRef . P.sourceInfo .~ toSourceInfo info
+        else
+          return $
+            defMessage
+              & P.foreignClassRef . P.moduleName .~ toModuleName (defSourceInfo <$ modName) -- NOTE(bladyjoker): ModuleName in ForeignClassRef don't have a Frontend Syntax representation.
+              & P.foreignClassRef . P.className .~ toClassName cn
+              & P.foreignClassRef . P.sourceInfo .~ toSourceInfo info
 
 toVarName :: VarName SourceInfo -> P.VarName
 toVarName (VarName n info) =
@@ -188,8 +289,20 @@ toTyArg (TyArg an info) =
     & P.argKind . P.kindRef .~ Kind'KIND_REF_TYPE
     & P.sourceInfo .~ toSourceInfo info
 
+toTyVar :: TyArg SourceInfo -> P.TyVar
+toTyVar (TyArg an info) =
+  defMessage
+    & P.varName . P.name .~ an
+    & P.varName . P.sourceInfo .~ toSourceInfo info
+
 toTyName :: TyName SourceInfo -> P.TyName
 toTyName (TyName n info) =
+  defMessage
+    & P.name .~ n
+    & P.sourceInfo .~ toSourceInfo info
+
+toClassName :: ClassName SourceInfo -> P.ClassName
+toClassName (ClassName n info) =
   defMessage
     & P.name .~ n
     & P.sourceInfo .~ toSourceInfo info

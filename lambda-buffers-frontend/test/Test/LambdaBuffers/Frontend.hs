@@ -29,7 +29,7 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(5:1)-(5:12) Duplicate type definition with the name A") errOrMod
+        assertError (fileErr <> ":(5:1)-(5:12) [A] Duplicate type definition with the name A") errOrMod
     , testCase "Import cycle found" $ do
         let workDir = dataDir </> "import_cycle_found"
             fileIn = workDir </> "A.lbf"
@@ -41,7 +41,7 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(3:17)-(3:18) Type C not found in module B, did you mean one of [A, B]") errOrMod
+        assertError (fileErr <> ":(3:17)-(3:18) [A] Name C not found in module B, did you mean one of the types: A B. Or did you mean one of the classes: ") errOrMod
     , testCase "Invalid module filepath" $ do
         let workDir = dataDir </> "invalid_module_filepath"
             fileIn = workDir </> "A.lbf"
@@ -59,7 +59,7 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(3:1):\nunexpected 't'\nexpecting lb new line, import statement, type definition, space or end of input") errOrMod
+        assertError (fileErr <> ":(3:1):\nunexpected 't'\nexpecting lb new line, import statement, type definition, class definition, instance clause, derive statement, space or end of input") errOrMod
     , testCase "Multiple modules found" $ do
         let workDir = dataDir </> "multiple_modules_found"
             fileIn = workDir </> "A.lbf"
@@ -71,23 +71,23 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(4:1)-(4:9) Symbol A already imported from module B") errOrMod
+        assertError (fileErr <> ":(4:1)-(4:9) [A] Type name A already imported from module B") errOrMod
     , testCase "Type definition name conflict" $ do
         let workDir = dataDir </> "tydef_name_conflict"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(5:1)-(5:12) Type name A conflicts with an imported type name from module B") errOrMod
+        assertError (fileErr <> ":(5:5)-(5:6) [A] Type name A conflicts with an imported type name from module B") errOrMod
     , testCase "Type reference not found" $ do
         let workDir = dataDir </> "tyref_not_found"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] fileIn
-        assertError (fileErr <> ":(6:13)-(6:28) Type WhereIsThisType not found in the module's scope [A, B, C, B.B, C.C]") errOrMod
+        assertError (fileErr <> ":(6:13)-(6:28) [A] Type WhereIsThisType not found in the module's scope A B C B.B C.C") errOrMod
     ]
 
 assertError :: String -> Either FrontendError FrontendResult -> Assertion
-assertError expected (Left frErr) = expected @?= show frErr
+assertError expected (Left frErr) = show frErr @?= expected
 assertError _ (Right _) = assertFailure "Expected to fail but succeeded"
 
 assertSuccess :: [String] -> Either FrontendError FrontendResult -> Assertion
