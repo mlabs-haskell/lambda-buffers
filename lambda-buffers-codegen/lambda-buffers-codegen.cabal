@@ -7,11 +7,13 @@ maintainer:         info@mlabs.city
 data-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.purs
   data/**/*.textproto
 
 extra-source-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.purs
   data/**/*.textproto
 
 flag dev
