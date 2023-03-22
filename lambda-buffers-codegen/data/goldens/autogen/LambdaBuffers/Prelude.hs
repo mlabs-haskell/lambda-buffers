@@ -1,21 +1,21 @@
-module LambdaBuffers.Prelude (Bool
-                             , Bytes
-                             , Char
-                             , Either
-                             , Int16
-                             , Int32
-                             , Int64
-                             , Int8
-                             , Integer
-                             , List
-                             , Map
-                             , Maybe
-                             , Set
-                             , Text
-                             , UInt16
-                             , UInt32
-                             , UInt64
-                             , UInt8) where
+module LambdaBuffers.Prelude (Bool(..)
+                             , Bytes(..)
+                             , Char(..)
+                             , Either(..)
+                             , Int16(..)
+                             , Int32(..)
+                             , Int64(..)
+                             , Int8(..)
+                             , Integer(..)
+                             , List(..)
+                             , Map(..)
+                             , Maybe(..)
+                             , Set(..)
+                             , Text(..)
+                             , UInt16(..)
+                             , UInt32(..)
+                             , UInt64(..)
+                             , UInt8(..)) where
 
 import qualified Data.ByteString
 import qualified Data.Int

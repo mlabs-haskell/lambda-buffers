@@ -17,12 +17,13 @@ module LambdaBuffers.Frontend.Parsec (
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (MonadPlus (mzero), void)
+import Data.Char qualified as Char
 import Data.Kind (Type)
 import Data.Maybe (fromJust, isJust)
 import Data.String (IsString (fromString))
 import LambdaBuffers.Compiler.NamingCheck (pClassName, pConstrName, pFieldName, pModuleNamePart, pTyName)
 import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Name (Name), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Statement (StClassDef, StDerive, StInstanceClause, StTyDef), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum)
-import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
+import Text.Parsec (ParseError, ParsecT, SourceName, Stream, between, char, endOfLine, eof, getPosition, label, lower, many, many1, optionMaybe, optional, runParserT, satisfy, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try)
 
 type Parser :: Type -> (Type -> Type) -> Type -> Type
 type Parser s m a = ParsecT s () m a
@@ -306,7 +307,10 @@ parseImport = withSourceInfo . label' "import statement" $ do
     Just (mayModAlias, mayNames) -> return $ Import isQual modName mayNames mayModAlias
 
 parseNewLine :: Stream s m Char => Parser s m ()
-parseNewLine = label' "lb new line" $ void endOfLine
+parseNewLine = label' "lb new line" $ void endOfLine <|> try parseComment
+
+parseComment :: Stream s m Char => Parser s m ()
+parseComment = label' "comment" $ void $ between (string "--") endOfLine (many (char ' ' <|> satisfy Char.isPrint))
 
 parseLineSpace :: Stream s m Char => Parser s m ()
 parseLineSpace = label' "line space" $ void $ try $ do

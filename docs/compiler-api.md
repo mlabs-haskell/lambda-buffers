@@ -4,6 +4,7 @@
 ## Table of Contents
 
 - [compiler.proto](#compiler-proto)
+    - [ClassConstraint](#lambdabuffers-compiler-ClassConstraint)
     - [ClassDef](#lambdabuffers-compiler-ClassDef)
     - [ClassName](#lambdabuffers-compiler-ClassName)
     - [CompilerError](#lambdabuffers-compiler-CompilerError)
@@ -12,6 +13,7 @@
     - [CompilerResult](#lambdabuffers-compiler-CompilerResult)
     - [ConstrName](#lambdabuffers-compiler-ConstrName)
     - [Constraint](#lambdabuffers-compiler-Constraint)
+    - [Derive](#lambdabuffers-compiler-Derive)
     - [FieldName](#lambdabuffers-compiler-FieldName)
     - [InstanceClause](#lambdabuffers-compiler-InstanceClause)
     - [InternalError](#lambdabuffers-compiler-InternalError)
@@ -29,9 +31,6 @@
     - [NamingError](#lambdabuffers-compiler-NamingError)
     - [Opaque](#lambdabuffers-compiler-Opaque)
     - [Product](#lambdabuffers-compiler-Product)
-    - [Product.NTuple](#lambdabuffers-compiler-Product-NTuple)
-    - [Product.Record](#lambdabuffers-compiler-Product-Record)
-    - [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field)
     - [ProtoParseError](#lambdabuffers-compiler-ProtoParseError)
     - [ProtoParseError.MultipleClassDefError](#lambdabuffers-compiler-ProtoParseError-MultipleClassDefError)
     - [ProtoParseError.MultipleConstructorError](#lambdabuffers-compiler-ProtoParseError-MultipleConstructorError)
@@ -42,6 +41,8 @@
     - [ProtoParseError.MultipleTyDefError](#lambdabuffers-compiler-ProtoParseError-MultipleTyDefError)
     - [ProtoParseError.OneOfNotSetError](#lambdabuffers-compiler-ProtoParseError-OneOfNotSetError)
     - [ProtoParseError.UnknownEnumError](#lambdabuffers-compiler-ProtoParseError-UnknownEnumError)
+    - [Record](#lambdabuffers-compiler-Record)
+    - [Record.Field](#lambdabuffers-compiler-Record-Field)
     - [SourceInfo](#lambdabuffers-compiler-SourceInfo)
     - [SourcePosition](#lambdabuffers-compiler-SourcePosition)
     - [Sum](#lambdabuffers-compiler-Sum)
@@ -51,6 +52,14 @@
     - [TyApp](#lambdabuffers-compiler-TyApp)
     - [TyArg](#lambdabuffers-compiler-TyArg)
     - [TyBody](#lambdabuffers-compiler-TyBody)
+    - [TyClassCheckError](#lambdabuffers-compiler-TyClassCheckError)
+    - [TyClassCheckError.DeriveOpaqueError](#lambdabuffers-compiler-TyClassCheckError-DeriveOpaqueError)
+    - [TyClassCheckError.ImportNotFoundError](#lambdabuffers-compiler-TyClassCheckError-ImportNotFoundError)
+    - [TyClassCheckError.MissingRuleError](#lambdabuffers-compiler-TyClassCheckError-MissingRuleError)
+    - [TyClassCheckError.OverlappingRulesError](#lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError)
+    - [TyClassCheckError.OverlappingRulesError.QHead](#lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError-QHead)
+    - [TyClassCheckError.SuperclassCycleError](#lambdabuffers-compiler-TyClassCheckError-SuperclassCycleError)
+    - [TyClassCheckError.UnboundClassRefError](#lambdabuffers-compiler-TyClassCheckError-UnboundClassRefError)
     - [TyClassRef](#lambdabuffers-compiler-TyClassRef)
     - [TyClassRef.Foreign](#lambdabuffers-compiler-TyClassRef-Foreign)
     - [TyClassRef.Local](#lambdabuffers-compiler-TyClassRef-Local)
@@ -76,6 +85,28 @@
 
 
 
+<a name="lambdabuffers-compiler-ClassConstraint"></a>
+
+### ClassConstraint
+Class constraints
+
+A special constraint type denoting the constraints that occur on the rhs of
+class definitions. Only used to specify super class constraints in a
+`ClassDef`.
+
+Not to be confused with `Constraint` which denote type class rules.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Type class reference. |
+| args | [TyVar](#lambdabuffers-compiler-TyVar) | repeated | Type variables quantified over `ClassDef` arguments. |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-ClassDef"></a>
 
 ### ClassDef
@@ -84,28 +115,37 @@ Type class definition
 LambdaBuffers use type classes to talk about the various &#39;meanings&#39; or
 &#39;semantics&#39; we want to associate with the types in LambdaBuffers schemata.
 
-For instance, most types can have `Eq` semantics, meaning they can be compared
-for equality. Other can have `Json` semantics, meaning they have some encoding
-in the Json format.
+For instance, most types can have `Eq` semantics, meaning they can be
+compared for equality. Other can have `Ord` semantics, meaning they can be
+ordered.
 
 Using type classes and instance declarations, much like in Haskell, users can
-specify the &#39;meaning&#39; of each type they declare.
+specify the &#39;meaning&#39; of each type they declare. For example, serialization
+in LambdaBuffers is just another type class, it&#39;s treated the same as any
+other type class. Concretely, if we wish to provide JSON serialization for
+LambdaBuffers types, we declare such a type class and provide desired
+semantic rules:
 
-Note that for each type class introduced, the entire Codegen machinery must be
-updated to support said type class. In other words, it doesn&#39;t come for free and
-for each new type class, a Codegen support must be implemented for [opaque](@ref
-Opaque) types
-used and for generic structural rules to enable generic support for user derived
-types.
+```lbf module Foo
 
-TODO(bladyjoker): Cleanup and reformulate with Sean.
+class JSON a
+
+sum Foo a b = Bar a | Baz b
+
+derive JSON (Foo a b) ```
+
+Note that for each type class introduced, the Codegen machinery must be
+updated to support said type class. In other words, it doesn&#39;t come for free
+and for each new type class, a Codegen support must be implemented for any
+`InstanceClause` declared by the user. Once all the `InstanceClause`s have an
+implementation provided, all the `Derive`d implementation come for free.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
 | class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Type class arguments. Class with no arguments is a trivial class. Compiler MAY report an error. TODO(bladyjoker): MultipleClassArgError. |
-| supers | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Superclass constraints. |
+| supers | [ClassConstraint](#lambdabuffers-compiler-ClassConstraint) | repeated | Superclass constraints. |
 | documentation | [string](#string) |  | Documentation elaborating on the type class. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
@@ -141,6 +181,7 @@ Compiler Error
 | proto_parse_errors | [ProtoParseError](#lambdabuffers-compiler-ProtoParseError) | repeated | Errors occurred during proto parsing. |
 | naming_errors | [NamingError](#lambdabuffers-compiler-NamingError) | repeated | Errors occurred during naming checking. |
 | kind_check_errors | [KindCheckError](#lambdabuffers-compiler-KindCheckError) | repeated | Errors occurred during kind checking. |
+| ty_class_check_errors | [TyClassCheckError](#lambdabuffers-compiler-TyClassCheckError) | repeated | Errors occurred during type class checking. |
 | internal_errors | [InternalError](#lambdabuffers-compiler-InternalError) | repeated | Errors internal to the compiler implementation. |
 
 
@@ -211,7 +252,7 @@ Sum type constructor name
 <a name="lambdabuffers-compiler-Constraint"></a>
 
 ### Constraint
-Constraint expression
+Constraint term
 
 
 | Field | Type | Label | Description |
@@ -219,6 +260,48 @@ Constraint expression
 | class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Name of the type class. |
 | args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Constraint arguments. Constraint with no arguments is a trivial constraint. Compiler MAY report an error. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-Derive"></a>
+
+### Derive
+Derive statement
+
+Derive statements enable user to specify &#39;semantic&#39; rules for their types much
+like `InstanceClause`s do. However, the Codegen will be able to derive an
+implementation for any such constraint.
+
+```lbf
+module Prelude
+
+class Eq a
+
+sum Maybe a = Just a | Nothing
+
+derive Eq (Maybe a)
+```
+
+The rule installed for the derive statement is:
+
+```prolog
+eq(maybe(A)) :- eq(just(A) | Nothing).
+```
+
+The rule relates the desired `Ty` term to its (lambda calculus)
+&#39;evaluated&#39; form.
+
+&gt; Currently, there&#39;s only support for deriving type class rules and
+implementations for `Ty` terms of `Kind.KIND_REF_TYPE`. That means,
+type classes like Ord and Eq...
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  | Constraint to derive. |
 
 
 
@@ -244,15 +327,37 @@ Record type field name
 <a name="lambdabuffers-compiler-InstanceClause"></a>
 
 ### InstanceClause
-Type class instances (rules)
+Instance clause
 
-Instance clauses enable users to specify &#39;semantic&#39; rules for their types.
+Instance clauses enable users to specify ad-hoc &#39;semantic&#39; rules for their
+types. Each such instance must be supported explicitly in the Codegen by
+providing runtime implementations.
+
+This rule form is used when declaring &#39;opaque&#39; implementations on `Opaque`
+types.
+
+```lbf
+module Prelude
+
+class Eq a
+
+opaque Maybe a
+
+instance Eq a =&gt; Eq (Maybe a)
+```
+
+The rule installed for the clause is:
+
+```prolog
+eq(maybe(A)) :- eq(A).
+```
+
+The instance clause is verbatim added to the rule set.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Type class name. |
-| args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Instance (rule) arguments. Instance clause with no arguments is a trivial instance clause. Compiler MAY report an error. |
+| head | [Constraint](#lambdabuffers-compiler-Constraint) |  | Head of the clause that holds only when the `body` holds. Type variables introduced in the head of the rule become available in the scope of the body of the rule. |
 | constraints | [Constraint](#lambdabuffers-compiler-Constraint) | repeated | Instance (rule) body, conjunction of constraints. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
@@ -264,12 +369,13 @@ Instance clauses enable users to specify &#39;semantic&#39; rules for their type
 <a name="lambdabuffers-compiler-InternalError"></a>
 
 ### InternalError
-Internal errors.
+Errors internal to the implementation.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| msg | [string](#string) |  |  |
+| msg | [string](#string) |  | Error message. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information if meaningful. |
 
 
 
@@ -415,7 +521,7 @@ Unbound variable ty_var detected in term ty_def.
 <a name="lambdabuffers-compiler-KindCheckError-UnificationError"></a>
 
 ### KindCheckError.UnificationError
-In ty_def an error has occurred when trying to unify kind ty_kind_lhs 
+In ty_def an error has occurred when trying to unify kind ty_kind_lhs
 with ty_kind_rhs.
 
 FIXME(cstml): Add source of constraint to the error such that user can see
@@ -449,7 +555,8 @@ A module encapsulates type, class and instance definitions.
 | type_defs | [TyDef](#lambdabuffers-compiler-TyDef) | repeated | Type definitions. Duplicate type definitions MUST be reported with `ProtoParseError.MultipleTyDefError`. |
 | class_defs | [ClassDef](#lambdabuffers-compiler-ClassDef) | repeated | Type class definitions. Duplicate class definitions MUST be reported with `ProtoParseError.MultipleClassDefError`. |
 | instances | [InstanceClause](#lambdabuffers-compiler-InstanceClause) | repeated | Type class instance clauses. |
-| imports | [ModuleName](#lambdabuffers-compiler-ModuleName) | repeated | Imported modules the Compiler consults when searching for instance clauses. Duplicate imports MUST be reported with `ProtoParseError.MultipleImportError`. |
+| derives | [Derive](#lambdabuffers-compiler-Derive) | repeated | Type class derive statements. |
+| imports | [ModuleName](#lambdabuffers-compiler-ModuleName) | repeated | Imported modules the Compiler consults when searching for type class rules. TODO(bladyjoker): Rename to ruleImports. Duplicate imports MUST be reported with `ProtoParseError.MultipleImportError`. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
 
 
@@ -512,7 +619,7 @@ Naming error message
 <a name="lambdabuffers-compiler-Opaque"></a>
 
 ### Opaque
-Opaque type body
+Opaque type.
 
 A type that has an `Opaque` body represents a &#39;built-in&#39; or a &#39;primitive&#39; type
 that&#39;s handled by the semantics &#39;under the hood&#39;. It&#39;s called &#39;opaque&#39; to denote
@@ -544,69 +651,13 @@ TODO(bladyjoker): Consider attaching explicit Kind terms to Opaques.
 <a name="lambdabuffers-compiler-Product"></a>
 
 ### Product
-Product
-
-It&#39;s a built-in type term that exists enclosed within a [type abstraction](@ref
-TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
-expression.
-
-It exists in two flavors, either a Record or a NTuple.
-
-TODO(bladyjoker): Separate into Tuple and Record.
+A product type term.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| record | [Product.Record](#lambdabuffers-compiler-Product-Record) |  |  |
-| ntuple | [Product.NTuple](#lambdabuffers-compiler-Product-NTuple) |  |  |
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-Product-NTuple"></a>
-
-### Product.NTuple
-A tuple type expression.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| fields | [Ty](#lambdabuffers-compiler-Ty) | repeated | Fields in a tuple are types. |
+| fields | [Ty](#lambdabuffers-compiler-Ty) | repeated | Fields in a products are types. |
 | source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-Product-Record"></a>
-
-### Product.Record
-A record type expression.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| fields | [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field) | repeated | Record fields. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-<a name="lambdabuffers-compiler-Product-Record-Field"></a>
-
-### Product.Record.Field
-Field in a record type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| field_name | [FieldName](#lambdabuffers-compiler-FieldName) |  | Record field name. |
-| field_ty | [Ty](#lambdabuffers-compiler-Ty) |  | Field type. |
 
 
 
@@ -687,7 +738,7 @@ ModuleName.TyDef.
 | ----- | ---- | ----- | ----------- |
 | module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  | Module in which the error was found. |
 | ty_def | [TyDef](#lambdabuffers-compiler-TyDef) |  | Type definition in which the error was found. |
-| fields | [Product.Record.Field](#lambdabuffers-compiler-Product-Record-Field) | repeated | Conflicting record fields. |
+| fields | [Record.Field](#lambdabuffers-compiler-Record-Field) | repeated | Conflicting record fields. |
 
 
 
@@ -790,6 +841,38 @@ Proto `enum` field is unknown.
 
 
 
+<a name="lambdabuffers-compiler-Record"></a>
+
+### Record
+A record type term.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| fields | [Record.Field](#lambdabuffers-compiler-Record-Field) | repeated | Record fields. |
+| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-Record-Field"></a>
+
+### Record.Field
+Field in a record type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| field_name | [FieldName](#lambdabuffers-compiler-FieldName) |  | Record field name. |
+| field_ty | [Ty](#lambdabuffers-compiler-Ty) |  | Field type. |
+
+
+
+
+
+
 <a name="lambdabuffers-compiler-SourceInfo"></a>
 
 ### SourceInfo
@@ -830,32 +913,10 @@ Position in Source
 <a name="lambdabuffers-compiler-Sum"></a>
 
 ### Sum
-Sum
-
-It&#39;s a built-in type term that exists enclosed within a [type abstraction](@ref
-TyAbs) term which introduces [type variables](@ref TyVar) in the scope of the
-expression.
+A sum type term.
 
 A type defined as a Sum type is just like a Haskell algebraic data type and
 represents a sum of products.
-
-It can essentially be expressed as `Either` type enriched with [constructor
-name](@ref ConstrName) information.
-
-```haskell
-
-data Foo a b = Bar | Baz a | Bax b
-
--- corresponds to
-
-type ConstrName = String
-type Foo_ a b = Either
-((), ConstrName)
-(Either
-(a, ConstrName)
-(b, ConstrName)
-)
-```
 
 
 | Field | Type | Label | Description |
@@ -877,7 +938,7 @@ Constructor of a Sum type is a Product type term.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | constr_name | [ConstrName](#lambdabuffers-compiler-ConstrName) |  | Constructor name. |
-| product | [Product](#lambdabuffers-compiler-Product) |  | TODO(bladyjoker): Replace with ConstructorBody that&#39;s either Tuple or Record. Product type term. |
+| product | [Product](#lambdabuffers-compiler-Product) |  | Product type term. |
 
 
 
@@ -889,7 +950,7 @@ Constructor of a Sum type is a Product type term.
 ### Ty
 Type term
 
-A type expression that ocurrs in bodies of type definitions (message TyDef):
+A type term that ocurrs in bodies of type definitions (message TyDef):
 
 ```lbf
 sum Maybe a = Just a | Nothing
@@ -928,7 +989,7 @@ Check out [examples](examples/tys.textproto).
 ### TyAbs
 Type abstraction
 
-A type expression that introduces type abstractions (ie. type functions). This
+A type term that introduces type abstractions (ie. type functions). This
 type term can only be introduced in the context of a
 [type definition](@ref TyDef).
 
@@ -949,7 +1010,7 @@ type term can only be introduced in the context of a
 ### TyApp
 Type application
 
-A type expression that applies a type abstraction to a list of arguments.
+A type term that applies a type abstraction to a list of arguments.
 
 
 | Field | Type | Label | Description |
@@ -995,18 +1056,163 @@ types (ie. HKT).
 <a name="lambdabuffers-compiler-TyBody"></a>
 
 ### TyBody
-Type body
+Type body.
 
-Lambda Buffers type bodies are enriched type terms that can only be specified in
-[type abstraction terms](@ref TyAbs).
-
-TODO: Add Tuple and Record type bodies.
+Lambda Buffers type bodies type terms that can only be specified in the
+`TyAbs` context. It&#39;s a built-in type term that can only occur enclosed
+within a `TyAbs` term which introduces `TyVar`s in the scope of the term.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | opaque | [Opaque](#lambdabuffers-compiler-Opaque) |  |  |
 | sum | [Sum](#lambdabuffers-compiler-Sum) |  |  |
+| product | [Product](#lambdabuffers-compiler-Product) |  |  |
+| record | [Record](#lambdabuffers-compiler-Record) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError"></a>
+
+### TyClassCheckError
+Type class checking errors.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| unbound_class_ref_err | [TyClassCheckError.UnboundClassRefError](#lambdabuffers-compiler-TyClassCheckError-UnboundClassRefError) |  |  |
+| superclass_cycle_err | [TyClassCheckError.SuperclassCycleError](#lambdabuffers-compiler-TyClassCheckError-SuperclassCycleError) |  |  |
+| import_not_found_err | [TyClassCheckError.ImportNotFoundError](#lambdabuffers-compiler-TyClassCheckError-ImportNotFoundError) |  |  |
+| derive_opaque_err | [TyClassCheckError.DeriveOpaqueError](#lambdabuffers-compiler-TyClassCheckError-DeriveOpaqueError) |  |  |
+| missing_rule_err | [TyClassCheckError.MissingRuleError](#lambdabuffers-compiler-TyClassCheckError-MissingRuleError) |  |  |
+| overlapping_rules_err | [TyClassCheckError.OverlappingRulesError](#lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-DeriveOpaqueError"></a>
+
+### TyClassCheckError.DeriveOpaqueError
+In `module_name` it wasn&#39;t possible to solve `constraint` because a
+`sub_constraint` has been derived on an `Opaque` type. `Opaque` type can
+only have an `InstanceClause` declared for them.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+| sub_constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-ImportNotFoundError"></a>
+
+### TyClassCheckError.ImportNotFoundError
+Import `missing` wasn&#39;t found in `module_name`
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| missing | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-MissingRuleError"></a>
+
+### TyClassCheckError.MissingRuleError
+In `module_name` while trying to solve `constraint` it wasn&#39;t possible to
+find a rule (`Derive` or `InstanceClause`) for `sub_constraint`.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+| sub_constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError"></a>
+
+### TyClassCheckError.OverlappingRulesError
+In `module_name` while trying to solve `constraint` `overlaps` (`Derive`
+or `InstanceClause`) were found that could be used to solve the
+`sub_constraint`.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+| sub_constraint | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+| overlaps | [TyClassCheckError.OverlappingRulesError.QHead](#lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError-QHead) | repeated |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-OverlappingRulesError-QHead"></a>
+
+### TyClassCheckError.OverlappingRulesError.QHead
+NOTE(bladyjoker): This should rather be oneof `Derive` and
+`InstanceClause`.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| head | [Constraint](#lambdabuffers-compiler-Constraint) |  |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-SuperclassCycleError"></a>
+
+### TyClassCheckError.SuperclassCycleError
+Superclass cycle `cycled_class_refs` was detected when checking a
+class definition for `class_name` in module `module_name`.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  |  |
+| cycled_class_refs | [TyClassRef](#lambdabuffers-compiler-TyClassRef) | repeated |  |
+
+
+
+
+
+
+<a name="lambdabuffers-compiler-TyClassCheckError-UnboundClassRefError"></a>
+
+### TyClassCheckError.UnboundClassRefError
+Unbound `class_ref` detected in `module_name`.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| module_name | [ModuleName](#lambdabuffers-compiler-ModuleName) |  |  |
+| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  |  |
 
 
 
@@ -1016,7 +1222,11 @@ TODO: Add Tuple and Record type bodies.
 <a name="lambdabuffers-compiler-TyClassRef"></a>
 
 ### TyClassRef
+Type class references
 
+It is necessary to know whether a type class is defined locally or in a
+foreign module when referring to it in a constraint, this allows users (and
+requires the frontend) to explicitly communicate that information.
 
 
 | Field | Type | Label | Description |
@@ -1111,7 +1321,7 @@ Type name
 ### TyRef
 Type reference
 
-A type expression that denotes a reference to a type available that&#39;s declared
+A type term that denotes a reference to a type available that&#39;s declared
 locally or in foreign modules.
 
 
@@ -1176,7 +1386,7 @@ Type variable
 <a name="lambdabuffers-compiler-Tys"></a>
 
 ### Tys
-A list of type expressions useful for debugging
+A list of type terms useful for debugging
 
 
 | Field | Type | Label | Description |

@@ -1,0 +1,26 @@
+module Plutus.V2
+
+import Prelude (Eq)
+import Plutus (PlutusData)
+
+-- PlutusLedgerApi.V2.Contexts
+opaque TxInInfo
+instance PlutusData TxInInfo
+instance Eq TxInInfo
+
+opaque TxInfo
+instance PlutusData TxInfo
+instance Eq TxInfo
+
+opaque ScriptContext
+instance PlutusData ScriptContext
+instance Eq ScriptContext
+
+-- PlutusLedgerApi.V2.Tx
+opaque OutputDatum
+instance PlutusData OutputDatum
+instance Eq OutputDatum
+
+opaque TxOut
+instance PlutusData TxOut
+instance Eq TxOut

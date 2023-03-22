@@ -8,9 +8,11 @@
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
+    ctl.url = "github:Plutonomicon/cardano-transaction-lib/v5.0.0";
+    iohk-nix = { url = "github:input-output-hk/iohk-nix"; flake = false; };
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, ... }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ]
       (system:
         let
@@ -20,7 +22,10 @@
           pkgs = import nixpkgs {
             inherit system;
             inherit (inputs.haskell-nix) config;
-            overlays = [ inputs.haskell-nix.overlay ];
+            overlays = [
+              inputs.haskell-nix.overlay
+              (import "${iohk-nix}/overlays/crypto")
+            ];
           };
           haskell-nix = pkgs.haskell-nix;
 
@@ -85,16 +90,6 @@
           compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
           compilerFlake = flakeAbstraction compilerBuild;
 
-          # Frontend Build
-          frontendBuild = buildAbstraction {
-            import-location = ./lambda-buffers-frontend/build.nix;
-            additional = {
-              lambda-buffers-compiler = ./lambda-buffers-compiler;
-              lambda-buffers-compiler-cli = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
-            };
-          };
-          frontendFlake = flakeAbstraction frontendBuild;
-
           # Codegen Build
           codegenBuild = buildAbstraction {
             import-location = ./lambda-buffers-codegen/build.nix;
@@ -103,6 +98,36 @@
             };
           };
           codegenFlake = flakeAbstraction codegenBuild;
+
+          # Frontend Build
+          frontendBuild = buildAbstraction {
+            import-location = ./lambda-buffers-frontend/build.nix;
+            additional = {
+              lambda-buffers-compiler = ./lambda-buffers-compiler;
+              lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
+              lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+            };
+          };
+          frontendFlake = flakeAbstraction frontendBuild;
+
+          # LambdaBuffers CLIs
+          clis = {
+            lbf = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
+            lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
+            lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+          };
+
+          # Purescript/cardano-transaction-lib environment.
+          ctlShell = import ./experimental/ctl-env/build.nix {
+            inherit system; inherit (inputs) nixpkgs ctl;
+            inherit (clis) lbf lbc lbg;
+          };
+          # Purescript/cardano-transaction-lib shell
+          plutusTxShell = import ./experimental/plutustx-env/build.nix {
+            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling;
+            inherit (clis) lbf lbc lbg;
+            lbf-base = ./experimental/lbf-base;
+          };
 
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -122,6 +147,8 @@
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;
+            dev-ctl-env = ctlShell;
+            dev-plutustx-env = plutusTxShell;
             default = preCommitDevShell;
           };
 

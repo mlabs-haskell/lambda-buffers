@@ -300,8 +300,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -602,8 +602,8 @@ modules {
                           }
                         }
                         module_name {
-                          parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                          source_info { pos_from {} pos_to {} }
+                          parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                          source_info { pos_from { } pos_to { } }
                         }
                         source_info {
                           file: "goldens/good/LambdaBuffers.lbf"
@@ -789,8 +789,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                      source_info { pos_from {} pos_to {} }
+                      parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                      source_info { pos_from { } pos_to { } }
                     }
                     source_info {
                       file: "goldens/good/LambdaBuffers.lbf"
@@ -866,8 +866,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                      source_info { pos_from {} pos_to {} }
+                      parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                      source_info { pos_from { } pos_to { } }
                     }
                     source_info {
                       file: "goldens/good/LambdaBuffers.lbf"
@@ -1201,8 +1201,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1262,8 +1262,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1378,8 +1378,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1494,8 +1494,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1655,8 +1655,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1888,8 +1888,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -1968,8 +1968,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -2048,8 +2048,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -2109,8 +2109,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -2170,8 +2170,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -2257,8 +2257,8 @@ modules {
                         }
                       }
                       module_name {
-                        parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                        source_info { pos_from {} pos_to {} }
+                        parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                        source_info { pos_from { } pos_to { } }
                       }
                       source_info {
                         file: "goldens/good/LambdaBuffers.lbf"
@@ -2352,8 +2352,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2401,8 +2401,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2450,8 +2450,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2499,8 +2499,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2550,8 +2550,8 @@ modules {
                       }
                     }
                     module_name {
-                      parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                      source_info { pos_from {} pos_to {} }
+                      parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                      source_info { pos_from { } pos_to { } }
                     }
                     source_info {
                       file: "goldens/good/LambdaBuffers.lbf"
@@ -2625,8 +2625,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2674,8 +2674,8 @@ modules {
                   }
                 }
                 module_name {
-                  parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-                  source_info { pos_from {} pos_to {} }
+                  parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+                  source_info { pos_from { } pos_to { } }
                 }
                 source_info {
                   file: "goldens/good/LambdaBuffers.lbf"
@@ -2712,8 +2712,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -2761,8 +2761,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -2810,8 +2810,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -2859,8 +2859,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -2908,8 +2908,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -2957,8 +2957,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3006,8 +3006,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3055,8 +3055,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3104,8 +3104,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3153,8 +3153,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3202,8 +3202,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3251,8 +3251,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3300,8 +3300,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3349,8 +3349,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3398,8 +3398,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3447,8 +3447,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3496,8 +3496,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3545,8 +3545,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3594,8 +3594,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3643,8 +3643,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3692,8 +3692,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3741,8 +3741,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3790,8 +3790,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3839,8 +3839,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3888,8 +3888,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3937,8 +3937,8 @@ modules {
             }
           }
           module_name {
-            parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-            source_info { pos_from {} pos_to {} }
+            parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+            source_info { pos_from { } pos_to { } }
           }
           source_info {
             file: "goldens/good/LambdaBuffers.lbf"
@@ -3974,8 +3974,8 @@ modules {
     }
   }
   imports {
-    parts { name: "Prelude" source_info { pos_from {} pos_to {} } }
-    source_info { pos_from {} pos_to {} }
+    parts { name: "Prelude" source_info { pos_from { } pos_to { } } }
+    source_info { pos_from { } pos_to { } }
   }
   source_info {
     file: "goldens/good/LambdaBuffers.lbf"
@@ -4008,7 +4008,7 @@ modules {
         pos_to { column: 12 row: 5 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 5 }
@@ -4024,7 +4024,7 @@ modules {
         pos_to { column: 15 row: 9 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 9 }
@@ -4040,7 +4040,7 @@ modules {
         pos_to { column: 12 row: 13 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 13 }
@@ -4056,7 +4056,7 @@ modules {
         pos_to { column: 13 row: 17 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 17 }
@@ -4072,7 +4072,7 @@ modules {
         pos_to { column: 13 row: 21 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 21 }
@@ -4088,7 +4088,7 @@ modules {
         pos_to { column: 13 row: 25 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 25 }
@@ -4104,7 +4104,7 @@ modules {
         pos_to { column: 13 row: 29 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 29 }
@@ -4120,7 +4120,7 @@ modules {
         pos_to { column: 14 row: 33 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 33 }
@@ -4136,7 +4136,7 @@ modules {
         pos_to { column: 14 row: 37 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 37 }
@@ -4152,7 +4152,7 @@ modules {
         pos_to { column: 14 row: 41 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 41 }
@@ -4168,7 +4168,7 @@ modules {
         pos_to { column: 13 row: 45 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 45 }
@@ -4184,7 +4184,7 @@ modules {
         pos_to { column: 12 row: 49 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 49 }
@@ -4200,7 +4200,7 @@ modules {
         pos_to { column: 12 row: 53 }
       }
     }
-    ty_abs { ty_body { opaque {} } }
+    ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 53 }
@@ -4226,7 +4226,7 @@ modules {
           pos_to { column: 15 row: 57 }
         }
       }
-      ty_body { opaque {} }
+      ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
@@ -4262,7 +4262,7 @@ modules {
           pos_to { column: 18 row: 61 }
         }
       }
-      ty_body { opaque {} }
+      ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
@@ -4289,7 +4289,7 @@ modules {
           pos_to { column: 14 row: 65 }
         }
       }
-      ty_body { opaque {} }
+      ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
@@ -4325,7 +4325,7 @@ modules {
           pos_to { column: 15 row: 69 }
         }
       }
-      ty_body { opaque {} }
+      ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
@@ -4352,7 +4352,7 @@ modules {
           pos_to { column: 13 row: 73 }
         }
       }
-      ty_body { opaque {} }
+      ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"

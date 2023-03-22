@@ -60,7 +60,13 @@
     ];
   };
 
-  excludes = [ "lambda-buffers-codegen/data/.*" "experimental/.*" ];
+  excludes = [
+    "lambda-buffers-codegen/data/.*"
+    "experimental/archive/.*"
+    "experimental/ctl-env/spago-packages.nix"
+    "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
+    "docs/compiler-api.md"
+  ];
 
   hooks = {
     nixpkgs-fmt.enable = true;

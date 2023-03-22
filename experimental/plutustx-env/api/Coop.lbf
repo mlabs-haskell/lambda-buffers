@@ -1,0 +1,46 @@
+module Coop
+
+import Prelude (Eq)
+import Plutus (PlutusData)
+import Plutus.V1
+
+record FsDatum = {
+  fact : FactStatement,
+  id : FactStatementId,
+  retireAfter : Extended POSIXTime,
+  submitter : PubKeyHash
+ }
+derive Eq FsDatum
+derive PlutusData FsDatum
+
+prod FactStatementId = Bytes
+derive Eq FactStatementId
+derive PlutusData FactStatementId
+
+prod FactStatement = PlutusData
+derive Eq FactStatement
+derive PlutusData FactStatement
+
+record CertDatum = {
+  id : AuthBatchId,
+  validity : POSIXTimeRange,
+  redeemer : AssetClass
+ }
+derive Eq CertDatum
+derive PlutusData CertDatum
+
+prod AuthBatchId = Bytes
+derive Eq AuthBatchId
+derive PlutusData AuthBatchId
+
+sum CertMpRedeemer = Burn | Mint
+derive Eq CertMpRedeemer
+derive PlutusData CertMpRedeemer
+
+sum AuthMpRedeemer = Burn | Mint
+derive Eq AuthMpRedeemer
+derive PlutusData AuthMpRedeemer
+
+sum FpMpRedeemer = Burn | Mint
+derive Eq FpMpRedeemer
+derive PlutusData FpMpRedeemer

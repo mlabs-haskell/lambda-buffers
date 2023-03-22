@@ -105,9 +105,13 @@ printHsQClassImpl mn iTyDefs hqcn d =
         Right (instanceDefsDoc, valImps) -> return (instanceDefsDoc, valImps)
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
-printModuleHeader mn exports =
-  let typeExportsDoc = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyName) <$> toList exports)
-   in "module" <+> printModName mn <+> typeExportsDoc <+> "where"
+printModuleHeader mn exports = "module" <+> printModName mn <+> printExports exports <+> "where"
+
+printExports :: Set (PC.InfoLess PC.TyName) -> Doc ann
+printExports exports = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyExportWithCtors) <$> toList exports)
+  where
+    printTyExportWithCtors :: PC.TyName -> Doc ann
+    printTyExportWithCtors tyn = printTyName tyn <> "(..)"
 
 -- TODO(bladyjoker): Collect package dependencies.
 printImports :: Set PC.QTyName -> Set H.QTyName -> Set [H.QClassName] -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Doc ann
