@@ -1,4 +1,4 @@
-{ system, nixpkgs, ctl, lbf, lbc, lbg }:
+{ system, nixpkgs, ctl, lbf, lbc, lbg, lbf-base }:
 let
   nixpkgsFor = system: import nixpkgs {
     inherit system;
@@ -20,8 +20,6 @@ in
     packages = with pkgs; [
       bashInteractive
       fd
-      nodePackages.eslint
-      nodePackages.prettier
       lbf
       lbc
       lbg
@@ -31,6 +29,8 @@ in
         export LC_CTYPE=C.UTF-8
         export LC_ALL=C.UTF-8
         export LANG=C.UTF-8
+        rm -f lbf-base
+        ln -s ${lbf-base} lbf-base
       '';
   };
 }).devShell

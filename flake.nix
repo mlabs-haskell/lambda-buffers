@@ -121,6 +121,7 @@
           ctlShell = import ./experimental/ctl-env/build.nix {
             inherit system; inherit (inputs) nixpkgs ctl;
             inherit (clis) lbf lbc lbg;
+            lbf-base = ./experimental/lbf-base;
           };
           # Purescript/cardano-transaction-lib shell
           plutusTxShell = import ./experimental/plutustx-env/build.nix {

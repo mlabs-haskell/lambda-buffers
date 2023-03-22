@@ -61,7 +61,7 @@
   };
 
   excludes = [
-    "lambda-buffers-codegen/data/.*"
+    "lambda-buffers-codegen/data/goldens/.*"
     "experimental/archive/.*"
     "experimental/ctl-env/spago-packages.nix"
     "lambda-buffers-frontend/data/goldens/good/work-dir/.*"

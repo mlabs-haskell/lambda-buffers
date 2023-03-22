@@ -7,11 +7,13 @@ maintainer:         info@mlabs.city
 data-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.purs
   data/**/*.textproto
 
 extra-source-files:
   data/**/*.hs
   data/**/*.json
+  data/**/*.purs
   data/**/*.textproto
 
 flag dev
@@ -126,6 +128,16 @@ library
     LambdaBuffers.Codegen.LamVal.Eq
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Print
+    LambdaBuffers.Codegen.Purescript
+    LambdaBuffers.Codegen.Purescript.Config
+    LambdaBuffers.Codegen.Purescript.Print
+    LambdaBuffers.Codegen.Purescript.Print.Derive
+    LambdaBuffers.Codegen.Purescript.Print.InstanceDef
+    LambdaBuffers.Codegen.Purescript.Print.LamVal
+    LambdaBuffers.Codegen.Purescript.Print.Monad
+    LambdaBuffers.Codegen.Purescript.Print.Names
+    LambdaBuffers.Codegen.Purescript.Print.TyDef
+    LambdaBuffers.Codegen.Purescript.Syntax
 
 executable lbg
   import:          common-language
@@ -149,6 +161,7 @@ executable lbg
   other-modules:
     LambdaBuffers.Codegen.Cli.Gen
     LambdaBuffers.Codegen.Cli.GenHaskell
+    LambdaBuffers.Codegen.Cli.GenPurescript
     Paths_lambda_buffers_codegen
 
   autogen-modules: Paths_lambda_buffers_codegen
@@ -176,3 +189,4 @@ test-suite tests
     Paths_lambda_buffers_codegen
     Test.LambdaBuffers.Codegen
     Test.LambdaBuffers.Codegen.Haskell
+    Test.LambdaBuffers.Codegen.Purescript

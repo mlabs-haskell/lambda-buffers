@@ -10,37 +10,9 @@ opaque Integer
 
 instance Eq Integer
 
-opaque Int8
-
-instance Eq Int8
-
-opaque Int16
-
-instance Eq Int16
-
 opaque Int32
 
 instance Eq Int32
-
-opaque Int64
-
-instance Eq Int64
-
-opaque UInt8
-
-instance Eq UInt8
-
-opaque UInt16
-
-instance Eq UInt16
-
-opaque UInt32
-
-instance Eq UInt32
-
-opaque UInt64
-
-instance Eq UInt64
 
 opaque Bytes
 

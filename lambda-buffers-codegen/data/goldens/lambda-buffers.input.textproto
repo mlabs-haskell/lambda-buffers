@@ -4033,23 +4033,23 @@ modules {
   }
   type_defs {
     ty_name {
-      name: "Int8"
+      name: "Int32"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 13 }
-        pos_to { column: 12 row: 13 }
+        pos_to { column: 13 row: 13 }
       }
     }
     ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 13 }
-      pos_to { column: 12 row: 13 }
+      pos_to { column: 13 row: 13 }
     }
   }
   type_defs {
     ty_name {
-      name: "Int16"
+      name: "Bytes"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 17 }
@@ -4065,78 +4065,120 @@ modules {
   }
   type_defs {
     ty_name {
-      name: "Int32"
+      name: "Char"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 21 }
-        pos_to { column: 13 row: 21 }
+        pos_to { column: 12 row: 21 }
       }
     }
     ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 21 }
-      pos_to { column: 13 row: 21 }
+      pos_to { column: 12 row: 21 }
     }
   }
   type_defs {
     ty_name {
-      name: "Int64"
+      name: "Text"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 25 }
-        pos_to { column: 13 row: 25 }
+        pos_to { column: 12 row: 25 }
       }
     }
     ty_abs { ty_body { opaque { } } }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 25 }
-      pos_to { column: 13 row: 25 }
+      pos_to { column: 12 row: 25 }
     }
   }
   type_defs {
     ty_name {
-      name: "UInt8"
+      name: "Maybe"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 29 }
         pos_to { column: 13 row: 29 }
       }
     }
-    ty_abs { ty_body { opaque { } } }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 14 row: 29 }
+          pos_to { column: 15 row: 29 }
+        }
+      }
+      ty_body { opaque { } }
+    }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 29 }
-      pos_to { column: 13 row: 29 }
+      pos_to { column: 15 row: 29 }
     }
   }
   type_defs {
     ty_name {
-      name: "UInt16"
+      name: "Either"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 33 }
         pos_to { column: 14 row: 33 }
       }
     }
-    ty_abs { ty_body { opaque { } } }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 15 row: 33 }
+          pos_to { column: 16 row: 33 }
+        }
+      }
+      ty_args {
+        arg_name { name: "b" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 17 row: 33 }
+          pos_to { column: 18 row: 33 }
+        }
+      }
+      ty_body { opaque { } }
+    }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 33 }
-      pos_to { column: 14 row: 33 }
+      pos_to { column: 18 row: 33 }
     }
   }
   type_defs {
     ty_name {
-      name: "UInt32"
+      name: "List"
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 8 row: 37 }
-        pos_to { column: 14 row: 37 }
+        pos_to { column: 12 row: 37 }
       }
     }
-    ty_abs { ty_body { opaque { } } }
+    ty_abs {
+      ty_args {
+        arg_name { name: "a" }
+        arg_kind { kind_ref: KIND_REF_TYPE }
+        source_info {
+          file: "goldens/good/Prelude.lbf"
+          pos_from { column: 13 row: 37 }
+          pos_to { column: 14 row: 37 }
+        }
+      }
+      ty_body { opaque { } }
+    }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 37 }
@@ -4145,165 +4187,11 @@ modules {
   }
   type_defs {
     ty_name {
-      name: "UInt64"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 41 }
-        pos_to { column: 14 row: 41 }
-      }
-    }
-    ty_abs { ty_body { opaque { } } }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 41 }
-      pos_to { column: 14 row: 41 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Bytes"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 45 }
-        pos_to { column: 13 row: 45 }
-      }
-    }
-    ty_abs { ty_body { opaque { } } }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 45 }
-      pos_to { column: 13 row: 45 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Char"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 49 }
-        pos_to { column: 12 row: 49 }
-      }
-    }
-    ty_abs { ty_body { opaque { } } }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 49 }
-      pos_to { column: 12 row: 49 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Text"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 53 }
-        pos_to { column: 12 row: 53 }
-      }
-    }
-    ty_abs { ty_body { opaque { } } }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 53 }
-      pos_to { column: 12 row: 53 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Maybe"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 57 }
-        pos_to { column: 13 row: 57 }
-      }
-    }
-    ty_abs {
-      ty_args {
-        arg_name { name: "a" }
-        arg_kind { kind_ref: KIND_REF_TYPE }
-        source_info {
-          file: "goldens/good/Prelude.lbf"
-          pos_from { column: 14 row: 57 }
-          pos_to { column: 15 row: 57 }
-        }
-      }
-      ty_body { opaque { } }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 57 }
-      pos_to { column: 15 row: 57 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "Either"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 61 }
-        pos_to { column: 14 row: 61 }
-      }
-    }
-    ty_abs {
-      ty_args {
-        arg_name { name: "a" }
-        arg_kind { kind_ref: KIND_REF_TYPE }
-        source_info {
-          file: "goldens/good/Prelude.lbf"
-          pos_from { column: 15 row: 61 }
-          pos_to { column: 16 row: 61 }
-        }
-      }
-      ty_args {
-        arg_name { name: "b" }
-        arg_kind { kind_ref: KIND_REF_TYPE }
-        source_info {
-          file: "goldens/good/Prelude.lbf"
-          pos_from { column: 17 row: 61 }
-          pos_to { column: 18 row: 61 }
-        }
-      }
-      ty_body { opaque { } }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 61 }
-      pos_to { column: 18 row: 61 }
-    }
-  }
-  type_defs {
-    ty_name {
-      name: "List"
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 65 }
-        pos_to { column: 12 row: 65 }
-      }
-    }
-    ty_abs {
-      ty_args {
-        arg_name { name: "a" }
-        arg_kind { kind_ref: KIND_REF_TYPE }
-        source_info {
-          file: "goldens/good/Prelude.lbf"
-          pos_from { column: 13 row: 65 }
-          pos_to { column: 14 row: 65 }
-        }
-      }
-      ty_body { opaque { } }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 65 }
-      pos_to { column: 14 row: 65 }
-    }
-  }
-  type_defs {
-    ty_name {
       name: "Map"
       source_info {
         file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 69 }
-        pos_to { column: 11 row: 69 }
+        pos_from { column: 8 row: 41 }
+        pos_to { column: 11 row: 41 }
       }
     }
     ty_abs {
@@ -4312,8 +4200,8 @@ modules {
         arg_kind { kind_ref: KIND_REF_TYPE }
         source_info {
           file: "goldens/good/Prelude.lbf"
-          pos_from { column: 12 row: 69 }
-          pos_to { column: 13 row: 69 }
+          pos_from { column: 12 row: 41 }
+          pos_to { column: 13 row: 41 }
         }
       }
       ty_args {
@@ -4321,16 +4209,16 @@ modules {
         arg_kind { kind_ref: KIND_REF_TYPE }
         source_info {
           file: "goldens/good/Prelude.lbf"
-          pos_from { column: 14 row: 69 }
-          pos_to { column: 15 row: 69 }
+          pos_from { column: 14 row: 41 }
+          pos_to { column: 15 row: 41 }
         }
       }
       ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 69 }
-      pos_to { column: 15 row: 69 }
+      pos_from { column: 1 row: 41 }
+      pos_to { column: 15 row: 41 }
     }
   }
   type_defs {
@@ -4338,8 +4226,8 @@ modules {
       name: "Set"
       source_info {
         file: "goldens/good/Prelude.lbf"
-        pos_from { column: 8 row: 73 }
-        pos_to { column: 11 row: 73 }
+        pos_from { column: 8 row: 45 }
+        pos_to { column: 11 row: 45 }
       }
     }
     ty_abs {
@@ -4348,16 +4236,16 @@ modules {
         arg_kind { kind_ref: KIND_REF_TYPE }
         source_info {
           file: "goldens/good/Prelude.lbf"
-          pos_from { column: 12 row: 73 }
-          pos_to { column: 13 row: 73 }
+          pos_from { column: 12 row: 45 }
+          pos_to { column: 13 row: 45 }
         }
       }
       ty_body { opaque { } }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 73 }
-      pos_to { column: 13 row: 73 }
+      pos_from { column: 1 row: 45 }
+      pos_to { column: 13 row: 45 }
     }
   }
   class_defs {
@@ -4507,17 +4395,17 @@ modules {
         ty_ref {
           local_ty_ref {
             ty_name {
-              name: "Int8"
+              name: "Int32"
               source_info {
                 file: "goldens/good/Prelude.lbf"
                 pos_from { column: 13 row: 15 }
-                pos_to { column: 17 row: 15 }
+                pos_to { column: 18 row: 15 }
               }
             }
             source_info {
               file: "goldens/good/Prelude.lbf"
               pos_from { column: 13 row: 15 }
-              pos_to { column: 17 row: 15 }
+              pos_to { column: 18 row: 15 }
             }
           }
         }
@@ -4525,13 +4413,13 @@ modules {
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 15 }
-        pos_to { column: 17 row: 15 }
+        pos_to { column: 18 row: 15 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 15 }
-      pos_to { column: 17 row: 15 }
+      pos_to { column: 18 row: 15 }
     }
   }
   instances {
@@ -4557,7 +4445,7 @@ modules {
         ty_ref {
           local_ty_ref {
             ty_name {
-              name: "Int16"
+              name: "Bytes"
               source_info {
                 file: "goldens/good/Prelude.lbf"
                 pos_from { column: 13 row: 19 }
@@ -4607,17 +4495,17 @@ modules {
         ty_ref {
           local_ty_ref {
             ty_name {
-              name: "Int32"
+              name: "Char"
               source_info {
                 file: "goldens/good/Prelude.lbf"
                 pos_from { column: 13 row: 23 }
-                pos_to { column: 18 row: 23 }
+                pos_to { column: 17 row: 23 }
               }
             }
             source_info {
               file: "goldens/good/Prelude.lbf"
               pos_from { column: 13 row: 23 }
-              pos_to { column: 18 row: 23 }
+              pos_to { column: 17 row: 23 }
             }
           }
         }
@@ -4625,13 +4513,13 @@ modules {
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 23 }
-        pos_to { column: 18 row: 23 }
+        pos_to { column: 17 row: 23 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 23 }
-      pos_to { column: 18 row: 23 }
+      pos_to { column: 17 row: 23 }
     }
   }
   instances {
@@ -4657,17 +4545,17 @@ modules {
         ty_ref {
           local_ty_ref {
             ty_name {
-              name: "Int64"
+              name: "Text"
               source_info {
                 file: "goldens/good/Prelude.lbf"
                 pos_from { column: 13 row: 27 }
-                pos_to { column: 18 row: 27 }
+                pos_to { column: 17 row: 27 }
               }
             }
             source_info {
               file: "goldens/good/Prelude.lbf"
               pos_from { column: 13 row: 27 }
-              pos_to { column: 18 row: 27 }
+              pos_to { column: 17 row: 27 }
             }
           }
         }
@@ -4675,13 +4563,13 @@ modules {
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 27 }
-        pos_to { column: 18 row: 27 }
+        pos_to { column: 17 row: 27 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 27 }
-      pos_to { column: 18 row: 27 }
+      pos_to { column: 17 row: 27 }
     }
   }
   instances {
@@ -4704,34 +4592,91 @@ modules {
         }
       }
       args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "UInt8"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 31 }
-                pos_to { column: 18 row: 31 }
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Maybe"
+                  source_info {
+                    file: "goldens/good/Prelude.lbf"
+                    pos_from { column: 14 row: 31 }
+                    pos_to { column: 19 row: 31 }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 14 row: 31 }
+                  pos_to { column: 19 row: 31 }
+                }
               }
             }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 31 }
-              pos_to { column: 18 row: 31 }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "a"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 20 row: 31 }
+                  pos_to { column: 21 row: 31 }
+                }
+              }
             }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 21 row: 31 }
+            pos_to { column: 21 row: 31 }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 31 }
-        pos_to { column: 18 row: 31 }
+        pos_to { column: 23 row: 31 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 26 row: 31 }
+              pos_to { column: 28 row: 31 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 26 row: 31 }
+            pos_to { column: 28 row: 31 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "a"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 29 row: 31 }
+              pos_to { column: 30 row: 31 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 26 row: 31 }
+        pos_to { column: 30 row: 31 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 31 }
-      pos_to { column: 18 row: 31 }
+      pos_to { column: 30 row: 31 }
     }
   }
   instances {
@@ -4754,34 +4699,139 @@ modules {
         }
       }
       args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "UInt16"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 35 }
-                pos_to { column: 19 row: 35 }
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Either"
+                  source_info {
+                    file: "goldens/good/Prelude.lbf"
+                    pos_from { column: 14 row: 35 }
+                    pos_to { column: 20 row: 35 }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 14 row: 35 }
+                  pos_to { column: 20 row: 35 }
+                }
               }
             }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 35 }
-              pos_to { column: 19 row: 35 }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "a"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 21 row: 35 }
+                  pos_to { column: 22 row: 35 }
+                }
+              }
             }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "b"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 23 row: 35 }
+                  pos_to { column: 24 row: 35 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 24 row: 35 }
+            pos_to { column: 24 row: 35 }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 35 }
-        pos_to { column: 19 row: 35 }
+        pos_to { column: 26 row: 35 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 29 row: 35 }
+              pos_to { column: 31 row: 35 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 29 row: 35 }
+            pos_to { column: 31 row: 35 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "a"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 32 row: 35 }
+              pos_to { column: 33 row: 35 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 29 row: 35 }
+        pos_to { column: 33 row: 35 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 34 row: 35 }
+              pos_to { column: 36 row: 35 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 34 row: 35 }
+            pos_to { column: 36 row: 35 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "b"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 37 row: 35 }
+              pos_to { column: 38 row: 35 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 34 row: 35 }
+        pos_to { column: 38 row: 35 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 35 }
-      pos_to { column: 19 row: 35 }
+      pos_to { column: 38 row: 35 }
     }
   }
   instances {
@@ -4804,34 +4854,91 @@ modules {
         }
       }
       args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "UInt32"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 39 }
-                pos_to { column: 19 row: 39 }
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "List"
+                  source_info {
+                    file: "goldens/good/Prelude.lbf"
+                    pos_from { column: 14 row: 39 }
+                    pos_to { column: 18 row: 39 }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 14 row: 39 }
+                  pos_to { column: 18 row: 39 }
+                }
               }
             }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 39 }
-              pos_to { column: 19 row: 39 }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "a"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 19 row: 39 }
+                  pos_to { column: 20 row: 39 }
+                }
+              }
             }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 20 row: 39 }
+            pos_to { column: 20 row: 39 }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 39 }
-        pos_to { column: 19 row: 39 }
+        pos_to { column: 22 row: 39 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 25 row: 39 }
+              pos_to { column: 27 row: 39 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 25 row: 39 }
+            pos_to { column: 27 row: 39 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "a"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 28 row: 39 }
+              pos_to { column: 29 row: 39 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 25 row: 39 }
+        pos_to { column: 29 row: 39 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 39 }
-      pos_to { column: 19 row: 39 }
+      pos_to { column: 29 row: 39 }
     }
   }
   instances {
@@ -4854,34 +4961,139 @@ modules {
         }
       }
       args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "UInt64"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 43 }
-                pos_to { column: 19 row: 43 }
+        ty_app {
+          ty_func {
+            ty_ref {
+              local_ty_ref {
+                ty_name {
+                  name: "Map"
+                  source_info {
+                    file: "goldens/good/Prelude.lbf"
+                    pos_from { column: 14 row: 43 }
+                    pos_to { column: 17 row: 43 }
+                  }
+                }
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 14 row: 43 }
+                  pos_to { column: 17 row: 43 }
+                }
               }
             }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 43 }
-              pos_to { column: 19 row: 43 }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "a"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 18 row: 43 }
+                  pos_to { column: 19 row: 43 }
+                }
+              }
             }
+          }
+          ty_args {
+            ty_var {
+              var_name {
+                name: "b"
+                source_info {
+                  file: "goldens/good/Prelude.lbf"
+                  pos_from { column: 20 row: 43 }
+                  pos_to { column: 21 row: 43 }
+                }
+              }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 21 row: 43 }
+            pos_to { column: 21 row: 43 }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
         pos_from { column: 10 row: 43 }
-        pos_to { column: 19 row: 43 }
+        pos_to { column: 23 row: 43 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 26 row: 43 }
+              pos_to { column: 28 row: 43 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 26 row: 43 }
+            pos_to { column: 28 row: 43 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "a"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 29 row: 43 }
+              pos_to { column: 30 row: 43 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 26 row: 43 }
+        pos_to { column: 30 row: 43 }
+      }
+    }
+    constraints {
+      class_ref {
+        local_class_ref {
+          class_name {
+            name: "Eq"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 31 row: 43 }
+              pos_to { column: 33 row: 43 }
+            }
+          }
+          source_info {
+            file: "goldens/good/Prelude.lbf"
+            pos_from { column: 31 row: 43 }
+            pos_to { column: 33 row: 43 }
+          }
+        }
+      }
+      args {
+        ty_var {
+          var_name {
+            name: "b"
+            source_info {
+              file: "goldens/good/Prelude.lbf"
+              pos_from { column: 34 row: 43 }
+              pos_to { column: 35 row: 43 }
+            }
+          }
+        }
+      }
+      source_info {
+        file: "goldens/good/Prelude.lbf"
+        pos_from { column: 31 row: 43 }
+        pos_to { column: 35 row: 43 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
       pos_from { column: 1 row: 43 }
-      pos_to { column: 19 row: 43 }
+      pos_to { column: 35 row: 43 }
     }
   }
   instances {
@@ -4904,680 +5116,6 @@ modules {
         }
       }
       args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "Bytes"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 47 }
-                pos_to { column: 18 row: 47 }
-              }
-            }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 47 }
-              pos_to { column: 18 row: 47 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 47 }
-        pos_to { column: 18 row: 47 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 47 }
-      pos_to { column: 18 row: 47 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 51 }
-              pos_to { column: 12 row: 51 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 51 }
-            pos_to { column: 12 row: 51 }
-          }
-        }
-      }
-      args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "Char"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 51 }
-                pos_to { column: 17 row: 51 }
-              }
-            }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 51 }
-              pos_to { column: 17 row: 51 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 51 }
-        pos_to { column: 17 row: 51 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 51 }
-      pos_to { column: 17 row: 51 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 55 }
-              pos_to { column: 12 row: 55 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 55 }
-            pos_to { column: 12 row: 55 }
-          }
-        }
-      }
-      args {
-        ty_ref {
-          local_ty_ref {
-            ty_name {
-              name: "Text"
-              source_info {
-                file: "goldens/good/Prelude.lbf"
-                pos_from { column: 13 row: 55 }
-                pos_to { column: 17 row: 55 }
-              }
-            }
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 13 row: 55 }
-              pos_to { column: 17 row: 55 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 55 }
-        pos_to { column: 17 row: 55 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 55 }
-      pos_to { column: 17 row: 55 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 59 }
-              pos_to { column: 12 row: 59 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 59 }
-            pos_to { column: 12 row: 59 }
-          }
-        }
-      }
-      args {
-        ty_app {
-          ty_func {
-            ty_ref {
-              local_ty_ref {
-                ty_name {
-                  name: "Maybe"
-                  source_info {
-                    file: "goldens/good/Prelude.lbf"
-                    pos_from { column: 14 row: 59 }
-                    pos_to { column: 19 row: 59 }
-                  }
-                }
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 14 row: 59 }
-                  pos_to { column: 19 row: 59 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "a"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 20 row: 59 }
-                  pos_to { column: 21 row: 59 }
-                }
-              }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 21 row: 59 }
-            pos_to { column: 21 row: 59 }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 59 }
-        pos_to { column: 23 row: 59 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 26 row: 59 }
-              pos_to { column: 28 row: 59 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 26 row: 59 }
-            pos_to { column: 28 row: 59 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "a"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 29 row: 59 }
-              pos_to { column: 30 row: 59 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 26 row: 59 }
-        pos_to { column: 30 row: 59 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 59 }
-      pos_to { column: 30 row: 59 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 63 }
-              pos_to { column: 12 row: 63 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 63 }
-            pos_to { column: 12 row: 63 }
-          }
-        }
-      }
-      args {
-        ty_app {
-          ty_func {
-            ty_ref {
-              local_ty_ref {
-                ty_name {
-                  name: "Either"
-                  source_info {
-                    file: "goldens/good/Prelude.lbf"
-                    pos_from { column: 14 row: 63 }
-                    pos_to { column: 20 row: 63 }
-                  }
-                }
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 14 row: 63 }
-                  pos_to { column: 20 row: 63 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "a"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 21 row: 63 }
-                  pos_to { column: 22 row: 63 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "b"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 23 row: 63 }
-                  pos_to { column: 24 row: 63 }
-                }
-              }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 24 row: 63 }
-            pos_to { column: 24 row: 63 }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 63 }
-        pos_to { column: 26 row: 63 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 29 row: 63 }
-              pos_to { column: 31 row: 63 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 29 row: 63 }
-            pos_to { column: 31 row: 63 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "a"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 32 row: 63 }
-              pos_to { column: 33 row: 63 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 29 row: 63 }
-        pos_to { column: 33 row: 63 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 34 row: 63 }
-              pos_to { column: 36 row: 63 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 34 row: 63 }
-            pos_to { column: 36 row: 63 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "b"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 37 row: 63 }
-              pos_to { column: 38 row: 63 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 34 row: 63 }
-        pos_to { column: 38 row: 63 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 63 }
-      pos_to { column: 38 row: 63 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 67 }
-              pos_to { column: 12 row: 67 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 67 }
-            pos_to { column: 12 row: 67 }
-          }
-        }
-      }
-      args {
-        ty_app {
-          ty_func {
-            ty_ref {
-              local_ty_ref {
-                ty_name {
-                  name: "List"
-                  source_info {
-                    file: "goldens/good/Prelude.lbf"
-                    pos_from { column: 14 row: 67 }
-                    pos_to { column: 18 row: 67 }
-                  }
-                }
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 14 row: 67 }
-                  pos_to { column: 18 row: 67 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "a"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 19 row: 67 }
-                  pos_to { column: 20 row: 67 }
-                }
-              }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 20 row: 67 }
-            pos_to { column: 20 row: 67 }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 67 }
-        pos_to { column: 22 row: 67 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 25 row: 67 }
-              pos_to { column: 27 row: 67 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 25 row: 67 }
-            pos_to { column: 27 row: 67 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "a"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 28 row: 67 }
-              pos_to { column: 29 row: 67 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 25 row: 67 }
-        pos_to { column: 29 row: 67 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 67 }
-      pos_to { column: 29 row: 67 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 71 }
-              pos_to { column: 12 row: 71 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 71 }
-            pos_to { column: 12 row: 71 }
-          }
-        }
-      }
-      args {
-        ty_app {
-          ty_func {
-            ty_ref {
-              local_ty_ref {
-                ty_name {
-                  name: "Map"
-                  source_info {
-                    file: "goldens/good/Prelude.lbf"
-                    pos_from { column: 14 row: 71 }
-                    pos_to { column: 17 row: 71 }
-                  }
-                }
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 14 row: 71 }
-                  pos_to { column: 17 row: 71 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "a"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 18 row: 71 }
-                  pos_to { column: 19 row: 71 }
-                }
-              }
-            }
-          }
-          ty_args {
-            ty_var {
-              var_name {
-                name: "b"
-                source_info {
-                  file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 20 row: 71 }
-                  pos_to { column: 21 row: 71 }
-                }
-              }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 21 row: 71 }
-            pos_to { column: 21 row: 71 }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 71 }
-        pos_to { column: 23 row: 71 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 26 row: 71 }
-              pos_to { column: 28 row: 71 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 26 row: 71 }
-            pos_to { column: 28 row: 71 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "a"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 29 row: 71 }
-              pos_to { column: 30 row: 71 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 26 row: 71 }
-        pos_to { column: 30 row: 71 }
-      }
-    }
-    constraints {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 31 row: 71 }
-              pos_to { column: 33 row: 71 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 31 row: 71 }
-            pos_to { column: 33 row: 71 }
-          }
-        }
-      }
-      args {
-        ty_var {
-          var_name {
-            name: "b"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 34 row: 71 }
-              pos_to { column: 35 row: 71 }
-            }
-          }
-        }
-      }
-      source_info {
-        file: "goldens/good/Prelude.lbf"
-        pos_from { column: 31 row: 71 }
-        pos_to { column: 35 row: 71 }
-      }
-    }
-    source_info {
-      file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 71 }
-      pos_to { column: 35 row: 71 }
-    }
-  }
-  instances {
-    head {
-      class_ref {
-        local_class_ref {
-          class_name {
-            name: "Eq"
-            source_info {
-              file: "goldens/good/Prelude.lbf"
-              pos_from { column: 10 row: 75 }
-              pos_to { column: 12 row: 75 }
-            }
-          }
-          source_info {
-            file: "goldens/good/Prelude.lbf"
-            pos_from { column: 10 row: 75 }
-            pos_to { column: 12 row: 75 }
-          }
-        }
-      }
-      args {
         ty_app {
           ty_func {
             ty_ref {
@@ -5586,14 +5124,14 @@ modules {
                   name: "Set"
                   source_info {
                     file: "goldens/good/Prelude.lbf"
-                    pos_from { column: 14 row: 75 }
-                    pos_to { column: 17 row: 75 }
+                    pos_from { column: 14 row: 47 }
+                    pos_to { column: 17 row: 47 }
                   }
                 }
                 source_info {
                   file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 14 row: 75 }
-                  pos_to { column: 17 row: 75 }
+                  pos_from { column: 14 row: 47 }
+                  pos_to { column: 17 row: 47 }
                 }
               }
             }
@@ -5604,23 +5142,23 @@ modules {
                 name: "a"
                 source_info {
                   file: "goldens/good/Prelude.lbf"
-                  pos_from { column: 18 row: 75 }
-                  pos_to { column: 19 row: 75 }
+                  pos_from { column: 18 row: 47 }
+                  pos_to { column: 19 row: 47 }
                 }
               }
             }
           }
           source_info {
             file: "goldens/good/Prelude.lbf"
-            pos_from { column: 19 row: 75 }
-            pos_to { column: 19 row: 75 }
+            pos_from { column: 19 row: 47 }
+            pos_to { column: 19 row: 47 }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
-        pos_from { column: 10 row: 75 }
-        pos_to { column: 21 row: 75 }
+        pos_from { column: 10 row: 47 }
+        pos_to { column: 21 row: 47 }
       }
     }
     constraints {
@@ -5630,14 +5168,14 @@ modules {
             name: "Eq"
             source_info {
               file: "goldens/good/Prelude.lbf"
-              pos_from { column: 24 row: 75 }
-              pos_to { column: 26 row: 75 }
+              pos_from { column: 24 row: 47 }
+              pos_to { column: 26 row: 47 }
             }
           }
           source_info {
             file: "goldens/good/Prelude.lbf"
-            pos_from { column: 24 row: 75 }
-            pos_to { column: 26 row: 75 }
+            pos_from { column: 24 row: 47 }
+            pos_to { column: 26 row: 47 }
           }
         }
       }
@@ -5647,27 +5185,27 @@ modules {
             name: "a"
             source_info {
               file: "goldens/good/Prelude.lbf"
-              pos_from { column: 27 row: 75 }
-              pos_to { column: 28 row: 75 }
+              pos_from { column: 27 row: 47 }
+              pos_to { column: 28 row: 47 }
             }
           }
         }
       }
       source_info {
         file: "goldens/good/Prelude.lbf"
-        pos_from { column: 24 row: 75 }
-        pos_to { column: 28 row: 75 }
+        pos_from { column: 24 row: 47 }
+        pos_to { column: 28 row: 47 }
       }
     }
     source_info {
       file: "goldens/good/Prelude.lbf"
-      pos_from { column: 1 row: 75 }
-      pos_to { column: 28 row: 75 }
+      pos_from { column: 1 row: 47 }
+      pos_to { column: 28 row: 47 }
     }
   }
   source_info {
     file: "goldens/good/Prelude.lbf"
     pos_from { column: 1 row: 1 }
-    pos_to { column: 28 row: 75 }
+    pos_to { column: 28 row: 47 }
   }
 }

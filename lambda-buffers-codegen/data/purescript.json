@@ -11,9 +11,9 @@
             "Set"
         ],
         "Prelude.List": [
-            "lb-haskell-runtime",
-            "LambdaBuffers.Runtime.Haskell",
-            "List"
+            "prelude",
+            "Prim",
+            "Array"
         ],
         "Prelude.Either": [
             "either",
@@ -42,7 +42,7 @@
         ],
         "Prelude.Int32": [
             "prelude",
-            "Primt",
+            "Prim",
             "Int"
         ],
         "Prelude.Integer": [
@@ -168,22 +168,22 @@
         "Plutus.V1.ScriptContext": [
             "cardano-transaction-lib",
             "<PlutusLedgerApi.V1.Contexts>",
-            "<ScriptContext>"
+            "<There's no ScriptContext in CTL>"
         ],
         "Plutus.V1.ScriptPurpose": [
             "cardano-transaction-lib",
             "<PlutusLedgerApi.V1.Contexts>",
-            "<ScriptPurpose>"
+            "<Couldn't find ScriptPurpose in CTL>"
         ],
         "Plutus.V1.TxInInfo": [
             "cardano-transaction-lib",
             "PlutusLedgerApi.V1.Contexts",
-            "<TxInInfo>"
+            "<Couldn't find TxInInfo in CTL>"
         ],
         "Plutus.V1.TxInfo": [
             "cardano-transaction-lib",
             "PlutusLedgerApi.V1.Contexts",
-            "<TxInf>?"
+            "<Couldn't find TxInfo in CTL>"
         ],
         "Plutus.V1.TxId": [
             "cardano-transaction-lib",
@@ -193,7 +193,7 @@
         "Plutus.V1.TxOut": [
             "cardano-transaction-lib",
             "Ctl.Internal.Plutus.Types.Transaction",
-            "<Doesn't support v1>"
+            "<Doesn't support V1 only V2>"
         ],
         "Plutus.V1.TxOutRef": [
             "cardano-transaction-lib",
