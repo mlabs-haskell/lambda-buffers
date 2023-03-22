@@ -159,6 +159,7 @@ executable lbg
   other-modules:
     LambdaBuffers.Codegen.Cli.Gen
     LambdaBuffers.Codegen.Cli.GenHaskell
+    LambdaBuffers.Codegen.Cli.GenPurescript
     Paths_lambda_buffers_codegen
 
   autogen-modules: Paths_lambda_buffers_codegen
