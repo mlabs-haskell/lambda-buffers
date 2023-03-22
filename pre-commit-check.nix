@@ -63,6 +63,8 @@
   excludes = [
     "lambda-buffers-codegen/data/goldens/.*"
     "experimental/archive/.*"
+    "experimental/ctl-env/autogen/.*"
+    "experimental/plutustx-env/autogen/.*"
     "experimental/ctl-env/spago-packages.nix"
     "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
     "docs/compiler-api.md"

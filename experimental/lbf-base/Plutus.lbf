@@ -1,6 +1,6 @@
 module Plutus
 
-import Prelude (Eq)
+import Prelude (Eq, Integer)
 
 class PlutusData a
 
@@ -11,3 +11,5 @@ class PlutusData a
 opaque PlutusData
 instance PlutusData PlutusData
 instance Eq PlutusData
+
+instance PlutusData Integer
