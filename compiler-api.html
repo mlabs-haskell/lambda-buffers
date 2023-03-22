@@ -380,156 +380,90 @@ in LambdaBuffers is just another type class, it's treated the same as any
 other type class. Concretely, if we wish to provide JSON serialization for
 LambdaBuffers types, we declare such a type class and provide desired
 semantic rules:</p>
-<pre><code class="language-lbf module Foo">
+<pre><code class="language-lbf">module Foo
+
 class JSON a
 
 sum Foo a b = Bar a | Baz b
 
-derive JSON (Foo a b) ```
-
-Note that for each type class introduced, the Codegen machinery must be
-updated to support said type class. In other words, it doesn&amp;#39;t come for free
+derive JSON (Foo a b)
+</code></pre>
+<p>Note that for each type class introduced, the Codegen machinery must be
+updated to support said type class. In other words, it doesn't come for free
 and for each new type class, a Codegen support must be implemented for any
-`InstanceClause` declared by the user. Once all the `InstanceClause`s have an
-implementation provided, all the `Derive`d implementation come for free.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| class_name | [ClassName](#lambdabuffers-compiler-ClassName) |  | Type class name. |
-| class_args | [TyArg](#lambdabuffers-compiler-TyArg) | repeated | Type class arguments. Class with no arguments is a trivial class. Compiler MAY report an error. TODO(bladyjoker): MultipleClassArgError. |
-| supers | [ClassConstraint](#lambdabuffers-compiler-ClassConstraint) | repeated | Superclass constraints. |
-| documentation | [string](#string) |  | Documentation elaborating on the type class. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-ClassName&quot;&gt;&lt;/a&gt;
-
-### ClassName
-Type class name
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | Name ::= [A-Z]&amp;#43;[A-Za-z0-9_]* |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-CompilerError&quot;&gt;&lt;/a&gt;
-
-### CompilerError
-Compiler Error
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| proto_parse_errors | [ProtoParseError](#lambdabuffers-compiler-ProtoParseError) | repeated | Errors occurred during proto parsing. |
-| naming_errors | [NamingError](#lambdabuffers-compiler-NamingError) | repeated | Errors occurred during naming checking. |
-| kind_check_errors | [KindCheckError](#lambdabuffers-compiler-KindCheckError) | repeated | Errors occurred during kind checking. |
-| ty_class_check_errors | [TyClassCheckError](#lambdabuffers-compiler-TyClassCheckError) | repeated | Errors occurred during type class checking. |
-| internal_errors | [InternalError](#lambdabuffers-compiler-InternalError) | repeated | Errors internal to the compiler implementation. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-CompilerInput&quot;&gt;&lt;/a&gt;
-
-### CompilerInput
-Compiler Input
-
-Compiler Input is a fully self contained list of modules, the entire
-compilation closure needed by the Compiler to perform its task.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| modules | [Module](#lambdabuffers-compiler-Module) | repeated | Modules to compile. Duplicate modules MUST be reported with `ProtoParseError.MultipleModuleError`. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-CompilerOutput&quot;&gt;&lt;/a&gt;
-
-### CompilerOutput
-Output of the Compiler.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| compiler_error | [CompilerError](#lambdabuffers-compiler-CompilerError) |  |  |
-| compiler_result | [CompilerResult](#lambdabuffers-compiler-CompilerResult) |  |  |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-CompilerResult&quot;&gt;&lt;/a&gt;
-
-### CompilerResult
-Compiler Result ~ a successful Compilation Output.
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-ConstrName&quot;&gt;&lt;/a&gt;
-
-### ConstrName
-Sum type constructor name
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | Name ::= [A-Z]&amp;#43;[A-Za-z0-9_]* |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-Constraint&quot;&gt;&lt;/a&gt;
-
-### Constraint
-Constraint term
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| class_ref | [TyClassRef](#lambdabuffers-compiler-TyClassRef) |  | Name of the type class. |
-| args | [Ty](#lambdabuffers-compiler-Ty) | repeated | Constraint arguments. Constraint with no arguments is a trivial constraint. Compiler MAY report an error. |
-| source_info | [SourceInfo](#lambdabuffers-compiler-SourceInfo) |  | Source information. |
-
-
-
-
-
-
-&lt;a name=&quot;lambdabuffers-compiler-Derive&quot;&gt;&lt;/a&gt;
-
-### Derive
-Derive statement
-
-Derive statements enable user to specify &amp;#39;semantic&amp;#39; rules for their types much
-like `InstanceClause`s do. However, the Codegen will be able to derive an
-implementation for any such constraint.
-
-```lbf
-module Prelude
+<code>InstanceClause</code> declared by the user. Once all the <code>InstanceClause</code>s have an
+implementation provided, all the <code>Derive</code>d implementation come for free.</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>class_name</td><td><a href="#lambdabuffers-compiler-ClassName">ClassName</a></td><td></td><td>Type class name.</td></tr>
+<tr><td>class_args</td><td><a href="#lambdabuffers-compiler-TyArg">TyArg</a></td><td>repeated</td><td>Type class arguments. Class with no arguments is a trivial class. Compiler MAY report an error. TODO(bladyjoker): MultipleClassArgError.</td></tr>
+<tr><td>supers</td><td><a href="#lambdabuffers-compiler-ClassConstraint">ClassConstraint</a></td><td>repeated</td><td>Superclass constraints.</td></tr>
+<tr><td>documentation</td><td><a href="#string">string</a></td><td></td><td>Documentation elaborating on the type class.</td></tr>
+<tr><td>source_info</td><td><a href="#lambdabuffers-compiler-SourceInfo">SourceInfo</a></td><td></td><td>Source information.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-ClassName"></a></p>
+<h3 id="classname"><a class="header" href="#classname">ClassName</a></h3>
+<p>Type class name</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>name</td><td><a href="#string">string</a></td><td></td><td>Name ::= [A-Z]+[A-Za-z0-9_]*</td></tr>
+<tr><td>source_info</td><td><a href="#lambdabuffers-compiler-SourceInfo">SourceInfo</a></td><td></td><td>Source information.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-CompilerError"></a></p>
+<h3 id="compilererror"><a class="header" href="#compilererror">CompilerError</a></h3>
+<p>Compiler Error</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>proto_parse_errors</td><td><a href="#lambdabuffers-compiler-ProtoParseError">ProtoParseError</a></td><td>repeated</td><td>Errors occurred during proto parsing.</td></tr>
+<tr><td>naming_errors</td><td><a href="#lambdabuffers-compiler-NamingError">NamingError</a></td><td>repeated</td><td>Errors occurred during naming checking.</td></tr>
+<tr><td>kind_check_errors</td><td><a href="#lambdabuffers-compiler-KindCheckError">KindCheckError</a></td><td>repeated</td><td>Errors occurred during kind checking.</td></tr>
+<tr><td>ty_class_check_errors</td><td><a href="#lambdabuffers-compiler-TyClassCheckError">TyClassCheckError</a></td><td>repeated</td><td>Errors occurred during type class checking.</td></tr>
+<tr><td>internal_errors</td><td><a href="#lambdabuffers-compiler-InternalError">InternalError</a></td><td>repeated</td><td>Errors internal to the compiler implementation.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-CompilerInput"></a></p>
+<h3 id="compilerinput"><a class="header" href="#compilerinput">CompilerInput</a></h3>
+<p>Compiler Input</p>
+<p>Compiler Input is a fully self contained list of modules, the entire
+compilation closure needed by the Compiler to perform its task.</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>modules</td><td><a href="#lambdabuffers-compiler-Module">Module</a></td><td>repeated</td><td>Modules to compile. Duplicate modules MUST be reported with <code>ProtoParseError.MultipleModuleError</code>.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-CompilerOutput"></a></p>
+<h3 id="compileroutput"><a class="header" href="#compileroutput">CompilerOutput</a></h3>
+<p>Output of the Compiler.</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>compiler_error</td><td><a href="#lambdabuffers-compiler-CompilerError">CompilerError</a></td><td></td><td></td></tr>
+<tr><td>compiler_result</td><td><a href="#lambdabuffers-compiler-CompilerResult">CompilerResult</a></td><td></td><td></td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-CompilerResult"></a></p>
+<h3 id="compilerresult"><a class="header" href="#compilerresult">CompilerResult</a></h3>
+<p>Compiler Result ~ a successful Compilation Output.</p>
+<p><a name="lambdabuffers-compiler-ConstrName"></a></p>
+<h3 id="constrname"><a class="header" href="#constrname">ConstrName</a></h3>
+<p>Sum type constructor name</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>name</td><td><a href="#string">string</a></td><td></td><td>Name ::= [A-Z]+[A-Za-z0-9_]*</td></tr>
+<tr><td>source_info</td><td><a href="#lambdabuffers-compiler-SourceInfo">SourceInfo</a></td><td></td><td>Source information.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-Constraint"></a></p>
+<h3 id="constraint"><a class="header" href="#constraint">Constraint</a></h3>
+<p>Constraint term</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
+<tr><td>class_ref</td><td><a href="#lambdabuffers-compiler-TyClassRef">TyClassRef</a></td><td></td><td>Name of the type class.</td></tr>
+<tr><td>args</td><td><a href="#lambdabuffers-compiler-Ty">Ty</a></td><td>repeated</td><td>Constraint arguments. Constraint with no arguments is a trivial constraint. Compiler MAY report an error.</td></tr>
+<tr><td>source_info</td><td><a href="#lambdabuffers-compiler-SourceInfo">SourceInfo</a></td><td></td><td>Source information.</td></tr>
+</tbody></table>
+</div>
+<p><a name="lambdabuffers-compiler-Derive"></a></p>
+<h3 id="derive"><a class="header" href="#derive">Derive</a></h3>
+<p>Derive statement</p>
+<p>Derive statements enable user to specify 'semantic' rules for their types much
+like <code>InstanceClause</code>s do. However, the Codegen will be able to derive an
+implementation for any such constraint.</p>
+<pre><code class="language-lbf">module Prelude
 
 class Eq a
 
