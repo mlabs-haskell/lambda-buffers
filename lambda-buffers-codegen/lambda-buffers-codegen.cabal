@@ -126,6 +126,16 @@ library
     LambdaBuffers.Codegen.LamVal.Eq
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Print
+    LambdaBuffers.Codegen.Purescript
+    LambdaBuffers.Codegen.Purescript.Config
+    LambdaBuffers.Codegen.Purescript.Print
+    LambdaBuffers.Codegen.Purescript.Print.Derive
+    LambdaBuffers.Codegen.Purescript.Print.InstanceDef
+    LambdaBuffers.Codegen.Purescript.Print.LamVal
+    LambdaBuffers.Codegen.Purescript.Print.Monad
+    LambdaBuffers.Codegen.Purescript.Print.Names
+    LambdaBuffers.Codegen.Purescript.Print.TyDef
+    LambdaBuffers.Codegen.Purescript.Syntax
 
 executable lbg
   import:          common-language
