@@ -60,7 +60,12 @@
     ];
   };
 
-  excludes = [ "lambda-buffers-codegen/data/.*" "experimental/.*" ];
+  excludes = [
+    "lambda-buffers-codegen/data/.*"
+    "experimental/archive/.*"
+    "experimental/ctl-env/spago-packages.nix"
+    "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
+  ];
 
   hooks = {
     nixpkgs-fmt.enable = true;
@@ -73,6 +78,7 @@
     typos.enable = true;
     markdownlint.enable = true;
     dhall-format.enable = true;
+    prettier.enable = true;
   } // protoHooks;
 
   tools = { inherit fourmolu; };

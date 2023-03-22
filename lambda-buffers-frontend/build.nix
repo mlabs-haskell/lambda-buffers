@@ -5,7 +5,8 @@
 , index-state
 , compilerHsPb
 , lambda-buffers-compiler
-, lambda-buffers-compiler-cli
+, lbc
+, lbg
 , commonTools
 , shellHook
 }:
@@ -41,7 +42,7 @@ let
 
       exactDeps = true;
 
-      nativeBuildInputs = [ lambda-buffers-compiler-cli ] ++ builtins.attrValues commonTools;
+      nativeBuildInputs = [ lbc lbg ] ++ builtins.attrValues commonTools;
 
       tools = {
         cabal = { };

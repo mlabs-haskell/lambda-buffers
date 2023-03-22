@@ -38,8 +38,15 @@ lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/PreludeT.lbf
 
 echo "goldens/good/Plutus.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
-lbf-form goldens/good/Plutus.lbf
-lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
+
+echo "goldens/good/Plutus/V1.lbf"
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus/V1.lbf
+
+echo "goldens/good/Plutus/V2.lbf"
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus/V2.lbf
+
+echo "goldens/good/Coop.lbf"
+lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Coop.lbf
 
 echo "goldens/good/Rules.lbf"
 lbf-comp -w goldens/good/work-dir -i goldens/good -f goldens/good/Rules.lbf
