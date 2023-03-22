@@ -23,11 +23,6 @@ opaque PubKeyHash
 instance PlutusData PubKeyHash
 instance Eq PubKeyHash
 
--- PlutusLedgerApi.V1.DCert
-opaque DCert
-instance PlutusData DCert
-instance Eq DCert
-
 -- PlutusLedgerApi.V1.Bytes
 opaque Bytes
 instance PlutusData Bytes
@@ -97,32 +92,10 @@ opaque ScriptHash
 instance PlutusData ScriptHash
 instance Eq ScriptHash
 
--- PlutusLedgerApi.V1.Contexts
-opaque ScriptContext
-instance PlutusData ScriptContext
-instance Eq ScriptContext
-
-opaque ScriptPurpose
-instance PlutusData ScriptPurpose
-instance Eq ScriptPurpose
-
-opaque TxInInfo
-instance PlutusData TxInInfo
-instance Eq TxInInfo
-
-opaque TxInfo
-instance PlutusData TxInfo
-instance Eq TxInfo
-
-
 -- PlutusLedgerApi.V1.Tx
 opaque TxId
 instance PlutusData TxId
 instance Eq TxId
-
-opaque TxOut
-instance PlutusData TxOut
-instance Eq TxOut
 
 opaque TxOutRef
 instance PlutusData TxOutRef

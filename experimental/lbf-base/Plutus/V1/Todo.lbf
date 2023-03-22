@@ -1,0 +1,31 @@
+module Plutus.V1.Todo
+
+import Plutus
+import Prelude
+
+-- PlutusLedgerApi.V1.DCert
+opaque DCert
+instance PlutusData DCert
+instance Eq DCert
+
+-- PlutusLedgerApi.V1.Contexts
+opaque ScriptContext
+instance PlutusData ScriptContext
+instance Eq ScriptContext
+
+opaque ScriptPurpose
+instance PlutusData ScriptPurpose
+instance Eq ScriptPurpose
+
+opaque TxInInfo
+instance PlutusData TxInInfo
+instance Eq TxInInfo
+
+opaque TxInfo
+instance PlutusData TxInfo
+instance Eq TxInfo
+
+-- PlutusLedgerApi.V1.Tx
+opaque TxOut
+instance PlutusData TxOut
+instance Eq TxOut

@@ -113,6 +113,12 @@ printExports exports = align $ group $ encloseSep lparen rparen (comma <> space)
     printTyExportWithCtors :: PC.TyName -> Doc ann
     printTyExportWithCtors tyn = printTyName tyn <> "(..)"
 
+escapeHatchImports :: [(Purs.PackageName, Purs.ModuleName)]
+escapeHatchImports =
+  [ (Purs.MkPackageName "newtype", Purs.MkModuleName "Data.Newtype")
+  , (Purs.MkPackageName "bigints", Purs.MkModuleName "Data.BigInt")
+  ]
+
 -- TODO(bladyjoker): Collect package dependencies.
 printImports :: Set PC.QTyName -> Set Purs.QTyName -> Set [Purs.QClassName] -> Set (PC.InfoLess PC.ModuleName) -> Set Purs.QValName -> Doc ann
 printImports lbTyImports pursTyImports classImps ruleImps valImps =
@@ -124,11 +130,12 @@ printImports lbTyImports pursTyImports classImps ruleImps valImps =
       groupedPursImports =
         Set.fromList [mn | (_cbl, mn, _tn) <- toList pursTyImports]
           `Set.union` Set.fromList [mn | cImps <- toList classImps, (_, mn, _) <- cImps]
-          `Set.union` Set.fromList [mn | (_, mn, _) <- toList valImps]
+          `Set.union` Set.fromList [mn | (Just (_, mn), _) <- toList valImps]
+          `Set.union` Set.fromList [mn | (_, mn) <- escapeHatchImports]
       pursImportDocs = (\(Purs.MkModuleName mn) -> importQualified $ pretty mn) <$> toList groupedPursImports
 
       importsDoc = vsep $ lbImportDocs ++ pursImportDocs
    in importsDoc
   where
     importQualified :: Doc ann -> Doc ann
-    importQualified mnDoc = "import qualified" <+> mnDoc
+    importQualified mnDoc = "import" <+> mnDoc <+> "as" <+> mnDoc

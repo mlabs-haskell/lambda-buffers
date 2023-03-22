@@ -11,23 +11,23 @@ import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Purescript.Print.LamVal (printImplementation)
-import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQValName, printPursValName)
+import LambdaBuffers.Codegen.Purescript.Print.Names (printPursValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, align, equals, group, sep, (<+>))
+import Prettyprinter (Doc, equals, (<+>))
 
-lvEqBuiltins :: Map LV.ValueName (Purs.PackageName, Purs.ModuleName, Purs.ValueName)
+lvEqBuiltins :: Map LV.ValueName Purs.QValName
 lvEqBuiltins =
   Map.fromList
-    [ ("eq", (Purs.MkPackageName "prelude", Purs.MkModuleName "Prelude", Purs.MkValueName "=="))
-    , ("and", (Purs.MkPackageName "prelude", Purs.MkModuleName "Prelude", Purs.MkValueName "&&"))
-    , ("true", (Purs.MkPackageName "prelude", Purs.MkModuleName "Prelude", Purs.MkValueName "True"))
-    , ("false", (Purs.MkPackageName "base", Purs.MkModuleName "Prelude", Purs.MkValueName "False"))
+    [ ("eq", Purs.normalValName "prelude" "Prelude" "==")
+    , ("and", Purs.normalValName "prelude" "Prelude" "&&")
+    , ("true", Purs.primValName "true")
+    , ("false", Purs.primValName "false")
     ]
 
 eqClassMethodName :: Purs.ValueName
-eqClassMethodName = Purs.MkValueName "=="
+eqClassMethodName = Purs.MkValueName "eq"
 
 -- TODO: Handle errors properly.
 printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
@@ -44,20 +44,14 @@ printDeriveEq mn iTyDefs mkInstanceDoc ty =
 lvPlutusDataBuiltins :: Map LV.ValueName Purs.QValName
 lvPlutusDataBuiltins =
   Map.fromList
-    [ ("toPlutusData", (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkValueName "toData"))
-    , ("integerData", (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkValueName "I"))
-    , ("constrData", (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkValueName "Constr"))
-    , ("listData", (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkValueName "List"))
+    [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
+    , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
+    , ("constrData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Constr")
+    , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
     ]
 
-dataToBuiltinDataRef :: Purs.QValName
-dataToBuiltinDataRef = (Purs.MkPackageName "plutus-tx", Purs.MkModuleName "PlutusTx", Purs.MkValueName "dataToBuiltinData")
-
-dotOp :: Purs.QValName
-dotOp = (Purs.MkPackageName "prelude", Purs.MkModuleName "Prelude", Purs.MkValueName ".")
-
 toPlutusDataClassMethodName :: Purs.ValueName
-toPlutusDataClassMethodName = Purs.MkValueName "toBuiltinData"
+toPlutusDataClassMethodName = Purs.MkValueName "toData"
 
 -- TODO: Handle errors properly.
 printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
@@ -68,15 +62,11 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty =
       case printImplementation lvPlutusDataBuiltins valE of
         Left err -> Left $ Text.pack $ show err
         Right implDoc ->
-          let dataToBuiltinDataDoc = printValueApp dotOp [printPursQValName dataToBuiltinDataRef, implDoc]
-              instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName dataToBuiltinDataDoc)
+          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
            in Right
                 ( instanceDoc
-                , Set.insert dataToBuiltinDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+                , Set.fromList . toList $ lvPlutusDataBuiltins
                 )
 
 printValueDef :: Purs.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printPursValName valName <+> equals <+> valDoc
-
-printValueApp :: Purs.QValName -> [Doc ann] -> Doc ann
-printValueApp fVal aDocs = align . group $ (printPursQValName fVal <+> (align . group . sep $ aDocs))

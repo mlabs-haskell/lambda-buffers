@@ -12,10 +12,11 @@ import LambdaBuffers.Codegen.Config (opaques)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
+import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as H
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, vsep, (<+>))
 
 {- | Prints the type definition.
 
@@ -30,7 +31,16 @@ type Maybe a = Prelude.Maybe a
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
-  return $ group $ kw <+> printTyName tyN <+> absDoc
+  return $
+    vsep
+      [ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc
+      , if kw == NewtypeTyDef then printNewtypeDerive tyN else mempty
+      ]
+
+printTyDefKw :: TyDefKw -> Doc ann
+printTyDefKw DataTyDef = "data"
+printTyDefKw NewtypeTyDef = "newtype"
+printTyDefKw SynonymTyDef = "type"
 
 {- | Prints the type abstraction.
 
@@ -39,11 +49,14 @@ For the above examples it prints
 a b = Foo'MkFoo a | Foo'MkBar b
 a = Prelude.Maybe a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
+printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
   let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
   (kw, bodyDoc) <- printTyBody tyN (toList args) body
   return (kw, group $ argsDoc <> align (equals <+> bodyDoc))
+
+printNewtypeDerive :: forall {ann}. PC.TyName -> Doc ann
+printNewtypeDerive tyn = "derive instance Data.Newtype.Newtype" <+> printTyName tyn <+> "_"
 
 {- | Prints the type body.
 
@@ -54,22 +67,21 @@ Prelude.Maybe a
 
 TODO(bladyjoker): Revisit empty records and prods.
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
-printTyBody tyN _ (PC.SumI s) = ("data",) <$> printSum tyN s
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
+printTyBody tyN _ (PC.SumI s) = (DataTyDef,) <$> printSum tyN s
 printTyBody tyN _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
-  [] -> return ("data", printMkCtor tyN)
-  [_] -> return ("newtype", printMkCtor tyN <+> printProd p)
-  _ -> return ("data", printMkCtor tyN <+> printProd p)
+  [] -> return (DataTyDef, printMkCtor tyN)
+  [_] -> return (NewtypeTyDef, printMkCtor tyN <+> printProd p)
+  _ -> return (DataTyDef, printMkCtor tyN <+> printProd p)
 printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
-  [] -> return ("data", printMkCtor tyN)
-  [_] -> printRec tyN r >>= \recDoc -> return ("newtype", printMkCtor tyN <+> recDoc)
-  _ -> printRec tyN r >>= \recDoc -> return ("data", printMkCtor tyN <+> recDoc)
+  [] -> return (DataTyDef, printMkCtor tyN)
+  _ -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . opaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
-    Just hqtyn -> return ("type", printPursQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
+    Just hqtyn -> return (SynonymTyDef, printPursQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn

@@ -187,3 +187,4 @@ test-suite tests
     Paths_lambda_buffers_codegen
     Test.LambdaBuffers.Codegen
     Test.LambdaBuffers.Codegen.Haskell
+    Test.LambdaBuffers.Codegen.Purescript

@@ -1,6 +1,5 @@
 module LambdaBuffers.Codegen.Purescript.Print.Names (printPursQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printPursQValName, printPursClassMethodName, printPursQClassName, printPursValName) where
 
-import Control.Lens ((^.))
 import Data.Char qualified as Char
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as H
@@ -21,10 +20,14 @@ printPursQClassName :: H.QClassName -> Doc ann
 printPursQClassName (_, H.MkModuleName pursModName, H.MkClassName pursClassName) = pretty pursModName <> dot <> pretty pursClassName
 
 printPursQValName :: H.QValName -> Doc ann
-printPursQValName (_, H.MkModuleName pursModName, H.MkValueName pursValName) = case Text.uncons pursValName of
+printPursQValName (Just (_, H.MkModuleName pursModName), H.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(bladyjoker): Got an empty Purescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursModName <> dot <> pretty pursValName
-  _ -> enclose lparen rparen $ pretty pursModName <> dot <> pretty pursValName
+  _ -> pretty pursModName <> dot <> enclose lparen rparen (pretty pursValName)
+printPursQValName (Nothing, H.MkValueName pursValName) = case Text.uncons pursValName of
+  Nothing -> "TODO(bladyjoker): Got an empty Purescript value name"
+  Just (c, _) | Char.isAlpha c -> pretty pursValName
+  _ -> enclose lparen rparen (pretty pursValName)
 
 printPursValName :: H.ValueName -> Doc ann
 printPursValName (H.MkValueName pursValName) = case Text.uncons pursValName of
@@ -37,7 +40,7 @@ printPursValName (H.MkValueName pursValName) = case Text.uncons pursValName of
  import the class and the class methods are made available in the scope.
 -}
 printPursClassMethodName :: H.QValName -> Doc ann
-printPursClassMethodName (_, _, H.MkValueName pursValName) = pretty pursValName
+printPursClassMethodName (_, H.MkValueName pursValName) = pretty pursValName
 
 {- | Translate LambdaBuffer sum constructor names into Purescript sum constructor names.
  sum Sum = Foo Int | Bar String
@@ -56,11 +59,7 @@ printMkCtor tyN = "Mk" <> printTyName tyN
  data Rec = MkRec { rec'foo :: Int, rec'bar :: String }
 -}
 printFieldName :: PC.TyName -> PC.FieldName -> Maybe (Doc ann)
-printFieldName tyN (PC.FieldName n _) = do
-  prefix <- case Text.uncons (tyN ^. #name) of
-    Nothing -> Nothing
-    Just (h, t) -> return $ Text.cons (Char.toLower h) t
-  return $ pretty prefix <> squote <> pretty n
+printFieldName _tyN (PC.FieldName n _) = return $ pretty n
 
 printVarName :: PC.VarName -> Doc ann
 printVarName (PC.VarName n _) = pretty n

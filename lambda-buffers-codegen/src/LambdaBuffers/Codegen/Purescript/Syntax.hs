@@ -12,6 +12,9 @@ module LambdaBuffers.Codegen.Purescript.Syntax (
   fromLbTyName,
   fromLbForeignRef,
   filepathFromModuleName,
+  normalValName,
+  primValName,
+  TyDefKw (..),
 ) where
 
 import Control.Lens ((^.))
@@ -22,13 +25,21 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 type QTyName = (PackageName, ModuleName, TyName)
 type QClassName = (PackageName, ModuleName, ClassName)
-type QValName = (PackageName, ModuleName, ValueName)
+type QValName = (Maybe (PackageName, ModuleName), ValueName)
+
+primValName :: Text -> QValName
+primValName vn = (Nothing, MkValueName vn)
+
+normalValName :: Text -> Text -> Text -> QValName
+normalValName pkg mn vn = (Just (MkPackageName pkg, MkModuleName mn), MkValueName vn)
 
 newtype PackageName = MkPackageName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
 newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ClassName = MkClassName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ValueName = MkValueName Text deriving stock (Eq, Ord, Show, Generic)
+
+data TyDefKw = DataTyDef | NewtypeTyDef | SynonymTyDef deriving stock (Eq, Ord, Show, Generic)
 
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
@@ -47,4 +58,4 @@ fromLbForeignRef fr =
   )
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
-filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".hs"
+filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".purs"

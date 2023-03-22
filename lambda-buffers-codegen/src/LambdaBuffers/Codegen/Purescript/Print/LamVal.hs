@@ -16,7 +16,7 @@ import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, enclose, encloseSep, equals, group, hsep, lbracket, line, lparen, rbracket, rparen, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, dot, enclose, encloseSep, equals, group, hsep, lbracket, line, lparen, parens, rbracket, rparen, vsep, (<+>))
 
 newtype PrintRead = MkPrintRead
   { builtins :: Map LV.ValueName Purs.QValName
@@ -95,7 +95,7 @@ printFieldE ((_, tyn), fieldName) recVal = do
   let mayFnDoc = PC.withInfoLess tyn (PC.withInfoLess fieldName . printFieldName)
   case mayFnDoc of
     Nothing -> throwError $ "TODO(bladyjoker): Internal error: Failed print a `FieldName` in Purescript implementation printer " <> show fieldName
-    Just fnDoc -> return $ enclose lparen rparen (fnDoc <+> recDoc)
+    Just fnDoc -> return $ enclose lparen rparen ("Data.Newtype.unwrap" <+> recDoc) <> dot <> fnDoc -- TODO(bladyjoker): Import unwrap.
 
 {- | Prints a `let` expression on a `ValueE` of type `Product`.
 
@@ -120,7 +120,7 @@ printLetE ((_, tyN), fields, letVal) letCont = do
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.ErrorE err) = throwError $ "TODO(bladyjoker): LamVal error builtin was called " <> err
-printValueE (LV.IntE i) = return $ pretty i
+printValueE (LV.IntE i) = return $ parens $ "Data.BigInt.fromInt" <+> pretty i -- TODO(bladyjoker): Import Data.BigInt.
 printValueE (LV.ListE vals) = align . group . encloseSep lbracket rbracket comma <$> (printValueE `traverse` vals)
 printValueE (LV.RefE ref) = resolveRef ref
 printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
