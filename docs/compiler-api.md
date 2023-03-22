@@ -126,13 +126,15 @@ other type class. Concretely, if we wish to provide JSON serialization for
 LambdaBuffers types, we declare such a type class and provide desired
 semantic rules:
 
-```lbf module Foo
+```lbf
+module Foo
 
 class JSON a
 
 sum Foo a b = Bar a | Baz b
 
-derive JSON (Foo a b) ```
+derive JSON (Foo a b)
+```
 
 Note that for each type class introduced, the Codegen machinery must be
 updated to support said type class. In other words, it doesn&#39;t come for free
