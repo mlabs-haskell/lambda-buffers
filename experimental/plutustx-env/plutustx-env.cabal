@@ -19,6 +19,8 @@ library
 
   hs-source-dirs:     autogen src
   exposed-modules:
-    LambdaBuffers.Demo
+    LambdaBuffers.Citizen
+    LambdaBuffers.Plutus
+    LambdaBuffers.Plutus.V1
     LambdaBuffers.Prelude
     LambdaBuffers.Runtime.Haskell

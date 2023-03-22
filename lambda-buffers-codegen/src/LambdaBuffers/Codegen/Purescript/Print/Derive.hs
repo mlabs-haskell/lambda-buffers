@@ -46,7 +46,7 @@ lvPlutusDataBuiltins =
   Map.fromList
     [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
     , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
-    , ("constrData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Constr")
+    , ("constrData", Purs.normalValName "lb-ctl-runtime" "LambdaBuffers.Runtime.PlutusLedgerApi" "pdConstr")
     , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
     ]
 

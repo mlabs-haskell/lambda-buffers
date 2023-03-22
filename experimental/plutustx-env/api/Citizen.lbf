@@ -1,0 +1,38 @@
+module Citizen
+
+import Prelude
+import qualified Plutus.V1 as Plutus (Bytes)
+import Plutus
+
+-- What is a Citizen?
+record Citizen = {
+  firstName : Name,
+  lastName : Name,
+  id : NationalId
+ }
+-- Citizens can be compared for equality!
+derive Eq Citizen
+-- Citizens can be stored in a Cardano UTXO as a Datum!
+derive PlutusData Citizen
+
+prod Name = Plutus.Bytes
+derive Eq Name
+derive PlutusData Name
+
+sum NationalId = CroatianPassport CroatianOIB Picture
+  | CroatianIdCard CroatianOIB
+  | SwissVisa SwissVisaType
+derive Eq NationalId
+derive PlutusData NationalId
+
+prod CroatianOIB = Integer
+derive Eq CroatianOIB
+derive PlutusData CroatianOIB
+
+prod Picture = Plutus.Bytes
+derive Eq Picture
+derive PlutusData Picture
+
+sum SwissVisaType = L | B | C
+derive Eq SwissVisaType
+derive PlutusData SwissVisaType
