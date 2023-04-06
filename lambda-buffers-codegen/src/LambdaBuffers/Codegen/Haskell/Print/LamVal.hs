@@ -57,7 +57,7 @@ printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
     then return $ group $ ctorNameDoc <+> "->" <+> group bodyDoc
     else return $ group $ ctorNameDoc <+> hsep argDocs <+> "->" <+> group bodyDoc
 
-printCaseE :: MonadPrint m => (PC.QTyName, LV.Sum) -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
+printCaseE :: MonadPrint m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
 printCaseE (qtyN, sumTy) caseVal ctorCont = do
   caseValDoc <- printValueE caseVal
   ctorCaseDocs <-
@@ -68,20 +68,20 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
             E.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
             _ -> throwError "TODO: Internal error, got a non-product in Sum."
         )
-  return $ align $ "case" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)
 
 printLamE :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
   arg <- freshArg
   bodyDoc <- printValueE (lamVal arg)
   argDoc <- printValueE arg
-  return $ lparen <> "\\" <> argDoc <+> "->" <+> bodyDoc <+> rparen
+  return $ lparen <> "\\" <> argDoc <+> "->" <+> group bodyDoc <+> rparen
 
 printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
-  return $ funDoc <+> parens argDoc
+  return $ funDoc <+> group (parens argDoc)
 
 {- | Prints a record field accessor expression on a `ValueE` of type `Field`'.
 
@@ -94,13 +94,13 @@ printAppE funVal argVal = do
 
    foo'foo x
 -}
-printFieldE :: MonadPrint m => (PC.QTyName, PC.InfoLess PC.FieldName) -> LV.ValueE -> m (Doc ann)
+printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, tyn), fieldN) recVal = do
   recDoc <- printValueE recVal
   let mayFnDoc = printFieldName (withInfo tyn) (withInfo fieldN)
   case mayFnDoc of
     Nothing -> throwError $ "TODO(bladyjoker): Internal error: Failed print a `FieldName` in Haskell implementation printer " <> show fieldN
-    Just fnDoc -> return $ parens (fnDoc <+> recDoc)
+    Just fnDoc -> return $ fnDoc <+> recDoc
 
 {- | Prints a `let` expression on a `ValueE` of type `Product`.
 
@@ -142,7 +142,12 @@ printCaseIntE caseIntVal cases otherCase = do
           return $ group $ conditionDoc <+> "->" <+> bodyDoc
       )
   otherDoc <- printOtherCase otherCase
-  return $ "case" <+> align (caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+
+printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
+printListE vals = do
+  valDocs <- printValueE `traverse` vals
+  return $ lbracket <> align (encloseSep mempty mempty (comma <> space) valDocs <> rbracket)
 
 printCaseListE :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE caseListVal cases otherCase = do
@@ -152,13 +157,12 @@ printCaseListE caseListVal cases otherCase = do
       cases
       ( \(listLength, bodyVal) -> do
           xs <- replicateM listLength freshArg
-          xsDocs <- for xs printValueE
-          let conditionDoc = lbracket <> align (encloseSep mempty rbracket (comma <> space) xsDocs)
+          conditionDoc <- printListE xs
           bodyDoc <- printValueE $ bodyVal xs
           return $ group $ conditionDoc <+> "->" <+> bodyDoc
       )
   otherDoc <- printOtherCase otherCase
-  return $ align $ "case" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc])
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
@@ -198,7 +202,7 @@ printValueE (LV.ProductE qprod vals) = printProductE qprod vals
 printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
 printValueE (LV.IntE i) = return $ pretty i
 printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
-printValueE (LV.ListE vals) = align . group . encloseSep lbracket rbracket comma <$> (printValueE `traverse` vals)
+printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
 printValueE (LV.ErrorE err) = throwError $ "TODO(bladyjoker): LamVal error builtin was called " <> err
 
