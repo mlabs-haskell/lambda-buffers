@@ -11,6 +11,7 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (opaques)
 import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQTyName, printMkCtor, printTyName, printVarName)
+import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
@@ -30,8 +31,17 @@ type Maybe a = Prelude.Maybe a
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
-  let derivingShowDoc = if show kw /= "type" then " deriving Prelude.Show" else mempty
-  return $ group $ kw <+> printTyName tyN <+> absDoc <> derivingShowDoc
+  if kw /= SynonymTyDef
+    then return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc <+> printDerivingShow
+    else return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc
+
+printTyDefKw :: TyDefKw -> Doc ann
+printTyDefKw DataTyDef = "data"
+printTyDefKw NewtypeTyDef = "newtype"
+printTyDefKw SynonymTyDef = "type"
+
+printDerivingShow :: Doc ann
+printDerivingShow = "deriving Prelude.Show"
 
 {- | Prints the type abstraction.
 
@@ -40,7 +50,7 @@ For the above examples it prints
 a b = Foo'MkFoo a | Foo'MkBar b
 a = Prelude.Maybe a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
+printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
   let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
   (kw, bodyDoc) <- printTyBody tyN (toList args) body
@@ -55,22 +65,22 @@ Prelude.Maybe a
 
 TODO(bladyjoker): Revisit empty records and prods.
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
-printTyBody tyN _ (PC.SumI s) = ("data",) <$> printSum tyN s
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
+printTyBody tyN _ (PC.SumI s) = (DataTyDef,) <$> printSum tyN s
 printTyBody tyN _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
-  [] -> return ("data", printMkCtor tyN)
-  [_] -> return ("newtype", printMkCtor tyN <+> printProd p)
-  _ -> return ("data", printMkCtor tyN <+> printProd p)
+  [] -> return (DataTyDef, printMkCtor tyN)
+  [_] -> return (NewtypeTyDef, printMkCtor tyN <+> printProd p)
+  _ -> return (DataTyDef, printMkCtor tyN <+> printProd p)
 printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
-  [] -> return ("data", printMkCtor tyN)
-  [_] -> printRec tyN r >>= \recDoc -> return ("newtype", printMkCtor tyN <+> recDoc)
-  _ -> printRec tyN r >>= \recDoc -> return ("data", printMkCtor tyN <+> recDoc)
+  [] -> return (DataTyDef, printMkCtor tyN)
+  [_] -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
+  _ -> printRec tyN r >>= \recDoc -> return (DataTyDef, printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . opaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
-    Just hqtyn -> return ("type", printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
+    Just hqtyn -> return (SynonymTyDef, printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn

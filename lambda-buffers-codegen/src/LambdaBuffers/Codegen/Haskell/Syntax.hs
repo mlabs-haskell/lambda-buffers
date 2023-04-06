@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName) where
+module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..)) where
 
 import Control.Lens ((^.))
 import Data.Text (Text)
@@ -15,6 +15,8 @@ newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
 newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ClassName = MkClassName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ValueName = MkValueName Text deriving stock (Eq, Ord, Show, Generic)
+
+data TyDefKw = DataTyDef | NewtypeTyDef | SynonymTyDef deriving stock (Eq, Ord, Show, Generic)
 
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
