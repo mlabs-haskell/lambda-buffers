@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+
 module LambdaBuffers.Codegen.Purescript.Print.LamVal (printValueE, printImplementation) where
 
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -108,9 +110,9 @@ printFieldE ((_, tyn), fieldName) recVal = do
 
    let MkFoo x1 x2 x3 = <letVal> in <letCont>
 -}
-printLetE :: MonadPrint m => (PC.QTyName, LV.Product, LV.ValueE) -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
-printLetE ((_, tyN), fields, letVal) letCont = do
-  letValDoc <- printValueE letVal
+printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
+printLetE ((_, tyN), fields) prodVal letCont = do
+  letValDoc <- printValueE prodVal
   args <- for fields (const freshArg)
   argDocs <- for args printValueE
   let bodyVal = letCont args
@@ -128,7 +130,7 @@ printValueE (LV.LamE lamVal) = printLamE lamVal
 printValueE (LV.AppE funVal argVal) = printAppE funVal argVal
 printValueE (LV.VarE v) = return $ pretty v
 printValueE (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
-printValueE (LV.LetE letVal letCont) = printLetE letVal letCont
+printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
 
 freshArg :: MonadPrint m => m LV.ValueE
 freshArg = do

@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData) where
+module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData) where
 
 import Data.Foldable (Foldable (toList))
 import Data.Map (Map)
@@ -8,14 +8,14 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Print.LamVal (printImplementation)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printHsQValName, printHsValName)
+import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
-import LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl)
+import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, align, equals, group, sep, (<+>))
+import Prettyprinter (Doc, equals, (<+>))
 
 lvEqBuiltins :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
 lvEqBuiltins =
@@ -44,17 +44,16 @@ printDeriveEq mn iTyDefs mkInstanceDoc ty =
 lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
 lvPlutusDataBuiltins =
   Map.fromList
-    [ ("toPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "toData"))
-    , ("integerData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "I"))
-    , ("constrData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "Constr"))
-    , ("listData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "List"))
+    [ ("toPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "toBuiltinData"))
+    , ("fromPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "fromBuiltinData"))
+    , ("casePlutusData", (H.MkCabalPackageName "lb-haskell-runtime", H.MkModuleName "LambdaBuffers.Runtime.PlutusTx", H.MkValueName "casePlutusData"))
+    , ("integerData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkI"))
+    , ("constrData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkConstr"))
+    , ("listData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkList"))
+    , ("succeedParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Just"))
+    , ("failParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Nothing"))
+    , ("bindParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ">>="))
     ]
-
-dataToBuiltinDataRef :: H.QValName
-dataToBuiltinDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "dataToBuiltinData")
-
-dotOp :: H.QValName
-dotOp = (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ".")
 
 toPlutusDataClassMethodName :: H.ValueName
 toPlutusDataClassMethodName = H.MkValueName "toBuiltinData"
@@ -68,15 +67,31 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty =
       case printImplementation lvPlutusDataBuiltins valE of
         Left err -> Left $ Text.pack $ show err
         Right implDoc ->
-          let dataToBuiltinDataDoc = printValueApp dotOp [printHsQValName dataToBuiltinDataRef, implDoc]
-              instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName dataToBuiltinDataDoc)
+          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
            in Right
                 ( instanceDoc
-                , Set.insert dataToBuiltinDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+                , Set.fromList . toList $ lvPlutusDataBuiltins
                 )
 
 printValueDef :: H.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printHsValName valName <+> equals <+> valDoc
 
-printValueApp :: H.QValName -> [Doc ann] -> Doc ann
-printValueApp fVal aDocs = align . group $ (printHsQValName fVal <+> (align . group . sep $ aDocs))
+fromPlutusDataClassMethodName :: H.ValueName
+fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"
+
+builtinDataToDataRef :: H.QValName
+builtinDataToDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "builtinDataToData")
+
+printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set H.QValName)
+printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty =
+  case deriveFromPlutusDataImpl mn iTyDefs ty of
+    Left err -> Left $ Text.pack err
+    Right valE ->
+      case printImplementation lvPlutusDataBuiltins valE of
+        Left err -> Left $ Text.pack $ show err
+        Right implDoc ->
+          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
+           in Right
+                ( instanceDoc
+                , Set.insert builtinDataToDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+                )

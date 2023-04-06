@@ -1,37 +1,25 @@
 module LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl) where
 
 import Data.Map.Ordered qualified as OMap
-import LambdaBuffers.Codegen.LamVal (Field, Product, Record, Sum, ValueE, caseE, fieldE, lamE, letE, refE, (@))
+import LambdaBuffers.Codegen.LamVal (Field, QProduct, QRecord, QSum, ValueE (CaseE, FieldE, LamE, LetE, RefE), (@))
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
 import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
--- | `eq` function encoding parametrized by a single `E.Ty` type `eq :: a -> a -> Bool`.
-eqE :: E.Ty -> ValueE
-eqE ty = refE (Just ty, "eq")
-
-falseE :: ValueE
-falseE = refE (Nothing, "false")
-
-trueE :: ValueE
-trueE = refE (Nothing, "true")
-
-andE :: ValueE
-andE = refE (Nothing, "and")
-
-eqSum :: PC.QTyName -> Sum -> ValueE
-eqSum qtyN sumTy =
-  lamE
+-- | Eq on values of a Sum type
+eqSum :: QSum -> ValueE
+eqSum qsum =
+  LamE
     ( \l ->
-        lamE
+        LamE
           ( \r ->
-              caseE
-                (qtyN, sumTy)
+              CaseE
+                qsum
                 l
                 ( \(ctorTyL, lxs) ->
-                    caseE
-                      (qtyN, sumTy)
+                    CaseE
+                      qsum
                       r
                       ( \(ctorTyR, rxs) ->
                           if fst ctorTyL == fst ctorTyR
@@ -46,29 +34,20 @@ eqSum qtyN sumTy =
           )
     )
 
-{- | Eq on values of a Product type.
-
-module Foo
-
-product Foo a b = a b
-
-Would translate into
-
-data Foo a b = MkFoo a b
-
-(==) = \l -> \r -> let MkFoo x1 x2 = l in let MkFoo x3 x4 = r in x1 == x3 && x2 == x4 && true
--}
-eqProduct :: PC.QTyName -> Product -> ValueE
-eqProduct qtyN prodTy =
-  lamE
+-- | Eq on values of a Product type
+eqProduct :: QProduct -> ValueE
+eqProduct qprod@(_, prodTy) =
+  LamE
     ( \l ->
-        lamE
+        LamE
           ( \r ->
-              letE
-                (qtyN, prodTy, l)
+              LetE
+                qprod
+                l
                 ( \lxs ->
-                    letE
-                      (qtyN, prodTy, r)
+                    LetE
+                      qprod
+                      r
                       ( \rxs ->
                           foldl
                             (\tot (lx, rx, ty) -> andE @ tot @ (eqE ty @ lx @ rx))
@@ -79,23 +58,12 @@ eqProduct qtyN prodTy =
           )
     )
 
-{- | Eq on values of a Record type.
-
-module Foo
-
-record Foo a b = {foo : a, bar : b}
-
-Would translate into
-
-data Foo a b = MkFoo {foo'foo :: a, foo'bar :: b}
-
-(==) = \l -> \r -> foo'foo l == foo'foo r && foo'bar l == foo'bar r && true
--}
-eqRecord :: PC.QTyName -> Record -> ValueE
-eqRecord qtyN recTy =
-  lamE
+-- | Eq on values of a Record type
+eqRecord :: QRecord -> ValueE
+eqRecord (qtyN, recTy) =
+  LamE
     ( \l ->
-        lamE
+        LamE
           ( \r ->
               foldl
                 (\tot field -> andE @ tot @ eqField qtyN field l r)
@@ -105,7 +73,26 @@ eqRecord qtyN recTy =
     )
 
 eqField :: PC.QTyName -> Field -> ValueE -> ValueE -> ValueE
-eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ fieldE (qtyN, fieldName) l @ fieldE (qtyN, fieldName) r
+eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ FieldE (qtyN, fieldName) l @ FieldE (qtyN, fieldName) r
 
+-- | Hooks
 deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
 deriveEqImpl mn tydefs = deriveImpl mn tydefs eqSum eqProduct eqRecord
+
+-- | Domain value references
+
+-- | `eq :: a -> a -> Bool`
+eqE :: E.Ty -> ValueE
+eqE ty = RefE (Just ty, "eq")
+
+-- | `false :: Bool`
+falseE :: ValueE
+falseE = RefE (Nothing, "false")
+
+-- | `true :: Bool`
+trueE :: ValueE
+trueE = RefE (Nothing, "true")
+
+-- | `and :: Bool -> Bool -> Bool`
+andE :: ValueE
+andE = RefE (Nothing, "and")

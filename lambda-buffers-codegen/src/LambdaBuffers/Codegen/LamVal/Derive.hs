@@ -16,9 +16,9 @@ deriveImpl' ::
   Either String ValueE
 deriveImpl' mn tydefs sumImpl productImpl recordImpl qtyN ty = case E.runEval mn tydefs ty of
   Left err -> Left $ "PC.Ty evaluation failed while trying to derive an implementation\n" <> show err
-  Right (E.TySum s _) -> Right $ sumImpl qtyN s
-  Right (E.TyProduct p _) -> Right $ productImpl qtyN p
-  Right (E.TyRecord r _) -> Right $ recordImpl qtyN r
+  Right (E.TySum s _) -> Right $ sumImpl (qtyN, s)
+  Right (E.TyProduct p _) -> Right $ productImpl (qtyN, p)
+  Right (E.TyRecord r _) -> Right $ recordImpl (qtyN, r)
   Right wrongTy -> Left $ "Type evaluation resulted in an underivable `Ty`\n" <> show wrongTy
 
 deriveImpl ::

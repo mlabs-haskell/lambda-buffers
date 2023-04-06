@@ -30,7 +30,8 @@ type Maybe a = Prelude.Maybe a
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
-  return $ group $ kw <+> printTyName tyN <+> absDoc
+  let derivingShowDoc = if show kw /= "type" then " deriving Prelude.Show" else mempty
+  return $ group $ kw <+> printTyName tyN <+> absDoc <> derivingShowDoc
 
 {- | Prints the type abstraction.
 

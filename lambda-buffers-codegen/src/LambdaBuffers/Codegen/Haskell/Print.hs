@@ -20,7 +20,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
-import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printModName, printModName', printTyName)
@@ -30,7 +30,7 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, lparen, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, hardline, lparen, rparen, space, vsep, (<+>))
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
@@ -43,9 +43,9 @@ printModule = do
       , mempty
       , printImports lbTyImps opTyImps classImps ruleImps valImps
       , mempty
-      , vsep tyDefDocs -- TODO(bladyjoker): Add additional line in between TyDefs.
+      , vsep ((hardline <>) <$> tyDefDocs)
       , mempty
-      , vsep instDocs -- TODO(bladyjoker): Add additional line in between implementations.
+      , vsep ((hardline <>) <$> instDocs)
       ]
 
 hsClassImplPrinters ::
@@ -67,6 +67,10 @@ hsClassImplPrinters =
       ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "ToData")
       , printDeriveToPlutusData
       )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "FromData")
+      , printDeriveFromPlutusData
+      )
     ]
 
 printInstances :: MonadPrint m => m ([Doc ann], Set H.QValName)
@@ -76,22 +80,27 @@ printInstances = do
   let iTyDefs = PC.indexTyDefs ci
   foldrM
     ( \d (instDocs, valImps) -> do
-        (instDoc', valImps') <- printDerive iTyDefs d
-        return (instDoc' : instDocs, valImps `Set.union` valImps')
+        (instDocs', valImps') <- printDerive iTyDefs d
+        return (instDocs' <> instDocs, valImps `Set.union` valImps')
     )
     (mempty, Set.empty)
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m (Doc ann, Set H.QValName)
+printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m ([Doc ann], Set H.QValName)
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.classes)
   case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
-    Just hsQClassNamesToPrint -> do
-      res <- for hsQClassNamesToPrint (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
-      return (vsep (fst <$> res), Set.unions (snd <$> res))
+    Just hsQClassNamesToPrint ->
+      foldrM
+        ( \hsqcn (instDocs, imports) -> do
+            (instDoc, imports') <- printHsQClassImpl mn iTyDefs hsqcn d
+            return (instDoc : instDocs, imports' <> imports)
+        )
+        (mempty, mempty)
+        hsQClassNamesToPrint
 
 printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann, Set H.QValName)
 printHsQClassImpl mn iTyDefs hqcn d =
