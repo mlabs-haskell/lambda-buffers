@@ -23,15 +23,6 @@ import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
--- | A name for a value.
-type ValueName = String
-
-{- | A value reference that may be parametrized on a `E.Ty`.
- For example a `id :: a -> a` when used as `id` is `(Just "a", "id")`.
- However, when used as `id True` it's `(Just "Bool", "id")`.
--}
-type Ref = (Maybe E.Ty, ValueName)
-
 -- | Simple HOAS encoding of a little lambda calculus language.
 data ValueE where
   LamE :: (ValueE -> ValueE) -> ValueE
@@ -58,6 +49,34 @@ data ValueE where
 
 (@) :: ValueE -> ValueE -> ValueE
 (@) = AppE
+
+-- | A name for a value.
+type ValueName = String
+
+{- | A value reference that may be parametrized on `E.Ty`s.
+
+ We use this during code generation when 'finding' concrete values, especially for polymorphic functions.
+ For example
+
+ ```haskell
+ id :: a -> a
+ id x = x
+
+ firstUseSite :: Int -> Int
+ firstUseSite = id
+
+ secondUseSite :: String -> String
+ secondUseSite = id
+
+ thirdUseSite :: a -> a
+ thirdUseSite = id
+ ```
+
+ In the `firstUseSite` the `id` is instantiated to 'is `(["Int"], "id")`.
+ In the `secondUseSite` the `id` is instantiated to 'is `(["String"], "id")`.
+ In the `thirdUseSite` the `id` is instantiated to 'is `(["a"], "id")`.
+-}
+type Ref = ([E.Ty], ValueName)
 
 {- | Wrapper types.
  TODO(bladyjoker): Refactor `ProtoCompat.Eval` to have these types explicitly named.

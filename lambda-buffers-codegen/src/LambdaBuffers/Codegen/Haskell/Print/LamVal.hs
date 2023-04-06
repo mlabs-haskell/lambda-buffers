@@ -221,10 +221,8 @@ freshArg = do
  TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
 -}
 resolveRef :: MonadPrint m => LV.Ref -> m (Doc ann)
-resolveRef (mayTy, refName) = do
+resolveRef (_, refName) = do
   bs <- asks builtins
   case Map.lookup refName bs of
     Nothing -> throwError $ "TODO(bladyjoker): LamVal builtin mapping for " <> show refName <> " not configured."
-    Just hqValName -> case mayTy of
-      Nothing -> return $ printHsQValName hqValName
-      Just _ty -> return $ printHsQValName hqValName -- TODO(bladyjoker): Add a TypeApplication notation?
+    Just hqValName -> return $ printHsQValName hqValName -- TODO(bladyjoker): Add a TypeApplication notation?

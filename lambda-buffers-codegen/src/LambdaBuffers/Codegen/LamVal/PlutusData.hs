@@ -64,17 +64,17 @@ fromPlutusDataSum ty (qtyN, sumTy) =
         pds
         [
           ( length ctorTy
-          , \pds' -> fromPlutusDataTys (zip ctorTy pds') (\xs -> succeedParseRef ty @ CtorE (qtyN, (ctorN, ctorTy)) xs)
+          , \pds' -> fromPlutusDataTys (zip ctorTy pds') ty (\xs -> succeedParseRef ty @ CtorE (qtyN, (ctorN, ctorTy)) xs)
           )
         ]
         (\_ -> failParseRef ty)
 
-fromPlutusDataTys :: [(E.Ty, ValueE)] -> ([ValueE] -> ValueE) -> ValueE
-fromPlutusDataTys pdsToParse = go pdsToParse []
+fromPlutusDataTys :: [(E.Ty, ValueE)] -> E.Ty -> ([ValueE] -> ValueE) -> ValueE
+fromPlutusDataTys pdsToParse tyOut = go pdsToParse []
   where
     go [] tot cont = cont (reverse tot)
     go ((tyX, pdX) : rest) tot cont =
-      bindParseRef tyX
+      bindParseRef tyX tyOut
         @ (fromPlutusDataRef tyX @ pdX)
         @ LamE (\x -> go rest (x : tot) cont)
 
@@ -102,7 +102,7 @@ toPlutusDataProduct qprod@(_, prodTy) =
 
 fromPlutusDataProduct :: E.Ty -> QProduct -> ValueE
 fromPlutusDataProduct ty qprod@(_, [fieldTy]) = LamE $ \pdVal ->
-  bindParseRef fieldTy
+  bindParseRef fieldTy ty
     @ (fromPlutusDataRef fieldTy @ pdVal)
     @ LamE (\fieldVal -> succeedParseRef ty @ ProductE qprod [fieldVal])
 fromPlutusDataProduct ty qprod@(_, fields) =
@@ -116,7 +116,7 @@ fromPlutusDataProduct ty qprod@(_, fields) =
               pds
               [
                 ( length fields
-                , \pds' -> fromPlutusDataTys (zip fields pds') (\xs -> succeedParseRef ty @ ProductE qprod xs)
+                , \pds' -> fromPlutusDataTys (zip fields pds') ty (\xs -> succeedParseRef ty @ ProductE qprod xs)
                 )
               ]
               (\_ -> failParseRef ty)
@@ -143,7 +143,7 @@ toPlutusDataRecord (qtyN, recTy) =
 fromPlutusDataRecord :: E.Ty -> QRecord -> ValueE
 fromPlutusDataRecord ty qrec@(_, fields') = case OMap.assocs fields' of
   [field@(_, fieldTy)] -> LamE $ \pdVal ->
-    bindParseRef fieldTy
+    bindParseRef fieldTy ty
       @ (fromPlutusDataRef fieldTy @ pdVal)
       @ LamE (\fieldVal -> succeedParseRef ty @ RecordE qrec [(field, fieldVal)])
   fields -> LamE $
@@ -156,7 +156,7 @@ fromPlutusDataRecord ty qrec@(_, fields') = case OMap.assocs fields' of
               pds
               [
                 ( length fields
-                , \pds' -> fromPlutusDataTys (zip (snd <$> fields) pds') (\xs -> succeedParseRef ty @ RecordE qrec (zip fields xs))
+                , \pds' -> fromPlutusDataTys (zip (snd <$> fields) pds') ty (\xs -> succeedParseRef ty @ RecordE qrec (zip fields xs))
                 )
               ]
               (\_ -> failParseRef ty)
@@ -185,39 +185,39 @@ findCtorIndex sumTy ctorN = case OMap.findIndex ctorN sumTy of
 
 -- | `toPlutusData :: a -> PlutusData`
 toPlutusDataRef :: E.Ty -> ValueE
-toPlutusDataRef ty = RefE (Just ty, "toPlutusData")
+toPlutusDataRef ty = RefE ([ty], "toPlutusData")
 
 -- | `fromPlutusData :: PlutusData -> Parser a`
 fromPlutusDataRef :: E.Ty -> ValueE
-fromPlutusDataRef ty = RefE (Just ty, "fromPlutusData")
+fromPlutusDataRef ty = RefE ([ty], "fromPlutusData")
 
 -- | `bindParse :: Parser a -> (a -> Parser b) -> Parser b`
-bindParseRef :: E.Ty -> ValueE
-bindParseRef ty = RefE (Just ty, "bindParse")
+bindParseRef :: E.Ty -> E.Ty -> ValueE
+bindParseRef tyIn tyOut = RefE ([tyIn, tyOut], "bindParse")
 
 -- | `failParse :: Parser a`
 failParseRef :: E.Ty -> ValueE
-failParseRef ty = RefE (Just ty, "failParse")
+failParseRef ty = RefE ([ty], "failParse")
 
 -- | `succeedParse :: a -> Parser a`
 succeedParseRef :: E.Ty -> ValueE
-succeedParseRef ty = RefE (Just ty, "succeedParse")
+succeedParseRef ty = RefE ([ty], "succeedParse")
 
 -- | `integerData :: IntE -> PlutusData`
 integerToPlutusDataRef :: ValueE
-integerToPlutusDataRef = RefE (Nothing, "integerData")
+integerToPlutusDataRef = RefE ([], "integerData")
 
 -- | `constrData :: IntE -> ListE PlutusData -> PlutusData`
 constrToPlutusDataRef :: ValueE
-constrToPlutusDataRef = RefE (Nothing, "constrData")
+constrToPlutusDataRef = RefE ([], "constrData")
 
 -- | `listData :: ListE PlutusData -> PlutusData`
 listToPlutusDataRef :: ValueE
-listToPlutusDataRef = RefE (Nothing, "listData")
+listToPlutusDataRef = RefE ([], "listData")
 
 -- | `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
 casePlutusDataRef :: E.Ty -> ValueE
-casePlutusDataRef ty = RefE (Just ty, "casePlutusData")
+casePlutusDataRef ty = RefE ([ty], "casePlutusData")
 
 casePlutusData :: E.Ty -> (ValueE -> ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> ValueE -> ValueE
 casePlutusData ty ctorCase listCase intCase otherCase pdVal =

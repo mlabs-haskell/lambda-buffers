@@ -83,16 +83,16 @@ deriveEqImpl mn tydefs = deriveImpl mn tydefs eqSum eqProduct eqRecord
 
 -- | `eq :: a -> a -> Bool`
 eqE :: E.Ty -> ValueE
-eqE ty = RefE (Just ty, "eq")
+eqE ty = RefE ([ty], "eq")
 
 -- | `false :: Bool`
 falseE :: ValueE
-falseE = RefE (Nothing, "false")
+falseE = RefE ([], "false")
 
 -- | `true :: Bool`
 trueE :: ValueE
-trueE = RefE (Nothing, "true")
+trueE = RefE ([], "true")
 
 -- | `and :: Bool -> Bool -> Bool`
 andE :: ValueE
-andE = RefE (Nothing, "and")
+andE = RefE ([], "and")
