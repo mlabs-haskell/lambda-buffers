@@ -30,7 +30,7 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, hardline, lparen, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
@@ -43,9 +43,9 @@ printModule = do
       , mempty
       , printImports lbTyImps opTyImps classImps ruleImps valImps
       , mempty
-      , vsep ((hardline <>) <$> tyDefDocs)
+      , vsep ((line <>) <$> tyDefDocs)
       , mempty
-      , vsep ((hardline <>) <$> instDocs)
+      , vsep ((line <>) <$> instDocs)
       ]
 
 hsClassImplPrinters ::

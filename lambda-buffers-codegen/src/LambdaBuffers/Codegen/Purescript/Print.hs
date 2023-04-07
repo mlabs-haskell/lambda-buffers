@@ -21,7 +21,7 @@ import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printModName, printModName', printTyName)
@@ -30,7 +30,7 @@ import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, lparen, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
@@ -43,9 +43,9 @@ printModule = do
       , mempty
       , printImports lbTyImps opTyImps classImps ruleImps valImps
       , mempty
-      , vsep tyDefDocs -- TODO(bladyjoker): Add additional line in between TyDefs.
+      , vsep ((line <>) <$> tyDefDocs)
       , mempty
-      , vsep instDocs -- TODO(bladyjoker): Add additional line in between implementations.
+      , vsep ((line <>) <$> instDocs)
       ]
 
 pursClassImplPrinters ::
@@ -67,6 +67,10 @@ pursClassImplPrinters =
       ( (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkClassName "ToData")
       , printDeriveToPlutusData
       )
+    ,
+      ( (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.FromData", Purs.MkClassName "FromData")
+      , printDeriveFromPlutusData
+      )
     ]
 
 printInstances :: MonadPrint m => m ([Doc ann], Set Purs.QValName)
@@ -76,22 +80,27 @@ printInstances = do
   let iTyDefs = PC.indexTyDefs ci
   foldrM
     ( \d (instDocs, valImps) -> do
-        (instDoc', valImps') <- printDerive iTyDefs d
-        return (instDoc' : instDocs, valImps `Set.union` valImps')
+        (instDocs', valImps') <- printDerive iTyDefs d
+        return (instDocs' <> instDocs, valImps `Set.union` valImps')
     )
     (mempty, Set.empty)
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m (Doc ann, Set Purs.QValName)
+printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m ([Doc ann], Set Purs.QValName)
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.classes)
   case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
-    Just pursQClassNamesToPrint -> do
-      res <- for pursQClassNamesToPrint (\pursqcn -> printPursQClassImpl mn iTyDefs pursqcn d)
-      return (vsep (fst <$> res), Set.unions (snd <$> res))
+    Just pursQClassNamesToPrint ->
+      foldrM
+        ( \pursqcn (instDocs, imports) -> do
+            (instDoc, imports') <- printPursQClassImpl mn iTyDefs pursqcn d
+            return (instDoc : instDocs, imports' <> imports)
+        )
+        (mempty, mempty)
+        pursQClassNamesToPrint
 
 printPursQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> Purs.QClassName -> PC.Derive -> m (Doc ann, Set Purs.QValName)
 printPursQClassImpl mn iTyDefs hqcn d =

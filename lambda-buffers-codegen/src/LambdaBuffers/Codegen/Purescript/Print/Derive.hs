@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveToPlutusData) where
+module LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData) where
 
 import Data.Foldable (Foldable (toList))
 import Data.Map (Map)
@@ -9,7 +9,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
-import LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl)
+import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Purescript.Print.LamVal (printImplementation)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
@@ -45,13 +45,21 @@ lvPlutusDataBuiltins :: Map LV.ValueName Purs.QValName
 lvPlutusDataBuiltins =
   Map.fromList
     [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
+    , ("fromPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.FromData" "fromData")
+    , ("casePlutusData", Purs.normalValName "lb-ctl-runtime" "LambdaBuffers.Runtime.PlutusLedgerApi" "casePlutusData")
     , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
     , ("constrData", Purs.normalValName "lb-ctl-runtime" "LambdaBuffers.Runtime.PlutusLedgerApi" "pdConstr")
     , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
+    , ("succeedParse", Purs.normalValName "maybe" "Data.Maybe" "Just")
+    , ("failParse", Purs.normalValName "maybe" "Data.Maybe" "Nothing")
+    , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
     ]
 
 toPlutusDataClassMethodName :: Purs.ValueName
 toPlutusDataClassMethodName = Purs.MkValueName "toData"
+
+fromPlutusDataClassMethodName :: Purs.ValueName
+fromPlutusDataClassMethodName = Purs.MkValueName "fromData"
 
 -- TODO: Handle errors properly.
 printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
@@ -63,6 +71,20 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty =
         Left err -> Left $ Text.pack $ show err
         Right implDoc ->
           let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
+           in Right
+                ( instanceDoc
+                , Set.fromList . toList $ lvPlutusDataBuiltins
+                )
+
+printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
+printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty =
+  case deriveFromPlutusDataImpl mn iTyDefs ty of
+    Left err -> Left $ Text.pack err
+    Right valE ->
+      case printImplementation lvPlutusDataBuiltins valE of
+        Left err -> Left $ Text.pack $ show err
+        Right implDoc ->
+          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
            in Right
                 ( instanceDoc
                 , Set.fromList . toList $ lvPlutusDataBuiltins

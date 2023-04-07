@@ -20,25 +20,36 @@ import Data.Set as Data.Set
 import Prelude as Prelude
 import Prim as Prim
 
+
 type Bool = Prim.Boolean
+
 
 type Bytes = Ctl.Internal.Types.ByteArray.ByteArray
 
+
 type Char = Prim.Char
+
 
 type Either a b = Data.Either.Either a b
 
+
 type Int32 = Prim.Int
+
 
 type Integer = Data.BigInt.BigInt
 
+
 type List a = Prim.Array a
+
 
 type Map a b = Data.Map.Map a b
 
+
 type Maybe a = Data.Maybe.Maybe a
 
+
 type Set a = Data.Set.Set a
+
 
 type Text = Prim.String
 
