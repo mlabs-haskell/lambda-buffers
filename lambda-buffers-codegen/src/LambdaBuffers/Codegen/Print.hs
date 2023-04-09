@@ -28,30 +28,30 @@ import Prettyprinter (Doc)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-type MonadPrint o c m = (MonadError Error m, MonadReader (Context o c) m)
+type MonadPrint qtn qcn m = (MonadError Error m, MonadReader (Context qtn qcn) m)
 
-type PrintM o c = ReaderT (Context o c) (Except Error)
+type PrintM qtn qcn = ReaderT (Context qtn qcn) (Except Error)
 
 type Error = (PC.SourceInfo, Text)
 
-data Context o c = MkContext
+data Context qtn qcn = MkContext
   { _ctxCompilerInput :: PC.CompilerInput -- TODO(bladyjoker): Use proper `CodegenInput`.
   , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
   , _ctxTyImports :: Set PC.QTyName
-  , _ctxOpaqueTyImports :: Set o
-  , _ctxClassImports :: Set c
+  , _ctxOpaqueTyImports :: Set qtn
+  , _ctxClassImports :: Set qcn
   , _ctxRuleImports :: Set (PC.InfoLess PC.ModuleName)
   , _ctxTyExports :: Set (PC.InfoLess PC.TyName)
-  , _ctxConfig :: Config o c
+  , _ctxConfig :: Config qtn qcn
   }
   deriving stock (Eq, Ord, Show)
 
 makeLenses 'MkContext
 
 runPrint ::
-  forall o c.
-  Context o c ->
-  PrintM o c (Doc ()) ->
+  forall qtn qcn.
+  Context qtn qcn ->
+  PrintM qtn qcn (Doc ()) ->
   Either P.CompilerError (Doc ())
 runPrint ctx modPrinter =
   let p = runReaderT modPrinter ctx

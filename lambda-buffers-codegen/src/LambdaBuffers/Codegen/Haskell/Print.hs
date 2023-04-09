@@ -90,7 +90,7 @@ printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m ([Doc ann], Set H.QVa
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
-  classes <- asks (view $ Print.ctxConfig . C.classes)
+  classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
     Just hsQClassNamesToPrint ->

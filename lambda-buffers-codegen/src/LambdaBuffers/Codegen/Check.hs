@@ -15,7 +15,7 @@ import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
-import LambdaBuffers.Codegen.Config (Config, classes, opaques)
+import LambdaBuffers.Codegen.Config (Config, cfgClasses, cfgOpaques)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
@@ -23,7 +23,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-type MonadCheck o c m = (MonadRWS (CheckRead o c) () (CheckState o c) m, MonadError CheckErr m)
+type MonadCheck qtn qcn m = (MonadRWS (CheckRead qtn qcn) () (CheckState qtn qcn) m, MonadError CheckErr m)
 
 data CheckCtx
   = ModuleCtx PC.ModuleName
@@ -31,23 +31,23 @@ data CheckCtx
   | RuleDefCtx PC.ModuleName
   deriving stock (Eq, Ord, Show)
 
-type CheckRead o c = (Config o c, CheckCtx)
+type CheckRead qtn qcn = (Config qtn qcn, CheckCtx)
 
 type CheckErr = String
 
-data CheckState o c = MkCheckState
+data CheckState qtn qcn = MkCheckState
   { moduleTyImports :: Set PC.QTyName
-  , moduleOpaqueImports :: Set o
-  , moduleClassImports :: Set c
+  , moduleOpaqueImports :: Set qtn
+  , moduleClassImports :: Set qcn
   , moduleRuleImports :: Set (PC.InfoLess PC.ModuleName)
   , moduleTyExports :: Set (PC.InfoLess PC.TyName)
   }
   deriving stock (Eq, Ord, Show)
 
-initialCheckState :: (Ord o, Ord c) => CheckState o c
+initialCheckState :: (Ord qtn, Ord qcn) => CheckState qtn qcn
 initialCheckState = MkCheckState mempty mempty mempty mempty mempty
 
-runCheck :: forall o c. (Ord o, Ord c) => Config o c -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (Print.Context o c)
+runCheck :: forall qtn qcn. (Ord qtn, Ord qcn) => Config qtn qcn -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (Print.Context qtn qcn)
 runCheck cfg ci m =
   let p =
         runRWST
@@ -57,47 +57,47 @@ runCheck cfg ci m =
       p' = runExcept p
    in go p'
   where
-    go :: Either CheckErr ((), CheckState o c, ()) -> Either P.CompilerError (Print.Context o c)
+    go :: Either CheckErr ((), CheckState qtn qcn, ()) -> Either P.CompilerError (Print.Context qtn qcn)
     go (Right ((), MkCheckState lbtyImps opqImps clImps ruleImps tyExprts, _)) = Right $ Print.MkContext ci m lbtyImps opqImps clImps ruleImps tyExprts cfg
     go (Left printErr) = Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ Text.pack printErr]
 
-askConfig :: MonadCheck o c m => m (Config o c)
+askConfig :: MonadCheck qtn qcn m => m (Config qtn qcn)
 askConfig = asks fst
 
-askCtx :: MonadCheck o c m => m CheckCtx
+askCtx :: MonadCheck qtn qcn m => m CheckCtx
 askCtx = asks snd
 
-askTyDefCtx :: MonadCheck o c m => m (PC.ModuleName, PC.TyDef)
+askTyDefCtx :: MonadCheck qtn qcn m => m (PC.ModuleName, PC.TyDef)
 askTyDefCtx = do
   ctx <- askCtx
   case ctx of
     TyDefCtx mn td -> return (mn, td)
     other -> throwError $ "Internal error, wanted TyDefCtx got " <> show other
 
-askInstCtx :: MonadCheck o c m => m PC.ModuleName
+askInstCtx :: MonadCheck qtn qcn m => m PC.ModuleName
 askInstCtx = do
   ctx <- askCtx
   case ctx of
     RuleDefCtx mn -> return mn
     other -> throwError $ "Internal error, wanted RuleDefCtx got " <> show other
 
-exportTy :: MonadCheck o c m => PC.InfoLess PC.TyName -> m ()
+exportTy :: MonadCheck qtn qcn m => PC.InfoLess PC.TyName -> m ()
 exportTy htyN = modify (\s -> s {moduleTyExports = Set.union (moduleTyExports s) (Set.singleton htyN)})
 
-importTy :: MonadCheck o c m => PC.QTyName -> m ()
+importTy :: MonadCheck qtn qcn m => PC.QTyName -> m ()
 importTy qtyn = modify (\s -> s {moduleTyImports = Set.union (moduleTyImports s) (Set.singleton qtyn)})
 
-importOpaqueTy :: Ord o => MonadCheck o c m => o -> m ()
+importOpaqueTy :: Ord qtn => MonadCheck qtn qcn m => qtn -> m ()
 importOpaqueTy qtyn = modify (\s -> s {moduleOpaqueImports = Set.union (moduleOpaqueImports s) (Set.singleton qtyn)})
 
-importClass :: (MonadCheck o c m, Ord c) => c -> m ()
+importClass :: (MonadCheck qtn qcn m, Ord qcn) => qcn -> m ()
 importClass qcn = modify (\s -> s {moduleClassImports = Set.union (moduleClassImports s) (Set.singleton qcn)})
 
-importRulesFrom :: MonadCheck o c m => PC.InfoLess PC.ModuleName -> m ()
+importRulesFrom :: MonadCheck qtn qcn m => PC.InfoLess PC.ModuleName -> m ()
 importRulesFrom mn = modify (\s -> s {moduleRuleImports = Set.union (moduleRuleImports s) (Set.singleton mn)})
 
 -- | Traverse the module and collect imports and exports, erroring if anything is not configured.
-checkModule :: (MonadCheck o c m, Ord o, Ord c) => PC.Module -> m ()
+checkModule :: (MonadCheck qtn qcn m, Ord qtn, Ord qcn) => PC.Module -> m ()
 checkModule m = do
   for_
     (m ^. #typeDefs)
@@ -115,63 +115,63 @@ checkModule m = do
     (Map.keys $ m ^. #imports)
     importRulesFrom
 
-checkTyDef :: (MonadCheck o c m, Ord o) => PC.TyDef -> m ()
+checkTyDef :: (MonadCheck qtn qcn m, Ord qtn) => PC.TyDef -> m ()
 checkTyDef td = do
   checkTyAbs $ td ^. #tyAbs
   exportTy (PC.mkInfoLess $ td ^. #tyName)
 
-checkTyAbs :: (MonadCheck o c m, Ord o) => PC.TyAbs -> m ()
+checkTyAbs :: (MonadCheck qtn qcn m, Ord qtn) => PC.TyAbs -> m ()
 checkTyAbs (PC.TyAbs _ body _) = checkTyBody body
 
-checkTyBody :: (MonadCheck o c m, Ord o) => PC.TyBody -> m ()
+checkTyBody :: (MonadCheck qtn qcn m, Ord qtn) => PC.TyBody -> m ()
 checkTyBody (PC.SumI s) = checkSum s
 checkTyBody (PC.ProductI p) = checkProduct p
 checkTyBody (PC.RecordI r) = checkRecord r
 checkTyBody (PC.OpaqueI _) = checkOpaque
 
-checkOpaque :: (MonadCheck o c m, Ord o) => m ()
+checkOpaque :: (MonadCheck qtn qcn m, Ord qtn) => m ()
 checkOpaque = do
   cfg <- askConfig
   (currentModuleName, currentTyDef) <- askTyDefCtx
   let qtyn = (PC.mkInfoLess currentModuleName, PC.mkInfoLess $ currentTyDef ^. #tyName)
-  qotyn <- case Map.lookup qtyn (cfg ^. opaques) of
+  qotyn <- case Map.lookup qtyn (cfg ^. cfgOpaques) of
     Nothing -> throwError $ "TODO(bladyjoker): Opaque not configured " <> show (currentTyDef ^. #tyName)
     Just qhtyn -> return qhtyn
   importOpaqueTy qotyn
 
-checkSum :: MonadCheck o c m => PC.Sum -> m ()
+checkSum :: MonadCheck qtn qcn m => PC.Sum -> m ()
 checkSum s = for_ (s ^. #constructors) (\c -> checkProduct (c ^. #product))
 
-checkProduct :: MonadCheck o c m => PC.Product -> m ()
+checkProduct :: MonadCheck qtn qcn m => PC.Product -> m ()
 checkProduct p = for_ (p ^. #fields) checkTy
 
-checkRecord :: MonadCheck o c m => PC.Record -> m ()
+checkRecord :: MonadCheck qtn qcn m => PC.Record -> m ()
 checkRecord r = for_ (r ^. #fields) (\f -> checkTy $ f ^. #fieldTy)
 
-checkTy :: MonadCheck o c m => PC.Ty -> m ()
+checkTy :: MonadCheck qtn qcn m => PC.Ty -> m ()
 checkTy (PC.TyRefI (PC.ForeignI fr)) = importTy (PC.mkInfoLess $ fr ^. #moduleName, PC.mkInfoLess $ fr ^. #tyName)
 checkTy (PC.TyAppI ta) = checkTy (ta ^. #tyFunc) >> for_ (ta ^. #tyArgs) checkTy
 checkTy _ = return ()
 
 -- TODO(bladyjoker): This is where you lookup instance implementation and report if an instance implementation is missing.
-checkInstanceClause :: (MonadCheck o c m, Ord c) => PC.InstanceClause -> m ()
+checkInstanceClause :: (MonadCheck qtn qcn m, Ord qcn) => PC.InstanceClause -> m ()
 checkInstanceClause ic = do
   checkConstraint $ ic ^. #head
   for_ (ic ^. #constraints) checkConstraint
 
-checkDerive :: (MonadCheck o c m, Ord c) => PC.Derive -> m ()
+checkDerive :: (MonadCheck qtn qcn m, Ord qcn) => PC.Derive -> m ()
 checkDerive drv = checkConstraint $ drv ^. #constraint
 
-checkConstraint :: (MonadCheck o c m, Ord c) => PC.Constraint -> m ()
+checkConstraint :: (MonadCheck qtn qcn m, Ord qcn) => PC.Constraint -> m ()
 checkConstraint c = do
   resolveClassRef (c ^. #classRef)
   checkTy $ c ^. #argument
 
-resolveClassRef :: (MonadCheck o c m, Ord c) => PC.TyClassRef -> m ()
+resolveClassRef :: (MonadCheck qtn qcn m, Ord qcn) => PC.TyClassRef -> m ()
 resolveClassRef cr = do
   cfg <- askConfig
   mn <- askInstCtx
   let qcn = PC.qualifyClassRef mn cr
-  case Map.lookup qcn (cfg ^. classes) of
+  case Map.lookup qcn (cfg ^. cfgClasses) of
     Nothing -> throwError $ "TODO(bladyjoker): Class not configured " <> show cr
     Just clImp -> importClass clImp

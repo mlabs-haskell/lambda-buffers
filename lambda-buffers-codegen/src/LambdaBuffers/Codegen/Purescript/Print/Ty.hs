@@ -8,7 +8,7 @@ import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Config (opaques)
+import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
@@ -50,7 +50,7 @@ printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
   [] -> return (DataTyDef, printMkCtor tyN)
   _ -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
-  opqs <- asks (view $ Print.ctxConfig . opaques)
+  opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))

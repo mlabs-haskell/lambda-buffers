@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Config (Config (..), opaques, classes) where
+module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses) where
 
 import Control.Lens (makeLenses, view)
 import Data.Aeson (FromJSON, ToJSON, parseJSON)
@@ -14,26 +14,31 @@ import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 
-data Config o c = MkConfig
-  { _opaques :: Map PC.QTyName o
-  , _classes :: Map PC.QClassName c
+-- | `Config` is parametrized over a qualified type and class name for specifying `Opaque` type and class mappings in the target language.
+data Config qtn qcn = Config
+  { _cfgOpaques :: Map PC.QTyName qtn
+  , _cfgClasses :: Map PC.QClassName qcn
   }
   deriving stock (Eq, Ord, Show)
 
-makeLenses 'MkConfig
+makeLenses 'Config
 
-data JsonConfig o c = MkJsonConfig
-  { opaquesConfig :: Map Text o
-  , classesConfig :: Map Text c
+-- | `JsonConfig` is a data type representing the external config format parametrized by qualified type and class names and instantiated per each backend separately.
+data JsonConfig qtn qcn = JsonConfig
+  { opaquesConfig :: Map Text qtn
+  , classesConfig :: Map Text qcn
   }
   deriving stock (Eq, Ord, Show, Generic)
 
+-- | `moduleNameToText ["Foo", "Bar"] = "Foo.Bar"`
 moduleNameToText :: PC.InfoLess PC.ModuleName -> Text
 moduleNameToText = Text.pack . show . (`PC.withInfoLess` PC.prettyModuleName)
 
+-- | `qTyNameToText (["Foo", "Bar"], "Baz") = "Foo.Bar.Baz"`
 qTyNameToText :: PC.QTyName -> Text
 qTyNameToText (mn, tyn) = moduleNameToText mn <> "." <> PC.withInfoLess tyn (view #name)
 
+-- | `qClassNameToText (["Foo", "Bar"], "Baz") = "Foo.Bar.Baz"`
 qClassNameToText :: PC.QClassName -> Text
 qClassNameToText (mn, cn) = moduleNameToText mn <> "." <> PC.withInfoLess cn (view #name)
 
@@ -67,17 +72,17 @@ toClassesConfig = Map.mapKeys qClassNameToText
 fromClassesConfig :: MonadFail m => Map Text o -> m (Map PC.QClassName o)
 fromClassesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> qClassNameFromText ltyn <*> pure htyn) (Map.toList opqs)
 
-toJsonConfig :: Config o c -> JsonConfig o c
-toJsonConfig (MkConfig opqs cls) = MkJsonConfig (toOpaquesConfig opqs) (toClassesConfig cls)
+toJsonConfig :: Config qtn qcn -> JsonConfig qtn qcn
+toJsonConfig (Config opqs cls) = JsonConfig (toOpaquesConfig opqs) (toClassesConfig cls)
 
-fromJsonConfig :: MonadFail m => JsonConfig o c -> m (Config o c)
-fromJsonConfig (MkJsonConfig opqs cls) = MkConfig <$> fromOpaquesConfig opqs <*> fromClassesConfig cls
+fromJsonConfig :: MonadFail m => JsonConfig qtn qcn -> m (Config qtn qcn)
+fromJsonConfig (JsonConfig opqs cls) = Config <$> fromOpaquesConfig opqs <*> fromClassesConfig cls
 
-instance (ToJSON o, ToJSON c) => ToJSON (JsonConfig o c)
-instance (FromJSON o, FromJSON c) => FromJSON (JsonConfig o c)
+instance (ToJSON qtn, ToJSON qcn) => ToJSON (JsonConfig qtn qcn)
+instance (FromJSON qtn, FromJSON qcn) => FromJSON (JsonConfig qtn qcn)
 
-instance (ToJSON o, ToJSON c) => ToJSON (Config o c) where
+instance (ToJSON qtn, ToJSON qcn) => ToJSON (Config qtn qcn) where
   toJSON = toJSON . toJsonConfig
 
-instance (FromJSON o, FromJSON c) => FromJSON (Config o c) where
+instance (FromJSON qtn, FromJSON qcn) => FromJSON (Config qtn qcn) where
   parseJSON v = parseJSON v >>= fromJsonConfig
