@@ -35,7 +35,7 @@ type CheckRead qtn qcn = (Config qtn qcn, CheckCtx)
 
 type CheckErr = String
 
-data CheckState qtn qcn = MkCheckState
+data CheckState qtn qcn = CheckState
   { moduleTyImports :: Set PC.QTyName
   , moduleOpaqueImports :: Set qtn
   , moduleClassImports :: Set qcn
@@ -45,7 +45,7 @@ data CheckState qtn qcn = MkCheckState
   deriving stock (Eq, Ord, Show)
 
 initialCheckState :: (Ord qtn, Ord qcn) => CheckState qtn qcn
-initialCheckState = MkCheckState mempty mempty mempty mempty mempty
+initialCheckState = CheckState mempty mempty mempty mempty mempty
 
 runCheck :: forall qtn qcn. (Ord qtn, Ord qcn) => Config qtn qcn -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (Print.Context qtn qcn)
 runCheck cfg ci m =
@@ -58,7 +58,7 @@ runCheck cfg ci m =
    in go p'
   where
     go :: Either CheckErr ((), CheckState qtn qcn, ()) -> Either P.CompilerError (Print.Context qtn qcn)
-    go (Right ((), MkCheckState lbtyImps opqImps clImps ruleImps tyExprts, _)) = Right $ Print.MkContext ci m lbtyImps opqImps clImps ruleImps tyExprts cfg
+    go (Right ((), CheckState lbtyImps opqImps clImps ruleImps tyExprts, _)) = Right $ Print.Context ci m lbtyImps opqImps clImps ruleImps tyExprts cfg
     go (Left printErr) = Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ Text.pack printErr]
 
 askConfig :: MonadCheck qtn qcn m => m (Config qtn qcn)
@@ -174,4 +174,4 @@ resolveClassRef cr = do
   let qcn = PC.qualifyClassRef mn cr
   case Map.lookup qcn (cfg ^. cfgClasses) of
     Nothing -> throwError $ "TODO(bladyjoker): Class not configured " <> show cr
-    Just clImp -> importClass clImp
+    Just clImps -> for_ clImps importClass

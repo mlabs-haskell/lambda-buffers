@@ -10,15 +10,20 @@ module LambdaBuffers.Codegen.Print (
   ctxConfig,
   ctxCompilerInput,
   ctxModule,
+  importValue,
+  importClass,
+  stValueImports,
+  stClassImports,
 ) where
 
 import Control.Lens (makeLenses, (&), (.~))
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.Except (Except, runExcept)
-import Control.Monad.Reader (ReaderT (runReaderT))
-import Control.Monad.Reader.Class (MonadReader)
+import Control.Monad.RWS (RWST (runRWST))
+import Control.Monad.RWS.Class (MonadRWS, modify)
 import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config)
@@ -28,13 +33,9 @@ import Prettyprinter (Doc)
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-type MonadPrint qtn qcn m = (MonadError Error m, MonadReader (Context qtn qcn) m)
-
-type PrintM qtn qcn = ReaderT (Context qtn qcn) (Except Error)
-
 type Error = (PC.SourceInfo, Text)
 
-data Context qtn qcn = MkContext
+data Context qtn qcn = Context
   { _ctxCompilerInput :: PC.CompilerInput -- TODO(bladyjoker): Use proper `CodegenInput`.
   , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
   , _ctxTyImports :: Set PC.QTyName
@@ -46,15 +47,28 @@ data Context qtn qcn = MkContext
   }
   deriving stock (Eq, Ord, Show)
 
-makeLenses 'MkContext
+makeLenses 'Context
+
+data State qcn qvn = State
+  { _stValueImports :: Set qvn
+  , _stClassImports :: Set qcn
+  }
+  deriving stock (Eq, Ord, Show)
+
+makeLenses 'State
+
+type MonadPrint qtn qcn qvn m = (MonadError Error m, MonadRWS (Context qtn qcn) () (State qcn qvn) m)
+
+type PrintM qtn qcn qvn = RWST (Context qtn qcn) () (State qcn qvn) (Except Error)
 
 runPrint ::
-  forall qtn qcn.
+  forall qtn qcn qvn.
+  (Ord qvn, Ord qcn) =>
   Context qtn qcn ->
-  PrintM qtn qcn (Doc ()) ->
+  PrintM qtn qcn qvn (Doc ()) ->
   Either P.CompilerError (Doc ())
 runPrint ctx modPrinter =
-  let p = runReaderT modPrinter ctx
+  let p = runRWST modPrinter ctx (State mempty mempty)
    in case runExcept p of
         Left err ->
           Left $
@@ -63,4 +77,10 @@ runPrint ctx modPrinter =
                 .~ [ defMessage
                       & P.msg .~ (Text.pack . show $ err) -- TODO(bladyjoker): Introduce SourceInfo in InternalError.
                    ]
-        Right doc -> Right doc
+        Right (doc, _, _) -> Right doc
+
+importValue :: (MonadPrint qtn qcn qvn m, Ord qvn) => qvn -> m ()
+importValue qvn = modify (\(State vimps cimps) -> State (Set.insert qvn vimps) cimps)
+
+importClass :: (MonadPrint qtn qcn qvn m, Ord qcn) => qcn -> m ()
+importClass qcn = modify (\(State vimps cimps) -> State vimps (Set.insert qcn cimps))

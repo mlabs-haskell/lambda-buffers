@@ -11,7 +11,8 @@ module LambdaBuffers.Codegen.Haskell.Print (MonadPrint, printModule) where
 import Control.Lens (view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (ask, asks)
-import Data.Foldable (Foldable (toList), foldrM)
+import Control.Monad.State.Class (MonadState (get))
+import Data.Foldable (Foldable (toList), foldrM, for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
@@ -34,14 +35,20 @@ import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, lin
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
-  Print.MkContext _ci m lbTyImps opTyImps classImps ruleImps tyExps _cfg <- ask
-  tyDefDocs <- for (toList $ m ^. #typeDefs) printTyDef
-  (instDocs, valImps) <- printInstances
+  ctx <- ask
+  tyDefDocs <- for (toList $ ctx ^. Print.ctxModule . #typeDefs) printTyDef
+  instDocs <- printInstances
+  st <- get
   return $
     align . vsep $
-      [ printModuleHeader (m ^. #moduleName) tyExps
+      [ printModuleHeader (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
       , mempty
-      , printImports lbTyImps opTyImps classImps ruleImps valImps
+      , printImports
+          (ctx ^. Print.ctxTyImports)
+          (ctx ^. Print.ctxOpaqueTyImports)
+          (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
+          (ctx ^. Print.ctxRuleImports)
+          (st ^. Print.stValueImports)
       , mempty
       , vsep ((line <>) <$> tyDefDocs)
       , mempty
@@ -73,36 +80,29 @@ hsClassImplPrinters =
       )
     ]
 
-printInstances :: MonadPrint m => m ([Doc ann], Set H.QValName)
+printInstances :: MonadPrint m => m [Doc ann]
 printInstances = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
   let iTyDefs = PC.indexTyDefs ci
   foldrM
-    ( \d (instDocs, valImps) -> do
-        (instDocs', valImps') <- printDerive iTyDefs d
-        return (instDocs' <> instDocs, valImps `Set.union` valImps')
+    ( \d instDocs -> do
+        instDocs' <- printDerive iTyDefs d
+        return $ instDocs' <> instDocs
     )
-    (mempty, Set.empty)
+    mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m ([Doc ann], Set H.QValName)
+printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m [Doc ann]
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
-    Just hsQClassNamesToPrint ->
-      foldrM
-        ( \hsqcn (instDocs, imports) -> do
-            (instDoc, imports') <- printHsQClassImpl mn iTyDefs hsqcn d
-            return (instDoc : instDocs, imports' <> imports)
-        )
-        (mempty, mempty)
-        hsQClassNamesToPrint
+    Just hsqcns -> for hsqcns (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
 
-printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann, Set H.QValName)
+printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
 printHsQClassImpl mn iTyDefs hqcn d =
   case Map.lookup hqcn hsClassImplPrinters of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print the Haskell type class " <> (Text.pack . show $ hqcn))
@@ -111,7 +111,9 @@ printHsQClassImpl mn iTyDefs hqcn d =
           mkInstanceDoc = printInstanceDef hqcn ty
       case implPrinter mn iTyDefs mkInstanceDoc ty of
         Left err -> throwError (d ^. #constraint . #sourceInfo, "Failed printing the implementation for " <> (Text.pack . show $ hqcn) <> "\nGot error: " <> err)
-        Right (instanceDefsDoc, valImps) -> return (instanceDefsDoc, valImps)
+        Right (instanceDefsDoc, valImps) -> do
+          for_ (toList valImps) Print.importValue
+          return instanceDefsDoc
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader mn exports = "module" <+> printModName mn <+> printExports exports <+> "where"
@@ -123,7 +125,7 @@ printExports exports = align $ group $ encloseSep lparen rparen (comma <> space)
     printTyExportWithCtors tyn = printTyName tyn <> "(..)"
 
 -- TODO(bladyjoker): Collect package dependencies.
-printImports :: Set PC.QTyName -> Set H.QTyName -> Set [H.QClassName] -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Doc ann
+printImports :: Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Doc ann
 printImports lbTyImports hsTyImports classImps ruleImps valImps =
   let groupedLbImports =
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
@@ -132,7 +134,7 @@ printImports lbTyImports hsTyImports classImps ruleImps valImps =
 
       groupedHsImports =
         Set.fromList [mn | (_cbl, mn, _tn) <- toList hsTyImports]
-          `Set.union` Set.fromList [mn | cImps <- toList classImps, (_, mn, _) <- cImps]
+          `Set.union` Set.fromList [mn | (_, mn, _) <- toList classImps]
           `Set.union` Set.fromList [mn | (_, mn, _) <- toList valImps]
       hsImportDocs = (\(H.MkModuleName mn) -> importQualified $ pretty mn) <$> toList groupedHsImports
 

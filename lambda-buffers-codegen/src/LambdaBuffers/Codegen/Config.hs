@@ -17,7 +17,7 @@ import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 -- | `Config` is parametrized over a qualified type and class name for specifying `Opaque` type and class mappings in the target language.
 data Config qtn qcn = Config
   { _cfgOpaques :: Map PC.QTyName qtn
-  , _cfgClasses :: Map PC.QClassName qcn
+  , _cfgClasses :: Map PC.QClassName [qcn]
   }
   deriving stock (Eq, Ord, Show)
 
@@ -26,7 +26,7 @@ makeLenses 'Config
 -- | `JsonConfig` is a data type representing the external config format parametrized by qualified type and class names and instantiated per each backend separately.
 data JsonConfig qtn qcn = JsonConfig
   { opaquesConfig :: Map Text qtn
-  , classesConfig :: Map Text qcn
+  , classesConfig :: Map Text [qcn]
   }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -60,17 +60,17 @@ qTyNameFromText qtyn = qNameFromText qtyn >>= \(mn, n) -> return (mn, PC.mkInfoL
 qClassNameFromText :: MonadFail m => Text -> m PC.QClassName
 qClassNameFromText qcn = qNameFromText qcn >>= \(mn, n) -> return (mn, PC.mkInfoLess (PC.ClassName n def))
 
-toOpaquesConfig :: Map PC.QTyName o -> Map Text o
+toOpaquesConfig :: Map PC.QTyName qtn -> Map Text qtn
 toOpaquesConfig = Map.mapKeys qTyNameToText
 
-fromOpaquesConfig :: MonadFail m => Map Text o -> m (Map PC.QTyName o)
-fromOpaquesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> qTyNameFromText ltyn <*> pure htyn) (Map.toList opqs)
+fromOpaquesConfig :: MonadFail m => Map Text qtn -> m (Map PC.QTyName qtn)
+fromOpaquesConfig opqs = Map.fromList <$> traverse (\(lqtn, qtn) -> (,) <$> qTyNameFromText lqtn <*> pure qtn) (Map.toList opqs)
 
-toClassesConfig :: Map PC.QClassName o -> Map Text o
+toClassesConfig :: Map PC.QClassName qcn -> Map Text qcn
 toClassesConfig = Map.mapKeys qClassNameToText
 
-fromClassesConfig :: MonadFail m => Map Text o -> m (Map PC.QClassName o)
-fromClassesConfig opqs = Map.fromList <$> traverse (\(ltyn, htyn) -> (,) <$> qClassNameFromText ltyn <*> pure htyn) (Map.toList opqs)
+fromClassesConfig :: MonadFail m => Map Text qcn -> m (Map PC.QClassName qcn)
+fromClassesConfig clss = Map.fromList <$> traverse (\(lqcn, qcn) -> (,) <$> qClassNameFromText lqcn <*> pure qcn) (Map.toList clss)
 
 toJsonConfig :: Config qtn qcn -> JsonConfig qtn qcn
 toJsonConfig (Config opqs cls) = JsonConfig (toOpaquesConfig opqs) (toClassesConfig cls)

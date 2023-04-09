@@ -10,9 +10,10 @@ import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQTyName, printMkCtor, printTyName, printVarName)
+import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQClassName, printHsQTyName, printMkCtor, printTyName, printVarName)
 import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Print (importClass)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
@@ -32,7 +33,9 @@ printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
   if kw /= SynonymTyDef
-    then return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc <+> printDerivingShow
+    then do
+      drvShowDoc <- printDerivingShow
+      return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc <+> drvShowDoc
     else return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc
 
 printTyDefKw :: TyDefKw -> Doc ann
@@ -40,8 +43,13 @@ printTyDefKw DataTyDef = "data"
 printTyDefKw NewtypeTyDef = "newtype"
 printTyDefKw SynonymTyDef = "type"
 
-printDerivingShow :: Doc ann
-printDerivingShow = "deriving Prelude.Show"
+showClass :: H.QClassName
+showClass = (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Show")
+
+printDerivingShow :: MonadPrint m => m (Doc ann)
+printDerivingShow = do
+  importClass showClass
+  return $ "deriving" <+> printHsQClassName showClass
 
 {- | Prints the type abstraction.
 

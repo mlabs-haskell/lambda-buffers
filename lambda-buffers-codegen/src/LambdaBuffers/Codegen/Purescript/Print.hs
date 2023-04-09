@@ -11,13 +11,15 @@ module LambdaBuffers.Codegen.Purescript.Print (MonadPrint, printModule) where
 import Control.Lens (view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (ask, asks)
-import Data.Foldable (Foldable (toList), foldrM)
+import Control.Monad.State.Class (MonadState (get))
+import Data.Foldable (Foldable (toList), foldrM, for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
+import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
@@ -33,34 +35,28 @@ import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, lin
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
-  Print.MkContext _ci m lbTyImps opTyImps classImps ruleImps tyExps _cfg <- ask
-  (tyDefDocs, cimps, vimps) <- printTyDefs m
-  (instDocs, valImps) <- printInstances
+  ctx <- ask
+  tyDefDocs <- printTyDefs (ctx ^. Print.ctxModule)
+  instDocs <- printInstances
+  st <- get
   return $
     align . vsep $
-      [ printModuleHeader (m ^. #moduleName) tyExps
+      [ printModuleHeader (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
       , mempty
       , printImports
-          lbTyImps
-          opTyImps
-          (Set.fromList [ci | cis <- toList classImps, ci <- cis] <> cimps)
-          ruleImps
-          (valImps <> vimps)
+          (ctx ^. Print.ctxTyImports)
+          (ctx ^. Print.ctxOpaqueTyImports)
+          (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
+          (ctx ^. Print.ctxRuleImports)
+          (st ^. Print.stValueImports)
       , mempty
       , vsep ((line <>) <$> tyDefDocs)
       , mempty
       , vsep ((line <>) <$> instDocs)
       ]
 
-printTyDefs :: MonadPrint m => PC.Module -> m ([Doc ann], Set Purs.QClassName, Set Purs.QValName)
-printTyDefs m =
-  foldrM
-    ( \td (doc, cimps, vimps) -> do
-        (d, c, v) <- printTyDef td
-        return (d : doc, c <> cimps, v <> vimps)
-    )
-    (mempty, mempty, mempty)
-    (toList $ m ^. #typeDefs)
+printTyDefs :: MonadPrint m => PC.Module -> m [Doc ann]
+printTyDefs m = for (toList $ m ^. #typeDefs) printTyDef
 
 pursClassImplPrinters ::
   Map
@@ -87,36 +83,29 @@ pursClassImplPrinters =
       )
     ]
 
-printInstances :: MonadPrint m => m ([Doc ann], Set Purs.QValName)
+printInstances :: MonadPrint m => m [Doc ann]
 printInstances = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
   let iTyDefs = PC.indexTyDefs ci
   foldrM
-    ( \d (instDocs, valImps) -> do
-        (instDocs', valImps') <- printDerive iTyDefs d
-        return (instDocs' <> instDocs, valImps `Set.union` valImps')
+    ( \d instDocs -> do
+        instDocs' <- printDerive iTyDefs d
+        return $ instDocs' <> instDocs
     )
-    (mempty, Set.empty)
+    mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m ([Doc ann], Set Purs.QValName)
+printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m [Doc ann]
 printDerive iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
-    Just pursQClassNamesToPrint ->
-      foldrM
-        ( \pursqcn (instDocs, imports) -> do
-            (instDoc, imports') <- printPursQClassImpl mn iTyDefs pursqcn d
-            return (instDoc : instDocs, imports' <> imports)
-        )
-        (mempty, mempty)
-        pursQClassNamesToPrint
+    Just pqcns -> for pqcns (\pqcn -> printPursQClassImpl mn iTyDefs pqcn d)
 
-printPursQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> Purs.QClassName -> PC.Derive -> m (Doc ann, Set Purs.QValName)
+printPursQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> Purs.QClassName -> PC.Derive -> m (Doc ann)
 printPursQClassImpl mn iTyDefs hqcn d =
   case Map.lookup hqcn pursClassImplPrinters of
     Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print the Purescript type class " <> (Text.pack . show $ hqcn))
@@ -125,7 +114,9 @@ printPursQClassImpl mn iTyDefs hqcn d =
           mkInstanceDoc = printInstanceDef hqcn ty
       case implPrinter mn iTyDefs mkInstanceDoc ty of
         Left err -> throwError (d ^. #constraint . #sourceInfo, "Failed printing the implementation for " <> (Text.pack . show $ hqcn) <> "\nGot error: " <> err)
-        Right (instanceDefsDoc, valImps) -> return (instanceDefsDoc, valImps)
+        Right (instanceDefsDoc, valImps) -> do
+          for_ (toList valImps) Print.importValue
+          return instanceDefsDoc
 
 printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader mn exports = "module" <+> printModName mn <+> printExports exports <+> "where"
