@@ -3,6 +3,11 @@ module LambdaBuffers.Citizen (Citizen(..)
                              , Name(..)
                              , NationalId(..)
                              , Picture(..)
+                             , ProdBar(..)
+                             , ProdFoo(..)
+                             , RecBar(..)
+                             , RecFoo(..)
+                             , SumFoo(..)
                              , SwissVisaType(..)) where
 
 import qualified LambdaBuffers.Plutus
@@ -27,6 +32,19 @@ data NationalId = NationalId'CroatianPassport CroatianOIB Picture
                    | NationalId'SwissVisa SwissVisaType deriving Prelude.Show
 
 newtype Picture = Picture LambdaBuffers.Plutus.V1.Bytes deriving Prelude.Show
+
+newtype ProdBar a = ProdBar a deriving Prelude.Show
+
+data ProdFoo a = ProdFoo LambdaBuffers.Prelude.Text a deriving Prelude.Show
+
+newtype RecBar a = RecBar { recBar'bar :: a} deriving Prelude.Show
+
+data RecFoo a = RecFoo { recFoo'bar :: LambdaBuffers.Prelude.Text
+                       , recFoo'baz :: a} deriving Prelude.Show
+
+data SumFoo a b = SumFoo'Baz LambdaBuffers.Prelude.Text a
+                   | SumFoo'Bar LambdaBuffers.Prelude.Integer
+                                b deriving Prelude.Show
 
 data SwissVisaType = SwissVisaType'L 
                       | SwissVisaType'B 
