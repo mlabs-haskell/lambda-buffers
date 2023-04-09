@@ -1,7 +1,7 @@
 module LambdaBuffers.Codegen.Purescript.Print.TyDef (printTyDef) where
 
 import LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printGenericDerive, printNewtypeDerive, printShowInstance)
-import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printTyName)
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyAbs)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))

@@ -24,7 +24,7 @@ import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printInstanceDef)
-import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printModName, printModName', printTyName)
 import LambdaBuffers.Codegen.Purescript.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs

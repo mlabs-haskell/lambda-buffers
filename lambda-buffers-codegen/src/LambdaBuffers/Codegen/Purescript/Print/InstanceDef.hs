@@ -7,7 +7,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Print (importClass, importValue)
-import LambdaBuffers.Codegen.Purescript.Print.Monad (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQClassName, printPursQValName)
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner)
 import LambdaBuffers.Codegen.Purescript.Syntax (className, normalValName)

@@ -9,7 +9,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
-import LambdaBuffers.Codegen.Haskell.Print.Monad (MonadPrint)
+import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQClassName, printHsQTyName, printMkCtor, printTyName, printVarName)
 import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H

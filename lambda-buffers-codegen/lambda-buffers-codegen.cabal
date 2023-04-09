@@ -119,7 +119,7 @@ library
     LambdaBuffers.Codegen.Haskell.Print.Derive
     LambdaBuffers.Codegen.Haskell.Print.InstanceDef
     LambdaBuffers.Codegen.Haskell.Print.LamVal
-    LambdaBuffers.Codegen.Haskell.Print.Monad
+    LambdaBuffers.Codegen.Haskell.Print.MonadPrint
     LambdaBuffers.Codegen.Haskell.Print.Names
     LambdaBuffers.Codegen.Haskell.Print.TyDef
     LambdaBuffers.Codegen.Haskell.Syntax
@@ -135,7 +135,7 @@ library
     LambdaBuffers.Codegen.Purescript.Print.Derive
     LambdaBuffers.Codegen.Purescript.Print.InstanceDef
     LambdaBuffers.Codegen.Purescript.Print.LamVal
-    LambdaBuffers.Codegen.Purescript.Print.Monad
+    LambdaBuffers.Codegen.Purescript.Print.MonadPrint
     LambdaBuffers.Codegen.Purescript.Print.Names
     LambdaBuffers.Codegen.Purescript.Print.Ty
     LambdaBuffers.Codegen.Purescript.Print.TyDef
