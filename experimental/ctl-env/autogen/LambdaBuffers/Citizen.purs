@@ -3,6 +3,11 @@ module LambdaBuffers.Citizen (Citizen(..)
                              , Name(..)
                              , NationalId(..)
                              , Picture(..)
+                             , ProdBar(..)
+                             , ProdFoo(..)
+                             , RecBar(..)
+                             , RecFoo(..)
+                             , SumFoo(..)
                              , SwissVisaType(..)) where
 
 import LambdaBuffers.Plutus as LambdaBuffers.Plutus
@@ -12,33 +17,83 @@ import Ctl.Internal.FromData as Ctl.Internal.FromData
 import Ctl.Internal.ToData as Ctl.Internal.ToData
 import Ctl.Internal.Types.PlutusData as Ctl.Internal.Types.PlutusData
 import Data.BigInt as Data.BigInt
+import Data.Generic.Rep as Data.Generic.Rep
 import Data.Maybe as Data.Maybe
 import Data.Newtype as Data.Newtype
+import Data.Show as Data.Show
+import Data.Show.Generic as Data.Show.Generic
+import Data.Tuple as Data.Tuple
 import LambdaBuffers.Runtime.PlutusLedgerApi as LambdaBuffers.Runtime.PlutusLedgerApi
 import Prelude as Prelude
-import Data.Tuple as Data.Tuple
 
-newtype Citizen = MkCitizen { firstName :: Name
-                            , lastName :: Name
-                            , id :: NationalId}
+
+newtype Citizen = Citizen { firstName :: Name
+                          , lastName :: Name
+                          , id :: NationalId}
 derive instance Data.Newtype.Newtype Citizen _
+derive instance Data.Generic.Rep.Generic Citizen _
+instance Data.Show.Show Citizen where
+  show = Data.Show.Generic.genericShow
 
-newtype CroatianOIB = MkCroatianOIB LambdaBuffers.Prelude.Integer
+newtype CroatianOIB = CroatianOIB LambdaBuffers.Prelude.Integer
 derive instance Data.Newtype.Newtype CroatianOIB _
+derive instance Data.Generic.Rep.Generic CroatianOIB _
+instance Data.Show.Show CroatianOIB where
+  show = Data.Show.Generic.genericShow
 
-newtype Name = MkName LambdaBuffers.Plutus.V1.Bytes
+newtype Name = Name LambdaBuffers.Plutus.V1.Bytes
 derive instance Data.Newtype.Newtype Name _
+derive instance Data.Generic.Rep.Generic Name _
+instance Data.Show.Show Name where
+  show = Data.Show.Generic.genericShow
 
 data NationalId = NationalId'CroatianPassport CroatianOIB Picture
                    | NationalId'CroatianIdCard CroatianOIB
                    | NationalId'SwissVisa SwissVisaType
+derive instance Data.Generic.Rep.Generic NationalId _
+instance Data.Show.Show NationalId where
+  show = Data.Show.Generic.genericShow
 
-
-newtype Picture = MkPicture LambdaBuffers.Plutus.V1.Bytes
+newtype Picture = Picture LambdaBuffers.Plutus.V1.Bytes
 derive instance Data.Newtype.Newtype Picture _
+derive instance Data.Generic.Rep.Generic Picture _
+instance Data.Show.Show Picture where
+  show = Data.Show.Generic.genericShow
+
+newtype ProdBar a = ProdBar a
+derive instance Data.Newtype.Newtype (ProdBar a) _
+derive instance Data.Generic.Rep.Generic (ProdBar a) _
+instance (Data.Show.Show a) => Data.Show.Show (ProdBar a) where
+  show = Data.Show.Generic.genericShow
+
+data ProdFoo a = ProdFoo LambdaBuffers.Prelude.Text a
+derive instance Data.Generic.Rep.Generic (ProdFoo a) _
+instance (Data.Show.Show a) => Data.Show.Show (ProdFoo a) where
+  show = Data.Show.Generic.genericShow
+
+newtype RecBar a = RecBar { bar :: a}
+derive instance Data.Newtype.Newtype (RecBar a) _
+derive instance Data.Generic.Rep.Generic (RecBar a) _
+instance (Data.Show.Show a) => Data.Show.Show (RecBar a) where
+  show = Data.Show.Generic.genericShow
+
+newtype RecFoo a = RecFoo { bar :: LambdaBuffers.Prelude.Text, baz :: a}
+derive instance Data.Newtype.Newtype (RecFoo a) _
+derive instance Data.Generic.Rep.Generic (RecFoo a) _
+instance (Data.Show.Show a) => Data.Show.Show (RecFoo a) where
+  show = Data.Show.Generic.genericShow
+
+data SumFoo a b = SumFoo'Baz LambdaBuffers.Prelude.Text a
+                   | SumFoo'Bar LambdaBuffers.Prelude.Integer b
+derive instance Data.Generic.Rep.Generic (SumFoo a b) _
+instance (Data.Show.Show a,Data.Show.Show b) => Data.Show.Show (SumFoo a
+                                                                       b) where
+  show = Data.Show.Generic.genericShow
 
 data SwissVisaType = SwissVisaType'L  | SwissVisaType'B  | SwissVisaType'C 
-
+derive instance Data.Generic.Rep.Generic SwissVisaType _
+instance Data.Show.Show SwissVisaType where
+  show = Data.Show.Generic.genericShow
 
 
 instance Prelude.Eq Citizen where
@@ -53,19 +108,19 @@ instance Ctl.Internal.FromData.FromData Citizen where
   fromData = (\x0 -> LambdaBuffers.Runtime.PlutusLedgerApi.casePlutusData ((\x1 -> (\x2 -> Data.Maybe.Nothing ) )) ((\x3 -> case x3 of
                                                                                                                               [x4
                                                                                                                                , x5
-                                                                                                                               , x6] -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x4)) ((\x7 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x5)) ((\x8 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x6)) ((\x9 -> Data.Maybe.Just (MkCitizen { firstName : x7
-                                                                                                                                                                                                                                                                                                                                                          , lastName : x8
-                                                                                                                                                                                                                                                                                                                                                          , id : x9 }) )) )) ))
+                                                                                                                               , x6] -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x4)) ((\x7 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x5)) ((\x8 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x6)) ((\x9 -> Data.Maybe.Just (Citizen { firstName : x7
+                                                                                                                                                                                                                                                                                                                                                        , lastName : x8
+                                                                                                                                                                                                                                                                                                                                                        , id : x9 }) )) )) ))
                                                                                                                               x10 -> Data.Maybe.Nothing )) ((\x11 -> Data.Maybe.Nothing )) ((\x12 -> Data.Maybe.Nothing )) (x0) )
 
 instance Prelude.Eq Name where
-  eq = (\x0 -> (\x1 -> let MkName x2 = x0 in let MkName x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
+  eq = (\x0 -> (\x1 -> let Name x2 = x0 in let Name x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
 
 instance Ctl.Internal.ToData.ToData Name where
-  toData = (\x0 -> let MkName x1 = x0 in Ctl.Internal.ToData.toData (x1) )
+  toData = (\x0 -> let Name x1 = x0 in Ctl.Internal.ToData.toData (x1) )
 
 instance Ctl.Internal.FromData.FromData Name where
-  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (MkName x1) )) )
+  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (Name x1) )) )
 
 instance Prelude.Eq NationalId where
   eq = (\x0 -> (\x1 -> case x0 of
@@ -102,22 +157,22 @@ instance Ctl.Internal.FromData.FromData NationalId where
                                                                                                                                                                                         x13 -> Data.Maybe.Nothing)] (\x14 -> Data.Maybe.Nothing ) x1 ) )) ((\x15 -> Data.Maybe.Nothing )) ((\x16 -> LambdaBuffers.Runtime.PlutusLedgerApi.caseInt [] (\x17 -> Data.Maybe.Nothing ) x16 )) ((\x18 -> Data.Maybe.Nothing )) (x0) )
 
 instance Prelude.Eq CroatianOIB where
-  eq = (\x0 -> (\x1 -> let MkCroatianOIB x2 = x0 in let MkCroatianOIB x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
+  eq = (\x0 -> (\x1 -> let CroatianOIB x2 = x0 in let CroatianOIB x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
 
 instance Ctl.Internal.ToData.ToData CroatianOIB where
-  toData = (\x0 -> let MkCroatianOIB x1 = x0 in Ctl.Internal.ToData.toData (x1) )
+  toData = (\x0 -> let CroatianOIB x1 = x0 in Ctl.Internal.ToData.toData (x1) )
 
 instance Ctl.Internal.FromData.FromData CroatianOIB where
-  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (MkCroatianOIB x1) )) )
+  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (CroatianOIB x1) )) )
 
 instance Prelude.Eq Picture where
-  eq = (\x0 -> (\x1 -> let MkPicture x2 = x0 in let MkPicture x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
+  eq = (\x0 -> (\x1 -> let Picture x2 = x0 in let Picture x3 = x1 in Prelude.(&&) (true) (Prelude.(==) (x2) (x3)) ) )
 
 instance Ctl.Internal.ToData.ToData Picture where
-  toData = (\x0 -> let MkPicture x1 = x0 in Ctl.Internal.ToData.toData (x1) )
+  toData = (\x0 -> let Picture x1 = x0 in Ctl.Internal.ToData.toData (x1) )
 
 instance Ctl.Internal.FromData.FromData Picture where
-  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (MkPicture x1) )) )
+  fromData = (\x0 -> Prelude.(>>=) (Ctl.Internal.FromData.fromData (x0)) ((\x1 -> Data.Maybe.Just (Picture x1) )) )
 
 instance Prelude.Eq SwissVisaType where
   eq = (\x0 -> (\x1 -> case x0 of

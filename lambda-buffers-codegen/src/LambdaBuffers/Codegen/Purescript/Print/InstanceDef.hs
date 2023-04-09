@@ -1,15 +1,18 @@
-module LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printInstanceDef) where
+module LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printInstanceDef, printNewtypeDerive, printGenericDerive, printShowInstance) where
 
-import Control.Lens (view)
+import Control.Lens (view, (^.))
+import Data.Default (Default (def))
 import Data.Foldable (Foldable (toList))
+import Data.Map.Ordered qualified as OMap
 import Data.Set (Set)
 import Data.Set qualified as Set
-import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQClassName)
-import LambdaBuffers.Codegen.Purescript.Print.TyDef (printTyInner)
+import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQClassName, printPursQValName)
+import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner)
+import LambdaBuffers.Codegen.Purescript.Syntax (className, normalValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, lparen, rparen, space, (<+>))
+import Prettyprinter (Doc, align, comma, encloseSep, equals, group, hardline, lparen, rparen, space, (<+>))
 
 printInstanceDef :: Purs.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
 printInstanceDef pursQClassName ty =
@@ -38,3 +41,52 @@ collectVars' :: Set (PC.InfoLess PC.VarName) -> PC.Ty -> Set (PC.InfoLess PC.Var
 collectVars' collected (PC.TyVarI tv) = Set.insert (PC.mkInfoLess . view #varName $ tv) collected
 collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (Set.unions . fmap collectVars $ args)
 collectVars' collected _ = collected
+
+genericShow :: Purs.QValName
+genericShow = normalValName "prelude" "Data.Show.Generic" "genericShow"
+
+newtypeClass :: Purs.QClassName
+newtypeClass = className "newtype" "Data.Newtype" "Newtype"
+
+genericClass :: Purs.QClassName
+genericClass = className "prelude" "Data.Generic.Rep" "Generic"
+
+showClass :: Purs.QClassName
+showClass = className "prelude" "Data.Show" "Show"
+
+printNewtypeDerive :: forall {ann}. PC.TyDef -> (Doc ann, Set Purs.QClassName, Set Purs.QValName)
+printNewtypeDerive tyd =
+  ( printDerive newtypeClass tyd
+  , Set.singleton newtypeClass
+  , mempty
+  )
+
+printGenericDerive :: forall {ann}. PC.TyDef -> (Doc ann, Set Purs.QClassName, Set Purs.QValName)
+printGenericDerive tyd =
+  ( printDerive genericClass tyd
+  , Set.singleton genericClass
+  , mempty
+  )
+
+printShowInstance :: forall {ann}. PC.TyDef -> (Doc ann, Set Purs.QClassName, Set Purs.QValName)
+printShowInstance tyd =
+  ( printInstanceDef showClass (toSaturatedTyApp tyd) ("show" <+> equals <+> printPursQValName genericShow)
+  , Set.singleton showClass
+  , Set.singleton genericShow
+  )
+
+{- | `printDerive qcn tyD` prints a Purescript `derive instance` statement for a type class `qcn` for a type definition `tyd`.
+ For a `Show` type class on a `Maybe a` type definition it prints
+ `derive instance Show (Maybe a) _`
+-}
+printDerive :: forall {ann}. Purs.QClassName -> PC.TyDef -> Doc ann
+printDerive qcn tyd = "derive instance" <+> printPursQClassName qcn <+> (printTyInner . toSaturatedTyApp $ tyd) <+> "_"
+
+toSaturatedTyApp :: PC.TyDef -> PC.Ty
+toSaturatedTyApp (PC.TyDef tyN tyAbs _) | OMap.null (tyAbs ^. #tyArgs) = PC.TyRefI $ PC.LocalI $ PC.LocalRef tyN def
+toSaturatedTyApp (PC.TyDef tyN tyAbs _) =
+  PC.TyAppI $
+    PC.TyApp
+      (PC.TyRefI $ PC.LocalI $ PC.LocalRef tyN def)
+      [PC.TyVarI $ PC.TyVar (arg ^. #argName) | arg <- toList $ tyAbs ^. #tyArgs]
+      def
