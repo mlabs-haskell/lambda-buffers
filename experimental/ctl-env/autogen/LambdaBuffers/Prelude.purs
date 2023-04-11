@@ -15,10 +15,10 @@ import Data.BigInt as Data.BigInt
 import Data.Either as Data.Either
 import Data.Map as Data.Map
 import Data.Maybe as Data.Maybe
-import Data.Newtype as Data.Newtype
 import Data.Set as Data.Set
 import Prelude as Prelude
 import Prim as Prim
+
 
 type Bool = Prim.Boolean
 
@@ -41,5 +41,4 @@ type Maybe a = Data.Maybe.Maybe a
 type Set a = Data.Set.Set a
 
 type Text = Prim.String
-
 

@@ -36,3 +36,9 @@ derive PlutusData Picture
 sum SwissVisaType = L | B | C
 derive Eq SwissVisaType
 derive PlutusData SwissVisaType
+
+sum SumFoo a b = Baz Text a | Bar Integer b
+prod ProdFoo a = Text a
+prod ProdBar a = a
+record RecFoo a = { bar : Text, baz : a}
+record RecBar a = { bar : a}

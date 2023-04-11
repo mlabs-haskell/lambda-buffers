@@ -6,7 +6,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 
-type Config = Config.Config H.QTyName [H.QClassName]
+type Config = Config.Config H.QTyName H.QClassName
 
 instance ToJSON H.TyName
 instance FromJSON H.TyName

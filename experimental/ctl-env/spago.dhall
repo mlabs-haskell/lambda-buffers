@@ -18,6 +18,7 @@ You can edit this file as you like.
   , "foreign-object"
   , "maybe"
   , "mote"
+  , "newtype"
   , "node-buffer"
   , "node-fs-aff"
   , "node-process"

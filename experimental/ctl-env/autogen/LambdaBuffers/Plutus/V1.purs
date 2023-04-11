@@ -24,6 +24,7 @@ module LambdaBuffers.Plutus.V1 (Address(..)
 
 import LambdaBuffers.Plutus as LambdaBuffers.Plutus
 import LambdaBuffers.Prelude as LambdaBuffers.Prelude
+import Ctl.Internal.FromData as Ctl.Internal.FromData
 import Ctl.Internal.Plutus.Types.Address as Ctl.Internal.Plutus.Types.Address
 import Ctl.Internal.Plutus.Types.AssocMap as Ctl.Internal.Plutus.Types.AssocMap
 import Ctl.Internal.Plutus.Types.Credential as Ctl.Internal.Plutus.Types.Credential
@@ -38,10 +39,9 @@ import Ctl.Internal.Types.RawBytes as Ctl.Internal.Types.RawBytes
 import Ctl.Internal.Types.Redeemer as Ctl.Internal.Types.Redeemer
 import Ctl.Internal.Types.TokenName as Ctl.Internal.Types.TokenName
 import Ctl.Internal.Types.Transaction as Ctl.Internal.Types.Transaction
-import Data.BigInt as Data.BigInt
-import Data.Newtype as Data.Newtype
 import LambdaBuffers.Runtime.PlutusLedgerApi as LambdaBuffers.Runtime.PlutusLedgerApi
 import Prelude as Prelude
+
 
 type Address = Ctl.Internal.Plutus.Types.Address.Address
 
@@ -88,5 +88,4 @@ type TxOutRef = Ctl.Internal.Types.Transaction.TransactionInput
 type UpperBound a = Ctl.Internal.Types.Interval.UpperBound a
 
 type Value = Ctl.Internal.Plutus.Types.Value.Value
-
 

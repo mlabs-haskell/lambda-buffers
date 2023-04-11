@@ -24,3 +24,4 @@ library
     LambdaBuffers.Plutus.V1
     LambdaBuffers.Prelude
     LambdaBuffers.Runtime.Haskell
+    LambdaBuffers.Runtime.PlutusTx

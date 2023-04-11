@@ -6,7 +6,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 
-type Config = Config.Config Purs.QTyName [Purs.QClassName]
+type Config = Config.Config Purs.QTyName Purs.QClassName
 
 instance ToJSON Purs.TyName
 instance FromJSON Purs.TyName

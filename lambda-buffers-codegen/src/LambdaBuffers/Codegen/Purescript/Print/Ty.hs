@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef, printTyInner) where
+module LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner, printTyTopLevel, printTyAbs) where
 
 import Control.Lens (view, (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -9,49 +9,16 @@ import Data.Map.Ordered qualified as OMap
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
-import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQClassName, printHsQTyName, printMkCtor, printTyName, printVarName)
-import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Codegen.Print (importClass)
 import LambdaBuffers.Codegen.Print qualified as Print
+import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
+import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
+import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
 
-{- | Prints the type definition.
-
-sum Foo a b = MkFoo a | MkBar b
-opaque Maybe a
-
-translates to
-
-data Foo a b = Foo'MkFoo a | Foo'MkBar b
-type Maybe a = Prelude.Maybe a
--}
-printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
-printTyDef (PC.TyDef tyN tyabs _) = do
-  (kw, absDoc) <- printTyAbs tyN tyabs
-  if kw /= SynonymTyDef
-    then do
-      drvShowDoc <- printDerivingShow
-      return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc <+> drvShowDoc
-    else return $ group $ printTyDefKw kw <+> printTyName tyN <+> absDoc
-
-printTyDefKw :: TyDefKw -> Doc ann
-printTyDefKw DataTyDef = "data"
-printTyDefKw NewtypeTyDef = "newtype"
-printTyDefKw SynonymTyDef = "type"
-
-showClass :: H.QClassName
-showClass = (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Show")
-
-printDerivingShow :: MonadPrint m => m (Doc ann)
-printDerivingShow = do
-  importClass showClass
-  return $ "deriving" <+> printHsQClassName showClass
-
-{- | Prints the type abstraction.
+{- | `printTyAbs tyN tyAbs` prints the type abstraction `tyAbs` for a type name `tyN`.
 
 For the above examples it prints
 
@@ -81,14 +48,13 @@ printTyBody tyN _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
   _ -> return (DataTyDef, printMkCtor tyN <+> printProd p)
 printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
   [] -> return (DataTyDef, printMkCtor tyN)
-  [_] -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
-  _ -> printRec tyN r >>= \recDoc -> return (DataTyDef, printMkCtor tyN <+> recDoc)
+  _ -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
-    Just hqtyn -> return (SynonymTyDef, printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
+    Just hqtyn -> return (SynonymTyDef, printPursQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn
@@ -154,7 +120,7 @@ printTyAppTopLevel (PC.TyApp f args _) =
 
 printTyRef :: PC.TyRef -> Doc ann
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) = let (_, H.MkModuleName hmn, H.MkTyName htn) = H.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn
+printTyRef (PC.ForeignI fr) = let (_, Purs.MkModuleName hmn, Purs.MkTyName htn) = Purs.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn
 
 printTyVar :: PC.TyVar -> Doc ann
 printTyVar (PC.TyVar vn) = printVarName vn

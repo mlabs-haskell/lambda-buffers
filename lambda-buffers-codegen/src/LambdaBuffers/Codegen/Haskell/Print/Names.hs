@@ -48,12 +48,12 @@ printCtorName :: PC.TyName -> PC.ConstrName -> Doc ann
 printCtorName tyN (PC.ConstrName n _) = printTyName tyN <> squote <> pretty n
 
 printMkCtor :: PC.TyName -> Doc ann
-printMkCtor tyN = "Mk" <> printTyName tyN
+printMkCtor = printTyName
 
 {- | Translate LambdaBuffer record field names into Haskell record field names
  rec Rec = { foo :: Int, bar :: String }
  translates to
- data Rec = MkRec { rec'foo :: Int, rec'bar :: String }
+ data Rec = Rec { rec'foo :: Int, rec'bar :: String }
 -}
 printFieldName :: PC.TyName -> PC.FieldName -> Maybe (Doc ann)
 printFieldName tyN (PC.FieldName n _) = do

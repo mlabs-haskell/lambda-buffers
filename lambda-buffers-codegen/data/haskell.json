@@ -247,6 +247,11 @@
                 "plutus-tx",
                 "PlutusTx",
                 "ToData"
+            ],
+            [
+                "plutus-tx",
+                "PlutusTx",
+                "FromData"
             ]
         ],
         "Prelude.Eq": [

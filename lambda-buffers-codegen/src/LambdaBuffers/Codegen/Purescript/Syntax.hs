@@ -15,6 +15,7 @@ module LambdaBuffers.Codegen.Purescript.Syntax (
   normalValName,
   primValName,
   TyDefKw (..),
+  className,
 ) where
 
 import Control.Lens ((^.))
@@ -32,6 +33,9 @@ primValName vn = (Nothing, MkValueName vn)
 
 normalValName :: Text -> Text -> Text -> QValName
 normalValName pkg mn vn = (Just (MkPackageName pkg, MkModuleName mn), MkValueName vn)
+
+className :: Text -> Text -> Text -> QClassName
+className pkg mn cn = (MkPackageName pkg, MkModuleName mn, MkClassName cn)
 
 newtype PackageName = MkPackageName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)

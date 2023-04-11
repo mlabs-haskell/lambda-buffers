@@ -1,237 +1,242 @@
 {
-    "opaquesConfig": {
-        "Prelude.Map": [
-            "ordered-collections",
-            "Data.Map",
-            "Map"
-        ],
-        "Prelude.Set": [
-            "ordered-containers",
-            "Data.Set",
-            "Set"
-        ],
-        "Prelude.List": [
-            "prelude",
-            "Prim",
-            "Array"
-        ],
-        "Prelude.Either": [
-            "either",
-            "Data.Either",
-            "Either"
-        ],
-        "Prelude.Maybe": [
-            "maybe",
-            "Data.Maybe",
-            "Maybe"
-        ],
-        "Prelude.Bytes": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.ByteArray",
-            "ByteArray"
-        ],
-        "Prelude.Text": [
-            "prelude",
-            "Prim",
-            "String"
-        ],
-        "Prelude.Char": [
-            "prelude",
-            "Prim",
-            "Char"
-        ],
-        "Prelude.Int32": [
-            "prelude",
-            "Prim",
-            "Int"
-        ],
-        "Prelude.Integer": [
-            "bigints",
-            "Data.BigInt",
-            "BigInt"
-        ],
-        "Prelude.Bool": [
-            "prelude",
-            "Prim",
-            "Boolean"
-        ],
-        "Plutus.PlutusData": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.PlutusData",
-            "PlutusData"
-        ],
-        "Plutus.V1.Address": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.Address",
-            "Address"
-        ],
-        "Plutus.V1.Credential": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.Credential",
-            "Credential"
-        ],
-        "Plutus.V1.StakingCredential": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.Credential",
-            "StakingCredential"
-        ],
-        "Plutus.V1.PubKeyHash": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.PubKeyHash",
-            "PubKeyHash"
-        ],
-        "Plutus.V1.DCert": [
-            "cardano-transaction-lib",
-            "<PlutusLedgerApi.V1.DCert>",
-            "<DCert>"
-        ],
-        "Plutus.V1.Bytes": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.RawBytes",
-            "RawBytes"
-        ],
-        "Plutus.V1.Interval": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "Interval"
-        ],
-        "Plutus.V1.Extended": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "Extended"
-        ],
-        "Plutus.V1.LowerBound": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "LowerBound"
-        ],
-        "Plutus.V1.UpperBound": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "UpperBound"
-        ],
-        "Plutus.V1.POSIXTime": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "POSIXTime"
-        ],
-        "Plutus.V1.POSIXTimeRange": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Interval",
-            "OnchainPOSIXTimeRange"
-        ],
-        "Plutus.V1.Value": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.Value",
-            "Value"
-        ],
-        "Plutus.V1.CurrencySymbol": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.CurrencySymbol",
-            "CurrencySymbol"
-        ],
-        "Plutus.V1.AssetClass": [
-            "lb-plutus-ledger-api-runtime",
-            "LambdaBuffers.Runtime.PlutusLedgerApi",
-            "AssetClass"
-        ],
-        "Plutus.V1.TokenName": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.TokenName",
-            "TokenName"
-        ],
-        "Plutus.V1.Redeemer": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Redeemer",
-            "Redeemer"
-        ],
-        "Plutus.V1.Datum": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Datum",
-            "Datum"
-        ],
-        "Plutus.V1.DatumHash": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Datum",
-            "DataHash"
-        ],
-        "Plutus.V1.RedeemerHash": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Redeemer",
-            "RedeemerHash"
-        ],
-        "Plutus.V1.ScriptHash": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Serialization.Hash",
-            "ScriptHash"
-        ],
-        "Plutus.V1.ScriptContext": [
-            "cardano-transaction-lib",
-            "<PlutusLedgerApi.V1.Contexts>",
-            "<There's no ScriptContext in CTL>"
-        ],
-        "Plutus.V1.ScriptPurpose": [
-            "cardano-transaction-lib",
-            "<PlutusLedgerApi.V1.Contexts>",
-            "<Couldn't find ScriptPurpose in CTL>"
-        ],
-        "Plutus.V1.TxInInfo": [
-            "cardano-transaction-lib",
-            "PlutusLedgerApi.V1.Contexts",
-            "<Couldn't find TxInInfo in CTL>"
-        ],
-        "Plutus.V1.TxInfo": [
-            "cardano-transaction-lib",
-            "PlutusLedgerApi.V1.Contexts",
-            "<Couldn't find TxInfo in CTL>"
-        ],
-        "Plutus.V1.TxId": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Transaction",
-            "TransactionHash"
-        ],
-        "Plutus.V1.TxOut": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.Transaction",
-            "<Doesn't support V1 only V2>"
-        ],
-        "Plutus.V1.TxOutRef": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Types.Transaction",
-            "TransactionInput"
-        ],
-        "Plutus.V1.Map": [
-            "cardano-transaction-lib",
-            "Ctl.Internal.Plutus.Types.AssocMap",
-            "Map"
-        ]
-    },
-    "classesConfig": {
-        "Plutus.PlutusData": [
-            [
-                "cardano-transaction-lib",
-                "Ctl.Internal.ToData",
-                "ToData"
-            ]
-        ],
-        "Prelude.Eq": [
-            [
-                "prelude",
-                "Prelude",
-                "Eq"
-            ]
-        ],
-        "Prelude.Json": [
-            [
-                "aeson",
-                "Aeson",
-                "EncodeAeson"
-            ],
-            [
-                "aeson",
-                "Aeson",
-                "DecodeAeson"
-            ]
-        ]
-    }
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "ordered-collections",
+      "Data.Map",
+      "Map"
+    ],
+    "Prelude.Set": [
+      "ordered-containers",
+      "Data.Set",
+      "Set"
+    ],
+    "Prelude.List": [
+      "prelude",
+      "Prim",
+      "Array"
+    ],
+    "Prelude.Either": [
+      "either",
+      "Data.Either",
+      "Either"
+    ],
+    "Prelude.Maybe": [
+      "maybe",
+      "Data.Maybe",
+      "Maybe"
+    ],
+    "Prelude.Bytes": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.ByteArray",
+      "ByteArray"
+    ],
+    "Prelude.Text": [
+      "prelude",
+      "Prim",
+      "String"
+    ],
+    "Prelude.Char": [
+      "prelude",
+      "Prim",
+      "Char"
+    ],
+    "Prelude.Int32": [
+      "prelude",
+      "Prim",
+      "Int"
+    ],
+    "Prelude.Integer": [
+      "bigints",
+      "Data.BigInt",
+      "BigInt"
+    ],
+    "Prelude.Bool": [
+      "prelude",
+      "Prim",
+      "Boolean"
+    ],
+    "Plutus.PlutusData": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.PlutusData",
+      "PlutusData"
+    ],
+    "Plutus.V1.Address": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.Address",
+      "Address"
+    ],
+    "Plutus.V1.Credential": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.Credential",
+      "Credential"
+    ],
+    "Plutus.V1.StakingCredential": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.Credential",
+      "StakingCredential"
+    ],
+    "Plutus.V1.PubKeyHash": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.PubKeyHash",
+      "PubKeyHash"
+    ],
+    "Plutus.V1.DCert": [
+      "cardano-transaction-lib",
+      "<PlutusLedgerApi.V1.DCert>",
+      "<DCert>"
+    ],
+    "Plutus.V1.Bytes": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.RawBytes",
+      "RawBytes"
+    ],
+    "Plutus.V1.Interval": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "Interval"
+    ],
+    "Plutus.V1.Extended": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "Extended"
+    ],
+    "Plutus.V1.LowerBound": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "LowerBound"
+    ],
+    "Plutus.V1.UpperBound": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "UpperBound"
+    ],
+    "Plutus.V1.POSIXTime": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "POSIXTime"
+    ],
+    "Plutus.V1.POSIXTimeRange": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Interval",
+      "OnchainPOSIXTimeRange"
+    ],
+    "Plutus.V1.Value": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.Value",
+      "Value"
+    ],
+    "Plutus.V1.CurrencySymbol": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.CurrencySymbol",
+      "CurrencySymbol"
+    ],
+    "Plutus.V1.AssetClass": [
+      "lb-plutus-ledger-api-runtime",
+      "LambdaBuffers.Runtime.PlutusLedgerApi",
+      "AssetClass"
+    ],
+    "Plutus.V1.TokenName": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.TokenName",
+      "TokenName"
+    ],
+    "Plutus.V1.Redeemer": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Redeemer",
+      "Redeemer"
+    ],
+    "Plutus.V1.Datum": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Datum",
+      "Datum"
+    ],
+    "Plutus.V1.DatumHash": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Datum",
+      "DataHash"
+    ],
+    "Plutus.V1.RedeemerHash": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Redeemer",
+      "RedeemerHash"
+    ],
+    "Plutus.V1.ScriptHash": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Serialization.Hash",
+      "ScriptHash"
+    ],
+    "Plutus.V1.ScriptContext": [
+      "cardano-transaction-lib",
+      "<PlutusLedgerApi.V1.Contexts>",
+      "<There's no ScriptContext in CTL>"
+    ],
+    "Plutus.V1.ScriptPurpose": [
+      "cardano-transaction-lib",
+      "<PlutusLedgerApi.V1.Contexts>",
+      "<Couldn't find ScriptPurpose in CTL>"
+    ],
+    "Plutus.V1.TxInInfo": [
+      "cardano-transaction-lib",
+      "PlutusLedgerApi.V1.Contexts",
+      "<Couldn't find TxInInfo in CTL>"
+    ],
+    "Plutus.V1.TxInfo": [
+      "cardano-transaction-lib",
+      "PlutusLedgerApi.V1.Contexts",
+      "<Couldn't find TxInfo in CTL>"
+    ],
+    "Plutus.V1.TxId": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Transaction",
+      "TransactionHash"
+    ],
+    "Plutus.V1.TxOut": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.Transaction",
+      "<Doesn't support V1 only V2>"
+    ],
+    "Plutus.V1.TxOutRef": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.Transaction",
+      "TransactionInput"
+    ],
+    "Plutus.V1.Map": [
+      "cardano-transaction-lib",
+      "Ctl.Internal.Plutus.Types.AssocMap",
+      "Map"
+    ]
+  },
+  "classesConfig": {
+    "Plutus.PlutusData": [
+      [
+        "cardano-transaction-lib",
+        "Ctl.Internal.ToData",
+        "ToData"
+      ],
+      [
+        "cardano-transaction-lib",
+        "Ctl.Internal.FromData",
+        "FromData"
+      ]
+    ],
+    "Prelude.Eq": [
+      [
+        "prelude",
+        "Prelude",
+        "Eq"
+      ]
+    ],
+    "Prelude.Json": [
+      [
+        "aeson",
+        "Aeson",
+        "EncodeAeson"
+      ],
+      [
+        "aeson",
+        "Aeson",
+        "DecodeAeson"
+      ]
+    ]
+  }
 }
