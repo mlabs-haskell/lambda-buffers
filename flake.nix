@@ -10,9 +10,10 @@
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
     ctl.url = "github:Plutonomicon/cardano-transaction-lib/v5.0.0";
     iohk-nix = { url = "github:input-output-hk/iohk-nix"; flake = false; };
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ]
       (system:
         let
@@ -41,7 +42,7 @@
           });
 
           commonTools = {
-            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt nix-linter cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
+            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
             inherit (pkgs) protolint txtpbfmt;
             inherit fourmolu;
             inherit apply-refact;

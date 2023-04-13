@@ -28,17 +28,19 @@ type MonadCheck m = (MonadReader CheckRead m, MonadError P.TyClassCheckError m)
 
 runCheck :: PC.CompilerInput -> Either [P.TyClassCheckError] ()
 runCheck ci =
-  let -- Index the class definitions by a qualified name (ModuleName, ClassName).
-      classDefs = PC.indexClassDefs ci
-      -- Process each type class definitions under the appropriate reader context and collect errors.
-      allErrors =
-        concat $
-          runCheckOnClassDef classDefs
-            <$> [ (m ^. #moduleName, cd)
-                | m <- toList $ ci ^. #modules
-                , cd <- toList $ m ^. #classDefs
-                ]
-   in if null allErrors then Right () else Left allErrors
+  let
+    -- Index the class definitions by a qualified name (ModuleName, ClassName).
+    classDefs = PC.indexClassDefs ci
+    -- Process each type class definitions under the appropriate reader context and collect errors.
+    allErrors =
+      concat $
+        runCheckOnClassDef classDefs
+          <$> [ (m ^. #moduleName, cd)
+              | m <- toList $ ci ^. #modules
+              , cd <- toList $ m ^. #classDefs
+              ]
+   in
+    if null allErrors then Right () else Left allErrors
 
 runCheckOnClassDef :: Map PC.QClassName PC.ClassDef -> (PC.ModuleName, PC.ClassDef) -> [P.TyClassCheckError]
 runCheckOnClassDef classDefs (mn, cd) =
