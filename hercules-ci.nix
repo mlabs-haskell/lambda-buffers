@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+{ self, inputs, ... }: {
   imports = [
     inputs.hci-effects.flakeModule # Adds hercules-ci and herculesCI options
   ];
@@ -17,7 +17,7 @@
     };
   };
   hercules-ci.github-pages.branch = "main";
-  perSystem = { self, pkgs, ... }: {
+  perSystem = { pkgs, ... }: {
     hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
       {
         buildInputs = [ pkgs.mdbook ];
