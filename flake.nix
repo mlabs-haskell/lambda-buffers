@@ -10,11 +10,17 @@
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
     ctl.url = "github:Plutonomicon/cardano-transaction-lib/v5.0.0";
     iohk-nix = { url = "github:input-output-hk/iohk-nix"; flake = false; };
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, ... }:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ]
-      (system:
+  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        (import ./hercules-ci.nix)
+        (import ./pre-commit.nix)
+      ];
+      systems = [ "x86_64-linux" ];
+      perSystem = { system, config, ... }:
         let
           inherit self;
 
@@ -35,33 +41,23 @@
           # pre-commit-hooks.nix
           apply-refact = pkgs.haskellPackages.apply-refact;
 
-          pre-commit-check = pre-commit-hooks.lib.${system}.run (import ./pre-commit-check.nix {
-            inherit fourmolu;
-            protoHooks = pbnix-lib.preCommitHooks { inherit pkgs; };
-          });
-
           commonTools = {
-            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt nix-linter cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
+            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
             inherit (pkgs) protolint txtpbfmt;
             inherit fourmolu;
             inherit apply-refact;
           };
 
-          preCommitDevShell = pkgs.mkShell {
-            name = "pre-commit-env";
-            inherit (pre-commit-check) shellHook;
-          };
-
           # Experimental env
           experimentalDevShell = import ./experimental/build.nix {
             inherit pkgs commonTools;
-            inherit (pre-commit-check) shellHook;
+            shellHook = config.pre-commit.installationScript;
           };
 
           # Docs env
           docsDevShell = import ./docs/build.nix {
             inherit pkgs commonTools;
-            inherit (pre-commit-check) shellHook;
+            shellHook = config.pre-commit.installationScript;
           };
 
           # Protos build
@@ -69,7 +65,7 @@
 
           protosBuild = import ./lambda-buffers-proto/build.nix {
             inherit pkgs pbnix-lib commonTools;
-            inherit (pre-commit-check) shellHook;
+            shellHook = config.pre-commit.installationScript;
           };
 
           index-state = "2022-12-01T00:00:00Z";
@@ -80,7 +76,7 @@
             import import-location ({
               inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
               inherit (protosBuild) compilerHsPb;
-              inherit (pre-commit-check) shellHook;
+              shellHook = config.pre-commit.installationScript;
             } // additional);
 
           # Common Flake abstraction for the components.
@@ -134,14 +130,10 @@
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
         rec {
-          # Useful for nix repl
-          inherit pkgs;
-
           # Standard flake attributes
           packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
 
           devShells = rec {
-            dev-pre-commit = preCommitDevShell;
             dev-experimental = experimentalDevShell;
             dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
@@ -150,23 +142,11 @@
             dev-codegen = codegenFlake.devShell;
             dev-ctl-env = ctlShell;
             dev-plutustx-env = plutusTxShell;
-            default = preCommitDevShell;
           };
 
-          # nix flake check --impure --keep-going --allow-import-from-derivation
-          checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
+          # nix flake check
+          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
 
-        }
-      ) // {
-      herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
-        herculesCI.ciSystems = [ "x86_64-linux" ];
-        hercules-ci.github-pages.branch = "main";
-        perSystem = { pkgs, ... }: {
-          hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
-            {
-              buildInputs = [ pkgs.mdbook ];
-            } "mdbook build ${self.outPath}/docs --dest-dir $out";
         };
-      };
     };
 }

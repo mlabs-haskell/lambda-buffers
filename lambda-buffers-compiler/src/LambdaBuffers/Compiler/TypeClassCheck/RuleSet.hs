@@ -22,7 +22,7 @@ buildRulesForModule ::
   Either P.CompilerError ([Clause], [Term], Set (PC.InfoLess PC.ModuleName))
 buildRulesForModule _ visited m | infoLessMn m `Set.member` visited = return ([], [], visited)
 buildRulesForModule ctx@(tyDefs, classRels, ci) visited m = do
-  let structuralRules = concat $ mkStructuralRules (m ^. #moduleName) <$> toList (m ^. #classDefs)
+  let structuralRules = concatMap (mkStructuralRules (m ^. #moduleName)) (toList (m ^. #classDefs))
 
   -- ClassRef scope is imports + locally defined.
   let classRelsInScope =
