@@ -14,8 +14,9 @@
   };
 
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ]
-      (system:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" ];
+      perSystem = { system, ... }:
         let
           inherit self;
 
@@ -135,9 +136,6 @@
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
         rec {
-          # Useful for nix repl
-          inherit pkgs;
-
           # Standard flake attributes
           packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
 
@@ -157,16 +155,17 @@
           # nix flake check --impure --keep-going --allow-import-from-derivation
           checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
 
-        }
-      ) // {
-      herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
-        herculesCI.ciSystems = [ "x86_64-linux" ];
-        hercules-ci.github-pages.branch = "main";
-        perSystem = { pkgs, ... }: {
-          hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
-            {
-              buildInputs = [ pkgs.mdbook ];
-            } "mdbook build ${self.outPath}/docs --dest-dir $out";
+        };
+      flake = {
+        herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
+          herculesCI.ciSystems = [ "x86_64-linux" ];
+          hercules-ci.github-pages.branch = "main";
+          perSystem = { pkgs, ... }: {
+            hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
+              {
+                buildInputs = [ pkgs.mdbook ];
+              } "mdbook build ${self.outPath}/docs --dest-dir $out";
+          };
         };
       };
     };
