@@ -75,7 +75,7 @@
     cabal-fmt.enable = true;
     fourmolu.enable = true;
     shellcheck.enable = true;
-    hlint.enable = false;
+    hlint.enable = true;
     # TODO: Enable hunspell
     typos.enable = true;
     markdownlint.enable = true;

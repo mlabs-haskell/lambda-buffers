@@ -33,12 +33,13 @@ runCheck ci =
     classDefs = PC.indexClassDefs ci
     -- Process each type class definitions under the appropriate reader context and collect errors.
     allErrors =
-      concat $
-        runCheckOnClassDef classDefs
-          <$> [ (m ^. #moduleName, cd)
-              | m <- toList $ ci ^. #modules
-              , cd <- toList $ m ^. #classDefs
-              ]
+      concatMap
+        (runCheckOnClassDef classDefs)
+        ( [ (m ^. #moduleName, cd)
+          | m <- toList $ ci ^. #modules
+          , cd <- toList $ m ^. #classDefs
+          ]
+        )
    in
     if null allErrors then Right () else Left allErrors
 
