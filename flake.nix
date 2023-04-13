@@ -15,6 +15,9 @@
 
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        (import ./hercules-ci.nix)
+      ];
       systems = [ "x86_64-linux" ];
       perSystem = { system, ... }:
         let
@@ -152,21 +155,9 @@
             default = preCommitDevShell;
           };
 
-          # nix flake check --impure --keep-going --allow-import-from-derivation
+          # nix flake check
           checks = { inherit pre-commit-check; } // devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
 
         };
-      flake = {
-        herculesCI = hci-effects.lib.mkHerculesCI { inherit inputs; } {
-          herculesCI.ciSystems = [ "x86_64-linux" ];
-          hercules-ci.github-pages.branch = "main";
-          perSystem = { pkgs, ... }: {
-            hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
-              {
-                buildInputs = [ pkgs.mdbook ];
-              } "mdbook build ${self.outPath}/docs --dest-dir $out";
-          };
-        };
-      };
     };
 }
