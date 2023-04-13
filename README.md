@@ -122,4 +122,4 @@ shellcheck...........................................(no files to check)Skipped
 typos....................................................................Passed
 ```
 
-To run all the code quality tooling specified in the [pre-commit-check config file](./pre-commit-check.nix)
+To run all the code quality tooling specified in the [pre-commit-check config file](./pre-commit.nix)

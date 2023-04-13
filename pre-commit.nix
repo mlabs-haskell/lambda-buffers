@@ -2,7 +2,6 @@
   imports = [
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
   ];
-  debug = true;
   perSystem = { pkgs, system, inputs', config, ... }:
     {
       devShells.dev-pre-commit = config.pre-commit.devShell;
