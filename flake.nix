@@ -20,113 +20,108 @@
         ./pre-commit.nix
         ./common.nix
         ./lambda-buffers-proto/build.nix
+        ./lambda-buffers-compiler/build.nix
       ];
       systems = [ "x86_64-linux" ];
+      debug = true;
       perSystem = { system, config, ... }:
-        let
-          inherit self;
+        #   let
+        #     # Nixpkgs with Haskell.nix
+        #     pkgs = import nixpkgs {
+        #       inherit system;
+        #       inherit (inputs.haskell-nix) config;
+        #       overlays = [
+        #         inputs.haskell-nix.overlay
+        #         (import "${iohk-nix}/overlays/crypto")
+        #       ];
+        #     };
+        #     haskell-nix = pkgs.haskell-nix;
 
-          # Nixpkgs with Haskell.nix
-          pkgs = import nixpkgs {
-            inherit system;
-            inherit (inputs.haskell-nix) config;
-            overlays = [
-              inputs.haskell-nix.overlay
-              (import "${iohk-nix}/overlays/crypto")
-            ];
-          };
-          haskell-nix = pkgs.haskell-nix;
+        #     # Experimental env
+        #     experimentalDevShell = import ./experimental/build.nix {
+        #       inherit pkgs;
+        #       commonTools = config.common.tools;
+        #       shellHook = config.common.shellHook;
+        #     };
 
-          # Experimental env
-          experimentalDevShell = import ./experimental/build.nix {
-            inherit pkgs;
-            commonTools = config.common.tools;
-            shellHook = config.common.shellHook;
-          };
+        #     # Docs env
+        #     docsDevShell = import ./docs/build.nix {
+        #       inherit pkgs;
+        #       commonTools = config.common.tools;
+        #       shellHook = config.common.shellHook;
+        #     };
 
-          # Docs env
-          docsDevShell = import ./docs/build.nix {
-            inherit pkgs;
-            commonTools = config.common.tools;
-            shellHook = config.common.shellHook;
-          };
+        #     # Common build abstraction for the components.
+        #     buildAbstraction = { import-location, additional ? { } }:
+        #       import import-location ({
+        #         inherit pkgs haskell-nix mlabs-tooling;
+        #         inherit (config.packages) compilerHsPb;
+        #         commonTools = config.common.tools;
+        #         inherit (config.common) shellHook compiler-nix-name index-state;
+        #       } // additional);
 
-          # Common build abstraction for the components.
-          buildAbstraction = { import-location, additional ? { } }:
-            import import-location ({
-              inherit pkgs haskell-nix mlabs-tooling;
-              inherit (config.packages) compilerHsPb;
-              commonTools = config.common.tools;
-              inherit (config.common) shellHook compiler-nix-name index-state;
-            } // additional);
+        #     # Common Flake abstraction for the components.
+        #     flakeAbstraction = component-name: component-name.hsNixProj.flake { };
 
-          # Common Flake abstraction for the components.
-          flakeAbstraction = component-name: component-name.hsNixProj.flake { };
+        #     # Codegen Build
+        #     codegenBuild = buildAbstraction {
+        #       import-location = ./lambda-buffers-codegen/build.nix;
+        #       additional = {
+        #         lambda-buffers-compiler = ./lambda-buffers-compiler;
+        #       };
+        #     };
+        #     codegenFlake = flakeAbstraction codegenBuild;
 
-          # Compiler Build
-          compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
-          compilerFlake = flakeAbstraction compilerBuild;
+        #     # Frontend Build
+        #     frontendBuild = buildAbstraction {
+        #       import-location = ./lambda-buffers-frontend/build.nix;
+        #       additional = {
+        #         lambda-buffers-compiler = ./lambda-buffers-compiler;
+        #         lbc = config.packages."lambda-buffers-compiler:exe:lbc";
+        #         lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+        #       };
+        #     };
+        #     frontendFlake = flakeAbstraction frontendBuild;
 
-          # Codegen Build
-          codegenBuild = buildAbstraction {
-            import-location = ./lambda-buffers-codegen/build.nix;
-            additional = {
-              lambda-buffers-compiler = ./lambda-buffers-compiler;
-            };
-          };
-          codegenFlake = flakeAbstraction codegenBuild;
+        #     # LambdaBuffers CLIs
+        #     clis = {
+        #       lbf = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
+        #       lbc = config.packages."lambda-buffers-compiler:exe:lbc";
+        #       lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+        #     };
 
-          # Frontend Build
-          frontendBuild = buildAbstraction {
-            import-location = ./lambda-buffers-frontend/build.nix;
-            additional = {
-              lambda-buffers-compiler = ./lambda-buffers-compiler;
-              lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
-              lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
-            };
-          };
-          frontendFlake = flakeAbstraction frontendBuild;
+        #     # Purescript/cardano-transaction-lib environment.
+        #     ctlShell = import ./experimental/ctl-env/build.nix {
+        #       inherit system; inherit (inputs) nixpkgs ctl;
+        #       inherit (clis) lbf lbc lbg;
+        #       lbf-base = ./experimental/lbf-base;
+        #     };
+        #     # Purescript/cardano-transaction-lib shell
+        #     plutusTxShell = import ./experimental/plutustx-env/build.nix {
+        #       inherit pkgs haskell-nix mlabs-tooling;
+        #       inherit (config.common) compiler-nix-name index-state;
+        #       inherit (clis) lbf lbc lbg;
+        #       lbf-base = ./experimental/lbf-base;
+        #     };
 
-          # LambdaBuffers CLIs
-          clis = {
-            lbf = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
-            lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
-            lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
-          };
-
-          # Purescript/cardano-transaction-lib environment.
-          ctlShell = import ./experimental/ctl-env/build.nix {
-            inherit system; inherit (inputs) nixpkgs ctl;
-            inherit (clis) lbf lbc lbg;
-            lbf-base = ./experimental/lbf-base;
-          };
-          # Purescript/cardano-transaction-lib shell
-          plutusTxShell = import ./experimental/plutustx-env/build.nix {
-            inherit pkgs haskell-nix mlabs-tooling;
-            inherit (config.common) compiler-nix-name index-state;
-            inherit (clis) lbf lbc lbg;
-            lbf-base = ./experimental/lbf-base;
-          };
-
-          # Utilities
-          renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
-        in
+        #     # Utilities
+        #     renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
+        #   in
         rec {
           # Standard flake attributes
-          packages = compilerFlake.packages; # // frontendFlake.packages // codegenFlake.packages;
-
-          devShells = rec {
-            dev-experimental = experimentalDevShell;
-            dev-docs = docsDevShell;
-            dev-compiler = compilerFlake.devShell;
-            dev-frontend = frontendFlake.devShell;
-            dev-codegen = codegenFlake.devShell;
-            dev-ctl-env = ctlShell;
-            dev-plutustx-env = plutusTxShell;
-          };
+          # // frontendFlake.packages // codegenFlake.packages;
+          packages.foo = config.packages.compilerHsPb;
+          # devShells = rec {
+          #   dev-experimental = experimentalDevShell;
+          #   dev-docs = docsDevShell;
+          #   dev-frontend = frontendFlake.devShell;
+          #   dev-codegen = codegenFlake.devShell;
+          #   dev-ctl-env = ctlShell;
+          #   dev-plutustx-env = plutusTxShell;
+          # };
 
           # nix flake check
-          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
+          # checks = devShells // renameAttrs (n: "check-${n}") (frontendFlake.checks // codegenFlake.checks);
 
         };
     };

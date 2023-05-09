@@ -1,7 +1,7 @@
 { inputs, ... }:
 {
   imports = [
-    ../common.nix
+    #  ../common.nix
   ];
 
   perSystem = { pkgs, system, config, ... }:
@@ -24,12 +24,14 @@
           proto = "lambdabuffers.proto";
           cabalPackageName = "lambda-buffers-pb";
         };
+
         compilerHsPb = inputs.protobufs-nix.lib.${system}.haskellProto {
           inherit pkgs;
           src = ./.;
           proto = "compiler.proto";
           cabalPackageName = "lambda-buffers-compiler-pb";
         };
+
         codegenHsPb = inputs.protobufs-nix.lib.${system}.haskellProto {
           inherit pkgs;
           src = ./.;

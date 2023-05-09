@@ -1,23 +1,14 @@
-{ pkgs
-, haskell-nix
-, mlabs-tooling
-, compiler-nix-name
-, index-state
-, compilerHsPb
-, commonTools
-, shellHook
-}:
+{ inputs, ... }:
 let
-  inherit pkgs;
-  project = {
+  project = pkgs: config: {
     src = ./.;
 
     name = "lambda-buffers-compiler";
 
-    inherit compiler-nix-name index-state;
+    inherit (config.common) compiler-nix-name index-state;
 
     extraHackage = [
-      "${compilerHsPb}"
+      # "${config.packages.compilerHsPb}"
     ];
 
     modules = [
@@ -38,25 +29,77 @@ let
 
       exactDeps = true;
 
-      nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ builtins.attrValues commonTools;
+      nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ config.common.tools;
 
       tools = {
         cabal = { };
         haskell-language-server = { };
       };
 
-      shellHook = ''
-        export LC_CTYPE=C.UTF-8
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        ${shellHook}
-      '';
+      inherit (config.common) shellHook;
     };
   };
 in
 {
-  hsNixProj = haskell-nix.cabalProject' [
-    mlabs-tooling.lib.mkHackageMod
-    project
+  imports = [
+    #../common.nix
   ];
+
+  perSystem = { pkgs, system, config, ... }:
+    let
+      pkgs' = import inputs.nixpkgs {
+        inherit system;
+        inherit (inputs.haskell-nix) config;
+        overlays = [
+          inputs.haskell-nix.overlay
+          (import "${inputs.iohk-nix}/overlays/crypto")
+        ];
+      };
+
+    in
+    {
+      packages = ((pkgs'.haskell-nix.cabalProject' [
+        inputs.mlabs-tooling.lib.mkHackageMod
+        (project pkgs config)
+        {
+          src = ./.;
+
+          name = "lambda-buffers-compiler";
+
+          inherit (config.common) compiler-nix-name index-state;
+
+          extraHackage = [
+            # "${config.packages.compilerHsPb}"
+          ];
+
+          modules = [
+            (_: {
+              packages = {
+                allComponent.doHoogle = true;
+                allComponent.doHaddock = true;
+
+                # Enable strict compilation
+                lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+              };
+            })
+          ];
+
+          shell = {
+
+            withHoogle = true;
+
+            exactDeps = true;
+
+            nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ config.common.tools;
+
+            tools = {
+              cabal = { };
+              haskell-language-server = { };
+            };
+
+            inherit (config.common) shellHook;
+          };
+        }
+      ]).flake { }).packages;
+    };
 }

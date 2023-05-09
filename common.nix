@@ -1,4 +1,4 @@
-({ lib, ... }: {
+({ inputs, lib, ... }: {
   imports = [
     ./pre-commit.nix # config.pre-commit options
   ];
@@ -40,7 +40,19 @@
     options.common.compiler-nix-name = lib.mkOption {
       type = lib.types.str;
       description = "GHC version to build with.";
-      default = "ghc927";
+      default = "ghc925";
     };
+
+
+    # config._module.args.pkgs = import inputs.nixpkgs {
+    #   inherit system;
+    #   inherit (inputs.haskell-nix) config;
+    #   overlays = [
+    #     inputs.haskell-nix.overlay
+    #     (import "${inputs.iohk-nix}/overlays/crypto")
+    #   ];
+    # };
+
   };
+
 })
