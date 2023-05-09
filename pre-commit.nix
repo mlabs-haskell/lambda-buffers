@@ -1,7 +1,9 @@
 { inputs, lib, ... }: {
+
   imports = [
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
   ];
+
   perSystem = { pkgs, system, inputs', config, ... }:
     {
       devShells.dev-pre-commit = config.pre-commit.devShell;
@@ -26,12 +28,11 @@
             fourmolu.enable = true;
             shellcheck.enable = true;
             hlint.enable = true;
-            # TODO: Enable hunspell
             typos.enable = true;
             markdownlint.enable = true;
             dhall-format.enable = true;
             purty.enable = true;
-          } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
+          } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; }); # TODO(bladyjoker): Turn protonix into module.
 
           settings.ormolu.cabalDefaultExtensions = true;
         };

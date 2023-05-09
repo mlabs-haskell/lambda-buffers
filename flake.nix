@@ -16,8 +16,10 @@
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        (import ./hercules-ci.nix)
-        (import ./pre-commit.nix)
+        ./hercules-ci.nix
+        ./pre-commit.nix
+        ./common.nix
+        ./lambda-buffers-proto/build.nix
       ];
       systems = [ "x86_64-linux" ];
       perSystem = { system, config, ... }:
@@ -35,48 +37,27 @@
           };
           haskell-nix = pkgs.haskell-nix;
 
-          # pre-commit-hooks.nix
-          fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
-
-          # pre-commit-hooks.nix
-          apply-refact = pkgs.haskellPackages.apply-refact;
-
-          commonTools = {
-            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
-            inherit (pkgs) protolint txtpbfmt;
-            inherit fourmolu;
-            inherit apply-refact;
-          };
-
           # Experimental env
           experimentalDevShell = import ./experimental/build.nix {
-            inherit pkgs commonTools;
-            shellHook = config.pre-commit.installationScript;
+            inherit pkgs;
+            commonTools = config.common.tools;
+            shellHook = config.common.shellHook;
           };
 
           # Docs env
           docsDevShell = import ./docs/build.nix {
-            inherit pkgs commonTools;
-            shellHook = config.pre-commit.installationScript;
+            inherit pkgs;
+            commonTools = config.common.tools;
+            shellHook = config.common.shellHook;
           };
-
-          # Protos build
-          pbnix-lib = protobufs-nix.lib.${system};
-
-          protosBuild = import ./lambda-buffers-proto/build.nix {
-            inherit pkgs pbnix-lib commonTools;
-            shellHook = config.pre-commit.installationScript;
-          };
-
-          index-state = "2022-12-01T00:00:00Z";
-          compiler-nix-name = "ghc925";
 
           # Common build abstraction for the components.
           buildAbstraction = { import-location, additional ? { } }:
             import import-location ({
-              inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-              inherit (protosBuild) compilerHsPb;
-              shellHook = config.pre-commit.installationScript;
+              inherit pkgs haskell-nix mlabs-tooling;
+              inherit (config.packages) compilerHsPb;
+              commonTools = config.common.tools;
+              inherit (config.common) shellHook compiler-nix-name index-state;
             } // additional);
 
           # Common Flake abstraction for the components.
@@ -121,7 +102,8 @@
           };
           # Purescript/cardano-transaction-lib shell
           plutusTxShell = import ./experimental/plutustx-env/build.nix {
-            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling;
+            inherit pkgs haskell-nix mlabs-tooling;
+            inherit (config.common) compiler-nix-name index-state;
             inherit (clis) lbf lbc lbg;
             lbf-base = ./experimental/lbf-base;
           };
@@ -131,12 +113,11 @@
         in
         rec {
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
+          packages = compilerFlake.packages; # // frontendFlake.packages // codegenFlake.packages;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
             dev-docs = docsDevShell;
-            dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;

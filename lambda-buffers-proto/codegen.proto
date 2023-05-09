@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package lambdabuffers.codegen;
+
+import "lambdabuffers.proto";
+
+/* Codegen Input
+
+   Codegen Input is a fully self contained list of modules, the entire
+   compilation closure needed by the Codegen to perform its task.
+*/
+message CodegenInput {
+  // Modules to compile.
+  // Duplicate modules MUST be reported with
+  // `ProtoParseError.MultipleModuleError`.
+  repeated Module modules = 1;
+}
+
+// Errors internal to the implementation.
+message InternalError {
+  // Error message.
+  string msg = 1;
+  // Source information if meaningful.
+  SourceInfo source_info = 2;
+}
+
+// Codegen Error
+message CodegenError {
+  // Errors internal to the compiler implementation.
+  repeated InternalError internal_errors = 6;
+}
+
+// Codegen Result ~ a successful Compilation Output.
+message CodegenResult {
+}
+
+// Output of the Codegen.
+message CodegenOutput {
+  oneof compiler_output {
+    CodegenError compiler_error = 1;
+    CodegenResult compiler_result = 2;
+  }
+}
