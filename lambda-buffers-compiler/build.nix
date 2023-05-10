@@ -8,7 +8,7 @@ let
     inherit (config.common) compiler-nix-name index-state;
 
     extraHackage = [
-      # "${config.packages.compilerHsPb}"
+      "${config.packages.compilerHsPb}"
     ];
 
     modules = [
@@ -42,7 +42,7 @@ let
 in
 {
   imports = [
-    #../common.nix
+    ../common.nix
   ];
 
   perSystem = { pkgs, system, config, ... }:
@@ -55,51 +55,14 @@ in
           (import "${inputs.iohk-nix}/overlays/crypto")
         ];
       };
-
-    in
-    {
-      packages = ((pkgs'.haskell-nix.cabalProject' [
+      hsProj = pkgs'.haskell-nix.cabalProject' [
         inputs.mlabs-tooling.lib.mkHackageMod
         (project pkgs config)
-        {
-          src = ./.;
-
-          name = "lambda-buffers-compiler";
-
-          inherit (config.common) compiler-nix-name index-state;
-
-          extraHackage = [
-            # "${config.packages.compilerHsPb}"
-          ];
-
-          modules = [
-            (_: {
-              packages = {
-                allComponent.doHoogle = true;
-                allComponent.doHaddock = true;
-
-                # Enable strict compilation
-                lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
-              };
-            })
-          ];
-
-          shell = {
-
-            withHoogle = true;
-
-            exactDeps = true;
-
-            nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ config.common.tools;
-
-            tools = {
-              cabal = { };
-              haskell-language-server = { };
-            };
-
-            inherit (config.common) shellHook;
-          };
-        }
-      ]).flake { }).packages;
+      ];
+      hsFlake = hsProj.flake { };
+    in
+    {
+      #devShells.dev-compiler = (hsProj.flake {}).devShell;
+      packages = { inherit (hsFlake.packages.${system}) asd; };
     };
 }

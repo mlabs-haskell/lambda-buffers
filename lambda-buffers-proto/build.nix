@@ -1,7 +1,7 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
   imports = [
-    #  ../common.nix
+    ../common.nix
   ];
 
   perSystem = { pkgs, system, config, ... }:
