@@ -62,7 +62,7 @@ in
       hsFlake = hsProj.flake { };
     in
     {
-      #devShells.dev-compiler = (hsProj.flake {}).devShell;
-      packages = { inherit (hsFlake.packages.${system}) asd; };
+      devShells.dev-compiler = hsFlake.devShell;
+      #packages = hsFlake.packages;
     };
 }
