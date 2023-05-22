@@ -9,7 +9,7 @@
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
     ctl.url = "github:Plutonomicon/cardano-transaction-lib/v5.0.0";
-    iohk-nix = { url = "github:input-output-hk/iohk-nix"; flake = false; };
+    iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
@@ -19,6 +19,7 @@
         (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
       ];
+      debug = true;
       systems = [ "x86_64-linux" ];
       perSystem = { system, config, ... }:
         let
@@ -30,7 +31,7 @@
             inherit (inputs.haskell-nix) config;
             overlays = [
               inputs.haskell-nix.overlay
-              (import "${iohk-nix}/overlays/crypto")
+              inputs.iohk-nix.overlays.crypto
             ];
           };
           haskell-nix = pkgs.haskell-nix;
