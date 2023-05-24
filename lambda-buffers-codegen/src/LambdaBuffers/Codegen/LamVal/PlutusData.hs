@@ -5,6 +5,7 @@ import LambdaBuffers.Codegen.LamVal (Product, QProduct, QRecord, QSum, Sum, Valu
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
 
 toPlutusDataSum :: QSum -> ValueE
 toPlutusDataSum qsum@(_, sumTy) =
@@ -163,10 +164,10 @@ fromPlutusDataRecord ty qrec@(_, fields') = case OMap.assocs fields' of
         pdVal
 
 -- | Hooks
-deriveToPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
+deriveToPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveToPlutusDataImpl mn tydefs = deriveImpl mn tydefs toPlutusDataSum toPlutusDataProduct toPlutusDataRecord
 
-deriveFromPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
+deriveFromPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveFromPlutusDataImpl mn tydefs ty = deriveImpl mn tydefs (fromPlutusDataSum (LT.fromTy ty)) (fromPlutusDataProduct (LT.fromTy ty)) (fromPlutusDataRecord $ LT.fromTy ty) ty
 
 -- | Helpers

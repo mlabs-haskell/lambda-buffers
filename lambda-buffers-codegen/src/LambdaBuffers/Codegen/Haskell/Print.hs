@@ -9,7 +9,6 @@
 module LambdaBuffers.Codegen.Haskell.Print (MonadPrint, printModule) where
 
 import Control.Lens (view, (^.))
-import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (ask, asks)
 import Control.Monad.State.Class (MonadState (get))
 import Data.Foldable (Foldable (toList), foldrM, for_)
@@ -17,8 +16,6 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.Text (Text)
-import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
@@ -27,9 +24,11 @@ import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printModName, printModName', printTyName)
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
+import Proto.Codegen qualified as P
 
 printModule :: MonadPrint m => m (Doc ann)
 printModule = do
@@ -60,7 +59,7 @@ hsClassImplPrinters ::
       PC.TyDefs ->
       (Doc ann -> Doc ann) ->
       PC.Ty ->
-      Either Text (Doc ann, Set H.QValName)
+      Either P.InternalError (Doc ann, Set H.QValName)
     )
 hsClassImplPrinters =
   Map.fromList
@@ -97,18 +96,18 @@ printDerive iTyDefs d = do
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
-    Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print " <> (Text.pack . show $ qcn))
+    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print " <> show qcn)
     Just hsqcns -> for hsqcns (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
 
 printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
 printHsQClassImpl mn iTyDefs hqcn d =
   case Map.lookup hqcn hsClassImplPrinters of
-    Nothing -> throwError (d ^. #constraint . #sourceInfo, "TODO(bladyjoker): Missing capability to print the Haskell type class " <> (Text.pack . show $ hqcn))
+    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Haskell type class " <> show hqcn)
     Just implPrinter -> do
       let ty = d ^. #constraint . #argument
           mkInstanceDoc = printInstanceDef hqcn ty
       case implPrinter mn iTyDefs mkInstanceDoc ty of
-        Left err -> throwError (d ^. #constraint . #sourceInfo, "Failed printing the implementation for " <> (Text.pack . show $ hqcn) <> "\nGot error: " <> err)
+        Left err -> throwInternalError (d ^. #constraint . #sourceInfo) ("Failed printing the implementation for " <> show hqcn <> "\nGot error: " <> show err)
         Right (instanceDefsDoc, valImps) -> do
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc

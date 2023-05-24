@@ -1,19 +1,17 @@
 module LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef, printTyInner) where
 
 import Control.Lens (view, (^.))
-import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (asks)
 import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
-import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQClassName, printHsQTyName, printMkCtor, printTyName, printVarName)
 import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Codegen.Print (importClass)
+import LambdaBuffers.Codegen.Print (importClass, throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
@@ -86,7 +84,7 @@ printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
-    Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
+    Nothing -> throwInternalError si ("Should have an Opaque configured for " <> show tyN)
     Just hqtyn -> return (SynonymTyDef, printHsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: PC.TyArg -> Doc ann
@@ -124,7 +122,7 @@ printProd (PC.Product fields _) = do
 printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
 printField tyN f@(PC.Field fn ty) = do
   fnDoc <- case printFieldName tyN fn of
-    Nothing -> throwError (fn ^. #sourceInfo, "TODO(bladyjoker): Internal error: Failed printing `FieldName` for field\n" <> Text.pack (show (tyN, f)))
+    Nothing -> throwInternalError (fn ^. #sourceInfo) ("Failed printing `FieldName` for field\n" <> show (tyN, f))
     Just fnDoc -> return fnDoc
   let tyDoc = printTyTopLevel ty
   return $ fnDoc <+> colon <> colon <+> tyDoc

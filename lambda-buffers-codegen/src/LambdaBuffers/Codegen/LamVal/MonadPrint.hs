@@ -1,15 +1,20 @@
 module LambdaBuffers.Codegen.LamVal.MonadPrint (MonadPrint, runPrint, freshArg, resolveRef, importValue) where
 
+import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (Except, runExcept)
 import Control.Monad.RWS (RWST (runRWST))
 import Control.Monad.RWS.Class (MonadRWS, asks, gets, modify)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text qualified as Text
 import LambdaBuffers.Codegen.LamVal (Ref, ValueE (VarE), ValueName)
 import Prettyprinter (Doc)
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
 newtype PrintRead qvn = MkPrintRead
   { builtins :: Map ValueName qvn
@@ -22,7 +27,10 @@ data PrintState qvn = MkPrintState
   }
   deriving stock (Eq, Ord, Show)
 
-type PrintError = String
+type PrintError = P.InternalError
+
+throwInternalError :: MonadPrint m qvn => String -> m a
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.LamVal.MonadPrint] " <> Text.pack msg
 
 type MonadPrint m qvn = (MonadRWS (PrintRead qvn) () (PrintState qvn) m, MonadError PrintError m)
 
@@ -56,5 +64,5 @@ resolveRef :: MonadPrint m qvn => Ref -> m qvn
 resolveRef (_, refName) = do
   bs <- asks builtins
   case Map.lookup refName bs of
-    Nothing -> throwError $ "TODO(bladyjoker): LamVal builtin mapping for " <> show refName <> " not configured."
+    Nothing -> throwInternalError $ "LamVal builtin mapping for " <> show refName <> " not configured."
     Just qvn -> return qvn

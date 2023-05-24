@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), writeFileAndCreate, inputFile, outputFile, debug, gen) where
+module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), writeFileAndCreate, inputFile, outputFile, debug, gen, logInfo, logError) where
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
 import Control.Monad (when)
@@ -13,11 +13,11 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
-import LambdaBuffers.Compiler.TypeClassCheck.Errors qualified as PC
 import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 import System.Directory (createDirectory, createDirectoryIfMissing, doesDirectoryExist, removeDirectoryRecursive)
+import System.Exit (exitFailure)
 import System.FilePath (takeDirectory, (</>))
 import System.FilePath.Lens (extension)
 
@@ -31,9 +31,15 @@ data GenOpts = GenOpts
 
 makeLenses ''GenOpts
 
+logInfo :: String -> IO ()
+logInfo msg = putStrLn $ "[lbg][INFO] " <> msg <> "."
+
+logError :: String -> IO ()
+logError msg = putStrLn $ "[lbg][ERROR] " <> msg <> "."
+
 gen :: GenOpts -> (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text))) -> IO ()
 gen opts cont = do
-  putStrLn $ "Code generation Input at " <> opts ^. inputFile
+  logInfo $ "Code generation Input at " <> opts ^. inputFile
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   initialisePrintDir (opts ^. printDir)
@@ -43,12 +49,12 @@ gen opts cont = do
       ( \(mn, errOrPrint) errs -> do
           case errOrPrint of
             Left err -> do
-              putStrLn $
+              logInfo $
                 "Code generation failed for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
               return (err : errs)
             Right (fp, printed) -> do
-              putStrLn $
+              logInfo $
                 "Code generation succeeded for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
                   <> " at file path "
@@ -62,17 +68,18 @@ gen opts cont = do
   if null allErrors
     then do
       writeCodegenResult (opts ^. outputFile)
-      putStrLn "Code generation successful."
+      logInfo "Code generation successful"
     else do
       writeCodegenError (opts ^. outputFile) allErrors
-      error "Code generation reported errors"
-  putStrLn $ "Code generation Output at " <> opts ^. outputFile
+      logError "Code generation reported errors"
+  logInfo $ "Code generation Output at " <> opts ^. outputFile
 
 runFromProto :: FilePath -> P.Input -> IO PC.CodegenInput
 runFromProto ofp ci = case PC.codegenInputFromProto ci of
   Left err -> do
     writeCodegenError ofp [err]
-    error $ "Code generation failed due to problem with the input file, inspect the error in " <> ofp <> " to find out the details"
+    logError $ "Code generation failed due to problem with the input file, inspect the error in " <> ofp <> " to find out the details"
+    exitFailure
   Right ci' -> return ci'
 
 writeFileAndCreate :: FilePath -> Text -> IO ()
@@ -97,10 +104,12 @@ readCodegenInput fp = do
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
-    _ -> error $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
+    _ -> do
+      logError $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
+      exitFailure
 
 writeCodegenError :: FilePath -> [P.Error] -> IO ()
-writeCodegenError fp err = writeCodegenOutput fp (defMessage & P.error .~ fold err)
+writeCodegenError fp errs = writeCodegenOutput fp (defMessage & P.error .~ fold errs)
 
 writeCodegenResult :: FilePath -> IO ()
 writeCodegenResult fp = writeCodegenOutput fp defMessage
@@ -111,4 +120,6 @@ writeCodegenOutput fp cr = do
   case ext of
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
-    _ -> error $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+    _ -> do
+      logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+      exitFailure

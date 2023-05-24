@@ -14,17 +14,17 @@ module LambdaBuffers.Codegen.Print (
   importClass,
   stValueImports,
   stClassImports,
+  throwInternalError,
 ) where
 
 import Control.Lens (makeLenses, (&), (.~))
-import Control.Monad.Error.Class (MonadError)
+import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (Except, runExcept)
 import Control.Monad.RWS (RWST (runRWST))
 import Control.Monad.RWS.Class (MonadRWS, modify)
 import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config)
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -32,7 +32,7 @@ import Prettyprinter (Doc)
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
-type Error = (PC.SourceInfo, Text)
+type Error = P.InternalError
 
 data Context qtn qcn = Context
   { _ctxCompilerInput :: PC.CodegenInput
@@ -73,8 +73,7 @@ runPrint ctx modPrinter =
           Left $
             defMessage
               & P.internalErrors
-                .~ [ defMessage
-                      & P.msg .~ (Text.pack . show $ err) -- TODO(bladyjoker): Introduce SourceInfo in InternalError.
+                .~ [ err
                    ]
         Right (doc, _, _) -> Right doc
 
@@ -83,3 +82,10 @@ importValue qvn = modify (\(State vimps cimps) -> State (Set.insert qvn vimps) c
 
 importClass :: (MonadPrint qtn qcn qvn m, Ord qcn) => qcn -> m ()
 importClass qcn = modify (\(State vimps cimps) -> State vimps (Set.insert qcn cimps))
+
+throwInternalError :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> String -> m a
+throwInternalError si msg =
+  throwError $
+    defMessage
+      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> Text.pack msg
+      & P.sourceInfo .~ PC.toProto si

@@ -5,6 +5,7 @@ import LambdaBuffers.Codegen.LamVal (Field, QProduct, QRecord, QSum, ValueE (Cas
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
 
 -- | Eq on values of a Sum type
 eqSum :: QSum -> ValueE
@@ -75,7 +76,7 @@ eqField :: PC.QTyName -> Field -> ValueE -> ValueE -> ValueE
 eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ FieldE (qtyN, fieldName) l @ FieldE (qtyN, fieldName) r
 
 -- | Hooks
-deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
+deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveEqImpl mn tydefs = deriveImpl mn tydefs eqSum eqProduct eqRecord
 
 -- | Domain value references

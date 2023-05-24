@@ -1,8 +1,11 @@
 module LambdaBuffers.Codegen.Purescript.Print.LamVal (printValueE) where
 
+import Control.Lens ((&), (.~))
 import Control.Monad (replicateM)
 import Control.Monad.Error.Class (MonadError (throwError))
 import Data.Map.Ordered qualified as OMap
+import Data.ProtoLens (Message (defMessage))
+import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
@@ -12,8 +15,12 @@ import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Proto.Codegen_Fields qualified as P
 
 type MonadPrint m = LV.MonadPrint m Purs.QValName
+
+throwInternalError :: MonadPrint m => String -> m a
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Purescript.Print.LamVal] " <> Text.pack msg
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
@@ -50,7 +57,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
             LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
-            _ -> throwError "TODO: Internal error, got a non-product in Sum."
+            _ -> throwInternalError "Got a non-product in Sum."
         )
   return $ align $ "case" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs
 
@@ -71,7 +78,7 @@ printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, tyN), fieldN) recVal = do
   recDoc <- printValueE recVal
   case printFieldName (withInfo tyN) (withInfo fieldN) of
-    Nothing -> throwError $ "TODO(bladyjoker): Internal error: Failed print a `FieldName` in Purescript implementation printer " <> show fieldN
+    Nothing -> throwInternalError $ "Failed print a `FieldName` in Purescript implementation printer " <> show fieldN
     Just fnDoc -> do
       unwrapDoc <- printPursQValName <$> LV.importValue unwrap
       return $ parens (unwrapDoc <+> recDoc) <> dot <> fnDoc
@@ -143,7 +150,7 @@ printRecordE :: MonadPrint m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc 
 printRecordE ((_, tyN), _) vals = do
   fieldDocs <- for vals $
     \((fieldN, _), val) -> case printFieldName (withInfo tyN) (withInfo fieldN) of
-      Nothing -> throwError "Failed printing field name"
+      Nothing -> throwInternalError "Failed printing field name"
       Just fieldNDoc -> do
         valDoc <- printValueE val
         return $ group $ fieldNDoc <+> colon <+> valDoc
@@ -179,4 +186,4 @@ printValueE (LV.IntE i) = printIntE i
 printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
 printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
-printValueE (LV.ErrorE err) = throwError $ "TODO(bladyjoker): LamVal error builtin was called " <> err
+printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err

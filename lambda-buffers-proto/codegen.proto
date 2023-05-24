@@ -22,10 +22,25 @@ message InternalError {
   SourceInfo source_info = 2;
 }
 
-// Compiler Error
+// Unsupported `Opaque` error for a type `ty_name` defined in module
+// `module_name`.
+message UnsupportedOpaqueError {
+  ModuleName module_name = 1;
+  TyName ty_name = 2;
+}
+
+// Unsupported `Class` error for a class `class_name` defined in module
+// `module_name`.
+message UnsupportedClassError {
+  ModuleName module_name = 1;
+  ClassName class_name = 2;
+}
+
+// Codegen Error
 message Error {
-  // Errors internal to the codegen implementation.
   repeated InternalError internal_errors = 1;
+  repeated UnsupportedOpaqueError unsupported_opaque_errors = 2;
+  repeated UnsupportedClassError unsupported_class_errors = 3;
 }
 
 // Codegen Result ~ a successful Codegen Output.
