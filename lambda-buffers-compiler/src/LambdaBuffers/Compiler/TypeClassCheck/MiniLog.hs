@@ -18,11 +18,11 @@ import Data.Default (Default (def))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
 import Data.Text (Text)
+import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.Compiler.MiniLog ((@), (@<=))
 import LambdaBuffers.Compiler.MiniLog qualified as ML
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver qualified as ML
 import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors (deriveOpaqueError, internalError, internalError', mappendErrs, memptyErr, missingRuleError, overlappingRulesError, unboundTyClassRefError')
@@ -227,19 +227,19 @@ mkStructuralRules mn cd =
 
 mkSupersBody :: PC.ModuleName -> PC.ClassRels -> PC.Constraint -> Either P.Error [Term]
 mkSupersBody mn clrels cstr =
-  let ty = tyToTerm mn . E.fromTy $ cstr ^. #argument
+  let ty = tyToTerm mn . LT.fromTy $ cstr ^. #argument
    in case Map.lookup (PC.qualifyClassRef mn $ cstr ^. #classRef) clrels of
         Nothing -> Left $ unboundTyClassRefError' mn (cstr ^. #classRef)
         Just sups -> Right ((`tconstraint` ty) <$> sups)
 
 mkDeriveRule :: PC.ModuleName -> PC.TyDefs -> PC.ClassRels -> PC.Derive -> Either P.Error Clause
 mkDeriveRule mn tyds clrels drv =
-  let ty = E.fromTy $ drv ^. #constraint . #argument
+  let ty = LT.fromTy $ drv ^. #constraint . #argument
       hd = termFromConstraint mn (drv ^. #constraint)
       tc = tcstrFromClassRef mn (drv ^. #constraint . #classRef)
    in do
         supsBody <- mkSupersBody mn clrels (drv ^. #constraint)
-        case E.runEval' mn tyds ty of
+        case LT.runEval' mn tyds ty of
           Left err -> Left err
           Right ty' -> Right $ hd @<= (tc (tyToTerm mn ty') : supsBody)
 
@@ -258,23 +258,23 @@ mkQuery t = t
 
 termFromConstraint :: PC.ModuleName -> PC.Constraint -> Term
 termFromConstraint mn cstr =
-  let ty = tyToTerm mn . E.fromTy $ cstr ^. #argument
+  let ty = tyToTerm mn . LT.fromTy $ cstr ^. #argument
       tc = tconstraint' mn cstr
    in tc ty
 
 tcstrFromClassRef :: PC.ModuleName -> PC.TyClassRef -> (Term -> Term)
 tcstrFromClassRef mn cr = let qcn = PC.qualifyClassRef mn cr in tconstraint qcn
 
--- | Turn a canonical `E.Ty` representation into a `Term`.
-tyToTerm :: PC.ModuleName -> E.Ty -> Term
-tyToTerm mn (E.TyRef tr) = ML.Atom $ ATyName (PC.qualifyTyRef mn tr)
-tyToTerm _ (E.TyVar tv) = ML.Var (tv ^. #varName . #name)
-tyToTerm _ (E.TyOpaque _) = topaque
-tyToTerm mn (E.TyAbs args body _) = tabs (foldr (\(vn, _) t -> (ML.Atom . AVarName $ vn) @| t) nilt (OMap.assocs args)) (tyToTerm mn body)
-tyToTerm mn (E.TyApp tf args _) = tapp (tyToTerm mn tf) (foldr (\ty t -> tyToTerm mn ty @| t) nilt args)
-tyToTerm mn (E.TySum ctors _) = tsum $ foldr (\(cn, cp) t -> tctor (ML.Atom . AConstrName $ cn) (tyToTerm mn cp) @| t) nilt (OMap.assocs ctors)
-tyToTerm mn (E.TyProduct fields _) = ttuple $ foldr (\fty t -> tyToTerm mn fty @| t) nilt fields
-tyToTerm mn (E.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.Atom . AFieldName $ fn) (tyToTerm mn fty) @| t) nilt (OMap.assocs fields)
+-- | Turn a canonical `LT.Ty` representation into a `Term`.
+tyToTerm :: PC.ModuleName -> LT.Ty -> Term
+tyToTerm mn (LT.TyRef tr) = ML.Atom $ ATyName (PC.qualifyTyRef mn tr)
+tyToTerm _ (LT.TyVar tv) = ML.Var (tv ^. #varName . #name)
+tyToTerm _ (LT.TyOpaque _) = topaque
+tyToTerm mn (LT.TyAbs args body _) = tabs (foldr (\(vn, _) t -> (ML.Atom . AVarName $ vn) @| t) nilt (OMap.assocs args)) (tyToTerm mn body)
+tyToTerm mn (LT.TyApp tf args _) = tapp (tyToTerm mn tf) (foldr (\ty t -> tyToTerm mn ty @| t) nilt args)
+tyToTerm mn (LT.TySum ctors _) = tsum $ foldr (\(cn, cp) t -> tctor (ML.Atom . AConstrName $ cn) (tyToTerm mn cp) @| t) nilt (OMap.assocs ctors)
+tyToTerm mn (LT.TyProduct fields _) = ttuple $ foldr (\fty t -> tyToTerm mn fty @| t) nilt fields
+tyToTerm mn (LT.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.Atom . AFieldName $ fn) (tyToTerm mn fty) @| t) nilt (OMap.assocs fields)
 
 {- | Solve/evaluate terms (goals) given some knowledge base (clauses).
  Tries each goal individually and collects all the errors.

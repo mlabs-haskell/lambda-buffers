@@ -24,13 +24,15 @@ makeLenses ''CompileOpts
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
+  putStrLn $ "Compiler input at " <> opts ^. input
   compInp <- readCompilerInput (opts ^. input)
   let compOut = runCompiler compInp
   case compOut ^. maybe'error of
     Nothing -> do
-      putStrLn "Compilation succeeded"
+      putStrLn "OK"
     Just _ -> do
-      putStrLn "Compilation failed"
+      putStrLn "FAIL"
+  putStrLn $ "Compiler output at " <> opts ^. output
   writeCompilerOutput (opts ^. output) compOut
 
 readCompilerInput :: FilePath -> IO Input

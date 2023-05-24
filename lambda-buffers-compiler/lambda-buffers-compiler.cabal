@@ -116,12 +116,15 @@ library
     LambdaBuffers.Compiler.KindCheck.Inference
     LambdaBuffers.Compiler.KindCheck.Kind
     LambdaBuffers.Compiler.KindCheck.Type
+    LambdaBuffers.Compiler.LamTy
+    LambdaBuffers.Compiler.LamTy.Eval
+    LambdaBuffers.Compiler.LamTy.Pretty
+    LambdaBuffers.Compiler.LamTy.Types
     LambdaBuffers.Compiler.MiniLog
     LambdaBuffers.Compiler.MiniLog.Pretty
     LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
     LambdaBuffers.Compiler.ProtoCompat
-    LambdaBuffers.Compiler.ProtoCompat.Eval
     LambdaBuffers.Compiler.ProtoCompat.FromProto
     LambdaBuffers.Compiler.ProtoCompat.Indexing
     LambdaBuffers.Compiler.ProtoCompat.InfoLess
@@ -143,7 +146,6 @@ executable lbc
     , bytestring                  >=0.11
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1.0.0
-    , lambda-buffers-lang-pb      >=0.1
     , lens                        >=5.2
     , optparse-applicative        >=0.17
     , proto-lens                  >=0.7

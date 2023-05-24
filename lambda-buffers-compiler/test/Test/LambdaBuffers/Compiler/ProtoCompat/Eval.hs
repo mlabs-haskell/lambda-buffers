@@ -1,6 +1,6 @@
 module Test.LambdaBuffers.Compiler.ProtoCompat.Eval (test) where
 
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
+import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import Test.LambdaBuffers.Compiler.ProtoCompat.Utils qualified as U
@@ -138,12 +138,12 @@ fooCiTestCase title mayGas ty want = testCase title $ runTestFix mayGas fooCi (U
 runTestFix :: Maybe Int -> PC.CompilerInput -> PC.ModuleName -> PC.Ty -> String -> Assertion
 runTestFix mayGas ci mn ty want =
   let tydefs = PC.indexTyDefs ci
-   in case fix mayGas (E.runEval' mn tydefs) (E.fromTy ty) of
+   in case fix mayGas (LT.runEval' mn tydefs) (LT.fromTy ty) of
         Left err -> assertFailure (show err)
         Right res -> do
           assertEqual "" want (show res)
 
-fix :: Maybe Int -> (E.Ty -> Either e E.Ty) -> E.Ty -> Either e E.Ty
+fix :: Maybe Int -> (LT.Ty -> Either e LT.Ty) -> LT.Ty -> Either e LT.Ty
 fix Nothing r x = case r x of
   Left err -> Left err
   Right x' -> if x == x' then Right x else fix Nothing r x'
