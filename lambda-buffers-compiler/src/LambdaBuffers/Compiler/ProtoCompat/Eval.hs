@@ -97,12 +97,12 @@ data Context = MkContext
 
 makeLenses 'MkContext
 
-type MonadEval m = (MonadError P.CompilerError m, MonadReader Context m)
+type MonadEval m = (MonadError P.Error m, MonadReader Context m)
 
-runEval :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> PC.Ty -> Either P.CompilerError Ty
+runEval :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> PC.Ty -> Either P.Error Ty
 runEval mn tds ty = runEval' mn tds (fromTy ty)
 
-runEval' :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> Ty -> Either P.CompilerError Ty
+runEval' :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> Ty -> Either P.Error Ty
 runEval' mn tds ty =
   let p = runReaderT (eval ty) (MkContext mn tds mempty)
    in runExcept p

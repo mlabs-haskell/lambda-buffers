@@ -20,6 +20,7 @@ import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 
 type ClassDefs = Map PC.QClassName PC.ClassDef
+
 indexClassDefs :: PC.CompilerInput -> Map PC.QClassName PC.ClassDef
 indexClassDefs ci =
   Map.fromList
@@ -29,6 +30,7 @@ indexClassDefs ci =
     ]
 
 type TyDefs = Map PC.QTyName PC.TyDef
+
 indexTyDefs :: PC.CompilerInput -> Map PC.QTyName PC.TyDef
 indexTyDefs ci =
   Map.fromList
@@ -38,6 +40,7 @@ indexTyDefs ci =
     ]
 
 type ClassRels = Map PC.QClassName [PC.QClassName]
+
 indexClassRelations :: PC.CompilerInput -> ClassRels
 indexClassRelations ci =
   foldr

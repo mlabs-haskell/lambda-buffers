@@ -16,16 +16,16 @@ import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as S
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-runCheck :: PC.CompilerInput -> Either P.CompilerError ()
+runCheck :: PC.CompilerInput -> Either P.Error ()
 runCheck = fst . runCheck'
 
-runCheck' :: PC.CompilerInput -> (Either P.CompilerError (), Map FilePath String)
+runCheck' :: PC.CompilerInput -> (Either P.Error (), Map FilePath String)
 runCheck' ci = case runSuperClassCycleCheck ci of
   Left err -> (Left err, mempty)
   Right _ -> runConstraintsCheck ci
 
 -- | Determines if type classes form a hierarchichal relation (no cycles).
-runSuperClassCycleCheck :: PC.CompilerInput -> Either P.CompilerError ()
+runSuperClassCycleCheck :: PC.CompilerInput -> Either P.Error ()
 runSuperClassCycleCheck ci = case Super.runCheck ci of
   Left errs -> Left $ defMessage & P.tyClassCheckErrors .~ errs
   Right _ -> Right ()
@@ -39,7 +39,7 @@ runSuperClassCycleCheck ci = case Super.runCheck ci of
  a map of Prolog rendered MiniLog clauses for each module which can be used to
  inspect the rules if needed.
 -}
-runConstraintsCheck :: PC.CompilerInput -> (Either P.CompilerError (), Map FilePath String)
+runConstraintsCheck :: PC.CompilerInput -> (Either P.Error (), Map FilePath String)
 runConstraintsCheck ci =
   let (errs, printed) =
         foldr
@@ -50,7 +50,7 @@ runConstraintsCheck ci =
         then (Right (), printed)
         else (Left errs, printed)
 
-solveAndPrint :: (PC.ModuleName, Either P.CompilerError ([Clause], [Term])) -> (P.CompilerError, Map FilePath String) -> (P.CompilerError, Map FilePath String)
+solveAndPrint :: (PC.ModuleName, Either P.Error ([Clause], [Term])) -> (P.Error, Map FilePath String) -> (P.Error, Map FilePath String)
 solveAndPrint (mn, errOrClauses) (errs, printed) =
   case errOrClauses of
     Left buildErr -> (buildErr `mappendErrs` errs, printed)

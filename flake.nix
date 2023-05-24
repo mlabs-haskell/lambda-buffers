@@ -76,7 +76,7 @@
           buildAbstraction = { import-location, additional ? { } }:
             import import-location ({
               inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-              inherit (protosBuild) compilerHsPb;
+              inherit (protosBuild) lambda-buffers-lang-hs-pb;
               shellHook = config.pre-commit.installationScript;
             } // additional);
 
@@ -84,13 +84,17 @@
           flakeAbstraction = component-name: component-name.hsNixProj.flake { };
 
           # Compiler Build
-          compilerBuild = buildAbstraction { import-location = ./lambda-buffers-compiler/build.nix; };
+          compilerBuild = buildAbstraction {
+            import-location = ./lambda-buffers-compiler/build.nix;
+            additional = { inherit (protosBuild) lambda-buffers-compiler-hs-pb; };
+          };
           compilerFlake = flakeAbstraction compilerBuild;
 
           # Codegen Build
           codegenBuild = buildAbstraction {
             import-location = ./lambda-buffers-codegen/build.nix;
             additional = {
+              inherit (protosBuild) lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
             };
           };

@@ -7,15 +7,16 @@ import Data.Proxy (Proxy (Proxy))
 import GHC.Stack (HasCallStack)
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
-import Proto.Compiler (CompilerError, CompilerInput, CompilerOutput, CompilerOutput'CompilerOutput (CompilerOutput'CompilerError, CompilerOutput'CompilerResult), CompilerResult)
-import Proto.Compiler_Fields (maybe'compilerOutput, modules, typeDefs)
+import Proto.Compiler (Error, Input, Output, Output'Output (Output'Error, Output'Result), Result)
+import Proto.Compiler_Fields (maybe'output, modules)
+import Proto.Lang_Fields (typeDefs)
 import Test.LambdaBuffers.Compiler.Utils (pick)
 import Test.Tasty (TestName)
 
 data Mutation m = MkMutation
   { mutLabel :: TestName
-  , mutFn :: CompilerInput -> H.Gen CompilerInput
-  , mutAssert :: H.MonadTest m => CompilerOutput -> m ()
+  , mutFn :: Input -> H.Gen Input
+  , mutAssert :: H.MonadTest m => Output -> m ()
   }
 
 instance Show (Mutation m) where
@@ -26,7 +27,7 @@ instance Show (Mutation m) where
 shuffleModules :: Mutation m
 shuffleModules =
   MkMutation
-    "Shuffling modules inside of the CompilerInput should not affect compilation"
+    "Shuffling modules inside of the Input should not affect compilation"
     ( \compInp -> do
         shuffled <- H.shuffle (compInp ^. modules)
         return $ compInp & modules .~ shuffled
@@ -50,18 +51,18 @@ shuffleTyDefs =
     (compilerResOrFail (const H.success))
 
 -- | Utils
-compilerOut :: HasCallStack => H.MonadTest m => (CompilerError -> m ()) -> (CompilerResult -> m ()) -> CompilerOutput -> m ()
+compilerOut :: HasCallStack => H.MonadTest m => (Error -> m ()) -> (Result -> m ()) -> Output -> m ()
 compilerOut err res co = do
-  H.annotate "Received CompilerOutput"
+  H.annotate "Received Output"
   H.annotateShow co
-  case co ^. maybe'compilerOutput of
+  case co ^. maybe'output of
     Nothing -> do
-      H.annotate $ "compiler_output field must be set in " <> show (messageName (Proxy @CompilerOutput))
+      H.annotate $ "compiler_output field must be set in " <> show (messageName (Proxy @Output))
       H.failure
-    Just (CompilerOutput'CompilerError cerr) -> err cerr
-    Just (CompilerOutput'CompilerResult cres) -> res cres
+    Just (Output'Error cerr) -> err cerr
+    Just (Output'Result cres) -> res cres
 
-compilerResOrFail :: HasCallStack => H.MonadTest m => (CompilerResult -> m ()) -> CompilerOutput -> m ()
+compilerResOrFail :: HasCallStack => H.MonadTest m => (Result -> m ()) -> Output -> m ()
 compilerResOrFail =
   compilerOut
     ( \cerr -> do

@@ -225,14 +225,14 @@ mkStructuralRules mn cd =
             , mkSumRule
             ]
 
-mkSupersBody :: PC.ModuleName -> PC.ClassRels -> PC.Constraint -> Either P.CompilerError [Term]
+mkSupersBody :: PC.ModuleName -> PC.ClassRels -> PC.Constraint -> Either P.Error [Term]
 mkSupersBody mn clrels cstr =
   let ty = tyToTerm mn . E.fromTy $ cstr ^. #argument
    in case Map.lookup (PC.qualifyClassRef mn $ cstr ^. #classRef) clrels of
         Nothing -> Left $ unboundTyClassRefError' mn (cstr ^. #classRef)
         Just sups -> Right ((`tconstraint` ty) <$> sups)
 
-mkDeriveRule :: PC.ModuleName -> PC.TyDefs -> PC.ClassRels -> PC.Derive -> Either P.CompilerError Clause
+mkDeriveRule :: PC.ModuleName -> PC.TyDefs -> PC.ClassRels -> PC.Derive -> Either P.Error Clause
 mkDeriveRule mn tyds clrels drv =
   let ty = E.fromTy $ drv ^. #constraint . #argument
       hd = termFromConstraint mn (drv ^. #constraint)
@@ -243,7 +243,7 @@ mkDeriveRule mn tyds clrels drv =
           Left err -> Left err
           Right ty' -> Right $ hd @<= (tc (tyToTerm mn ty') : supsBody)
 
-mkInstanceRule :: PC.ModuleName -> PC.ClassRels -> PC.InstanceClause -> Either P.CompilerError Clause
+mkInstanceRule :: PC.ModuleName -> PC.ClassRels -> PC.InstanceClause -> Either P.Error Clause
 mkInstanceRule mn clrels inst =
   let hd = termFromConstraint mn (inst ^. #head)
       body = termFromConstraint mn <$> inst ^. #constraints
@@ -279,7 +279,7 @@ tyToTerm mn (E.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.Ato
 {- | Solve/evaluate terms (goals) given some knowledge base (clauses).
  Tries each goal individually and collects all the errors.
 -}
-runSolve :: PC.ModuleName -> [Clause] -> [Term] -> Either P.CompilerError ()
+runSolve :: PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
 runSolve mn clauses goals =
   let allErrs =
         foldr
@@ -292,7 +292,7 @@ runSolve mn clauses goals =
    in if allErrs == memptyErr then Right () else Left allErrs
 
 -- | Tries to solve a single goal.
-runSolve' :: PC.ModuleName -> [Clause] -> Term -> Either P.CompilerError ()
+runSolve' :: PC.ModuleName -> [Clause] -> Term -> Either P.Error ()
 runSolve' locMn clauses goal = do
   let (errOrRes, mlTrace) = ML.solve clauses [goal]
   case errOrRes of
@@ -303,7 +303,7 @@ runSolve' locMn clauses goal = do
     Right _ -> return ()
 
 -- | Convert to API errors.
-fromMiniLogError :: PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> ML.MiniLogError Funct Atom -> P.CompilerError
+fromMiniLogError :: PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> ML.MiniLogError Funct Atom -> P.Error
 fromMiniLogError locMn currentCstr _trace err@(ML.OverlappingClausesError clauses goal) =
   case originalConstraint `traverse` clauses of
     Nothing -> internalError locMn currentCstr ("Failed extracting the original `Constraint` when constructing a report for the `OverlappingRulesError`" <> show err)
@@ -323,7 +323,7 @@ fromMiniLogError locMn currentCstr _trace (ML.InternalError ierr) = internalErro
 {- | Searches through the `ML.MiniLogTrace` finding the `Clause` within which an errouneous call occurred.
  WARN(bladyjoker): This is brittle, consider adding the clause head as part of the `ML.MiniLogError`.
 -}
-deriveOpaqueError' :: forall {a}. Show a => PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> a -> P.CompilerError
+deriveOpaqueError' :: forall {a}. Show a => PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> a -> P.Error
 deriveOpaqueError' locMn currentCstr trace err = case reverse $ filter (\case ML.CallClause _ _ -> True; _ -> False) trace of
   (ML.CallClause cl _ : _) -> case originalConstraint cl of
     Nothing -> internalError locMn currentCstr ("Failed extracting the original constraint when constructing a report for the `DeriveOpaqueError`\n" <> show err)

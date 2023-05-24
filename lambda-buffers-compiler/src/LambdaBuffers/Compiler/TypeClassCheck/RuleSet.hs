@@ -19,7 +19,7 @@ buildRulesForModule ::
   (PC.TyDefs, PC.ClassRels, PC.CompilerInput) ->
   Set (PC.InfoLess PC.ModuleName) ->
   PC.Module ->
-  Either P.CompilerError ([Clause], [Term], Set (PC.InfoLess PC.ModuleName))
+  Either P.Error ([Clause], [Term], Set (PC.InfoLess PC.ModuleName))
 buildRulesForModule _ visited m | infoLessMn m `Set.member` visited = return ([], [], visited)
 buildRulesForModule ctx@(tyDefs, classRels, ci) visited m = do
   let structuralRules = concatMap (mkStructuralRules (m ^. #moduleName)) (toList (m ^. #classDefs))
@@ -68,7 +68,7 @@ infoLessMn :: PC.Module -> PC.InfoLess PC.ModuleName
 infoLessMn m = PC.mkInfoLess (m ^. #moduleName)
 
 -- | Builds Lambda Buffers rules and query goals given the available type class definitions, instance clauses and derive statements in the compiler input.
-buildRules :: PC.CompilerInput -> Map PC.ModuleName (Either P.CompilerError ([Clause], [Term]))
+buildRules :: PC.CompilerInput -> Map PC.ModuleName (Either P.Error ([Clause], [Term]))
 buildRules ci =
   let tyDefs = PC.indexTyDefs ci
       classRels = PC.indexClassRelations ci

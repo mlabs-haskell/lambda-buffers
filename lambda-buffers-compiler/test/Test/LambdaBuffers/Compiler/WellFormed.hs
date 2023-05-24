@@ -20,9 +20,10 @@ import GHC.Enum qualified as Int
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Hedgehog.Range qualified as HR
-import Proto.Compiler (ClassName, CompilerInput, ConstrName, Kind, Kind'KindRef (Kind'KIND_REF_TYPE), Module, ModuleName, ModuleNamePart, SourceInfo, Sum, Sum'Constructor, Ty, TyAbs, TyArg, TyBody, TyDef, TyName, VarName)
-import Proto.Compiler_Fields (argKind, argName, column, constrName, constructors, fields, file, foreignTyRef, kindArrow, kindRef, left, localTyRef, moduleName, modules, name, parts, posFrom, posTo, right, row, sourceInfo, tyAbs, tyApp, tyArgs, tyBody, tyFunc, tyName, tyRef, tyVar, typeDefs, varName)
-import Proto.Compiler_Fields qualified as P
+import Proto.Compiler qualified as Compiler
+import Proto.Compiler_Fields qualified as Compiler
+import Proto.Lang qualified as Lang
+import Proto.Lang_Fields qualified as Lang
 import Test.LambdaBuffers.Compiler.Utils (distribute, indexBy)
 
 -- | Default constant range used in various generators
@@ -39,71 +40,71 @@ genUpperCamelCase = do
   t <- H.list defRange genAlphaNum
   return $ Text.pack $ h : t
 
-genModuleNamePart :: H.Gen ModuleNamePart
+genModuleNamePart :: H.Gen Lang.ModuleNamePart
 genModuleNamePart = do
   mnp <- genUpperCamelCase
-  return $ defMessage & name .~ mnp
+  return $ defMessage & Lang.name .~ mnp
 
-genModuleName :: H.Gen ModuleName
+genModuleName :: H.Gen Lang.ModuleName
 genModuleName = do
   ps <- H.list defRange genModuleNamePart
-  return $ defMessage & parts .~ ps
+  return $ defMessage & Lang.parts .~ ps
 
-genTyName :: H.Gen TyName
+genTyName :: H.Gen Lang.TyName
 genTyName = do
   n <- genUpperCamelCase
-  return $ defMessage & name .~ n
+  return $ defMessage & Lang.name .~ n
 
-_genClassName :: H.Gen ClassName
+_genClassName :: H.Gen Lang.ClassName
 _genClassName = do
   n <- genUpperCamelCase
-  return $ defMessage & name .~ n
+  return $ defMessage & Lang.name .~ n
 
-genConstrName :: H.Gen ConstrName
+genConstrName :: H.Gen Lang.ConstrName
 genConstrName = do
   n <- genUpperCamelCase
-  return $ defMessage & name .~ n
+  return $ defMessage & Lang.name .~ n
 
-genVarName :: H.Gen VarName
+genVarName :: H.Gen Lang.VarName
 genVarName = do
   h <- H.lower
   t <- H.list defRange H.lower
-  return $ defMessage & name .~ Text.pack (h : t)
+  return $ defMessage & Lang.name .~ Text.pack (h : t)
 
-starKind :: Kind
-starKind = defMessage & kindRef .~ Kind'KIND_REF_TYPE
+starKind :: Lang.Kind
+starKind = defMessage & Lang.kindRef .~ Lang.Kind'KIND_REF_TYPE
 
-kindOf :: TyAbs -> Kind
-kindOf tyabs = case tyabs ^. tyArgs of
+kindOf :: Lang.TyAbs -> Lang.Kind
+kindOf tyabs = case tyabs ^. Lang.tyArgs of
   [] -> starKind
   (a : args) ->
     defMessage
-      & kindArrow . left .~ (a ^. argKind)
-      & kindArrow . right .~ kindOf (tyabs & tyArgs .~ args)
+      & Lang.kindArrow . Lang.left .~ (a ^. Lang.argKind)
+      & Lang.kindArrow . Lang.right .~ kindOf (tyabs & Lang.tyArgs .~ args)
 
-genTyArg :: VarName -> H.Gen TyArg
+genTyArg :: Lang.VarName -> H.Gen Lang.TyArg
 genTyArg vn = do
   return $
     defMessage
-      & argName .~ vn
-      & argKind .~ starKind -- TODO(bladyjoker): Gen arbitrary kinds.
+      & Lang.argName .~ vn
+      & Lang.argKind .~ starKind -- TODO(bladyjoker): Gen arbitrary kinds.
 
-genSum :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen Sum
+genSum :: TyDefs -> Set Lang.TyArg -> NESet Lang.ConstrName -> H.Gen Lang.Sum
 genSum tydefs args ctorNs = do
   let (ctorN :| ctorNs') = NESet.toList ctorNs
   ctorNs'' <- H.subsequence ctorNs'
   ctors <- for (ctorN :| ctorNs'') (genConstructor tydefs args)
-  return $ defMessage & constructors .~ toList ctors
+  return $ defMessage & Lang.constructors .~ toList ctors
 
-genTy :: Kind -> TyDefs -> Set TyArg -> H.Gen Ty
+genTy :: Lang.Kind -> TyDefs -> Set Lang.TyArg -> H.Gen Lang.Ty
 genTy kind tydefs tyargs =
   H.choice $
     NESet.withNonEmpty [] (genTyVar kind) tyargs
       <> genTyRef kind tydefs
       <> genTyApp kind tydefs tyargs
 
-genTyRef :: Kind -> TyDefs -> [H.Gen Ty]
-genTyRef kind tydefs = case [tyd | tyd <- Map.toList tydefs, kindOf (snd tyd ^. tyAbs) == kind] of
+genTyRef :: Lang.Kind -> TyDefs -> [H.Gen Lang.Ty]
+genTyRef kind tydefs = case [tyd | tyd <- Map.toList tydefs, kindOf (snd tyd ^. Lang.tyAbs) == kind] of
   [] -> []
   tyds ->
     [ do
@@ -112,27 +113,27 @@ genTyRef kind tydefs = case [tyd | tyd <- Map.toList tydefs, kindOf (snd tyd ^. 
           Left (mn, tyn) ->
             return $
               defMessage
-                & tyRef . foreignTyRef . moduleName .~ mn
-                & tyRef . foreignTyRef . tyName .~ tyn
-          Right tyn -> return $ defMessage & tyRef . localTyRef . tyName .~ tyn
+                & Lang.tyRef . Lang.foreignTyRef . Lang.moduleName .~ mn
+                & Lang.tyRef . Lang.foreignTyRef . Lang.tyName .~ tyn
+          Right tyn -> return $ defMessage & Lang.tyRef . Lang.localTyRef . Lang.tyName .~ tyn
     ]
 
-genTyVar :: Kind -> NESet TyArg -> [H.Gen Ty]
-genTyVar kind args = case [tyarg | tyarg <- toList args, tyarg ^. argKind == kind] of
+genTyVar :: Lang.Kind -> NESet Lang.TyArg -> [H.Gen Lang.Ty]
+genTyVar kind args = case [tyarg | tyarg <- toList args, tyarg ^. Lang.argKind == kind] of
   [] -> []
   tyargs ->
     [ do
         tyarg <- H.element tyargs
-        return $ defMessage & tyVar . varName .~ (tyarg ^. argName)
+        return $ defMessage & Lang.tyVar . Lang.varName .~ (tyarg ^. Lang.argName)
     ]
 
-genTyApp :: Kind -> TyDefs -> Set TyArg -> [H.Gen Ty]
+genTyApp :: Lang.Kind -> TyDefs -> Set Lang.TyArg -> [H.Gen Lang.Ty]
 genTyApp kind tydefs args =
   let kindFunc =
         defMessage
-          & kindArrow . left .~ starKind -- TODO(bladyjoker): Generalize
-          & kindArrow . right .~ kind
-   in case [tyd | tyd <- toList tydefs, kindOf (tyd ^. tyAbs) == kindFunc] of
+          & Lang.kindArrow . Lang.left .~ starKind -- TODO(bladyjoker): Generalize
+          & Lang.kindArrow . Lang.right .~ kind
+   in case [tyd | tyd <- toList tydefs, kindOf (tyd ^. Lang.tyAbs) == kindFunc] of
         [] -> []
         _ ->
           [ do
@@ -140,27 +141,27 @@ genTyApp kind tydefs args =
               tyarg <- genTy starKind tydefs args -- TODO(bladyjoker): Generalize
               return $
                 defMessage
-                  & tyApp . tyFunc .~ tyfunc
-                  & tyApp . tyArgs .~ [tyarg] -- TODO(bladyjoker): Generate list arguments
+                  & Lang.tyApp . Lang.tyFunc .~ tyfunc
+                  & Lang.tyApp . Lang.tyArgs .~ [tyarg] -- TODO(bladyjoker): Generate list arguments
           ]
 
-genConstructor :: TyDefs -> Set TyArg -> ConstrName -> H.Gen Sum'Constructor
+genConstructor :: TyDefs -> Set Lang.TyArg -> Lang.ConstrName -> H.Gen Lang.Sum'Constructor
 genConstructor tydefs args cn = do
   tys <- H.list defRange (genTy starKind tydefs args)
   return $
     defMessage
-      & constrName .~ cn
-      & P.product . fields .~ tys
+      & Lang.constrName .~ cn
+      & Lang.product . Lang.fields .~ tys
 
-genTyBodySum :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen TyBody
+genTyBodySum :: TyDefs -> Set Lang.TyArg -> NESet Lang.ConstrName -> H.Gen Lang.TyBody
 genTyBodySum tydefs args ctors = do
   b <- genSum tydefs args ctors
-  return $ defMessage & P.sum .~ b
+  return $ defMessage & Lang.sum .~ b
 
-genTyBodyOpaque :: H.Gen TyBody
-genTyBodyOpaque = return $ defMessage & P.opaque .~ defMessage
+genTyBodyOpaque :: H.Gen Lang.TyBody
+genTyBodyOpaque = return $ defMessage & Lang.opaque .~ defMessage
 
-genTyBody :: TyDefs -> Set TyArg -> NESet ConstrName -> H.Gen TyBody
+genTyBody :: TyDefs -> Set Lang.TyArg -> NESet Lang.ConstrName -> H.Gen Lang.TyBody
 genTyBody tydefs args ctorNs =
   H.choice $
     [ genTyBodyOpaque
@@ -168,7 +169,7 @@ genTyBody tydefs args ctorNs =
       -- Gen TyBody'Sum only if there's some TyDefs and TyArgs available
       <> [genTyBodySum tydefs args ctorNs | not (tydefs == mempty && args == mempty)]
 
-genTyAbs :: TyDefs -> NESet ConstrName -> H.Gen TyAbs
+genTyAbs :: TyDefs -> NESet Lang.ConstrName -> H.Gen Lang.TyAbs
 genTyAbs tydefs ctorNs = do
   vns <-
     if tydefs == mempty
@@ -178,20 +179,20 @@ genTyAbs tydefs ctorNs = do
   body <- genTyBody tydefs (Set.fromList args) ctorNs
   return $
     defMessage
-      & tyArgs .~ toList args
-      & tyBody .~ body
+      & Lang.tyArgs .~ toList args
+      & Lang.tyBody .~ body
 
-type TyDefs = Map (Either (ModuleName, TyName) TyName) TyDef
+type TyDefs = Map (Either (Lang.ModuleName, Lang.TyName) Lang.TyName) Lang.TyDef
 
-genTyDef :: TyDefs -> TyName -> NESet ConstrName -> H.Gen TyDef
+genTyDef :: TyDefs -> Lang.TyName -> NESet Lang.ConstrName -> H.Gen Lang.TyDef
 genTyDef tydefs tyn ctors = do
   tyabs <- genTyAbs tydefs ctors
   withSourceInfo $
     defMessage
-      & tyName .~ tyn
-      & tyAbs .~ tyabs
+      & Lang.tyName .~ tyn
+      & Lang.tyAbs .~ tyabs
 
-genModule :: Map ModuleName Module -> ModuleName -> H.Gen Module
+genModule :: Map Lang.ModuleName Lang.Module -> Lang.ModuleName -> H.Gen Lang.Module
 genModule availableMods mn = do
   tyNs <- NESet.fromList <$> H.nonEmpty defRange genTyName
   ctorNs <- H.set (HR.constant (length tyNs) (length tyNs * 10)) genConstrName
@@ -207,17 +208,17 @@ genModule availableMods mn = do
       (Map.toList tyNsWithCtorNs)
   return $
     defMessage
-      & moduleName .~ mn
-      & typeDefs .~ ([tydef | (n, tydef) <- Map.toList tydefs, isRight n])
+      & Lang.moduleName .~ mn
+      & Lang.typeDefs .~ ([tydef | (n, tydef) <- Map.toList tydefs, isRight n])
   where
-    collectTyDefs :: Map ModuleName Module -> TyDefs
+    collectTyDefs :: Map Lang.ModuleName Lang.Module -> TyDefs
     collectTyDefs mods =
       snd
         <$> indexBy
-          (\(m, tydef) -> Left (m ^. moduleName, tydef ^. tyName))
-          [(m, tydef) | m <- toList mods, tydef <- m ^. typeDefs]
+          (\(m, tydef) -> Left (m ^. Lang.moduleName, tydef ^. Lang.tyName))
+          [(m, tydef) | m <- toList mods, tydef <- m ^. Lang.typeDefs]
 
-genCompilerInput :: H.Gen CompilerInput
+genCompilerInput :: H.Gen Compiler.Input
 genCompilerInput = do
   mns <- H.set defRange genModuleName
   ms <-
@@ -228,19 +229,19 @@ genCompilerInput = do
       )
       mempty
       (toList mns)
-  return $ defMessage & modules .~ toList ms
+  return $ defMessage & Compiler.modules .~ toList ms
 
 -- | Utils
-withSourceInfo :: HasField a "sourceInfo" SourceInfo => a -> H.Gen a
+withSourceInfo :: HasField a "sourceInfo" Lang.SourceInfo => a -> H.Gen a
 withSourceInfo msg = do
   f <- Text.pack <$> H.list (HR.constant 1 10) H.unicodeAll
   i <- H.int (HR.constant 0 Int.maxBound)
   let pos =
         defMessage
-          & row .~ fromIntegral i
-          & column .~ fromIntegral i
+          & Lang.row .~ fromIntegral i
+          & Lang.column .~ fromIntegral i
   return $
     msg
-      & sourceInfo . file .~ f
-      & sourceInfo . posFrom .~ pos
-      & sourceInfo . posTo .~ pos
+      & Lang.sourceInfo . Lang.file .~ f
+      & Lang.sourceInfo . Lang.posFrom .~ pos
+      & Lang.sourceInfo . Lang.posTo .~ pos

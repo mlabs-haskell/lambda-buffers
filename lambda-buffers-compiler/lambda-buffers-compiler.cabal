@@ -99,6 +99,7 @@ library
     , generic-lens                >=2.2
     , generics-sop                >=0.5
     , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lambda-buffers-lang-pb      >=0.1
     , lens                        >=5.2
     , mtl                         >=2.2
     , ordered-containers          >=0.2
@@ -142,6 +143,7 @@ executable lbc
     , bytestring                  >=0.11
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1.0.0
+    , lambda-buffers-lang-pb      >=0.1
     , lens                        >=5.2
     , optparse-applicative        >=0.17
     , proto-lens                  >=0.7
@@ -163,6 +165,7 @@ test-suite tests
     , hedgehog                    >=1.2
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb  >=0.1
+    , lambda-buffers-lang-pb      >=0.1
     , lens                        >=5.2
     , nonempty-containers         >=0.3
     , ordered-containers          >=0.2

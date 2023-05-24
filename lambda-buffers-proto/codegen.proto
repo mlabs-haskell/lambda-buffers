@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package lambdabuffers;
+
+import "lang.proto";
+
+/* Codegen Input
+
+Codegen Input is a fully self contained list of modules,
+that have been checked by the Compiler.
+*/
+message Input {
+  // Modules to codegen.
+  repeated Module modules = 1;
+}
+
+// Errors internal to the implementation.
+message InternalError {
+  // Error message.
+  string msg = 1;
+  // Source information if meaningful.
+  SourceInfo source_info = 2;
+}
+
+// Compiler Error
+message Error {
+  // Errors internal to the codegen implementation.
+  repeated InternalError internal_errors = 1;
+}
+
+// Codegen Result ~ a successful Codegen Output.
+message Result {
+}
+
+// Codegen output.
+message Output {
+  oneof output {
+    Error error = 1;
+    Result result = 2;
+  }
+}

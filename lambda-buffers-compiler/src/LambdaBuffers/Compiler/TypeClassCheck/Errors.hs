@@ -21,13 +21,13 @@ import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-tyClassCheckError :: P.TyClassCheckError -> P.CompilerError
+tyClassCheckError :: P.TyClassCheckError -> P.Error
 tyClassCheckError err =
   defMessage
     & P.tyClassCheckErrors
       .~ [err]
 
-importNotFoundError :: PC.ModuleName -> PC.ModuleName -> P.CompilerError
+importNotFoundError :: PC.ModuleName -> PC.ModuleName -> P.Error
 importNotFoundError mn imp =
   tyClassCheckError $
     defMessage
@@ -48,10 +48,10 @@ unboundTyClassRefError mn cr =
     & P.unboundClassRefErr . P.moduleName .~ PC.toProto mn
     & P.unboundClassRefErr . P.classRef .~ PC.toProto cr
 
-unboundTyClassRefError' :: PC.ModuleName -> PC.TyClassRef -> P.CompilerError
+unboundTyClassRefError' :: PC.ModuleName -> PC.TyClassRef -> P.Error
 unboundTyClassRefError' mn = tyClassCheckError . unboundTyClassRefError mn
 
-deriveOpaqueError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> P.CompilerError
+deriveOpaqueError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> P.Error
 deriveOpaqueError locMn cstr subCstr =
   tyClassCheckError $
     defMessage
@@ -59,7 +59,7 @@ deriveOpaqueError locMn cstr subCstr =
       & P.deriveOpaqueErr . P.constraint .~ PC.toProto cstr
       & P.deriveOpaqueErr . P.subConstraint .~ PC.toProto subCstr
 
-missingRuleError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> P.CompilerError
+missingRuleError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> P.Error
 missingRuleError locMn cstr subCstr =
   tyClassCheckError $
     defMessage
@@ -67,7 +67,7 @@ missingRuleError locMn cstr subCstr =
       & P.missingRuleErr . P.constraint .~ PC.toProto cstr
       & P.missingRuleErr . P.subConstraint .~ PC.toProto subCstr
 
-overlappingRulesError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> [(PC.ModuleName, PC.Constraint)] -> P.CompilerError
+overlappingRulesError :: PC.ModuleName -> PC.Constraint -> PC.Constraint -> [(PC.ModuleName, PC.Constraint)] -> P.Error
 overlappingRulesError locMn cstr subCstr qheads =
   tyClassCheckError $
     defMessage
@@ -81,7 +81,7 @@ overlappingRulesError locMn cstr subCstr qheads =
            | (mn, hcstr) <- qheads
            ]
 
-internalError' :: PC.ModuleName -> String -> P.CompilerError
+internalError' :: PC.ModuleName -> String -> P.Error
 internalError' mn msg =
   defMessage
     & P.internalErrors
@@ -97,11 +97,11 @@ internalError' mn msg =
                 )
          ]
 
-internalError :: PC.ModuleName -> PC.Constraint -> String -> P.CompilerError
+internalError :: PC.ModuleName -> PC.Constraint -> String -> P.Error
 internalError mn cstr msg = internalError' mn ("I was trying to solve" <> "\n" <> show cstr <> "\nbut the following error occurred\n" <> msg)
 
 -- TODO(bladyjoker): This is quite convenient, implement as Semigroup/Monoid and figure out how to use it properly.
-mappendErrs :: P.CompilerError -> P.CompilerError -> P.CompilerError
+mappendErrs :: P.Error -> P.Error -> P.Error
 mappendErrs l r =
   defMessage
     & P.protoParseErrors .~ l ^. P.protoParseErrors <> r ^. P.protoParseErrors
@@ -110,5 +110,5 @@ mappendErrs l r =
     & P.tyClassCheckErrors .~ l ^. P.tyClassCheckErrors <> r ^. P.tyClassCheckErrors
     & P.internalErrors .~ l ^. P.internalErrors <> r ^. P.internalErrors
 
-memptyErr :: P.CompilerError
+memptyErr :: P.Error
 memptyErr = defMessage

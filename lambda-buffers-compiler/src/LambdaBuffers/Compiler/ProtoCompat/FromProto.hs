@@ -19,28 +19,29 @@ import Data.Text qualified as Text
 import GHC.Generics (Generic)
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkModuleNamePart, checkTyName, checkVarName)
 import LambdaBuffers.Compiler.ProtoCompat.InfoLess (mkInfoLess)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Proto.Compiler (NamingError)
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
+import LambdaBuffers.Compiler.ProtoCompat.Types qualified as Compat
+import Proto.Compiler qualified as Compiler
+import Proto.Compiler_Fields qualified as Compiler
+import Proto.Lang qualified as Lang
+import Proto.Lang_Fields qualified as Lang
 
 data FromProtoErr
-  = FPNamingError P.NamingError
-  | FPInternalError P.InternalError
-  | FPProtoParseError P.ProtoParseError
+  = FPNamingError Compiler.NamingError
+  | FPInternalError Compiler.InternalError
+  | FPProtoParseError Compiler.ProtoParseError
   deriving stock (Show, Eq, Ord, Generic)
 
 data FromProtoContext
   = CtxCompilerInput
-  | CtxModule P.ModuleName
-  | CtxTyDef P.ModuleName P.TyDef
-  | CtxClassDef P.ModuleName P.ClassDef
+  | CtxModule Lang.ModuleName
+  | CtxTyDef Lang.ModuleName Lang.TyDef
+  | CtxClassDef Lang.ModuleName Lang.ClassDef
   deriving stock (Show, Eq, Ord, Generic)
 
 type FromProto a = ReaderT FromProtoContext (Except [FromProtoErr]) a
 
--- | Parse a Proto API CompilerInput into the internal CompilerInput representation or report errors (in Proto format).
-runFromProto :: P.CompilerInput -> Either P.CompilerError PC.CompilerInput
+-- | Parse a Proto API Compiler Input into the internal CompilerInput representation or report errors (in Proto format).
+runFromProto :: Compiler.Input -> Either Compiler.Error Compat.CompilerInput
 runFromProto compInp = do
   let exM = runReaderT (fromProto compInp) CtxCompilerInput
       errsOrRes = runExcept exM
@@ -51,9 +52,9 @@ runFromProto compInp = do
           ierrs = [err | FPInternalError err <- errs]
        in Left $
             defMessage
-              & P.namingErrors .~ nerrs
-              & P.protoParseErrors .~ pperrs
-              & P.internalErrors .~ ierrs
+              & Compiler.namingErrors .~ nerrs
+              & Compiler.protoParseErrors .~ pperrs
+              & Compiler.internalErrors .~ ierrs
     Right compIn' -> return compIn'
 
 class IsMessage (proto :: Type) (good :: Type) where
@@ -61,7 +62,7 @@ class IsMessage (proto :: Type) (good :: Type) where
 
   toProto :: good -> proto
 
-throwNamingError :: Either NamingError b -> FromProto b
+throwNamingError :: Either Compiler.NamingError b -> FromProto b
 throwNamingError = either (\err -> throwError [FPNamingError err]) return
 
 throwOneOfError :: Text -> Text -> FromProto b
@@ -69,12 +70,12 @@ throwOneOfError protoMsgName protoFieldName =
   throwError
     [ FPProtoParseError $
         defMessage
-          & P.oneOfNotSetError . P.messageName .~ protoMsgName
-          & P.oneOfNotSetError . P.fieldName .~ protoFieldName
+          & Compiler.oneOfNotSetError . Compiler.messageName .~ protoMsgName
+          & Compiler.oneOfNotSetError . Compiler.fieldName .~ protoFieldName
     ]
 
 throwInternalError :: Text -> FromProto b
-throwInternalError msg = throwError [FPInternalError $ defMessage & P.msg .~ msg]
+throwInternalError msg = throwError [FPInternalError $ defMessage & Compiler.msg .~ msg]
 
 parseAndIndex :: forall {t :: Type -> Type} {proto} {a} {k}. (Foldable t, IsMessage proto a, Ord k) => (a -> k) -> t proto -> FromProto (Map k a, Map k [proto])
 parseAndIndex key =
@@ -104,29 +105,29 @@ parseAndIndex' key =
     SourceInfo
 -}
 
-instance IsMessage P.SourcePosition PC.SourcePosition where
+instance IsMessage Lang.SourcePosition Compat.SourcePosition where
   fromProto sp = do
-    let col = fromIntegral $ sp ^. P.column
-        row = fromIntegral $ sp ^. P.row
-    pure $ PC.SourcePosition col row
+    let col = fromIntegral $ sp ^. Lang.column
+        row = fromIntegral $ sp ^. Lang.row
+    pure $ Compat.SourcePosition col row
 
   toProto sp =
     defMessage
-      & P.column .~ fromIntegral (sp ^. #column)
-      & P.row .~ fromIntegral (sp ^. #row)
+      & Lang.column .~ fromIntegral (sp ^. #column)
+      & Lang.row .~ fromIntegral (sp ^. #row)
 
-instance IsMessage P.SourceInfo PC.SourceInfo where
+instance IsMessage Lang.SourceInfo Compat.SourceInfo where
   fromProto si = do
-    let file = si ^. P.file
-    pFrom <- fromProto $ si ^. P.posFrom
-    pTo <- fromProto $ si ^. P.posTo
-    pure $ PC.SourceInfo file pFrom pTo
+    let file = si ^. Lang.file
+    pFrom <- fromProto $ si ^. Lang.posFrom
+    pTo <- fromProto $ si ^. Lang.posTo
+    pure $ Compat.SourceInfo file pFrom pTo
 
   toProto si =
     defMessage
-      & P.file .~ (si ^. #file)
-      & P.posFrom .~ toProto (si ^. #posFrom)
-      & P.posTo .~ toProto (si ^. #posTo)
+      & Lang.file .~ (si ^. #file)
+      & Lang.posFrom .~ toProto (si ^. #posFrom)
+      & Lang.posTo .~ toProto (si ^. #posTo)
 
 {-
     Names
@@ -136,179 +137,179 @@ instance IsMessage Text Text where
   fromProto = pure
   toProto = id
 
-instance IsMessage P.ModuleNamePart PC.ModuleNamePart where
+instance IsMessage Lang.ModuleNamePart Compat.ModuleNamePart where
   fromProto mnp = do
-    si <- fromProto $ mnp ^. P.sourceInfo
+    si <- fromProto $ mnp ^. Compiler.sourceInfo
     throwNamingError $ checkModuleNamePart mnp
-    pure $ PC.ModuleNamePart (mnp ^. P.name) si
+    pure $ Compat.ModuleNamePart (mnp ^. Lang.name) si
 
-  toProto (PC.ModuleNamePart nm si) =
+  toProto (Compat.ModuleNamePart nm si) =
     defMessage
-      & P.name .~ nm
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ nm
+      & Compiler.sourceInfo .~ toProto si
 
-instance IsMessage P.ModuleName PC.ModuleName where
+instance IsMessage Lang.ModuleName Compat.ModuleName where
   fromProto mn = do
-    si <- fromProto $ mn ^. P.sourceInfo
-    parts <- traverse fromProto $ mn ^. P.parts
-    pure $ PC.ModuleName parts si
+    si <- fromProto $ mn ^. Compiler.sourceInfo
+    parts <- traverse fromProto $ mn ^. Lang.parts
+    pure $ Compat.ModuleName parts si
 
-  toProto (PC.ModuleName parts si) =
+  toProto (Compat.ModuleName parts si) =
     defMessage
-      & P.parts .~ (toProto <$> parts)
-      & P.sourceInfo .~ toProto si
+      & Lang.parts .~ (toProto <$> parts)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.FieldName PC.FieldName where
+instance IsMessage Lang.FieldName Compat.FieldName where
   fromProto v = do
     throwNamingError $ checkFieldName v
-    PC.FieldName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
+    Compat.FieldName <$> fromProto (v ^. Lang.name) <*> fromProto (v ^. Compiler.sourceInfo)
 
-  toProto (PC.FieldName n si) =
+  toProto (Compat.FieldName n si) =
     defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ toProto n
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.ConstrName PC.ConstrName where
+instance IsMessage Lang.ConstrName Compat.ConstrName where
   fromProto v = do
     throwNamingError $ checkConstrName v
-    PC.ConstrName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
+    Compat.ConstrName <$> fromProto (v ^. Lang.name) <*> fromProto (v ^. Lang.sourceInfo)
 
-  toProto (PC.ConstrName n si) =
+  toProto (Compat.ConstrName n si) =
     defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ toProto n
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyName PC.TyName where
+instance IsMessage Lang.TyName Compat.TyName where
   fromProto v = do
     throwNamingError $ checkTyName v
-    PC.TyName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
+    Compat.TyName <$> fromProto (v ^. Lang.name) <*> fromProto (v ^. Lang.sourceInfo)
 
-  toProto (PC.TyName n si) =
+  toProto (Compat.TyName n si) =
     defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ toProto n
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.ClassName PC.ClassName where
+instance IsMessage Lang.ClassName Compat.ClassName where
   fromProto v = do
     throwNamingError $ checkClassName v
-    PC.ClassName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
+    Compat.ClassName <$> fromProto (v ^. Lang.name) <*> fromProto (v ^. Lang.sourceInfo)
 
-  toProto (PC.ClassName n si) =
+  toProto (Compat.ClassName n si) =
     defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ toProto n
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.VarName PC.VarName where
+instance IsMessage Lang.VarName Compat.VarName where
   fromProto v = do
     throwNamingError $ checkVarName v
-    PC.VarName <$> fromProto (v ^. P.name) <*> fromProto (v ^. P.sourceInfo)
+    Compat.VarName <$> fromProto (v ^. Lang.name) <*> fromProto (v ^. Lang.sourceInfo)
 
-  toProto (PC.VarName n si) =
+  toProto (Compat.VarName n si) =
     defMessage
-      & P.name .~ toProto n
-      & P.sourceInfo .~ toProto si
+      & Lang.name .~ toProto n
+      & Lang.sourceInfo .~ toProto si
 
 {-
     Ty & Components
 -}
 
-instance IsMessage P.TyVar PC.TyVar where
+instance IsMessage Lang.TyVar Compat.TyVar where
   fromProto tv = do
-    vn <- fromProto $ tv ^. P.varName
-    pure $ PC.TyVar vn
+    vn <- fromProto $ tv ^. Lang.varName
+    pure $ Compat.TyVar vn
 
-  toProto (PC.TyVar vn) =
+  toProto (Compat.TyVar vn) =
     defMessage
-      & P.varName .~ toProto vn
+      & Lang.varName .~ toProto vn
 
-instance IsMessage P.TyApp PC.TyApp where
+instance IsMessage Lang.TyApp Compat.TyApp where
   fromProto ta = do
-    tf <- fromProto $ ta ^. P.tyFunc
-    si <- fromProto $ ta ^. P.sourceInfo
-    targs <- traverse fromProto $ ta ^. P.tyArgs
-    pure $ PC.TyApp tf targs si
+    tf <- fromProto $ ta ^. Lang.tyFunc
+    si <- fromProto $ ta ^. Lang.sourceInfo
+    targs <- traverse fromProto $ ta ^. Lang.tyArgs
+    pure $ Compat.TyApp tf targs si
 
-  toProto (PC.TyApp tf args si) =
+  toProto (Compat.TyApp tf args si) =
     defMessage
-      & P.tyFunc .~ toProto tf
-      & P.tyArgs .~ toList (toProto <$> args)
-      & P.sourceInfo .~ toProto si
+      & Lang.tyFunc .~ toProto tf
+      & Lang.tyArgs .~ toList (toProto <$> args)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Ty PC.Ty where
-  fromProto ti = case ti ^. P.maybe'ty of
-    Nothing -> throwOneOfError (messageName (Proxy @P.Ty)) "ty"
+instance IsMessage Lang.Ty Compat.Ty where
+  fromProto ti = case ti ^. Lang.maybe'ty of
+    Nothing -> throwOneOfError (messageName (Proxy @Lang.Ty)) "ty"
     Just x -> case x of
-      P.Ty'TyVar tv -> PC.TyVarI <$> fromProto tv
-      P.Ty'TyApp ta -> PC.TyAppI <$> fromProto ta
-      P.Ty'TyRef tr -> PC.TyRefI <$> fromProto tr
+      Lang.Ty'TyVar tv -> Compat.TyVarI <$> fromProto tv
+      Lang.Ty'TyApp ta -> Compat.TyAppI <$> fromProto ta
+      Lang.Ty'TyRef tr -> Compat.TyRefI <$> fromProto tr
 
   toProto = \case
-    PC.TyVarI tv -> defMessage & P.tyVar .~ toProto tv
-    PC.TyRefI tr -> defMessage & P.tyRef .~ toProto tr
-    PC.TyAppI ta -> defMessage & P.tyApp .~ toProto ta
+    Compat.TyVarI tv -> defMessage & Lang.tyVar .~ toProto tv
+    Compat.TyRefI tr -> defMessage & Lang.tyRef .~ toProto tr
+    Compat.TyAppI ta -> defMessage & Lang.tyApp .~ toProto ta
 
-instance IsMessage P.TyRef'Local PC.LocalRef where
+instance IsMessage Lang.TyRef'Local Compat.LocalRef where
   fromProto lr = do
-    si <- fromProto $ lr ^. P.sourceInfo
-    nm <- fromProto $ lr ^. P.tyName
-    pure $ PC.LocalRef nm si
+    si <- fromProto $ lr ^. Lang.sourceInfo
+    nm <- fromProto $ lr ^. Lang.tyName
+    pure $ Compat.LocalRef nm si
 
-  toProto (PC.LocalRef nm si) =
+  toProto (Compat.LocalRef nm si) =
     defMessage
-      & P.tyName .~ toProto nm
-      & P.sourceInfo .~ toProto si
+      & Lang.tyName .~ toProto nm
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyRef'Foreign PC.ForeignRef where
+instance IsMessage Lang.TyRef'Foreign Compat.ForeignRef where
   fromProto fr = do
-    si <- fromProto $ fr ^. P.sourceInfo
-    mn <- fromProto $ fr ^. P.moduleName
-    tn <- fromProto $ fr ^. P.tyName
-    pure $ PC.ForeignRef tn mn si
+    si <- fromProto $ fr ^. Lang.sourceInfo
+    mn <- fromProto $ fr ^. Lang.moduleName
+    tn <- fromProto $ fr ^. Lang.tyName
+    pure $ Compat.ForeignRef tn mn si
 
-  toProto (PC.ForeignRef tn mn si) =
+  toProto (Compat.ForeignRef tn mn si) =
     defMessage
-      & P.tyName .~ toProto tn
-      & P.moduleName .~ toProto mn
-      & P.sourceInfo .~ toProto si
+      & Lang.tyName .~ toProto tn
+      & Lang.moduleName .~ toProto mn
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyRef PC.TyRef where
-  fromProto tr = case tr ^. P.maybe'tyRef of
-    Nothing -> throwOneOfError (messageName (Proxy @P.TyRef)) "ty_ref"
+instance IsMessage Lang.TyRef Compat.TyRef where
+  fromProto tr = case tr ^. Lang.maybe'tyRef of
+    Nothing -> throwOneOfError (messageName (Proxy @Lang.TyRef)) "ty_ref"
     Just x -> case x of
-      P.TyRef'LocalTyRef lr -> PC.LocalI <$> fromProto lr
-      P.TyRef'ForeignTyRef f -> PC.ForeignI <$> fromProto f
+      Lang.TyRef'LocalTyRef lr -> Compat.LocalI <$> fromProto lr
+      Lang.TyRef'ForeignTyRef f -> Compat.ForeignI <$> fromProto f
 
   toProto = \case
-    PC.LocalI lr -> defMessage & P.localTyRef .~ toProto lr
-    PC.ForeignI fr -> defMessage & P.foreignTyRef .~ toProto fr
+    Compat.LocalI lr -> defMessage & Lang.localTyRef .~ toProto lr
+    Compat.ForeignI fr -> defMessage & Lang.foreignTyRef .~ toProto fr
 
 {-
     TyDef & Components
 -}
 
-instance IsMessage P.TyDef PC.TyDef where
+instance IsMessage Lang.TyDef Compat.TyDef where
   fromProto td = do
     ctx <- ask
     ctxModuleName <- case ctx of
       CtxModule mn -> return mn
       _ -> throwInternalError "Expected to be in Module Context"
     local (const $ CtxTyDef ctxModuleName td) $ do
-      tnm <- fromProto $ td ^. P.tyName
-      tyabs <- fromProto $ td ^. P.tyAbs
-      si <- fromProto $ td ^. P.sourceInfo
-      pure $ PC.TyDef tnm tyabs si
+      tnm <- fromProto $ td ^. Lang.tyName
+      tyabs <- fromProto $ td ^. Lang.tyAbs
+      si <- fromProto $ td ^. Lang.sourceInfo
+      pure $ Compat.TyDef tnm tyabs si
 
-  toProto (PC.TyDef tnm tyabs si) =
+  toProto (Compat.TyDef tnm tyabs si) =
     defMessage
-      & P.tyName .~ toProto tnm
-      & P.tyAbs .~ toProto tyabs
-      & P.sourceInfo .~ toProto si
+      & Lang.tyName .~ toProto tnm
+      & Lang.tyAbs .~ toProto tyabs
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyAbs PC.TyAbs where
+instance IsMessage Lang.TyAbs Compat.TyAbs where
   fromProto ta = do
-    (tyargs, mulTyArgs) <- parseAndIndex' (\a -> mkInfoLess $ a ^. #argName) (ta ^. P.tyArgs)
-    tybody <- fromProto $ ta ^. P.tyBody
-    si <- fromProto $ ta ^. P.sourceInfo
+    (tyargs, mulTyArgs) <- parseAndIndex' (\a -> mkInfoLess $ a ^. #argName) (ta ^. Lang.tyArgs)
+    tybody <- fromProto $ ta ^. Lang.tyBody
+    si <- fromProto $ ta ^. Lang.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
       CtxTyDef mn tyd -> return (mn, tyd)
@@ -316,91 +317,91 @@ instance IsMessage P.TyAbs PC.TyAbs where
     let mulArgsErrs =
           [ FPProtoParseError $
             defMessage
-              & P.multipleTyargError . P.moduleName .~ ctxMn
-              & P.multipleTyargError . P.tyDef .~ ctxTyd
-              & P.multipleTyargError . P.tyArgs .~ args
+              & Compiler.multipleTyargError . Compiler.moduleName .~ ctxMn
+              & Compiler.multipleTyargError . Compiler.tyDef .~ ctxTyd
+              & Compiler.multipleTyargError . Compiler.tyArgs .~ args
           | (_an, args) <- Map.toList mulTyArgs
           ]
     if null mulArgsErrs
-      then pure $ PC.TyAbs tyargs tybody si
+      then pure $ Compat.TyAbs tyargs tybody si
       else throwError mulArgsErrs
 
-  toProto (PC.TyAbs tyargs tyabs si) =
+  toProto (Compat.TyAbs tyargs tyabs si) =
     defMessage
-      & P.tyArgs .~ (toProto <$> toList tyargs)
-      & P.tyBody .~ toProto tyabs
-      & P.sourceInfo .~ toProto si
+      & Lang.tyArgs .~ (toProto <$> toList tyargs)
+      & Lang.tyBody .~ toProto tyabs
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Kind'KindRef PC.KindRefType where
+instance IsMessage Lang.Kind'KindRef Compat.KindRefType where
   fromProto kr =
     ( \case
-        P.Kind'KIND_REF_TYPE -> pure PC.KType
-        P.Kind'KIND_REF_UNSPECIFIED -> pure PC.KUnspecified
-        P.Kind'KindRef'Unrecognized v ->
+        Lang.Kind'KIND_REF_TYPE -> pure Compat.KType
+        Lang.Kind'KIND_REF_UNSPECIFIED -> pure Compat.KUnspecified
+        Lang.Kind'KindRef'Unrecognized v ->
           throwError
             [ FPProtoParseError $
                 defMessage
-                  & P.unknownEnumError . P.enumName .~ Text.pack (showEnum kr)
-                  & P.unknownEnumError . P.gotTag .~ (Text.pack . show $ v)
+                  & Compiler.unknownEnumError . Compiler.enumName .~ Text.pack (showEnum kr)
+                  & Compiler.unknownEnumError . Compiler.gotTag .~ (Text.pack . show $ v)
             ]
     )
       kr
 
   toProto = \case
-    PC.KType -> P.Kind'KIND_REF_TYPE
-    PC.KUnspecified -> P.Kind'KIND_REF_UNSPECIFIED
+    Compat.KType -> Lang.Kind'KIND_REF_TYPE
+    Compat.KUnspecified -> Lang.Kind'KIND_REF_UNSPECIFIED
 
-instance IsMessage P.Kind PC.Kind where
+instance IsMessage Lang.Kind Compat.Kind where
   fromProto k = do
-    kt <- case k ^. P.maybe'kind of
-      Nothing -> throwOneOfError (messageName (Proxy @P.Kind)) "kind"
+    kt <- case k ^. Lang.maybe'kind of
+      Nothing -> throwOneOfError (messageName (Proxy @Lang.Kind)) "kind"
       Just k' -> case k' of
-        P.Kind'KindRef r -> PC.KindRef <$> fromProto r
-        P.Kind'KindArrow' arr -> PC.KindArrow <$> fromProto (arr ^. P.left) <*> fromProto (arr ^. P.right)
-    pure $ PC.Kind kt
+        Lang.Kind'KindRef r -> Compat.KindRef <$> fromProto r
+        Lang.Kind'KindArrow' arr -> Compat.KindArrow <$> fromProto (arr ^. Lang.left) <*> fromProto (arr ^. Lang.right)
+    pure $ Compat.Kind kt
 
-  toProto (PC.Kind (PC.KindArrow l r)) = do
+  toProto (Compat.Kind (Compat.KindArrow l r)) = do
     defMessage
-      & P.kindArrow . P.left .~ toProto l
-      & P.kindArrow . P.right .~ toProto r
-  toProto (PC.Kind (PC.KindRef r)) = do
+      & Lang.kindArrow . Lang.left .~ toProto l
+      & Lang.kindArrow . Lang.right .~ toProto r
+  toProto (Compat.Kind (Compat.KindRef r)) = do
     defMessage
-      & P.kindRef .~ toProto r
+      & Lang.kindRef .~ toProto r
 
-instance IsMessage P.TyArg PC.TyArg where
+instance IsMessage Lang.TyArg Compat.TyArg where
   fromProto ta = do
-    argnm <- fromProto $ ta ^. P.argName
-    si <- fromProto $ ta ^. P.sourceInfo
-    kind <- fromProto $ ta ^. P.argKind
-    pure $ PC.TyArg argnm kind si
+    argnm <- fromProto $ ta ^. Lang.argName
+    si <- fromProto $ ta ^. Lang.sourceInfo
+    kind <- fromProto $ ta ^. Lang.argKind
+    pure $ Compat.TyArg argnm kind si
 
-  toProto (PC.TyArg argnm argkind si) =
+  toProto (Compat.TyArg argnm argkind si) =
     defMessage
-      & P.argName .~ toProto argnm
-      & P.argKind .~ toProto argkind
-      & P.sourceInfo .~ toProto si
+      & Lang.argName .~ toProto argnm
+      & Lang.argKind .~ toProto argkind
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyBody PC.TyBody where
-  fromProto tb = case tb ^. P.maybe'tyBody of
-    Nothing -> throwOneOfError (messageName (Proxy @P.TyBody)) "ty_body"
+instance IsMessage Lang.TyBody Compat.TyBody where
+  fromProto tb = case tb ^. Lang.maybe'tyBody of
+    Nothing -> throwOneOfError (messageName (Proxy @Lang.TyBody)) "ty_body"
     Just x -> case x of
-      P.TyBody'Opaque opq -> PC.OpaqueI <$> fromProto (opq ^. P.sourceInfo)
-      P.TyBody'Sum sumI -> PC.SumI <$> fromProto sumI
-      P.TyBody'Product prodI -> PC.ProductI <$> fromProto prodI
-      P.TyBody'Record recI -> PC.RecordI <$> fromProto recI
+      Lang.TyBody'Opaque opq -> Compat.OpaqueI <$> fromProto (opq ^. Lang.sourceInfo)
+      Lang.TyBody'Sum sumI -> Compat.SumI <$> fromProto sumI
+      Lang.TyBody'Product prodI -> Compat.ProductI <$> fromProto prodI
+      Lang.TyBody'Record recI -> Compat.RecordI <$> fromProto recI
 
   toProto = \case
-    PC.OpaqueI si ->
-      let opaque = defMessage & P.sourceInfo .~ toProto si
-       in defMessage & P.opaque .~ opaque
-    PC.SumI s -> defMessage & P.sum .~ toProto s
-    PC.ProductI p -> defMessage & P.product .~ toProto p
-    PC.RecordI r -> defMessage & P.record .~ toProto r
+    Compat.OpaqueI si ->
+      let opaque = defMessage & Lang.sourceInfo .~ toProto si
+       in defMessage & Lang.opaque .~ opaque
+    Compat.SumI s -> defMessage & Lang.sum .~ toProto s
+    Compat.ProductI p -> defMessage & Lang.product .~ toProto p
+    Compat.RecordI r -> defMessage & Lang.record .~ toProto r
 
-instance IsMessage P.Sum PC.Sum where
+instance IsMessage Lang.Sum Compat.Sum where
   fromProto s = do
-    (ctors, mulCtors) <- parseAndIndex' (\c -> mkInfoLess $ c ^. #constrName) (s ^. P.constructors)
-    si <- fromProto $ s ^. P.sourceInfo
+    (ctors, mulCtors) <- parseAndIndex' (\c -> mkInfoLess $ c ^. #constrName) (s ^. Lang.constructors)
+    si <- fromProto $ s ^. Lang.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
       CtxTyDef mn tyd -> return (mn, tyd)
@@ -408,35 +409,35 @@ instance IsMessage P.Sum PC.Sum where
     let mulCtorsErrs =
           [ FPProtoParseError $
             defMessage
-              & P.multipleConstructorError . P.moduleName .~ ctxMn
-              & P.multipleConstructorError . P.tyDef .~ ctxTyd
-              & P.multipleConstructorError . P.constructors .~ cs
+              & Compiler.multipleConstructorError . Compiler.moduleName .~ ctxMn
+              & Compiler.multipleConstructorError . Compiler.tyDef .~ ctxTyd
+              & Compiler.multipleConstructorError . Compiler.constructors .~ cs
           | (_cn, cs) <- Map.toList mulCtors
           ]
     if null mulCtorsErrs
-      then pure $ PC.Sum ctors si
+      then pure $ Compat.Sum ctors si
       else throwError mulCtorsErrs
 
-  toProto (PC.Sum ctors si) =
+  toProto (Compat.Sum ctors si) =
     defMessage
-      & P.constructors .~ toList (toProto <$> ctors)
-      & P.sourceInfo .~ toProto si
+      & Lang.constructors .~ toList (toProto <$> ctors)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Sum'Constructor PC.Constructor where
+instance IsMessage Lang.Sum'Constructor Compat.Constructor where
   fromProto c = do
-    cnm <- fromProto $ c ^. P.constrName
-    prod <- fromProto $ c ^. P.product
-    pure $ PC.Constructor cnm prod
+    cnm <- fromProto $ c ^. Lang.constrName
+    prod <- fromProto $ c ^. Lang.product
+    pure $ Compat.Constructor cnm prod
 
-  toProto (PC.Constructor cnm prod) =
+  toProto (Compat.Constructor cnm prod) =
     defMessage
-      & P.constrName .~ toProto cnm
-      & P.product .~ toProto prod
+      & Lang.constrName .~ toProto cnm
+      & Lang.product .~ toProto prod
 
-instance IsMessage P.Record PC.Record where
+instance IsMessage Lang.Record Compat.Record where
   fromProto r = do
-    (fields, mulFields) <- parseAndIndex' (\f -> mkInfoLess $ f ^. #fieldName) (r ^. P.fields)
-    si <- fromProto $ r ^. P.sourceInfo
+    (fields, mulFields) <- parseAndIndex' (\f -> mkInfoLess $ f ^. #fieldName) (r ^. Lang.fields)
+    si <- fromProto $ r ^. Lang.sourceInfo
     ctx <- ask
     (ctxMn, ctxTyd) <- case ctx of
       CtxTyDef mn tyd -> return (mn, tyd)
@@ -444,310 +445,310 @@ instance IsMessage P.Record PC.Record where
     let mulFieldsErrs =
           [ FPProtoParseError $
             defMessage
-              & P.multipleFieldError . P.moduleName .~ ctxMn
-              & P.multipleFieldError . P.tyDef .~ ctxTyd
-              & P.multipleFieldError . P.fields .~ fs
+              & Compiler.multipleFieldError . Compiler.moduleName .~ ctxMn
+              & Compiler.multipleFieldError . Compiler.tyDef .~ ctxTyd
+              & Compiler.multipleFieldError . Compiler.fields .~ fs
           | (_fn, fs) <- Map.toList mulFields
           ]
     if null mulFieldsErrs
-      then pure $ PC.Record fields si
+      then pure $ Compat.Record fields si
       else throwError mulFieldsErrs
 
-  toProto (PC.Record fs si) =
+  toProto (Compat.Record fs si) =
     defMessage
-      & P.fields .~ (toProto <$> toList fs)
-      & P.sourceInfo .~ toProto si
+      & Lang.fields .~ (toProto <$> toList fs)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Product PC.Product where
+instance IsMessage Lang.Product Compat.Product where
   fromProto r = do
-    fs <- traverse fromProto $ r ^. P.fields
-    si <- fromProto $ r ^. P.sourceInfo
-    pure $ PC.Product fs si
+    fs <- traverse fromProto $ r ^. Lang.fields
+    si <- fromProto $ r ^. Lang.sourceInfo
+    pure $ Compat.Product fs si
 
-  toProto (PC.Product fs si) =
+  toProto (Compat.Product fs si) =
     defMessage
-      & P.fields .~ (toProto <$> fs)
-      & P.sourceInfo .~ toProto si
+      & Lang.fields .~ (toProto <$> fs)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Record'Field PC.Field where
+instance IsMessage Lang.Record'Field Compat.Field where
   fromProto f = do
-    fnm <- fromProto $ f ^. P.fieldName
-    fty <- fromProto $ f ^. P.fieldTy
-    pure $ PC.Field fnm fty
+    fnm <- fromProto $ f ^. Lang.fieldName
+    fty <- fromProto $ f ^. Lang.fieldTy
+    pure $ Compat.Field fnm fty
 
-  toProto (PC.Field fnm fty) =
+  toProto (Compat.Field fnm fty) =
     defMessage
-      & P.fieldName .~ toProto fnm
-      & P.fieldTy .~ toProto fty
+      & Lang.fieldName .~ toProto fnm
+      & Lang.fieldTy .~ toProto fty
 
 {-
     Classes, instances, constraints
 -}
 
-instance IsMessage P.TyClassRef'Local PC.LocalClassRef where
+instance IsMessage Lang.TyClassRef'Local Compat.LocalClassRef where
   fromProto lr = do
-    si <- fromProto $ lr ^. P.sourceInfo
-    nm <- fromProto $ lr ^. P.className
-    pure $ PC.LocalClassRef nm si
+    si <- fromProto $ lr ^. Lang.sourceInfo
+    nm <- fromProto $ lr ^. Lang.className
+    pure $ Compat.LocalClassRef nm si
 
-  toProto (PC.LocalClassRef nm si) =
+  toProto (Compat.LocalClassRef nm si) =
     defMessage
-      & P.className .~ toProto nm
-      & P.sourceInfo .~ toProto si
+      & Lang.className .~ toProto nm
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyClassRef'Foreign PC.ForeignClassRef where
+instance IsMessage Lang.TyClassRef'Foreign Compat.ForeignClassRef where
   fromProto fr = do
-    si <- fromProto $ fr ^. P.sourceInfo
-    mn <- fromProto $ fr ^. P.moduleName
-    tn <- fromProto $ fr ^. P.className
-    pure $ PC.ForeignClassRef tn mn si
+    si <- fromProto $ fr ^. Lang.sourceInfo
+    mn <- fromProto $ fr ^. Lang.moduleName
+    tn <- fromProto $ fr ^. Lang.className
+    pure $ Compat.ForeignClassRef tn mn si
 
-  toProto (PC.ForeignClassRef tn mn si) =
+  toProto (Compat.ForeignClassRef tn mn si) =
     defMessage
-      & P.className .~ toProto tn
-      & P.moduleName .~ toProto mn
-      & P.sourceInfo .~ toProto si
+      & Lang.className .~ toProto tn
+      & Lang.moduleName .~ toProto mn
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.TyClassRef PC.TyClassRef where
-  fromProto tr = case tr ^. P.maybe'classRef of
-    Nothing -> throwOneOfError (messageName (Proxy @P.TyClassRef)) "class_ref"
+instance IsMessage Lang.TyClassRef Compat.TyClassRef where
+  fromProto tr = case tr ^. Lang.maybe'classRef of
+    Nothing -> throwOneOfError (messageName (Proxy @Lang.TyClassRef)) "class_ref"
     Just x -> case x of
-      P.TyClassRef'LocalClassRef lr -> PC.LocalCI <$> fromProto lr
-      P.TyClassRef'ForeignClassRef f -> PC.ForeignCI <$> fromProto f
+      Lang.TyClassRef'LocalClassRef lr -> Compat.LocalCI <$> fromProto lr
+      Lang.TyClassRef'ForeignClassRef f -> Compat.ForeignCI <$> fromProto f
 
   toProto = \case
-    PC.LocalCI lr -> defMessage & P.localClassRef .~ toProto lr
-    PC.ForeignCI fr -> defMessage & P.foreignClassRef .~ toProto fr
+    Compat.LocalCI lr -> defMessage & Lang.localClassRef .~ toProto lr
+    Compat.ForeignCI fr -> defMessage & Lang.foreignClassRef .~ toProto fr
 
-instance IsMessage P.ClassDef PC.ClassDef where
+instance IsMessage Lang.ClassDef Compat.ClassDef where
   fromProto cd = do
     ctx <- ask
     ctxMn <- case ctx of
       CtxModule mn -> return mn
       _ -> throwInternalError "Expected to be in Module Context"
     local (const $ CtxClassDef ctxMn cd) $ do
-      si <- fromProto $ cd ^. P.sourceInfo
-      cnm <- fromProto $ cd ^. P.className
-      cargs <- traverse fromProto $ cd ^. P.classArgs
+      si <- fromProto $ cd ^. Lang.sourceInfo
+      cnm <- fromProto $ cd ^. Lang.className
+      cargs <- traverse fromProto $ cd ^. Lang.classArgs
       carg <- case cargs of
         [] -> throwInternalError "Zero parameter type classes are not supported"
         [x] -> return x
         _ -> throwInternalError "Multi parameter type classes are not supported"
-      sups <- traverse fromProto $ cd ^. P.supers
-      let doc = cd ^. P.documentation
-      pure $ PC.ClassDef cnm carg sups doc si
+      sups <- traverse fromProto $ cd ^. Lang.supers
+      let doc = cd ^. Lang.documentation
+      pure $ Compat.ClassDef cnm carg sups doc si
 
-  toProto (PC.ClassDef cnm carg sups doc si) =
+  toProto (Compat.ClassDef cnm carg sups doc si) =
     defMessage
-      & P.className .~ toProto cnm
-      & P.classArgs .~ pure (toProto carg)
-      & P.supers .~ (toProto <$> sups)
-      & P.documentation .~ doc
-      & P.sourceInfo .~ toProto si
+      & Lang.className .~ toProto cnm
+      & Lang.classArgs .~ pure (toProto carg)
+      & Lang.supers .~ (toProto <$> sups)
+      & Lang.documentation .~ doc
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.ClassConstraint PC.ClassConstraint where
+instance IsMessage Lang.ClassConstraint Compat.ClassConstraint where
   fromProto cc = do
-    cr <- fromProto $ cc ^. P.classRef
-    args <- traverse fromProto $ cc ^. P.args
+    cr <- fromProto $ cc ^. Lang.classRef
+    args <- traverse fromProto $ cc ^. Lang.args
     arg <- case args of
       [] -> throwInternalError "ClassConstraint: Zero parameter type classes are not supported"
       [x] -> return x
       _ -> throwInternalError "ClassConstraint: Multi parameter type classes are not supported"
-    pure $ PC.ClassConstraint cr arg
+    pure $ Compat.ClassConstraint cr arg
 
-  toProto (PC.ClassConstraint cr arg) =
+  toProto (Compat.ClassConstraint cr arg) =
     defMessage
-      & P.classRef .~ toProto cr
-      & P.args .~ [toProto arg]
+      & Lang.classRef .~ toProto cr
+      & Lang.args .~ [toProto arg]
 
-instance IsMessage P.InstanceClause PC.InstanceClause where
+instance IsMessage Lang.InstanceClause Compat.InstanceClause where
   fromProto ic = do
-    si <- fromProto $ ic ^. P.sourceInfo
-    hd <- fromProto $ ic ^. P.head
-    body <- traverse fromProto $ ic ^. P.constraints
-    pure $ PC.InstanceClause hd body si
+    si <- fromProto $ ic ^. Lang.sourceInfo
+    hd <- fromProto $ ic ^. Lang.head
+    body <- traverse fromProto $ ic ^. Lang.constraints
+    pure $ Compat.InstanceClause hd body si
 
-  toProto (PC.InstanceClause hd cstrs si) =
+  toProto (Compat.InstanceClause hd cstrs si) =
     defMessage
-      & P.head .~ toProto hd
-      & P.constraints .~ (toProto <$> cstrs)
-      & P.sourceInfo .~ toProto si
+      & Lang.head .~ toProto hd
+      & Lang.constraints .~ (toProto <$> cstrs)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.Derive PC.Derive where
+instance IsMessage Lang.Derive Compat.Derive where
   fromProto c = do
-    cstr <- fromProto $ c ^. P.constraint
-    pure $ PC.Derive cstr
+    cstr <- fromProto $ c ^. Lang.constraint
+    pure $ Compat.Derive cstr
 
-  toProto (PC.Derive cstr) =
+  toProto (Compat.Derive cstr) =
     defMessage
-      & P.constraint .~ toProto cstr
+      & Lang.constraint .~ toProto cstr
 
-instance IsMessage P.Constraint PC.Constraint where
+instance IsMessage Lang.Constraint Compat.Constraint where
   fromProto c = do
-    si <- fromProto $ c ^. P.sourceInfo
-    cnm <- fromProto $ c ^. P.classRef
-    args <- traverse fromProto $ c ^. P.args
+    si <- fromProto $ c ^. Lang.sourceInfo
+    cnm <- fromProto $ c ^. Lang.classRef
+    args <- traverse fromProto $ c ^. Lang.args
     arg <- case args of
       [] -> throwInternalError "Zero constraint arguments, but zero parameter type classes are not supported"
       [x] -> return x
       _ -> throwInternalError "Multiple constraint arguments, but multi parameter type classes are not supported"
-    pure $ PC.Constraint cnm arg si
+    pure $ Compat.Constraint cnm arg si
 
-  toProto (PC.Constraint cnm arg si) =
+  toProto (Compat.Constraint cnm arg si) =
     defMessage
-      & P.classRef .~ toProto cnm
-      & P.args .~ pure (toProto arg)
-      & P.sourceInfo .~ toProto si
+      & Lang.classRef .~ toProto cnm
+      & Lang.args .~ pure (toProto arg)
+      & Lang.sourceInfo .~ toProto si
 
 {-
     Module, CompilerInput
 -}
 
-instance IsMessage P.Module PC.Module where
+instance IsMessage Lang.Module Compat.Module where
   fromProto m = do
     ctx <- ask
     case ctx of
       CtxCompilerInput -> return ()
       _ -> throwInternalError "Expected to be in CompilerInput Context"
-    local (const $ CtxModule (m ^. P.moduleName)) $ do
-      mnm <- fromProto $ m ^. P.moduleName
-      (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> mkInfoLess $ tyDef ^. #tyName) (m ^. P.typeDefs)
-      (cldefs, mulClDefs) <- parseAndIndex (\cldef -> mkInfoLess $ cldef ^. #className) (m ^. P.classDefs)
-      (impts, mulImpts) <- parseAndIndex mkInfoLess (m ^. P.imports)
-      insts <- traverse fromProto $ m ^. P.instances
-      derives <- traverse fromProto $ m ^. P.derives
-      si <- fromProto $ m ^. P.sourceInfo
+    local (const $ CtxModule (m ^. Lang.moduleName)) $ do
+      mnm <- fromProto $ m ^. Lang.moduleName
+      (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> mkInfoLess $ tyDef ^. #tyName) (m ^. Lang.typeDefs)
+      (cldefs, mulClDefs) <- parseAndIndex (\cldef -> mkInfoLess $ cldef ^. #className) (m ^. Lang.classDefs)
+      (impts, mulImpts) <- parseAndIndex mkInfoLess (m ^. Lang.imports)
+      insts <- traverse fromProto $ m ^. Lang.instances
+      derives <- traverse fromProto $ m ^. Lang.derives
+      si <- fromProto $ m ^. Lang.sourceInfo
       let mulTyDefsErrs =
             [ FPProtoParseError $
               defMessage
-                & P.multipleTydefError . P.moduleName .~ (m ^. P.moduleName)
-                & P.multipleTydefError . P.tyDefs .~ tds
+                & Compiler.multipleTydefError . Compiler.moduleName .~ (m ^. Compiler.moduleName)
+                & Compiler.multipleTydefError . Compiler.tyDefs .~ tds
             | (_tn, tds) <- Map.toList mulTyDefs
             ]
           mulClassDefsErrs =
             [ FPProtoParseError $
               defMessage
-                & P.multipleClassdefError . P.moduleName .~ (m ^. P.moduleName)
-                & P.multipleClassdefError . P.classDefs .~ cds
+                & Compiler.multipleClassdefError . Compiler.moduleName .~ (m ^. Compiler.moduleName)
+                & Compiler.multipleClassdefError . Compiler.classDefs .~ cds
             | (_cn, cds) <- Map.toList mulClDefs
             ]
           mulImptsErrs =
             [ FPProtoParseError $
               defMessage
-                & P.multipleImportError . P.moduleName .~ (m ^. P.moduleName)
-                & P.multipleImportError . P.imports .~ ims
+                & Compiler.multipleImportError . Compiler.moduleName .~ (m ^. Compiler.moduleName)
+                & Compiler.multipleImportError . Compiler.imports .~ ims
             | (_in, ims) <- Map.toList mulImpts
             ]
           protoParseErrs = mulTyDefsErrs ++ mulClassDefsErrs ++ mulImptsErrs
       if null protoParseErrs
-        then pure $ PC.Module mnm tydefs cldefs insts derives impts si
+        then pure $ Compat.Module mnm tydefs cldefs insts derives impts si
         else throwError protoParseErrs
 
-  toProto (PC.Module mnm tdefs cdefs insts drv impts si) =
+  toProto (Compat.Module mnm tdefs cdefs insts drv impts si) =
     defMessage
-      & P.moduleName .~ toProto mnm
-      & P.typeDefs .~ (toProto <$> toList tdefs)
-      & P.classDefs .~ (toProto <$> toList cdefs)
-      & P.instances .~ (toProto <$> insts)
-      & P.derives .~ (toProto <$> drv)
-      & P.imports .~ (toProto <$> toList impts)
-      & P.sourceInfo .~ toProto si
+      & Lang.moduleName .~ toProto mnm
+      & Lang.typeDefs .~ (toProto <$> toList tdefs)
+      & Lang.classDefs .~ (toProto <$> toList cdefs)
+      & Lang.instances .~ (toProto <$> insts)
+      & Lang.derives .~ (toProto <$> drv)
+      & Lang.imports .~ (toProto <$> toList impts)
+      & Lang.sourceInfo .~ toProto si
 
-instance IsMessage P.CompilerInput PC.CompilerInput where
+instance IsMessage Compiler.Input Compat.CompilerInput where
   fromProto ci = do
     local (const CtxCompilerInput) $ do
-      (mods, mulModules) <- parseAndIndex (\m -> mkInfoLess $ m ^. #moduleName) (ci ^. P.modules)
+      (mods, mulModules) <- parseAndIndex (\m -> mkInfoLess $ m ^. #moduleName) (ci ^. Compiler.modules)
       let mulModulesErrs =
             [ FPProtoParseError $
-              defMessage & P.multipleModuleError . P.modules .~ ms
+              defMessage & Compiler.multipleModuleError . Compiler.modules .~ ms
             | (_mn, ms) <- Map.toList mulModules
             ]
       if null mulModulesErrs
-        then pure $ PC.CompilerInput mods
+        then pure $ Compat.CompilerInput mods
         else throwError mulModulesErrs
 
-  toProto (PC.CompilerInput ms) =
+  toProto (Compat.CompilerInput ms) =
     defMessage
-      & P.modules .~ (toProto <$> toList ms)
+      & Compiler.modules .~ (toProto <$> toList ms)
 
 {-
   Outputs
 -}
 
-instance IsMessage P.KindCheckError PC.KindCheckError where
+instance IsMessage Compiler.KindCheckError Compat.KindCheckError where
   fromProto kce =
-    case kce ^. P.maybe'kindCheckError of
+    case kce ^. Compiler.maybe'kindCheckError of
       Just x -> case x of
-        P.KindCheckError'UnboundTyVarError' err ->
-          PC.UnboundTyVarError
-            <$> fromProto (err ^. P.tyDef)
-            <*> fromProto (err ^. P.tyVar)
-            <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'UnboundTyRefError' err ->
-          PC.UnboundTyRefError
-            <$> fromProto (err ^. P.tyDef)
-            <*> fromProto (err ^. P.tyRef)
-            <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'UnificationError' err ->
-          PC.IncorrectApplicationError
-            <$> fromProto (err ^. P.tyDef)
-            <*> fromProto (err ^. P.tyKindLhs)
-            <*> fromProto (err ^. P.tyKindRhs)
-            <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'CyclicKindError' err ->
-          PC.RecursiveKindError
-            <$> fromProto (err ^. P.tyDef)
-            <*> fromProto (err ^. P.moduleName)
-        P.KindCheckError'InconsistentTypeError' err ->
-          PC.InconsistentTypeError
-            <$> fromProto (err ^. P.tyDef)
-            <*> fromProto (err ^. P.actualKind)
-            <*> fromProto (err ^. P.expectedKind)
-            <*> fromProto (err ^. P.moduleName)
-      Nothing -> throwOneOfError (messageName (Proxy @P.KindCheckError)) "kind_check_error"
+        Compiler.KindCheckError'UnboundTyVarError' err ->
+          Compat.UnboundTyVarError
+            <$> fromProto (err ^. Compiler.tyDef)
+            <*> fromProto (err ^. Compiler.tyVar)
+            <*> fromProto (err ^. Compiler.moduleName)
+        Compiler.KindCheckError'UnboundTyRefError' err ->
+          Compat.UnboundTyRefError
+            <$> fromProto (err ^. Compiler.tyDef)
+            <*> fromProto (err ^. Compiler.tyRef)
+            <*> fromProto (err ^. Compiler.moduleName)
+        Compiler.KindCheckError'UnificationError' err ->
+          Compat.IncorrectApplicationError
+            <$> fromProto (err ^. Compiler.tyDef)
+            <*> fromProto (err ^. Compiler.tyKindLhs)
+            <*> fromProto (err ^. Compiler.tyKindRhs)
+            <*> fromProto (err ^. Compiler.moduleName)
+        Compiler.KindCheckError'CyclicKindError' err ->
+          Compat.RecursiveKindError
+            <$> fromProto (err ^. Compiler.tyDef)
+            <*> fromProto (err ^. Compiler.moduleName)
+        Compiler.KindCheckError'InconsistentTypeError' err ->
+          Compat.InconsistentTypeError
+            <$> fromProto (err ^. Compiler.tyDef)
+            <*> fromProto (err ^. Compiler.actualKind)
+            <*> fromProto (err ^. Compiler.expectedKind)
+            <*> fromProto (err ^. Compiler.moduleName)
+      Nothing -> throwOneOfError (messageName (Proxy @Compiler.KindCheckError)) "kind_check_error"
 
   toProto = \case
-    PC.UnboundTyVarError tydef tyvar modname ->
+    Compat.UnboundTyVarError tydef tyvar modname ->
       defMessage
-        & (P.unboundTyVarError . P.tyDef) .~ toProto tydef
-        & (P.unboundTyVarError . P.tyVar) .~ toProto tyvar
-        & (P.unboundTyVarError . P.moduleName) .~ toProto modname
-    PC.UnboundTyRefError tydef tyref modname ->
+        & (Compiler.unboundTyVarError . Compiler.tyDef) .~ toProto tydef
+        & (Compiler.unboundTyVarError . Compiler.tyVar) .~ toProto tyvar
+        & (Compiler.unboundTyVarError . Compiler.moduleName) .~ toProto modname
+    Compat.UnboundTyRefError tydef tyref modname ->
       defMessage
-        & (P.unboundTyRefError . P.tyDef) .~ toProto tydef
-        & (P.unboundTyRefError . P.tyRef) .~ toProto tyref
-        & (P.unboundTyRefError . P.moduleName) .~ toProto modname
-    PC.IncorrectApplicationError tydef k1 k2 modname ->
+        & (Compiler.unboundTyRefError . Compiler.tyDef) .~ toProto tydef
+        & (Compiler.unboundTyRefError . Compiler.tyRef) .~ toProto tyref
+        & (Compiler.unboundTyRefError . Compiler.moduleName) .~ toProto modname
+    Compat.IncorrectApplicationError tydef k1 k2 modname ->
       defMessage
-        & (P.unificationError . P.tyDef) .~ toProto tydef
-        & (P.unificationError . P.tyKindLhs) .~ toProto k1
-        & (P.unificationError . P.tyKindRhs) .~ toProto k2
-        & (P.unificationError . P.moduleName) .~ toProto modname
-    PC.RecursiveKindError tydef modname ->
+        & (Compiler.unificationError . Compiler.tyDef) .~ toProto tydef
+        & (Compiler.unificationError . Compiler.tyKindLhs) .~ toProto k1
+        & (Compiler.unificationError . Compiler.tyKindRhs) .~ toProto k2
+        & (Compiler.unificationError . Compiler.moduleName) .~ toProto modname
+    Compat.RecursiveKindError tydef modname ->
       defMessage
-        & (P.cyclicKindError . P.tyDef) .~ toProto tydef
-        & (P.cyclicKindError . P.moduleName) .~ toProto modname
-    PC.InconsistentTypeError tydef ki kd modname ->
+        & (Compiler.cyclicKindError . Compiler.tyDef) .~ toProto tydef
+        & (Compiler.cyclicKindError . Compiler.moduleName) .~ toProto modname
+    Compat.InconsistentTypeError tydef ki kd modname ->
       defMessage
-        & (P.inconsistentTypeError . P.tyDef) .~ toProto tydef
-        & (P.inconsistentTypeError . P.actualKind) .~ toProto ki
-        & (P.inconsistentTypeError . P.expectedKind) .~ toProto kd
-        & (P.inconsistentTypeError . P.moduleName) .~ toProto modname
+        & (Compiler.inconsistentTypeError . Compiler.tyDef) .~ toProto tydef
+        & (Compiler.inconsistentTypeError . Compiler.actualKind) .~ toProto ki
+        & (Compiler.inconsistentTypeError . Compiler.expectedKind) .~ toProto kd
+        & (Compiler.inconsistentTypeError . Compiler.moduleName) .~ toProto modname
 
-instance IsMessage P.CompilerError PC.CompilerError where
+instance IsMessage Compiler.Error Compat.CompilerError where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
   toProto = \case
-    PC.CompKindCheckError err -> defMessage & P.kindCheckErrors .~ [toProto err]
-    PC.InternalError err -> defMessage & P.internalErrors .~ [defMessage & P.msg .~ err]
+    Compat.CompKindCheckError err -> defMessage & Compiler.kindCheckErrors .~ [toProto err]
+    Compat.InternalError err -> defMessage & Compiler.internalErrors .~ [defMessage & Compiler.msg .~ err]
 
-instance IsMessage P.CompilerResult PC.CompilerResult where
+instance IsMessage Compiler.Result Compat.CompilerResult where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
-  toProto PC.CompilerResult = defMessage
+  toProto Compat.CompilerResult = defMessage
 
-instance IsMessage P.CompilerOutput PC.CompilerOutput where
+instance IsMessage Compiler.Output Compat.CompilerOutput where
   fromProto _ = throwInternalError "fromProto CompilerError not implemented"
 
   toProto = \case
-    Right res -> defMessage & P.compilerResult .~ toProto res
-    Left err -> defMessage & P.compilerError .~ toProto err
+    Right res -> defMessage & Compiler.result .~ toProto res
+    Left err -> defMessage & Compiler.error .~ toProto err

@@ -5,8 +5,8 @@ import Data.ProtoLens (Message (defMessage))
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import LambdaBuffers.Compiler (runCompiler)
-import Proto.Compiler (CompilerOutput)
-import Proto.Compiler_Fields (compilerResult)
+import Proto.Compiler qualified as Compiler
+import Proto.Compiler_Fields qualified as Compiler
 import Test.LambdaBuffers.Compiler.Coverage (coverage)
 import Test.LambdaBuffers.Compiler.Mutation qualified as Mut
 import Test.LambdaBuffers.Compiler.WellFormed (genCompilerInput)
@@ -24,8 +24,8 @@ test =
       , allWellFormedCompInpCompileAfterBenignMut
       ]
 
-compilationOk :: H.MonadTest m => CompilerOutput -> m ()
-compilationOk compOut = compOut H.=== (defMessage & compilerResult .~ defMessage)
+compilationOk :: H.MonadTest m => Compiler.Output -> m ()
+compilationOk compOut = compOut H.=== (defMessage & Compiler.result .~ defMessage)
 
 allWellFormedCompInpCompile :: HasCallStack => TestTree
 allWellFormedCompInpCompile =
