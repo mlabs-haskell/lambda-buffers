@@ -7,8 +7,7 @@ import Data.Foldable (Foldable (toList))
 import Data.Map.Ordered (OMap)
 import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Compiler.LamTy.Types (Ty (TyAbs, TyApp, TyOpaque, TyProduct, TyRecord, TyRef, TySum, TyVar))
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils (prettyModuleName)
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, LayoutOptions (LayoutOptions), PageWidth (Unbounded), Pretty (pretty), colon, comma, concatWith, dot, enclose, encloseSep, hsep, layoutPretty, lbrace, lparen, pipe, rbrace, rparen, space, (<+>))
 import Prettyprinter.Render.String (renderShowS)
 
@@ -30,7 +29,7 @@ prettyTy (TyProduct fields _t) = hsep $ prettyTy <$> fields
 prettyTy (TyRecord fields _r) = encloseSep lbrace rbrace comma $ prettyField <$> OMap.assocs fields
 prettyTy (TyOpaque _) = "opq"
 prettyTy (TyRef (PC.LocalI lr)) = pretty $ lr ^. #tyName . #name
-prettyTy (TyRef (PC.ForeignI fr)) = prettyModuleName (fr ^. #moduleName) <> dot <> pretty (fr ^. #tyName . #name)
+prettyTy (TyRef (PC.ForeignI fr)) = PC.prettyModuleName (fr ^. #moduleName) <> dot <> pretty (fr ^. #tyName . #name)
 
 prettyField :: (PC.InfoLess PC.FieldName, Ty) -> Doc ann
 prettyField (fn, ty) = PC.withInfoLess fn (pretty . view #name) <+> colon <+> prettyTy ty

@@ -12,7 +12,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import LambdaBuffers.Compiler.LamTy.Pretty ()
 import LambdaBuffers.Compiler.LamTy.Types (Ty (TyAbs, TyApp, TyProduct, TyRecord, TyRef, TySum, TyVar), fromTy, fromTyAbs)
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 

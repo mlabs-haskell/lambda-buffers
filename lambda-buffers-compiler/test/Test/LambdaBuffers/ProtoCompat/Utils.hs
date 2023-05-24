@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Compiler.ProtoCompat.Utils (
+module Test.LambdaBuffers.ProtoCompat.Utils (
   abs,
   sum,
   tv,
@@ -33,8 +33,7 @@ import Data.Default (Default (def))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
 import Data.Text (Text)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prelude (Monoid (mempty), fmap, ($), (.))
 
 lr :: Text -> PC.Ty

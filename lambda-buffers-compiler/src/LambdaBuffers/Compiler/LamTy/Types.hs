@@ -3,7 +3,7 @@ module LambdaBuffers.Compiler.LamTy.Types (Ty (..), fromTy, fromTyAbs) where
 import Control.Lens ((^.))
 import Data.Foldable (Foldable (toList))
 import Data.Map.Ordered (OMap)
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 
 data Ty
   = TyApp Ty [Ty] (Maybe PC.TyApp)

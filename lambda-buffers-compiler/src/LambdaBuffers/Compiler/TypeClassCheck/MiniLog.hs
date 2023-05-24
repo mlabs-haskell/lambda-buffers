@@ -22,10 +22,8 @@ import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.Compiler.MiniLog ((@), (@<=))
 import LambdaBuffers.Compiler.MiniLog qualified as ML
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver qualified as ML
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors (deriveOpaqueError, internalError, internalError', mappendErrs, memptyErr, missingRuleError, overlappingRulesError, unboundTyClassRefError')
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 
 type Term = ML.Term Funct Atom

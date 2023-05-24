@@ -7,12 +7,11 @@ import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.MiniLog.Pretty qualified as ML
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors (mappendErrs, memptyErr)
 import LambdaBuffers.Compiler.TypeClassCheck.MiniLog (Clause, Term, runSolve)
 import LambdaBuffers.Compiler.TypeClassCheck.RuleSet (buildRules)
 import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as Super
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 

@@ -4,11 +4,11 @@ import Data.Map qualified as Map
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck qualified as TC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 import System.FilePath ((<.>), (</>))
-import Test.LambdaBuffers.Compiler.ProtoCompat.Utils qualified as U
 import Test.LambdaBuffers.Compiler.Utils.Golden qualified as Golden
+import Test.LambdaBuffers.ProtoCompat.Utils qualified as U
 import Test.Tasty (TestName, TestTree, testGroup)
 
 test :: TestTree

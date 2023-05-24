@@ -11,9 +11,8 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors (superClassCycleDetectedError, unboundTyClassRefError)
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 
 data CheckRead = MkCheckRead

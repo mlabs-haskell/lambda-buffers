@@ -31,7 +31,7 @@ rec {
     src = ./.;
     proto = "codegen.proto";
     cabalBuildDepends = [ lambda-buffers-lang-hs-pb ];
-    cabalPackageName = "lambda-buffers-compiler-pb";
+    cabalPackageName = "lambda-buffers-codegen-pb";
   };
 
 }

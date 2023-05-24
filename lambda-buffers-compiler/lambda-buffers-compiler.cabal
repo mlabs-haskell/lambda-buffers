@@ -124,17 +124,25 @@ library
     LambdaBuffers.Compiler.MiniLog.Pretty
     LambdaBuffers.Compiler.MiniLog.UniFdSolver
     LambdaBuffers.Compiler.NamingCheck
-    LambdaBuffers.Compiler.ProtoCompat
-    LambdaBuffers.Compiler.ProtoCompat.FromProto
-    LambdaBuffers.Compiler.ProtoCompat.Indexing
-    LambdaBuffers.Compiler.ProtoCompat.InfoLess
-    LambdaBuffers.Compiler.ProtoCompat.Types
-    LambdaBuffers.Compiler.ProtoCompat.Utils
     LambdaBuffers.Compiler.TypeClassCheck
     LambdaBuffers.Compiler.TypeClassCheck.Errors
     LambdaBuffers.Compiler.TypeClassCheck.MiniLog
     LambdaBuffers.Compiler.TypeClassCheck.RuleSet
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
+    LambdaBuffers.ProtoCompat
+    LambdaBuffers.ProtoCompat.Indexing
+    LambdaBuffers.ProtoCompat.InfoLess
+    LambdaBuffers.ProtoCompat.IsCompat
+    LambdaBuffers.ProtoCompat.IsCompat.Compiler
+    LambdaBuffers.ProtoCompat.IsCompat.FromProto
+    LambdaBuffers.ProtoCompat.IsCompat.Lang
+    LambdaBuffers.ProtoCompat.IsCompat.Utils
+    LambdaBuffers.ProtoCompat.Types
+    LambdaBuffers.ProtoCompat.Types.Codegen
+    LambdaBuffers.ProtoCompat.Types.Compiler
+    LambdaBuffers.ProtoCompat.Types.Lang
+    LambdaBuffers.ProtoCompat.Types.Qualified
+    LambdaBuffers.ProtoCompat.Utils
 
   hs-source-dirs:  src
 
@@ -184,14 +192,14 @@ test-suite tests
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
     Test.LambdaBuffers.Compiler.Coverage
+    Test.LambdaBuffers.Compiler.LamTy
     Test.LambdaBuffers.Compiler.MiniLog
     Test.LambdaBuffers.Compiler.Mutation
-    Test.LambdaBuffers.Compiler.ProtoCompat.Eval
-    Test.LambdaBuffers.Compiler.ProtoCompat.Utils
     Test.LambdaBuffers.Compiler.TypeClassCheck
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.Utils.Golden
     Test.LambdaBuffers.Compiler.WellFormed
+    Test.LambdaBuffers.ProtoCompat.Utils
     Test.Utils.CompilerInput
     Test.Utils.Constructors
     Test.Utils.Module

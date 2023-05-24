@@ -94,7 +94,7 @@
           codegenBuild = buildAbstraction {
             import-location = ./lambda-buffers-codegen/build.nix;
             additional = {
-              inherit (protosBuild) lambda-buffers-codegen-hs-pb;
+              inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
             };
           };

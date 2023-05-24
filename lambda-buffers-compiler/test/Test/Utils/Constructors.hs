@@ -30,8 +30,7 @@ module Test.Utils.Constructors (
 import Control.Lens ((^.))
 import Data.Map qualified as Map
 import Data.Text (Text)
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types (SourceInfo)
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler_Fields ()
 
 import Data.Default (def)
@@ -85,7 +84,7 @@ _TyVarI :: Text -> PC.Ty
 _TyVarI = PC.TyVarI . _TyVar
 
 -- | TyVar with Source Info - for error precision testing.
-_TyVarI' :: Text -> SourceInfo -> PC.Ty
+_TyVarI' :: Text -> PC.SourceInfo -> PC.Ty
 _TyVarI' x s = PC.TyVarI $ PC.TyVar {PC.varName = _VarName' x s}
 
 _SourceInfo :: Int -> Int -> PC.SourceInfo

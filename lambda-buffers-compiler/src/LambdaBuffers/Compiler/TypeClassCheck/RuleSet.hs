@@ -8,11 +8,9 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Traversable (for)
 import LambdaBuffers.Compiler.MiniLog qualified as ML
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors (importNotFoundError)
 import LambdaBuffers.Compiler.TypeClassCheck.MiniLog (Clause, Term, mkDeriveRule, mkInstanceRule, mkQuery, mkStructuralRules)
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 
 buildRulesForModule ::

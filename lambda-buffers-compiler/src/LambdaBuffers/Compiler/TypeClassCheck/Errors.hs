@@ -15,9 +15,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Errors (
 import Control.Lens ((&), (.~), (^.))
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
-import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 

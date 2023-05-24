@@ -9,8 +9,7 @@ module LambdaBuffers.Compiler.KindCheck.Type (
 
 import GHC.Generics (Generic)
 import Generics.SOP qualified as SOP
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, InfoLessC, withInfoLess)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Pretty (pretty), viaShow)
 
 -- NOTE(cstml): Let's remove the Arbitrary instances and replaces them with
@@ -27,10 +26,10 @@ data Variable
 instance Pretty Variable where
   pretty = viaShow
 
-instance InfoLessC Variable
+instance PC.InfoLessC Variable
 
-instance Pretty (InfoLess Variable) where
-  pretty x = withInfoLess x pretty
+instance Pretty (PC.InfoLess Variable) where
+  pretty x = PC.withInfoLess x pretty
 
 data Type
   = Abs PC.TyAbs

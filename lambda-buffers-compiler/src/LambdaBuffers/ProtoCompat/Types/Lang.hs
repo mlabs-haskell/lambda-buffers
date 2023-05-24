@@ -1,15 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.Compiler.ProtoCompat.Types (
-  localRef2ForeignRef,
+module LambdaBuffers.ProtoCompat.Types.Lang (
   ClassDef (..),
   ClassConstraint (..),
   ClassName (..),
-  CompilerError (..),
-  CompilerInput (..),
-  CompilerOutput,
-  CompilerResult (..),
   ConstrName (..),
   Constraint (..),
   Constructor (..),
@@ -20,9 +15,7 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   InstanceClause (..),
   Kind (..),
   KindRefType (..),
-  KindCheckError (..),
   KindType (..),
-  LBName (..),
   LocalRef (..),
   LocalClassRef (..),
   Derive (..),
@@ -45,14 +38,8 @@ module LambdaBuffers.Compiler.ProtoCompat.Types (
   TyRef (..),
   TyVar (..),
   VarName (..),
-  InferenceErr,
-  KindCheckErr,
-  QClassName,
-  QTyName,
 ) where
 
-import Control.Exception (Exception)
-import Control.Lens (Getter, to, (^.))
 import Data.Default (Default (def))
 import Data.Generics.Labels ()
 import Data.Map (Map)
@@ -60,7 +47,7 @@ import Data.Map.Ordered (OMap)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Generics.SOP qualified as SOP
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, InfoLessC (infoLessId))
+import LambdaBuffers.ProtoCompat.InfoLess (InfoLess, InfoLessC (infoLessId))
 
 data SourceInfo = SourceInfo {file :: Text, posFrom :: SourcePosition, posTo :: SourcePosition}
   deriving stock (Show, Eq, Ord, Generic)
@@ -72,19 +59,6 @@ data SourcePosition = SourcePosition {column :: Int, row :: Int}
 
 instance Default SourceInfo where
   def = SourceInfo "" (SourcePosition 0 0) (SourcePosition 0 0)
-
--- | Qualified type name mostly used in maintaining various contexts
-type QTyName = (InfoLess ModuleName, InfoLess TyName)
-
--- | Qualified type class name mostly used in maintaining various contexts
-type QClassName = (InfoLess ModuleName, InfoLess ClassName)
-
-{- | NOTE(gnumonik): I need a "generic name" type for my template haskell, this
- shouldn't be used anywhere outside of that
--}
-data LBName = LBName {name :: Text, sourceInfo :: SourceInfo}
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
 
 data TyName = TyName {name :: Text, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
@@ -145,17 +119,6 @@ data ForeignRef = ForeignRef {tyName :: TyName, moduleName :: ModuleName, source
 data LocalRef = LocalRef {tyName :: TyName, sourceInfo :: SourceInfo}
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
-
-localRef2ForeignRef :: ModuleName -> Getter LocalRef ForeignRef
-localRef2ForeignRef modName =
-  to
-    ( \lr ->
-        ForeignRef
-          { tyName = lr ^. #tyName
-          , sourceInfo = lr ^. #sourceInfo
-          , moduleName = modName
-          }
-    )
 
 data TyRef = LocalI LocalRef | ForeignI ForeignRef
   deriving stock (Show, Eq, Ord, Generic)
@@ -266,59 +229,11 @@ data Module = Module
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (SOP.Generic)
 
-data InferenceErr
-  = UnboundTermErr Text
-  | ImpossibleErr Text
-  | UnificationErr Text
-  | RecursiveSubstitutionErr Text
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-instance Exception InferenceErr
-
-data KindCheckErr
-  = InconsistentTypeErr TyDef
-  | InferenceFailure TyDef InferenceErr
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-instance Exception KindCheckErr
-
-newtype CompilerInput = CompilerInput {modules :: Map (InfoLess ModuleName) Module}
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (Monoid, Semigroup)
-  deriving anyclass (SOP.Generic)
-
-data KindCheckError
-  = UnboundTyVarError TyDef TyVar ModuleName
-  | UnboundTyRefError TyDef TyRef ModuleName
-  | IncorrectApplicationError TyDef Kind Kind ModuleName
-  | RecursiveKindError TyDef ModuleName
-  | InconsistentTypeError TyDef Kind Kind ModuleName
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-instance Exception KindCheckError
-
--- | All the compiler errors.
-data CompilerError
-  = CompKindCheckError KindCheckError
-  | InternalError Text
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-data CompilerResult = CompilerResult
-  deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (SOP.Generic)
-
-type CompilerOutput = Either CompilerError CompilerResult
-
 -- | InfoLess instances
 instance InfoLessC SourceInfo where
   infoLessId = const def
 
 instance InfoLessC SourcePosition
-instance InfoLessC LBName
 instance InfoLessC TyName
 instance InfoLessC ConstrName
 instance InfoLessC ModuleName
@@ -353,9 +268,3 @@ instance InfoLessC InstanceClause
 instance InfoLessC Derive
 instance InfoLessC Constraint
 instance InfoLessC Module
-instance InfoLessC InferenceErr
-instance InfoLessC KindCheckErr
-instance InfoLessC CompilerInput
-instance InfoLessC KindCheckError
-instance InfoLessC CompilerError
-instance InfoLessC CompilerResult

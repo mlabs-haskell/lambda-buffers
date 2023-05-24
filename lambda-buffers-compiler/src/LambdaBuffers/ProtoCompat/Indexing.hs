@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.ProtoCompat.Indexing (
+module LambdaBuffers.ProtoCompat.Indexing (
   ClassRels,
   TyDefs,
   ClassDefs,
@@ -14,14 +14,18 @@ module LambdaBuffers.Compiler.ProtoCompat.Indexing (
 
 import Control.Lens (view, (^.))
 import Data.Default (Default (def))
+import Data.Generics.Product (HasField')
 import Data.Map (Map)
 import Data.Map qualified as Map
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.InfoLess (InfoLess)
+import LambdaBuffers.ProtoCompat.InfoLess qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 
 type ClassDefs = Map PC.QClassName PC.ClassDef
 
-indexClassDefs :: PC.CompilerInput -> Map PC.QClassName PC.ClassDef
+type HasModules a = HasField' "modules" a (Map (InfoLess PC.ModuleName) PC.Module)
+
+indexClassDefs :: HasModules a => a -> Map PC.QClassName PC.ClassDef
 indexClassDefs ci =
   Map.fromList
     [ ((mn, cn), cd)
@@ -31,7 +35,7 @@ indexClassDefs ci =
 
 type TyDefs = Map PC.QTyName PC.TyDef
 
-indexTyDefs :: PC.CompilerInput -> Map PC.QTyName PC.TyDef
+indexTyDefs :: HasModules a => a -> Map PC.QTyName PC.TyDef
 indexTyDefs ci =
   Map.fromList
     [ ((mn, tn), td)
@@ -41,7 +45,7 @@ indexTyDefs ci =
 
 type ClassRels = Map PC.QClassName [PC.QClassName]
 
-indexClassRelations :: PC.CompilerInput -> ClassRels
+indexClassRelations :: HasModules a => a -> ClassRels
 indexClassRelations ci =
   foldr
     ( \m classRels ->

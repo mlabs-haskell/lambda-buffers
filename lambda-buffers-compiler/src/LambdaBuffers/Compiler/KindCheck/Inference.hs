@@ -41,9 +41,9 @@ import LambdaBuffers.Compiler.KindCheck.Type (
   Type (Abs, App, Constructor, Opaque, Product, Sum, UnitT, Var, VoidT),
   Variable (QualifiedTyRef, TyVar),
  )
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
-import LambdaBuffers.Compiler.ProtoCompat.Types (localRef2ForeignRef)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
+import LambdaBuffers.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Utils (localRef2ForeignRef)
 import Prettyprinter (Pretty (pretty), (<+>))
 
 -- | Utility to unify the two.

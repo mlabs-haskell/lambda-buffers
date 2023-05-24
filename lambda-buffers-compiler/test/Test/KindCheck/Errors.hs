@@ -1,8 +1,8 @@
 module Test.KindCheck.Errors (testGKindCheckErrors) where
 
 import LambdaBuffers.Compiler.KindCheck (runCheck)
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types (CompilerError (CompKindCheckError), KindCheckError (UnboundTyRefError, UnboundTyVarError))
+import LambdaBuffers.ProtoCompat qualified as PC
+import LambdaBuffers.ProtoCompat.Types (CompilerError (CompKindCheckError), KindCheckError (UnboundTyRefError, UnboundTyVarError))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Utils.CompilerInput (compilerInput'undefinedForeignTyRef, compilerInput'undefinedLocalTyRef, compilerInput'undefinedVariable)
