@@ -19,9 +19,8 @@ module LambdaBuffers.Codegen.LamVal (
 ) where
 
 import Data.Map.Ordered (OMap)
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
 
 -- | Simple HOAS encoding of a little lambda calculus language.
 data ValueE where
@@ -53,7 +52,7 @@ data ValueE where
 -- | A name for a value.
 type ValueName = String
 
-{- | A value reference that may be parametrized on `E.Ty`s.
+{- | A value reference that may be parametrized on `LT.Ty`s.
 
  We use this during code generation when 'finding' concrete values, especially for polymorphic functions.
  For example
@@ -76,18 +75,18 @@ type ValueName = String
  In the `secondUseSite` the `id` is instantiated to 'is `(["String"], "id")`.
  In the `thirdUseSite` the `id` is instantiated to 'is `(["a"], "id")`.
 -}
-type Ref = ([E.Ty], ValueName)
+type Ref = ([LT.Ty], ValueName)
 
 {- | Wrapper types.
  TODO(bladyjoker): Refactor `ProtoCompat.Eval` to have these types explicitly named.
 -}
-type Sum = OMap (PC.InfoLess PC.ConstrName) E.Ty
+type Sum = OMap (PC.InfoLess PC.ConstrName) LT.Ty
 
-type Product = [E.Ty]
-type Record = OMap (PC.InfoLess PC.FieldName) E.Ty
+type Product = [LT.Ty]
+type Record = OMap (PC.InfoLess PC.FieldName) LT.Ty
 
 type Ctor = (PC.InfoLess PC.ConstrName, Product)
-type Field = (PC.InfoLess PC.FieldName, E.Ty)
+type Field = (PC.InfoLess PC.FieldName, LT.Ty)
 
 type SumImpl = QSum -> ValueE
 type ProductImpl = QProduct -> ValueE

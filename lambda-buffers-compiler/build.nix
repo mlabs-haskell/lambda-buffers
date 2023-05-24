@@ -5,6 +5,7 @@
 , index-state
 , lambda-buffers-lang-hs-pb
 , lambda-buffers-compiler-hs-pb
+, lambda-buffers-codegen-hs-pb
 , commonTools
 , shellHook
 }:
@@ -20,6 +21,7 @@ let
     extraHackage = [
       "${lambda-buffers-lang-hs-pb}"
       "${lambda-buffers-compiler-hs-pb}"
+      "${lambda-buffers-codegen-hs-pb}"
     ];
 
     modules = [

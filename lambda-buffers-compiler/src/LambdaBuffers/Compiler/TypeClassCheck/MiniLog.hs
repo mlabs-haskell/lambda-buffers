@@ -22,7 +22,7 @@ import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.Compiler.MiniLog ((@), (@<=))
 import LambdaBuffers.Compiler.MiniLog qualified as ML
 import LambdaBuffers.Compiler.MiniLog.UniFdSolver qualified as ML
-import LambdaBuffers.Compiler.TypeClassCheck.Errors (deriveOpaqueError, internalError, internalError', mappendErrs, memptyErr, missingRuleError, overlappingRulesError, unboundTyClassRefError')
+import LambdaBuffers.Compiler.TypeClassCheck.Errors (deriveOpaqueError, internalError, internalError', missingRuleError, overlappingRulesError, unboundTyClassRefError')
 import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 
@@ -282,12 +282,12 @@ runSolve mn clauses goals =
   let allErrs =
         foldr
           ( \goal errs -> case runSolve' mn clauses goal of
-              Left err -> err `mappendErrs` errs
+              Left err -> err <> errs
               Right _ -> errs
           )
-          memptyErr
+          mempty
           goals
-   in if allErrs == memptyErr then Right () else Left allErrs
+   in if allErrs == mempty then Right () else Left allErrs
 
 -- | Tries to solve a single goal.
 runSolve' :: PC.ModuleName -> [Clause] -> Term -> Either P.Error ()

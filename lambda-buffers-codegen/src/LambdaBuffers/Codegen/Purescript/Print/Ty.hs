@@ -14,8 +14,7 @@ import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
 
 {- | `printTyAbs tyN tyAbs` prints the type abstraction `tyAbs` for a type name `tyN`.

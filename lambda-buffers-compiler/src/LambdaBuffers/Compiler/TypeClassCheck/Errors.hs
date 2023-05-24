@@ -8,11 +8,9 @@ module LambdaBuffers.Compiler.TypeClassCheck.Errors (
   internalError,
   internalError',
   overlappingRulesError,
-  mappendErrs,
-  memptyErr,
 ) where
 
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens ((&), (.~))
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -97,16 +95,3 @@ internalError' mn msg =
 
 internalError :: PC.ModuleName -> PC.Constraint -> String -> P.Error
 internalError mn cstr msg = internalError' mn ("I was trying to solve" <> "\n" <> show cstr <> "\nbut the following error occurred\n" <> msg)
-
--- TODO(bladyjoker): This is quite convenient, implement as Semigroup/Monoid and figure out how to use it properly.
-mappendErrs :: P.Error -> P.Error -> P.Error
-mappendErrs l r =
-  defMessage
-    & P.protoParseErrors .~ l ^. P.protoParseErrors <> r ^. P.protoParseErrors
-    & P.namingErrors .~ l ^. P.namingErrors <> r ^. P.namingErrors
-    & P.kindCheckErrors .~ l ^. P.kindCheckErrors <> r ^. P.kindCheckErrors
-    & P.tyClassCheckErrors .~ l ^. P.tyClassCheckErrors <> r ^. P.tyClassCheckErrors
-    & P.internalErrors .~ l ^. P.internalErrors <> r ^. P.internalErrors
-
-memptyErr :: P.Error
-memptyErr = defMessage

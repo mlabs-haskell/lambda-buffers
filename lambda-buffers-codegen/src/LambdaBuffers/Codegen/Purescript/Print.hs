@@ -28,9 +28,7 @@ import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printModName, printModName', printTyName)
 import LambdaBuffers.Codegen.Purescript.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
 
 printModule :: MonadPrint m => m (Doc ann)

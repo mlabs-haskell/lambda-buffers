@@ -32,7 +32,7 @@ data FromProtoErr
   deriving stock (Show, Eq, Ord, Generic)
 
 data FromProtoContext
-  = CtxCompilerInput
+  = CtxTop -- top level sees all modules
   | CtxModule Lang.ModuleName
   | CtxTyDef Lang.ModuleName Lang.TyDef
   | CtxClassDef Lang.ModuleName Lang.ClassDef
@@ -41,9 +41,9 @@ data FromProtoContext
 type FromProto a = ReaderT FromProtoContext (Except [FromProtoErr]) a
 
 -- | Parse a Proto API message into the internal representation or report errors (in Proto format).
-runFromProto :: IsCompat proto good => FromProtoContext -> proto -> Either Compiler.Error good
-runFromProto ctx proto = do
-  let exM = runReaderT (fromProto proto) ctx
+runFromProto :: IsCompat proto good => proto -> Either Compiler.Error good
+runFromProto proto = do
+  let exM = runReaderT (fromProto proto) CtxTop
       errsOrRes = runExcept exM
   case errsOrRes of
     Left errs ->

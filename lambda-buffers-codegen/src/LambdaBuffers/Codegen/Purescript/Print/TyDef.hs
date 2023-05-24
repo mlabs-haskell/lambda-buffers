@@ -5,7 +5,7 @@ import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printTyName)
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyAbs)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc, group, vsep, (<+>))
 
 {- | Prints the LambdaBuffers type definition into a Purescript type definition.

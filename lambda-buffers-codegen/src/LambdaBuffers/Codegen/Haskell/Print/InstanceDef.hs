@@ -7,8 +7,7 @@ import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Haskell.Print.Names (printHsQClassName)
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, lparen, rparen, space, (<+>))
 
 printInstanceDef :: H.QClassName -> PC.Ty -> (Doc ann -> Doc ann)

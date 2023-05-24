@@ -9,12 +9,12 @@ import LambdaBuffers.Codegen.Haskell.Config qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Print qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Syntax (filepathFromModuleName)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
-import Proto.Compiler qualified as P
+import Proto.Codegen qualified as P
 
-runPrint :: Haskell.Config -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (FilePath, Text)
+runPrint :: Haskell.Config -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text)
 runPrint cfg ci m = case runCheck cfg ci m of
   Left err -> Left err
   Right ctx -> case Print.runPrint ctx Haskell.printModule of

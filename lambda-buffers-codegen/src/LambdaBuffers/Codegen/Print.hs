@@ -27,16 +27,15 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc)
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
 type Error = (PC.SourceInfo, Text)
 
 data Context qtn qcn = Context
-  { _ctxCompilerInput :: PC.CompilerInput -- TODO(bladyjoker): Use proper `CodegenInput`.
+  { _ctxCompilerInput :: PC.CodegenInput
   , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
   , _ctxTyImports :: Set PC.QTyName
   , _ctxOpaqueTyImports :: Set qtn
@@ -66,7 +65,7 @@ runPrint ::
   (Ord qvn, Ord qcn) =>
   Context qtn qcn ->
   PrintM qtn qcn qvn (Doc ()) ->
-  Either P.CompilerError (Doc ())
+  Either P.Error (Doc ())
 runPrint ctx modPrinter =
   let p = runRWST modPrinter ctx (State mempty mempty)
    in case runExcept p of

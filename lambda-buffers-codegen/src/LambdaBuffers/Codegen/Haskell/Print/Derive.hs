@@ -13,8 +13,7 @@ import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, equals, (<+>))
 
 lvEqBuiltins :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)

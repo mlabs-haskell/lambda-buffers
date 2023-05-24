@@ -14,7 +14,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.NamingCheck (checkClassName, checkConstrName, checkFieldName, checkModuleNamePart, checkTyName, checkVarName)
 import LambdaBuffers.ProtoCompat.InfoLess (mkInfoLess)
-import LambdaBuffers.ProtoCompat.IsCompat.FromProto (FromProtoContext (CtxClassDef, CtxCompilerInput, CtxModule, CtxTyDef), FromProtoErr (FPProtoParseError), IsCompat (fromProto, toProto), throwInternalError, throwNamingError, throwOneOfError)
+import LambdaBuffers.ProtoCompat.IsCompat.FromProto (FromProtoContext (CtxClassDef, CtxModule, CtxTop, CtxTyDef), FromProtoErr (FPProtoParseError), IsCompat (fromProto, toProto), throwInternalError, throwNamingError, throwOneOfError)
 import LambdaBuffers.ProtoCompat.IsCompat.Utils (parseAndIndex, parseAndIndex')
 import LambdaBuffers.ProtoCompat.Types qualified as Compat
 import Proto.Compiler_Fields qualified as Compiler
@@ -521,15 +521,15 @@ instance IsCompat Lang.Constraint Compat.Constraint where
       & Lang.sourceInfo .~ toProto si
 
 {-
-    Module, CompilerInput
+    Module
 -}
 
 instance IsCompat Lang.Module Compat.Module where
   fromProto m = do
     ctx <- ask
     case ctx of
-      CtxCompilerInput -> return ()
-      _ -> throwInternalError "Expected to be in CompilerInput Context"
+      CtxTop -> return ()
+      _ -> throwInternalError "Expected to be in the Top Context"
     local (const $ CtxModule (m ^. Lang.moduleName)) $ do
       mnm <- fromProto $ m ^. Lang.moduleName
       (tydefs, mulTyDefs) <- parseAndIndex (\tyDef -> mkInfoLess $ tyDef ^. #tyName) (m ^. Lang.typeDefs)

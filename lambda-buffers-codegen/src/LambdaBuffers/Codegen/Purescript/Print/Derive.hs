@@ -12,8 +12,7 @@ import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, derive
 import LambdaBuffers.Codegen.Purescript.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, equals, (<+>))
 
 lvEqBuiltins :: Map LV.ValueName Purs.QValName

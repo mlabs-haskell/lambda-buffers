@@ -10,9 +10,9 @@ import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
 import LambdaBuffers.Codegen.Purescript qualified as Purs
 import LambdaBuffers.Codegen.Purescript.Config qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Paths_lambda_buffers_codegen qualified as Paths
-import Proto.Compiler qualified as P
+import Proto.Codegen qualified as P
 import System.FilePath ((<.>), (</>))
 import System.FilePath.Lens (extension)
 import Test.Tasty (TestName, TestTree, testGroup)
@@ -31,7 +31,7 @@ prints goldensFp = testCase goldensFp $ do
   cfg <- readPurescriptConfig configFp
   ciFp <- Paths.getDataFileName ("data/goldens" </> goldensFp)
   ci <- readCodegenInput ciFp
-  ci' <- case PC.runFromProto ci of
+  ci' <- case PC.codegenInputFromProto ci of
     Left err -> assertFailure (show err)
     Right res -> return res
   for_
@@ -54,7 +54,7 @@ prints goldensFp = testCase goldensFp $ do
                   <> otherFp
     )
 
-readCodegenInput :: FilePath -> IO P.CompilerInput
+readCodegenInput :: FilePath -> IO P.Input
 readCodegenInput fp = do
   let ext = fp ^. extension
   case ext of
@@ -64,7 +64,7 @@ readCodegenInput fp = do
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
-    _ -> error $ "Unknown CompilerInput format " <> ext
+    _ -> error $ "Unknown Codegen Input format " <> ext
 
 readPurescriptConfig :: FilePath -> IO Purs.Config
 readPurescriptConfig f = do

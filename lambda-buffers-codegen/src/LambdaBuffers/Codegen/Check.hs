@@ -17,11 +17,9 @@ import Data.Set qualified as Set
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config, cfgClasses, cfgOpaques)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
+import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
 type MonadCheck qtn qcn m = (MonadRWS (CheckRead qtn qcn) () (CheckState qtn qcn) m, MonadError CheckErr m)
 
@@ -47,7 +45,7 @@ data CheckState qtn qcn = CheckState
 initialCheckState :: (Ord qtn, Ord qcn) => CheckState qtn qcn
 initialCheckState = CheckState mempty mempty mempty mempty mempty
 
-runCheck :: forall qtn qcn. (Ord qtn, Ord qcn) => Config qtn qcn -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (Print.Context qtn qcn)
+runCheck :: forall qtn qcn. (Ord qtn, Ord qcn) => Config qtn qcn -> PC.CodegenInput -> PC.Module -> Either P.Error (Print.Context qtn qcn)
 runCheck cfg ci m =
   let p =
         runRWST
@@ -57,7 +55,7 @@ runCheck cfg ci m =
       p' = runExcept p
    in go p'
   where
-    go :: Either CheckErr ((), CheckState qtn qcn, ()) -> Either P.CompilerError (Print.Context qtn qcn)
+    go :: Either CheckErr ((), CheckState qtn qcn, ()) -> Either P.Error (Print.Context qtn qcn)
     go (Right ((), CheckState lbtyImps opqImps clImps ruleImps tyExprts, _)) = Right $ Print.Context ci m lbtyImps opqImps clImps ruleImps tyExprts cfg
     go (Left printErr) = Left $ defMessage & P.internalErrors .~ [defMessage & P.msg .~ Text.pack printErr]
 

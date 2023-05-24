@@ -22,7 +22,7 @@ import Control.Lens ((^.))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 
 type QTyName = (PackageName, ModuleName, TyName)
 type QClassName = (PackageName, ModuleName, ClassName)

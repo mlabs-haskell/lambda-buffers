@@ -4,7 +4,7 @@ import Control.Lens ((^.))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 
 type QTyName = (CabalPackageName, ModuleName, TyName)
 type QClassName = (CabalPackageName, ModuleName, ClassName)

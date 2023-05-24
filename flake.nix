@@ -86,7 +86,7 @@
           # Compiler Build
           compilerBuild = buildAbstraction {
             import-location = ./lambda-buffers-compiler/build.nix;
-            additional = { inherit (protosBuild) lambda-buffers-compiler-hs-pb; };
+            additional = { inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
           };
           compilerFlake = flakeAbstraction compilerBuild;
 

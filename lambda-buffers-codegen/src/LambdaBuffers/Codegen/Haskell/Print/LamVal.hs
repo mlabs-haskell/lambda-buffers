@@ -13,9 +13,8 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQValName, printMkCtor)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 
 newtype PrintRead = MkPrintRead
@@ -64,8 +63,8 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
     vsep
       <$> for
         (OMap.assocs sumTy)
-        ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring E.Ty.
-            E.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
+        ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
+            LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
             _ -> throwError "TODO: Internal error, got a non-product in Sum."
         )
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)

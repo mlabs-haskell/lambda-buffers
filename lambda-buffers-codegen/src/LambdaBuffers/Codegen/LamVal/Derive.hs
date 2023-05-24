@@ -1,9 +1,8 @@
 module LambdaBuffers.Codegen.LamVal.Derive (deriveImpl) where
 
 import LambdaBuffers.Codegen.LamVal (ProductImpl, RecordImpl, SumImpl, ValueE)
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
 
 deriveImpl' ::
   PC.ModuleName ->
@@ -14,11 +13,11 @@ deriveImpl' ::
   PC.QTyName ->
   PC.Ty ->
   Either String ValueE
-deriveImpl' mn tydefs sumImpl productImpl recordImpl qtyN ty = case E.runEval mn tydefs ty of
+deriveImpl' mn tydefs sumImpl productImpl recordImpl qtyN ty = case LT.runEval mn tydefs ty of
   Left err -> Left $ "PC.Ty evaluation failed while trying to derive an implementation\n" <> show err
-  Right (E.TySum s _) -> Right $ sumImpl (qtyN, s)
-  Right (E.TyProduct p _) -> Right $ productImpl (qtyN, p)
-  Right (E.TyRecord r _) -> Right $ recordImpl (qtyN, r)
+  Right (LT.TySum s _) -> Right $ sumImpl (qtyN, s)
+  Right (LT.TyProduct p _) -> Right $ productImpl (qtyN, p)
+  Right (LT.TyRecord r _) -> Right $ recordImpl (qtyN, r)
   Right wrongTy -> Left $ "Type evaluation resulted in an underivable `Ty`\n" <> show wrongTy
 
 deriveImpl ::

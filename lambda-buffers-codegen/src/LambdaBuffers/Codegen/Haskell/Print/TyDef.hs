@@ -15,8 +15,7 @@ import LambdaBuffers.Codegen.Haskell.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, S
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.Print (importClass)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
 
 {- | Prints the type definition.

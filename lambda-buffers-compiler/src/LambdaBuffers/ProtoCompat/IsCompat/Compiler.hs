@@ -10,7 +10,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (messageName), defMessage)
 import Data.Proxy (Proxy (Proxy))
 import LambdaBuffers.ProtoCompat.InfoLess (mkInfoLess)
-import LambdaBuffers.ProtoCompat.IsCompat.FromProto (FromProtoContext (CtxCompilerInput), FromProtoErr (FPProtoParseError), IsCompat (fromProto, toProto), runFromProto, throwInternalError, throwOneOfError)
+import LambdaBuffers.ProtoCompat.IsCompat.FromProto (FromProtoContext (CtxTop), FromProtoErr (FPProtoParseError), IsCompat (fromProto, toProto), runFromProto, throwInternalError, throwOneOfError)
 import LambdaBuffers.ProtoCompat.IsCompat.Lang ()
 import LambdaBuffers.ProtoCompat.IsCompat.Utils (parseAndIndex)
 import LambdaBuffers.ProtoCompat.Types (CompilerInput)
@@ -19,11 +19,11 @@ import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
 
 compilerInputFromProto :: Compiler.Input -> Either Compiler.Error CompilerInput
-compilerInputFromProto = runFromProto CtxCompilerInput
+compilerInputFromProto = runFromProto
 
 instance IsCompat Compiler.Input Compat.CompilerInput where
   fromProto ci = do
-    local (const CtxCompilerInput) $ do
+    local (const CtxTop) $ do
       (mods, mulModules) <- parseAndIndex (\m -> mkInfoLess $ m ^. #moduleName) (ci ^. Compiler.modules)
       let mulModulesErrs =
             [ FPProtoParseError $

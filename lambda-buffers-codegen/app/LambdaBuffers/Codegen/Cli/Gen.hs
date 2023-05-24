@@ -3,7 +3,7 @@ module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), writeFileAndCreate, inputFil
 import Control.Lens (makeLenses, (&), (.~), (^.))
 import Control.Monad (when)
 import Data.ByteString qualified as BS
-import Data.Foldable (foldrM)
+import Data.Foldable (Foldable (fold), foldrM)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
@@ -13,13 +13,10 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
-import LambdaBuffers.Compiler.ProtoCompat.FromProto qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
 import LambdaBuffers.Compiler.TypeClassCheck.Errors qualified as PC
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
+import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 import System.Directory (createDirectory, createDirectoryIfMissing, doesDirectoryExist, removeDirectoryRecursive)
 import System.FilePath (takeDirectory, (</>))
 import System.FilePath.Lens (extension)
@@ -34,9 +31,9 @@ data GenOpts = GenOpts
 
 makeLenses ''GenOpts
 
--- TODO(bladyjoker): Create proper CodegenInput and CodegenOutput messages.
-gen :: GenOpts -> (PC.CompilerInput -> Map (PC.InfoLess PC.ModuleName) (Either P.CompilerError (FilePath, Text))) -> IO ()
+gen :: GenOpts -> (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text))) -> IO ()
 gen opts cont = do
+  putStrLn $ "Code generation Input at " <> opts ^. inputFile
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   initialisePrintDir (opts ^. printDir)
@@ -49,7 +46,7 @@ gen opts cont = do
               putStrLn $
                 "Code generation failed for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
-              return (err `PC.mappendErrs` errs)
+              return (err : errs)
             Right (fp, printed) -> do
               putStrLn $
                 "Code generation succeeded for module "
@@ -59,19 +56,22 @@ gen opts cont = do
               writeFileAndCreate (opts ^. printDir </> fp) printed
               return errs
       )
-      PC.memptyErr
+      []
       (Map.toList res)
 
-  if allErrors == PC.memptyErr
-    then putStrLn "Code generation successful."
+  if null allErrors
+    then do
+      writeCodegenResult (opts ^. outputFile)
+      putStrLn "Code generation successful."
     else do
       writeCodegenError (opts ^. outputFile) allErrors
       error "Code generation reported errors"
+  putStrLn $ "Code generation Output at " <> opts ^. outputFile
 
-runFromProto :: FilePath -> P.CompilerInput -> IO PC.CompilerInput
-runFromProto ofp ci = case PC.runFromProto ci of
+runFromProto :: FilePath -> P.Input -> IO PC.CodegenInput
+runFromProto ofp ci = case PC.codegenInputFromProto ci of
   Left err -> do
-    writeCodegenError ofp err
+    writeCodegenError ofp [err]
     error $ "Code generation failed due to problem with the input file, inspect the error in " <> ofp <> " to find out the details"
   Right ci' -> return ci'
 
@@ -87,7 +87,7 @@ initialisePrintDir fp = do
   when exists (removeDirectoryRecursive fp)
   createDirectory fp
 
-readCodegenInput :: FilePath -> IO P.CompilerInput
+readCodegenInput :: FilePath -> IO P.Input
 readCodegenInput fp = do
   let ext = fp ^. extension
   case ext of
@@ -97,15 +97,18 @@ readCodegenInput fp = do
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
-    _ -> error $ "Unknown CompilerInput format " <> ext
+    _ -> error $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
 
-writeCodegenError :: FilePath -> P.CompilerError -> IO ()
-writeCodegenError fp err = writeCodegenOutput fp (defMessage & P.compilerError .~ err)
+writeCodegenError :: FilePath -> [P.Error] -> IO ()
+writeCodegenError fp err = writeCodegenOutput fp (defMessage & P.error .~ fold err)
 
-writeCodegenOutput :: FilePath -> P.CompilerOutput -> IO ()
+writeCodegenResult :: FilePath -> IO ()
+writeCodegenResult fp = writeCodegenOutput fp defMessage
+
+writeCodegenOutput :: FilePath -> P.Output -> IO ()
 writeCodegenOutput fp cr = do
   let ext = fp ^. extension
   case ext of
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
-    _ -> error $ "Unknown CompilerOutput format " <> ext
+    _ -> error $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext

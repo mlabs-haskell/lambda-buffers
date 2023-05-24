@@ -7,7 +7,6 @@ import Data.ProtoLens (Message (defMessage))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.MiniLog.Pretty qualified as ML
-import LambdaBuffers.Compiler.TypeClassCheck.Errors (mappendErrs, memptyErr)
 import LambdaBuffers.Compiler.TypeClassCheck.MiniLog (Clause, Term, runSolve)
 import LambdaBuffers.Compiler.TypeClassCheck.RuleSet (buildRules)
 import LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck qualified as Super
@@ -43,21 +42,21 @@ runConstraintsCheck ci =
   let (errs, printed) =
         foldr
           solveAndPrint
-          (memptyErr, mempty)
+          (mempty, mempty)
           (Map.toList . buildRules $ ci)
-   in if errs == memptyErr
+   in if errs == mempty
         then (Right (), printed)
         else (Left errs, printed)
 
 solveAndPrint :: (PC.ModuleName, Either P.Error ([Clause], [Term])) -> (P.Error, Map FilePath String) -> (P.Error, Map FilePath String)
 solveAndPrint (mn, errOrClauses) (errs, printed) =
   case errOrClauses of
-    Left buildErr -> (buildErr `mappendErrs` errs, printed)
+    Left buildErr -> (buildErr <> errs, printed)
     Right (clauses, goals) ->
       let (fp, prolog) = ML.toPrologModule (modNameToText mn) clauses
           printed' = Map.insert fp prolog printed
        in case runSolve mn clauses goals of
-            Left solveErr -> (solveErr `mappendErrs` errs, printed')
+            Left solveErr -> (solveErr <> errs, printed')
             Right _ -> (errs, printed')
 
 modNameToText :: PC.ModuleName -> Text

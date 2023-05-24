@@ -98,6 +98,7 @@ library
     , freer-simple                >=1.2
     , generic-lens                >=2.2
     , generics-sop                >=0.5
+    , lambda-buffers-codegen-pb   >=0.1
     , lambda-buffers-compiler-pb  >=0.1.0.0
     , lambda-buffers-lang-pb      >=0.1
     , lens                        >=5.2
@@ -133,6 +134,7 @@ library
     LambdaBuffers.ProtoCompat.Indexing
     LambdaBuffers.ProtoCompat.InfoLess
     LambdaBuffers.ProtoCompat.IsCompat
+    LambdaBuffers.ProtoCompat.IsCompat.Codegen
     LambdaBuffers.ProtoCompat.IsCompat.Compiler
     LambdaBuffers.ProtoCompat.IsCompat.FromProto
     LambdaBuffers.ProtoCompat.IsCompat.Lang

@@ -9,12 +9,12 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Config qualified as Purescript
 import LambdaBuffers.Codegen.Purescript.Print qualified as Purescript
 import LambdaBuffers.Codegen.Purescript.Syntax (filepathFromModuleName)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
-import Proto.Compiler qualified as P
+import Proto.Codegen qualified as P
 
-runPrint :: Purescript.Config -> PC.CompilerInput -> PC.Module -> Either P.CompilerError (FilePath, Text)
+runPrint :: Purescript.Config -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text)
 runPrint cfg ci m = case runCheck cfg ci m of
   Left err -> Left err
   Right ctx -> case Print.runPrint ctx Purescript.printModule of
