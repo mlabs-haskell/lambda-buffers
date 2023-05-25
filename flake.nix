@@ -104,6 +104,7 @@
           frontendBuild = buildAbstraction {
             import-location = ./lambda-buffers-frontend/build.nix;
             additional = {
+              inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
               lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
               lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
