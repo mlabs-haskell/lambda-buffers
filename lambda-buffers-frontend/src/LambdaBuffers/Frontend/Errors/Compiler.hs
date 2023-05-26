@@ -9,18 +9,30 @@ Another example of where this could be even better is if the reporting also had
 a Frontend module context such that we can restore original module aliases with
 type references where they are indeed used.
 -}
-module LambdaBuffers.Frontend.Errors.Compiler (toErrors) where
+module LambdaBuffers.Frontend.Errors.Compiler (showErrors) where
 
 import Control.Lens ((^.))
 import Data.ProtoLens.Field (HasField)
 import Data.Text (Text)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Syntax qualified as Syntax
-import Prettyprinter (Doc, Pretty (pretty), dot, encloseSep, line, parens, squotes, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), defaultLayoutOptions, dot, encloseSep, layoutPretty, line, parens, squotes, vsep, (<+>))
+import Prettyprinter.Render.String (renderString)
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
 import Proto.Lang qualified as Lang
 import Proto.Lang_Fields qualified as Lang
+
+showErrors :: Compiler.Error -> [String]
+showErrors err =
+  [ render $ case maySi of
+    Nothing -> doc
+    Just si -> pretty (toSyntaxSourceInfo si) <+> doc
+  | (maySi, doc) <- toErrors err
+  ]
+  where
+    render :: Doc ann -> String
+    render = renderString . layoutPretty defaultLayoutOptions
 
 toErrors :: Compiler.Error -> [(Maybe Lang.SourceInfo, Doc ann)]
 toErrors err =
@@ -416,6 +428,19 @@ toSyntaxModuleAlias mn = Just $ Syntax.ModuleAlias (toSyntaxModuleName mn) ()
 
 toSyntaxModuleName :: Lang.ModuleName -> Syntax.ModuleName ()
 toSyntaxModuleName mn = Syntax.ModuleName [Syntax.ModuleNamePart (p ^. Lang.name) () | p <- mn ^. Lang.parts] ()
+
+toSyntaxSourceInfo :: Lang.SourceInfo -> Syntax.SourceInfo
+toSyntaxSourceInfo si =
+  Syntax.SourceInfo
+    (si ^. Lang.file)
+    ( Syntax.SourcePos
+        (fromIntegral $ si ^. (Lang.posFrom . Lang.row))
+        (fromIntegral $ si ^. (Lang.posFrom . Lang.column))
+    )
+    ( Syntax.SourcePos
+        (fromIntegral $ si ^. (Lang.posTo . Lang.row))
+        (fromIntegral $ si ^. (Lang.posTo . Lang.column))
+    )
 
 prettyConstraint :: Lang.Constraint -> Doc ann
 prettyConstraint cstr = either pretty pretty (toSyntaxConstraint cstr)

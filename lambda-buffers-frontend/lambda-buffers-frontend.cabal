@@ -132,7 +132,7 @@ executable lbf
   hs-source-dirs: app
   main-is:        Main.hs
   other-modules:
-    LambdaBuffers.Frontend.Cli.Compile
+    LambdaBuffers.Frontend.Cli.Build
     LambdaBuffers.Frontend.Cli.Format
 
 test-suite tests
