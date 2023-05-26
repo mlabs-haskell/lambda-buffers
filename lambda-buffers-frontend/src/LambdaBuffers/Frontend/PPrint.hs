@@ -4,7 +4,7 @@
 Module      : LambdaBuffers.Frontend.PPrint
 Description : Pretty printing implementation of the LambdaBuffers.Frontend.Syntax types used for formatting
 -}
-module LambdaBuffers.Frontend.PPrint () where
+module LambdaBuffers.Frontend.PPrint (prettyTyInner, prettyTyTopLevel) where
 
 import Data.List (sort)
 import Data.Text qualified as Text

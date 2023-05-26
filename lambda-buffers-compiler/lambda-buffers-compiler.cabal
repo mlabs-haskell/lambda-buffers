@@ -112,7 +112,6 @@ library
 
   exposed-modules:
     LambdaBuffers.Compiler
-    LambdaBuffers.Compiler.Errors
     LambdaBuffers.Compiler.KindCheck
     LambdaBuffers.Compiler.KindCheck.Derivation
     LambdaBuffers.Compiler.KindCheck.Inference
