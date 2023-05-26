@@ -28,6 +28,12 @@ toErrors err =
     <> internalErrors (err ^. Compiler.internalErrors)
     <> kindCheckErrors (err ^. Compiler.kindCheckErrors)
     <> classCheckErrors (err ^. Compiler.tyClassCheckErrors)
+    <> namingCheckErrors (err ^. Compiler.namingErrors)
+
+namingCheckErrors :: [Compiler.NamingError] -> [(Maybe Lang.SourceInfo, Doc ann)]
+namingCheckErrors errs = do
+  err <- errs
+  maybe [] namingCheckErrors' (err ^. Compiler.maybe'namingError)
 
 internalErrors :: [Compiler.InternalError] -> [(Maybe Lang.SourceInfo, Doc ann)]
 internalErrors errs = do
@@ -321,6 +327,45 @@ classCheckErrors' (Compiler.TyClassCheckError'OverlappingRulesErr err) =
     )
   ]
 
+namingCheckErrors' :: Compiler.NamingError'NamingError -> [(Maybe Lang.SourceInfo, Doc ann)]
+namingCheckErrors' (Compiler.NamingError'ModuleNameErr mnPart) =
+  [
+    ( Just $ mnPart ^. Lang.sourceInfo
+    , "Module name part" <+> prettyName' mnPart <+> "has an invalid format"
+    )
+  ]
+namingCheckErrors' (Compiler.NamingError'TyNameErr tyN) =
+  [
+    ( Just $ tyN ^. Lang.sourceInfo
+    , "Type name" <+> prettyName' tyN <+> "has an invalid format"
+    )
+  ]
+namingCheckErrors' (Compiler.NamingError'VarNameErr varN) =
+  [
+    ( Just $ varN ^. Lang.sourceInfo
+    , "Type variable name" <+> prettyName' varN <+> "has an invalid format"
+    )
+  ]
+namingCheckErrors' (Compiler.NamingError'ConstrNameErr constrN) =
+  [
+    ( Just $ constrN ^. Lang.sourceInfo
+    , "Sum constructor name" <+> prettyName' constrN <+> "has an invalid format"
+    )
+  ]
+namingCheckErrors' (Compiler.NamingError'FieldNameErr fieldN) =
+  [
+    ( Just $ fieldN ^. Lang.sourceInfo
+    , "Record field name" <+> prettyName' fieldN <+> "has an invalid format"
+    )
+  ]
+namingCheckErrors' (Compiler.NamingError'ClassNameErr classN) =
+  [
+    ( Just $ classN ^. Lang.sourceInfo
+    , "Type class name" <+> prettyName' classN <+> "has an invalid format"
+    )
+  ]
+
+-- | Utils TODO(bladyjoker): Move to Utils module.
 toSyntaxTy :: Lang.Ty -> Either Text (Syntax.Ty ())
 toSyntaxTy langTy = case langTy ^. Lang.maybe'ty of
   Nothing -> Left "TODO(bladyjoker): Something went wrong when parsing a Lang Ty message"
