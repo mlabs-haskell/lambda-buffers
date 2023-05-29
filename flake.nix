@@ -137,7 +137,7 @@
         in
         rec {
           # Standard flake attributes
-          packages = { inherit (protosBuild) compilerHsPb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
+          packages = { inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
