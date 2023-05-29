@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..)) where
+module LambdaBuffers.Codegen.Haskell.Syntax (QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), cabalPackageNameToText) where
 
 import Control.Lens ((^.))
 import Data.Text (Text)
@@ -27,6 +27,9 @@ fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p 
 -- TODO(bladyjoker): Figure out the Cabal package name syntax.
 cabalFromLbModuleName :: PC.ModuleName -> CabalPackageName
 cabalFromLbModuleName mn = MkCabalPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
+
+cabalPackageNameToText :: CabalPackageName -> Text
+cabalPackageNameToText (MkCabalPackageName cpn) = cpn
 
 fromLbForeignRef :: PC.ForeignRef -> QTyName
 fromLbForeignRef fr =

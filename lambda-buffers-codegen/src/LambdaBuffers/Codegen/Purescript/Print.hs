@@ -16,6 +16,7 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text (Text)
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
@@ -30,27 +31,35 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
 import Proto.Codegen qualified as P
 
-printModule :: MonadPrint m => m (Doc ann)
+printModule :: MonadPrint m => m (Doc ann, Set Text)
 printModule = do
   ctx <- ask
   tyDefDocs <- printTyDefs (ctx ^. Print.ctxModule)
   instDocs <- printInstances
   st <- get
-  return $
-    align . vsep $
-      [ printModuleHeader (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
-      , mempty
-      , printImports
+  let modDoc =
+        align . vsep $
+          [ printModuleHeader (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
+          , mempty
+          , printImports
+              (ctx ^. Print.ctxTyImports)
+              (ctx ^. Print.ctxOpaqueTyImports)
+              (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
+              (ctx ^. Print.ctxRuleImports)
+              (st ^. Print.stValueImports)
+          , mempty
+          , vsep ((line <>) <$> tyDefDocs)
+          , mempty
+          , vsep ((line <>) <$> instDocs)
+          ]
+      pkgDeps =
+        collectPackageDeps
           (ctx ^. Print.ctxTyImports)
           (ctx ^. Print.ctxOpaqueTyImports)
           (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
           (ctx ^. Print.ctxRuleImports)
           (st ^. Print.stValueImports)
-      , mempty
-      , vsep ((line <>) <$> tyDefDocs)
-      , mempty
-      , vsep ((line <>) <$> instDocs)
-      ]
+  return (modDoc, pkgDeps)
 
 printTyDefs :: MonadPrint m => PC.Module -> m [Doc ann]
 printTyDefs m = for (toList $ m ^. #typeDefs) printTyDef
@@ -124,7 +133,6 @@ printExports exports = align $ group $ encloseSep lparen rparen (comma <> space)
     printTyExportWithCtors :: PC.TyName -> Doc ann
     printTyExportWithCtors tyn = printTyName tyn <> "(..)"
 
--- TODO(bladyjoker): Collect package dependencies.
 printImports :: Set PC.QTyName -> Set Purs.QTyName -> Set Purs.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Purs.QValName -> Doc ann
 printImports lbTyImports pursTyImports classImps ruleImps valImps =
   let groupedLbImports =
@@ -143,3 +151,17 @@ printImports lbTyImports pursTyImports classImps ruleImps valImps =
   where
     importQualified :: Doc ann -> Doc ann
     importQualified mnDoc = "import" <+> mnDoc <+> "as" <+> mnDoc
+
+-- TODO(bladyjoker): Handle LB package deps once you figure out the UX story.
+
+-- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+collectPackageDeps :: Set PC.QTyName -> Set Purs.QTyName -> Set Purs.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Purs.QValName -> Set Text
+collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
+  -- let groupedLbImports =
+  --       Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
+  --         `Set.union` ruleImps
+  let deps =
+        Set.fromList [Purs.pkgNameToText pkgName | (pkgName, _, _) <- toList hsTyImports]
+          `Set.union` Set.fromList [Purs.pkgNameToText pkgName | (pkgName, _, _) <- toList classImps]
+          `Set.union` Set.fromList [Purs.pkgNameToText pkgName | (Just (pkgName, _), _) <- toList valImps]
+   in deps

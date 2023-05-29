@@ -38,7 +38,8 @@ prints goldensFp = testCase goldensFp $ do
     (ci' ^. #modules)
     ( \m -> case Purs.runPrint cfg ci' m of
         Left err -> assertFailure (show err)
-        Right (fp', printed) -> do
+        -- TODO(bladyjoker): Include deps in testing.
+        Right (fp', printed, _deps) -> do
           fp <- Paths.getDataFileName ("data/goldens/purescript-autogen" </> fp')
           golden <- Text.readFile fp
           if golden == printed

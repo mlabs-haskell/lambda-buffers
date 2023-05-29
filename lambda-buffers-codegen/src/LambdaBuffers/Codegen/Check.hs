@@ -175,7 +175,7 @@ checkTy (PC.TyRefI (PC.ForeignI fr)) = importTy (PC.mkInfoLess $ fr ^. #moduleNa
 checkTy (PC.TyAppI ta) = checkTy (ta ^. #tyFunc) >> for_ (ta ^. #tyArgs) checkTy
 checkTy _ = return ()
 
--- TODO(bladyjoker): This is where you lookup instance implementation and report if an instance implementation is missing.
+-- TODO(bladyjoker): This is where you should lookup instance implementation and report if an instance implementation is missing.
 checkInstanceClause :: (MonadCheck qtn qcn m) => PC.InstanceClause -> m ()
 checkInstanceClause ic = do
   checkConstraint $ ic ^. #head

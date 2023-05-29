@@ -2,6 +2,7 @@ module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), writeFileAndCreate, inputFil
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
 import Control.Monad (when)
+import Data.Aeson (encodeFile)
 import Data.ByteString qualified as BS
 import Data.Foldable (Foldable (fold), foldrM)
 import Data.Map (Map)
@@ -9,6 +10,7 @@ import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
@@ -37,37 +39,38 @@ logInfo msg = putStrLn $ "[lbg][INFO] " <> msg <> "."
 logError :: String -> IO ()
 logError msg = putStrLn $ "[lbg][ERROR] " <> msg <> "."
 
-gen :: GenOpts -> (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text))) -> IO ()
+gen :: GenOpts -> (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text, Set Text))) -> IO ()
 gen opts cont = do
   logInfo $ "Code generation Input at " <> opts ^. inputFile
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   initialisePrintDir (opts ^. genDir)
   let res = cont ci'
-  allErrors <-
+  (allErrors, allDeps) <-
     foldrM
-      ( \(mn, errOrPrint) errs -> do
+      ( \(mn, errOrPrint) (errs, deps) -> do
           case errOrPrint of
             Left err -> do
               logInfo $
                 "Code generation failed for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
-              return (err : errs)
-            Right (fp, printed) -> do
+              return (err : errs, deps)
+            Right (fp, printed, deps') -> do
               logInfo $
                 "Code generation succeeded for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
                   <> " at file path "
                   <> (opts ^. genDir </> fp)
               writeFileAndCreate (opts ^. genDir </> fp) printed
-              return errs
+              return (errs, deps <> deps')
       )
-      []
+      ([], mempty)
       (Map.toList res)
 
   if null allErrors
     then do
       writeCodegenResult (opts ^. outputFile)
+      writePackageDeps (opts ^. genDir </> "build.json") allDeps
       logInfo "Code generation successful"
     else do
       writeCodegenError (opts ^. outputFile) allErrors
@@ -123,3 +126,6 @@ writeCodegenOutput fp cr = do
     _ -> do
       logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
       exitFailure
+
+writePackageDeps :: FilePath -> Set Text -> IO ()
+writePackageDeps = encodeFile

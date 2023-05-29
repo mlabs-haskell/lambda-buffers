@@ -16,6 +16,7 @@ module LambdaBuffers.Codegen.Purescript.Syntax (
   primValName,
   TyDefKw (..),
   className,
+  pkgNameToText,
 ) where
 
 import Control.Lens ((^.))
@@ -50,6 +51,9 @@ fromLbTyName tn = MkTyName $ tn ^. #name
 
 fromLbModuleName :: PC.ModuleName -> ModuleName
 fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
+
+pkgNameToText :: PackageName -> Text
+pkgNameToText (MkPackageName pkg) = pkg
 
 pkgFromLbModuleName :: PC.ModuleName -> PackageName
 pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])

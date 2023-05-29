@@ -25,6 +25,7 @@ import Control.Monad.RWS.Class (MonadRWS, modify)
 import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config)
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -60,12 +61,13 @@ type MonadPrint qtn qcn qvn m = (MonadError Error m, MonadRWS (Context qtn qcn) 
 
 type PrintM qtn qcn qvn = RWST (Context qtn qcn) () (State qcn qvn) (Except Error)
 
+-- | `runPrint ctx printer` runs a printing workflow that yields a module document and a set of package dependencies.
 runPrint ::
   forall qtn qcn qvn.
   (Ord qvn, Ord qcn) =>
   Context qtn qcn ->
-  PrintM qtn qcn qvn (Doc ()) ->
-  Either P.Error (Doc ())
+  PrintM qtn qcn qvn (Doc (), Set Text) ->
+  Either P.Error (Doc (), Set Text)
 runPrint ctx modPrinter =
   let p = runRWST modPrinter ctx (State mempty mempty)
    in case runExcept p of
@@ -75,7 +77,7 @@ runPrint ctx modPrinter =
               & P.internalErrors
                 .~ [ err
                    ]
-        Right (doc, _, _) -> Right doc
+        Right (r, _, _) -> Right r
 
 importValue :: (MonadPrint qtn qcn qvn m, Ord qvn) => qvn -> m ()
 importValue qvn = modify (\(State vimps cimps) -> State (Set.insert qvn vimps) cimps)
