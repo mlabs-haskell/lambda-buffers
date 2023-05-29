@@ -7,8 +7,9 @@ import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler (runCompiler)
-import Proto.Compiler (CompilerInput, CompilerOutput)
-import Proto.Compiler_Fields (maybe'compilerError)
+import Proto.Compiler (Input, Output)
+import Proto.Compiler_Fields (maybe'error)
+import System.Exit (exitFailure)
 import System.FilePath.Lens (extension)
 
 data CompileOpts = CompileOpts
@@ -19,21 +20,27 @@ data CompileOpts = CompileOpts
 
 makeLenses ''CompileOpts
 
--- NOTE(cstml): Let's use Katip instead of print.
+logInfo :: String -> IO ()
+logInfo msg = putStrLn $ "[lbc][INFO] " <> msg
+
+logError :: String -> IO ()
+logError msg = putStrLn $ "[lbc][ERROR] " <> msg
 
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
+  logInfo $ "Compiler input at " <> opts ^. input
   compInp <- readCompilerInput (opts ^. input)
   let compOut = runCompiler compInp
-  case compOut ^. maybe'compilerError of
+  case compOut ^. maybe'error of
     Nothing -> do
-      putStrLn "Compilation succeeded"
+      logInfo "Compilation succeeded"
     Just _ -> do
-      putStrLn "Compilation failed"
+      logError "Compilation failed"
+  logInfo $ "Compiler output at " <> opts ^. output
   writeCompilerOutput (opts ^. output) compOut
 
-readCompilerInput :: FilePath -> IO CompilerInput
+readCompilerInput :: FilePath -> IO Input
 readCompilerInput fp = do
   let ext = fp ^. extension
   case ext of
@@ -43,12 +50,16 @@ readCompilerInput fp = do
     ".textproto" -> do
       content <- Text.readFile fp
       return $ PbText.readMessageOrDie content
-    _ -> error $ "Unknown CompilerInput format " <> ext
+    _ -> do
+      logError $ "Unknown Compiler Input format (wanted .pb or .textproto) " <> ext
+      exitFailure
 
-writeCompilerOutput :: FilePath -> CompilerOutput -> IO ()
+writeCompilerOutput :: FilePath -> Output -> IO ()
 writeCompilerOutput fp cr = do
   let ext = fp ^. extension
   case ext of
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
-    _ -> error $ "Unknown CompilerOutput format " <> ext
+    _ -> do
+      logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+      exitFailure

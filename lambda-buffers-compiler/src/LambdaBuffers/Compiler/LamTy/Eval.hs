@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.ProtoCompat.Eval (Ty (..), fromTy, eval, runEval, runEval', prettyTy) where
+module LambdaBuffers.Compiler.LamTy.Eval (runEval, runEval', eval) where
 
 import Control.Lens (makeLenses, view, (%~), (&), (.~), (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -8,85 +8,13 @@ import Control.Monad.Reader.Class (MonadReader (local), asks)
 import Data.Foldable (Foldable (toList))
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.Map.Ordered (OMap)
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
-import LambdaBuffers.Compiler.ProtoCompat qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils (prettyModuleName)
-import Prettyprinter (Doc, LayoutOptions (LayoutOptions), PageWidth (Unbounded), Pretty (pretty), colon, comma, concatWith, dot, enclose, encloseSep, hsep, layoutPretty, lbrace, lparen, pipe, rbrace, rparen, space, (<+>))
-import Prettyprinter.Render.String (renderShowS)
+import LambdaBuffers.Compiler.LamTy.Pretty ()
+import LambdaBuffers.Compiler.LamTy.Types (Ty (TyAbs, TyApp, TyProduct, TyRecord, TyRef, TySum, TyVar), fromTy, fromTyAbs)
+import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
-
-data Ty
-  = TyApp Ty [Ty] (Maybe PC.TyApp)
-  | TyAbs (OMap (PC.InfoLess PC.VarName) PC.TyArg) Ty PC.TyAbs
-  | TyRef PC.TyRef
-  | TyVar PC.TyVar
-  | TyOpaque PC.SourceInfo
-  | TySum (OMap (PC.InfoLess PC.ConstrName) Ty) PC.Sum
-  | TyProduct [Ty] PC.Product
-  | TyRecord (OMap (PC.InfoLess PC.FieldName) Ty) PC.Record
-  deriving stock (Eq, Ord)
-
-prettyTy :: Ty -> Doc a
-prettyTy (TyVar tv) = pretty $ tv ^. #varName . #name
-prettyTy (TyAbs args body _) =
-  if null args
-    then enclose lparen rparen $ "\\" <> prettyTy body
-    else enclose lparen rparen $ printArgs args <+> "->" <+> prettyTy body
-  where
-    printArgs :: OMap (PC.InfoLess PC.VarName) PC.TyArg -> Doc a
-    printArgs args' = hsep (pretty . view (#argName . #name) <$> toList args')
-prettyTy (TyApp f args _t) = if null args then prettyTy f else encloseSep lparen rparen space (prettyTy <$> f : args)
-prettyTy (TySum ctors _s) = enclose lparen rparen $ sepWith (space <> pipe <> space) (fmap prettyCtor . OMap.assocs $ ctors)
-  where
-    prettyCtor :: (PC.InfoLess PC.ConstrName, Ty) -> Doc a
-    prettyCtor (cn, p) = pretty (PC.withInfoLess cn (view #name)) <+> prettyTy p
-prettyTy (TyProduct fields _t) = hsep $ prettyTy <$> fields
-prettyTy (TyRecord fields _r) = encloseSep lbrace rbrace comma $ prettyField <$> OMap.assocs fields
-prettyTy (TyOpaque _) = "opq"
-prettyTy (TyRef (PC.LocalI lr)) = pretty $ lr ^. #tyName . #name
-prettyTy (TyRef (PC.ForeignI fr)) = prettyModuleName (fr ^. #moduleName) <> dot <> pretty (fr ^. #tyName . #name)
-
-prettyField :: (PC.InfoLess PC.FieldName, Ty) -> Doc ann
-prettyField (fn, ty) = PC.withInfoLess fn (pretty . view #name) <+> colon <+> prettyTy ty
-
-sepWith :: Foldable t => Doc ann -> t (Doc ann) -> Doc ann
-sepWith d = concatWith (\l r -> l <> d <> r)
-
-instance Pretty Ty where
-  pretty = prettyTy
-
-instance Show Ty where
-  showsPrec _ = renderShowS . layoutPretty (LayoutOptions Unbounded) . pretty
-
-fromTy :: PC.Ty -> Ty
-fromTy (PC.TyVarI tv) = TyVar tv
-fromTy (PC.TyRefI tr) = TyRef tr
-fromTy (PC.TyAppI ta@(PC.TyApp tf as _)) = TyApp (fromTy tf) (fromTy <$> as) (Just ta)
-
-fromTyAbs :: PC.TyAbs -> Ty
-fromTyAbs tabs@(PC.TyAbs args body _si) = TyAbs args (fromTyBody args body) tabs
-
-fromTyBody :: OMap (PC.InfoLess PC.VarName) PC.TyArg -> PC.TyBody -> Ty
-fromTyBody args (PC.OpaqueI si) = TyApp (TyOpaque si) (fromTyArg <$> toList args) Nothing
-  where
-    fromTyArg :: PC.TyArg -> Ty
-    fromTyArg arg = TyVar $ PC.TyVar (arg ^. #argName)
-fromTyBody _ (PC.SumI s) = TySum (fromTyCtor <$> s ^. #constructors) s
-  where
-    fromTyCtor (PC.Constructor _cn p) = fromTyProd p
-fromTyBody _ (PC.ProductI p) = fromTyProd p
-fromTyBody _ (PC.RecordI r) = fromTyRecord r
-
-fromTyProd :: PC.Product -> Ty
-fromTyProd p@(PC.Product fields _) = TyProduct (fromTy <$> fields) p
-
-fromTyRecord :: PC.Record -> Ty
-fromTyRecord p@(PC.Record fields _) = TyRecord (fromTyField <$> fields) p
-  where
-    fromTyField (PC.Field _fn ty) = fromTy ty
 
 data Context = MkContext
   { _ctxModuleName :: PC.ModuleName
@@ -97,12 +25,12 @@ data Context = MkContext
 
 makeLenses 'MkContext
 
-type MonadEval m = (MonadError P.CompilerError m, MonadReader Context m)
+type MonadEval m = (MonadError P.Error m, MonadReader Context m)
 
-runEval :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> PC.Ty -> Either P.CompilerError Ty
+runEval :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> PC.Ty -> Either P.Error Ty
 runEval mn tds ty = runEval' mn tds (fromTy ty)
 
-runEval' :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> Ty -> Either P.CompilerError Ty
+runEval' :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> Ty -> Either P.Error Ty
 runEval' mn tds ty =
   let p = runReaderT (eval ty) (MkContext mn tds mempty)
    in runExcept p

@@ -1,5 +1,6 @@
 module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE, printImplementation) where
 
+import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (replicateM, runExcept)
 import Control.Monad.RWS (RWST (runRWST))
@@ -9,14 +10,17 @@ import Control.Monad.State.Class (gets, modify)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
+import Data.ProtoLens (Message (defMessage))
+import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQValName, printMkCtor)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
 newtype PrintRead = MkPrintRead
   { builtins :: Map LV.ValueName H.QValName
@@ -32,7 +36,10 @@ newtype PrintCommand = ImportInstance H.ModuleName
   deriving stock (Eq, Ord)
   deriving stock (Show)
 
-type PrintErr = String
+type PrintErr = P.InternalError
+
+throwInternalError :: MonadPrint m => String -> m a
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Haskell.Print.LamVal] " <> Text.pack msg
 
 type MonadPrint m = (MonadRWS PrintRead () PrintState m, MonadError PrintErr m)
 
@@ -64,9 +71,9 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
     vsep
       <$> for
         (OMap.assocs sumTy)
-        ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring E.Ty.
-            E.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
-            _ -> throwError "TODO: Internal error, got a non-product in Sum."
+        ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
+            LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
+            _ -> throwInternalError "Got a non-product in Sum."
         )
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)
 
@@ -99,7 +106,7 @@ printFieldE ((_, tyn), fieldN) recVal = do
   recDoc <- printValueE recVal
   let mayFnDoc = printFieldName (withInfo tyn) (withInfo fieldN)
   case mayFnDoc of
-    Nothing -> throwError $ "TODO(bladyjoker): Internal error: Failed print a `FieldName` in Haskell implementation printer " <> show fieldN
+    Nothing -> throwInternalError $ "Failed printing a `FieldName` " <> show fieldN
     Just fnDoc -> return $ fnDoc <+> recDoc
 
 {- | Prints a `let` expression on a `ValueE` of type `Product`.
@@ -176,7 +183,7 @@ printRecordE :: MonadPrint m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc 
 printRecordE ((_, tyN), _) vals = do
   fieldDocs <- for vals $
     \((fieldN, _), val) -> case printFieldName (withInfo tyN) (withInfo fieldN) of
-      Nothing -> throwError "Failed printing field name"
+      Nothing -> throwInternalError $ "Failed printing field name " <> show fieldN
       Just fieldNDoc -> do
         valDoc <- printValueE val
         return $ group $ fieldNDoc <+> equals <+> valDoc
@@ -204,7 +211,7 @@ printValueE (LV.IntE i) = return $ pretty i
 printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
 printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
-printValueE (LV.ErrorE err) = throwError $ "TODO(bladyjoker): LamVal error builtin was called " <> err
+printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
 
 freshArg :: MonadPrint m => m LV.ValueE
 freshArg = do
@@ -212,17 +219,17 @@ freshArg = do
   modify (\(MkPrintState s) -> MkPrintState $ s + 1)
   return $ LV.VarE $ "x" <> show i
 
-{- | Resolves a `Ref` to a value reference in the target language.
- Resolves a `LV.Ref` which is a reference to a LamVal 'builtin', to the equivalent in the target language.
- If the `LV.Ref` is polymorphic like `eq @Int` or `eq @(Maybe a)` or `eq @(List Int)`,
- then lookup the implementation in the context and error if it's not there (TODO).
+-- {- | Resolves a `Ref` to a value reference in the target language.
+--  Resolves a `LV.Ref` which is a reference to a LamVal 'builtin', to the equivalent in the target language.
+--  If the `LV.Ref` is polymorphic like `eq @Int` or `eq @(Maybe a)` or `eq @(List Int)`,
+--  then lookup the implementation in the context and error if it's not there (TODO).
 
- NOTE(bladyjoker): Currently, this is assuming all the implementations are imported.
- TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
--}
+--  NOTE(bladyjoker): Currently, this is assuming all the implementations are imported.
+--  TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
+-- -}
 resolveRef :: MonadPrint m => LV.Ref -> m (Doc ann)
 resolveRef (_, refName) = do
   bs <- asks builtins
   case Map.lookup refName bs of
-    Nothing -> throwError $ "TODO(bladyjoker): LamVal builtin mapping for " <> show refName <> " not configured."
+    Nothing -> throwInternalError $ "LamVal builtin mapping for " <> show refName <> " not configured."
     Just hqValName -> return $ printHsQValName hqValName -- TODO(bladyjoker): Add a TypeApplication notation?

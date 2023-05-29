@@ -1,7 +1,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module LambdaBuffers.Compiler.ProtoCompat.InfoLess (
+module LambdaBuffers.ProtoCompat.InfoLess (
   InfoLess,
   withInfoLess,
   withInfoLessF,

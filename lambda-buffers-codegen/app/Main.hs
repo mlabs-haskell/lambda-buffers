@@ -48,10 +48,10 @@ genOptsP =
           <> help "Codegen output that can be used to inspect Codegen errors"
       )
     <*> strOption
-      ( long "print-dir"
-          <> short 'p'
+      ( long "gen-dir"
+          <> short 'g'
           <> metavar "FILEPATH"
-          <> help "Directory to print code generation output to"
+          <> help "Directory to print generation output to"
       )
     <*> flag
       False

@@ -2,10 +2,12 @@ module LambdaBuffers.Codegen.Cli.GenPurescript (GenOpts (..), gen) where
 
 import Control.Lens (makeLenses, (^.))
 import Data.Aeson (decodeFileStrict)
+import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Purescript (runPrint)
 import LambdaBuffers.Codegen.Purescript.Config qualified as H
 import Paths_lambda_buffers_codegen qualified as Paths
+import System.Exit (exitFailure)
 
 data GenOpts = MkGenOpts
   { _common :: Gen.GenOpts
@@ -27,5 +29,7 @@ readPurescriptConfig :: FilePath -> IO H.Config
 readPurescriptConfig f = do
   mayCfg <- decodeFileStrict f
   case mayCfg of
-    Nothing -> error $ "Invalid Purescript configuration file " <> f
+    Nothing -> do
+      logError $ "Invalid Purescript configuration file " <> f
+      exitFailure
     Just cfg -> return cfg

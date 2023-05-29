@@ -3,7 +3,9 @@
 , mlabs-tooling
 , compiler-nix-name
 , index-state
-, compilerHsPb
+, lambda-buffers-lang-hs-pb
+, lambda-buffers-compiler-hs-pb
+, lambda-buffers-codegen-hs-pb
 , commonTools
 , shellHook
 }:
@@ -17,7 +19,9 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      "${compilerHsPb}"
+      "${lambda-buffers-lang-hs-pb}"
+      "${lambda-buffers-compiler-hs-pb}"
+      "${lambda-buffers-codegen-hs-pb}"
     ];
 
     modules = [

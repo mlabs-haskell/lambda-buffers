@@ -10,9 +10,7 @@ import Data.Map qualified as Map
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Utils qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 
 -- | `Config` is parametrized over a qualified type and class name for specifying `Opaque` type and class mappings in the target language.
 data Config qtn qcn = Config

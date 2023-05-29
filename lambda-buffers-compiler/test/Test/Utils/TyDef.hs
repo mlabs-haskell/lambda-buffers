@@ -15,8 +15,7 @@ module Test.Utils.TyDef (
   tyDef'ntEither'saturated,
 ) where
 
-import LambdaBuffers.Compiler.ProtoCompat.Types (Ty (TyVarI))
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as P
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Test.Utils.Constructors (
   _ForeignRef',
   _LocalRef',
@@ -36,7 +35,7 @@ import Test.Utils.Constructors (
  )
 
 -- | Maybe tyDef.
-tyDef'maybe :: P.TyDef
+tyDef'maybe :: PC.TyDef
 tyDef'maybe =
   _TyDef
     (_TyName "Maybe")
@@ -47,7 +46,7 @@ tyDef'maybe =
         ]
     )
 
-tyDef'either'opaque :: P.TyDef
+tyDef'either'opaque :: PC.TyDef
 tyDef'either'opaque =
   _TyDef
     (_TyName "Either")
@@ -58,7 +57,7 @@ tyDef'either'opaque =
         _Opaque
     )
 
-tyDef'either :: P.TyDef
+tyDef'either :: PC.TyDef
 tyDef'either =
   _TyDef
     (_TyName "Either")
@@ -71,10 +70,10 @@ tyDef'either =
         ]
     )
 
-tyDef'Int :: P.TyDef
+tyDef'Int :: PC.TyDef
 tyDef'Int = _TyDef (_TyName "Int") (_TyAbs' mempty _Opaque)
 
-tyDef'ntEither'saturated :: P.TyDef
+tyDef'ntEither'saturated :: PC.TyDef
 tyDef'ntEither'saturated =
   _TyDef
     (_TyName "WrapEither")
@@ -94,7 +93,7 @@ tyDef'ntEither'saturated =
         ]
     )
 
-tyDef'ntEither :: P.TyDef
+tyDef'ntEither :: PC.TyDef
 tyDef'ntEither =
   _TyDef
     (_TyName "WrapEither")
@@ -107,7 +106,7 @@ tyDef'ntEither =
     )
 
 -- data F a = Rec F (F a)
-tyDef'recDef :: P.TyDef
+tyDef'recDef :: PC.TyDef
 tyDef'recDef =
   _TyDef
     (_TyName "F")
@@ -125,7 +124,7 @@ tyDef'recDef =
     )
 
 -- | B a = B Maybe
-tyDef'incoherent :: P.TyDef
+tyDef'incoherent :: PC.TyDef
 tyDef'incoherent =
   _TyDef
     (_TyName "B")
@@ -137,20 +136,20 @@ tyDef'incoherent =
     )
 
 -- | Foo = Bar b
-tyDef'undefinedVar :: P.TyDef
+tyDef'undefinedVar :: PC.TyDef
 tyDef'undefinedVar =
   _TyDef
     (_TyName "Foo")
-    (_TyAbs [] [("Bar", _ProductI [TyVarI tyDef'undefinedVar'var])])
+    (_TyAbs [] [("Bar", _ProductI [PC.TyVarI tyDef'undefinedVar'var])])
 
 {- | The undefined var (i.e. "b") in tyDef'undefinedVar.
  Exported to see if the test identifies it correctly.
 -}
-tyDef'undefinedVar'var :: P.TyVar
+tyDef'undefinedVar'var :: PC.TyVar
 tyDef'undefinedVar'var = _TyVar' "b" (_SourceInfo 1 2)
 
 -- | Foo a = Foo Baz b
-tyDef'undefinedLocalTyRef :: P.TyDef
+tyDef'undefinedLocalTyRef :: PC.TyDef
 tyDef'undefinedLocalTyRef =
   _TyDef
     (_TyName "Foo")
@@ -159,7 +158,7 @@ tyDef'undefinedLocalTyRef =
         [
           ( "Foo"
           , _ProductI
-              [ P.TyRefI tyDef'undefinedLocalTyRef'TyRef
+              [ PC.TyRefI tyDef'undefinedLocalTyRef'TyRef
               , _TyVarI "a"
               ]
           )
@@ -169,11 +168,11 @@ tyDef'undefinedLocalTyRef =
 {- | The undefined Local TyRef (i.e. "Baz") in tyDef'undefinedLocalTyRef.
  Exported to see if the test identifies it correctly.
 -}
-tyDef'undefinedLocalTyRef'TyRef :: P.TyRef
-tyDef'undefinedLocalTyRef'TyRef = P.LocalI $ _LocalRef' "Baz" (_SourceInfo 1 2)
+tyDef'undefinedLocalTyRef'TyRef :: PC.TyRef
+tyDef'undefinedLocalTyRef'TyRef = PC.LocalI $ _LocalRef' "Baz" (_SourceInfo 1 2)
 
 -- | Foo a = Foo Baz b
-tyDef'undefinedForeignTyRef :: P.TyDef
+tyDef'undefinedForeignTyRef :: PC.TyDef
 tyDef'undefinedForeignTyRef =
   _TyDef
     (_TyName "Foo")
@@ -182,7 +181,7 @@ tyDef'undefinedForeignTyRef =
         [
           ( "Foo"
           , _ProductI
-              [ P.TyRefI tyDef'undefinedForeignTyRef'TyRef
+              [ PC.TyRefI tyDef'undefinedForeignTyRef'TyRef
               , _TyVarI "a"
               ]
           )
@@ -192,5 +191,5 @@ tyDef'undefinedForeignTyRef =
 {- | The undefined Local TyRef (i.e. "Baz") in tyDef'undefinedLocalTyRef.
  Exported to see if the test identifies it correctly.
 -}
-tyDef'undefinedForeignTyRef'TyRef :: P.TyRef
-tyDef'undefinedForeignTyRef'TyRef = P.ForeignI $ _ForeignRef' "Baz" (_ModuleName ["Foreign", "Module"]) (_SourceInfo 1 2)
+tyDef'undefinedForeignTyRef'TyRef :: PC.TyRef
+tyDef'undefinedForeignTyRef'TyRef = PC.ForeignI $ _ForeignRef' "Baz" (_ModuleName ["Foreign", "Module"]) (_SourceInfo 1 2)

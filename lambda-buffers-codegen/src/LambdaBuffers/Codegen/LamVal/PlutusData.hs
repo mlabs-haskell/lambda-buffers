@@ -3,11 +3,9 @@ module LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl, deriveFr
 import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Codegen.LamVal (Product, QProduct, QRecord, QSum, Sum, ValueE (CaseE, CaseIntE, CaseListE, CtorE, ErrorE, FieldE, IntE, LamE, LetE, ListE, ProductE, RecordE, RefE), (@))
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
-import LambdaBuffers.Compiler.ProtoCompat.Eval (fromTy)
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
 
 toPlutusDataSum :: QSum -> ValueE
 toPlutusDataSum qsum@(_, sumTy) =
@@ -27,7 +25,7 @@ toPlutusDataSum qsum@(_, sumTy) =
           )
     )
 
-fromPlutusDataSum :: E.Ty -> QSum -> ValueE
+fromPlutusDataSum :: LT.Ty -> QSum -> ValueE
 fromPlutusDataSum ty (qtyN, sumTy) =
   LamE $
     \pdVal ->
@@ -39,7 +37,7 @@ fromPlutusDataSum ty (qtyN, sumTy) =
               [ ( IntE ix
                 , fromPlutusDataCtor ctorN ctorTy pds
                 )
-              | (ix, (ctorN, E.TyProduct ctorTy _)) <- zip [0 ..] (OMap.assocs sumTy)
+              | (ix, (ctorN, LT.TyProduct ctorTy _)) <- zip [0 ..] (OMap.assocs sumTy)
               , not (isUnitProd ctorTy)
               ]
               (\_ -> failParseRef ty)
@@ -51,7 +49,7 @@ fromPlutusDataSum ty (qtyN, sumTy) =
               [ ( IntE ix
                 , succeedParseRef ty @ CtorE (qtyN, (ctorN, ctorTy)) []
                 )
-              | (ix, (ctorN, E.TyProduct ctorTy _)) <- zip [0 ..] (OMap.assocs sumTy)
+              | (ix, (ctorN, LT.TyProduct ctorTy _)) <- zip [0 ..] (OMap.assocs sumTy)
               , isUnitProd ctorTy
               ]
               (\_ -> failParseRef ty)
@@ -69,7 +67,7 @@ fromPlutusDataSum ty (qtyN, sumTy) =
         ]
         (\_ -> failParseRef ty)
 
-fromPlutusDataTys :: [(E.Ty, ValueE)] -> E.Ty -> ([ValueE] -> ValueE) -> ValueE
+fromPlutusDataTys :: [(LT.Ty, ValueE)] -> LT.Ty -> ([ValueE] -> ValueE) -> ValueE
 fromPlutusDataTys pdsToParse tyOut = go pdsToParse []
   where
     go [] tot cont = cont (reverse tot)
@@ -100,7 +98,7 @@ toPlutusDataProduct qprod@(_, prodTy) =
           )
     )
 
-fromPlutusDataProduct :: E.Ty -> QProduct -> ValueE
+fromPlutusDataProduct :: LT.Ty -> QProduct -> ValueE
 fromPlutusDataProduct ty qprod@(_, [fieldTy]) = LamE $ \pdVal ->
   bindParseRef fieldTy ty
     @ (fromPlutusDataRef fieldTy @ pdVal)
@@ -140,7 +138,7 @@ toPlutusDataRecord (qtyN, recTy) =
                 ]
     )
 
-fromPlutusDataRecord :: E.Ty -> QRecord -> ValueE
+fromPlutusDataRecord :: LT.Ty -> QRecord -> ValueE
 fromPlutusDataRecord ty qrec@(_, fields') = case OMap.assocs fields' of
   [field@(_, fieldTy)] -> LamE $ \pdVal ->
     bindParseRef fieldTy ty
@@ -166,11 +164,11 @@ fromPlutusDataRecord ty qrec@(_, fields') = case OMap.assocs fields' of
         pdVal
 
 -- | Hooks
-deriveToPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
+deriveToPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveToPlutusDataImpl mn tydefs = deriveImpl mn tydefs toPlutusDataSum toPlutusDataProduct toPlutusDataRecord
 
-deriveFromPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
-deriveFromPlutusDataImpl mn tydefs ty = deriveImpl mn tydefs (fromPlutusDataSum (fromTy ty)) (fromPlutusDataProduct (fromTy ty)) (fromPlutusDataRecord $ fromTy ty) ty
+deriveFromPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
+deriveFromPlutusDataImpl mn tydefs ty = deriveImpl mn tydefs (fromPlutusDataSum (LT.fromTy ty)) (fromPlutusDataProduct (LT.fromTy ty)) (fromPlutusDataRecord $ LT.fromTy ty) ty
 
 -- | Helpers
 isUnitProd :: Product -> Bool
@@ -184,23 +182,23 @@ findCtorIndex sumTy ctorN = case OMap.findIndex ctorN sumTy of
 -- | Domain value references (functions)
 
 -- | `toPlutusData :: a -> PlutusData`
-toPlutusDataRef :: E.Ty -> ValueE
+toPlutusDataRef :: LT.Ty -> ValueE
 toPlutusDataRef ty = RefE ([ty], "toPlutusData")
 
 -- | `fromPlutusData :: PlutusData -> Parser a`
-fromPlutusDataRef :: E.Ty -> ValueE
+fromPlutusDataRef :: LT.Ty -> ValueE
 fromPlutusDataRef ty = RefE ([ty], "fromPlutusData")
 
 -- | `bindParse :: Parser a -> (a -> Parser b) -> Parser b`
-bindParseRef :: E.Ty -> E.Ty -> ValueE
+bindParseRef :: LT.Ty -> LT.Ty -> ValueE
 bindParseRef tyIn tyOut = RefE ([tyIn, tyOut], "bindParse")
 
 -- | `failParse :: Parser a`
-failParseRef :: E.Ty -> ValueE
+failParseRef :: LT.Ty -> ValueE
 failParseRef ty = RefE ([ty], "failParse")
 
 -- | `succeedParse :: a -> Parser a`
-succeedParseRef :: E.Ty -> ValueE
+succeedParseRef :: LT.Ty -> ValueE
 succeedParseRef ty = RefE ([ty], "succeedParse")
 
 -- | `integerData :: IntE -> PlutusData`
@@ -216,10 +214,10 @@ listToPlutusDataRef :: ValueE
 listToPlutusDataRef = RefE ([], "listData")
 
 -- | `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
-casePlutusDataRef :: E.Ty -> ValueE
+casePlutusDataRef :: LT.Ty -> ValueE
 casePlutusDataRef ty = RefE ([ty], "casePlutusData")
 
-casePlutusData :: E.Ty -> (ValueE -> ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> ValueE -> ValueE
+casePlutusData :: LT.Ty -> (ValueE -> ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> (ValueE -> ValueE) -> ValueE -> ValueE
 casePlutusData ty ctorCase listCase intCase otherCase pdVal =
   casePlutusDataRef ty
     @ LamE (\ix -> LamE $ \pds -> ctorCase ix pds)

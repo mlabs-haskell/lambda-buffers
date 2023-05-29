@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package lambdabuffers;
+
+import "lang.proto";
+
+/* Codegen Input
+
+Codegen Input is a fully self contained list of modules,
+that have been checked by the Compiler.
+*/
+message Input {
+  // Modules to codegen.
+  repeated Module modules = 1;
+}
+
+// Errors internal to the implementation.
+message InternalError {
+  // Error message.
+  string msg = 1;
+  // Source information if meaningful.
+  SourceInfo source_info = 2;
+}
+
+// Unsupported `Opaque` error for a type `ty_name` defined in module
+// `module_name`.
+message UnsupportedOpaqueError {
+  ModuleName module_name = 1;
+  TyName ty_name = 2;
+}
+
+// Unsupported `Class` error for a class `class_name` defined in module
+// `module_name`.
+message UnsupportedClassError {
+  ModuleName module_name = 1;
+  ClassName class_name = 2;
+}
+
+// Codegen Error
+message Error {
+  repeated InternalError internal_errors = 1;
+  repeated UnsupportedOpaqueError unsupported_opaque_errors = 2;
+  repeated UnsupportedClassError unsupported_class_errors = 3;
+}
+
+// Codegen Result ~ a successful Codegen Output.
+message Result {
+}
+
+// Codegen output.
+message Output {
+  oneof output {
+    Error error = 1;
+    Result result = 2;
+  }
+}

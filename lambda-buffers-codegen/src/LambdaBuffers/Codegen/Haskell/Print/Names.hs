@@ -4,8 +4,7 @@ import Control.Lens ((^.))
 import Data.Char qualified as Char
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), dot, enclose, lparen, rparen, squote)
 
 printModName' :: PC.InfoLess PC.ModuleName -> Doc ann

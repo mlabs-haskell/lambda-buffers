@@ -5,17 +5,15 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.Text (Text)
-import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Print.LamVal (printImplementation)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, equals, (<+>))
+import Proto.Codegen qualified as P
 
 lvEqBuiltins :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
 lvEqBuiltins =
@@ -29,17 +27,12 @@ lvEqBuiltins =
 eqClassMethodName :: H.ValueName
 eqClassMethodName = H.MkValueName "=="
 
--- TODO: Handle errors properly.
-printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set H.QValName)
-printDeriveEq mn iTyDefs mkInstanceDoc ty =
-  case deriveEqImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case printImplementation lvEqBuiltins valE of
-        Left err -> Left $ Text.pack $ show err
-        Right implDoc ->
-          let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
-           in Right (instanceDoc, Set.fromList . toList $ lvEqBuiltins)
+printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveEq mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveEqImpl mn iTyDefs ty
+  implDoc <- printImplementation lvEqBuiltins valE
+  let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+  return (instanceDoc, Set.fromList . toList $ lvEqBuiltins)
 
 lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
 lvPlutusDataBuiltins =
@@ -58,20 +51,15 @@ lvPlutusDataBuiltins =
 toPlutusDataClassMethodName :: H.ValueName
 toPlutusDataClassMethodName = H.MkValueName "toBuiltinData"
 
--- TODO: Handle errors properly.
-printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set H.QValName)
-printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty =
-  case deriveToPlutusDataImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case printImplementation lvPlutusDataBuiltins valE of
-        Left err -> Left $ Text.pack $ show err
-        Right implDoc ->
-          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
-           in Right
-                ( instanceDoc
-                , Set.fromList . toList $ lvPlutusDataBuiltins
-                )
+printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveToPlutusDataImpl mn iTyDefs ty
+  implDoc <- printImplementation lvPlutusDataBuiltins valE
+  let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
+  return
+    ( instanceDoc
+    , Set.fromList . toList $ lvPlutusDataBuiltins
+    )
 
 printValueDef :: H.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printHsValName valName <+> equals <+> valDoc
@@ -82,16 +70,12 @@ fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"
 builtinDataToDataRef :: H.QValName
 builtinDataToDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "builtinDataToData")
 
-printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set H.QValName)
-printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty =
-  case deriveFromPlutusDataImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case printImplementation lvPlutusDataBuiltins valE of
-        Left err -> Left $ Text.pack $ show err
-        Right implDoc ->
-          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
-           in Right
-                ( instanceDoc
-                , Set.insert builtinDataToDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
-                )
+printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveFromPlutusDataImpl mn iTyDefs ty
+  implDoc <- printImplementation lvPlutusDataBuiltins valE
+  let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
+  return
+    ( instanceDoc
+    , Set.insert builtinDataToDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+    )

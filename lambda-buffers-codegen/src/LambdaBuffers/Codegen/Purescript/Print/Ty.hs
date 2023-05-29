@@ -1,21 +1,19 @@
 module LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner, printTyTopLevel, printTyAbs) where
 
 import Control.Lens (view, (^.))
-import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Reader.Class (asks)
 import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
-import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
+import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, lbrace, parens, pipe, rbrace, sep, space, (<+>))
 
 {- | `printTyAbs tyN tyAbs` prints the type abstraction `tyAbs` for a type name `tyN`.
@@ -53,7 +51,7 @@ printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
-    Nothing -> throwError (si, "Internal error: Should have an Opaque configured for " <> (Text.pack . show $ tyN))
+    Nothing -> throwInternalError si ("Internal error: Should have an Opaque configured for " <> show tyN)
     Just hqtyn -> return (SynonymTyDef, printPursQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
 
 printTyArg :: PC.TyArg -> Doc ann
@@ -91,7 +89,7 @@ printProd (PC.Product fields _) = do
 printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
 printField tyN f@(PC.Field fn ty) = do
   fnDoc <- case printFieldName tyN fn of
-    Nothing -> throwError (fn ^. #sourceInfo, "TODO(bladyjoker): Internal error: Failed printing `FieldName` for field\n" <> Text.pack (show (tyN, f)))
+    Nothing -> throwInternalError (fn ^. #sourceInfo) ("Failed printing `FieldName` for field\n" <> show (tyN, f))
     Just fnDoc -> return fnDoc
   let tyDoc = printTyTopLevel ty
   return $ fnDoc <+> colon <> colon <+> tyDoc

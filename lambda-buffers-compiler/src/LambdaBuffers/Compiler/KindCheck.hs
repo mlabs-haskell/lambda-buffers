@@ -23,8 +23,8 @@ import LambdaBuffers.Compiler.KindCheck.Derivation (Context, context)
 import LambdaBuffers.Compiler.KindCheck.Inference qualified as I
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:)), kind2ProtoKind)
 import LambdaBuffers.Compiler.KindCheck.Type (Variable (QualifiedTyRef, TyVar))
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
+import LambdaBuffers.ProtoCompat.InfoLess (InfoLess, mkInfoLess)
 
 --------------------------------------------------------------------------------
 -- Types

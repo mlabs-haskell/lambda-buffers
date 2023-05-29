@@ -3,9 +3,9 @@ module LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl) where
 import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Codegen.LamVal (Field, QProduct, QRecord, QSum, ValueE (CaseE, FieldE, LamE, LetE, RefE), (@))
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
-import LambdaBuffers.Compiler.ProtoCompat.Eval qualified as E
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.Compiler.LamTy qualified as LT
+import LambdaBuffers.ProtoCompat qualified as PC
+import Proto.Codegen qualified as P
 
 -- | Eq on values of a Sum type
 eqSum :: QSum -> ValueE
@@ -76,13 +76,13 @@ eqField :: PC.QTyName -> Field -> ValueE -> ValueE -> ValueE
 eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ FieldE (qtyN, fieldName) l @ FieldE (qtyN, fieldName) r
 
 -- | Hooks
-deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either String ValueE
+deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveEqImpl mn tydefs = deriveImpl mn tydefs eqSum eqProduct eqRecord
 
 -- | Domain value references
 
 -- | `eq :: a -> a -> Bool`
-eqE :: E.Ty -> ValueE
+eqE :: LT.Ty -> ValueE
 eqE ty = RefE ([ty], "eq")
 
 -- | `false :: Bool`

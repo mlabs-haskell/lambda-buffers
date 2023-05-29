@@ -14,10 +14,11 @@ module LambdaBuffers.Codegen.Print (
   importClass,
   stValueImports,
   stClassImports,
+  throwInternalError,
 ) where
 
 import Control.Lens (makeLenses, (&), (.~))
-import Control.Monad.Error.Class (MonadError)
+import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (Except, runExcept)
 import Control.Monad.RWS (RWST (runRWST))
 import Control.Monad.RWS.Class (MonadRWS, modify)
@@ -27,16 +28,15 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Config (Config)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc)
-import Proto.Compiler qualified as P
-import Proto.Compiler_Fields qualified as P
+import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
-type Error = (PC.SourceInfo, Text)
+type Error = P.InternalError
 
 data Context qtn qcn = Context
-  { _ctxCompilerInput :: PC.CompilerInput -- TODO(bladyjoker): Use proper `CodegenInput`.
+  { _ctxCompilerInput :: PC.CodegenInput
   , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
   , _ctxTyImports :: Set PC.QTyName
   , _ctxOpaqueTyImports :: Set qtn
@@ -61,12 +61,13 @@ type MonadPrint qtn qcn qvn m = (MonadError Error m, MonadRWS (Context qtn qcn) 
 
 type PrintM qtn qcn qvn = RWST (Context qtn qcn) () (State qcn qvn) (Except Error)
 
+-- | `runPrint ctx printer` runs a printing workflow that yields a module document and a set of package dependencies.
 runPrint ::
   forall qtn qcn qvn.
   (Ord qvn, Ord qcn) =>
   Context qtn qcn ->
-  PrintM qtn qcn qvn (Doc ()) ->
-  Either P.CompilerError (Doc ())
+  PrintM qtn qcn qvn (Doc (), Set Text) ->
+  Either P.Error (Doc (), Set Text)
 runPrint ctx modPrinter =
   let p = runRWST modPrinter ctx (State mempty mempty)
    in case runExcept p of
@@ -74,13 +75,19 @@ runPrint ctx modPrinter =
           Left $
             defMessage
               & P.internalErrors
-                .~ [ defMessage
-                      & P.msg .~ (Text.pack . show $ err) -- TODO(bladyjoker): Introduce SourceInfo in InternalError.
+                .~ [ err
                    ]
-        Right (doc, _, _) -> Right doc
+        Right (r, _, _) -> Right r
 
 importValue :: (MonadPrint qtn qcn qvn m, Ord qvn) => qvn -> m ()
 importValue qvn = modify (\(State vimps cimps) -> State (Set.insert qvn vimps) cimps)
 
 importClass :: (MonadPrint qtn qcn qvn m, Ord qcn) => qcn -> m ()
 importClass qcn = modify (\(State vimps cimps) -> State vimps (Set.insert qcn cimps))
+
+throwInternalError :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> String -> m a
+throwInternalError si msg =
+  throwError $
+    defMessage
+      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> Text.pack msg
+      & P.sourceInfo .~ PC.toProto si

@@ -12,8 +12,7 @@ import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQClassName, printP
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner)
 import LambdaBuffers.Codegen.Purescript.Syntax (className, normalValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, comma, encloseSep, equals, group, hardline, lparen, rparen, space, (<+>))
 
 printInstanceDef :: Purs.QClassName -> PC.Ty -> (Doc ann -> Doc ann)

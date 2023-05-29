@@ -16,13 +16,14 @@ module LambdaBuffers.Codegen.Purescript.Syntax (
   primValName,
   TyDefKw (..),
   className,
+  pkgNameToText,
 ) where
 
 import Control.Lens ((^.))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat.Types qualified as PC
 
 type QTyName = (PackageName, ModuleName, TyName)
 type QClassName = (PackageName, ModuleName, ClassName)
@@ -50,6 +51,9 @@ fromLbTyName tn = MkTyName $ tn ^. #name
 
 fromLbModuleName :: PC.ModuleName -> ModuleName
 fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
+
+pkgNameToText :: PackageName -> Text
+pkgNameToText (MkPackageName pkg) = pkg
 
 pkgFromLbModuleName :: PC.ModuleName -> PackageName
 pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])

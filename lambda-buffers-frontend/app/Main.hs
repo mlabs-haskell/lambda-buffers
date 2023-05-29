@@ -1,7 +1,8 @@
 module Main (main) where
 
 import Control.Applicative (Alternative (many), optional, (<**>))
-import LambdaBuffers.Frontend.Cli.Compile (CompileOpts (CompileOpts), compile)
+import LambdaBuffers.Frontend.Cli.Build (BuildOpts (BuildOpts), build)
+import LambdaBuffers.Frontend.Cli.Env qualified as Env
 import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
 import Options.Applicative (
   Parser,
@@ -26,7 +27,7 @@ import Options.Applicative (
  )
 
 data Command
-  = Compile CompileOpts
+  = Build BuildOpts
   | Format FormatOpts
 
 importPathP :: Parser FilePath
@@ -38,21 +39,31 @@ importPathP =
         <> help "Directory to look for LambdaBuffer Module source files (.lbf)"
     )
 
-compileOptsP :: Parser CompileOpts
-compileOptsP =
-  CompileOpts
+buildOptsP :: Parser BuildOpts
+buildOptsP =
+  BuildOpts
     <$> many importPathP
     <*> strOption
       ( long "file"
           <> short 'f'
           <> metavar "FILEPATH"
-          <> help "LambdaBuffers file (.lbf) to compile"
+          <> help "LambdaBuffers file (.lbf) to build"
       )
-    <*> strOption
-      ( long "compiler"
-          <> short 'c'
-          <> metavar "FILEPATH"
-          <> help "LambdaBuffers compiler location (lambda-buffers-compiler-cli)"
+    <*> optional
+      ( strOption
+          ( long "compiler"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help ("LambdaBuffers Compiler location (if none is set the " <> Env.lbcVar <> " environment variable is used)")
+          )
+      )
+    <*> optional
+      ( strOption
+          ( long "gen"
+              <> short 'g'
+              <> metavar "FILEPATH"
+              <> help ("LambdaBuffers Codegen location (if none is set the " <> Env.lbgVar <> " environment variable is used)")
+          )
       )
     <*> flag
       False
@@ -94,8 +105,8 @@ optionsP :: Parser Command
 optionsP =
   subparser $
     command
-      "compile"
-      (info (Compile <$> compileOptsP <* helper) (progDesc "Compile a LambdaBuffers Module (.lbf)"))
+      "build"
+      (info (Build <$> buildOptsP <* helper) (progDesc "Build a LambdaBuffers Module (.lbf)"))
       <> command
         "format"
         (info (Format <$> formatOptsP <* helper) (progDesc "Format a LambdaBuffers Module (.lbf)"))
@@ -107,5 +118,5 @@ main :: IO ()
 main = do
   cmd <- customExecParser (prefs (showHelpOnEmpty <> showHelpOnError)) parserInfo
   case cmd of
-    Compile opts -> compile opts
+    Build opts -> build opts
     Format opts -> format opts

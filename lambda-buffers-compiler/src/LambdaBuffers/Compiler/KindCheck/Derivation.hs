@@ -16,7 +16,7 @@ import Control.Lens (Lens', lens, makeLenses, (&), (.~), (^.))
 import Data.Map qualified as M
 import LambdaBuffers.Compiler.KindCheck.Kind (Kind)
 import LambdaBuffers.Compiler.KindCheck.Type (Type, Variable)
-import LambdaBuffers.Compiler.ProtoCompat.InfoLess (InfoLess)
+import LambdaBuffers.ProtoCompat.InfoLess (InfoLess)
 import Prettyprinter (
   Doc,
   Pretty (pretty),

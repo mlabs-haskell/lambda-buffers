@@ -3,10 +3,14 @@
 , mlabs-tooling
 , compiler-nix-name
 , index-state
-, compilerHsPb
+, lambda-buffers-lang-hs-pb
+, lambda-buffers-compiler-hs-pb
+, lambda-buffers-codegen-hs-pb
 , lambda-buffers-compiler
 , lbc
 , lbg
+, lbg-haskell
+, lbg-purescript
 , commonTools
 , shellHook
 }:
@@ -20,7 +24,9 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      "${compilerHsPb}"
+      "${lambda-buffers-lang-hs-pb}"
+      "${lambda-buffers-compiler-hs-pb}"
+      "${lambda-buffers-codegen-hs-pb}"
       "${lambda-buffers-compiler}"
     ];
 
@@ -42,7 +48,7 @@ let
 
       exactDeps = true;
 
-      nativeBuildInputs = [ lbc lbg ] ++ builtins.attrValues commonTools;
+      nativeBuildInputs = [ lbc lbg lbg-haskell lbg-purescript ] ++ builtins.attrValues commonTools;
 
       tools = {
         cabal = { };

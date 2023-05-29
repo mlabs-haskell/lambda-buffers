@@ -3,8 +3,6 @@ module LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDerive
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
-import Data.Text (Text)
-import Data.Text qualified as Text
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
@@ -12,9 +10,9 @@ import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, derive
 import LambdaBuffers.Codegen.Purescript.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
-import LambdaBuffers.Compiler.ProtoCompat.Indexing qualified as PC
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, equals, (<+>))
+import Proto.Codegen qualified as P
 
 lvEqBuiltins :: Map LV.ValueName Purs.QValName
 lvEqBuiltins =
@@ -28,17 +26,12 @@ lvEqBuiltins =
 eqClassMethodName :: Purs.ValueName
 eqClassMethodName = Purs.MkValueName "eq"
 
--- TODO: Handle errors properly.
-printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
-printDeriveEq mn iTyDefs mkInstanceDoc ty =
-  case deriveEqImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case LV.runPrint lvEqBuiltins (printValueE valE) of
-        Left err -> Left $ Text.pack $ show err
-        Right (implDoc, imports) ->
-          let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
-           in Right (instanceDoc, imports)
+printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Purs.QValName)
+printDeriveEq mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveEqImpl mn iTyDefs ty
+  (implDoc, imports) <- LV.runPrint lvEqBuiltins (printValueE valE)
+  let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+  return (instanceDoc, imports)
 
 lvPlutusDataBuiltins :: Map LV.ValueName Purs.QValName
 lvPlutusDataBuiltins =
@@ -60,34 +53,25 @@ toPlutusDataClassMethodName = Purs.MkValueName "toData"
 fromPlutusDataClassMethodName :: Purs.ValueName
 fromPlutusDataClassMethodName = Purs.MkValueName "fromData"
 
--- TODO: Handle errors properly.
-printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
-printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty =
-  case deriveToPlutusDataImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
-        Left err -> Left $ Text.pack $ show err
-        Right (implDoc, imports) ->
-          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
-           in Right
-                ( instanceDoc
-                , imports
-                )
+printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Purs.QValName)
+printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveToPlutusDataImpl mn iTyDefs ty
+  (implDoc, imports) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
+  let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
+  return
+    ( instanceDoc
+    , imports
+    )
 
-printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either Text (Doc ann, Set Purs.QValName)
-printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty =
-  case deriveFromPlutusDataImpl mn iTyDefs ty of
-    Left err -> Left $ Text.pack err
-    Right valE ->
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
-        Left err -> Left $ Text.pack $ show err
-        Right (implDoc, imports) ->
-          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
-           in Right
-                ( instanceDoc
-                , imports
-                )
+printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Purs.QValName)
+printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveFromPlutusDataImpl mn iTyDefs ty
+  (implDoc, imports) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
+  let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
+  return
+    ( instanceDoc
+    , imports
+    )
 
 printValueDef :: Purs.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printPursValName valName <+> equals <+> valDoc

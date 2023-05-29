@@ -1,7 +1,7 @@
 module LambdaBuffers.Compiler.KindCheck.Kind (Kind (KType, (:->:), KVar), kind2ProtoKind, Atom) where
 
 import GHC.Generics (Generic)
-import LambdaBuffers.Compiler.ProtoCompat.Types qualified as PC
+import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Pretty (pretty), parens, (<+>))
 
 infixr 8 :->:
