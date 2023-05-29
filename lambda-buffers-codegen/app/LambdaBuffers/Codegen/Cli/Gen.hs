@@ -24,7 +24,7 @@ import System.FilePath.Lens (extension)
 data GenOpts = GenOpts
   { _inputFile :: FilePath
   , _outputFile :: FilePath
-  , _printDir :: FilePath
+  , _genDir :: FilePath
   , _debug :: Bool
   }
   deriving stock (Eq, Show)
@@ -42,7 +42,7 @@ gen opts cont = do
   logInfo $ "Code generation Input at " <> opts ^. inputFile
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
-  initialisePrintDir (opts ^. printDir)
+  initialisePrintDir (opts ^. genDir)
   let res = cont ci'
   allErrors <-
     foldrM
@@ -58,8 +58,8 @@ gen opts cont = do
                 "Code generation succeeded for module "
                   <> PC.withInfoLess mn (show . PC.prettyModuleName)
                   <> " at file path "
-                  <> (opts ^. printDir </> fp)
-              writeFileAndCreate (opts ^. printDir </> fp) printed
+                  <> (opts ^. genDir </> fp)
+              writeFileAndCreate (opts ^. genDir </> fp) printed
               return errs
       )
       []
@@ -78,7 +78,7 @@ runFromProto :: FilePath -> P.Input -> IO PC.CodegenInput
 runFromProto ofp ci = case PC.codegenInputFromProto ci of
   Left err -> do
     writeCodegenError ofp [err]
-    logError $ "Code generation failed due to problem with the input file, inspect the error in " <> ofp <> " to find out the details"
+    logError $ "Code generation failed due to problems with the input file, inspect the error in " <> ofp <> " to find out the details"
     exitFailure
   Right ci' -> return ci'
 

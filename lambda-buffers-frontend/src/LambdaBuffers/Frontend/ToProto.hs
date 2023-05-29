@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.ToProto (toCompilerInput) where
+module LambdaBuffers.Frontend.ToProto (toModules) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Except (Except, MonadError (throwError), runExcept)
@@ -41,8 +41,6 @@ import LambdaBuffers.Frontend.Syntax (
   defSourceInfo,
  )
 import LambdaBuffers.Frontend.Utils (Scope, strip)
-import Proto.Compiler qualified as Compiler
-import Proto.Compiler_Fields qualified as Compiler
 import Proto.Lang qualified as Lang
 import Proto.Lang_Fields qualified as Lang
 
@@ -51,16 +49,14 @@ type ToProto a = (ReaderT (ModuleName (), Scope) (Except ToProtoError)) a
 data ToProtoError = MissingTyRef (TyRef SourceInfo) | MissingClassRef (ClassRef SourceInfo)
   deriving stock (Show, Eq)
 
-toCompilerInput :: FrontendResult -> Either ToProtoError Compiler.Input
-toCompilerInput (FrontendResult modsWithScope) = do
-  mods <-
-    for
-      (Map.toList modsWithScope)
-      ( \(modName, (m, scope)) -> do
-          let errM = runReaderT (toModule m) (modName, scope)
-          runExcept errM
-      )
-  return $ defMessage & Compiler.modules .~ mods
+toModules :: FrontendResult -> Either ToProtoError [Lang.Module]
+toModules (FrontendResult modsWithScope) =
+  for
+    (Map.toList modsWithScope)
+    ( \(modName, (m, scope)) -> do
+        let errM = runReaderT (toModule m) (modName, scope)
+        runExcept errM
+    )
 
 toModule :: Module SourceInfo -> ToProto Lang.Module
 toModule (Module mn _ stmts info) = do

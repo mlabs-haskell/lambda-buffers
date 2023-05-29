@@ -2,6 +2,7 @@ module Main (main) where
 
 import Control.Applicative (Alternative (many), optional, (<**>))
 import LambdaBuffers.Frontend.Cli.Build (BuildOpts (BuildOpts), build)
+import LambdaBuffers.Frontend.Cli.Env qualified as Env
 import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
 import Options.Applicative (
   Parser,
@@ -48,11 +49,21 @@ buildOptsP =
           <> metavar "FILEPATH"
           <> help "LambdaBuffers file (.lbf) to build"
       )
-    <*> strOption
-      ( long "compiler"
-          <> short 'c'
-          <> metavar "FILEPATH"
-          <> help "LambdaBuffers compiler location (lambda-buffers-compiler-cli)"
+    <*> optional
+      ( strOption
+          ( long "compiler"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help ("LambdaBuffers Compiler location (if none is set the " <> Env.lbcVar <> " environment variable is used)")
+          )
+      )
+    <*> optional
+      ( strOption
+          ( long "gen"
+              <> short 'g'
+              <> metavar "FILEPATH"
+              <> help ("LambdaBuffers Codegen location (if none is set the " <> Env.lbgVar <> " environment variable is used)")
+          )
       )
     <*> flag
       False

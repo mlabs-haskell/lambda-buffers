@@ -9,6 +9,8 @@
 , lambda-buffers-compiler
 , lbc
 , lbg
+, lbg-haskell
+, lbg-purescript
 , commonTools
 , shellHook
 }:
@@ -46,7 +48,7 @@ let
 
       exactDeps = true;
 
-      nativeBuildInputs = [ lbc lbg ] ++ builtins.attrValues commonTools;
+      nativeBuildInputs = [ lbc lbg lbg-haskell lbg-purescript ] ++ builtins.attrValues commonTools;
 
       tools = {
         cabal = { };

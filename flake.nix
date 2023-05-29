@@ -106,17 +106,28 @@
             additional = {
               inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
-              lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
-              lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+              inherit (clis) lbc lbg lbg-haskell lbg-purescript;
             };
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
           # LambdaBuffers CLIs
-          clis = {
-            lbf = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
+          clis = rec {
+            lbf-pure = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
             lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
             lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
+            lbg-haskell = pkgs.writeShellScriptBin "lbg-haskell" ''
+              ${lbg}/bin/lbg gen-haskell $@
+            '';
+            lbg-purescript = pkgs.writeScriptBin "lbg-purescript" ''
+              ${lbg}/bin/lbg gen-purescript $@
+            '';
+            lbf = pkgs.writeScriptBin "lbf" ''
+              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
+              export LB_COMPILER=${lbc}/bin/lbc;
+              ${lbf-pure}/bin/lbf $@
+            '';
+
           };
 
           # Purescript/cardano-transaction-lib environment.
@@ -137,7 +148,13 @@
         in
         rec {
           # Standard flake attributes
-          packages = { inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; } // compilerFlake.packages // frontendFlake.packages // codegenFlake.packages;
+          packages = {
+            inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
+          }
+          // compilerFlake.packages
+          // frontendFlake.packages
+          // codegenFlake.packages
+          // clis;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
