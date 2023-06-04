@@ -21,7 +21,7 @@ import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
-import System.Exit (exitFailure)
+import System.Exit (ExitCode (ExitFailure), exitFailure)
 import System.FilePath ((<.>), (</>))
 import System.FilePath.Lens (extension)
 import System.IO.Temp (withSystemTempDirectory)
@@ -32,6 +32,8 @@ data BuildOpts = BuildOpts
   , _moduleFilepath :: FilePath
   , _compilerCliFilepath :: Maybe FilePath
   , _codegenCliFilepath :: Maybe FilePath
+  , _codegenGenDir :: FilePath
+  , _codegenCliOpts :: [String]
   , _debug :: Bool
   , _workingDir :: Maybe FilePath
   }
@@ -66,7 +68,7 @@ callCompiler opts tempDir compInp = do
   writeCompilerInput compInpFp compInp
   lbcFp <- maybe Env.getLbcFromEnvironment return (opts ^. compilerCliFilepath)
   let args = ["compile", "--input-file", compInpFp, "--output-file", compOutFp]
-  logInfo $ "Calling: " <> showCommandForUser lbcFp args
+  call lbcFp args
   _ <- readProcessWithExitCode lbcFp args ""
   compOut <- readCompilerOutput compOutFp
   if compOut ^. Compiler.error == defMessage
@@ -104,18 +106,30 @@ readCompilerOutput fp = do
       logError $ "Unknown Compiler Output format (wanted .pb or .textproto) " <> ext
       exitFailure
 
+call :: FilePath -> [String] -> IO ()
+call cliFp cliArgs = do
+  logInfo $ "Calling: " <> showCommandForUser cliFp cliArgs
+  (exitCode, stdOut, stdErr) <- readProcessWithExitCode cliFp cliArgs ""
+  case exitCode of
+    (ExitFailure _) -> do
+      logError $ "Error from:" <> showCommandForUser cliFp cliArgs
+      logError stdErr
+      logError stdOut
+      exitFailure
+    _ -> do
+      logInfo $ "Success from: " <> showCommandForUser cliFp cliArgs
+      return ()
+
 callCodegen :: BuildOpts -> FilePath -> Codegen.Input -> IO Codegen.Result
 callCodegen opts tempDir compInp = do
   let ext = if opts ^. debug then "textproto" else "pb"
       workDir = fromMaybe tempDir (opts ^. workingDir)
       compInpFp = workDir </> "codegen-input" <.> ext
       compOutFp = workDir </> "codegen-output" <.> ext
-      genDirFp = workDir </> "gen"
   writeCodegenInput compInpFp compInp
   lbgFp <- maybe Env.getLbgFromEnvironment return (opts ^. codegenCliFilepath)
-  let args = ["--input", compInpFp, "--output", compOutFp, "--gen-dir", genDirFp]
-  logInfo $ "Calling: " <> showCommandForUser lbgFp args
-  _ <- readProcessWithExitCode lbgFp args ""
+  let args = ["--input", compInpFp, "--output", compOutFp, "--gen-dir", opts ^. codegenGenDir] ++ opts ^. codegenCliOpts
+  call lbgFp args
   compOut <- readCodegenOutput compOutFp
   if compOut ^. Codegen.error == defMessage
     then return $ compOut ^. Codegen.result

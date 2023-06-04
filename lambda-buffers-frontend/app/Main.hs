@@ -7,6 +7,7 @@ import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
 import Options.Applicative (
   Parser,
   ParserInfo,
+  auto,
   command,
   customExecParser,
   flag,
@@ -65,6 +66,18 @@ buildOptsP =
               <> help ("LambdaBuffers Codegen location (if none is set the " <> Env.lbgVar <> " environment variable is used)")
           )
       )
+    <*> strOption
+      ( long "gen-dir"
+          <> metavar "FILEPATH"
+          <> help "Directory where the Codegen will store any output produced from the LambdaBuffers schema"
+      )
+    <*> many
+      ( strOption
+          ( long "gen-opt"
+              <> metavar "ARGUMENT"
+              <> help "Additional options to provide to the Codegen module"
+          )
+      )
     <*> flag
       False
       True
@@ -78,7 +91,7 @@ buildOptsP =
           ( long "work-dir"
               <> short 'w'
               <> metavar "FILEPATH"
-              <> help "Working directory used to communicate with the Compiler"
+              <> help "Working directory used to communicate with the Compiler and Codegen modules"
               <> showDefault
           )
       )

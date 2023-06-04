@@ -1,12 +1,14 @@
 module LambdaBuffers.Codegen.Cli.GenHaskell (GenOpts (..), gen) where
 
 import Control.Lens (makeLenses, (^.))
-import Data.Aeson (decodeFileStrict)
+import Control.Monad (unless)
+import Data.Aeson (decodeFileStrict')
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Haskell (runPrint)
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
 import Paths_lambda_buffers_codegen qualified as Paths
+import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
 data GenOpts = MkGenOpts
@@ -27,7 +29,14 @@ gen opts = do
 
 readHaskellConfig :: FilePath -> IO H.Config
 readHaskellConfig f = do
-  mayCfg <- decodeFileStrict f
+  fExists <- doesFileExist f
+  unless
+    fExists
+    ( do
+        logError $ "Provided Haskell Codegen configuration file doesn't exists: " <> f
+        exitFailure
+    )
+  mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
       logError $ "Invalid Haskell configuration file " <> f
