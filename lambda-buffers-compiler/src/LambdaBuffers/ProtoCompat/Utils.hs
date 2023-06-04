@@ -10,6 +10,7 @@ import LambdaBuffers.ProtoCompat.IsCompat.Lang ()
 import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), dot, encloseSep)
 import Proto.Codegen qualified as Codegen
+import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
 import Proto.Lang qualified as Lang
@@ -50,4 +51,6 @@ instance Monoid Codegen.Error where
 instance Semigroup Codegen.Error where
   l <> r =
     defMessage
-      & Compiler.internalErrors .~ l ^. Compiler.internalErrors <> r ^. Compiler.internalErrors
+      & Codegen.internalErrors .~ l ^. Codegen.internalErrors <> r ^. Codegen.internalErrors
+      & Codegen.unsupportedOpaqueErrors .~ l ^. Codegen.unsupportedOpaqueErrors <> r ^. Codegen.unsupportedOpaqueErrors
+      & Codegen.unsupportedClassErrors .~ l ^. Codegen.unsupportedClassErrors <> r ^. Codegen.unsupportedClassErrors

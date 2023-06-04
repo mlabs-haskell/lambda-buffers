@@ -7,7 +7,6 @@ import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
 import Options.Applicative (
   Parser,
   ParserInfo,
-  auto,
   command,
   customExecParser,
   flag,

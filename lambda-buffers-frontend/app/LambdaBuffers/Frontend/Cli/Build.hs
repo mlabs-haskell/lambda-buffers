@@ -1,6 +1,7 @@
 module LambdaBuffers.Frontend.Cli.Build (BuildOpts (..), build) where
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
+import Control.Monad (unless)
 import Data.ByteString qualified as BS
 import Data.Foldable (for_)
 import Data.Maybe (fromMaybe)
@@ -21,6 +22,7 @@ import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
+import System.Directory (doesDirectoryExist)
 import System.Exit (ExitCode (ExitFailure), exitFailure)
 import System.FilePath ((<.>), (</>))
 import System.FilePath.Lens (extension)
@@ -46,23 +48,36 @@ build :: BuildOpts -> IO ()
 build opts = do
   errOrMod <- runFrontend (opts ^. importPaths) (opts ^. moduleFilepath)
   case errOrMod of
-    Left err -> logFrontendError err
+    Left err -> do
+      logFrontendError err
+      exitFailure
     Right res -> do
-      logInfo "OK"
       mods <- either (\e -> error $ "Failed building Proto API modules: " <> show e) return (toModules res)
       withSystemTempDirectory
         "lambda-buffers-frontend"
         ( \tempDir -> do
-            _compRes <- callCompiler opts tempDir (defMessage & Compiler.modules .~ mods)
+            workDir <- getWorkDir opts tempDir
+            _compRes <- callCompiler opts workDir (defMessage & Compiler.modules .~ mods)
             logInfo "Compilation OK"
-            _cdgRes <- callCodegen opts tempDir (defMessage & Codegen.modules .~ mods)
+            _cdgRes <- callCodegen opts workDir (defMessage & Codegen.modules .~ mods)
             logInfo "Codegen OK"
         )
 
+getWorkDir :: BuildOpts -> FilePath -> IO FilePath
+getWorkDir opts tempDir = do
+  let workDir = fromMaybe tempDir (opts ^. workingDir)
+  exists <- doesDirectoryExist workDir
+  unless
+    exists
+    ( do
+        logError $ "Provided working directory " <> workDir <> " doesn't exist (did you forget to create it first?)"
+        exitFailure
+    )
+  return workDir
+
 callCompiler :: BuildOpts -> FilePath -> Compiler.Input -> IO Compiler.Result
-callCompiler opts tempDir compInp = do
+callCompiler opts workDir compInp = do
   let ext = if opts ^. debug then "textproto" else "pb"
-      workDir = fromMaybe tempDir (opts ^. workingDir)
       compInpFp = workDir </> "compiler-input" <.> ext
       compOutFp = workDir </> "compiler-output" <.> ext
   writeCompilerInput compInpFp compInp
@@ -121,9 +136,8 @@ call cliFp cliArgs = do
       return ()
 
 callCodegen :: BuildOpts -> FilePath -> Codegen.Input -> IO Codegen.Result
-callCodegen opts tempDir compInp = do
+callCodegen opts workDir compInp = do
   let ext = if opts ^. debug then "textproto" else "pb"
-      workDir = fromMaybe tempDir (opts ^. workingDir)
       compInpFp = workDir </> "codegen-input" <.> ext
       compOutFp = workDir </> "codegen-output" <.> ext
   writeCodegenInput compInpFp compInp
