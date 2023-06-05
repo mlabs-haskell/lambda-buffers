@@ -12,8 +12,8 @@ import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _common :: Gen.GenOpts
-  , _config :: Maybe FilePath
+  { _config :: Maybe FilePath
+  , _common :: Gen.GenOpts
   }
 
 makeLenses 'MkGenOpts
