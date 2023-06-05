@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses) where
+module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses, moduleNameFromText) where
 
 import Control.Lens (makeLenses, view)
 import Data.Aeson (FromJSON, ToJSON, parseJSON)
@@ -32,6 +32,14 @@ data JsonConfig qtn qcn = JsonConfig
 moduleNameToText :: PC.InfoLess PC.ModuleName -> Text
 moduleNameToText = Text.pack . show . (`PC.withInfoLess` PC.prettyModuleName)
 
+{- | `moduleNameFromText "Foo.Bar" = ["Foo", "Bar"]`
+ TODO(bladyjoker): Use ModuleNamePart parsers from the Compiler.
+-}
+moduleNameFromText :: MonadFail m => Text -> m (PC.InfoLess PC.ModuleName)
+moduleNameFromText txt = case Text.split (== '.') txt of
+  [] -> fail "[LambdaBuffers.Codegen.Config] Got an empty text but wanted a LambdaBuffers module name"
+  parts -> return (PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart p def | p <- parts] def)
+
 -- | `qTyNameToText (["Foo", "Bar"], "Baz") = "Foo.Bar.Baz"`
 qTyNameToText :: PC.QTyName -> Text
 qTyNameToText (mn, tyn) = moduleNameToText mn <> "." <> PC.withInfoLess tyn (view #name)
@@ -41,11 +49,11 @@ qClassNameToText :: PC.QClassName -> Text
 qClassNameToText (mn, cn) = moduleNameToText mn <> "." <> PC.withInfoLess cn (view #name)
 
 qNameFromText :: MonadFail m => Text -> m (PC.InfoLess PC.ModuleName, Text)
-qNameFromText qn =
-  let xs = Text.split (== '.') qn
+qNameFromText txt =
+  let xs = Text.split (== '.') txt
    in case List.reverse xs of
-        [] -> fail "Got an empty text but wanted a qualified LambdaBuffers name (<module name>.<type name|class name>)"
-        [x] -> fail $ "Got a single text " <> show x <> " but wanted a qualified LambdaBuffers name (<module name>.<type name|class name>)"
+        [] -> fail "[LambdaBuffers.Codegen.Config] Got an empty text but wanted a qualified LambdaBuffers name (<module name>.<type name|class name>)"
+        [x] -> fail $ "[LambdaBuffers.Codegen.Config] Got a single text " <> show x <> " but wanted a qualified LambdaBuffers name (<module name>.<type name|class name>)"
         (n : mn) ->
           return
             ( PC.mkInfoLess $ PC.ModuleName [PC.ModuleNamePart p def | p <- List.reverse mn] def

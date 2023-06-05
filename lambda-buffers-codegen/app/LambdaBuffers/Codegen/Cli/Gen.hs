@@ -4,17 +4,21 @@ import Control.Lens (makeLenses, (&), (.~), (^.))
 import Control.Monad (when)
 import Data.Aeson (encodeFile)
 import Data.ByteString qualified as BS
-import Data.Foldable (Foldable (fold), foldrM)
+import Data.Foldable (Foldable (fold, toList), foldrM)
+import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens qualified as Pb
 import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
+import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
@@ -28,6 +32,7 @@ data GenOpts = GenOpts
   , _outputFile :: FilePath
   , _genDir :: FilePath
   , _debug :: Bool
+  , _requestedModules :: NonEmpty String
   }
   deriving stock (Eq, Show)
 
@@ -39,34 +44,16 @@ logInfo msg = putStrLn $ "[lbg][INFO] " <> msg <> "."
 logError :: String -> IO ()
 logError msg = putStrLn $ "[lbg][ERROR] " <> msg <> "."
 
-gen :: GenOpts -> (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text, Set Text))) -> IO ()
+type Handler = (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text, Set Text)))
+
+gen :: GenOpts -> Handler -> IO ()
 gen opts cont = do
   logInfo $ "Code generation Input at " <> opts ^. inputFile
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   initialisePrintDir (opts ^. genDir)
   let res = cont ci'
-  (allErrors, allDeps) <-
-    foldrM
-      ( \(mn, errOrPrint) (errs, deps) -> do
-          case errOrPrint of
-            Left err -> do
-              logInfo $
-                "Code generation failed for module "
-                  <> PC.withInfoLess mn (show . PC.prettyModuleName)
-              return (err : errs, deps)
-            Right (fp, printed, deps') -> do
-              logInfo $
-                "Code generation succeeded for module "
-                  <> PC.withInfoLess mn (show . PC.prettyModuleName)
-                  <> " at file path "
-                  <> (opts ^. genDir </> fp)
-              writeFileAndCreate (opts ^. genDir </> fp) printed
-              return (errs, deps <> deps')
-      )
-      ([], mempty)
-      (Map.toList res)
-
+  (allErrors, allDeps) <- collectErrorsAndDeps opts res
   if null allErrors
     then do
       writeCodegenResult (opts ^. outputFile)
@@ -76,6 +63,35 @@ gen opts cont = do
       writeCodegenError (opts ^. outputFile) allErrors
       logError "Code generation reported errors"
   logInfo $ "Code generation Output at " <> opts ^. outputFile
+
+restrictToRequestedModules :: forall {b} {a}. GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)) -> IO (Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)))
+restrictToRequestedModules opts res = do
+  let uniqMns = toList $ NonEmpty.nub $ opts ^. requestedModules
+  onlyModules <- (Config.moduleNameFromText . Text.pack) `traverse` uniqMns
+  return $ Map.restrictKeys res (Set.fromList onlyModules)
+
+collectErrorsAndDeps :: forall {b} {a}. Monoid b => GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)) -> IO ([a], b)
+collectErrorsAndDeps opts res = do
+  res' <- restrictToRequestedModules opts res
+  foldrM
+    ( \(mn, errOrPrint) (errs, deps) -> do
+        case errOrPrint of
+          Left err -> do
+            logInfo $
+              "Code generation failed for module "
+                <> PC.withInfoLess mn (show . PC.prettyModuleName)
+            return (err : errs, deps)
+          Right (fp, printed, deps') -> do
+            logInfo $
+              "Code generation succeeded for module "
+                <> PC.withInfoLess mn (show . PC.prettyModuleName)
+                <> " at file path "
+                <> (opts ^. genDir </> fp)
+            writeFileAndCreate (opts ^. genDir </> fp) printed
+            return (errs, deps <> deps')
+    )
+    ([], mempty)
+    (Map.toList res')
 
 runFromProto :: FilePath -> P.Input -> IO PC.CodegenInput
 runFromProto ofp ci = case PC.codegenInputFromProto ci of

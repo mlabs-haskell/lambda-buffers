@@ -119,6 +119,7 @@ executable lbf
   build-depends:
     , base                        >=4.16
     , bytestring                  >=0.11
+    , directory
     , filepath                    >=1.4
     , lambda-buffers-codegen-pb   >=0.1
     , lambda-buffers-compiler-pb  >=0.1

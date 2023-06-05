@@ -22,10 +22,12 @@ import Options.Applicative (
   showDefault,
   showHelpOnEmpty,
   showHelpOnError,
+  strArgument,
   strOption,
   subparser,
   value,
  )
+import Options.Applicative.NonEmpty (some1)
 
 data Command
   = GenHaskell Haskell.GenOpts
@@ -61,12 +63,12 @@ genOptsP =
           <> help "Run in debug mode"
           <> showDefault
       )
+    <*> some1 (strArgument (metavar "[module name]..." <> help "Modules to generate code for"))
 
 haskellGenOptsP :: Parser Haskell.GenOpts
 haskellGenOptsP =
   Haskell.MkGenOpts
-    <$> genOptsP
-    <*> optional
+    <$> optional
       ( strOption
           ( long "config"
               <> short 'c'
@@ -74,12 +76,12 @@ haskellGenOptsP =
               <> help "Configuration file for the Haskell codegen module"
           )
       )
+    <*> genOptsP
 
 purescriptGenOptsP :: Parser Purescript.GenOpts
 purescriptGenOptsP =
   Purescript.MkGenOpts
-    <$> genOptsP
-    <*> optional
+    <$> optional
       ( strOption
           ( long "config"
               <> short 'c'
@@ -87,9 +89,10 @@ purescriptGenOptsP =
               <> help "Configuration file for the Purescript codegen module"
           )
       )
+    <*> genOptsP
 
-optionsP :: Parser Command
-optionsP =
+commandP :: Parser Command
+commandP =
   subparser $
     command
       "gen-haskell"
@@ -99,7 +102,7 @@ optionsP =
         (info (GenPurescript <$> purescriptGenOptsP <* helper) (progDesc "Generate Purescript code from a compiled LambdaBuffers schema"))
 
 parserInfo :: ParserInfo Command
-parserInfo = info (optionsP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
+parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
 
 main :: IO ()
 main = do

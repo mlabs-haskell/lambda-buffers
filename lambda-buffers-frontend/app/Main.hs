@@ -22,9 +22,11 @@ import Options.Applicative (
   showDefault,
   showHelpOnEmpty,
   showHelpOnError,
+  strArgument,
   strOption,
   subparser,
  )
+import Options.Applicative.NonEmpty (some1)
 
 data Command
   = Build BuildOpts
@@ -43,12 +45,6 @@ buildOptsP :: Parser BuildOpts
 buildOptsP =
   BuildOpts
     <$> many importPathP
-    <*> strOption
-      ( long "file"
-          <> short 'f'
-          <> metavar "FILEPATH"
-          <> help "LambdaBuffers file (.lbf) to build"
-      )
     <*> optional
       ( strOption
           ( long "compiler"
@@ -65,6 +61,18 @@ buildOptsP =
               <> help ("LambdaBuffers Codegen location (if none is set the " <> Env.lbgVar <> " environment variable is used)")
           )
       )
+    <*> strOption
+      ( long "gen-dir"
+          <> metavar "FILEPATH"
+          <> help "Directory where the Codegen will store any output produced from the LambdaBuffers schema"
+      )
+    <*> many
+      ( strOption
+          ( long "gen-opt"
+              <> metavar "ARGUMENT"
+              <> help "Additional options to provide to the Codegen module"
+          )
+      )
     <*> flag
       False
       True
@@ -78,10 +86,11 @@ buildOptsP =
           ( long "work-dir"
               <> short 'w'
               <> metavar "FILEPATH"
-              <> help "Working directory used to communicate with the Compiler"
+              <> help "Working directory used to communicate with the Compiler and Codegen components"
               <> showDefault
           )
       )
+    <*> some1 (strArgument (metavar "[.lbf SCHEMA]..." <> help ".lbf schemas to build"))
 
 formatOptsP :: Parser FormatOpts
 formatOptsP =
@@ -101,18 +110,18 @@ formatOptsP =
           <> showDefault
       )
 
-optionsP :: Parser Command
-optionsP =
+commandP :: Parser Command
+commandP =
   subparser $
     command
       "build"
-      (info (Build <$> buildOptsP <* helper) (progDesc "Build a LambdaBuffers Module (.lbf)"))
+      (info (Build <$> buildOptsP <* helper) (progDesc "Build LambdaBuffers .lbf schemas"))
       <> command
         "format"
         (info (Format <$> formatOptsP <* helper) (progDesc "Format a LambdaBuffers Module (.lbf)"))
 
 parserInfo :: ParserInfo Command
-parserInfo = info (optionsP <**> helper) (fullDesc <> progDesc "LambdaBuffers Frontend command-line interface tool")
+parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Frontend command-line interface tool")
 
 main :: IO ()
 main = do

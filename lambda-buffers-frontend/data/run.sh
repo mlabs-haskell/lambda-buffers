@@ -4,58 +4,68 @@ function lbf {
 }
 
 function lbf-build {
-    lbf build --compiler `which lbc` --debug $@
+    DIR=$1
+    lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug --import-path $1 --gen-dir "$1/autogen" "$1/$2"
+}
+
+function lbf-build2 {
+    DIR=$1
+    lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug --import-path $1 --gen-dir "$1/autogen" "$1/$2"
 }
 
 function lbf-form {
     lbf format -i -f $@
 }
 
-lbf-build -i duplicate_tydef -f duplicate_tydef/A.lbf
-lbf-build -i import_cycle_found -f import_cycle_found/A.lbf
-lbf-build -i imported_not_found -f imported_not_found/A.lbf
-lbf-build -i invalid_module_filepath -f invalid_module_filepath/A.lbf
-lbf-build -i module_not_found -f module_not_found/A.lbf
-lbf-build -i module_parse_error -f module_parse_error/A.lbf
-lbf-build -i multiple_modules_found -i multiple_modules_found/another_import_path -f multiple_modules_found/A.lbf
-lbf-build -i symbol_already_imported -f symbol_already_imported/A.lbf
-lbf-build -i tydef_name_conflict -f tydef_name_conflict/A.lbf
-lbf-build -i tyref_not_found -f tyref_not_found/A.lbf
+lbf-build duplicate_tydef A.lbf
+lbf-build import_cycle_found A.lbf
+lbf-build imported_not_found A.lbf
+lbf-build invalid_module_filepath A.lbf
+lbf-build module_not_found A.lbf
+lbf-build module_parse_error A.lbf
+lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug \
+    --import-path multiple_modules_found \
+    --import-path multiple_modules_found/another_import_path \
+    --gen-dir multiple_modules_found/autogen \
+    multiple_modules_found/A.lbf
+lbf-build symbol_already_imported A.lbf
+lbf-build tydef_name_conflict A.lbf
+lbf-build tyref_not_found A.lbf
 
-lbf-build -w good/work-dir -i good -f good/Test.lbf
+lbf-build good Test.lbf
 lbf-form good/Test.lbf
-lbf-build -w good/work-dir -i good -f good/Test.lbf
+lbf-build good Test.lbf
 
 echo "goldens/good/Prelude.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Prelude.lbf
+lbf-build goldens/good Prelude.lbf
 lbf-form goldens/good/Prelude.lbf
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Prelude.lbf
+lbf-build goldens/good Prelude.lbf
 
 echo "goldens/good/PreludeT.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/PreludeT.lbf
+lbf-build goldens/good PreludeT.lbf
 lbf-form goldens/good/PreludeT.lbf
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/PreludeT.lbf
+lbf-build goldens/good PreludeT.lbf
 
 echo "goldens/good/Plutus.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus.lbf
+lbf-build goldens/good Plutus.lbf
 
 echo "goldens/good/Plutus/V1.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus/V1.lbf
+lbf-build goldens/good Plutus/V1.lbf
 
 echo "goldens/good/Plutus/V2.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Plutus/V2.lbf
+lbf-build goldens/good Plutus/V2.lbf
 
 echo "goldens/good/Coop.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Coop.lbf
+lbf-build goldens/good Coop.lbf
 
 echo "goldens/good/Rules.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Rules.lbf
+lbf-build goldens/good Rules.lbf
 lbf-form goldens/good/Rules.lbf
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/Rules.lbf
+lbf-build goldens/good Rules.lbf
 
 echo "goldens/good/LambdaBuffers.lbf"
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf
+lbf-build goldens/good LambdaBuffers.lbf
 lbf-form goldens/good/LambdaBuffers.lbf
-lbf-build -w goldens/good/work-dir -i goldens/good -f goldens/good/LambdaBuffers.lbf
+lbf-build goldens/good LambdaBuffers.lbf
 
-# find goldens/ -name "*.lbf" | entr -p cabal run lbf -- compile --compiler `which lbc` --debug -w goldens/good/work-dir -i goldens/good -f /_
+# find goldens/ -name "*.lbf" | entr -p cabal run lbf -- compile --compiler `which lbc` --debug goldens/good /_
