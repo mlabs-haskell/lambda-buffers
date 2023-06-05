@@ -85,20 +85,13 @@ library
   import:          common-language
   build-depends:
     , aeson
-    , base                >=4.16
-    , base16-bytestring   >=1.0
-    , bytestring          >=0.11
-    , containers          >=0.6
-    , data-default        >=0.7
-    , lens                >=5.2
-    , mtl                 >=2.2
-    , ordered-containers  >=0.2
+    , base               >=4.16
+    , base16-bytestring  >=1.0
+    , bytestring         >=0.11
     , plutus-ledger-api
     , plutus-tx
-    , prettyprinter       >=1.7
-    , text                >=1.2
-    , transformers        >=0.5
-    , vector              >=0.12
+    , text               >=1.2
+    , vector             >=0.12
 
   hs-source-dirs:  src
   exposed-modules: LambdaBuffers.Runtime.Json.Plutus
@@ -109,13 +102,15 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , aeson        >=2.1
-    , base         >=4.16
-    , bytestring   >=0.11
-    , filepath     >=1.4
-    , lens         >=5.2
-    , tasty        >=1.4
-    , tasty-hunit  >=0.10
-    , text         >=1.2
+    , base               >=4.16
+    , bytestring         >=0.11
+    , hedgehog           >=1.2
+    , lbr-json-plutus
+    , plutus-ledger-api
+    , plutus-tx
+    , tasty              >=1.4
+    , tasty-hedgehog     >=1.4
 
-  other-modules:  Test.LambdaBuffers.Runtime.Json.Plutus
+  other-modules:
+    Test.LambdaBuffers.Runtime.Json.Plutus
+    Test.LambdaBuffers.Runtime.Json.Plutus.Generators.Correct

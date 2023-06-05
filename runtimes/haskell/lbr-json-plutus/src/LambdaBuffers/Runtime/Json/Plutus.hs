@@ -1,14 +1,19 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module LambdaBuffers.Runtime.Json.Plutus () where
+module LambdaBuffers.Runtime.Json.Plutus (Json (toJson, fromJson), toJsonBytes, fromJsonBytes) where
 
 import Data.Aeson (object, withObject)
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Encoding qualified as Aeson
+import Data.Aeson.Encoding qualified as AesonEnc
 import Data.Aeson.Key qualified as Key
+import Data.Aeson.Parser qualified as Aeson
 import Data.Aeson.Types (prependFailure)
 import Data.Aeson.Types qualified as Aeson
+import Data.ByteString (ByteString)
 import Data.ByteString qualified as BSS
 import Data.ByteString.Base16 qualified as Base16
+import Data.ByteString.Lazy qualified as LBS
 import Data.Foldable (Foldable (toList))
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -23,6 +28,14 @@ import PlutusTx.AssocMap qualified as PlutusTx
 class Json a where
   toJson :: a -> Aeson.Value
   fromJson :: Aeson.Value -> Aeson.Parser a
+
+toJsonBytes :: Json a => a -> ByteString
+toJsonBytes = LBS.toStrict . Aeson.encodingToLazyByteString . AesonEnc.value . toJson
+
+fromJsonBytes :: forall a. Json a => ByteString -> Either String a
+fromJsonBytes bs = case Aeson.eitherDecodeStrictWith Aeson.json (Aeson.iparse $ fromJson @a) bs of
+  Left (jsonPath, err) -> Left $ "[" <> Aeson.formatPath jsonPath <> "] " <> err
+  Right res -> Right res
 
 type Key = String
 
@@ -46,7 +59,7 @@ fromJsonConstructor f =
     )
 
 instance Json PlutusV1.AssetClass where
-  toJson (PlutusV1.AssetClass (policyId, tn)) = object ["policy_id" .= policyId, "token_name" .= tn]
+  toJson (PlutusV1.AssetClass (policyId, tn)) = object ["currency_symbol" .= policyId, "token_name" .= tn]
   fromJson =
     withObject
       "Plutus.V1.AssetClass"
@@ -112,7 +125,7 @@ instance Json PlutusV1.Data where
             "List" -> prependFailure "List" $ PlutusV1.List <$> fromJson @[PlutusV1.Data] ctorProduct
             "Map" -> prependFailure "Map" $ PlutusV1.Map <$> fromJson @[(PlutusV1.Data, PlutusV1.Data)] ctorProduct
             "Constr" ->
-              Aeson.withObject
+              withObject
                 "Constr"
                 ( \obj -> do
                     ctorIx <- obj .: "index" >>= fromJson @Integer
