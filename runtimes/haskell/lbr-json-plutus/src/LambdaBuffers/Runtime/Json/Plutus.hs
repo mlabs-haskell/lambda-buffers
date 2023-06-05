@@ -1,7 +1,6 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module LambdaBuffers.Runtime.Json.Plutus where
+module LambdaBuffers.Runtime.Json.Plutus () where
 
 import Data.Aeson (object, withObject)
 import Data.Aeson qualified as Aeson
@@ -19,8 +18,6 @@ import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusTx.AssocMap qualified as PlutusTx
-
-type Error = String
 
 class Json a where
   toJson :: a -> Aeson.Value
@@ -138,6 +135,54 @@ instance Json PlutusV1.LedgerBytes where
   toJson (PlutusV1.LedgerBytes plutusBytes) = Aeson.String $ encodeByteString $ PlutusV1.fromBuiltin plutusBytes
   fromJson = Aeson.withText "Plutus.V1.Bytes" (fmap (PlutusV1.LedgerBytes . PlutusV1.toBuiltin) . decodeByteString)
 
+instance Json a => Json (PlutusV1.Extended a) where
+  toJson PlutusV1.NegInf = toJsonConstructor "NegInf" ()
+  toJson PlutusV1.PosInf = toJsonConstructor "PosInf" ()
+  toJson (PlutusV1.Finite f) = toJsonConstructor "Finite" f
+  fromJson v =
+    prependFailure "Plutus.V1.Extended" $
+      fromJsonConstructor
+        ( \ctorName ctorProduct -> case ctorName of
+            "NegInf" -> prependFailure "NegInf" $ fromJson @() ctorProduct >> return PlutusV1.NegInf
+            "PosInf" -> prependFailure "PosInf" $ fromJson @() ctorProduct >> return PlutusV1.PosInf
+            "Finite" -> prependFailure "Finite" $ PlutusV1.Finite <$> fromJson @a ctorProduct
+            invalid -> fail $ "[LambdaBuffers.Runtime.Json.Plutus][Json Extended] Received a an invalid constructor name " <> Text.unpack invalid
+        )
+        v
+
+instance Json a => Json (PlutusV1.UpperBound a) where
+  toJson (PlutusV1.UpperBound bound closed) = object ["bound" .= toJson bound, "closed" .= toJson closed]
+  fromJson =
+    withObject
+      "Plutus.V1.UpperBound"
+      ( \obj -> do
+          bound <- obj .: "bound"
+          closed <- obj .: "closed"
+          return $ PlutusV1.UpperBound bound closed
+      )
+
+instance Json a => Json (PlutusV1.LowerBound a) where
+  toJson (PlutusV1.LowerBound bound closed) = object ["bound" .= toJson bound, "closed" .= toJson closed]
+  fromJson =
+    withObject
+      "Plutus.V1.LowerBound"
+      ( \obj -> do
+          bound <- obj .: "bound"
+          closed <- obj .: "closed"
+          return $ PlutusV1.LowerBound bound closed
+      )
+
+instance Json a => Json (PlutusV1.Interval a) where
+  toJson (PlutusV1.Interval from to) = object ["from" .= toJson from, "to" .= toJson to]
+  fromJson =
+    withObject
+      "Plutus.V1.Interval"
+      ( \obj -> do
+          from <- obj .: "from"
+          to <- obj .: "to"
+          return $ PlutusV1.Interval from to
+      )
+
 encodeByteString :: BSS.ByteString -> Text.Text
 encodeByteString = Text.decodeUtf8 . Base16.encode
 
@@ -154,11 +199,18 @@ instance (Json a, Json b) => Json (a, b) where
       "[LambdaBuffers.Runtime.Json.Plutus][Json (a,b)]"
       ( \arr -> case toList arr of
           [x, y] -> do
-            x' <- fromJson x
-            y' <- fromJson y
+            x' <- prependFailure "first" $ fromJson x
+            y' <- prependFailure "second" $ fromJson y
             return (x', y')
           _ -> fail ""
       )
+
+instance Json () where
+  toJson _ = Aeson.Null
+  fromJson v =
+    if v == Aeson.Null
+      then return ()
+      else fail $ "[LambdaBuffers.Runtime.Json.Plutus][Json ()] Expected a null but got " <> show v
 
 instance Json a => Json [a] where
   toJson = Aeson.Array . Vector.fromList . fmap toJson
@@ -169,5 +221,9 @@ instance Json Aeson.Value where
   fromJson = return
 
 instance Json Integer where
-  fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Integer]" (Aeson.parseJSON v)
   toJson = Aeson.toJSON
+  fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Integer]" (Aeson.parseJSON v)
+
+instance Json Bool where
+  toJson = Aeson.toJSON
+  fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Bool]" (Aeson.parseJSON v)
