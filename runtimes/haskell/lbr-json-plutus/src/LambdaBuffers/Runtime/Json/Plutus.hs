@@ -183,6 +183,10 @@ instance Json a => Json (PlutusV1.Interval a) where
           return $ PlutusV1.Interval from to
       )
 
+instance Json PlutusV1.POSIXTime where
+  toJson (PlutusV1.POSIXTime t) = toJson t
+  fromJson v = prependFailure "Plutus.V1.POSIXTime" (PlutusV1.POSIXTime <$> fromJson @Integer v)
+
 encodeByteString :: BSS.ByteString -> Text.Text
 encodeByteString = Text.decodeUtf8 . Base16.encode
 
