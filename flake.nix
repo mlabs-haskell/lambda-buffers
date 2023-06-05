@@ -76,7 +76,6 @@
           buildAbstraction = { import-location, additional ? { } }:
             import import-location ({
               inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools;
-              inherit (protosBuild) lambda-buffers-lang-hs-pb;
               shellHook = config.pre-commit.installationScript;
             } // additional);
 
@@ -86,7 +85,7 @@
           # Compiler Build
           compilerBuild = buildAbstraction {
             import-location = ./lambda-buffers-compiler/build.nix;
-            additional = { inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
+            additional = { inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
           };
           compilerFlake = flakeAbstraction compilerBuild;
 
@@ -94,7 +93,7 @@
           codegenBuild = buildAbstraction {
             import-location = ./lambda-buffers-codegen/build.nix;
             additional = {
-              inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
+              inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
             };
           };
@@ -104,12 +103,19 @@
           frontendBuild = buildAbstraction {
             import-location = ./lambda-buffers-frontend/build.nix;
             additional = {
-              inherit (protosBuild) lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
+              inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
               inherit (clis) lbc lbg lbg-haskell lbg-purescript;
             };
           };
           frontendFlake = flakeAbstraction frontendBuild;
+
+          # JSON Plutus runtime
+          lbrJsonPlutusHsBuild = buildAbstraction {
+            import-location = ./runtimes/haskell/lbr-json-plutus/build.nix;
+            additional = { };
+          };
+          lbrJsonPlutusHsFlake = flakeAbstraction lbrJsonPlutusHsBuild;
 
           # LambdaBuffers CLIs
           clis = rec {
@@ -154,6 +160,7 @@
           // compilerFlake.packages
           // frontendFlake.packages
           // codegenFlake.packages
+          // lbrJsonPlutusHsFlake.packages
           // clis;
 
           devShells = rec {
@@ -165,10 +172,11 @@
             dev-codegen = codegenFlake.devShell;
             dev-ctl-env = ctlShell;
             dev-plutustx-env = plutusTxShell;
+            dev-haskell-json-plutus = lbrJsonPlutusHsFlake.devShell;
           };
 
           # nix flake check
-          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks);
+          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrJsonPlutusHsFlake.checks);
 
         };
     };
