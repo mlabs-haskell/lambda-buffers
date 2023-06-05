@@ -119,7 +119,7 @@ instance Json PlutusV1.Data where
                     return (PlutusV1.Constr ctorIx ctorProd)
                 )
                 ctorProduct
-            invalid -> fail $ "[LambdaBuffers.Runtime.Json.Plutus][Json Data] Received a an invalid constructor name " <> Text.unpack invalid
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
         )
         v
 
@@ -146,7 +146,7 @@ instance Json a => Json (PlutusV1.Extended a) where
             "NegInf" -> prependFailure "NegInf" $ fromJson @() ctorProduct >> return PlutusV1.NegInf
             "PosInf" -> prependFailure "PosInf" $ fromJson @() ctorProduct >> return PlutusV1.PosInf
             "Finite" -> prependFailure "Finite" $ PlutusV1.Finite <$> fromJson @a ctorProduct
-            invalid -> fail $ "[LambdaBuffers.Runtime.Json.Plutus][Json Extended] Received a an invalid constructor name " <> Text.unpack invalid
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
         )
         v
 
@@ -186,6 +186,52 @@ instance Json a => Json (PlutusV1.Interval a) where
 instance Json PlutusV1.POSIXTime where
   toJson (PlutusV1.POSIXTime t) = toJson t
   fromJson v = prependFailure "Plutus.V1.POSIXTime" (PlutusV1.POSIXTime <$> fromJson @Integer v)
+
+instance Json PlutusV1.Address where
+  toJson (PlutusV1.Address cred stakingCred) = object ["credential" .= toJson cred, "staking_credential" .= toJson stakingCred]
+  fromJson =
+    withObject
+      "Plutus.V1.Address"
+      ( \obj -> do
+          cred <- obj .: "credential"
+          stakingCred <- obj .: "staking_credential"
+          return $ PlutusV1.Address cred stakingCred
+      )
+
+instance Json PlutusV1.Credential where
+  toJson (PlutusV1.PubKeyCredential pkh) = toJsonConstructor "PubKeyCredential" pkh
+  toJson (PlutusV1.ScriptCredential scrh) = toJsonConstructor "ScriptCredential" scrh
+  fromJson v =
+    prependFailure "Plutus.V1.Credential" $
+      fromJsonConstructor
+        ( \ctorName ctorProduct -> case ctorName of
+            "PubKeyCredential" -> prependFailure "PubKeyCredential" $ PlutusV1.PubKeyCredential <$> fromJson @PlutusV1.PubKeyHash ctorProduct
+            "ScriptCredential" -> prependFailure "ScriptCredential" $ PlutusV1.ScriptCredential <$> fromJson @PlutusV1.ScriptHash ctorProduct
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+        )
+        v
+
+instance Json PlutusV1.StakingCredential where
+  toJson (PlutusV1.StakingHash cred) = toJsonConstructor "StakingHash" cred
+  toJson (PlutusV1.StakingPtr slot txIx certIx) = toJsonConstructor "ScriptCredential" (object ["slot_number" .= toJson slot, "transaction_index" .= toJson txIx, "certificate_index" .= toJson certIx])
+  fromJson v =
+    prependFailure "Plutus.V1.StakingCredential" $
+      fromJsonConstructor
+        ( \ctorName ctorProduct -> case ctorName of
+            "StakingHash" -> prependFailure "StakingHash" $ PlutusV1.StakingHash <$> fromJson @PlutusV1.Credential ctorProduct
+            "StakingPtr" ->
+              withObject
+                "StakingPtr"
+                ( \obj -> do
+                    slot <- obj .: "slot_number"
+                    txIx <- obj .: "transaction_index"
+                    certIx <- obj .: "certificate_index"
+                    return $ PlutusV1.StakingPtr slot txIx certIx
+                )
+                ctorProduct
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+        )
+        v
 
 encodeByteString :: BSS.ByteString -> Text.Text
 encodeByteString = Text.decodeUtf8 . Base16.encode
@@ -231,3 +277,16 @@ instance Json Integer where
 instance Json Bool where
   toJson = Aeson.toJSON
   fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Bool]" (Aeson.parseJSON v)
+
+instance Json a => Json (Maybe a) where
+  toJson Nothing = toJsonConstructor "Nothing" ()
+  toJson (Just x) = toJsonConstructor "Just" x
+  fromJson v =
+    prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json (Maybe a)]" $
+      fromJsonConstructor
+        ( \ctorName ctorProduct -> case ctorName of
+            "Nothing" -> prependFailure "Nothing" $ fromJson @() ctorProduct >> return Nothing
+            "Just" -> prependFailure "Just" $ Just <$> fromJson @a ctorProduct
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+        )
+        v
