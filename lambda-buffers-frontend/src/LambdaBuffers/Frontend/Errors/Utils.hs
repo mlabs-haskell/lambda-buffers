@@ -1,4 +1,4 @@
-module LambdaBuffers.Frontend.Errors.Utils (prettyClassRef, prettyTyRef, prettyKind, toSyntaxSourceInfo, prettyConstraint, prettyModuleName', prettyName', prettySourceInfo) where
+module LambdaBuffers.Frontend.Errors.Utils (prettyClassRef, prettyTyRef, prettyKind, toSyntaxSourceInfo, prettyConstraint, prettyModuleName, prettyModuleName', prettyName', prettySourceInfo) where
 
 import Control.Lens ((^.))
 import Data.ProtoLens.Field (HasField)

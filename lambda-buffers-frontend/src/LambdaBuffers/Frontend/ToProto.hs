@@ -50,7 +50,7 @@ data ToProtoError = MissingTyRef (TyRef SourceInfo) | MissingClassRef (ClassRef 
   deriving stock (Show, Eq)
 
 toModules :: FrontendResult -> Either ToProtoError [Lang.Module]
-toModules (FrontendResult modsWithScope) =
+toModules (FrontendResult modsWithScope _requestedModuleNames) =
   for
     (Map.toList modsWithScope)
     ( \(modName, (m, scope)) -> do

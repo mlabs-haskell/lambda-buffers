@@ -3,7 +3,8 @@ module LambdaBuffers.Frontend.Cli.Build (BuildOpts (..), build) where
 import Control.Lens (makeLenses, (&), (.~), (^.))
 import Control.Monad (unless)
 import Data.ByteString qualified as BS
-import Data.Foldable (for_)
+import Data.Foldable (Foldable (toList), for_, traverse_)
+import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe (fromMaybe)
 import Data.ProtoLens (Message (defMessage))
 import Data.ProtoLens.Encoding qualified as Pb
@@ -13,16 +14,18 @@ import Data.Text.Lazy.IO qualified as LText
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Frontend (runFrontend)
 import LambdaBuffers.Frontend.Cli.Env qualified as Env
-import LambdaBuffers.Frontend.Cli.Utils (logCodegenError, logCompilerError, logError, logFrontendError, logInfo)
+import LambdaBuffers.Frontend.Cli.Utils (logCodegenError, logCompilerError, logError, logFrontendError, logInfo, toCodegenCliModuleName)
 import LambdaBuffers.Frontend.Errors.Codegen qualified as CodegenErrors
 import LambdaBuffers.Frontend.Errors.Compiler qualified as CompilerErrors
+import LambdaBuffers.Frontend.Monad qualified as Frontend
 import LambdaBuffers.Frontend.PPrint ()
+import LambdaBuffers.Frontend.Syntax qualified as Frontend
 import LambdaBuffers.Frontend.ToProto (toModules)
 import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
-import System.Directory (doesDirectoryExist)
+import System.Directory (doesDirectoryExist, doesFileExist)
 import System.Exit (ExitCode (ExitFailure), exitFailure)
 import System.FilePath ((<.>), (</>))
 import System.FilePath.Lens (extension)
@@ -31,13 +34,13 @@ import System.Process (readProcessWithExitCode, showCommandForUser)
 
 data BuildOpts = BuildOpts
   { _importPaths :: [FilePath]
-  , _moduleFilepath :: FilePath
   , _compilerCliFilepath :: Maybe FilePath
   , _codegenCliFilepath :: Maybe FilePath
   , _codegenGenDir :: FilePath
   , _codegenCliOpts :: [String]
   , _debug :: Bool
   , _workingDir :: Maybe FilePath
+  , _moduleFilepaths :: NonEmpty FilePath
   }
   deriving stock (Eq, Show)
 
@@ -46,22 +49,39 @@ makeLenses ''BuildOpts
 -- | Build a filepath containing a LambdaBuffers module
 build :: BuildOpts -> IO ()
 build opts = do
-  errOrMod <- runFrontend (opts ^. importPaths) (opts ^. moduleFilepath)
+  checkExists `traverse_` (opts ^. moduleFilepaths)
+  errOrMod <- runFrontend (opts ^. importPaths) (toList $ opts ^. moduleFilepaths)
   case errOrMod of
     Left err -> do
       logFrontendError err
       exitFailure
     Right res -> do
-      mods <- either (\e -> error $ "Failed building Proto API modules: " <> show e) return (toModules res)
+      mods <-
+        either
+          ( \e -> do
+              logError $ "Failed building Proto API modules: " <> show e
+              exitFailure
+          )
+          return
+          (toModules res)
       withSystemTempDirectory
-        "lambda-buffers-frontend"
+        "lbf"
         ( \tempDir -> do
             workDir <- getWorkDir opts tempDir
             _compRes <- callCompiler opts workDir (defMessage & Compiler.modules .~ mods)
             logInfo "Compilation OK"
-            _cdgRes <- callCodegen opts workDir (defMessage & Codegen.modules .~ mods)
+            _cdgRes <- callCodegen opts workDir (Frontend.fres'requested res) (defMessage & Codegen.modules .~ mods)
             logInfo "Codegen OK"
         )
+
+checkExists :: FilePath -> IO ()
+checkExists fp = do
+  exists <- doesFileExist fp
+  if exists
+    then return ()
+    else do
+      logError $ "Couldn't find the provided file containing an .lbf schema " <> fp
+      exitFailure
 
 getWorkDir :: BuildOpts -> FilePath -> IO FilePath
 getWorkDir opts tempDir = do
@@ -135,14 +155,23 @@ call cliFp cliArgs = do
       logInfo $ "Success from: " <> showCommandForUser cliFp cliArgs
       return ()
 
-callCodegen :: BuildOpts -> FilePath -> Codegen.Input -> IO Codegen.Result
-callCodegen opts workDir compInp = do
+callCodegen :: BuildOpts -> FilePath -> [Frontend.ModuleName ()] -> Codegen.Input -> IO Codegen.Result
+callCodegen opts workDir requestedModules compInp = do
   let ext = if opts ^. debug then "textproto" else "pb"
       compInpFp = workDir </> "codegen-input" <.> ext
       compOutFp = workDir </> "codegen-output" <.> ext
   writeCodegenInput compInpFp compInp
   lbgFp <- maybe Env.getLbgFromEnvironment return (opts ^. codegenCliFilepath)
-  let args = ["--input", compInpFp, "--output", compOutFp, "--gen-dir", opts ^. codegenGenDir] ++ opts ^. codegenCliOpts
+  let args =
+        [ "--input"
+        , compInpFp
+        , "--output"
+        , compOutFp
+        , "--gen-dir"
+        , opts ^. codegenGenDir
+        ]
+          <> (opts ^. codegenCliOpts)
+          <> (toCodegenCliModuleName <$> requestedModules) -- NOTE(bladyjoker): Consider using the proto to supply requested modules.
   call lbgFp args
   compOut <- readCodegenOutput compOutFp
   if compOut ^. Codegen.error == defMessage

@@ -39,11 +39,11 @@ data FrontendError
   deriving stock (Eq)
 
 instance Show FrontendError where
-  show (ModuleNotFound _cm imp impPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
-  show (MultipleModulesFound _cm imp conflictingPaths) = showOneLine $ pretty (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
-  show (ImportCycleFound _cm imp visited) = showOneLine $ pretty (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
+  show (ModuleNotFound cm imp impPaths) = showOneLine $ prettyContext cm (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "not found in available import paths" <+> pretty impPaths
+  show (MultipleModulesFound cm imp conflictingPaths) = showOneLine $ prettyContext cm (importInfo imp) <+> "Module" <+> pretty (importModuleName imp) <+> "found in multiple files" <+> pretty conflictingPaths
+  show (ImportCycleFound cm imp visited) = showOneLine $ prettyContext cm (importInfo imp) <+> "Tried to load module" <+> pretty (importModuleName imp) <+> "which constitutes a cycle" <+> pretty visited
   show (ModuleParseError _fp err) = showOneLine $ pretty err
-  show (InvalidModuleFilepath mn@(ModuleName _ info) gotModFp wantedFpSuffix) = showOneLine $ pretty info <+> "File name" <+> pretty gotModFp <+> "doesn't match module name" <+> pretty mn <+> "expected" <+> pretty wantedFpSuffix
+  show (InvalidModuleFilepath mn@(ModuleName _ info) gotModFp wantedFpSuffix) = showOneLine $ prettyContext mn info <+> "File name" <+> pretty gotModFp <+> "doesn't match module name" <+> pretty mn <+> "expected" <+> pretty wantedFpSuffix
   show (TyRefNotFound err) = showOneLine $ prettyTyRefNotFound err
   show (ClassRefNotFound err) = showOneLine $ prettyClassRefNotFound err
   show (ImportedNotFound err) = showOneLine $ prettyImportedNotFound err

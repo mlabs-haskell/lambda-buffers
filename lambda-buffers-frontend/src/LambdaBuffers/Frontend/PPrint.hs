@@ -9,7 +9,7 @@ module LambdaBuffers.Frontend.PPrint (prettyTyInner, prettyTyTopLevel) where
 import Data.List (sort)
 import Data.Text qualified as Text
 import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Name (Name), Product (Product), Record (Record), SourceInfo (SourceInfo), SourcePos (SourcePos), Statement (StClassDef, StDerive, StInstanceClause, StTyDef), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwClassDef, kwDerive, kwInstance, kwTyDefOpaque, tyBodyToTyDefKw)
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, concatWith, encloseSep, equals, group, hsep, lbrace, line, lparen, pipe, rbrace, rparen, sep, space, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, brackets, colon, comma, concatWith, encloseSep, equals, group, hsep, lbrace, line, lparen, parens, pipe, rbrace, rparen, sep, space, (<+>))
 import Text.Parsec qualified as Parsec
 import Text.Parsec.Error qualified as Parsec
 
@@ -167,7 +167,7 @@ instance Pretty SourcePos where
   pretty (SourcePos r c) = pretty r <> ":" <> pretty c
 
 instance Pretty Parsec.ParseError where
-  pretty pe = pretty (Parsec.errorPos pe) <> ":" <> pretty (Parsec.showErrorMessages "or" "unknown parse error" "expecting" "unexpected" "end of input" $ Parsec.errorMessages pe)
+  pretty pe = brackets (pretty (Parsec.errorPos pe)) <+> pretty (Parsec.showErrorMessages "or" "unknown parse error" "expecting" "unexpected" "end of input" $ Parsec.errorMessages pe)
 
 instance Pretty Parsec.SourcePos where
-  pretty sp = pretty (Parsec.sourceName sp) <> ":" <> "(" <> pretty (Parsec.sourceLine sp) <> ":" <> pretty (Parsec.sourceColumn sp) <> ")"
+  pretty sp = pretty (Parsec.sourceName sp) <> ":" <> parens (pretty (Parsec.sourceLine sp) <> ":" <> pretty (Parsec.sourceColumn sp))

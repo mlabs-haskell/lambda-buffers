@@ -18,12 +18,13 @@ data FrontRead = FrontRead
   deriving stock (Eq, Show)
 
 newtype FrontState = FrontState
-  { importedModules :: Map (ModuleName ()) (Module SourceInfo, (TyScope, ClassScope))
+  { fstate'modules :: Map (ModuleName ()) (Module SourceInfo, (TyScope, ClassScope))
   }
   deriving stock (Eq, Show)
 
-newtype FrontendResult = FrontendResult
-  { processedModules :: Map (ModuleName ()) (Module SourceInfo, (TyScope, ClassScope))
+data FrontendResult = FrontendResult
+  { fres'modules :: Map (ModuleName ()) (Module SourceInfo, (TyScope, ClassScope))
+  , fres'requested :: [ModuleName ()]
   }
   deriving stock (Eq, Show)
 
