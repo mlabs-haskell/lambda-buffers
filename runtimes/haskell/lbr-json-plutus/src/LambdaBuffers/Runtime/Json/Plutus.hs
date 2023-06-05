@@ -233,6 +233,21 @@ instance Json PlutusV1.StakingCredential where
         )
         v
 
+instance Json PlutusV1.TxId where
+  toJson (PlutusV1.TxId txId) = toJson txId
+  fromJson v = prependFailure "Plutus.V1.TxId" (PlutusV1.TxId <$> fromJson @BuiltinByteString v)
+
+instance Json PlutusV1.TxOutRef where
+  toJson (PlutusV1.TxOutRef txId ix) = object ["transaction_id" .= toJson txId, "index" .= toJson ix]
+  fromJson =
+    withObject
+      "Plutus.V1.TxOutRef"
+      ( \obj -> do
+          txId <- obj .: "transaction_id"
+          index <- obj .: "index"
+          return $ PlutusV1.TxOutRef txId index
+      )
+
 encodeByteString :: BSS.ByteString -> Text.Text
 encodeByteString = Text.decodeUtf8 . Base16.encode
 
