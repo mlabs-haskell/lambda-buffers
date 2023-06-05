@@ -17,6 +17,7 @@ import Data.Vector qualified as Vector
 import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
+import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusTx.AssocMap qualified as PlutusTx
 
 class Json a where
@@ -246,6 +247,45 @@ instance Json PlutusV1.TxOutRef where
           txId <- obj .: "transaction_id"
           index <- obj .: "index"
           return $ PlutusV1.TxOutRef txId index
+      )
+
+instance Json PlutusV2.TxOut where
+  toJson (PlutusV2.TxOut addr val dat mayRefScript) = object ["address" .= toJson addr, "value" .= toJson val, "datum" .= toJson dat, "reference_script" .= toJson mayRefScript]
+  fromJson =
+    withObject
+      "Plutus.V2.TxOut"
+      ( \obj -> do
+          addr <- obj .: "address"
+          val <- obj .: "value"
+          dat <- obj .: "datum"
+          mayRefScript <- obj .: "reference_script"
+          return $ PlutusV2.TxOut addr val dat mayRefScript
+      )
+
+instance Json PlutusV2.OutputDatum where
+  toJson PlutusV2.NoOutputDatum = toJsonConstructor "NoOutputDatum" ()
+  toJson (PlutusV2.OutputDatumHash dh) = toJsonConstructor "OutputDatumHash" dh
+  toJson (PlutusV2.OutputDatum dat) = toJsonConstructor "OutputDatum" dat
+  fromJson v =
+    prependFailure "Plutus.V2.OutputDatum" $
+      fromJsonConstructor
+        ( \ctorName ctorProduct -> case ctorName of
+            "NoOutputDatum" -> prependFailure "NoOutputDatum" $ fromJson @() ctorProduct >> return PlutusV2.NoOutputDatum
+            "OutputDatumHash" -> prependFailure "OutputDatumHash" $ PlutusV2.OutputDatumHash <$> fromJson ctorProduct
+            "OutputDatum" -> prependFailure "OutputDatum" $ PlutusV2.OutputDatum <$> fromJson ctorProduct
+            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+        )
+        v
+
+instance Json PlutusV2.TxInInfo where
+  toJson (PlutusV2.TxInInfo outRef out) = object ["reference" .= toJson outRef, "output" .= toJson out]
+  fromJson =
+    withObject
+      "Plutus.V2.TxInInfo"
+      ( \obj -> do
+          outRef <- obj .: "reference"
+          out <- obj .: "output"
+          return $ PlutusV2.TxInInfo outRef out
       )
 
 encodeByteString :: BSS.ByteString -> Text.Text
