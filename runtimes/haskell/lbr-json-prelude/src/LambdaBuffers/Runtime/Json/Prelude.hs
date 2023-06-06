@@ -1,4 +1,4 @@
-module LambdaBuffers.Runtime.Json.Prelude (Json (toJson, fromJson), toJsonBytes, fromJsonBytes) where
+module LambdaBuffers.Runtime.Json.Prelude (Json (toJson, fromJson), toJsonBytes, fromJsonBytes, (.:), (.=), toJsonConstructor, fromJsonConstructor) where
 
 import Data.Aeson (object, withArray, withObject, withText)
 import Data.Aeson qualified as Aeson

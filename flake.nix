@@ -120,7 +120,7 @@
           # JSON Plutus runtime
           lbrJsonPlutusHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-json-plutus/build.nix;
-            additional = { };
+            additional = { lbr-json-prelude = ./runtimes/haskell/lbr-json-prelude; };
           };
           lbrJsonPlutusHsFlake = flakeAbstraction lbrJsonPlutusHsBuild;
 

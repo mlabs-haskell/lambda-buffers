@@ -1,6 +1,7 @@
 { pkgs
 , haskell-nix
 , mlabs-tooling
+, lbr-json-prelude
 , compiler-nix-name
 , index-state
 , commonTools
@@ -16,6 +17,7 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
+      "${lbr-json-prelude}"
     ];
 
     modules = [

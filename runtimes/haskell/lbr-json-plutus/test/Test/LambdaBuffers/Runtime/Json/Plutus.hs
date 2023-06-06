@@ -1,7 +1,8 @@
 module Test.LambdaBuffers.Runtime.Json.Plutus (test) where
 
 import Hedgehog qualified as H
-import LambdaBuffers.Runtime.Json.Plutus (Json, fromJsonBytes, toJsonBytes)
+import LambdaBuffers.Runtime.Json (Json, fromJsonBytes, toJsonBytes)
+import LambdaBuffers.Runtime.Json.Plutus ()
 import Test.LambdaBuffers.Runtime.Json.Plutus.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
@@ -11,7 +12,7 @@ test :: TestTree
 test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
-      "Compiler API tests"
+      "lbf-prelude.Plutus.Json instance rule implementations for lbf-plutus package"
       [ valueFromTo
       , currencySymbolFromTo
       , assetClassFromTo

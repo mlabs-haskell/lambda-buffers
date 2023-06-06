@@ -1,63 +1,24 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module LambdaBuffers.Runtime.Json.Plutus (Json (toJson, fromJson), toJsonBytes, fromJsonBytes) where
+module LambdaBuffers.Runtime.Json.Plutus () where
 
 import Data.Aeson (object, withObject)
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Encoding qualified as Aeson
-import Data.Aeson.Encoding qualified as AesonEnc
-import Data.Aeson.Key qualified as Key
-import Data.Aeson.Parser qualified as Aeson
 import Data.Aeson.Types (prependFailure)
-import Data.Aeson.Types qualified as Aeson
-import Data.ByteString (ByteString)
 import Data.ByteString qualified as BSS
 import Data.ByteString.Base16 qualified as Base16
-import Data.ByteString.Lazy qualified as LBS
 import Data.Foldable (Foldable (toList))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Data.Vector qualified as Vector
+import LambdaBuffers.Runtime.Json (Json (fromJson, toJson), fromJsonConstructor, toJsonConstructor, (.:), (.=))
 import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusTx.AssocMap qualified as PlutusTx
 
-class Json a where
-  toJson :: a -> Aeson.Value
-  fromJson :: Aeson.Value -> Aeson.Parser a
-
-toJsonBytes :: Json a => a -> ByteString
-toJsonBytes = LBS.toStrict . Aeson.encodingToLazyByteString . AesonEnc.value . toJson
-
-fromJsonBytes :: forall a. Json a => ByteString -> Either String a
-fromJsonBytes bs = case Aeson.eitherDecodeStrictWith Aeson.json (Aeson.iparse $ fromJson @a) bs of
-  Left (jsonPath, err) -> Left $ "[" <> Aeson.formatPath jsonPath <> "] " <> err
-  Right res -> Right res
-
-type Key = String
-
-(.=) :: Json v => Key -> v -> Aeson.Pair
-(.=) k v = (Key.fromString k, toJson v)
-
-(.:) :: forall a. Json a => Aeson.Object -> Key -> Aeson.Parser a
-(.:) obj k = Aeson.explicitParseField (fromJson @a) obj (Key.fromString k)
-
-toJsonConstructor :: forall {a}. Json a => Text -> a -> Aeson.Value
-toJsonConstructor ctorName ctorProduct = object ["ctor_name" .= Aeson.String ctorName, "ctor_product" .= toJson ctorProduct]
-
-fromJsonConstructor :: (Text -> Aeson.Value -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
-fromJsonConstructor f =
-  Aeson.withObject
-    "[LambdaBuffers.Runtime.Json.Plutus][fromJsonConstructor]"
-    ( \obj -> do
-        ctorName <- obj .: "ctor_name" >>= Aeson.withText "[LambdaBuffers.Runtime.Json.Plutus][ctor_name]" return
-        ctorProduct <- obj .: "ctor_product"
-        f ctorName ctorProduct
-    )
-
+-- | lbf-prelude.Plutus.Json instance rule implementations for lbf-plutus package
 instance Json PlutusV1.AssetClass where
   toJson (PlutusV1.AssetClass (policyId, tn)) = object ["currency_symbol" .= policyId, "token_name" .= tn]
   fromJson =
@@ -82,6 +43,7 @@ instance Json PlutusV1.TokenName where
 instance Json PlutusV1.Value where
   toJson (PlutusV1.Value currencyMap) = toJson currencyMap
   fromJson v = prependFailure "Plutus.V1.Value" (PlutusV1.Value <$> fromJson @(PlutusTx.Map PlutusV1.CurrencySymbol (PlutusTx.Map PlutusV1.TokenName Integer)) v)
+
 instance (Json k, Json v) => Json (PlutusTx.Map k v) where
   toJson = toJson . PlutusTx.toList
   fromJson v = prependFailure "Plutus.V1.Map" $ PlutusTx.fromList <$> fromJson @[(k, v)] v
@@ -322,39 +284,3 @@ instance (Json a, Json b) => Json (a, b) where
             return (x', y')
           _ -> fail ""
       )
-
-instance Json () where
-  toJson _ = Aeson.Null
-  fromJson v =
-    if v == Aeson.Null
-      then return ()
-      else fail $ "[LambdaBuffers.Runtime.Json.Plutus][Json ()] Expected a null but got " <> show v
-
-instance Json a => Json [a] where
-  toJson = Aeson.Array . Vector.fromList . fmap toJson
-  fromJson = Aeson.withArray "[LambdaBuffers.Runtime.Json.Plutus][Json [a]]" (fmap toList . traverse fromJson)
-
-instance Json Aeson.Value where
-  toJson v = v
-  fromJson = return
-
-instance Json Integer where
-  toJson = Aeson.toJSON
-  fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Integer]" (Aeson.parseJSON v)
-
-instance Json Bool where
-  toJson = Aeson.toJSON
-  fromJson v = prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json Bool]" (Aeson.parseJSON v)
-
-instance Json a => Json (Maybe a) where
-  toJson Nothing = toJsonConstructor "Nothing" ()
-  toJson (Just x) = toJsonConstructor "Just" x
-  fromJson v =
-    prependFailure "[LambdaBuffers.Runtime.Json.Plutus][Json (Maybe a)]" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "Nothing" -> prependFailure "Nothing" $ fromJson @() ctorProduct >> return Nothing
-            "Just" -> prependFailure "Just" $ Just <$> fromJson @a ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
-        )
-        v
