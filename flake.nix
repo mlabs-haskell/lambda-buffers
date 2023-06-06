@@ -110,6 +110,13 @@
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
+          # JSON Prelude runtime
+          lbrJsonPreludeHsBuild = buildAbstraction {
+            import-location = ./runtimes/haskell/lbr-json-prelude/build.nix;
+            additional = { };
+          };
+          lbrJsonPreludeHsFlake = flakeAbstraction lbrJsonPreludeHsBuild;
+
           # JSON Plutus runtime
           lbrJsonPlutusHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-json-plutus/build.nix;
@@ -160,6 +167,7 @@
           // compilerFlake.packages
           // frontendFlake.packages
           // codegenFlake.packages
+          // lbrJsonPreludeHsFlake.packages
           // lbrJsonPlutusHsFlake.packages
           // clis;
 
@@ -172,11 +180,12 @@
             dev-codegen = codegenFlake.devShell;
             dev-ctl-env = ctlShell;
             dev-plutustx-env = plutusTxShell;
+            dev-haskell-json-prelude = lbrJsonPreludeHsFlake.devShell;
             dev-haskell-json-plutus = lbrJsonPlutusHsFlake.devShell;
           };
 
           # nix flake check
-          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrJsonPlutusHsFlake.checks);
+          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrJsonPreludeHsFlake.checks // lbrJsonPlutusHsFlake.checks);
 
         };
     };

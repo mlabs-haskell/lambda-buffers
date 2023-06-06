@@ -1,47 +1,54 @@
 module Prelude
 
 class Eq a
+class Json a
 
 opaque Bool
 
 instance Eq Bool
+instance Json Bool
 
 opaque Integer
 
 instance Eq Integer
-
-opaque Int32
-
-instance Eq Int32
+instance Json Integer
 
 opaque Bytes
 
 instance Eq Bytes
+instance Json Bytes
 
 opaque Char
 
 instance Eq Char
+instance Json Char
 
 opaque Text
 
 instance Eq Text
+instance Json Text
 
 opaque Maybe a
 
 instance Eq (Maybe a) :- Eq a
+instance Json (Maybe a) :- Json a
 
 opaque Either a b
 
 instance Eq (Either a b) :- Eq a,Eq b
+instance Json (Either a b) :- Json a,Json b
 
 opaque List a
 
 instance Eq (List a) :- Eq a
+instance Json (List a) :- Json a
 
 opaque Map a b
 
 instance Eq (Map a b) :- Eq a,Eq b
+instance Json (Map Text a) :- Json a
 
 opaque Set a
 
 instance Eq (Set a) :- Eq a
+instance Json (Set a) :- Json a

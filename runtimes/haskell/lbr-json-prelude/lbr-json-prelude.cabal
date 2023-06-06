@@ -1,8 +1,8 @@
 cabal-version: 3.0
-name:          lbr-json-plutus
+name:          lbr-json-prelude
 version:       0.1.0.0
 synopsis:
-  Lambda Buffers Runtime library with LB Prelude.Json typeclass implementations for Plutus opaque types.
+  Lambda Buffers Runtime library with LB Prelude.Json typeclass implementations for Prelude opaque types.
 
 author:        Drazen Popovic
 maintainer:    bladyjoker@gmail.com
@@ -88,15 +88,16 @@ library
   build-depends:
     , aeson
     , base               >=4.16
-    , base16-bytestring  >=1.0
+    , base64-bytestring
     , bytestring         >=0.11
-    , plutus-ledger-api
-    , plutus-tx
+    , containers         >=0.6
     , text               >=1.2
     , vector             >=0.12
 
   hs-source-dirs:  src
-  exposed-modules: LambdaBuffers.Runtime.Json.Plutus
+  exposed-modules:
+    LambdaBuffers.Runtime.Json
+    LambdaBuffers.Runtime.Json.Prelude
 
 test-suite tests
   import:         common-language
@@ -104,15 +105,15 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base               >=4.16
-    , bytestring         >=0.11
-    , hedgehog           >=1.2
-    , lbr-json-plutus
-    , plutus-ledger-api
-    , plutus-tx
-    , tasty              >=1.4
-    , tasty-hedgehog     >=1.4
+    , base              >=4.16
+    , bytestring        >=0.11
+    , containers        >=0.6
+    , hedgehog          >=1.2
+    , lbr-json-prelude
+    , tasty             >=1.4
+    , tasty-hedgehog    >=1.4
+    , text              >=1.2
 
   other-modules:
-    Test.LambdaBuffers.Runtime.Json.Plutus
-    Test.LambdaBuffers.Runtime.Json.Plutus.Generators.Correct
+    Test.LambdaBuffers.Runtime.Json.Prelude
+    Test.LambdaBuffers.Runtime.Json.Prelude.Generators.Correct
