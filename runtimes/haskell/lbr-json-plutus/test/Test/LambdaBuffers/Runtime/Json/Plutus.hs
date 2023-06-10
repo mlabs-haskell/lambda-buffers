@@ -22,7 +22,7 @@ test =
 fromToTest :: forall {a}. (Show a, Eq a, Json a) => TestName -> H.Gen a -> TestTree
 fromToTest title gen =
   testProperty
-    title
+    (title <> ": (fromJson . toJson) x == x")
     ( H.property $ do
         x <- H.forAll gen
         (fromJsonBytes . toJsonBytes) x H.=== Right x
@@ -31,23 +31,23 @@ fromToTest title gen =
 valueFromTo :: TestTree
 valueFromTo =
   fromToTest
-    "Plutus.V1.Value: (fromJson . toJson) x == x"
+    "Plutus.V1.Value"
     Correct.genValue
 
 currencySymbolFromTo :: TestTree
 currencySymbolFromTo =
   fromToTest
-    "Plutus.V1.CurrencySymbol: (fromJson . toJson) x == x"
+    "Plutus.V1.CurrencySymbol"
     Correct.genCurrencySymbol
 
 assetClassFromTo :: TestTree
 assetClassFromTo =
   fromToTest
-    "Plutus.V1.AssetClass: (fromJson . toJson) x == x"
+    "Plutus.V1.AssetClass:"
     Correct.genAssetClass
 
 tokenNameFromTo :: TestTree
 tokenNameFromTo =
   fromToTest
-    "Plutus.V1.TokenName: (fromJson . toJson) x == x"
+    "Plutus.V1.TokenName:"
     Correct.genTokenName

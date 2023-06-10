@@ -126,6 +126,7 @@ library
     LambdaBuffers.Codegen.LamVal
     LambdaBuffers.Codegen.LamVal.Derive
     LambdaBuffers.Codegen.LamVal.Eq
+    LambdaBuffers.Codegen.LamVal.Json
     LambdaBuffers.Codegen.LamVal.MonadPrint
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Print
