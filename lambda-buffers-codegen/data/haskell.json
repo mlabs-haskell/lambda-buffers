@@ -263,14 +263,9 @@
         ],
         "Prelude.Json": [
             [
-                "aeson",
-                "Data.Aeson",
-                "ToJSON"
-            ],
-            [
-                "aeson",
-                "Data.Aeson",
-                "FromJSON"
+                "lbr-json-prelude",
+                "LambdaBuffers.Runtime.Json",
+                "Json"
             ]
         ]
     }

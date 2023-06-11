@@ -1,12 +1,11 @@
 -- | lbf-prelude.Prelude.Json class implementations
 module LambdaBuffers.Codegen.LamVal.Json (deriveToJsonImpl, deriveFromJsonImpl) where
 
-import Control.Lens (view, (^.))
-import Data.Foldable (Foldable (toList))
+import Control.Lens (view)
 import Data.Map.Ordered qualified as OMap
 import Data.Text (Text)
 import Data.Text qualified as Text
-import LambdaBuffers.Codegen.LamVal (Product, QProduct, QRecord, QSum, Sum, ValueE (CaseE, CaseIntE, CaseListE, CaseTextE, CtorE, ErrorE, FieldE, IntE, LamE, LetE, ListE, ProductE, RecordE, RefE, TextE, TupleE), (@))
+import LambdaBuffers.Codegen.LamVal (QProduct, QRecord, QSum, ValueE (CaseE, CaseListE, CtorE, ErrorE, FieldE, LamE, LetE, ListE, ProductE, RecordE, RefE, TextE, TupleE), (@))
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -34,52 +33,54 @@ failParseRef ty = RefE ([ty], "failParse")
 succeedParseRef :: LT.Ty -> ValueE
 succeedParseRef ty = RefE ([ty], "succeedParse")
 
--- | `toJsonConstructor :: Text -> [Json] -> Json`
-toJsonConstructorRef :: ValueE
-toJsonConstructorRef = RefE ([], "toJsonConstructor")
+-- | `jsonConstructor :: Text -> [Json] -> Json`
+jsonConstructorRef :: ValueE
+jsonConstructorRef = RefE ([], "jsonConstructor")
 
--- | `toJsonUnitConstructor :: Text -> Json`
-toJsonUnitConstructorRef :: ValueE
-toJsonUnitConstructorRef = RefE ([], "toJsonUnitConstructor")
-
--- | `caseJsonConstructor :: (Text -> [Json] -> Parser a) -> Json -> Parser a`
+-- | `caseJsonConstructor :: Text -> [(Text, [Json] -> Parser a)] -> Json -> Parser a`
 caseJsonConstructor :: LT.Ty -> ValueE
 caseJsonConstructor ty = RefE ([ty], "caseJsonConstructor")
 
--- | `caseJsonArray :: ([Json] -> Parser a) -> Json -> Parser a
+-- | `jsonArray :: [Json] -> Json`
+jsonArrayRef :: ValueE
+jsonArrayRef = RefE ([], "jsonArray")
+
+-- | `caseJsonArray :: Text -> ([Json] -> Parser a) -> Json -> Parser a
 caseJsonArrayRef :: LT.Ty -> ValueE
 caseJsonArrayRef ty = RefE ([ty], "caseJsonArray")
 
-{- | `caseJsonObjectField :: Text -> (Json -> Parser a) -> Json -> Parser a
-NOTE(bladyjoker): This is not ideal, but it saved me from introducing MapE and LookupE in ValueE.
--}
-caseJsonObjectFieldRef :: LT.Ty -> ValueE
-caseJsonObjectFieldRef ty = RefE ([ty], "caseJsonObjectField")
+-- | `jsonMap :: [(Text, Json)] -> Json`
+jsonMapRef :: ValueE
+jsonMapRef = RefE ([], "jsonMap")
 
--- | `listToJson :: [Json] -> Json`
-listToJsonRef :: ValueE
-listToJsonRef = RefE ([], "toJson")
+-- | `caseJsonObject` :: (JsonObj -> Parser a) -> Json -> Parser a
+caseJsonObjectRef :: LT.Ty -> ValueE
+caseJsonObjectRef ty = RefE ([ty], "caseJsonObject")
+
+-- | `jsonField` :: Text -> JsonObj -> Parser Json
+jsonFieldRef :: ValueE
+jsonFieldRef = RefE ([], "jsonField")
 
 {- | `toJsonSum qsum` makes a `LamVal` function specification for encoding sum type values into their JSON representation `toJson :: <qsum> -> Json`.
 
-```
-module Example
+ ```
+ module Example
 
-sum Foo a b = Bar | Baz a | Qax a b
-```
+ sum Foo a b = Bar | Baz a | Qax a b
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooToJson :: (Json a, Json b) => Foo a b -> Json
-fooToJson =
+ ```
+ fooToJson :: (Json a, Json b) => Foo a b -> Json
+ fooToJson =
   \foo -> case foo of
-    Bar -> toJsonUnitConstructor "Bar"
-    Baz x1 -> toJsonConstructor "Baz" [toJson @a x1]
-    Qax x1 x2 -> toJsonConstructor "Baz" [toJson @a x1, toJson @b x2]
-```
+    Bar -> jsonConstructor "Bar" []
+    Baz x1 -> jsonConstructor "Baz" [toJson @a x1]
+    Qax x1 x2 -> jsonConstructor "Baz" [toJson @a x1, toJson @b x2]
+ ```
 
-TODO(bladyjoker): For completeness add `ty` as an argument?
+ TODO(bladyjoker): For completeness add `ty` as an argument?
 -}
 toJsonSum :: QSum -> ValueE
 toJsonSum qsum@(_qtyn, _sumTy) =
@@ -89,102 +90,87 @@ toJsonSum qsum@(_qtyn, _sumTy) =
           qsum
           sumVal
           ( \((ctorN, ctorTy), ctorVal) ->
-              if isUnitProd ctorTy
-                then
-                  toJsonUnitConstructorRef
-                    @ ctorNameVal ctorN
-                else
-                  toJsonConstructorRef
-                    @ ctorNameVal ctorN
-                    @ ListE [toJsonRef fieldTy @ fieldVal | (fieldVal, fieldTy) <- zip ctorVal ctorTy]
+              jsonConstructorRef
+                @ ctorNameVal ctorN
+                @ ListE [toJsonRef fieldTy @ fieldVal | (fieldVal, fieldTy) <- zip ctorVal ctorTy]
           )
     )
 
 {- | `fromJsonSum ty qsum` makes a `LamVal` function for decoding sum type values from their JSON representation `fromJson :: Json -> Parser <ty>`.
 
-```
-module Example
+ ```
+ module Example
 
-sum Foo a b = Bar | Baz a | Qax a b
-```
+ sum Foo a b = Bar | Baz a | Qax a b
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
-fooFromJson =
-    caseJsonConstructor
-      (\ctorNameGot fieldsJsonVal ->
-        caseText ctorNameGot [
-          ("Bar", caseList
-                       fieldsJsonVal
-                       (\[] -> succeedParse @(Foo a b) Bar)
-                       fail
-          ),
-          ("Baz", caseList
-                     fieldsJsonVal
-                       (\[x1] -> fromJson @a x1 >>= \y1 -> succeedParse @(Foo a b) (Baz y1))
-                       fail
-          ),
-          ("Qax", caseList
-                     fieldsJsonVal
-                       (\[x1, x2] -> fromJson @a x1 >>= \y1 -> fromJson @b x2 >>= \y2 -> succeedParse @(Foo a b) (Qax y1 y2))
-                       fail
-          )
-        ]
+ ```
+ fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
+ fooFromJson =
+    caseJsonConstructor "Foo" [
+      ("Bar",
+       \jsons -> case jsons of
+                   [] -> succeedParse @(Foo a b) Bar)
+                   _ -> fail "Expected a JSON Array with 0 elements"
+      ),
+      ("Baz",
+       \jsons -> case jsons of
+                   [x1] -> fromJson @a x1 >>= \y1 -> succeedParse @(Foo a b) (Baz y1)
+                   _ -> fail "Expected a JSON Array with 1 elements"
+      ),
+      ("Qax",
+       \jsons -> case jsons of
+                   [x1, x2] -> fromJson @a x1 >>= \y1 -> fromJson @b x2 >>= \y2 -> succeedParse @(Foo a b) (Qax y1 y2)
+                   _ -> fail "Expected a JSON Array with 2 elements"
       )
-```
+    ]
+ ```
 -}
 fromJsonSum :: LT.Ty -> QSum -> ValueE
 fromJsonSum ty (qtyN, sumTy) =
   caseJsonConstructor ty
-    @ LamE
-      ( \ctorNameGot -> LamE $ \fieldsJsonVal ->
-          CaseTextE
-            ctorNameGot
-            [ ( ctorNameVal ctorN
-              , fromJsonCtor ctorN ctorTy fieldsJsonVal
-              )
-            | (ctorN, LT.TyProduct ctorTy _) <- OMap.assocs sumTy
-            ]
-            (\_ -> failParseRef ty)
+    @ TextE (showQTyName qtyN)
+    @ ListE
+      ( [ TupleE (ctorNameVal ctorN) (LamE $ \jsons -> fromJsonCtor ctorN ctorTy jsons)
+        | (ctorN, LT.TyProduct ctorTy _) <- OMap.assocs sumTy
+        ]
       )
   where
-    {- `fromJsonCtor "Baz" [a] fields`
-      caseList fields
-        (\[x1] -> fromJson @a x1 >>= \y1 -> return (Baz y1))
-        fail
-    -}
-    fromJsonCtor ctorN ctorTy fields =
+    fromJsonCtor ctorN ctorTy jsons =
       CaseListE
-        fields
+        jsons
         [
           ( length ctorTy
           , \fields' -> fromJsonTys (zip ctorTy fields') ty (\xs -> succeedParseRef ty @ CtorE (qtyN, (ctorN, ctorTy)) xs)
           )
         ]
-        (\_ -> failParseRef ty @ TextE ("Expected a JSON Array of " <> (Text.pack . show . length $ ctorTy) <> " elements to parse a " <> (Text.pack . show $ ctorN) <> " of a LambdaBuffers sum type " <> (Text.pack . show $ qtyN)))
+        (\_ -> failParseRef ty @ TextE ("Expected a JSON Array of " <> (Text.pack . show . length $ ctorTy) <> " elements"))
+
+    showQTyName :: PC.QTyName -> Text
+    showQTyName (_mn, _tyn) = "TODO(bladyjoker): Print qualified type name"
 
 {- | `toJsonProduct qprod` makes a `LamVal` function for encoding product type values into their JSON representation `toJson :: <qprod> -> Json`.
 
-```
-module Example
+ ```
+ module Example
 
-product Foo a b = a b
-product Bar a = a
-```
+ product Foo a b = a b
+ product Bar a = a
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooToJson :: (Json a, Json b) => Foo a b -> Json
-fooToJson =
-  \foo -> let foo (\x1 x2 -> listToJson [toJson @a x1, toJson @b x2])
+ ```
+ fooToJson :: (Json a, Json b) => Foo a b -> Json
+ fooToJson =
+  \foo -> let foo (\x1 x2 -> jsonArray [toJson @a x1, toJson @b x2])
 
-barToJson :: Json a => Bar a -> Json
-barToJson =
+ barToJson :: Json a => Bar a -> Json
+ barToJson =
   \bar -> let bar (\x1 -> toJson @a x1)
-```
+ ```
 -}
 toJsonProduct :: QProduct -> ValueE
 toJsonProduct qprod@(_, prodTy) =
@@ -199,7 +185,7 @@ toJsonProduct qprod@(_, prodTy) =
                 ([fieldVal], [fieldTy]) -> toJsonRef fieldTy @ fieldVal
                 (fieldVals', fieldTys)
                   | length fieldVals' == length fieldTys ->
-                      listToJsonRef
+                      jsonArrayRef
                         @ ListE
                           [ toJsonRef fieldTy @ fieldVal
                           | (fieldVal, fieldTy) <- zip fieldVals' fieldTys
@@ -210,68 +196,68 @@ toJsonProduct qprod@(_, prodTy) =
 
 {- | `fromJsonProduct qprod` makes a `LamVal` function for decoding product type values from their JSON representation `fromJson :: Json -> Parser <qprod>`.
 
-```
-module Example
+ ```
+ module Example
 
-product Foo a b = a b
-product Bar a = a
-```
+ product Foo a b = a b
+ product Bar a = a
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
-fooFromJson =
-  caseJsonArray
-    (\fields -> caseList fields
-                  (\x1 x2 -> fromJson @a x1 >>= \y1 -> fromJson @b x2 >>= \y2 -> succeedParse @(Foo a b) (Foo y1 y2))
-                  (failParse @(Foo a b) "Expected a JSON Array of size 2 when decoding a LambdaBuffers Example.Foo product type")
+ ```
+ fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
+ fooFromJson =
+  caseJsonArray "Foo"
+    (\jsons -> case jsons of
+                 [x1, x2] -> fromJson @a x1 >>= \y1 -> fromJson @b x2 >>= \y2 -> succeedParse @(Foo a b) (Foo y1 y2))
+                 _ -> (failParse @(Foo a b) "Expected a JSON Array of 2 elements")
     )
 
-barToJson :: Json a => Bar a -> Json
-barToJson =
+ barToJson :: Json a => Bar a -> Json
+ barToJson =
   \json -> fromJson @a json >>= \y1 -> succeedParse @(Bar a) (Bar y1)
-```
+ ```
 -}
 fromJsonProduct :: LT.Ty -> QProduct -> ValueE
-fromJsonProduct ty qprod@(_, [fieldTy]) = LamE $ \jsonVal ->
+fromJsonProduct ty qprod@(_, [fieldTy]) = LamE $ \json ->
   bindParseRef fieldTy ty
-    @ (fromJsonRef fieldTy @ jsonVal)
+    @ (fromJsonRef fieldTy @ json)
     @ LamE (\fieldVal -> succeedParseRef ty @ ProductE qprod [fieldVal])
 fromJsonProduct ty qprod@(_, prodTy) =
   caseJsonArrayRef ty
     @ LamE
-      ( \jsonVals ->
+      ( \jsons ->
           CaseListE
-            jsonVals
+            jsons
             [
               ( length prodTy
-              , \pds' -> fromJsonTys (zip prodTy pds') ty (\xs -> succeedParseRef ty @ ProductE qprod xs)
+              , \jsons' -> fromJsonTys (zip prodTy jsons') ty (\xs -> succeedParseRef ty @ ProductE qprod xs)
               )
             ]
-            (\_ -> failParseRef ty)
+            (\_ -> failParseRef ty @ TextE ("Expected a JSON Array of " <> (Text.pack . show . length $ prodTy) <> " elements"))
       )
 
 {- | `toJsonProduct qprod` makes a `LamVal` function for encoding product type values into their JSON representation `toJson :: <qprod> -> Json`.
 
-```
-module Example
+ ```
+ module Example
 
-record Foo a b = { fooA : a, fooB : b }
-record Bar a = { barA: a }
-```
+ record Foo a b = { fooA : a, fooB : b }
+ record Bar a = { barA: a }
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooToJson :: (Json a, Json b) => Foo a b -> Json
-fooToJson =
-  \foo -> mapToJson [ ("fooA", toJson @a (getField @"fooA" foo), ("fooB", toJson @b (getField @"fooB" foo) ]
+ ```
+ fooToJson :: (Json a, Json b) => Foo a b -> Json
+ fooToJson =
+  \foo -> jsonMap [ ("fooA", toJson @a foo.fooA), ("fooB", toJson @b foo.fooB) ]
 
-barToJson :: Json a => Bar a -> Json
-barToJson =
-  \bar -> mapToJson [ ("barA", toJson @a (getField @"barA" bar) ]
-```
+ barToJson :: Json a => Bar a -> Json
+ barToJson =
+  \bar -> jsonMap [ ("barA", toJson @a bar.barA) ]
+ ```
 -}
 toJsonRecord :: QRecord -> ValueE
 toJsonRecord (qtyN, recTy) =
@@ -280,48 +266,59 @@ toJsonRecord (qtyN, recTy) =
         case OMap.assocs recTy of
           [] -> ErrorE "Got an empty Record type to print in `toJsonRecord`"
           _ ->
-            listToJsonRef
+            jsonMapRef
               @ ListE
                 [ TupleE (fieldNameVal fieldName) (toJsonRef fieldTy @ FieldE (qtyN, fieldName) recVal)
                 | (fieldName, fieldTy) <- OMap.assocs recTy
                 ]
     )
 
-{- | `fromJsonRecord qrec` makes a `LamVal` function for decoding record type values from their JSON representation `fromJson :: Json -> Parser <qprod>`.
+{- | `fromJsonRecord ty qrec` makes a `LamVal` function for decoding record type values from their JSON representation `fromJson :: Json -> Parser <ty>`.
 
-```
-```
-module Example
+ ```
+ ```
+ module Example
 
-record Foo a b = { fooA : a, fooB : b }
-record Bar a = { barA: a }
-```
+ record Foo a b = { fooA : a, fooB : b }
+ record Bar a = { barA: a }
+ ```
 
-Generated code in some functional language:
+ Generated code in some functional language:
 
-```
-fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
-fooFromJson =
-  \json -> caseJsonObjectField @a "fooA" json >>=
-             \fooA -> caseJsonObjectField @b "fooB" json >>=
-               \fooB -> succeedParse @(Foo a b) (Foo {fooA, fooB})
+ ```
+ fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
+ fooFromJson =
+  caseJsonObject \jsonObj ->
+                   jsonField "fooA" jsonObj >>=
+                     \json'fooA -> fromJson @a json'fooA >>=
+                        \fooA -> jsonObjField "fooB" jsonObj >>=
+                           \json'fooB -> fromJson @a json'fooB >>=
+                             \fooB -> succeedParse @(Foo a b) (Foo {fooA, fooB})
 
-barToJson :: Json a => Bar a -> Json
-barToJson =
-  \json -> caseJsonObjectField @a "barA" json >>=
-             \barA -> succeedParse @(Bar a) (Bar {barA})
-```
-NOTE(bladyjoker): Infinitely complicated --.-- I wanna puke
+ barToJson :: Json a => Bar a -> Json
+ barToJson =
+  caseJsonObj \jsonObj ->
+                jsonField "barA" jsonObj >>=
+                  \json'barA -> fromJson @a json'barA >>=
+                    \barA -> succeedParseRef @(Bar a) (Bar {barA})
+ ```
+ NOTE(bladyjoker): Infinitely complicated --.-- I wanna puke
 -}
 fromJsonRecord :: LT.Ty -> QRecord -> ValueE
-fromJsonRecord ty qrec@(_, recTy) = LamE $ \jsonVal -> parseRecordFromJson jsonVal (OMap.assocs recTy) []
+fromJsonRecord ty qrec@(_, recTy) =
+  caseJsonObjectRef ty @ LamE (\jsonObj -> parseRecordFromJson jsonObj (OMap.assocs recTy) [])
   where
-    parseRecordFromJson _jsonVal [] parsedFields = succeedParseRef ty @ RecordE qrec parsedFields
-    parseRecordFromJson jsonVal (field@(fieldN, fieldTy) : rest) parsedFields =
-      caseJsonObjectFieldRef fieldTy
+    parseRecordFromJson _jsonObj [] parsedFields = succeedParseRef ty @ RecordE qrec parsedFields
+    parseRecordFromJson jsonObj (field@(fieldN, fieldTy) : rest) parsedFields =
+      jsonFieldRef
         @ fieldNameVal fieldN
-        @ LamE (\fieldVal -> parseRecordFromJson jsonVal rest ((field, fieldVal) : parsedFields))
-        @ jsonVal
+        @ LamE
+          ( \fieldJson ->
+              bindParseRef fieldTy ty
+                @ (fromJsonRef fieldTy @ fieldJson)
+                @ LamE (\fieldVal -> parseRecordFromJson jsonObj rest ((field, fieldVal) : parsedFields))
+          )
+        @ jsonObj
 
 -- | Hooks
 deriveToJsonImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
@@ -331,9 +328,6 @@ deriveFromJsonImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalEr
 deriveFromJsonImpl mn tydefs ty = deriveImpl mn tydefs (fromJsonSum (LT.fromTy ty)) (fromJsonProduct (LT.fromTy ty)) (fromJsonRecord $ LT.fromTy ty) ty
 
 -- | Helpers
-isUnitProd :: Product -> Bool
-isUnitProd = null
-
 ctorNameVal :: PC.InfoLess PC.ConstrName -> ValueE
 ctorNameVal cn = PC.withInfoLess cn (TextE . view #name)
 

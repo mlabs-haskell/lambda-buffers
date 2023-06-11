@@ -46,7 +46,7 @@ instance Json (List a) :- Json a
 opaque Map a b
 
 instance Eq (Map a b) :- Eq a,Eq b
-instance Json (Map Text a) :- Json a
+instance Json (Map k v) :- Json k, Json v
 
 opaque Set a
 

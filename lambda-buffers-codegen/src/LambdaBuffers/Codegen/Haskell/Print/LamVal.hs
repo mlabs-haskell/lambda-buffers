@@ -18,7 +18,7 @@ import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
@@ -211,7 +211,35 @@ printValueE (LV.IntE i) = return $ pretty i
 printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
 printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
+printValueE (LV.TextE txt) = printTextE txt
+printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
+printValueE (LV.TupleE l r) = printTupleE l r
 printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
+
+printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
+printTupleE l r = do
+  lDoc <- printValueE l
+  rDoc <- printValueE r
+  return $ parens (lDoc <> comma <> rDoc)
+
+printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
+printTextE = return . dquotes . pretty
+
+printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE txtVal cases otherCase = do
+  caseValDoc <- printValueE txtVal
+  caseDocs <-
+    for
+      cases
+      ( \case
+          (LV.TextE caseTxt, bodyVal) -> do
+            conditionDoc <- printTextE caseTxt
+            bodyDoc <- printValueE bodyVal
+            return $ group $ conditionDoc <+> "->" <+> bodyDoc
+          (_wrongCaseVal, _) -> throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
+      )
+  otherDoc <- printOtherCase otherCase
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
 freshArg :: MonadPrint m => m LV.ValueE
 freshArg = do

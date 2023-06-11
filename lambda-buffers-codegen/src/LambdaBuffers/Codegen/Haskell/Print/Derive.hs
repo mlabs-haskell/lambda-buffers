@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData) where
+module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
 
 import Data.Foldable (Foldable (toList))
 import Data.Map (Map)
@@ -10,9 +10,10 @@ import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
+import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, equals, (<+>))
+import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
 
 lvEqBuiltins :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
@@ -78,4 +79,48 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
   return
     ( instanceDoc
     , Set.insert builtinDataToDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+    )
+
+-- | LambdaBuffers.Codegen.LamVal.Json specification printing
+lvJsonBuiltins :: Map LV.ValueName H.QValName
+lvJsonBuiltins =
+  Map.fromList
+    [ ("toJson", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "toJson"))
+    , ("fromJson", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "fromJson"))
+    , ("jsonConstructor", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "jsonConstructor"))
+    , ("jsonArray", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "jsonArray"))
+    , ("jsonMap", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "jsonMap"))
+    , ("caseJsonConstructor", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "caseJsonConstructor"))
+    , ("caseJsonArray", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "caseJsonArray"))
+    , ("caseJsonObject", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "caseJsonObject"))
+    , ("jsonField", (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkValueName "jsonField"))
+    , ("succeedParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "return"))
+    , ("failParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "fail"))
+    , ("bindParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ">>="))
+    ]
+
+toJsonClassMethodName :: H.ValueName
+toJsonClassMethodName = H.MkValueName "toJson"
+
+fromJsonClassMethodName :: H.ValueName
+fromJsonClassMethodName = H.MkValueName "fromJson"
+
+printDeriveJson :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveJson mn iTyDefs mkInstanceDoc ty = do
+  toJsonValE <- deriveToJsonImpl mn iTyDefs ty
+  toJsonImplDoc <- printImplementation lvJsonBuiltins toJsonValE
+  fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
+  fromJsonImplDoc <- printImplementation lvJsonBuiltins fromJsonValE
+
+  let instanceDoc =
+        mkInstanceDoc
+          ( align $
+              vsep
+                [ printValueDef toJsonClassMethodName toJsonImplDoc
+                , printValueDef fromJsonClassMethodName fromJsonImplDoc
+                ]
+          )
+  return
+    ( instanceDoc
+    , Set.fromList . toList $ lvJsonBuiltins
     )

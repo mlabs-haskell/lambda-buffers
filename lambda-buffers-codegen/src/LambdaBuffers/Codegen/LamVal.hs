@@ -40,9 +40,11 @@ data ValueE where
   LetE :: QProduct -> ValueE -> ([ValueE] -> ValueE) -> ValueE
   -- | Int expressions
   IntE :: Int -> ValueE
+  -- caseInt :: Int -> [(Int, a)] -> (Int -> a) -> a
   CaseIntE :: ValueE -> [(ValueE, ValueE)] -> (ValueE -> ValueE) -> ValueE
   -- | Text expressions
   TextE :: Text -> ValueE
+  -- caseText :: Text -> [(Text, a)] -> (Text -> a) -> a
   CaseTextE :: ValueE -> [(ValueE, ValueE)] -> (ValueE -> ValueE) -> ValueE
   -- | List expressions
   ListE :: [ValueE] -> ValueE
