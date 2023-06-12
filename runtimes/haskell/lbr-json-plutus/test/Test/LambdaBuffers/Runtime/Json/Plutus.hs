@@ -12,11 +12,31 @@ test :: TestTree
 test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
-      "lbf-prelude.Plutus.Json instance rule implementations for lbf-plutus package"
+      "lbf-plutus package tests for lbf-prelude.Plutus.Json type class implementations"
       [ valueFromTo
       , currencySymbolFromTo
       , assetClassFromTo
       , tokenNameFromTo
+      , dataFromTo
+      , pubKeyHashFromTo
+      , scriptHashFromTo
+      , redeemerHashFromTo
+      , datumHashFromTo
+      , intervalFromTo
+      , extendedFromTo
+      , upperBoundFromTo
+      , lowerBoundFromTo
+      , posixTimeFromTo
+      , closureFromTo
+      , addressFromTo
+      , credentialFromTo
+      , stakingCredentialFromTo
+      , datumFromTo
+      , redeemerFromTo
+      , txIdFromTo
+      , txOutFromTo
+      , txOutRefFromTo
+      , outputDatumFromTo
       ]
 
 fromToTest :: forall {a}. (Show a, Eq a, Json a) => TestName -> H.Gen a -> TestTree
@@ -43,11 +63,131 @@ currencySymbolFromTo =
 assetClassFromTo :: TestTree
 assetClassFromTo =
   fromToTest
-    "Plutus.V1.AssetClass:"
+    "Plutus.V1.AssetClass"
     Correct.genAssetClass
 
 tokenNameFromTo :: TestTree
 tokenNameFromTo =
   fromToTest
-    "Plutus.V1.TokenName:"
+    "Plutus.V1.TokenName"
     Correct.genTokenName
+
+dataFromTo :: TestTree
+dataFromTo =
+  fromToTest
+    "Plutus.V1.Data"
+    Correct.genData
+
+pubKeyHashFromTo :: TestTree
+pubKeyHashFromTo =
+  fromToTest
+    "Plutus.V1.PubKeyHash"
+    Correct.genPubKeyHash
+
+scriptHashFromTo :: TestTree
+scriptHashFromTo =
+  fromToTest
+    "Plutus.V1.ScriptHash"
+    Correct.genScriptHash
+
+redeemerHashFromTo :: TestTree
+redeemerHashFromTo =
+  fromToTest
+    "Plutus.V1.RedeemerHash"
+    Correct.genRedeemerHash
+
+datumHashFromTo :: TestTree
+datumHashFromTo =
+  fromToTest
+    "Plutus.V1.DatumHash"
+    Correct.genDatumHash
+
+intervalFromTo :: TestTree
+intervalFromTo =
+  fromToTest
+    "Plutus.V1.Interval PlutusV1.POSIXTime"
+    Correct.genInterval
+
+extendedFromTo :: TestTree
+extendedFromTo =
+  fromToTest
+    "Plutus.V1.Extended PlutusV1.POSIXTime"
+    Correct.genExtended
+
+upperBoundFromTo :: TestTree
+upperBoundFromTo =
+  fromToTest
+    "Plutus.V1.UpperBound PlutusV1.POSIXTime"
+    Correct.genUpperBound
+
+lowerBoundFromTo :: TestTree
+lowerBoundFromTo =
+  fromToTest
+    "Plutus.V1.LowerBound PlutusV1.POSIXTime"
+    Correct.genLowerBound
+
+posixTimeFromTo :: TestTree
+posixTimeFromTo =
+  fromToTest
+    "Plutus.V1.POSIXTime"
+    Correct.genPosixTime
+
+closureFromTo :: TestTree
+closureFromTo =
+  fromToTest
+    "Plutus.V1.Closure"
+    Correct.genClosure
+
+addressFromTo :: TestTree
+addressFromTo =
+  fromToTest
+    "Plutus.V1.Address"
+    Correct.genAddress
+
+credentialFromTo :: TestTree
+credentialFromTo =
+  fromToTest
+    "Plutus.V1.Credential"
+    Correct.genCredential
+
+stakingCredentialFromTo :: TestTree
+stakingCredentialFromTo =
+  fromToTest
+    "Plutus.V1.StakingCredential"
+    Correct.genStakingCredential
+
+datumFromTo :: TestTree
+datumFromTo =
+  fromToTest
+    "Plutus.V1.Datum"
+    Correct.genDatum
+
+redeemerFromTo :: TestTree
+redeemerFromTo =
+  fromToTest
+    "Plutus.V1.Redeemer"
+    Correct.genRedeemer
+
+txIdFromTo :: TestTree
+txIdFromTo =
+  fromToTest
+    "Plutus.V1.TxId"
+    Correct.genTxId
+
+txOutRefFromTo :: TestTree
+txOutRefFromTo =
+  fromToTest
+    "Plutus.V1.TxOutRef"
+    Correct.genTxOutRef
+
+txOutFromTo :: TestTree
+txOutFromTo =
+  fromToTest
+    "Plutus.V2.TxOut"
+    Correct.genTxOut
+
+outputDatumFromTo :: TestTree
+outputDatumFromTo =
+  fromToTest
+    "Plutus.V2.OutputDatum"
+    Correct.genOutputDatum

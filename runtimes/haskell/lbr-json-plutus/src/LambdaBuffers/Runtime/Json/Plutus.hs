@@ -2,16 +2,17 @@
 
 module LambdaBuffers.Runtime.Json.Plutus () where
 
+import Control.Monad (unless)
 import Data.Aeson (object, withObject)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types (prependFailure)
+import Data.Aeson.Types qualified as Aeson
 import Data.ByteString qualified as BSS
 import Data.ByteString.Base16 qualified as Base16
-import Data.Foldable (Foldable (toList))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import LambdaBuffers.Runtime.Json (Json (fromJson, toJson), fromJsonConstructor, toJsonConstructor, (.:), (.=))
+import LambdaBuffers.Runtime.Json (Json (fromJson, toJson), caseJsonConstructor, jsonConstructor, (.:), (.=))
 import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
@@ -32,13 +33,20 @@ instance Json PlutusV1.AssetClass where
               .: "token_name"
       )
 
+-- ByteString representing the currency, hashed with BLAKE2b-224. It is empty for Ada, 28 bytes for MintingPolicyHash. Forms an AssetClass along with TokenName. A Value is a map from CurrencySymbol's to a map from TokenName to an Integer.
 instance Json PlutusV1.CurrencySymbol where
   toJson (PlutusV1.CurrencySymbol plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.CurrencySymbol" $ PlutusV1.CurrencySymbol <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v = prependFailure "Plutus.V1.CurrencySymbol" $ PlutusV1.CurrencySymbol <$> decodeSizedPlutusBytes 28 v
 
+-- ByteString of a name of a token. Shown as UTF-8 string when possible. Should be no longer than 32 bytes, empty for Ada. Forms an AssetClass along with a CurrencySymbol.
 instance Json PlutusV1.TokenName where
   toJson (PlutusV1.TokenName plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.TokenName" $ PlutusV1.TokenName <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v =
+    prependFailure "Plutus.V1.TokenName" $
+      PlutusV1.TokenName <$> do
+        plutusBytes <- fromJson @PlutusV1.BuiltinByteString v
+        unless ((BSS.length . PlutusV1.fromBuiltin $ plutusBytes) <= 32) $ fail $ "Expected a Plutus TokenName of size smaller than or equal to 32 but got " <> show plutusBytes
+        return plutusBytes
 
 instance Json PlutusV1.Value where
   toJson (PlutusV1.Value currencyMap) = toJson currencyMap
@@ -48,21 +56,25 @@ instance (Json k, Json v) => Json (PlutusTx.Map k v) where
   toJson = toJson . PlutusTx.toList
   fromJson v = prependFailure "Plutus.V1.Map" $ PlutusTx.fromList <$> fromJson @[(k, v)] v
 
+-- The hash of a public key. This is frequently used to identify the public key, rather than the key itself. Hashed with BLAKE2b-224. 28 bytes.
 instance Json PlutusV1.PubKeyHash where
   toJson (PlutusV1.PubKeyHash plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.PubKeyHash" $ PlutusV1.PubKeyHash <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v = prependFailure "Plutus.V1.PubKeyHash" $ PlutusV1.PubKeyHash <$> decodeSizedPlutusBytes 28 v
 
+-- Script runtime representation of a Digest SHA256.
 instance Json PlutusV1.ScriptHash where
   toJson (PlutusV1.ScriptHash plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.ScriptHash" $ PlutusV1.ScriptHash <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v = prependFailure "Plutus.V1.ScriptHash" $ PlutusV1.ScriptHash <$> decodeSizedPlutusBytes 32 v
 
+-- Type representing the BLAKE2b-256 hash of a redeemer. 32 bytes.
 instance Json PlutusV1.RedeemerHash where
   toJson (PlutusV1.RedeemerHash plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.RedeemerHash" $ PlutusV1.RedeemerHash <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v = prependFailure "Plutus.V1.RedeemerHash" $ PlutusV1.RedeemerHash <$> decodeSizedPlutusBytes 32 v
 
+-- Script runtime representation of a Digest SHA256.
 instance Json PlutusV1.DatumHash where
   toJson (PlutusV1.DatumHash plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.DatumHash" $ PlutusV1.DatumHash <$> fromJson @PlutusV1.BuiltinByteString v
+  fromJson v = prependFailure "Plutus.V1.DatumHash" $ PlutusV1.DatumHash <$> decodeSizedPlutusBytes 32 v
 
 instance Json PlutusV1.Datum where
   toJson (PlutusV1.Datum plutusData) = toJson plutusData
@@ -73,31 +85,53 @@ instance Json PlutusV1.Redeemer where
   fromJson v = prependFailure "Plutus.V1.Redeemer" $ PlutusV1.Redeemer <$> fromJson @PlutusV1.BuiltinData v
 
 instance Json PlutusV1.Data where
-  toJson (PlutusV1.I i) = toJsonConstructor "Integer" i
-  toJson (PlutusV1.B b) = toJsonConstructor "Bytes" (PlutusV1.toBuiltin b)
-  toJson (PlutusV1.List xs) = toJsonConstructor "List" xs
-  toJson (PlutusV1.Map elems) = toJsonConstructor "Map" elems
-  toJson (PlutusV1.Constr ctorIx prod) = toJsonConstructor "Constr" (object ["index" .= toJson ctorIx, "product" .= prod])
-  fromJson v =
-    prependFailure "Plutus.V1.Data" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "Integer" -> prependFailure "Integer" $ PlutusV1.I <$> fromJson @Integer ctorProduct
-            "Bytes" -> prependFailure "Bytes" $ PlutusV1.B . PlutusV1.fromBuiltin <$> fromJson @BuiltinByteString ctorProduct
-            "List" -> prependFailure "List" $ PlutusV1.List <$> fromJson @[PlutusV1.Data] ctorProduct
-            "Map" -> prependFailure "Map" $ PlutusV1.Map <$> fromJson @[(PlutusV1.Data, PlutusV1.Data)] ctorProduct
-            "Constr" ->
+  toJson (PlutusV1.I i) = jsonConstructor "Integer" [toJson i]
+  toJson (PlutusV1.B b) = jsonConstructor "Bytes" [toJson $ PlutusV1.toBuiltin b]
+  toJson (PlutusV1.List xs) = jsonConstructor "List" [toJson xs]
+  toJson (PlutusV1.Map elems) = jsonConstructor "Map" [toJson elems]
+  toJson (PlutusV1.Constr ctorIx prod) = jsonConstructor "Constr" [object ["index" .= toJson ctorIx, "fields" .= prod]]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.Data"
+      [
+        ( "Integer"
+        , \case
+            [json] -> PlutusV1.I <$> fromJson @Integer json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
+        )
+      ,
+        ( "Bytes"
+        , \case
+            [json] -> PlutusV1.B . PlutusV1.fromBuiltin <$> fromJson @BuiltinByteString json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
+        )
+      ,
+        ( "List"
+        , \case
+            [json] -> PlutusV1.List <$> fromJson @[PlutusV1.Data] json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
+        )
+      ,
+        ( "Map"
+        , \case
+            [json] -> PlutusV1.Map <$> fromJson @[(PlutusV1.Data, PlutusV1.Data)] json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
+        )
+      ,
+        ( "Constr"
+        , \case
+            [json] ->
               withObject
-                "Constr"
+                ""
                 ( \obj -> do
                     ctorIx <- obj .: "index" >>= fromJson @Integer
-                    ctorProd <- obj .: "product" >>= fromJson @[PlutusV1.Data]
-                    return (PlutusV1.Constr ctorIx ctorProd)
+                    ctorFields <- obj .: "fields" >>= fromJson @[PlutusV1.Data]
+                    return $ PlutusV1.Constr ctorIx ctorFields
                 )
-                ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+                json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
         )
-        v
+      ]
 
 instance Json PlutusV1.BuiltinData where
   toJson (PlutusV1.BuiltinData d) = toJson d
@@ -112,19 +146,31 @@ instance Json PlutusV1.LedgerBytes where
   fromJson = Aeson.withText "Plutus.V1.Bytes" (fmap (PlutusV1.LedgerBytes . PlutusV1.toBuiltin) . decodeByteString)
 
 instance Json a => Json (PlutusV1.Extended a) where
-  toJson PlutusV1.NegInf = toJsonConstructor "NegInf" ()
-  toJson PlutusV1.PosInf = toJsonConstructor "PosInf" ()
-  toJson (PlutusV1.Finite f) = toJsonConstructor "Finite" f
-  fromJson v =
-    prependFailure "Plutus.V1.Extended" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "NegInf" -> prependFailure "NegInf" $ fromJson @() ctorProduct >> return PlutusV1.NegInf
-            "PosInf" -> prependFailure "PosInf" $ fromJson @() ctorProduct >> return PlutusV1.PosInf
-            "Finite" -> prependFailure "Finite" $ PlutusV1.Finite <$> fromJson @a ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+  toJson PlutusV1.NegInf = jsonConstructor "NegInf" []
+  toJson PlutusV1.PosInf = jsonConstructor "PosInf" []
+  toJson (PlutusV1.Finite f) = jsonConstructor "Finite" [toJson f]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.Extended"
+      [
+        ( "NegInf"
+        , \case
+            [] -> return PlutusV1.NegInf
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
         )
-        v
+      ,
+        ( "PosInf"
+        , \case
+            [] -> return PlutusV1.PosInf
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ,
+        ( "Finite"
+        , \case
+            [json] -> PlutusV1.Finite <$> fromJson @a json
+            invalid -> fail $ "Expected a JSON Array with 1 element but got " <> show invalid
+        )
+      ]
 
 instance Json a => Json (PlutusV1.UpperBound a) where
   toJson (PlutusV1.UpperBound bound closed) = object ["bound" .= toJson bound, "closed" .= toJson closed]
@@ -175,43 +221,62 @@ instance Json PlutusV1.Address where
       )
 
 instance Json PlutusV1.Credential where
-  toJson (PlutusV1.PubKeyCredential pkh) = toJsonConstructor "PubKeyCredential" pkh
-  toJson (PlutusV1.ScriptCredential scrh) = toJsonConstructor "ScriptCredential" scrh
-  fromJson v =
-    prependFailure "Plutus.V1.Credential" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "PubKeyCredential" -> prependFailure "PubKeyCredential" $ PlutusV1.PubKeyCredential <$> fromJson @PlutusV1.PubKeyHash ctorProduct
-            "ScriptCredential" -> prependFailure "ScriptCredential" $ PlutusV1.ScriptCredential <$> fromJson @PlutusV1.ScriptHash ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+  toJson (PlutusV1.PubKeyCredential pkh) = jsonConstructor "PubKeyCredential" [toJson pkh]
+  toJson (PlutusV1.ScriptCredential scrh) = jsonConstructor "ScriptCredential" [toJson scrh]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.Credential"
+      [
+        ( "PubKeyCredential"
+        , \case
+            [json] -> PlutusV1.PubKeyCredential <$> fromJson @PlutusV1.PubKeyHash json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
-        v
+      ,
+        ( "ScriptCredential"
+        , \case
+            [json] -> PlutusV1.ScriptCredential <$> fromJson @PlutusV1.ScriptHash json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ]
 
 instance Json PlutusV1.StakingCredential where
-  toJson (PlutusV1.StakingHash cred) = toJsonConstructor "StakingHash" cred
-  toJson (PlutusV1.StakingPtr slot txIx certIx) = toJsonConstructor "ScriptCredential" (object ["slot_number" .= toJson slot, "transaction_index" .= toJson txIx, "certificate_index" .= toJson certIx])
-  fromJson v =
-    prependFailure "Plutus.V1.StakingCredential" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "StakingHash" -> prependFailure "StakingHash" $ PlutusV1.StakingHash <$> fromJson @PlutusV1.Credential ctorProduct
-            "StakingPtr" ->
+  toJson (PlutusV1.StakingHash cred) = jsonConstructor "StakingHash" [toJson cred]
+  toJson (PlutusV1.StakingPtr slot txIx certIx) =
+    jsonConstructor
+      "StakingPtr"
+      [ object ["slot_number" .= toJson slot, "transaction_index" .= toJson txIx, "certificate_index" .= toJson certIx]
+      ]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.StakingCredential"
+      [
+        ( "StakingHash"
+        , \case
+            [json] -> PlutusV1.StakingHash <$> fromJson @PlutusV1.Credential json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "StakingPtr"
+        , \case
+            [json] ->
               withObject
-                "StakingPtr"
+                ""
                 ( \obj -> do
                     slot <- obj .: "slot_number"
                     txIx <- obj .: "transaction_index"
                     certIx <- obj .: "certificate_index"
                     return $ PlutusV1.StakingPtr slot txIx certIx
                 )
-                ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+                json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
-        v
+      ]
 
+-- A transaction ID, i.e. the hash of a transaction. Hashed with BLAKE2b-256. 32 byte.
 instance Json PlutusV1.TxId where
   toJson (PlutusV1.TxId txId) = toJson txId
-  fromJson v = prependFailure "Plutus.V1.TxId" (PlutusV1.TxId <$> fromJson @BuiltinByteString v)
+  fromJson v = prependFailure "Plutus.V1.TxId" (PlutusV1.TxId <$> decodeSizedPlutusBytes 32 v)
 
 instance Json PlutusV1.TxOutRef where
   toJson (PlutusV1.TxOutRef txId ix) = object ["transaction_id" .= toJson txId, "index" .= toJson ix]
@@ -238,19 +303,31 @@ instance Json PlutusV2.TxOut where
       )
 
 instance Json PlutusV2.OutputDatum where
-  toJson PlutusV2.NoOutputDatum = toJsonConstructor "NoOutputDatum" ()
-  toJson (PlutusV2.OutputDatumHash dh) = toJsonConstructor "OutputDatumHash" dh
-  toJson (PlutusV2.OutputDatum dat) = toJsonConstructor "OutputDatum" dat
-  fromJson v =
-    prependFailure "Plutus.V2.OutputDatum" $
-      fromJsonConstructor
-        ( \ctorName ctorProduct -> case ctorName of
-            "NoOutputDatum" -> prependFailure "NoOutputDatum" $ fromJson @() ctorProduct >> return PlutusV2.NoOutputDatum
-            "OutputDatumHash" -> prependFailure "OutputDatumHash" $ PlutusV2.OutputDatumHash <$> fromJson ctorProduct
-            "OutputDatum" -> prependFailure "OutputDatum" $ PlutusV2.OutputDatum <$> fromJson ctorProduct
-            invalid -> fail $ "Received a an invalid constructor name " <> Text.unpack invalid
+  toJson PlutusV2.NoOutputDatum = jsonConstructor "NoOutputDatum" []
+  toJson (PlutusV2.OutputDatumHash dh) = jsonConstructor "OutputDatumHash" [toJson dh]
+  toJson (PlutusV2.OutputDatum dat) = jsonConstructor "OutputDatum" [toJson dat]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V2.OutputDatum"
+      [
+        ( "NoOutputDatum"
+        , \case
+            [] -> return PlutusV2.NoOutputDatum
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
         )
-        v
+      ,
+        ( "OutputDatumHash"
+        , \case
+            [json] -> PlutusV2.OutputDatumHash <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "OutputDatum"
+        , \case
+            [json] -> PlutusV2.OutputDatum <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ]
 
 instance Json PlutusV2.TxInInfo where
   toJson (PlutusV2.TxInInfo outRef out) = object ["reference" .= toJson outRef, "output" .= toJson out]
@@ -272,15 +349,8 @@ decodeByteString = either (\err -> fail $ "[LambdaBuffers.Runtime.Json.Plutus] F
     tryDecode :: Text.Text -> Either String BSS.ByteString
     tryDecode = Base16.decode . Text.encodeUtf8
 
-instance (Json a, Json b) => Json (a, b) where
-  toJson (x, y) = toJson [toJson x, toJson y]
-  fromJson =
-    Aeson.withArray
-      "[LambdaBuffers.Runtime.Json.Plutus][Json (a,b)]"
-      ( \arr -> case toList arr of
-          [x, y] -> do
-            x' <- prependFailure "first" $ fromJson x
-            y' <- prependFailure "second" $ fromJson y
-            return (x', y')
-          _ -> fail ""
-      )
+decodeSizedPlutusBytes :: Int -> Aeson.Value -> Aeson.Parser PlutusV1.BuiltinByteString
+decodeSizedPlutusBytes size json = do
+  bytes <- fromJson @PlutusV1.BuiltinByteString json
+  unless ((BSS.length . PlutusV1.fromBuiltin @_ @BSS.ByteString $ bytes) == size) $ fail $ "Expected Plutus Bytes of size " <> show size <> " but got: " <> show bytes
+  return bytes
