@@ -110,19 +110,19 @@
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
-          # JSON Prelude runtime
-          lbrJsonPreludeHsBuild = buildAbstraction {
-            import-location = ./runtimes/haskell/lbr-json-prelude/build.nix;
+          # `lbf-prelude` runtime
+          lbrPreludeHsBuild = buildAbstraction {
+            import-location = ./runtimes/haskell/lbr-prelude/build.nix;
             additional = { };
           };
-          lbrJsonPreludeHsFlake = flakeAbstraction lbrJsonPreludeHsBuild;
+          lbrPreludeHsFlake = flakeAbstraction lbrPreludeHsBuild;
 
-          # JSON Plutus runtime
-          lbrJsonPlutusHsBuild = buildAbstraction {
-            import-location = ./runtimes/haskell/lbr-json-plutus/build.nix;
-            additional = { lbr-json-prelude = ./runtimes/haskell/lbr-json-prelude; };
+          # `lbf-plutus` runtime
+          lbrPlutusHsBuild = buildAbstraction {
+            import-location = ./runtimes/haskell/lbr-plutus/build.nix;
+            additional = { lbr-prelude = ./runtimes/haskell/lbr-prelude; };
           };
-          lbrJsonPlutusHsFlake = flakeAbstraction lbrJsonPlutusHsBuild;
+          lbrPlutusHsFlake = flakeAbstraction lbrPlutusHsBuild;
 
           # LambdaBuffers CLIs
           clis = rec {
@@ -167,8 +167,8 @@
           // compilerFlake.packages
           // frontendFlake.packages
           // codegenFlake.packages
-          // lbrJsonPreludeHsFlake.packages
-          // lbrJsonPlutusHsFlake.packages
+          // lbrPreludeHsFlake.packages
+          // lbrPlutusHsFlake.packages
           // clis;
 
           devShells = rec {
@@ -180,12 +180,12 @@
             dev-codegen = codegenFlake.devShell;
             dev-ctl-env = ctlShell;
             dev-plutustx-env = plutusTxShell;
-            dev-haskell-json-prelude = lbrJsonPreludeHsFlake.devShell;
-            dev-haskell-json-plutus = lbrJsonPlutusHsFlake.devShell;
+            dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
+            dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
           };
 
           # nix flake check
-          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrJsonPreludeHsFlake.checks // lbrJsonPlutusHsFlake.checks);
+          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrPreludeHsFlake.checks // lbrPlutusHsFlake.checks);
 
         };
     };

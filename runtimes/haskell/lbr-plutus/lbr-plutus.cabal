@@ -1,0 +1,119 @@
+cabal-version: 3.0
+name:          lbr-plutus
+version:       0.1.0.0
+synopsis:      Lambda Buffers Runtime library for the `lbf-plutus` package
+author:        Drazen Popovic
+maintainer:    bladyjoker@gmail.com
+
+flag dev
+  description: Enable non-strict compilation for development
+  manual:      True
+
+common common-language
+  ghc-options:
+    -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
+    -fwarn-missing-import-lists -Weverything -Wno-unsafe
+    -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-missing-kind-signatures -Wno-all-missed-specializations
+
+  if !flag(dev)
+    ghc-options: -Werror
+
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    DoAndIfThenElse
+    DuplicateRecordFields
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    ExplicitNamespaces
+    FlexibleContexts
+    FlexibleInstances
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralizedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RecordWildCards
+    RelaxedPolyRec
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TemplateHaskell
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns
+
+  default-language:   Haskell2010
+
+library
+  import:          common-language
+  build-depends:
+    , aeson
+    , base               >=4.16
+    , base16-bytestring  >=1.0
+    , bytestring         >=0.11
+    , lbr-prelude
+    , plutus-ledger-api
+    , plutus-tx
+    , text               >=1.2
+
+  hs-source-dirs:  src
+  exposed-modules:
+    LambdaBuffers.Runtime.Plutus
+    LambdaBuffers.Runtime.Plutus.Json
+
+test-suite tests
+  import:         common-language
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , base               >=4.16
+    , bytestring         >=0.11
+    , hedgehog           >=1.2
+    , lbr-plutus
+    , lbr-prelude
+    , plutus-ledger-api
+    , plutus-tx
+    , tasty              >=1.4
+    , tasty-hedgehog     >=1.4
+
+  other-modules:
+    Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
+    Test.LambdaBuffers.Runtime.Plutus.Json
