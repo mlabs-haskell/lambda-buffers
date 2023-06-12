@@ -187,3 +187,4 @@ printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases ot
 printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
 printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
+printValueE _ = throwInternalError "TODO(bladyjoker) LamVal not implemented"

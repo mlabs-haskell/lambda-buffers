@@ -88,7 +88,7 @@ hsClassImplPrinters =
       , printDeriveFromPlutusData
       )
     ,
-      ( (H.MkCabalPackageName "lbr-json-prelude", H.MkModuleName "LambdaBuffers.Runtime.Json", H.MkClassName "Json")
+      ( (H.MkCabalPackageName "lbr-prelude", H.MkModuleName "LambdaBuffers.Runtime.Prelude", H.MkClassName "Json")
       , printDeriveJson
       )
     ]

@@ -12,6 +12,7 @@ module LambdaBuffers.Runtime.Prelude.Json (
   caseJsonMap,
   caseJsonObject,
   jsonField,
+  jsonObject,
 )
 where
 
@@ -171,7 +172,7 @@ instance (Json a, Json b) => Json (a, b) where
       )
       v
 
-encodeByteString :: BSS.ByteString -> Text.Text
+encodeByteString :: BSS.ByteString -> Text
 encodeByteString = Text.decodeUtf8 . Base64.encode
 
 decodeByteString :: MonadFail m => Text -> m BSS.ByteString
@@ -180,64 +181,70 @@ decodeByteString = either (\err -> fail $ "Failed decoding from base64 into byte
     tryDecode :: Text.Text -> Either String BSS.ByteString
     tryDecode = Base64.decode . Text.encodeUtf8
 
-type Key = Text
+jsonMap :: [(Aeson.Value, Aeson.Value)] -> Aeson.Value
+jsonMap = jsonArray . fmap toJson
+
+caseJsonMap :: Ord k => String -> ((Aeson.Value, Aeson.Value) -> Aeson.Parser (k, v)) -> Aeson.Value -> Aeson.Parser (Map k v)
+caseJsonMap title parseElem =
+  prependFailure
+    ("caseJsonMap " <> title)
+    . Aeson.withArray
+      ""
+      ( \arr -> do
+          let parse v = fromJson @(Aeson.Value, Aeson.Value) v >>= parseElem
+          kvs <- Vector.toList <$> (prependFailure "element " . parse) `traverse` arr
+          let m = Map.fromList kvs
+          unless (Vector.length arr == Map.size m) (fail $ "Expected a JSON Array with unique elements for map but got " <> show arr)
+          return m
+      )
+
+type Key = String
 
 (.=) :: Json v => Key -> v -> Aeson.Pair
-(.=) k v = (AesonKey.fromText k, toJson v)
+(.=) k v = (AesonKey.fromString k, toJson v)
 
 (.:) :: forall a. Json a => Aeson.Object -> Key -> Aeson.Parser a
-(.:) obj k = Aeson.explicitParseField (fromJson @a) obj (AesonKey.fromText k)
+(.:) obj k = Aeson.explicitParseField (fromJson @a) obj (AesonKey.fromString k)
 
 -- | LamVal Json builtins
 jsonArray :: [Aeson.Value] -> Aeson.Value
 jsonArray = Aeson.Array . Vector.fromList
 
 caseJsonArray :: String -> ([Aeson.Value] -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
-caseJsonArray title parseArr = Aeson.withArray ("caseJsonArray " <> title) ((prependFailure "array element " . parseArr) . toList)
+caseJsonArray title parseArr = prependFailure ("caseJsonArray " <> title) . Aeson.withArray "" ((prependFailure "element " . parseArr) . toList)
 
-jsonMap :: [(Aeson.Value, Aeson.Value)] -> Aeson.Value
-jsonMap = jsonArray . fmap toJson
-
-caseJsonMap :: Ord k => String -> ((Aeson.Value, Aeson.Value) -> Aeson.Parser (k, v)) -> Aeson.Value -> Aeson.Parser (Map k v)
-caseJsonMap title parseElem =
-  Aeson.withArray
-    ("caseJsonMap " <> title)
-    ( \arr -> do
-        let parse v = fromJson @(Aeson.Value, Aeson.Value) v >>= parseElem
-        kvs <- Vector.toList <$> (prependFailure "element " . parse) `traverse` arr
-        let m = Map.fromList kvs
-        unless (Vector.length arr == Map.size m) (fail $ "Expected a JSON Array with unique elements for map but got " <> show arr)
-        return m
-    )
+jsonObject :: [(String, Aeson.Value)] -> Aeson.Value
+jsonObject kvs = object [k .= v | (k, v) <- kvs]
 
 caseJsonObject :: (Aeson.Object -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
-caseJsonObject = Aeson.withObject ""
+caseJsonObject parseObj = prependFailure "caseJsonObj" . Aeson.withObject "" parseObj
 
-jsonField :: Text -> Aeson.Object -> Aeson.Parser Aeson.Value
-jsonField name obj = obj .: name
+jsonField :: String -> Aeson.Object -> (Aeson.Value -> Aeson.Parser a) -> Aeson.Parser a
+jsonField name obj parseField = obj .: name >>= parseField
 
-jsonConstructor :: Text -> [Aeson.Value] -> Aeson.Value
-jsonConstructor ctorName ctorProduct = object ["constructor" .= Aeson.String ctorName, "fields" .= toJson ctorProduct]
+jsonConstructor :: String -> [Aeson.Value] -> Aeson.Value
+jsonConstructor ctorName ctorProduct = object ["constructor" .= (Aeson.String . Text.pack $ ctorName), "fields" .= toJson ctorProduct]
 
-caseJsonConstructor :: String -> [(Text, [Aeson.Value] -> Aeson.Parser a)] -> Aeson.Value -> Aeson.Parser a
+caseJsonConstructor :: String -> [(String, [Aeson.Value] -> Aeson.Parser a)] -> Aeson.Value -> Aeson.Parser a
 caseJsonConstructor title = caseJsonConstructor' title . Map.fromList
 
-caseJsonConstructor' :: String -> Map Text ([Aeson.Value] -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
+caseJsonConstructor' :: String -> Map String ([Aeson.Value] -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
 caseJsonConstructor' title ctorParsers =
-  Aeson.withObject
-    ("caseJsonConstructor " <> title)
-    ( \obj -> do
-        ctorName <- obj .: "constructor" >>= Aeson.withText "constructor name" return
-        case Map.lookup ctorName ctorParsers of
-          Nothing ->
-            fail $
-              "Expected a JSON String to contain one of constructor names ("
-                <> List.intercalate ", " (Text.unpack <$> Map.keys ctorParsers)
-                <> "), but got an unknown constructor name "
-                <> Text.unpack ctorName
-          Just parse -> do
-            ctorFields <- obj .: "fields"
-            prependFailure
-              ("constructor fields " <> Text.unpack ctorName)
-              $ parse ctorFields
-    )
+  prependFailure ("caseJsonConstructor " <> title)
+    . Aeson.withObject
+      ""
+      ( \obj -> do
+          ctorName <- obj .: "constructor" >>= Aeson.withText "constructor name" (return . Text.unpack)
+          case Map.lookup ctorName ctorParsers of
+            Nothing ->
+              fail $
+                "Expected a JSON String to contain one of constructor names ("
+                  <> List.intercalate ", " (Map.keys ctorParsers)
+                  <> "), but got an unknown constructor name "
+                  <> ctorName
+            Just parse -> do
+              ctorFields <- obj .: "fields"
+              prependFailure
+                ("constructor fields " <> ctorName)
+                $ parse ctorFields
+      )

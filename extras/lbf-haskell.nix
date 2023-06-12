@@ -1,4 +1,4 @@
-{ pkgs, src, lbfFile, importPaths, lbf, lbg-haskell, cabalPackageName, deps ? [ ], cabalPackageVersion ? "0.1.0.0" }:
+lbf: lbg-haskell: { pkgs, src, lbfFiles, importPaths, cabalPackageName, deps ? [ ], cabalPackageVersion ? "0.1.0.0" }:
 let
   importPaths' = builtins.concatStringsSep " " (builtins.map (imp: "--import-path ${imp}") importPaths);
   providedDeps = builtins.concatStringsSep " " (builtins.map (dep: dep.name) deps);
@@ -35,18 +35,20 @@ pkgs.stdenv.mkDerivation {
     mkdir autogen
     mkdir .work
     lbf build ${importPaths'} \
-        --file ${src}/${lbfFile} \
         --work-dir .work \
         --gen ${lbg-haskell}/bin/lbg-haskell \
-        --gen-dir autogen
+        --gen-dir autogen \
+        ${builtins.concatStringsSep " " lbfFiles}
 
     EXPOSED_MODULES=$(find autogen -name "*.hs" | while read f; do grep -Eo 'module\s+\S+\s+' $f | head -n 1 | sed -r 's/module\s+//' | sed -r 's/\s+//'; done | tr '\n' ' ')
     echo "Found generated modules $EXPOSED_MODULES"
-    DEPS=$(echo ${providedDeps} $(cat autogen/build.json | jq -r ".[]") | tr ' ' ',' | sed 's/.$//')
+    DEPS=$(echo ${providedDeps} $(cat autogen/build.json | jq -r ".[]") | tr ' ' ',' | sed 's/$//')
 
     cat ${cabalTemplate} \
         | sed -r "s/<EXPOSED_MODULES>/$EXPOSED_MODULES/" \
         | sed -r "s/<DEPS>/$DEPS/" > ${cabalPackageName}.cabal
+    cat ${cabalPackageName}.cabal
+    cat autogen/build.json
   '';
 
   installPhase = ''

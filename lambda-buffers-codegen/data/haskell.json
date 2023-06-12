@@ -11,8 +11,8 @@
             "Set"
         ],
         "Prelude.List": [
-            "lb-haskell-runtime",
-            "LambdaBuffers.Runtime.Haskell",
+            "lbr-prelude",
+            "LambdaBuffers.Runtime.Prelude",
             "List"
         ],
         "Prelude.Either": [
@@ -263,8 +263,8 @@
         ],
         "Prelude.Json": [
             [
-                "lbr-json-prelude",
-                "LambdaBuffers.Runtime.Json",
+                "lbr-prelude",
+                "LambdaBuffers.Runtime.Prelude",
                 "Json"
             ]
         ]

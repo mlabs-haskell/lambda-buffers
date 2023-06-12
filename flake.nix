@@ -143,6 +143,29 @@
 
           };
 
+          # Nix lib
+          lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
+
+          lbfPreludeHs = lbfHaskell {
+            src = ./libs/lbf-prelude;
+            inherit pkgs;
+            cabalPackageName = "lbf-prelude";
+            lbfFiles = [ "Prelude.lbf" ];
+            importPaths = [ ];
+            deps = [ ];
+          };
+
+          # Test Suite
+          lbfPreludeHsTestBuild = buildAbstraction {
+            import-location = ./lambda-buffers-testsuite/lbf-prelude/haskell-tests/build.nix;
+            additional = {
+              lbr-prelude = ./runtimes/haskell/lbr-prelude;
+              lbf-prelude = ./libs/lbf-prelude;
+              inherit lbfHaskell lbfPreludeHs;
+            };
+          };
+          lbfPreludeHsTestFlake = flakeAbstraction lbfPreludeHsTestBuild;
+
           # Purescript/cardano-transaction-lib environment.
           ctlShell = import ./experimental/ctl-env/build.nix {
             inherit system; inherit (inputs) nixpkgs ctl;
@@ -182,6 +205,7 @@
             dev-plutustx-env = plutusTxShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
+            dev-lbf-prelude-haskell-tests = lbfPreludeHsTestFlake.devShell;
           };
 
           # nix flake check

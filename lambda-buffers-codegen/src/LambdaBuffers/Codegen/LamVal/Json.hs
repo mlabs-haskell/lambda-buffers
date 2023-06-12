@@ -49,17 +49,17 @@ jsonArrayRef = RefE ([], "jsonArray")
 caseJsonArrayRef :: LT.Ty -> ValueE
 caseJsonArrayRef ty = RefE ([ty], "caseJsonArray")
 
--- | `jsonMap :: [(Text, Json)] -> Json`
-jsonMapRef :: ValueE
-jsonMapRef = RefE ([], "jsonMap")
+-- | `jsonObject :: [(Text, Json)] -> Json`
+jsonObjRef :: ValueE
+jsonObjRef = RefE ([], "jsonObject")
 
 -- | `caseJsonObject` :: (JsonObj -> Parser a) -> Json -> Parser a
 caseJsonObjectRef :: LT.Ty -> ValueE
 caseJsonObjectRef ty = RefE ([ty], "caseJsonObject")
 
--- | `jsonField` :: Text -> JsonObj -> Parser Json
-jsonFieldRef :: ValueE
-jsonFieldRef = RefE ([], "jsonField")
+-- | `jsonField` :: Text -> JsonObj -> (Json -> Parser a) -> Parser a
+jsonFieldRef :: LT.Ty -> ValueE
+jsonFieldRef ty = RefE ([ty], "jsonField")
 
 {- | `toJsonSum qsum` makes a `LamVal` function specification for encoding sum type values into their JSON representation `toJson :: <qsum> -> Json`.
 
@@ -148,8 +148,8 @@ fromJsonSum ty (qtyN, sumTy) =
         ]
         (\_ -> failParseRef ty @ TextE ("Expected a JSON Array of " <> (Text.pack . show . length $ ctorTy) <> " elements"))
 
-    showQTyName :: PC.QTyName -> Text
-    showQTyName (_mn, _tyn) = "TODO(bladyjoker): Print qualified type name"
+showQTyName :: PC.QTyName -> Text
+showQTyName (_mn, _tyn) = "TODO(bladyjoker): Print qualified type name"
 
 {- | `toJsonProduct qprod` makes a `LamVal` function for encoding product type values into their JSON representation `toJson :: <qprod> -> Json`.
 
@@ -224,8 +224,9 @@ fromJsonProduct ty qprod@(_, [fieldTy]) = LamE $ \json ->
   bindParseRef fieldTy ty
     @ (fromJsonRef fieldTy @ json)
     @ LamE (\fieldVal -> succeedParseRef ty @ ProductE qprod [fieldVal])
-fromJsonProduct ty qprod@(_, prodTy) =
+fromJsonProduct ty qprod@(qtyN, prodTy) =
   caseJsonArrayRef ty
+    @ TextE (showQTyName qtyN)
     @ LamE
       ( \jsons ->
           CaseListE
@@ -238,7 +239,7 @@ fromJsonProduct ty qprod@(_, prodTy) =
             (\_ -> failParseRef ty @ TextE ("Expected a JSON Array of " <> (Text.pack . show . length $ prodTy) <> " elements"))
       )
 
-{- | `toJsonProduct qprod` makes a `LamVal` function for encoding product type values into their JSON representation `toJson :: <qprod> -> Json`.
+{- | `toJsonRecord qrec` makes a `LamVal` function for encoding record type values into their JSON representation `toJson :: <qrec> -> Json`.
 
  ```
  module Example
@@ -252,11 +253,11 @@ fromJsonProduct ty qprod@(_, prodTy) =
  ```
  fooToJson :: (Json a, Json b) => Foo a b -> Json
  fooToJson =
-  \foo -> jsonMap [ ("fooA", toJson @a foo.fooA), ("fooB", toJson @b foo.fooB) ]
+  \foo -> jsonObject [ ("fooA", toJson @a foo.fooA), ("fooB", toJson @b foo.fooB) ]
 
  barToJson :: Json a => Bar a -> Json
  barToJson =
-  \bar -> jsonMap [ ("barA", toJson @a bar.barA) ]
+  \bar -> jsonObject [ ("barA", toJson @a bar.barA) ]
  ```
 -}
 toJsonRecord :: QRecord -> ValueE
@@ -266,7 +267,7 @@ toJsonRecord (qtyN, recTy) =
         case OMap.assocs recTy of
           [] -> ErrorE "Got an empty Record type to print in `toJsonRecord`"
           _ ->
-            jsonMapRef
+            jsonObjRef
               @ ListE
                 [ TupleE (fieldNameVal fieldName) (toJsonRef fieldTy @ FieldE (qtyN, fieldName) recVal)
                 | (fieldName, fieldTy) <- OMap.assocs recTy
@@ -289,16 +290,16 @@ toJsonRecord (qtyN, recTy) =
  fooFromJson :: (Json a, Json b) => Json -> Parser (Foo a b)
  fooFromJson =
   caseJsonObject \jsonObj ->
-                   jsonField "fooA" jsonObj >>=
+                   jsonField "fooA" jsonObj
                      \json'fooA -> fromJson @a json'fooA >>=
-                        \fooA -> jsonObjField "fooB" jsonObj >>=
+                        \fooA -> jsonObjField "fooB" jsonObj
                            \json'fooB -> fromJson @a json'fooB >>=
                              \fooB -> succeedParse @(Foo a b) (Foo {fooA, fooB})
 
  barToJson :: Json a => Bar a -> Json
  barToJson =
   caseJsonObj \jsonObj ->
-                jsonField "barA" jsonObj >>=
+                jsonField "barA" jsonObj
                   \json'barA -> fromJson @a json'barA >>=
                     \barA -> succeedParseRef @(Bar a) (Bar {barA})
  ```
@@ -310,15 +311,15 @@ fromJsonRecord ty qrec@(_, recTy) =
   where
     parseRecordFromJson _jsonObj [] parsedFields = succeedParseRef ty @ RecordE qrec parsedFields
     parseRecordFromJson jsonObj (field@(fieldN, fieldTy) : rest) parsedFields =
-      jsonFieldRef
+      jsonFieldRef fieldTy
         @ fieldNameVal fieldN
+        @ jsonObj
         @ LamE
           ( \fieldJson ->
               bindParseRef fieldTy ty
                 @ (fromJsonRef fieldTy @ fieldJson)
                 @ LamE (\fieldVal -> parseRecordFromJson jsonObj rest ((field, fieldVal) : parsedFields))
           )
-        @ jsonObj
 
 -- | Hooks
 deriveToJsonImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
