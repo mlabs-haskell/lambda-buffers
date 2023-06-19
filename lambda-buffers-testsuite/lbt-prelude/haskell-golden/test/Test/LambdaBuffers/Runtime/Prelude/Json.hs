@@ -14,6 +14,7 @@ import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday
 import LambdaBuffers.Foo.Bar (FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
 import LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Lbr
+import Paths_haskell_golden qualified as Paths
 import System.Directory (removeFile)
 import System.FilePath (takeBaseName, (</>))
 import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
@@ -124,13 +125,11 @@ weekDayFromTo =
     "Days.WeekDay"
     Correct.genWeekDay
 
-goldenDir :: FilePath
-goldenDir = "../golden"
-
 -- | `fromToGoldenTest title gens`
 fromToGoldenTest :: forall {a}. (Json a) => TestName -> [H.Gen a] -> IO TestTree
 fromToGoldenTest title gens =
   do
+    goldenDir <- Paths.getDataFileName "../golden"
     jsonFpsFound <- filter (\fp -> title `isPrefixOf` takeBaseName fp) <$> findByExtension [".json"] goldenDir
     jsonFps <-
       if length jsonFpsFound /= length gens

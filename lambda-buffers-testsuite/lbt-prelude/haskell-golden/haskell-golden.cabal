@@ -1,11 +1,18 @@
-cabal-version: 3.0
-name:          haskell-golden
-version:       0.1.0.0
+cabal-version:      3.0
+name:               haskell-golden
+version:            0.1.0.0
 synopsis:
   Integration Test Suite for `lbf-prelude` and Haskell `lbr-prelude`
 
-author:        Drazen Popovic
-maintainer:    bladyjoker@gmail.com
+author:             Drazen Popovic
+maintainer:         bladyjoker@gmail.com
+data-files:
+  ../api/**/*.lbf
+  ../golden/**/*.json
+
+extra-source-files:
+  ../api/**/*.lbf
+  ../golden/**/*.json
 
 flag dev
   description: Enable non-strict compilation for development
@@ -121,6 +128,7 @@ test-suite tests
     , text            >=1.2
 
   other-modules:
+    Paths_haskell_golden
     Test.LambdaBuffers.Runtime.Prelude.Eq
     Test.LambdaBuffers.Runtime.Prelude.Generators.Correct
     Test.LambdaBuffers.Runtime.Prelude.Json
