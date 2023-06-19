@@ -21,6 +21,12 @@ let
     importPaths = [ lbf-prelude ];
     deps = [ lbfPreludeHs ];
   };
+  goldenData = import ../../../extras/haskell-data.nix {
+    inherit pkgs;
+    srcs = [ ../. ];
+    cabalDataPatterns = [ "**/*.lbf" "**/*.json" ];
+    cabalPackageName = "lbt-prelude-golden-data-hs";
+  };
   project = { lib, ... }: {
     src = ./.;
 
@@ -32,6 +38,7 @@ let
       "${lbr-prelude}"
       "${lbfPreludeHs}"
       "${lbfFooHs}"
+      "${goldenData}"
     ];
 
     modules = [
