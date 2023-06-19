@@ -5,10 +5,11 @@ import Test.LambdaBuffers.Runtime.Prelude.Json qualified as PreludeJson
 import Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
-main =
+main = do
+  jsonTests <- PreludeJson.tests
   defaultMain $
     testGroup
       "LambdaBuffers `lbf-prelude` package runtime tests"
-      [ PreludeJson.test
-      , PreludeEq.test
+      [ jsonTests
+      , PreludeEq.tests
       ]

@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Runtime.Prelude.Eq (test) where
+module Test.LambdaBuffers.Runtime.Prelude.Eq (tests) where
 
 import Hedgehog qualified as H
 import LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Lbr
@@ -7,11 +7,17 @@ import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Hedgehog qualified as H
 
-test :: TestTree
-test =
+tests :: TestTree
+tests =
+  testGroup
+    "lbf-prelude.Prelude.Eq class derivation tests"
+    [hedgehogTests]
+
+hedgehogTests :: TestTree
+hedgehogTests =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
-      "lbf-prelude.Prelude.Eq class derivation tests"
+      "Property tests"
       [ fooSumEq
       , fooProdEq
       , fooRecEq
