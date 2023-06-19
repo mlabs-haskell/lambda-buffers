@@ -91,12 +91,14 @@ library
     , base64-bytestring
     , bytestring         >=0.11
     , containers         >=0.6
+    , hedgehog           >=1.2
     , text               >=1.2
     , vector             >=0.12
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Runtime.Prelude
+    LambdaBuffers.Runtime.Prelude.Generators.Correct
     LambdaBuffers.Runtime.Prelude.Json
 
 test-suite tests
@@ -106,14 +108,9 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base            >=4.16
-    , bytestring      >=0.11
-    , containers      >=0.6
     , hedgehog        >=1.2
     , lbr-prelude
     , tasty           >=1.4
     , tasty-hedgehog  >=1.4
-    , text            >=1.2
 
-  other-modules:
-    Test.LambdaBuffers.Runtime.Prelude.Generators.Correct
-    Test.LambdaBuffers.Runtime.Prelude.Json
+  other-modules:  Test.LambdaBuffers.Runtime.Prelude.Json

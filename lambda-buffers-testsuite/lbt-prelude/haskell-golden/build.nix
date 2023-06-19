@@ -14,17 +14,17 @@ let
   inherit pkgs;
 
   lbfFooHs = lbfHaskell {
-    src = ./..;
+    src = ./../api;
     inherit pkgs;
-    cabalPackageName = "lbf-prelude-test";
-    lbfFiles = [ "Foo/Bar.lbf" ];
+    cabalPackageName = "lbf-golden-api";
+    lbfFiles = [ "Foo/Bar.lbf" "Days.lbf" ];
     importPaths = [ lbf-prelude ];
     deps = [ lbfPreludeHs ];
   };
   project = { lib, ... }: {
     src = ./.;
 
-    name = "lbf-prelude-haskell-tests";
+    name = "lbf-prelude-haskell-golden";
 
     inherit compiler-nix-name index-state;
 
@@ -41,7 +41,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          haskell-tests.configureFlags = [ "-f-dev" ];
+          haskell-golden.configureFlags = [ "-f-dev" ];
         };
       })
     ];

@@ -2,7 +2,7 @@ module Test.LambdaBuffers.Runtime.Prelude.Json (test) where
 
 import Hedgehog qualified as H
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
-import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
+import LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Hedgehog qualified as H

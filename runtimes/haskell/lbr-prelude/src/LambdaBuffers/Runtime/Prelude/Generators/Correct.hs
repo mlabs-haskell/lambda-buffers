@@ -1,4 +1,4 @@
-module Test.LambdaBuffers.Runtime.Prelude.Generators.Correct (genBool, genInteger, genChar, genText, genMaybe, genEither, genBytes, genList, genSet, genMap, genComplicated) where
+module LambdaBuffers.Runtime.Prelude.Generators.Correct (genBool, genInteger, genChar, genText, genMaybe, genEither, genBytes, genList, genSet, genMap, genComplicated) where
 
 import Data.ByteString (ByteString)
 import Data.List qualified as List

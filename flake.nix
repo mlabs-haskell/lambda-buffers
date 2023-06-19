@@ -156,15 +156,15 @@
           };
 
           # Test Suite
-          lbfPreludeHsTestBuild = buildAbstraction {
-            import-location = ./lambda-buffers-testsuite/lbf-prelude/haskell-tests/build.nix;
+          preludeHsGoldenBuild = buildAbstraction {
+            import-location = ./lambda-buffers-testsuite/lbt-prelude/haskell-golden/build.nix;
             additional = {
               lbr-prelude = ./runtimes/haskell/lbr-prelude;
               lbf-prelude = ./libs/lbf-prelude;
               inherit lbfHaskell lbfPreludeHs;
             };
           };
-          lbfPreludeHsTestFlake = flakeAbstraction lbfPreludeHsTestBuild;
+          preludeHsGoldenFlake = flakeAbstraction preludeHsGoldenBuild;
 
           # Purescript/cardano-transaction-lib environment.
           ctlShell = import ./experimental/ctl-env/build.nix {
@@ -192,6 +192,7 @@
           // codegenFlake.packages
           // lbrPreludeHsFlake.packages
           // lbrPlutusHsFlake.packages
+          // preludeHsGoldenFlake.packages
           // clis;
 
           devShells = rec {
@@ -205,11 +206,20 @@
             dev-plutustx-env = plutusTxShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
-            dev-lbf-prelude-haskell-tests = lbfPreludeHsTestFlake.devShell;
+            dev-lbf-prelude-haskell-golden = preludeHsGoldenFlake.devShell;
           };
 
           # nix flake check
-          checks = devShells // packages // renameAttrs (n: "check-${n}") (compilerFlake.checks // frontendFlake.checks // codegenFlake.checks // lbrPreludeHsFlake.checks // lbrPlutusHsFlake.checks);
+          checks = devShells //
+            packages //
+            renameAttrs (n: "check-${n}") (
+              compilerFlake.checks //
+                frontendFlake.checks //
+                codegenFlake.checks //
+                lbrPreludeHsFlake.checks //
+                lbrPlutusHsFlake.checks //
+                preludeHsGoldenFlake.checks
+            );
 
         };
     };

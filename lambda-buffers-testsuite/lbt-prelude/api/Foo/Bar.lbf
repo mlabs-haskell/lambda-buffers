@@ -16,3 +16,12 @@ record FooRec a b c = { fooA : a, fooB : b, fooC : c, fooInt : Integer }
 
 derive Eq (FooRec a b c)
 derive Json (FooRec a b c)
+
+record FooComplicated a b c = {
+  sum : FooSum a b c,
+  prod : FooProd a b c,
+  rec : FooRec a b c
+ }
+
+derive Eq (FooComplicated a b c)
+derive Json (FooComplicated a b c)
