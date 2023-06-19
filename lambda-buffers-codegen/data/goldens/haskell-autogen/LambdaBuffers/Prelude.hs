@@ -15,7 +15,7 @@ import qualified Data.Int
 import qualified Data.Map
 import qualified Data.Set
 import qualified Data.Text
-import qualified LambdaBuffers.Runtime.Haskell
+import qualified LambdaBuffers.Runtime.Prelude
 import qualified Prelude
 
 
@@ -31,7 +31,7 @@ type Int32 = Data.Int.Int32
 
 type Integer = Prelude.Integer
 
-type List a = LambdaBuffers.Runtime.Haskell.List a
+type List a = LambdaBuffers.Runtime.Prelude.List a
 
 type Map a b = Data.Map.Map a b
 
