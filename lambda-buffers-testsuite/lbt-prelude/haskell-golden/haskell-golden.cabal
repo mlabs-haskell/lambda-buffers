@@ -100,7 +100,7 @@ library
   hs-source-dirs:  src
   exposed-modules: LambdaBuffers.Prelude.Json.Golden
 
-executable lbf-prelude-golden
+executable lbt-prelude-golden
   import:         common-language
   build-depends:
     , aeson
