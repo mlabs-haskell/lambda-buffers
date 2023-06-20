@@ -1,10 +1,10 @@
 { pkgs
 , haskell-nix
 , mlabs-tooling
-, lbr-prelude
 , lbf-prelude
+, lbf-prelude-hs
+, lbr-prelude-hs
 , lbfHaskell
-, lbfPreludeHs
 , compiler-nix-name
 , index-state
 , commonTools
@@ -13,13 +13,13 @@
 let
   inherit pkgs;
 
-  lbfFooHs = lbfHaskell {
-    src = ./../api;
+  goldenApiHs = lbfHaskell {
     inherit pkgs;
-    cabalPackageName = "lbf-golden-api";
-    lbfFiles = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-    importPaths = [ lbf-prelude ./../api ];
-    deps = [ lbfPreludeHs ];
+    name = "lbf-golden-api";
+    src = ./../api;
+    files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
+    imports = [ ../../../libs/lbf-prelude ];
+    dependencies = [ "lbf-prelude" "lbr-prelude" ];
   };
   goldenData = import ../../../extras/haskell-data.nix {
     inherit pkgs;
@@ -35,9 +35,9 @@ let
     inherit compiler-nix-name index-state;
 
     extraHackage = [
-      "${lbr-prelude}"
-      "${lbfPreludeHs}"
-      "${lbfFooHs}"
+      "${lbr-prelude-hs}"
+      "${lbf-prelude-hs}"
+      "${goldenApiHs}"
       "${goldenData}"
     ];
 

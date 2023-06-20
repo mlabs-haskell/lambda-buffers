@@ -145,39 +145,47 @@
 
           # Nix lib
           lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
+          lbfLibs = {
+            lbf-prelude-hs = lbfHaskell {
+              inherit pkgs;
+              name = "lbf-prelude";
+              src = ./libs/lbf-prelude;
+              files = [ "Prelude.lbf" ];
+              dependencies = [ "lbr-prelude" ];
+            };
 
-          lbfPreludeHs = lbfHaskell {
-            src = ./libs/lbf-prelude;
-            inherit pkgs;
-            cabalPackageName = "lbf-prelude";
-            lbfFiles = [ "Prelude.lbf" ];
-            importPaths = [ ];
-            deps = [ ];
+            lbf-plutus-hs = lbfHaskell {
+              inherit pkgs;
+              name = "lbf-plutus";
+              src = ./libs/lbf-plutus;
+              imports = [ ./libs/lbf-prelude ];
+              files = [ "Plutus.lbf" "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+              dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
+            };
           };
 
           # Test Suite
           preludeHsGoldenBuild = buildAbstraction {
             import-location = ./lambda-buffers-testsuite/lbt-prelude/haskell-golden/build.nix;
             additional = {
-              lbr-prelude = ./runtimes/haskell/lbr-prelude;
+              inherit lbfHaskell;
               lbf-prelude = ./libs/lbf-prelude;
-              inherit lbfHaskell lbfPreludeHs;
+              lbr-prelude-hs = ./runtimes/haskell/lbr-prelude;
+              inherit (lbfLibs) lbf-prelude-hs;
             };
           };
           preludeHsGoldenFlake = flakeAbstraction preludeHsGoldenBuild;
 
-          # Purescript/cardano-transaction-lib environment.
-          ctlShell = import ./experimental/ctl-env/build.nix {
-            inherit system; inherit (inputs) nixpkgs ctl;
-            inherit (clis) lbf lbc lbg;
-            lbf-base = ./experimental/lbf-base;
+          plutusHsGoldenBuild = buildAbstraction {
+            import-location = ./lambda-buffers-testsuite/lbt-plutus/haskell-golden/build.nix;
+            additional = {
+              inherit lbfHaskell;
+              lbf-prelude = ./libs/lbf-prelude;
+              lbr-prelude-hs = ./runtimes/haskell/lbr-prelude;
+              inherit (lbfLibs) lbf-prelude-hs;
+            };
           };
-          # Purescript/cardano-transaction-lib shell
-          plutusTxShell = import ./experimental/plutustx-env/build.nix {
-            inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling;
-            inherit (clis) lbf lbc lbg;
-            lbf-base = ./experimental/lbf-base;
-          };
+          plutusHsGoldenFlake = flakeAbstraction plutusHsGoldenBuild;
 
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -193,7 +201,8 @@
           // lbrPreludeHsFlake.packages
           // lbrPlutusHsFlake.packages
           // preludeHsGoldenFlake.packages
-          // clis;
+          // clis
+          // lbfLibs;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
@@ -202,8 +211,6 @@
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;
-            dev-ctl-env = ctlShell;
-            dev-plutustx-env = plutusTxShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
             dev-lbf-prelude-haskell-golden = preludeHsGoldenFlake.devShell;

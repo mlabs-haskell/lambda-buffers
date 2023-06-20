@@ -1,13 +1,36 @@
-lbf: lbg-haskell: { pkgs, src, lbfFiles, importPaths, cabalPackageName, deps ? [ ], cabalPackageVersion ? "0.1.0.0" }:
+# LambdaBuffers Frontend
+lbf:
+# LambdaBuffers Haskell Codegen
+lbg-haskell:
+{
+  # Nixpkgs
+  pkgs
+, # Source that are passed to `lbf` as the `--import-path` flag and used to find `files`.
+  # Examples: src = [ ./api ]
+  src
+, # Additional sources that are passed to `lbf` as the `--import-path` flag.
+  # Examples: imports = [ lbf-prelude ]
+  imports ? [ ]
+, # .lbf files in `src` to compile and codegen.
+  # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
+  files
+, # Dependencies to include in the Cabal's `build-depends` stanza.
+  # examples: dependencies = [ "lbf-prelude" "lbr-prelude" ]
+  dependencies ? [ ]
+, # Name of the package and also the name of the Cabal package.
+  # Examples: name = "lbf-myproject"
+  name
+, # Version of the package and also the version of the Cabal package.
+  # Examples: version = "0.1.0.0"
+  version ? "0.1.0.0"
+}:
 let
-  importPaths' = builtins.concatStringsSep " " (builtins.map (imp: "--import-path ${imp}") importPaths);
-  providedDeps = builtins.concatStringsSep " " (builtins.map (dep: dep.name) deps);
   cabalTemplate = pkgs.writeTextFile {
     name = "lambda-buffers-cabal-template";
     text = ''
       cabal-version:      3.0
-      name:               ${cabalPackageName}
-      version:            ${cabalPackageVersion}
+      name:               ${name}
+      version:            ${version}
       synopsis:           A Cabal project that contains LambdaBuffers generated Haskell modules
       build-type:         Simple
 
@@ -23,8 +46,8 @@ let
   };
 in
 pkgs.stdenv.mkDerivation {
-  inherit src;
-  name = cabalPackageName;
+  inherit src version;
+  pname = name;
   outputs = [ "out" "build" ];
   buildInputs = [
     pkgs.cabal-install
@@ -34,27 +57,28 @@ pkgs.stdenv.mkDerivation {
   buildPhase = ''
     mkdir autogen
     mkdir .work
-    lbf build ${importPaths'} \
+    ls
+    lbf build ${builtins.concatStringsSep " " (builtins.map (src: "--import-path ${src}") ([src] ++ imports))} \
         --work-dir .work \
         --gen ${lbg-haskell}/bin/lbg-haskell \
         --gen-dir autogen \
-        ${builtins.concatStringsSep " " lbfFiles}
+        ${builtins.concatStringsSep " " files}
 
     EXPOSED_MODULES=$(find autogen -name "*.hs" | while read f; do grep -Eo 'module\s+\S+\s+' $f | head -n 1 | sed -r 's/module\s+//' | sed -r 's/\s+//'; done | tr '\n' ' ')
     echo "Found generated modules $EXPOSED_MODULES"
-    DEPS=$(echo ${providedDeps} $(cat autogen/build.json | jq -r ".[]") | tr ' ' ',' | sed 's/$//')
+    DEPS=$(echo ${builtins.concatStringsSep " " dependencies} $(cat autogen/build.json | jq -r ".[]") | tr ' ' ',' | sed 's/$//')
 
     cat ${cabalTemplate} \
         | sed -r "s/<EXPOSED_MODULES>/$EXPOSED_MODULES/" \
-        | sed -r "s/<DEPS>/$DEPS/" > ${cabalPackageName}.cabal
-    cat ${cabalPackageName}.cabal
+        | sed -r "s/<DEPS>/$DEPS/" > ${name}.cabal
+    cat ${name}.cabal
     cat autogen/build.json
   '';
 
   installPhase = ''
     mkdir -p $out/autogen;
     cp -r autogen $out
-    cp ${cabalPackageName}.cabal $out/${cabalPackageName}.cabal;
+    cp ${name}.cabal $out/${name}.cabal;
     mv autogen/build.json $build;
   '';
 }
