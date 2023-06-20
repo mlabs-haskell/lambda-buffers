@@ -12,7 +12,7 @@ prod WorkDay = Day
 derive Eq WorkDay
 derive Json WorkDay
 
-record WeekDay = { day : Day }
+record FreeDay = { day : Day }
 
-derive Eq WeekDay
-derive Json WeekDay
+derive Eq FreeDay
+derive Json FreeDay

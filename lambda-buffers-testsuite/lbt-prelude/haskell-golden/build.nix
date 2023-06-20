@@ -17,8 +17,8 @@ let
     src = ./../api;
     inherit pkgs;
     cabalPackageName = "lbf-golden-api";
-    lbfFiles = [ "Foo/Bar.lbf" "Days.lbf" ];
-    importPaths = [ lbf-prelude ];
+    lbfFiles = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
+    importPaths = [ lbf-prelude ./../api ];
     deps = [ lbfPreludeHs ];
   };
   goldenData = import ../../../extras/haskell-data.nix {

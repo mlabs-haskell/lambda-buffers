@@ -1,26 +1,12 @@
 module Test.LambdaBuffers.Runtime.Prelude.Json (tests) where
 
-import Data.ByteString qualified as B
-import Data.ByteString.Lazy qualified as BL
-import Data.Foldable (for_)
-import Data.List (isPrefixOf)
-import Data.Map qualified as Map
-import Data.Set qualified as Set
-import Data.Text qualified as Text
-import Data.Traversable (for)
 import Hedgehog qualified as H
-import Hedgehog.Gen qualified as H
-import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), WeekDay (WeekDay), WorkDay (WorkDay))
-import LambdaBuffers.Foo.Bar (FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Prelude.Json.Golden qualified as Golden
+import LambdaBuffers.Prelude.Json.Golden qualified as Map
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
-import LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Lbr
 import Paths_lbt_prelude_golden_data_hs qualified as Paths
-import System.Directory (removeFile)
-import System.FilePath (takeBaseName, (</>))
 import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
-import Test.Tasty.Golden (findByExtension, goldenVsString)
-import Test.Tasty.HUnit (assertFailure)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Hedgehog qualified as H
 
@@ -37,13 +23,13 @@ hedgehogTests =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "Property tests"
-      [ fooSumFromTo
-      , fooProdFromTo
-      , fooRecFromTo
-      , fooComplicatedFromTo
-      , dayFromTo
-      , workDayFromTo
-      , weekDayFromTo
+      [ aToFrom
+      , bToFrom
+      , cToFrom
+      , dToFrom
+      , dayToFrom
+      , workDayToFrom
+      , weekDayToFrom
       ]
 
 goldenTests :: IO TestTree
@@ -53,10 +39,10 @@ goldenTests = do
       `traverse` [ dayFromToGolden
                  , workDayFromToGolden
                  , weekDayFromToGolden
-                 , fooSumFromToGolden Lbr.genBool Lbr.genBytes Lbr.genInteger
-                 , fooProdFromToGolden Lbr.genBool Lbr.genBytes Lbr.genInteger
-                 , fooRecFromToGolden Lbr.genBool Lbr.genBytes Lbr.genInteger
-                 , fooComplicatedFromToGolden Lbr.genBool Lbr.genBytes Lbr.genInteger
+                 , aFromToGolden
+                 , bFromToGolden
+                 , cFromToGolden
+                 , dFromToGolden
                  , boolFromToGolden
                  , integerFromToGolden
                  , bytesFromToGolden
@@ -74,8 +60,8 @@ goldenTests = do
       "Golden tests"
       gts
 
-fromToTest :: forall {a}. (Show a, Eq a, Json a) => TestName -> H.Gen a -> TestTree
-fromToTest title gen =
+toFromTest :: forall {a}. (Show a, Eq a, Json a) => TestName -> H.Gen a -> TestTree
+toFromTest title gen =
   testProperty
     (title <> ": (fromJson . toJson) x == x")
     ( H.property $ do
@@ -83,174 +69,115 @@ fromToTest title gen =
         (fromJsonBytes . toJsonBytes) x H.=== Right x
     )
 
-fooSumFromTo :: TestTree
-fooSumFromTo =
-  fromToTest
-    "Foo.Bar.FooSum"
-    (Correct.genFooSum Lbr.genInteger Lbr.genBool Lbr.genBytes)
+aToFrom :: TestTree
+aToFrom =
+  toFromTest
+    "Foo.A"
+    Correct.genA
 
-fooProdFromTo :: TestTree
-fooProdFromTo =
-  fromToTest
-    "Foo.Bar.FooProd"
-    (Correct.genFooProd Lbr.genInteger Lbr.genBool Lbr.genBytes)
+bToFrom :: TestTree
+bToFrom =
+  toFromTest
+    "Foo.B"
+    Correct.genB
 
-fooRecFromTo :: TestTree
-fooRecFromTo =
-  fromToTest
-    "Foo.Bar.FooRec"
-    (Correct.genFooRec Lbr.genInteger Lbr.genBool Lbr.genBytes)
+cToFrom :: TestTree
+cToFrom =
+  toFromTest
+    "Foo.C"
+    Correct.genC
 
-fooComplicatedFromTo :: TestTree
-fooComplicatedFromTo =
-  fromToTest
-    "Foo.Bar.FooComplicated"
-    (Correct.genFooComplicated Lbr.genInteger Lbr.genBool Lbr.genBytes)
+dToFrom :: TestTree
+dToFrom =
+  toFromTest
+    "Foo.D"
+    Correct.genD
 
-dayFromTo :: TestTree
-dayFromTo =
-  fromToTest
+dayToFrom :: TestTree
+dayToFrom =
+  toFromTest
     "Days.Day"
     Correct.genDay
 
-workDayFromTo :: TestTree
-workDayFromTo =
-  fromToTest
+workDayToFrom :: TestTree
+workDayToFrom =
+  toFromTest
     "Days.WorkDay"
     Correct.genWorkDay
 
-weekDayFromTo :: TestTree
-weekDayFromTo =
-  fromToTest
+weekDayToFrom :: TestTree
+weekDayToFrom =
+  toFromTest
     "Days.WeekDay"
     Correct.genWeekDay
 
--- | `fromToGoldenTest title gens`
-fromToGoldenTest :: forall {a}. (Json a) => TestName -> [H.Gen a] -> IO TestTree
-fromToGoldenTest title gens =
-  do
-    goldenDir <- Paths.getDataFileName "data/golden"
-    jsonFpsFound <- filter (\fp -> title `isPrefixOf` takeBaseName fp) <$> findByExtension [".json"] goldenDir
-    jsonFps <-
-      if length jsonFpsFound /= length gens
-        then do
-          for_ jsonFpsFound removeFile
-          for (zip [0 :: Integer ..] gens) $ \(ix, gen) -> do
-            x <- H.sample gen
-            let
-              xJson = toJsonBytes x
-              jsonFp = goldenDir </> title <> "." <> show ix <> ".json"
-            B.writeFile jsonFp xJson
-            return jsonFp
-        else return jsonFpsFound
-    tests' <- for jsonFps $ \jsonFp ->
-      do
-        let index = takeBaseName jsonFp
-        json <- B.readFile jsonFp
-        case fromJsonBytes @a json of
-          Left err -> assertFailure $ "Failed parsing " <> jsonFp <> " " <> show err
-          Right res -> return $ goldenVsString index jsonFp (return . BL.fromStrict . toJsonBytes $ res)
-    return $
-      testGroup
-        (title <> ": (toJson . fromJson) golden == golden")
-        tests'
+fromToGoldenTest :: forall {a}. Json a => TestName -> [a] -> IO TestTree
+fromToGoldenTest title goldens = do
+  goldenDir <- Paths.getDataFileName "data/golden"
+  Golden.fromToGoldenTest goldenDir title goldens
 
-fooSumGens :: H.Gen a -> H.Gen b -> H.Gen c -> [H.Gen (FooSum a b c)]
-fooSumGens genx geny genz =
-  [ FooSum'Foo <$> genx <*> geny <*> genz
-  , FooSum'Bar <$> genx <*> geny
-  , FooSum'Baz <$> geny
-  , return FooSum'Qax
-  , FooSum'Faz <$> Lbr.genInteger
-  ]
-
-fooSumFromToGolden :: (Json a, Json b, Json c) => H.Gen a -> H.Gen b -> H.Gen c -> IO TestTree
-fooSumFromToGolden genx geny genz =
+aFromToGolden :: IO TestTree
+aFromToGolden =
   fromToGoldenTest
-    "Foo.Bar.FooSum"
-    (fooSumGens genx geny genz)
+    "Foo.A"
+    Golden.aGoldens
 
-fooProdGens :: H.Gen a -> H.Gen b -> H.Gen c -> [H.Gen (FooProd a b c)]
-fooProdGens genx geny genz =
-  [FooProd <$> genx <*> geny <*> genz <*> Lbr.genInteger]
-
-fooProdFromToGolden :: (Json a, Json b, Json c) => H.Gen a -> H.Gen b -> H.Gen c -> IO TestTree
-fooProdFromToGolden genx geny genz =
+bFromToGolden :: IO TestTree
+bFromToGolden =
   fromToGoldenTest
-    "Foo.Bar.FooProd"
-    (fooProdGens genx geny genz)
+    "Foo.B"
+    Golden.bGoldens
 
-fooRecGens :: H.Gen a -> H.Gen b -> H.Gen c -> [H.Gen (FooRec a b c)]
-fooRecGens genx geny genz =
-  [FooRec <$> genx <*> geny <*> genz <*> Lbr.genInteger]
-
-fooRecFromToGolden :: (Json a, Json b, Json c) => H.Gen a -> H.Gen b -> H.Gen c -> IO TestTree
-fooRecFromToGolden genx geny genz =
+cFromToGolden :: IO TestTree
+cFromToGolden =
   fromToGoldenTest
-    "Foo.Bar.FooRec"
-    (fooRecGens genx geny genz)
+    "Foo.C"
+    Golden.cGoldens
 
-fooComplicatedFromToGolden :: (Json a, Json b, Json c) => H.Gen a -> H.Gen b -> H.Gen c -> IO TestTree
-fooComplicatedFromToGolden genx geny genz =
+dFromToGolden :: IO TestTree
+dFromToGolden =
   fromToGoldenTest
-    "Foo.Bar.FooComplicated"
-    ( do
-        fooSumGen <- fooSumGens genx geny genz
-        fooProdGen <- fooProdGens genx geny genz
-        fooRecGen <- fooRecGens genx geny genz
-        return (FooComplicated <$> fooSumGen <*> fooProdGen <*> fooRecGen)
-    )
+    "Foo.D"
+    Golden.dGoldens
 
 dayFromToGolden :: IO TestTree
-dayFromToGolden = fromToGoldenTest "Days.Day" (return <$> [Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursday, Day'Friday, Day'Saturday, Day'Sunday])
+dayFromToGolden = fromToGoldenTest "Days.Day" Golden.dayGoldens
 
 workDayFromToGolden :: IO TestTree
-workDayFromToGolden = fromToGoldenTest "Days.WorkDay" (return . WorkDay <$> [Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursday, Day'Friday])
+workDayFromToGolden = fromToGoldenTest "Days.WorkDay" Golden.workDayGoldens
 
 weekDayFromToGolden :: IO TestTree
-weekDayFromToGolden = fromToGoldenTest "Days.WeekDay" (return . WeekDay <$> [Day'Saturday, Day'Sunday])
+weekDayFromToGolden = fromToGoldenTest "Days.FreeDay" Golden.freeDayGoldens
 
 boolFromToGolden :: IO TestTree
-boolFromToGolden = fromToGoldenTest "Prelude.Bool" (return <$> [True, False])
+boolFromToGolden = fromToGoldenTest "Prelude.Bool" Golden.boolGoldens
 
 integerFromToGolden :: IO TestTree
 integerFromToGolden =
   fromToGoldenTest
     "Prelude.Integer"
-    [ return 0
-    , return 1
-    , return (-1)
-    , return $ 2 ^ (32 :: Integer)
-    , return $ -(2 ^ (32 :: Integer))
-    , return $ 2 ^ (64 :: Integer)
-    , return $ -(2 ^ (64 :: Integer))
-    , return $ 2 ^ (128 :: Integer)
-    , return $ -(2 ^ (128 :: Integer))
-    , return $ 2 ^ (256 :: Integer)
-    , return $ -(2 ^ (256 :: Integer))
-    , Lbr.genInteger
-    ]
+    Golden.integerGoldens
 
 bytesFromToGolden :: IO TestTree
-bytesFromToGolden = fromToGoldenTest "Prelude.Bytes" [return B.empty, return $ B.singleton 0, Lbr.genBytes]
+bytesFromToGolden = fromToGoldenTest "Prelude.Bytes" Golden.bytesGoldens
 
 charFromToGolden :: IO TestTree
-charFromToGolden = fromToGoldenTest "Prelude.Char" [return '\0', return '\n', Lbr.genChar]
+charFromToGolden = fromToGoldenTest "Prelude.Char" Golden.charGoldens
 
 textFromToGolden :: IO TestTree
-textFromToGolden = fromToGoldenTest "Prelude.Text" [return Text.empty, return $ Text.singleton 'x', return $ Text.pack "dražen popović", Lbr.genText]
+textFromToGolden = fromToGoldenTest "Prelude.Text" Golden.textGoldens
 
 maybeFromToGolden :: IO TestTree
-maybeFromToGolden = fromToGoldenTest "Prelude.Maybe" [return Nothing, return $ Just True, return $ Just False]
+maybeFromToGolden = fromToGoldenTest "Prelude.Maybe" Golden.maybeGoldens
 
 eitherFromToGolden :: IO TestTree
-eitherFromToGolden = fromToGoldenTest "Prelude.Either" [return $ Left True, return $ Right (Text.pack "this is right"), Lbr.genEither Lbr.genBool Lbr.genText]
+eitherFromToGolden = fromToGoldenTest "Prelude.Either" Golden.eitherGoldens
 
 listFromToGolden :: IO TestTree
-listFromToGolden = fromToGoldenTest "Prelude.List" [return [], return [True], Lbr.genList Lbr.genBool]
+listFromToGolden = fromToGoldenTest "Prelude.List" Golden.listGoldens
 
 setFromToGolden :: IO TestTree
-setFromToGolden = fromToGoldenTest "Prelude.Set" [return Set.empty, return $ Set.singleton True, return $ Set.fromList [True, False]]
+setFromToGolden = fromToGoldenTest "Prelude.Set" Golden.setGoldens
 
 mapFromToGolden :: IO TestTree
-mapFromToGolden = fromToGoldenTest "Prelude.Map" [return Map.empty, return $ Map.singleton True True, return $ Map.fromList [(True, True), (False, False)]]
+mapFromToGolden = fromToGoldenTest "Prelude.Map" Map.mapGoldens
