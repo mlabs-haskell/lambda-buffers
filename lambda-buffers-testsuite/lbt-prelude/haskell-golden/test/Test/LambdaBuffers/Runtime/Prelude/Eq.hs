@@ -1,7 +1,6 @@
 module Test.LambdaBuffers.Runtime.Prelude.Eq (tests) where
 
 import Hedgehog qualified as H
-import LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Lbr
 import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
@@ -18,10 +17,10 @@ hedgehogTests =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "Property tests"
-      [ fooSumEq
-      , fooProdEq
-      , fooRecEq
-      , fooComplicatedEq
+      [ aEq
+      , bEq
+      , cEq
+      , dEq
       , dayEq
       , workDayEq
       , weekDayEq
@@ -36,29 +35,29 @@ eqTest title gen =
         x H.=== x
     )
 
-fooSumEq :: TestTree
-fooSumEq =
+aEq :: TestTree
+aEq =
   eqTest
-    "Foo.Bar.FooSum"
-    (Correct.genFooSum Lbr.genInteger Lbr.genBool Lbr.genBytes)
+    "Foo.A"
+    Correct.genA
 
-fooProdEq :: TestTree
-fooProdEq =
+bEq :: TestTree
+bEq =
   eqTest
-    "Foo.Bar.FooProd"
-    (Correct.genFooProd Lbr.genInteger Lbr.genBool Lbr.genBytes)
+    "Foo.B"
+    Correct.genB
 
-fooRecEq :: TestTree
-fooRecEq =
+cEq :: TestTree
+cEq =
   eqTest
-    "Foo.Bar.FooRec"
-    (Correct.genFooRec Lbr.genInteger Lbr.genBool Lbr.genBytes)
+    "Foo.C"
+    Correct.genC
 
-fooComplicatedEq :: TestTree
-fooComplicatedEq =
+dEq :: TestTree
+dEq =
   eqTest
-    "Foo.Bar.FooComplicated"
-    (Correct.genFooComplicated Lbr.genInteger Lbr.genBool Lbr.genBytes)
+    "Foo.D"
+    Correct.genD
 
 dayEq :: TestTree
 dayEq =

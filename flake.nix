@@ -145,6 +145,7 @@
 
           # Nix lib
           lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
+
           lbfLibs = {
             lbf-prelude-hs = lbfHaskell {
               inherit pkgs;
@@ -159,12 +160,12 @@
               name = "lbf-plutus";
               src = ./libs/lbf-plutus;
               imports = [ ./libs/lbf-prelude ];
-              files = [ "Plutus.lbf" "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+              files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
               dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
             };
           };
 
-          # Test Suite
+          # Test Suites
           preludeHsGoldenBuild = buildAbstraction {
             import-location = ./lambda-buffers-testsuite/lbt-prelude/haskell-golden/build.nix;
             additional = {
@@ -176,16 +177,18 @@
           };
           preludeHsGoldenFlake = flakeAbstraction preludeHsGoldenBuild;
 
-          plutusHsGoldenBuild = buildAbstraction {
-            import-location = ./lambda-buffers-testsuite/lbt-plutus/haskell-golden/build.nix;
+          lbtPlutusHsBuild = buildAbstraction {
+            import-location = ./lambda-buffers-testsuite/lbt-plutus/lbt-plutus-haskell/build.nix;
             additional = {
               inherit lbfHaskell;
               lbf-prelude = ./libs/lbf-prelude;
               lbr-prelude-hs = ./runtimes/haskell/lbr-prelude;
-              inherit (lbfLibs) lbf-prelude-hs;
+              lbf-plutus = ./libs/lbf-plutus;
+              lbr-plutus-hs = ./runtimes/haskell/lbr-plutus;
+              inherit (lbfLibs) lbf-prelude-hs lbf-plutus-hs;
             };
           };
-          plutusHsGoldenFlake = flakeAbstraction plutusHsGoldenBuild;
+          lbtPlutusHsFlake = flakeAbstraction lbtPlutusHsBuild;
 
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -201,6 +204,7 @@
           // lbrPreludeHsFlake.packages
           // lbrPlutusHsFlake.packages
           // preludeHsGoldenFlake.packages
+          // lbtPlutusHsFlake.packages
           // clis
           // lbfLibs;
 
@@ -213,7 +217,8 @@
             dev-codegen = codegenFlake.devShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
-            dev-lbf-prelude-haskell-golden = preludeHsGoldenFlake.devShell;
+            dev-lbt-prelude-haskell = preludeHsGoldenFlake.devShell;
+            dev-lbt-plutus-haskell = lbtPlutusHsFlake.devShell;
           };
 
           # nix flake check
@@ -225,7 +230,8 @@
                 codegenFlake.checks //
                 lbrPreludeHsFlake.checks //
                 lbrPlutusHsFlake.checks //
-                preludeHsGoldenFlake.checks
+                preludeHsGoldenFlake.checks //
+                lbtPlutusHsFlake.checks
             );
 
         };

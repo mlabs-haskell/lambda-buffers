@@ -66,7 +66,7 @@ pkgs.stdenv.mkDerivation {
 
     EXPOSED_MODULES=$(find autogen -name "*.hs" | while read f; do grep -Eo 'module\s+\S+\s+' $f | head -n 1 | sed -r 's/module\s+//' | sed -r 's/\s+//'; done | tr '\n' ' ')
     echo "Found generated modules $EXPOSED_MODULES"
-    DEPS=$(echo ${builtins.concatStringsSep " " dependencies} $(cat autogen/build.json | jq -r ".[]") | tr ' ' ',' | sed 's/$//')
+    DEPS=$(echo ${builtins.concatStringsSep " " dependencies} base $(cat autogen/build.json | jq -r ".[]") | sort -nu | tr ' ' ',' | sed 's/$//')
 
     cat ${cabalTemplate} \
         | sed -r "s/<EXPOSED_MODULES>/$EXPOSED_MODULES/" \

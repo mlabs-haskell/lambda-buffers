@@ -30,7 +30,7 @@ let
   project = { lib, ... }: {
     src = ./.;
 
-    name = "lbf-prelude-haskell-golden";
+    name = "lbt-prelude-haskell-golden";
 
     inherit compiler-nix-name index-state;
 

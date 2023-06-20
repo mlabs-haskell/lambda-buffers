@@ -1,0 +1,15 @@
+module Plutus.V2.Todo
+
+import Prelude (Eq)
+import Plutus (PlutusData)
+
+-- PlutusLedgerApi.V2.Contexts
+opaque TxInfo
+
+instance PlutusData TxInfo
+instance Eq TxInfo
+
+opaque ScriptContext
+
+instance PlutusData ScriptContext
+instance Eq ScriptContext

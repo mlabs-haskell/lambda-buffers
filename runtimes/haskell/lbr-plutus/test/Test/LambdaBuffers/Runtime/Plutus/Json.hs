@@ -3,7 +3,7 @@ module Test.LambdaBuffers.Runtime.Plutus.Json (test) where
 import Hedgehog qualified as H
 import LambdaBuffers.Runtime.Plutus ()
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
-import Test.LambdaBuffers.Runtime.Plutus.Generators.Correct qualified as Correct
+import Test.LambdaBuffers.Plutus.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Hedgehog qualified as H

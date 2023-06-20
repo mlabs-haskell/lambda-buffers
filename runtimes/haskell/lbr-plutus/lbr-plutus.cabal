@@ -88,6 +88,7 @@ library
     , base               >=4.16
     , base16-bytestring  >=1.0
     , bytestring         >=0.11
+    , hedgehog           >=1.2
     , lbr-prelude
     , plutus-ledger-api
     , plutus-tx
@@ -97,6 +98,8 @@ library
   exposed-modules:
     LambdaBuffers.Runtime.Plutus
     LambdaBuffers.Runtime.Plutus.Json
+    LambdaBuffers.Runtime.Plutus.PlutusData
+    Test.LambdaBuffers.Plutus.Generators.Correct
 
 test-suite tests
   import:         common-language
@@ -104,16 +107,11 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base               >=4.16
-    , bytestring         >=0.11
-    , hedgehog           >=1.2
+    , base            >=4.16
+    , hedgehog        >=1.2
     , lbr-plutus
     , lbr-prelude
-    , plutus-ledger-api
-    , plutus-tx
-    , tasty              >=1.4
-    , tasty-hedgehog     >=1.4
+    , tasty           >=1.4
+    , tasty-hedgehog  >=1.4
 
-  other-modules:
-    Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
-    Test.LambdaBuffers.Runtime.Plutus.Json
+  other-modules:  Test.LambdaBuffers.Runtime.Plutus.Json

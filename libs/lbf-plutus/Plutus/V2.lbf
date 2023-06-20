@@ -1,26 +1,24 @@
 module Plutus.V2
 
-import Prelude (Eq)
-import Plutus (PlutusData)
+import Prelude (Eq, Json)
+import Plutus.V1 (PlutusData)
 
 -- PlutusLedgerApi.V2.Contexts
 opaque TxInInfo
+
 instance PlutusData TxInInfo
 instance Eq TxInInfo
-
-opaque TxInfo
-instance PlutusData TxInfo
-instance Eq TxInfo
-
-opaque ScriptContext
-instance PlutusData ScriptContext
-instance Eq ScriptContext
+instance Json TxInInfo
 
 -- PlutusLedgerApi.V2.Tx
 opaque OutputDatum
+
 instance PlutusData OutputDatum
 instance Eq OutputDatum
+instance Json OutputDatum
 
 opaque TxOut
+
 instance PlutusData TxOut
 instance Eq TxOut
+instance Json TxOut
