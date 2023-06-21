@@ -1,5 +1,5 @@
 cabal-version: 3.0
-name:          haskell-golden
+name:          lbt-prelude-haskell
 version:       0.1.0.0
 synopsis:
   Integration Test Suite for `lbf-prelude` and Haskell `lbr-prelude`
@@ -104,7 +104,7 @@ executable lbt-prelude-golden
   import:         common-language
   build-depends:
     , base                  >=4.16
-    , haskell-golden
+    , lbt-prelude-haskell
     , optparse-applicative  >=0.17
 
   hs-source-dirs: app
@@ -118,11 +118,11 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base                        >=4.16
-    , haskell-golden
     , hedgehog                    >=1.2
     , lbf-golden-api              >=0.1
     , lbr-prelude
     , lbt-prelude-golden-data-hs
+    , lbt-prelude-haskell
     , tasty                       >=1.4
     , tasty-hedgehog              >=1.4
 

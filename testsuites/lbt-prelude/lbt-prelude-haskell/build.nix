@@ -21,6 +21,7 @@ let
     imports = [ ../../../libs/lbf-prelude ];
     dependencies = [ "lbf-prelude" "lbr-prelude" ];
   };
+
   goldenData = import ../../../extras/haskell-data.nix {
     inherit pkgs;
     srcs = [ ../. ];
@@ -30,7 +31,7 @@ let
   project = { lib, ... }: {
     src = ./.;
 
-    name = "lbt-prelude-haskell-golden";
+    name = "lbt-prelude-haskell";
 
     inherit compiler-nix-name index-state;
 
@@ -48,7 +49,7 @@ let
           allComponent.doHaddock = true;
 
           # Enable strict compilation
-          haskell-golden.configureFlags = [ "-f-dev" ];
+          lbt-prelude-haskell.configureFlags = [ "-f-dev" ];
         };
       })
     ];
