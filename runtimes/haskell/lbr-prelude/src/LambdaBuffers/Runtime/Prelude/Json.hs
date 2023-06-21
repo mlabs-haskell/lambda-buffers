@@ -23,7 +23,6 @@ import Data.Aeson.Encoding qualified as Aeson
 import Data.Aeson.Encoding qualified as AesonEnc
 import Data.Aeson.Key qualified as AesonKey
 import Data.Aeson.Parser qualified as Aeson
-import Data.Aeson.Types (prependFailure)
 import Data.Aeson.Types qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BSS
@@ -56,17 +55,17 @@ fromJsonBytes bs = case Aeson.eitherDecodeStrictWith Aeson.json (Aeson.iparse $ 
 -- | lbf-prelude.Prelude.Json instance rule implementations
 instance Json Integer where
   toJson = Aeson.toJSON
-  fromJson v = prependFailure "instance Json Integer" (Aeson.parseJSON v)
+  fromJson v = prependFailure "Prelude.Integer" (Aeson.parseJSON v)
 
 instance Json Bool where
   toJson = Aeson.toJSON
-  fromJson v = prependFailure "instance Json Bool" (Aeson.parseJSON v)
+  fromJson v = prependFailure "Prelude.Bool" (Aeson.parseJSON v)
 
 instance Json Char where
   toJson = Aeson.String . Text.singleton
   fromJson =
     withText
-      "instance Json Char"
+      "Prelude.Char"
       ( \txt ->
           case Text.uncons txt of
             (Just (c, rest)) -> if Text.null rest then return c else fail $ "Received a JSON String that has more than one character: " <> Text.unpack txt
@@ -75,18 +74,18 @@ instance Json Char where
 
 instance Json ByteString where
   toJson = Aeson.String . encodeByteString
-  fromJson = withText "instance Json Bytes" decodeByteString
+  fromJson = withText "Prelude.Bytes" decodeByteString
 
 instance Json Text where
   toJson = Aeson.String
-  fromJson = withText "instance Json Text" return
+  fromJson = withText "Prelude.Text" return
 
 instance Json a => Json (Maybe a) where
   toJson Nothing = jsonConstructor "Nothing" []
   toJson (Just x) = jsonConstructor "Just" [toJson x]
   fromJson =
     caseJsonConstructor
-      "instance Json (Maybe a) :- Json a"
+      "Prelude.Maybe"
       [
         ( "Nothing"
         , \ctorFields -> case ctorFields of
@@ -106,7 +105,7 @@ instance (Json a, Json b) => Json (Either a b) where
   toJson (Right r) = jsonConstructor "Right" [toJson r]
   fromJson =
     caseJsonConstructor
-      "instance Json (Either a b) :- Json a, Json b"
+      "Prelude.Either"
       [
         ( "Left"
         , \ctorFields -> case ctorFields of
@@ -123,15 +122,15 @@ instance (Json a, Json b) => Json (Either a b) where
 
 instance Json a => Json [a] where
   toJson = jsonArray . fmap toJson
-  fromJson = caseJsonArray "instance Json (List a) :- Json a" (\xs -> fromJson @a `traverse` xs)
+  fromJson = caseJsonArray "Prelude.List" (\xs -> fromJson @a `traverse` xs)
 
 instance (Json a, Ord a) => Json (Set a) where
   toJson s = toJson (toList s)
   fromJson =
     withArray
-      "instance Json (Set a) :- Json a"
+      "Prelude.Set"
       ( \arr -> do
-          elems <- prependFailure "Trying Set elements" $ fromJson @a `traverse` arr
+          elems <- prependFailure "elements" $ fromJson @a `traverse` arr
           let elems' = Set.fromList (toList elems)
           if Vector.length elems == Set.size elems'
             then return elems'
@@ -141,7 +140,7 @@ instance (Json a, Ord a) => Json (Set a) where
 instance (Json k, Json v, Ord k) => Json (Map k v) where
   toJson m = jsonMap [(toJson k, toJson v) | (k, v) <- Map.toList m]
   fromJson =
-    caseJsonMap "instance Json (Map k v) :- Json k, Json v" (\(k, v) -> (,) <$> fromJson @k k <*> fromJson @v v)
+    caseJsonMap "Prelude.Map" (\(k, v) -> (,) <$> fromJson @k k <*> fromJson @v v)
 
 -- | Helper instances
 instance Json () where
@@ -186,8 +185,8 @@ jsonMap = jsonArray . fmap toJson
 
 caseJsonMap :: Ord k => String -> ((Aeson.Value, Aeson.Value) -> Aeson.Parser (k, v)) -> Aeson.Value -> Aeson.Parser (Map k v)
 caseJsonMap title parseElem =
-  prependFailure
-    ("caseJsonMap " <> title)
+  prependFailure "caseJsonMap"
+    . prependFailure title
     . Aeson.withArray
       ""
       ( \arr -> do
@@ -206,12 +205,15 @@ type Key = String
 (.:) :: forall a. Json a => Aeson.Object -> Key -> Aeson.Parser a
 (.:) obj k = Aeson.explicitParseField (fromJson @a) obj (AesonKey.fromString k)
 
+prependFailure :: forall {a}. String -> Aeson.Parser a -> Aeson.Parser a
+prependFailure msg = Aeson.prependFailure $ msg <> " > "
+
 -- | LamVal Json builtins
 jsonArray :: [Aeson.Value] -> Aeson.Value
 jsonArray = Aeson.Array . Vector.fromList
 
 caseJsonArray :: String -> ([Aeson.Value] -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
-caseJsonArray title parseArr = prependFailure ("caseJsonArray " <> title) . Aeson.withArray "" ((prependFailure "element " . parseArr) . toList)
+caseJsonArray title parseArr = prependFailure "caseJsonArray" . prependFailure title . Aeson.withArray "" ((prependFailure "element " . parseArr) . toList)
 
 jsonObject :: [(String, Aeson.Value)] -> Aeson.Value
 jsonObject kvs = object [k .= v | (k, v) <- kvs]
@@ -230,7 +232,8 @@ caseJsonConstructor title = caseJsonConstructor' title . Map.fromList
 
 caseJsonConstructor' :: String -> Map String ([Aeson.Value] -> Aeson.Parser a) -> Aeson.Value -> Aeson.Parser a
 caseJsonConstructor' title ctorParsers =
-  prependFailure ("caseJsonConstructor " <> title)
+  prependFailure "caseJsonConstructor"
+    . prependFailure title
     . Aeson.withObject
       ""
       ( \obj -> do
@@ -245,6 +248,6 @@ caseJsonConstructor' title ctorParsers =
             Just parse -> do
               ctorFields <- obj .: "fields"
               prependFailure
-                ("constructor fields " <> ctorName)
+                ("constructor " <> ctorName)
                 $ parse ctorFields
       )

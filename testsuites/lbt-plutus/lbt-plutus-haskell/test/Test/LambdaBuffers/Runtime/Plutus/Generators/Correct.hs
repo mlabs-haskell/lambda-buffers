@@ -1,4 +1,16 @@
-module Test.LambdaBuffers.Runtime.Plutus.Generators.Correct (genFooSum, genFooProd, genFooRec, genFooComplicated, genDay, genWeekDay, genWorkDay, genA, genB, genC, genD) where
+module Test.LambdaBuffers.Runtime.Plutus.Generators.Correct (
+  genFooSum,
+  genFooProd,
+  genFooRec,
+  genFooComplicated,
+  genDay,
+  genFreeDay,
+  genWorkDay,
+  genA,
+  genB,
+  genC,
+  genD,
+) where
 
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
@@ -58,5 +70,5 @@ genDay =
 genWorkDay :: H.Gen WorkDay
 genWorkDay = WorkDay <$> genDay
 
-genWeekDay :: H.Gen FreeDay
-genWeekDay = FreeDay <$> genDay
+genFreeDay :: H.Gen FreeDay
+genFreeDay = FreeDay <$> genDay

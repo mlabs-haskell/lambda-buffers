@@ -1,45 +1,19 @@
-module Test.LambdaBuffers.Runtime.Plutus.PlutusData (tests) where
+module Test.LambdaBuffers.Runtime.Plutus.Json (tests) where
 
-import Hedgehog qualified as H
+import LambdaBuffers.Runtime.Prelude (Json)
 import Paths_lbt_plutus_golden_data_hs qualified as Paths
-import PlutusTx (FromData, ToData, fromData, toData)
 import Test.LambdaBuffers.Plutus.Golden qualified as Golden
-import Test.LambdaBuffers.Plutus.Golden.PlutusData qualified as Golden
-import Test.LambdaBuffers.Runtime.Plutus.Generators.Correct qualified as Correct
-import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
-import Test.Tasty.Hedgehog (testProperty)
-import Test.Tasty.Hedgehog qualified as H
+import Test.LambdaBuffers.Plutus.Golden.Json qualified as Golden
+import Test.Tasty (TestName, TestTree, testGroup)
 
 tests :: IO TestTree
 tests = do
-  goldenDerived <- goldenDerivedTests
   goldenInstance <- goldenInstanceTests
   return $
     testGroup
-      "Plutus.V1.PlutusData class tests"
-      [ testGroup "Derive" [goldenDerived, propsDerived]
-      , testGroup "Instance" [goldenInstance]
+      "Prelude.Json class tests"
+      [ testGroup "Instance" [goldenInstance]
       ]
-
-propsDerived :: TestTree
-propsDerived =
-  adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
-    testGroup
-      "Property tests"
-      ( fooToFromTests
-          <> daysToFromTests
-      )
-
-goldenDerivedTests :: IO TestTree
-goldenDerivedTests = do
-  gts <-
-    id
-      `traverse` (daysFromToGoldenTests <> fooFromToGoldenTests)
-
-  return $
-    testGroup
-      "Golden tests"
-      gts
 
 goldenInstanceTests :: IO TestTree
 goldenInstanceTests = do
@@ -52,65 +26,10 @@ goldenInstanceTests = do
       "Golden tests"
       gts
 
-toFromTest :: forall {a}. (Show a, Eq a, ToData a, FromData a) => TestName -> H.Gen a -> TestTree
-toFromTest title gen =
-  testProperty
-    ("forall (x : " <> title <> "): (fromPlutusData . toPlutusData) x == x")
-    ( H.property $ do
-        x <- H.forAll gen
-        (fromData . toData) x H.=== Just x
-    )
-
-fromToGoldenTest :: forall {a}. (ToData a, FromData a, Eq a, Show a) => TestName -> [a] -> IO TestTree
+fromToGoldenTest :: forall {a}. (Json a, Eq a, Show a) => TestName -> [a] -> IO TestTree
 fromToGoldenTest title goldens = do
   goldenDir <- Paths.getDataFileName "data/golden"
   Golden.fromToGoldenTest goldenDir title goldens
-
--- | Foo
-fooToFromTests :: [TestTree]
-fooToFromTests =
-  [ toFromTest
-      "Foo.A"
-      Correct.genA
-  , toFromTest
-      "Foo.B"
-      Correct.genB
-  , toFromTest
-      "Foo.C"
-      Correct.genC
-  , toFromTest
-      "Foo.D"
-      Correct.genD
-  ]
-
-fooFromToGoldenTests :: [IO TestTree]
-fooFromToGoldenTests =
-  [ fromToGoldenTest "Foo.A" Golden.aGoldens
-  , fromToGoldenTest "Foo.B" Golden.bGoldens
-  , fromToGoldenTest "Foo.C" Golden.cGoldens
-  , fromToGoldenTest "Foo.D" Golden.dGoldens
-  ]
-
--- | Days
-daysToFromTests :: [TestTree]
-daysToFromTests =
-  [ toFromTest
-      "Days.Day"
-      Correct.genDay
-  , toFromTest
-      "Days.WorkDay"
-      Correct.genWorkDay
-  , toFromTest
-      "Days.FreeDay"
-      Correct.genFreeDay
-  ]
-
-daysFromToGoldenTests :: [IO TestTree]
-daysFromToGoldenTests =
-  [ fromToGoldenTest "Days.Day" Golden.dayGoldens
-  , fromToGoldenTest "Days.WorkDay" Golden.workDayGoldens
-  , fromToGoldenTest "Days.FreeDay" Golden.freeDayGoldens
-  ]
 
 -- | Plutus.V1
 plutusFromToGoldenTests :: [IO TestTree]

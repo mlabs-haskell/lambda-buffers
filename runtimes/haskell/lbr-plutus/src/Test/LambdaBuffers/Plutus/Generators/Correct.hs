@@ -52,7 +52,12 @@ genAmount :: H.Gen Integer
 genAmount = H.integral (HR.constant (-100) 100)
 
 genValue :: H.Gen PlutusV1.Value
-genValue = PlutusV1.Value <$> genMap genCurrencySymbol (genMap genTokenName genAmount)
+genValue =
+  PlutusV1.Value
+    <$> H.choice
+      [ genMap genCurrencySymbol (genMap genTokenName genAmount)
+      , genMap (return PlutusV1.adaSymbol) (genMap (return PlutusV1.adaToken) genAmount)
+      ]
 
 genMap :: (Eq k) => H.Gen k -> H.Gen v -> H.Gen (PlutusTx.Map k v)
 genMap gk gv =
@@ -97,7 +102,7 @@ genPubKeyHash :: H.Gen PlutusV1.PubKeyHash
 genPubKeyHash = PlutusV1.PubKeyHash <$> genPlutusBytes 28
 
 genScriptHash :: H.Gen PlutusV1.ScriptHash
-genScriptHash = PlutusV1.ScriptHash <$> genPlutusBytes 32
+genScriptHash = PlutusV1.ScriptHash <$> genPlutusBytes 28
 
 genRedeemerHash :: H.Gen PlutusV1.RedeemerHash
 genRedeemerHash = PlutusV1.RedeemerHash <$> genPlutusBytes 32

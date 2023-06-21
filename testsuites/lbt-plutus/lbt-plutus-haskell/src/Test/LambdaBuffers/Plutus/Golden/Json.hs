@@ -1,43 +1,27 @@
 module Test.LambdaBuffers.Plutus.Golden.Json (writeGoldens, fromToGoldenTest) where
 
 import Data.ByteString qualified as B
-import Data.ByteString.Lazy qualified as BL
-import Data.List (isPrefixOf)
-import Data.Traversable (for)
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
-import System.FilePath (takeBaseName, (</>))
-import Test.Tasty (TestName, TestTree, testGroup)
-import Test.Tasty.Golden (findByExtension, goldenVsString)
+import Test.LambdaBuffers.Plutus.Golden.Utils qualified as Utils
+import Test.Tasty (TestName, TestTree)
 import Test.Tasty.HUnit (assertEqual, assertFailure)
 
-findGoldens :: FilePath -> TestName -> IO [(FilePath, String)]
-findGoldens goldenDir title = do
-  jsonFps <- filter (\fp -> title `isPrefixOf` takeBaseName fp) <$> findByExtension [".json"] goldenDir
-  return $ (\fp -> (fp, takeBaseName fp)) <$> jsonFps
-
 writeGoldens :: Json a => FilePath -> TestName -> [a] -> IO [FilePath]
-writeGoldens goldenDir title goldens = do
-  for (zip [0 :: Integer ..] goldens) $ \(index, golden) -> do
-    let
-      goldenJson = toJsonBytes golden
-      jsonFp = goldenDir </> title <> "." <> show index <> ".json"
-    B.writeFile jsonFp goldenJson
-    return jsonFp
+writeGoldens goldenDir title = Utils.writeGoldens goldenDir title ".json"
 
 -- | `fromToGoldenTest goldenDir title goldens`
 fromToGoldenTest :: forall {a}. (Json a, Eq a, Show a) => FilePath -> TestName -> [a] -> IO TestTree
-fromToGoldenTest goldenDir title goldens =
-  do
-    goldens' <- findGoldens goldenDir title
-    tests' <- for (zip goldens goldens') $ \(golden, (fp, index)) ->
-      do
+fromToGoldenTest goldenDir title =
+  Utils.assertGoldens
+    goldenDir
+    title
+    ".json"
+    (\x -> "(toJson . fromJson) " <> x <> " == " <> x)
+    ( \golden index fp -> do
         json <- B.readFile fp
         case fromJsonBytes @a json of
-          Left err -> assertFailure $ "Failed parsing " <> fp <> " " <> show err
+          Left err -> assertFailure $ show ("Golden bytes should parse as Json" :: String, title, index, fp, err)
           Right res -> do
             assertEqual "Golden values should match" golden res
-            return $ goldenVsString index fp (return . BL.fromStrict . toJsonBytes $ res)
-    return $
-      testGroup
-        (title <> ": (toJson . fromJson) golden == golden")
-        tests'
+            assertEqual "Golden bytes should match" json (toJsonBytes res)
+    )

@@ -5,7 +5,6 @@ module LambdaBuffers.Runtime.Plutus.Json () where
 import Control.Monad (unless)
 import Data.Aeson (object, withObject)
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Types (prependFailure)
 import Data.Aeson.Types qualified as Aeson
 import Data.ByteString qualified as BSS
 import Data.ByteString.Base16 qualified as Base16
@@ -18,6 +17,9 @@ import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusTx.AssocMap qualified as PlutusTx
+
+prependFailure :: forall {a}. String -> Aeson.Parser a -> Aeson.Parser a
+prependFailure msg = Aeson.prependFailure $ msg <> " > "
 
 -- | lbf-prelude.Plutus.Json instance rule implementations for lbf-plutus package
 instance Json PlutusV1.AssetClass where
@@ -33,12 +35,17 @@ instance Json PlutusV1.AssetClass where
               .: "token_name"
       )
 
--- ByteString representing the currency, hashed with BLAKE2b-224. It is empty for Ada, 28 bytes for MintingPolicyHash. Forms an AssetClass along with TokenName. A Value is a map from CurrencySymbol's to a map from TokenName to an Integer.
+-- | ByteString representing the currency, hashed with /BLAKE2b-224/. It is empty for `Ada`, 28 bytes for `MintingPolicyHash`.
 instance Json PlutusV1.CurrencySymbol where
   toJson (PlutusV1.CurrencySymbol plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.CurrencySymbol" $ PlutusV1.CurrencySymbol <$> decodeSizedPlutusBytes 28 v
+  fromJson v = prependFailure "Plutus.V1.CurrencySymbol" $ do
+    bytes <- fromJson @PlutusV1.BuiltinByteString v
+    case BSS.length . PlutusV1.fromBuiltin $ bytes of
+      0 -> return PlutusV1.adaSymbol
+      28 -> return $ PlutusV1.CurrencySymbol bytes
+      _ -> fail $ "Expected 0 or 28 bytes long bytes but got " <> show bytes
 
--- ByteString of a name of a token. Shown as UTF-8 string when possible. Should be no longer than 32 bytes, empty for Ada. Forms an AssetClass along with a CurrencySymbol.
+-- | ByteString of a name of a token. Shown as UTF-8 string when possible. Should be no longer than 32 bytes, empty for Ada. Forms an AssetClass along with a CurrencySymbol.
 instance Json PlutusV1.TokenName where
   toJson (PlutusV1.TokenName plutusBytes) = toJson plutusBytes
   fromJson v =
@@ -56,22 +63,22 @@ instance (Json k, Json v) => Json (PlutusTx.Map k v) where
   toJson = toJson . PlutusTx.toList
   fromJson v = prependFailure "Plutus.V1.Map" $ PlutusTx.fromList <$> fromJson @[(k, v)] v
 
--- The hash of a public key. This is frequently used to identify the public key, rather than the key itself. Hashed with BLAKE2b-224. 28 bytes.
+-- | The hash of a public key. This is frequently used to identify the public key, rather than the key itself. Hashed with BLAKE2b-224. 28 bytes.
 instance Json PlutusV1.PubKeyHash where
   toJson (PlutusV1.PubKeyHash plutusBytes) = toJson plutusBytes
   fromJson v = prependFailure "Plutus.V1.PubKeyHash" $ PlutusV1.PubKeyHash <$> decodeSizedPlutusBytes 28 v
 
--- Script runtime representation of a Digest SHA256.
+-- | Type representing the /BLAKE2b-224/ hash of a script. 28 bytes.
 instance Json PlutusV1.ScriptHash where
   toJson (PlutusV1.ScriptHash plutusBytes) = toJson plutusBytes
-  fromJson v = prependFailure "Plutus.V1.ScriptHash" $ PlutusV1.ScriptHash <$> decodeSizedPlutusBytes 32 v
+  fromJson v = prependFailure "Plutus.V1.ScriptHash" $ PlutusV1.ScriptHash <$> decodeSizedPlutusBytes 28 v
 
--- Type representing the BLAKE2b-256 hash of a redeemer. 32 bytes.
+-- | Type representing the /BLAKE2b-256/ hash of a redeemer. 32 bytes.
 instance Json PlutusV1.RedeemerHash where
   toJson (PlutusV1.RedeemerHash plutusBytes) = toJson plutusBytes
   fromJson v = prependFailure "Plutus.V1.RedeemerHash" $ PlutusV1.RedeemerHash <$> decodeSizedPlutusBytes 32 v
 
--- Script runtime representation of a Digest SHA256.
+-- | Type representing the /BLAKE2b-256/ hash of a datum. 32 bytes.
 instance Json PlutusV1.DatumHash where
   toJson (PlutusV1.DatumHash plutusBytes) = toJson plutusBytes
   fromJson v = prependFailure "Plutus.V1.DatumHash" $ PlutusV1.DatumHash <$> decodeSizedPlutusBytes 32 v
@@ -273,7 +280,7 @@ instance Json PlutusV1.StakingCredential where
         )
       ]
 
--- A transaction ID, i.e. the hash of a transaction. Hashed with BLAKE2b-256. 32 byte.
+-- | A transaction ID, i.e. the hash of a transaction. Hashed with BLAKE2b-256. 32 byte.
 instance Json PlutusV1.TxId where
   toJson (PlutusV1.TxId txId) = toJson txId
   fromJson v = prependFailure "Plutus.V1.TxId" (PlutusV1.TxId <$> decodeSizedPlutusBytes 32 v)
