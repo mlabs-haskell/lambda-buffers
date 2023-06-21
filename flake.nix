@@ -167,7 +167,7 @@
 
           # Test Suites
           preludeHsGoldenBuild = buildAbstraction {
-            import-location = ./lambda-buffers-testsuite/lbt-prelude/haskell-golden/build.nix;
+            import-location = ./testsuites/lbt-prelude/haskell-golden/build.nix;
             additional = {
               inherit lbfHaskell;
               lbf-prelude = ./libs/lbf-prelude;
@@ -178,7 +178,7 @@
           preludeHsGoldenFlake = flakeAbstraction preludeHsGoldenBuild;
 
           lbtPlutusHsBuild = buildAbstraction {
-            import-location = ./lambda-buffers-testsuite/lbt-plutus/lbt-plutus-haskell/build.nix;
+            import-location = ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix;
             additional = {
               inherit lbfHaskell;
               lbf-prelude = ./libs/lbf-prelude;
