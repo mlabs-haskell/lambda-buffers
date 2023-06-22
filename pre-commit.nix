@@ -19,6 +19,7 @@
             "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
             "docs/compiler-api.md"
             "lambda-buffers-testsuite/lbt-prelude/goldens/.*"
+            "runtimes/purescript/lbr-prelude/spago-packages.nix"
           ];
 
           hooks = {

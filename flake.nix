@@ -11,9 +11,10 @@
     ctl.url = "github:Plutonomicon/cardano-transaction-lib/v5.0.0";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    purifix.url = "github:purifix/purifix";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, purifix, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         (import ./hercules-ci.nix)
@@ -32,6 +33,8 @@
             overlays = [
               inputs.haskell-nix.overlay
               inputs.iohk-nix.overlays.crypto
+              inputs.ctl.overlays.purescript
+              inputs.ctl.overlays.spago
             ];
           };
           haskell-nix = pkgs.haskell-nix;
@@ -110,14 +113,24 @@
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
-          # `lbf-prelude` runtime
+          # Runtimes
+
+          ## `lbf-prelude` runtime
+
+          ### Haskell
           lbrPreludeHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-prelude/build.nix;
             additional = { };
           };
           lbrPreludeHsFlake = flakeAbstraction lbrPreludeHsBuild;
 
-          # `lbf-plutus` runtime
+          ### Purescript
+          lbrPreludePurs = import ./runtimes/purescript/lbr-prelude/build.nix {
+            inherit pkgs commonTools;
+            shellHook = config.pre-commit.installationScript;
+          };
+
+          ## `lbf-plutus` runtime
           lbrPlutusHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-plutus/build.nix;
             additional = { lbr-prelude = ./runtimes/haskell/lbr-prelude; };
@@ -193,7 +206,8 @@
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
-        rec {
+        rec
+        {
           # Standard flake attributes
           packages = {
             inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
@@ -202,6 +216,7 @@
           // frontendFlake.packages
           // codegenFlake.packages
           // lbrPreludeHsFlake.packages
+          // { inherit (lbrPreludePurs) compiled; }
           // lbrPlutusHsFlake.packages
           // lbtPreludeHsFlake.packages
           // lbtPlutusHsFlake.packages
@@ -216,6 +231,7 @@
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
+            dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
             dev-lbt-plutus-haskell = lbtPlutusHsFlake.devShell;
