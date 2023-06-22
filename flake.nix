@@ -113,6 +113,11 @@
           };
           frontendFlake = flakeAbstraction frontendBuild;
 
+          # Nix libs
+
+          lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
+          pursFlake = import ./extras/flake-purescript.nix;
+
           # Runtimes
 
           ## `lbf-prelude` runtime
@@ -125,10 +130,12 @@
           lbrPreludeHsFlake = flakeAbstraction lbrPreludeHsBuild;
 
           ### Purescript
-          lbrPreludePurs = import ./runtimes/purescript/lbr-prelude/build.nix {
-            inherit pkgs commonTools;
-            shellHook = config.pre-commit.installationScript;
-          };
+          lbrPreludePurs = pursFlake (
+            import ./runtimes/purescript/lbr-prelude/build.nix {
+              inherit pkgs commonTools;
+              shellHook = config.pre-commit.installationScript;
+            }
+          );
 
           ## `lbf-plutus` runtime
           lbrPlutusHsBuild = buildAbstraction {
@@ -156,9 +163,7 @@
 
           };
 
-          # Nix lib
-          lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
-
+          # Schema libs
           lbfLibs = {
             lbf-prelude-hs = lbfHaskell {
               inherit pkgs;
