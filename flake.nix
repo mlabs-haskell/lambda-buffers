@@ -46,7 +46,7 @@
           apply-refact = pkgs.haskellPackages.apply-refact;
 
           commonTools = {
-            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall;
+            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall purty;
             inherit (pkgs) protolint txtpbfmt;
             inherit fourmolu;
             inherit apply-refact;
@@ -216,7 +216,7 @@
           // frontendFlake.packages
           // codegenFlake.packages
           // lbrPreludeHsFlake.packages
-          // { inherit (lbrPreludePurs) compiled; }
+          // lbrPreludePurs.packages
           // lbrPlutusHsFlake.packages
           // lbtPreludeHsFlake.packages
           // lbtPlutusHsFlake.packages
@@ -240,6 +240,7 @@
           # nix flake check
           checks = devShells //
             packages //
+            lbrPreludePurs.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //
                 frontendFlake.checks //
