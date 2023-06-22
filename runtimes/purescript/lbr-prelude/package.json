@@ -18,6 +18,10 @@
     "bignumber.js": "^9.1.1",
     "bufferutil": "4.0.5"
   },
+  "devDependencies": {
+    "webpack": "^5.88.0",
+    "webpack-cli": "4.10"
+  },
   "prettier": {
     "arrowParens": "avoid"
   }
