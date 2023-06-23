@@ -8,7 +8,8 @@ import Data.Maybe (Maybe(..))
 import Data.TextDecoder (decodeUtf8)
 import Data.TextEncoder (encodeUtf8)
 import Effect.Class (liftEffect)
-import LambdaBuffers.Runtime.Prelude (class Json)
+import LambdaBuffers.Runtime.Prelude (class Json, toJsonString)
+import LambdaBuffers.Runtime.Prelude.Bytes as Bytes
 import LambdaBuffers.Runtime.Prelude.Generators.Correct as Correct
 import LambdaBuffers.Runtime.Prelude.Json (fromJsonBytes, toJsonBytes)
 import Test.QuickCheck (quickCheckGen, (===)) as Q
@@ -43,6 +44,21 @@ tests = do
             $ Q.quickCheckGen do
                 str <- Correct.genText
                 pure $ (encodeUtf8 >>> decodeUtf8 >>> hush) str Q.=== Just str
+  describe "Bytes" do
+    it "forall (x : Bytes). x == x'"
+      $ do
+          liftEffect
+            $ Q.quickCheckGen do
+                bs <- Correct.genBytes
+                pure $ bs Q.=== bs
+    it "forall (x : Bytes). (fromIntArray . toIntArray) x == x'"
+      $ do
+          liftEffect
+            $ Q.quickCheckGen do
+                bs <- Correct.genBytes
+                pure $ (Bytes.fromIntArray <<< Bytes.toIntArray) bs Q.=== bs
+    it "toJson 'test' == '\"dGVzdA==\"'"
+      $ toJsonString (Bytes.fromIntArray [ 116, 101, 115, 116 ]) `shouldEqual` "\"dGVzdA==\""
 
 fromToTest :: forall a. Json a => Show a => Eq a => String -> Q.Gen a -> Spec Unit
 fromToTest title gen =

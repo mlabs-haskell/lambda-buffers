@@ -22,6 +22,7 @@
   , "spec"
   , "strings"
   , "tuples"
+  , "uint"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

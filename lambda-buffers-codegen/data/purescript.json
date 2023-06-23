@@ -26,9 +26,9 @@
       "Maybe"
     ],
     "Prelude.Bytes": [
-      "arraybuffer-types",
-      "Data.ArrayBuffer.Types",
-      "Uint8Array"
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "Bytes"
     ],
     "Prelude.Text": [
       "prelude",
