@@ -1,1 +1,1 @@
-{"constructor":"Constr","fields":[{"fields":[{"constructor":"Map","fields":[[[{"constructor":"Bytes","fields":[""]},{"constructor":"Map","fields":[[[{"constructor":"Bytes","fields":[""]},{"constructor":"Integer","fields":[1337]}]]]}]]]}],"index":2}]}
+{"fields":[{"fields":[{"fields":[[[{"fields":[""],"name":"Bytes"},{"fields":[[[{"fields":[""],"name":"Bytes"},{"fields":[1337],"name":"Integer"}]]],"name":"Map"}]]],"name":"Map"}],"index":2}],"name":"Constr"}

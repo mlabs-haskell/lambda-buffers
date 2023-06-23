@@ -225,7 +225,7 @@ jsonField :: String -> Aeson.Object -> (Aeson.Value -> Aeson.Parser a) -> Aeson.
 jsonField name obj parseField = obj .: name >>= parseField
 
 jsonConstructor :: String -> [Aeson.Value] -> Aeson.Value
-jsonConstructor ctorName ctorProduct = object ["constructor" .= (Aeson.String . Text.pack $ ctorName), "fields" .= toJson ctorProduct]
+jsonConstructor ctorName ctorProduct = object ["name" .= (Aeson.String . Text.pack $ ctorName), "fields" .= toJson ctorProduct]
 
 caseJsonConstructor :: String -> [(String, [Aeson.Value] -> Aeson.Parser a)] -> Aeson.Value -> Aeson.Parser a
 caseJsonConstructor title = caseJsonConstructor' title . Map.fromList
@@ -237,7 +237,7 @@ caseJsonConstructor' title ctorParsers =
     . Aeson.withObject
       ""
       ( \obj -> do
-          ctorName <- obj .: "constructor" >>= Aeson.withText "constructor name" (return . Text.unpack)
+          ctorName <- obj .: "name" >>= Aeson.withText "constructor name" (return . Text.unpack)
           case Map.lookup ctorName ctorParsers of
             Nothing ->
               fail $

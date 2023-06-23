@@ -1,1 +1,1 @@
-{"prod":[1337,false,"c29tZSBieXRlcw==",1337],"rec":{"fooA":1337,"fooB":false,"fooC":"c29tZSBieXRlcw==","fooInt":1337},"sum":{"constructor":"Faz","fields":[0]}}
+{"prod":[1337,false,"c29tZSBieXRlcw==",1337],"rec":{"fooA":1337,"fooB":false,"fooC":"c29tZSBieXRlcw==","fooInt":1337},"sum":{"fields":[0],"name":"Faz"}}

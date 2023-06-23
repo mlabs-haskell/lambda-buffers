@@ -1,1 +1,1 @@
-{"from":{"bound":{"constructor":"NegInf","fields":[]},"closed":true},"to":{"bound":{"constructor":"Finite","fields":[0]},"closed":true}}
+{"from":{"bound":{"fields":[],"name":"NegInf"},"closed":true},"to":{"bound":{"fields":[0],"name":"Finite"},"closed":true}}

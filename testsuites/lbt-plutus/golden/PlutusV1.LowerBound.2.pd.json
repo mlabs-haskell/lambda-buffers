@@ -1,1 +1,1 @@
-{"constructor":"Constr","fields":[{"fields":[{"constructor":"Constr","fields":[{"fields":[],"index":2}]},{"constructor":"Constr","fields":[{"fields":[],"index":1}]}],"index":0}]}
+{"fields":[{"fields":[{"fields":[{"fields":[],"index":2}],"name":"Constr"},{"fields":[{"fields":[],"index":1}],"name":"Constr"}],"index":0}],"name":"Constr"}

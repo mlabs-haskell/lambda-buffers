@@ -1,1 +1,1 @@
-{"constructor":"Constr","fields":[{"fields":[{"constructor":"Integer","fields":[1337]}],"index":2}]}
+{"fields":[{"fields":[{"fields":[1337],"name":"Integer"}],"index":2}],"name":"Constr"}

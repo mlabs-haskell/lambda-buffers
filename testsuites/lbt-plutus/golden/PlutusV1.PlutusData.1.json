@@ -1,1 +1,1 @@
-{"constructor":"Constr","fields":[{"fields":[{"constructor":"Integer","fields":[1]},{"constructor":"Bytes","fields":["736f6d65206279746573"]}],"index":1}]}
+{"fields":[{"fields":[{"fields":[1],"name":"Integer"},{"fields":["736f6d65206279746573"],"name":"Bytes"}],"index":1}],"name":"Constr"}

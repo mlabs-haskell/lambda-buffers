@@ -1,1 +1,1 @@
-{"constructor":"Constr","fields":[{"fields":[{"constructor":"Constr","fields":[{"fields":[{"constructor":"Integer","fields":[0]}],"index":1}]},{"constructor":"Constr","fields":[{"fields":[],"index":1}]}],"index":0}]}
+{"fields":[{"fields":[{"fields":[{"fields":[{"fields":[0],"name":"Integer"}],"index":1}],"name":"Constr"},{"fields":[{"fields":[],"index":1}],"name":"Constr"}],"index":0}],"name":"Constr"}

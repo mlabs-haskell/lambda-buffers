@@ -1,1 +1,1 @@
-{"constructor":"List","fields":[[{"constructor":"Integer","fields":[1]},{"constructor":"Integer","fields":[2]}]]}
+{"fields":[[{"fields":[1],"name":"Integer"},{"fields":[2],"name":"Integer"}]],"name":"List"}
