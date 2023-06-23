@@ -14,7 +14,7 @@ import LambdaBuffers.Codegen.Purescript.Syntax (normalValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 type MonadPrint m = LV.MonadPrint m Purs.QValName
@@ -171,6 +171,32 @@ printRefE ref = do
   qvn <- LV.resolveRef ref
   printPursQValName <$> LV.importValue qvn
 
+printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
+printTupleE l r = do
+  lDoc <- printValueE l
+  rDoc <- printValueE r
+  tupleDoc <- printPursQValName <$> LV.importValue tuple
+  return $ parens (tupleDoc <+> parens lDoc <+> parens rDoc)
+
+printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
+printTextE = return . dquotes . pretty
+
+printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE txtVal cases otherCase = do
+  caseValDoc <- printValueE txtVal
+  caseDocs <-
+    for
+      cases
+      ( \case
+          (LV.TextE caseTxt, bodyVal) -> do
+            conditionDoc <- printTextE caseTxt
+            bodyDoc <- printValueE bodyVal
+            return $ group $ conditionDoc <+> "->" <+> bodyDoc
+          (_wrongCaseVal, _) -> throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
+      )
+  otherDoc <- printOtherCase otherCase
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v
 printValueE (LV.RefE ref) = printRefE ref
@@ -186,5 +212,7 @@ printValueE (LV.IntE i) = printIntE i
 printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
 printValueE (LV.ListE vals) = printListE vals
 printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
+printValueE (LV.TextE txt) = printTextE txt
+printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
+printValueE (LV.TupleE l r) = printTupleE l r
 printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
-printValueE _ = throwInternalError "TODO(bladyjoker) LamVal not implemented"

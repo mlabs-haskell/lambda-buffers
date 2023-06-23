@@ -159,14 +159,11 @@ printImports lbTyImports hsTyImports classImps ruleImps valImps =
     importQualified :: Doc ann -> Doc ann
     importQualified mnDoc = "import qualified" <+> mnDoc
 
--- TODO(bladyjoker): Handle LB package deps once you figure out the UX story.
-
--- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+{- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+ Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).
+-}
 collectPackageDeps :: Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
-  -- let groupedLbImports =
-  --       Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
-  --         `Set.union` ruleImps
   let deps =
         Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList classImps]

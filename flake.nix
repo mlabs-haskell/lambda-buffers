@@ -152,7 +152,7 @@
             lbg-haskell = pkgs.writeShellScriptBin "lbg-haskell" ''
               ${lbg}/bin/lbg gen-haskell $@
             '';
-            lbg-purescript = pkgs.writeScriptBin "lbg-purescript" ''
+            lbg-purescript = pkgs.writeShellScriptBin "lbg-purescript" ''
               ${lbg}/bin/lbg gen-purescript $@
             '';
             lbf = pkgs.writeScriptBin "lbf" ''
@@ -161,6 +161,11 @@
               ${lbf-pure}/bin/lbf $@
             '';
 
+          };
+          # LambdaBuffers environment
+          lbEnv = pkgs.mkShell {
+            name = "lambdabuffers-env";
+            packages = builtins.attrValues clis;
           };
 
           # Schema libs
@@ -184,6 +189,8 @@
           };
 
           # Test Suites
+
+          ## lbt-prelude
           lbtPreludeHsBuild = buildAbstraction {
             import-location = ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix;
             additional = {
@@ -195,6 +202,7 @@
           };
           lbtPreludeHsFlake = flakeAbstraction lbtPreludeHsBuild;
 
+          ## lbt-plutus
           lbtPlutusHsBuild = buildAbstraction {
             import-location = ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix;
             additional = {
@@ -240,6 +248,7 @@
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
             dev-lbt-plutus-haskell = lbtPlutusHsFlake.devShell;
+            lb = lbEnv;
           };
 
           # nix flake check

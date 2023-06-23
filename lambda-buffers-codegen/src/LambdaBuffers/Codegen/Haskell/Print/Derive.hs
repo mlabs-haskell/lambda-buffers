@@ -1,16 +1,16 @@
 module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
 
-import Data.Foldable (Foldable (toList))
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
-import LambdaBuffers.Codegen.Haskell.Print.LamVal (printImplementation)
+import LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
+import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, equals, vsep, (<+>))
@@ -31,9 +31,9 @@ eqClassMethodName = H.MkValueName "=="
 printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
 printDeriveEq mn iTyDefs mkInstanceDoc ty = do
   valE <- deriveEqImpl mn iTyDefs ty
-  implDoc <- printImplementation lvEqBuiltins valE
+  (implDoc, imps) <- LV.runPrint lvEqBuiltins (printValueE valE)
   let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
-  return (instanceDoc, Set.fromList . toList $ lvEqBuiltins)
+  return (instanceDoc, imps)
 
 lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
 lvPlutusDataBuiltins =
@@ -55,11 +55,11 @@ toPlutusDataClassMethodName = H.MkValueName "toBuiltinData"
 printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
 printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
   valE <- deriveToPlutusDataImpl mn iTyDefs ty
-  implDoc <- printImplementation lvPlutusDataBuiltins valE
+  (implDoc, imps) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
   let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
   return
     ( instanceDoc
-    , Set.fromList . toList $ lvPlutusDataBuiltins
+    , imps
     )
 
 printValueDef :: H.ValueName -> Doc ann -> Doc ann
@@ -74,11 +74,11 @@ builtinDataToDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "Plutus
 printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
 printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
   valE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  implDoc <- printImplementation lvPlutusDataBuiltins valE
+  (implDoc, imps) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
   let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
   return
     ( instanceDoc
-    , Set.insert builtinDataToDataRef $ Set.fromList . toList $ lvPlutusDataBuiltins
+    , Set.singleton builtinDataToDataRef <> imps
     )
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
@@ -108,9 +108,9 @@ fromJsonClassMethodName = H.MkValueName "fromJson"
 printDeriveJson :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
 printDeriveJson mn iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  toJsonImplDoc <- printImplementation lvJsonBuiltins toJsonValE
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  fromJsonImplDoc <- printImplementation lvJsonBuiltins fromJsonValE
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
 
   let instanceDoc =
         mkInstanceDoc
@@ -122,5 +122,5 @@ printDeriveJson mn iTyDefs mkInstanceDoc ty = do
           )
   return
     ( instanceDoc
-    , Set.fromList . toList $ lvJsonBuiltins
+    , impsA <> impsB
     )

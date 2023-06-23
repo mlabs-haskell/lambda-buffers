@@ -21,7 +21,7 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveJson, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printModName, printModName', printTyName)
@@ -86,6 +86,10 @@ pursClassImplPrinters =
     ,
       ( (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.FromData", Purs.MkClassName "FromData")
       , printDeriveFromPlutusData
+      )
+    ,
+      ( (Purs.MkPackageName "lbr-prelude", Purs.MkModuleName "LambdaBuffers.Runtime.Prelude", Purs.MkClassName "Json")
+      , printDeriveJson
       )
     ]
 
@@ -152,14 +156,11 @@ printImports lbTyImports pursTyImports classImps ruleImps valImps =
     importQualified :: Doc ann -> Doc ann
     importQualified mnDoc = "import" <+> mnDoc <+> "as" <+> mnDoc
 
--- TODO(bladyjoker): Handle LB package deps once you figure out the UX story.
-
--- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+{- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+ Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).
+-}
 collectPackageDeps :: Set PC.QTyName -> Set Purs.QTyName -> Set Purs.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Purs.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
-  -- let groupedLbImports =
-  --       Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
-  --         `Set.union` ruleImps
   let deps =
         Set.fromList [Purs.pkgNameToText pkgName | (pkgName, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [Purs.pkgNameToText pkgName | (pkgName, _, _) <- toList classImps]

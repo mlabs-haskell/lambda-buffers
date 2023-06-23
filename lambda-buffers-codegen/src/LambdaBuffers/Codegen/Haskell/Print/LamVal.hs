@@ -1,14 +1,8 @@
-module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE, printImplementation) where
+module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Except (replicateM, runExcept)
-import Control.Monad.RWS (RWST (runRWST))
-import Control.Monad.RWS.Class (MonadRWS)
-import Control.Monad.Reader (asks)
-import Control.Monad.State.Class (gets, modify)
-import Data.Map (Map)
-import Data.Map qualified as Map
+import Control.Monad.Except (replicateM)
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
@@ -16,46 +10,23 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQValName, printMkCtor)
 import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
+import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
-import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
-
-newtype PrintRead = MkPrintRead
-  { builtins :: Map LV.ValueName H.QValName
-  }
-  deriving stock (Show)
-
-newtype PrintState = MkPrintState
-  { currentVar :: Int
-  }
-  deriving stock (Eq, Ord, Show)
-
-newtype PrintCommand = ImportInstance H.ModuleName
-  deriving stock (Eq, Ord)
-  deriving stock (Show)
-
-type PrintErr = P.InternalError
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Haskell.Print.LamVal] " <> Text.pack msg
 
-type MonadPrint m = (MonadRWS PrintRead () PrintState m, MonadError PrintErr m)
+type MonadPrint m = LV.MonadPrint m H.QValName
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
 
-printImplementation :: Map LV.ValueName H.QValName -> LV.ValueE -> Either PrintErr (Doc ann)
-printImplementation lamValBuiltins valE =
-  let p = runExcept $ runRWST (printValueE valE) (MkPrintRead lamValBuiltins) (MkPrintState 0)
-   in case p of
-        Left err -> Left err
-        Right (doc, _, _) -> Right doc
-
 printCtorCase :: MonadPrint m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
 printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
-  args <- for fields (const freshArg)
+  args <- for fields (const LV.freshArg)
   argDocs <- for args printValueE
   let body = ctorCont (ctor, args)
   bodyDoc <- printValueE body
@@ -79,7 +50,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
 
 printLamE :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
-  arg <- freshArg
+  arg <- LV.freshArg
   bodyDoc <- printValueE (lamVal arg)
   argDoc <- printValueE arg
   return $ lparen <> "\\" <> argDoc <+> "->" <+> group bodyDoc <+> rparen
@@ -123,7 +94,7 @@ printFieldE ((_, tyn), fieldN) recVal = do
 printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
 printLetE ((_, tyN), fields) prodVal letCont = do
   letValDoc <- printValueE prodVal
-  args <- for fields (const freshArg)
+  args <- for fields (const LV.freshArg)
   argDocs <- for args printValueE
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
@@ -132,7 +103,7 @@ printLetE ((_, tyN), fields) prodVal letCont = do
 
 printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printOtherCase otherCase = do
-  arg <- freshArg
+  arg <- LV.freshArg
   argDoc <- printValueE arg
   bodyDoc <- printValueE $ otherCase arg
   return $ group $ argDoc <+> "->" <+> bodyDoc
@@ -163,7 +134,7 @@ printCaseListE caseListVal cases otherCase = do
     for
       cases
       ( \(listLength, bodyVal) -> do
-          xs <- replicateM listLength freshArg
+          xs <- replicateM listLength LV.freshArg
           conditionDoc <- printListE xs
           bodyDoc <- printValueE $ bodyVal xs
           return $ group $ conditionDoc <+> "->" <+> bodyDoc
@@ -196,26 +167,6 @@ printProductE ((_, tyN), _) vals = do
   let ctorDoc = printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (hsep fieldDocs)
 
-printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
-printValueE (LV.VarE v) = return $ pretty v
-printValueE (LV.RefE ref) = resolveRef ref
-printValueE (LV.LamE lamVal) = printLamE lamVal
-printValueE (LV.AppE funVal argVal) = printAppE funVal argVal
-printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
-printValueE (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
-printValueE (LV.RecordE qrec vals) = printRecordE qrec vals
-printValueE (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
-printValueE (LV.ProductE qprod vals) = printProductE qprod vals
-printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
-printValueE (LV.IntE i) = return $ pretty i
-printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
-printValueE (LV.ListE vals) = printListE vals
-printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
-printValueE (LV.TextE txt) = printTextE txt
-printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
-printValueE (LV.TupleE l r) = printTupleE l r
-printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
-
 printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printTupleE l r = do
   lDoc <- printValueE l
@@ -241,23 +192,27 @@ printCaseTextE txtVal cases otherCase = do
   otherDoc <- printOtherCase otherCase
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
-freshArg :: MonadPrint m => m LV.ValueE
-freshArg = do
-  i <- gets currentVar
-  modify (\(MkPrintState s) -> MkPrintState $ s + 1)
-  return $ LV.VarE $ "x" <> show i
+printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
+printRefE ref = do
+  qvn <- LV.resolveRef ref
+  printHsQValName <$> LV.importValue qvn
 
--- {- | Resolves a `Ref` to a value reference in the target language.
---  Resolves a `LV.Ref` which is a reference to a LamVal 'builtin', to the equivalent in the target language.
---  If the `LV.Ref` is polymorphic like `eq @Int` or `eq @(Maybe a)` or `eq @(List Int)`,
---  then lookup the implementation in the context and error if it's not there (TODO).
-
---  NOTE(bladyjoker): Currently, this is assuming all the implementations are imported.
---  TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
--- -}
-resolveRef :: MonadPrint m => LV.Ref -> m (Doc ann)
-resolveRef (_, refName) = do
-  bs <- asks builtins
-  case Map.lookup refName bs of
-    Nothing -> throwInternalError $ "LamVal builtin mapping for " <> show refName <> " not configured."
-    Just hqValName -> return $ printHsQValName hqValName -- TODO(bladyjoker): Add a TypeApplication notation?
+printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
+printValueE (LV.VarE v) = return $ pretty v
+printValueE (LV.RefE ref) = printRefE ref
+printValueE (LV.LamE lamVal) = printLamE lamVal
+printValueE (LV.AppE funVal argVal) = printAppE funVal argVal
+printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
+printValueE (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
+printValueE (LV.RecordE qrec vals) = printRecordE qrec vals
+printValueE (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
+printValueE (LV.ProductE qprod vals) = printProductE qprod vals
+printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
+printValueE (LV.IntE i) = return $ pretty i
+printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
+printValueE (LV.ListE vals) = printListE vals
+printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
+printValueE (LV.TextE txt) = printTextE txt
+printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
+printValueE (LV.TupleE l r) = printTupleE l r
+printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
