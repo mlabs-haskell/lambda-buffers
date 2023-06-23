@@ -4,17 +4,8 @@ version:            0.1.0.0
 synopsis:           Lambda Buffers Codegen
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-data-files:
-  data/**/*.hs
-  data/**/*.json
-  data/**/*.purs
-  data/**/*.textproto
-
-extra-source-files:
-  data/**/*.hs
-  data/**/*.json
-  data/**/*.purs
-  data/**/*.textproto
+data-files:         data/**/*.json
+extra-source-files: data/**/*.json
 
 flag dev
   description: Enable non-strict compilation for development
