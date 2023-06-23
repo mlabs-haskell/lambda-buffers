@@ -175,18 +175,11 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , aeson                      >=2.1
-    , base                       >=4.16
-    , bytestring                 >=0.11
-    , filepath                   >=1.4
+    , aeson                   >=2.1
+    , base                    >=4.16
     , lambda-buffers-codegen
-    , lambda-buffers-codegen-pb  >=0.1
-    , lambda-buffers-compiler    >=0.1
-    , lens                       >=5.2
-    , proto-lens                 >=0.7
-    , tasty                      >=1.4
-    , tasty-hunit                >=0.10
-    , text                       >=1.2
+    , tasty                   >=1.4
+    , tasty-hunit             >=0.10
 
   other-modules:
     Paths_lambda_buffers_codegen
