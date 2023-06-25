@@ -8,7 +8,7 @@
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
-    ctl.url = "github:plutonomicon/cardano-transaction-lib/db88ea60d07d1580035cbf3854df59e752d4e164";
+    ctl.url = "github:plutonomicon/cardano-transaction-lib/bladyjoker/lambda-buffers-catalyst"; # path:/home/bladyjoker/Desktop/cardano-transaction-lib;
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";

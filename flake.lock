@@ -3445,17 +3445,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1687728011,
-        "narHash": "sha256-+IeN4Dm9q+tSS8MEyJ3EX4O/V11FKULzxLETasqyrbk=",
+        "lastModified": 1687729456,
+        "narHash": "sha256-dV/sDGMQzrc3RiJqO+LuYMX56Mm1RITNt+XqeMgT1X8=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "db88ea60d07d1580035cbf3854df59e752d4e164",
+        "rev": "19d1d869cbc6427ae8c3612e421a07f3a5342a82",
         "type": "github"
       },
       "original": {
         "owner": "plutonomicon",
+        "ref": "bladyjoker/lambda-buffers-catalyst",
         "repo": "cardano-transaction-lib",
-        "rev": "db88ea60d07d1580035cbf3854df59e752d4e164",
         "type": "github"
       }
     },
