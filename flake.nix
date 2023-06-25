@@ -241,7 +241,7 @@
           lbtPreludePursFlake = pursFlake (
             import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix {
               inherit pkgs commonTools shellHook lbfPurescript;
-              lbr-prelude-purs = pkgs.stdenv.mkDerivation { name = "lbr-prelude"; src = ./runtimes/purescript/lbr-prelude; installPhase = "ln -s $src $out"; };
+              lbr-prelude-purs = pkgs.stdenv.mkDerivation { name = "lbr-prelude"; src = ./runtimes/purescript/lbr-prelude; phases="installPhase"; installPhase = "ln -s $src $out"; };
               inherit (lbfLibs) lbf-prelude-purs;
             }
           );
