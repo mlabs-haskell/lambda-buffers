@@ -4,11 +4,13 @@ module Test.LambdaBuffers.Runtime.Prelude.Json
 
 import Prelude
 import Data.Either (Either(Right), hush)
+import Data.Enum (toEnumWithDefaults)
 import Data.Maybe (Maybe(..))
+import Data.String (CodePoint)
 import Data.TextDecoder (decodeUtf8)
 import Data.TextEncoder (encodeUtf8)
 import Effect.Class (liftEffect)
-import LambdaBuffers.Runtime.Prelude (class Json, toJsonString)
+import LambdaBuffers.Runtime.Prelude (class Json, fromJsonString, toJsonString)
 import LambdaBuffers.Runtime.Prelude.Bytes as Bytes
 import LambdaBuffers.Runtime.Prelude.Generators.Correct as Correct
 import LambdaBuffers.Runtime.Prelude.Json (fromJsonBytes, toJsonBytes)
@@ -59,6 +61,13 @@ tests = do
                 pure $ (Bytes.fromIntArray <<< Bytes.toIntArray) bs Q.=== bs
     it "toJson 'test' == '\"dGVzdA==\"'"
       $ toJsonString (Bytes.fromIntArray [ 116, 101, 115, 116 ]) `shouldEqual` "\"dGVzdA==\""
+  let
+    invertedSmiley = toEnumWithDefaults bottom top 0x1F643 :: CodePoint
+  describe "Char" do
+    it "fromJson \"🙃\" == '🙃'"
+      $ fromJsonString "\"🙃\"" `shouldEqual` Right invertedSmiley
+    it "toJson '🙃' == \"🙃\""
+      $ toJsonString invertedSmiley `shouldEqual` "\"🙃\""
 
 fromToTest :: forall a. Json a => Show a => Eq a => String -> Q.Gen a -> Spec Unit
 fromToTest title gen =

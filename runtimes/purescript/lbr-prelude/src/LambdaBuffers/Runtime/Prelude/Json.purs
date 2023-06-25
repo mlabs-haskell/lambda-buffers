@@ -3,7 +3,7 @@ module LambdaBuffers.Runtime.Prelude.Json (class Json, toJson, fromJson, fromJso
 import Prelude
 import Aeson (Aeson, (.:))
 import Aeson as Aeson
-import Data.Array (fromFoldable, toUnfoldable)
+import Data.Array (fromFoldable)
 import Data.Array as Array
 import Data.ArrayBuffer.Types (Uint8Array)
 import Data.BigInt (BigInt)
@@ -14,7 +14,8 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
-import Data.String.CodeUnits (fromCharArray, toCharArray) as String
+import Data.String (CodePoint)
+import Data.String (singleton, toCodePointArray) as String
 import Data.TextDecoder (decodeUtf8)
 import Data.TextEncoder (encodeUtf8)
 import Data.Traversable (traverse)
@@ -39,13 +40,14 @@ instance jsonBool :: Json Boolean where
   toJson = Aeson.encodeAeson
   fromJson = prependFailure "Prelude.Bool" <<< Aeson.decodeAeson
 
-instance jsonChar :: Json Char where
-  toJson c = Aeson.fromString <<< String.fromCharArray <<< toUnfoldable $ [ c ]
+-- Purescript '<>' are not 'really' Unicode literals, we must use CodePoints.
+instance jsonChar :: Json CodePoint where
+  toJson = Aeson.fromString <<< String.singleton
   fromJson json =
     prependFailure "Prelude.Char" $ caseJsonString json
-      >>= ( \str -> case fromFoldable <<< String.toCharArray $ str of
+      >>= ( \str -> case fromFoldable <<< String.toCodePointArray $ str of
             [ c ] -> pure c
-            _ -> fail $ "Expected a JSON String for length 1 but got " <> show str
+            _ -> fail $ "Expected a JSON String of length 1 but got " <> show str
         )
 
 instance jsonBytes :: Json Uint8Array where
@@ -155,8 +157,8 @@ jsonConstructor' :: String -> Array Aeson -> Aeson
 jsonConstructor' ctorName ctorFields =
   Aeson.fromObject
     $ Object.fromFoldable
-        [ Tuple "name" (Aeson.fromString ctorName)
-        , Tuple "fields" (toJson ctorFields)
+        [ Tuple "fields" (toJson ctorFields)
+        , Tuple "name" (Aeson.fromString ctorName)
         ]
 
 caseJsonConstructor' :: forall a. Map String (Array Aeson -> Parser a) -> Aeson -> Parser a

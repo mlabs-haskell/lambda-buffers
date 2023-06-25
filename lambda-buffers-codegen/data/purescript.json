@@ -36,9 +36,9 @@
       "String"
     ],
     "Prelude.Char": [
-      "prelude",
-      "Prim",
-      "Char"
+      "strings",
+      "Data.String.CodePoints",
+      "CodePoint"
     ],
     "Prelude.Integer": [
       "bigints",

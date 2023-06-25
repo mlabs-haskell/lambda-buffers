@@ -28,6 +28,7 @@ let
     cabalDataPatterns = [ "**/*.lbf" "**/*.json" ];
     cabalPackageName = "lbt-prelude-golden-data-hs";
   };
+
   project = { lib, ... }: {
     src = ./.;
 

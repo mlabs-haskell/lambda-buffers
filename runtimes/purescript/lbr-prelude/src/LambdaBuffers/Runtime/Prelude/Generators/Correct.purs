@@ -12,6 +12,7 @@ import Data.Map as Map
 import Data.Maybe (Maybe)
 import Data.Set (Set)
 import Data.Set as Set
+import Data.String (CodePoint, codePointFromChar)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import LambdaBuffers.Runtime.Prelude.Bytes (Bytes(..))
@@ -25,8 +26,8 @@ genBool = Q.arbitrary
 genInteger :: Q.Gen BigInt
 genInteger = BigInt.fromInt <$> Q.chooseInt (-100000) 100000
 
-genChar :: Q.Gen Char
-genChar = UTF8String.genChar
+genChar :: Q.Gen CodePoint
+genChar = codePointFromChar <$> UTF8String.genChar
 
 genBytes :: Q.Gen Bytes
 genBytes = Bytes <$> ArrayBuffer.genTypedArray ArrayBuffer.genUint8

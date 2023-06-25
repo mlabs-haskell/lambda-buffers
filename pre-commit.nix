@@ -20,6 +20,7 @@
             "docs/compiler-api.md"
             "lambda-buffers-testsuite/lbt-prelude/goldens/.*"
             "runtimes/purescript/lbr-prelude/spago-packages.nix"
+            ".*/spago-packages.nix$"
           ];
 
           hooks = {

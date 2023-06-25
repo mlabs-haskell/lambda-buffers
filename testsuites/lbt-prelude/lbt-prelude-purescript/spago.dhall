@@ -16,6 +16,9 @@
   , "gen"
   , "maybe"
   , "newtype"
+  , "node-buffer"
+  , "node-fs"
+  , "node-path"
   , "ordered-collections"
   , "prelude"
   , "quickcheck"
@@ -26,5 +29,5 @@
   , "uint"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, sources = [ "test/**/*.purs", ".extras/**/*.purs" ]
 }
