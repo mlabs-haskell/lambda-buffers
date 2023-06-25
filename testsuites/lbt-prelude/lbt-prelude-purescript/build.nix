@@ -19,9 +19,11 @@
     lbr-prelude-purs
   ];
   data = [
-    { name = "lbt-prelude-golden-data";
-      path =  ../golden;
-    }];
+    {
+      name = "lbt-prelude-golden-data";
+      path = ../golden;
+    }
+  ];
 
   shell = {
     withRuntime = false;

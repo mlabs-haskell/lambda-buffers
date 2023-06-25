@@ -43,7 +43,7 @@ bi :: Int -> BigInt
 bi = BigInt.fromInt
 
 someBytes :: Bytes
-someBytes = Bytes.fromIntArray [ 115,111,109,101,32,98,121,116,101,115 ]
+someBytes = Bytes.fromIntArray [ 115, 111, 109, 101, 32, 98, 121, 116, 101, 115 ]
 
 fooSumGoldens :: forall a b c. a -> b -> c -> Array (FooSum a b c)
 fooSumGoldens x y z =

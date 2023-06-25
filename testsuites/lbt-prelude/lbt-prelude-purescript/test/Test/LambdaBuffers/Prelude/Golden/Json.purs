@@ -3,7 +3,6 @@ module Test.LambdaBuffers.Prelude.Golden.Json
   ) where
 
 import Prelude
-
 import Data.Either (Either(..))
 import Data.Foldable (sequence_)
 import Data.Traversable (sequence)
@@ -41,57 +40,60 @@ tests = do
   goldenInstance <- goldenInstanceTests
   pure
     $ describe
-        "Prelude.Json class tests"
-        do
-          describe "Instance" do
-            goldenInstance
+        "Prelude.Json class tests" do
+        describe "Instance" do
+          goldenInstance
 
 goldenInstanceTests :: Effect (Spec Unit)
 goldenInstanceTests = do
   t1 <- preludeFromToGoldenTests
   t2 <- fooFromToGoldenTests
   t3 <- daysFromToGoldenTests
-  pure $ describe "Golden tests" do
-    t1
-    t2
-    t3
+  pure
+    $ describe "Golden tests" do
+        t1
+        t2
+        t3
 
 fooFromToGoldenTests :: Effect (Spec Unit)
 fooFromToGoldenTests =
-  sequence_ <$> sequence
-    [ fromToGoldenTest
-        "Foo.A"
-        Golden.aGoldens
-    , fromToGoldenTest
-        "Foo.B"
-        Golden.bGoldens
-    , fromToGoldenTest
-        "Foo.C"
-        Golden.cGoldens
-    , fromToGoldenTest
-        "Foo.D"
-        Golden.dGoldens
-    ]
+  sequence_
+    <$> sequence
+        [ fromToGoldenTest
+            "Foo.A"
+            Golden.aGoldens
+        , fromToGoldenTest
+            "Foo.B"
+            Golden.bGoldens
+        , fromToGoldenTest
+            "Foo.C"
+            Golden.cGoldens
+        , fromToGoldenTest
+            "Foo.D"
+            Golden.dGoldens
+        ]
 
 daysFromToGoldenTests :: Effect (Spec Unit)
 daysFromToGoldenTests =
-  sequence_ <$> sequence
-    [ fromToGoldenTest "Days.Day" Golden.dayGoldens
-    , fromToGoldenTest "Days.WorkDay" Golden.workDayGoldens
-    , fromToGoldenTest "Days.FreeDay" Golden.freeDayGoldens
-    ]
+  sequence_
+    <$> sequence
+        [ fromToGoldenTest "Days.Day" Golden.dayGoldens
+        , fromToGoldenTest "Days.WorkDay" Golden.workDayGoldens
+        , fromToGoldenTest "Days.FreeDay" Golden.freeDayGoldens
+        ]
 
 preludeFromToGoldenTests :: Effect (Spec Unit)
 preludeFromToGoldenTests =
-  sequence_ <$> sequence
-    [ fromToGoldenTest "Prelude.Bool" Golden.boolGoldens
-    , fromToGoldenTest "Prelude.Char" Golden.charGoldens
-    , fromToGoldenTest "Prelude.Integer" Golden.integerGoldens
-    , fromToGoldenTest "Prelude.Text" Golden.textGoldens
-    , fromToGoldenTest "Prelude.Bytes" Golden.bytesGoldens
-    , fromToGoldenTest "Prelude.Maybe" Golden.maybeGoldens
-    , fromToGoldenTest "Prelude.Either" Golden.eitherGoldens
-    , fromToGoldenTest "Prelude.List" Golden.listGoldens
-    , fromToGoldenTest "Prelude.Set" Golden.setGoldens
-    , fromToGoldenTest "Prelude.Map" Golden.mapGoldens
-    ]
+  sequence_
+    <$> sequence
+        [ fromToGoldenTest "Prelude.Bool" Golden.boolGoldens
+        , fromToGoldenTest "Prelude.Char" Golden.charGoldens
+        , fromToGoldenTest "Prelude.Integer" Golden.integerGoldens
+        , fromToGoldenTest "Prelude.Text" Golden.textGoldens
+        , fromToGoldenTest "Prelude.Bytes" Golden.bytesGoldens
+        , fromToGoldenTest "Prelude.Maybe" Golden.maybeGoldens
+        , fromToGoldenTest "Prelude.Either" Golden.eitherGoldens
+        , fromToGoldenTest "Prelude.List" Golden.listGoldens
+        , fromToGoldenTest "Prelude.Set" Golden.setGoldens
+        , fromToGoldenTest "Prelude.Map" Golden.mapGoldens
+        ]
