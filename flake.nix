@@ -8,7 +8,7 @@
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
-    ctl.url = "github:plutonomicon/cardano-transaction-lib/cbe38e46201c26eac29b94eb1562cb29c416f385";
+    ctl.url = "github:plutonomicon/cardano-transaction-lib/828807176051145b3d9715e9acb5ba8bd419d4ea";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
@@ -209,14 +209,15 @@
               dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
             };
 
-            lbf-plutus-purs = lbfPurescript {
-              inherit pkgs;
-              name = "lbf-plutus";
-              src = ./libs/lbf-plutus;
-              imports = [ ./libs/lbf-prelude ];
-              files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
-              dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
-            };
+            # TODO
+            # lbf-plutus-purs = lbfPurescript {
+            #   inherit pkgs;
+            #   name = "lbf-plutus";
+            #   src = ./libs/lbf-plutus;
+            #   imports = [ ./libs/lbf-prelude ];
+            #   files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+            #   dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
+            # };
           };
 
           # Test Suites
@@ -241,7 +242,7 @@
           lbtPreludePursFlake = pursFlake (
             import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix {
               inherit pkgs commonTools shellHook lbfPurescript;
-              lbr-prelude-purs = pkgs.stdenv.mkDerivation { name = "lbr-prelude"; src = ./runtimes/purescript/lbr-prelude; phases="installPhase"; installPhase = "ln -s $src $out"; };
+              lbr-prelude-purs = pkgs.stdenv.mkDerivation { name = "lbr-prelude"; src = ./runtimes/purescript/lbr-prelude; phases = "installPhase"; installPhase = "ln -s $src $out"; };
               inherit (lbfLibs) lbf-prelude-purs;
             }
           );
