@@ -43,7 +43,7 @@ bi :: Int -> BigInt
 bi = BigInt.fromInt
 
 someBytes :: Bytes
-someBytes = (Bytes.fromIntArray [ 115, 111, 109, 101, 32, 98, 121, 101, 115 ])
+someBytes = Bytes.fromIntArray [ 115,111,109,101,32,98,121,116,101,115 ]
 
 fooSumGoldens :: forall a b c. a -> b -> c -> Array (FooSum a b c)
 fooSumGoldens x y z =
@@ -102,7 +102,7 @@ integerGoldens =
   ]
 
 bytesGoldens :: Array Bytes
-bytesGoldens = [ Bytes.fromIntArray [], Bytes.fromIntArray [ 0 ], Bytes.fromIntArray [ 0x73, 0x6f, 0x6d, 0x65, 0x20, 0x62, 0x79, 0x74, 0x65, 0x73 ] ]
+bytesGoldens = [ Bytes.fromIntArray [], Bytes.fromIntArray [ 0 ], someBytes ]
 
 charGoldens :: Array CodePoint
 charGoldens = toEnumWithDefaults bottom top <$> [ 0x0, 0xA, 0x1F643 ]

@@ -17,10 +17,10 @@ lbg-purescript:
 , # TODO(bladyjoker): Dependencies to include in the `build` output
   # examples: dependencies = [ "lbf-prelude" "lbr-prelude" ]
   dependencies ? [ ]
-, # Name of the package and also the name of the Cabal package.
+, # Package name.
   # Examples: name = "lbf-myproject"
   name
-, # Version of the package and also the version of the Cabal package.
+, # Package version.
   # Examples: version = "0.1.0.0"
   version ? "0.1.0.0"
 }:

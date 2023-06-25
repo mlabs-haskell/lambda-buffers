@@ -2,6 +2,7 @@
 module LambdaBuffers.Codegen.LamVal.Json (deriveToJsonImpl, deriveFromJsonImpl) where
 
 import Control.Lens (view)
+import Data.List (sortOn)
 import Data.Map.Ordered qualified as OMap
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -270,7 +271,7 @@ toJsonRecord (qtyN, recTy) =
             jsonObjRef
               @ ListE
                 [ TupleE (fieldNameVal fieldName) (toJsonRef fieldTy @ FieldE (qtyN, fieldName) recVal)
-                | (fieldName, fieldTy) <- OMap.assocs recTy
+                | (fieldName, fieldTy) <- sortOn fst $ OMap.assocs recTy
                 ]
     )
 

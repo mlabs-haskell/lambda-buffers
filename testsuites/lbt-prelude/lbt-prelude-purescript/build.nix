@@ -18,12 +18,10 @@
     lbf-prelude-purs
     lbr-prelude-purs
   ];
-  goldenData = import ../../../extras/haskell-data.nix {
-    inherit pkgs;
-    srcs = [ ../. ];
-    cabalDataPatterns = [ "**/*.lbf" "**/*.json" ];
-    cabalPackageName = "lbt-prelude-golden-data-hs";
-  };
+  data = [
+    { name = "lbt-prelude-golden-data";
+      path =  ../golden;
+    }];
 
   shell = {
     withRuntime = false;

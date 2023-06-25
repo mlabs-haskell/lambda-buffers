@@ -45,8 +45,7 @@ findGoldens goldenDir ext title goldensLength =
     Map.empty
     (0 .. (goldensLength - 1))
 
-type Spec a
-  = SpecT Aff Unit (Either Error) a
+type Spec a = SpecT Aff Unit (Either Error) a
 
 -- | `assertGoldens goldenDir title ext assert goldens`
 assertGoldens :: forall a. FilePath -> String -> String -> (String -> String) -> (a -> Int -> FilePath -> String -> Spec Unit) -> Array a -> Effect (Spec Unit)
