@@ -3445,11 +3445,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1687729456,
-        "narHash": "sha256-dV/sDGMQzrc3RiJqO+LuYMX56Mm1RITNt+XqeMgT1X8=",
+        "lastModified": 1687772868,
+        "narHash": "sha256-87oDH5rKhflPTonifUrXD9F1ABrmgnIsxzmIV3bmwqQ=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "19d1d869cbc6427ae8c3612e421a07f3a5342a82",
+        "rev": "41a574c3fef82e5107cfef5505eca52d811b4dd7",
         "type": "github"
       },
       "original": {
