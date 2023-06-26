@@ -29,6 +29,7 @@
     withRuntime = false;
     packageLockOnly = true;
     packages = builtins.attrValues commonTools ++ [
+      pkgs.nodejs_16
       pkgs.bashInteractive
       pkgs.fd
     ];
