@@ -1,0 +1,24 @@
+module Foo
+
+import Foo.Bar
+import Prelude
+
+prod A = (FooSum Integer Bool Bytes)
+
+derive Eq A
+derive Json A
+
+prod B = (FooProd Integer Bool Bytes)
+
+derive Eq B
+derive Json B
+
+prod C = (FooRec Integer Bool Bytes)
+
+derive Eq C
+derive Json C
+
+prod D = (FooComplicated Integer Bool Bytes)
+
+derive Eq D
+derive Json D

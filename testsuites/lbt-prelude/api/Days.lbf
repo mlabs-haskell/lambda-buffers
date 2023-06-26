@@ -1,0 +1,18 @@
+module Days
+
+import Prelude
+
+sum Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+
+derive Eq Day
+derive Json Day
+
+prod WorkDay = Day
+
+derive Eq WorkDay
+derive Json WorkDay
+
+record FreeDay = { day : Day }
+
+derive Eq FreeDay
+derive Json FreeDay

@@ -18,6 +18,9 @@
             "experimental/ctl-env/spago-packages.nix"
             "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
             "docs/compiler-api.md"
+            "lambda-buffers-testsuite/lbt-prelude/goldens/.*"
+            "runtimes/purescript/lbr-prelude/spago-packages.nix"
+            ".*/spago-packages.nix$"
           ];
 
           hooks = {

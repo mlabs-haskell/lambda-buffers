@@ -26,9 +26,9 @@
       "Maybe"
     ],
     "Prelude.Bytes": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.ByteArray",
-      "ByteArray"
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "Bytes"
     ],
     "Prelude.Text": [
       "prelude",
@@ -36,14 +36,9 @@
       "String"
     ],
     "Prelude.Char": [
-      "prelude",
-      "Prim",
-      "Char"
-    ],
-    "Prelude.Int32": [
-      "prelude",
-      "Prim",
-      "Int"
+      "strings",
+      "Data.String.CodePoints",
+      "CodePoint"
     ],
     "Prelude.Integer": [
       "bigints",
@@ -228,14 +223,9 @@
     ],
     "Prelude.Json": [
       [
-        "aeson",
-        "Aeson",
-        "EncodeAeson"
-      ],
-      [
-        "aeson",
-        "Aeson",
-        "DecodeAeson"
+        "lbr-prelude",
+        "LambdaBuffers.Runtime.Prelude",
+        "Json"
       ]
     ]
   }

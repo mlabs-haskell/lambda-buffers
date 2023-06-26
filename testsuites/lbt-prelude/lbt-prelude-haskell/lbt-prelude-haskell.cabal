@@ -1,0 +1,132 @@
+cabal-version: 3.0
+name:          lbt-prelude-haskell
+version:       0.1.0.0
+synopsis:
+  Integration Test Suite for `lbf-prelude` and Haskell `lbr-prelude`
+
+author:        Drazen Popovic
+maintainer:    bladyjoker@gmail.com
+
+flag dev
+  description: Enable non-strict compilation for development
+  manual:      True
+
+common common-language
+  ghc-options:
+    -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
+    -fwarn-missing-import-lists -Weverything -Wno-unsafe
+    -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-missing-kind-signatures -Wno-all-missed-specializations
+
+  if !flag(dev)
+    ghc-options: -Werror
+
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    DoAndIfThenElse
+    DuplicateRecordFields
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    ExplicitNamespaces
+    FlexibleContexts
+    FlexibleInstances
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralizedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RecordWildCards
+    RelaxedPolyRec
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TemplateHaskell
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns
+
+  default-language:   Haskell2010
+
+library
+  import:          common-language
+  build-depends:
+    , base            >=4.16
+    , bytestring      >=0.11
+    , containers      >=0.6
+    , filepath        >=1.4
+    , lbf-golden-api
+    , lbr-prelude
+    , tasty           >=1.4
+    , tasty-golden
+    , tasty-hunit
+    , text            >=1.2
+
+  hs-source-dirs:  src
+  exposed-modules: LambdaBuffers.Prelude.Json.Golden
+
+executable lbt-prelude-golden
+  import:         common-language
+  build-depends:
+    , base                  >=4.16
+    , lbt-prelude-haskell
+    , optparse-applicative  >=0.17
+
+  hs-source-dirs: app
+  main-is:        Main.hs
+  other-modules:  LambdaBuffers.Prelude.Cli.Generate
+
+test-suite tests
+  import:         common-language
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , base                        >=4.16
+    , hedgehog                    >=1.2
+    , lbf-golden-api              >=0.1
+    , lbr-prelude
+    , lbt-prelude-golden-data-hs
+    , lbt-prelude-haskell
+    , tasty                       >=1.4
+    , tasty-hedgehog              >=1.4
+
+  other-modules:
+    Test.LambdaBuffers.Runtime.Prelude.Eq
+    Test.LambdaBuffers.Runtime.Prelude.Generators.Correct
+    Test.LambdaBuffers.Runtime.Prelude.Json

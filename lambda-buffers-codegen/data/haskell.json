@@ -11,8 +11,8 @@
             "Set"
         ],
         "Prelude.List": [
-            "lb-haskell-runtime",
-            "LambdaBuffers.Runtime.Haskell",
+            "lbr-prelude",
+            "LambdaBuffers.Runtime.Prelude",
             "List"
         ],
         "Prelude.Either": [
@@ -90,7 +90,7 @@
             "Prelude",
             "Bool"
         ],
-        "Plutus.PlutusData": [
+        "Plutus.V1.PlutusData": [
             "plutus-tx",
             "PlutusTx.Builtins",
             "BuiltinData"
@@ -239,10 +239,25 @@
             "plutus-tx",
             "PlutusTx.AssocMap",
             "Map"
+        ],
+        "Plutus.V2.TxInInfo": [
+            "plutus-ledger-api",
+            "PlutusLedgerApi.V2.Contexts",
+            "TxInInfo"
+        ],
+        "Plutus.V2.OutputDatum": [
+            "plutus-ledger-api",
+            "PlutusLedgerApi.V2.Tx",
+            "OutputDatum"
+        ],
+        "Plutus.V2.TxOut": [
+            "plutus-ledger-api",
+            "PlutusLedgerApi.V2.Tx",
+            "TxOut"
         ]
     },
     "classesConfig": {
-        "Plutus.PlutusData": [
+        "Plutus.V1.PlutusData": [
             [
                 "plutus-tx",
                 "PlutusTx",
@@ -263,14 +278,9 @@
         ],
         "Prelude.Json": [
             [
-                "aeson",
-                "Data.Aeson",
-                "ToJSON"
-            ],
-            [
-                "aeson",
-                "Data.Aeson",
-                "FromJSON"
+                "lbr-prelude",
+                "LambdaBuffers.Runtime.Prelude",
+                "Json"
             ]
         ]
     }

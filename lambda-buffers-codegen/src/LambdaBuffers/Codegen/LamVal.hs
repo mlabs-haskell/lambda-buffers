@@ -19,6 +19,7 @@ module LambdaBuffers.Codegen.LamVal (
 ) where
 
 import Data.Map.Ordered (OMap)
+import Data.Text (Text)
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
 
@@ -39,10 +40,17 @@ data ValueE where
   LetE :: QProduct -> ValueE -> ([ValueE] -> ValueE) -> ValueE
   -- | Int expressions
   IntE :: Int -> ValueE
+  -- caseInt :: Int -> [(Int, a)] -> (Int -> a) -> a
   CaseIntE :: ValueE -> [(ValueE, ValueE)] -> (ValueE -> ValueE) -> ValueE
-  -- | Int expressions
+  -- | Text expressions
+  TextE :: Text -> ValueE
+  -- caseText :: Text -> [(Text, a)] -> (Text -> a) -> a
+  CaseTextE :: ValueE -> [(ValueE, ValueE)] -> (ValueE -> ValueE) -> ValueE
+  -- | List expressions
   ListE :: [ValueE] -> ValueE
   CaseListE :: ValueE -> [(Int, [ValueE] -> ValueE)] -> (ValueE -> ValueE) -> ValueE
+  -- | Tuple expressions
+  TupleE :: ValueE -> ValueE -> ValueE
   -- | Error
   ErrorE :: String -> ValueE
 

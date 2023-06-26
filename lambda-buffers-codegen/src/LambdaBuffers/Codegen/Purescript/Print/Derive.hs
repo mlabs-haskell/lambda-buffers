@@ -1,17 +1,18 @@
-module LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData) where
+module LambdaBuffers.Codegen.Purescript.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
 
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
+import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Purescript.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, equals, (<+>))
+import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
 
 lvEqBuiltins :: Map LV.ValueName Purs.QValName
@@ -75,3 +76,47 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
 
 printValueDef :: Purs.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printPursValName valName <+> equals <+> valDoc
+
+-- | LambdaBuffers.Codegen.LamVal.Json specification printing
+lvJsonBuiltins :: Map LV.ValueName Purs.QValName
+lvJsonBuiltins =
+  Map.fromList
+    [ ("toJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "toJson")
+    , ("fromJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fromJson")
+    , ("jsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonObject")
+    , ("jsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonConstructor")
+    , ("jsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonArray")
+    , ("caseJsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonConstructor")
+    , ("caseJsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonArray")
+    , ("caseJsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonObject")
+    , ("jsonField", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonField")
+    , ("succeedParse", Purs.normalValName "either" "Data.Either" "Right")
+    , ("failParse", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fail")
+    , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
+    ]
+
+toJsonClassMethodName :: Purs.ValueName
+toJsonClassMethodName = Purs.MkValueName "toJson"
+
+fromJsonClassMethodName :: Purs.ValueName
+fromJsonClassMethodName = Purs.MkValueName "fromJson"
+
+printDeriveJson :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Purs.QValName)
+printDeriveJson mn iTyDefs mkInstanceDoc ty = do
+  toJsonValE <- deriveToJsonImpl mn iTyDefs ty
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
+  fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
+
+  let instanceDoc =
+        mkInstanceDoc
+          ( align $
+              vsep
+                [ printValueDef toJsonClassMethodName toJsonImplDoc
+                , printValueDef fromJsonClassMethodName fromJsonImplDoc
+                ]
+          )
+  return
+    ( instanceDoc
+    , impsA <> impsB
+    )

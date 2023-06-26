@@ -1,0 +1,155 @@
+module LambdaBuffers
+
+import Prelude
+
+sum Kind = Type | Arrow Kind Kind
+
+derive Eq Kind
+derive Json Kind
+
+sum Ty = App Ty Ty | Var VarName | Ref TyRef
+
+derive Eq Ty
+derive Json Ty
+
+record TyAbs = { args : List TyArg, body : TyBody }
+
+derive Eq TyAbs
+derive Json TyAbs
+
+record TyArg = { name : VarName, kind : Kind }
+
+derive Eq TyArg
+derive Json TyArg
+
+record TyDef = { name : TyName, abs : TyAbs }
+
+derive Eq TyDef
+derive Json TyDef
+
+sum TyBody = Opaque | Sum (Map ConstrName Constructor)
+
+derive Eq TyBody
+derive Json TyBody
+
+record Constructor = { name : ConstrName, product : Product }
+
+derive Eq Constructor
+derive Json Constructor
+
+prod Product = (List Ty)
+
+derive Eq Product
+derive Json Product
+
+prod Record = (Map FieldName Field)
+
+derive Eq Record
+derive Json Record
+
+record Field = { name : FieldName, ty : Ty }
+
+derive Eq Field
+derive Json Field
+
+sum TyRef = Local TyName | Foreign ModuleName TyName
+
+derive Eq TyRef
+derive Json TyRef
+
+record ClassDef = { name : ClassName
+                  , args : List TyArg
+                  , supers : List ClassConstraint }
+
+derive Eq ClassDef
+derive Json ClassDef
+
+record ClassConstraint = { class : ClassRef, args : List TyArg }
+
+derive Eq ClassConstraint
+derive Json ClassConstraint
+
+record InstanceClause = { head : Constraint, body : List Constraint }
+
+derive Eq InstanceClause
+derive Json InstanceClause
+
+prod Derive = Constraint
+
+derive Eq Derive
+derive Json Derive
+
+record Constraint = { class : ClassRef, args : List Ty }
+
+derive Eq Constraint
+derive Json Constraint
+
+sum ClassRef = Local ClassName | Foreign ModuleName ClassName
+
+derive Eq ClassRef
+derive Json ClassRef
+
+record Module = { name : ModuleName
+                , tyDefs : Map TyName TyDef
+                , classDefs : Map ClassName ClassDef
+                , ruleImports : Set ModuleName
+                , instanceClauses : List InstanceClause
+                , derives : List Derive }
+
+derive Eq Module
+derive Json Module
+
+record CompilerInput = { modules : Map ModuleName Module }
+
+derive Eq CompilerInput
+derive Json CompilerInput
+
+prod TyName = Text
+
+derive Eq TyName
+derive Json TyName
+
+prod VarName = Text
+
+derive Eq VarName
+derive Json VarName
+
+prod ConstrName = Text
+
+derive Eq ConstrName
+derive Json ConstrName
+
+prod FieldName = Text
+
+derive Eq FieldName
+derive Json FieldName
+
+prod ModuleName = (List ModuleNamePart)
+
+derive Eq ModuleName
+derive Json ModuleName
+
+prod ModuleNamePart = Text
+
+derive Eq ModuleNamePart
+derive Json ModuleNamePart
+
+prod ClassName = Text
+
+derive Eq ClassName
+derive Json ClassName
+
+prod TestProd a b c = a b c
+
+derive Eq (TestProd a b c)
+derive Json (TestProd a b c)
+
+record TestRec a b c = { f1 : a , f2 : b , f3 : c}
+
+derive Eq (TestRec a b c)
+derive Json (TestRec a b c)
+
+sum TestSum a b c = A a | B b | C c
+
+derive Eq (TestSum a b c)
+derive Json (TestSum a b c)

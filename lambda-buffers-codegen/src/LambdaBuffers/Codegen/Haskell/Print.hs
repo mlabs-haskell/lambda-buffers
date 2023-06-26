@@ -17,9 +17,10 @@ import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
+import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
-import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveJson, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printModName, printModName', printTyName)
@@ -31,6 +32,7 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
 import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
 printModule :: MonadPrint m => m (Doc ann, Set Text)
 printModule = do
@@ -85,6 +87,10 @@ hsClassImplPrinters =
       ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "FromData")
       , printDeriveFromPlutusData
       )
+    ,
+      ( (H.MkCabalPackageName "lbr-prelude", H.MkModuleName "LambdaBuffers.Runtime.Prelude", H.MkClassName "Json")
+      , printDeriveJson
+      )
     ]
 
 printInstances :: MonadPrint m => m [Doc ann]
@@ -106,18 +112,21 @@ printDerive iTyDefs d = do
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
-    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print " <> show qcn)
+    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print " <> show qcn) -- TODO(bladyjoker): Fix qcn printing.
     Just hsqcns -> for hsqcns (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
 
 printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
 printHsQClassImpl mn iTyDefs hqcn d =
   case Map.lookup hqcn hsClassImplPrinters of
-    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Haskell type class " <> show hqcn)
+    Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Haskell type class " <> show hqcn) -- TODO(bladyjoker): Fix hqcn printing
     Just implPrinter -> do
       let ty = d ^. #constraint . #argument
           mkInstanceDoc = printInstanceDef hqcn ty
       case implPrinter mn iTyDefs mkInstanceDoc ty of
-        Left err -> throwInternalError (d ^. #constraint . #sourceInfo) ("Failed printing the implementation for " <> show hqcn <> "\nGot error: " <> show err)
+        Left err ->
+          throwInternalError
+            (d ^. #constraint . #sourceInfo)
+            ("Failed printing the implementation for " <> show hqcn <> "\nGot error: " <> Text.unpack (err ^. P.msg))
         Right (instanceDefsDoc, valImps) -> do
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc
@@ -150,14 +159,11 @@ printImports lbTyImports hsTyImports classImps ruleImps valImps =
     importQualified :: Doc ann -> Doc ann
     importQualified mnDoc = "import qualified" <+> mnDoc
 
--- TODO(bladyjoker): Handle LB package deps once you figure out the UX story.
-
--- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+{- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+ Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).
+-}
 collectPackageDeps :: Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
-  -- let groupedLbImports =
-  --       Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
-  --         `Set.union` ruleImps
   let deps =
         Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList classImps]

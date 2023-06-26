@@ -4,17 +4,8 @@ version:            0.1.0.0
 synopsis:           Lambda Buffers Codegen
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-data-files:
-  data/**/*.hs
-  data/**/*.json
-  data/**/*.purs
-  data/**/*.textproto
-
-extra-source-files:
-  data/**/*.hs
-  data/**/*.json
-  data/**/*.purs
-  data/**/*.textproto
+data-files:         data/**/*.json
+extra-source-files: data/**/*.json
 
 flag dev
   description: Enable non-strict compilation for development
@@ -126,6 +117,7 @@ library
     LambdaBuffers.Codegen.LamVal
     LambdaBuffers.Codegen.LamVal.Derive
     LambdaBuffers.Codegen.LamVal.Eq
+    LambdaBuffers.Codegen.LamVal.Json
     LambdaBuffers.Codegen.LamVal.MonadPrint
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Print
@@ -174,18 +166,11 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , aeson                      >=2.1
-    , base                       >=4.16
-    , bytestring                 >=0.11
-    , filepath                   >=1.4
+    , aeson                   >=2.1
+    , base                    >=4.16
     , lambda-buffers-codegen
-    , lambda-buffers-codegen-pb  >=0.1
-    , lambda-buffers-compiler    >=0.1
-    , lens                       >=5.2
-    , proto-lens                 >=0.7
-    , tasty                      >=1.4
-    , tasty-hunit                >=0.10
-    , text                       >=1.2
+    , tasty                   >=1.4
+    , tasty-hunit             >=0.10
 
   other-modules:
     Paths_lambda_buffers_codegen
