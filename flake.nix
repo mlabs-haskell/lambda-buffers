@@ -175,11 +175,21 @@
 
           ## Plutus runtime - lbr-plutus
 
+          ### Haskell
           lbrPlutusHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-plutus/build.nix;
             additional = { lbr-prelude = ./runtimes/haskell/lbr-prelude; };
           };
           lbrPlutusHsFlake = flakeAbstraction lbrPlutusHsBuild;
+
+          ### Purescript
+
+          lbrPlutusPurs = pursFlake (
+            import ./runtimes/purescript/lbr-plutus/build.nix {
+              inherit pkgs commonTools;
+              shellHook = config.pre-commit.installationScript;
+            }
+          );
 
           # Schema libs
 
@@ -277,6 +287,7 @@
           // lbrPreludeHsFlake.packages
           // lbrPreludePurs.packages
           // lbrPlutusHsFlake.packages
+          // lbrPlutusPurs.packages
           // lbtPreludeHsFlake.packages
           // lbtPreludePursFlake.packages
           // lbtPlutusHsFlake.packages
@@ -293,6 +304,7 @@
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
+            dev-lbr-plutus-purescript = lbrPlutusPurs.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
             dev-lbt-prelude-purescript = lbtPreludePursFlake.devShell;
             dev-lbt-plutus-haskell = lbtPlutusHsFlake.devShell;
@@ -303,6 +315,7 @@
           checks = devShells //
             packages //
             lbrPreludePurs.checks //
+            lbrPlutusPurs.checks //
             lbtPreludePursFlake.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //

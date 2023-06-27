@@ -10,6 +10,15 @@ module.exports = {
         filename: 'output.js',
         path: path.resolve(__dirname, 'dist'),
     },
+    experiments: {
+        asyncWebAssembly: false,
+        layers: false,
+        lazyCompilation: false,
+        outputModule: true,
+        syncWebAssembly: true,
+        topLevelAwait: true,
+    },
+
     resolve: {
         // We use node_modules provided by Nix shell via an environment variable
         modules: [process.env.NODE_PATH],
@@ -42,9 +51,10 @@ module.exports = {
         new webpack.LoaderOptionsPlugin({
             debug: true,
         }),
-        new HtmlWebpackPlugin(),
         new webpack.ProvidePlugin({
             Buffer: ["buffer", "Buffer"],
-        })
+        }),
+        new webpack.ContextReplacementPlugin(/cardano-serialization-lib-browser/),
+        new webpack.ContextReplacementPlugin(/cardano-serialization-lib-nodejs/),
     ]
 };
