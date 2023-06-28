@@ -40,6 +40,7 @@ tests = do
       fromToTest "Plutus.V1.TxOutRef" Correct.genTxOutRef
       fromToTest "Plutus.V2.OutputDatum" Correct.genOutputDatum
       fromToTest "Plutus.V2.TxOut" Correct.genTxOut
+      fromToTest "Plutus.V2.TxInInfo" Correct.genTxInInfo
 
 fromToTest :: forall a. ToData a => FromData a => Show a => Eq a => String -> Q.Gen a -> Spec Unit
 fromToTest title gen =

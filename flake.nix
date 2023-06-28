@@ -219,15 +219,14 @@
               dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
             };
 
-            # TODO
-            # lbf-plutus-purs = lbfPurescript {
-            #   inherit pkgs;
-            #   name = "lbf-plutus";
-            #   src = ./libs/lbf-plutus;
-            #   imports = [ ./libs/lbf-prelude ];
-            #   files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
-            #   dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
-            # };
+            lbf-plutus-purs = lbfPurescript {
+              inherit pkgs;
+              name = "lbf-plutus";
+              src = ./libs/lbf-plutus;
+              imports = [ ./libs/lbf-prelude ];
+              files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+              dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
+            };
           };
 
           # Test Suites

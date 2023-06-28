@@ -22,6 +22,7 @@ module Test.LambdaBuffers.Plutus.Generators.Correct
   , genStakingCredential
   , genTokenName
   , genTxId
+  , genTxInInfo
   , genTxOut
   , genTxOutRef
   , genUpperBound
@@ -38,8 +39,8 @@ import Ctl.Internal.Plutus.Types.CurrencySymbol (CurrencySymbol, adaSymbol, mkCu
 import Ctl.Internal.Plutus.Types.Transaction (TransactionOutput(..)) as PlutusV2
 import Ctl.Internal.Plutus.Types.Value (Value) as PlutusV1
 import Ctl.Internal.Plutus.Types.Value as PlutusV1.Value
-import Ctl.Internal.Serialization.Hash as Hash
 import Ctl.Internal.Serialization.Hash (ScriptHash, scriptHashFromBytes) as PlutusV1
+import Ctl.Internal.Serialization.Hash as Hash
 import Ctl.Internal.Types.BigNum as BigNum
 import Ctl.Internal.Types.ByteArray (ByteArray(..)) as PlutusV1
 import Ctl.Internal.Types.Datum (Datum(..)) as PlutusV1
@@ -64,6 +65,7 @@ import Data.Tuple (Tuple(..))
 import Data.UInt as UInt
 import Data.Unfoldable (replicateA)
 import Effect.Unsafe (unsafePerformEffect)
+import LambdaBuffers.Runtime.Plutus as PlutusV2
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (arbitrary) as Q
 import Test.QuickCheck.Gen (Gen, chooseInt) as Q
@@ -210,6 +212,9 @@ genOutputDatum =
 
 genTxOut :: Q.Gen PlutusV2.TransactionOutput
 genTxOut = PlutusV2.TransactionOutput <$> ({ address: _, amount: _, datum: _, referenceScript: _ } <$> genAddress <*> genValue <*> genOutputDatum <*> (pure Nothing <$> Just <$> genScriptHash))
+
+genTxInInfo :: Q.Gen PlutusV2.TxInInfo
+genTxInInfo = PlutusV2.TxInInfo <$> ({ outRef: _, resolved: _ } <$> genTxOutRef <*> genTxOut)
 
 -- | Utils
 genBytes :: Int -> Q.Gen Uint8Array

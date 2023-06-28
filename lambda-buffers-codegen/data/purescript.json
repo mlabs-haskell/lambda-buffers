@@ -50,7 +50,7 @@
       "Prim",
       "Boolean"
     ],
-    "Plutus.PlutusData": [
+    "Plutus.V1.PlutusData": [
       "cardano-transaction-lib",
       "Ctl.Internal.Types.PlutusData",
       "PlutusData"
@@ -75,15 +75,10 @@
       "Ctl.Internal.Types.PubKeyHash",
       "PubKeyHash"
     ],
-    "Plutus.V1.DCert": [
-      "cardano-transaction-lib",
-      "<PlutusLedgerApi.V1.DCert>",
-      "<DCert>"
-    ],
     "Plutus.V1.Bytes": [
       "cardano-transaction-lib",
-      "Ctl.Internal.Types.RawBytes",
-      "RawBytes"
+      "Ctl.Internal.Types.ByteArray",
+      "ByteArray"
     ],
     "Plutus.V1.Interval": [
       "cardano-transaction-lib",
@@ -113,7 +108,7 @@
     "Plutus.V1.POSIXTimeRange": [
       "cardano-transaction-lib",
       "Ctl.Internal.Types.Interval",
-      "OnchainPOSIXTimeRange"
+      "POSIXTimeRange"
     ],
     "Plutus.V1.Value": [
       "cardano-transaction-lib",
@@ -126,8 +121,8 @@
       "CurrencySymbol"
     ],
     "Plutus.V1.AssetClass": [
-      "lb-plutus-ledger-api-runtime",
-      "LambdaBuffers.Runtime.PlutusLedgerApi",
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
       "AssetClass"
     ],
     "Plutus.V1.TokenName": [
@@ -160,35 +155,10 @@
       "Ctl.Internal.Serialization.Hash",
       "ScriptHash"
     ],
-    "Plutus.V1.ScriptContext": [
-      "cardano-transaction-lib",
-      "<PlutusLedgerApi.V1.Contexts>",
-      "<There's no ScriptContext in CTL>"
-    ],
-    "Plutus.V1.ScriptPurpose": [
-      "cardano-transaction-lib",
-      "<PlutusLedgerApi.V1.Contexts>",
-      "<Couldn't find ScriptPurpose in CTL>"
-    ],
-    "Plutus.V1.TxInInfo": [
-      "cardano-transaction-lib",
-      "PlutusLedgerApi.V1.Contexts",
-      "<Couldn't find TxInInfo in CTL>"
-    ],
-    "Plutus.V1.TxInfo": [
-      "cardano-transaction-lib",
-      "PlutusLedgerApi.V1.Contexts",
-      "<Couldn't find TxInfo in CTL>"
-    ],
     "Plutus.V1.TxId": [
       "cardano-transaction-lib",
       "Ctl.Internal.Types.Transaction",
       "TransactionHash"
-    ],
-    "Plutus.V1.TxOut": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.Transaction",
-      "<Doesn't support V1 only V2>"
     ],
     "Plutus.V1.TxOutRef": [
       "cardano-transaction-lib",
@@ -199,10 +169,26 @@
       "cardano-transaction-lib",
       "Ctl.Internal.Plutus.Types.AssocMap",
       "Map"
+    ],
+    "Plutus.V2.TxOut": [
+        "cardano-transaction-lib",
+        "LambdaBuffers.Runtime.Plutus",
+        "TxInInfo"
+    ],
+    "Plutus.V2.TxInInfo": [
+        "lbr-plutus",
+        "LambdaBuffers.Runtime.Plutus",
+        "TxInInfo"
+    ],
+    "Plutus.V2.OutputDatum": [
+        "cardano-transaction-lib",
+        "Ctl.Internal.Types.OutputDatum",
+        "OutputDatum"
     ]
+
   },
   "classesConfig": {
-    "Plutus.PlutusData": [
+    "Plutus.V1.PlutusData": [
       [
         "cardano-transaction-lib",
         "Ctl.Internal.ToData",
