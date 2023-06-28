@@ -9,7 +9,7 @@
     "scripts": {
         "test": "spago test",
         "bundle": "spago bundle-module -m Test.Main --to dist/output.js",
-        "test-web": "echo NOT YET READY FOR THE BROWSER!!!"
+        "test-web": "spago bundle-module -m Test.Main --to dist/output.js && BROWSER_RUNTIME=1 webpack serve --static-directory app/"
     },
     "author": "Drazen Popovic",
     "license": "MIT",
