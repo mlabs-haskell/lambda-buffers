@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "spago test",
-    "bundle": "spago bundle-module -m Test.Main --to dist/output.js"
+      "bundle": "spago bundle-module -m Test.Main --to dist/output.js",
+      "test-web": "echo NOT REALLY READY FOR THE BROWSER!!!"
   },
   "author": "Drazen Popovic",
   "license": "MIT",
