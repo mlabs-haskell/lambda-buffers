@@ -1,0 +1,39 @@
+{
+    "name": "lbt-plutus",
+    "version": "0.1.0",
+    "description": "LambdaBuffers Plutus test suite",
+    "main": "app/index.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "spago test",
+        "bundle": "spago bundle-module -m Test.Main --to dist/output.js",
+        "test-web": "echo NOT YET READY FOR THE BROWSER!!!"
+    },
+    "author": "Drazen Popovic",
+    "license": "MIT",
+    "dependencies": {
+        "@emurgo/cardano-serialization-lib-browser": "11.2.1",
+        "@emurgo/cardano-serialization-lib-nodejs": "11.2.1",
+        "@mlabs-haskell/csl-gc-wrapper": "^1.0.1",
+        "@mlabs-haskell/json-bigint": " 1.0.0",
+        "@noble/secp256k1": "^1.7.0",
+        "base64-js": "^1.5.1",
+        "big-integer": "1.6.51",
+        "bignumber.js": "^9.1.1",
+        "bufferutil": "4.0.5",
+        "node-polyfill-webpack-plugin": "1.1.4",
+        "uniqid": "^5.4.0"
+    },
+    "devDependencies": {
+        "buffer": "^6.0.3",
+        "html-webpack-plugin": "5.5.0",
+        "webpack": "^5.88.0",
+        "webpack-cli": "4.10",
+        "webpack-dev-server": "^4.15.1"
+    },
+    "prettier": {
+        "arrowParens": "avoid"
+    }
+}

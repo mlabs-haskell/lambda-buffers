@@ -65,7 +65,7 @@ import Data.Tuple (Tuple(..))
 import Data.UInt as UInt
 import Data.Unfoldable (replicateA)
 import Effect.Unsafe (unsafePerformEffect)
-import LambdaBuffers.Runtime.Plutus as PlutusV2
+import LambdaBuffers.Runtime.Plutus (TxInInfo(..)) as PlutusV2
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (arbitrary) as Q
 import Test.QuickCheck.Gen (Gen, chooseInt) as Q

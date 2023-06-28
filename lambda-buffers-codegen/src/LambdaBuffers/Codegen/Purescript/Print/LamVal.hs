@@ -32,7 +32,7 @@ tuple :: Purs.QValName
 tuple = normalValName "tuple" "Data.Tuple" "Tuple"
 
 caseInt :: Purs.QValName
-caseInt = normalValName "lb-purescript-runtime" "LambdaBuffers.Runtime.PlutusLedgerApi" "caseInt"
+caseInt = normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseInt"
 
 fromInt :: Purs.QValName
 fromInt = normalValName "bigint" "Data.BigInt" "fromInt"
