@@ -25,7 +25,7 @@ gen opts = do
 
   Gen.gen
     (opts ^. common)
-    (\ci -> runPrint cfg ci <$> ci ^. #modules)
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg ci <$> (ci ^. #modules))
 
 readPurescriptConfig :: FilePath -> IO H.Config
 readPurescriptConfig f = do

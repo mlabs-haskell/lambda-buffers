@@ -1,4 +1,4 @@
-{ pkgs, lbfPurescript, lbf-prelude-purs, lbf-plutus-purs, lbr-prelude-purs, lbr-plutus-purs, commonTools, shellHook }:
+{ pkgs, lbfPurescriptPlutus, lbf-prelude-purs, lbf-plutus-purs, lbr-prelude-purs, lbr-plutus-purs, commonTools, shellHook }:
 {
   inherit pkgs;
   src = ./.;
@@ -8,12 +8,11 @@
   packageLock = ./package-lock.json;
 
   extraSources = [
-    (lbfPurescript {
+    (lbfPurescriptPlutus {
       inherit pkgs;
       name = "lbf-golden";
       src = ./../api;
       files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-      imports = [ ../../../libs/lbf-prelude ../../../libs/lbf-plutus ];
     })
     lbf-prelude-purs
     lbf-plutus-purs

@@ -1,7 +1,9 @@
-module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), writeFileAndCreate, inputFile, outputFile, debug, gen, logInfo, logError) where
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module LambdaBuffers.Codegen.Cli.Gen (GenOpts (..), Generated (..), writeFileAndCreate, inputFile, outputFile, debug, gen, logInfo, logError) where
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
-import Control.Monad (when)
+import Control.Monad (unless, when)
 import Data.Aeson (encodeFile)
 import Data.ByteString qualified as BS
 import Data.Foldable (Foldable (fold, toList), foldrM)
@@ -18,6 +20,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
+import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Codegen qualified as P
@@ -32,6 +35,7 @@ data GenOpts = GenOpts
   , _outputFile :: FilePath
   , _genDir :: FilePath
   , _debug :: Bool
+  , _requestedClasses :: [String]
   , _requestedModules :: NonEmpty String
   }
   deriving stock (Eq, Show)
@@ -44,15 +48,26 @@ logInfo msg = putStrLn $ "[lbg][INFO] " <> msg <> "."
 logError :: String -> IO ()
 logError msg = putStrLn $ "[lbg][ERROR] " <> msg <> "."
 
-type Handler = (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error (FilePath, Text, Set Text)))
+data Generated = Generated
+  { _generatedFilePath :: FilePath
+  , _generatedCode :: Text
+  , _generatedPackageDeps :: Set Text
+  }
+  deriving stock (Show, Eq, Ord)
+
+makeLenses ''Generated
+
+type Handler = (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated))
 
 gen :: GenOpts -> Handler -> IO ()
 gen opts cont = do
-  logInfo $ "Code generation Input at " <> opts ^. inputFile
+  logInfo $ "Codegen Input at " <> opts ^. inputFile
+  when (opts ^. debug) $ logInfo $ "Options received: " <> show opts
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
+  ci'' <- filterToRequestedClasses' opts ci'
   initialisePrintDir (opts ^. genDir)
-  let res = cont ci'
+  let res = cont ci''
   (allErrors, allDeps) <- collectErrorsAndDeps opts res
   if null allErrors
     then do
@@ -62,17 +77,76 @@ gen opts cont = do
     else do
       writeCodegenError (opts ^. outputFile) allErrors
       logError "Code generation reported errors"
-  logInfo $ "Code generation Output at " <> opts ^. outputFile
+  logInfo $ "Codegen Output at " <> opts ^. outputFile
 
-restrictToRequestedModules :: forall {b} {a}. GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)) -> IO (Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)))
-restrictToRequestedModules opts res = do
+instance MonadFail (Either String) where
+  fail = Left
+
+filterToRequestedClasses' :: GenOpts -> PC.CodegenInput -> IO PC.CodegenInput
+filterToRequestedClasses' opts ci = do
+  reqCls <-
+    for
+      (toList $ opts ^. requestedClasses)
+      ( \cl -> do
+          case Config.qClassNameFromText . Text.pack $ cl of
+            Left err -> do
+              logError err
+              exitFailure
+            Right qcn -> return qcn
+      )
+  filterToRequestedClasses (Set.fromList reqCls) ci
+
+filterToRequestedClasses :: Set PC.QClassName -> PC.CodegenInput -> IO PC.CodegenInput
+filterToRequestedClasses reqCls ci =
+  let
+    ciClassRels = PC.indexClassRelations ci
+    ciQClassNames = Map.keysSet ciClassRels
+    requestedClasses' = classClosure ciClassRels reqCls
+   in
+    do
+      logInfo $ "Computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
+      unless (null (reqCls `Set.difference` ciQClassNames)) $ do
+        logError $
+          "Requested to print classes that are not available in the provided context."
+            <> "\nClasses requested: "
+            <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
+            <> "\nClasses available: "
+            <> unwords (Text.unpack . Config.qClassNameToText <$> toList ciQClassNames)
+            <> "\nClasses missing: "
+            <> unwords (Text.unpack . Config.qClassNameToText <$> toList (reqCls `Set.difference` ciQClassNames))
+        exitFailure
+      return $ ci & #modules .~ (filterClassInModule requestedClasses' <$> ci ^. #modules)
+  where
+    classClosure :: PC.ClassRels -> Set PC.QClassName -> Set PC.QClassName
+    classClosure classRels cls =
+      let classRels' = Map.filterWithKey (\k _x -> k `Set.member` cls) classRels
+          cls' = cls <> (Set.fromList . mconcat . Map.elems $ classRels')
+       in if cls == cls'
+            then cls
+            else classClosure classRels cls'
+    filterClassInModule :: Set PC.QClassName -> PC.Module -> PC.Module
+    filterClassInModule cls m =
+      m
+        { PC.classDefs = Map.filterWithKey (\_clName clDef -> PC.qualifyClassName (m ^. #moduleName) (clDef ^. #className) `Set.member` cls) (m ^. #classDefs)
+        , PC.instances = [i | i <- m ^. #instances, filterInstance cls m i]
+        , PC.derives = [d | d <- m ^. #derives, filterDerive cls m d]
+        }
+    filterInstance :: Set PC.QClassName -> PC.Module -> PC.InstanceClause -> Bool
+    filterInstance cls m inst = filterConstraint cls m (inst ^. #head)
+    filterDerive :: Set PC.QClassName -> PC.Module -> PC.Derive -> Bool
+    filterDerive cls m drv = filterConstraint cls m (drv ^. #constraint)
+    filterConstraint :: Set PC.QClassName -> PC.Module -> PC.Constraint -> Bool
+    filterConstraint cls m cnstr = PC.qualifyClassRef (m ^. #moduleName) (cnstr ^. #classRef) `Set.member` cls
+
+filterToRequestedModules :: GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated) -> IO (Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated))
+filterToRequestedModules opts res = do
   let uniqMns = toList $ NonEmpty.nub $ opts ^. requestedModules
   onlyModules <- (Config.moduleNameFromText . Text.pack) `traverse` uniqMns
   return $ Map.restrictKeys res (Set.fromList onlyModules)
 
-collectErrorsAndDeps :: forall {b} {a}. Monoid b => GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either a (FilePath, Text, b)) -> IO ([a], b)
+collectErrorsAndDeps :: GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated) -> IO ([P.Error], Set Text)
 collectErrorsAndDeps opts res = do
-  res' <- restrictToRequestedModules opts res
+  res' <- filterToRequestedModules opts res
   foldrM
     ( \(mn, errOrPrint) (errs, deps) -> do
         case errOrPrint of
@@ -81,14 +155,14 @@ collectErrorsAndDeps opts res = do
               "Code generation failed for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
             return (err : errs, deps)
-          Right (fp, printed, deps') -> do
+          Right gend -> do
+            writeFileAndCreate (opts ^. genDir </> (gend ^. generatedFilePath)) (gend ^. generatedCode)
             logInfo $
               "Code generation succeeded for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
                 <> " at file path "
-                <> (opts ^. genDir </> fp)
-            writeFileAndCreate (opts ^. genDir </> fp) printed
-            return (errs, deps <> deps')
+                <> (opts ^. genDir </> (gend ^. generatedFilePath))
+            return (errs, deps <> gend ^. generatedPackageDeps)
     )
     ([], mempty)
     (Map.toList res')

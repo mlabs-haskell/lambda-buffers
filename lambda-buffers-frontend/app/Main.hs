@@ -38,7 +38,7 @@ importPathP =
     ( long "import-path"
         <> short 'i'
         <> metavar "FILEPATH"
-        <> help "Directory to look for LambdaBuffer Module source files (.lbf)"
+        <> help "Directory to look for LambdaBuffer schemas (.lbf)"
     )
 
 buildOptsP :: Parser BuildOpts
@@ -65,6 +65,14 @@ buildOptsP =
       ( long "gen-dir"
           <> metavar "FILEPATH"
           <> help "Directory where the Codegen will store any output produced from the LambdaBuffers schema"
+      )
+    <*> many
+      ( strOption
+          ( long "gen-class"
+              <> metavar "CLASS"
+              <> help "Class to code generate implementations for (if empty only the type definitions will be printed)"
+              <> showDefault
+          )
       )
     <*> many
       ( strOption

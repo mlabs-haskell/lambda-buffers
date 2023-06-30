@@ -63,9 +63,10 @@ lbf-build goldens/good Rules.lbf
 lbf-form goldens/good/Rules.lbf
 lbf-build goldens/good Rules.lbf
 
+set -vox
 echo "goldens/good/LambdaBuffers.lbf"
 lbf-build goldens/good LambdaBuffers.lbf
 lbf-form goldens/good/LambdaBuffers.lbf
 lbf-build goldens/good LambdaBuffers.lbf
-
+unset -vox
 # find goldens/ -name "*.lbf" | entr -p cabal run lbf -- compile --compiler `which lbc` --debug goldens/good /_

@@ -1,10 +1,11 @@
 module Main (main) where
 
-import Control.Applicative (optional, (<**>))
+import Control.Applicative (Alternative (many), optional, (<**>))
 import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
 import Options.Applicative (
+  InfoMod,
   Parser,
   ParserInfo,
   command,
@@ -40,20 +41,20 @@ genOptsP =
       ( long "input"
           <> short 'i'
           <> metavar "FILEPATH"
-          <> help "Compiled LambdaBuffers schema to generate code for"
+          <> help "Codegen API input containing compiled LambdaBuffers schema checked by the Compiler"
       )
     <*> strOption
       ( long "output"
           <> short 'o'
           <> metavar "FILEPATH"
           <> value "codegen-output.textproto"
-          <> help "Codegen output that can be used to inspect Codegen errors"
+          <> help "Codegen API output that can be used to inspect Codegen errors"
       )
     <*> strOption
       ( long "gen-dir"
           <> short 'g'
           <> metavar "FILEPATH"
-          <> help "Directory to print generation output to"
+          <> help "Directory to write code generation output to"
       )
     <*> flag
       False
@@ -63,7 +64,14 @@ genOptsP =
           <> help "Run in debug mode"
           <> showDefault
       )
-    <*> some1 (strArgument (metavar "[module name]..." <> help "Modules to generate code for"))
+    <*> many
+      ( strOption
+          ( long "gen-class"
+              <> metavar "CLASS"
+              <> help "Class to code generate implementations for"
+          )
+      )
+    <*> some1 (strArgument (metavar "[module]..." <> help "Modules to generate code for"))
 
 haskellGenOptsP :: Parser Haskell.GenOpts
 haskellGenOptsP =
@@ -73,7 +81,7 @@ haskellGenOptsP =
           ( long "config"
               <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Configuration file for the Haskell codegen module"
+              <> help "Configuration file for the Haskell Codegen module"
           )
       )
     <*> genOptsP
@@ -86,20 +94,34 @@ purescriptGenOptsP =
           ( long "config"
               <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Configuration file for the Purescript codegen module"
+              <> help "Configuration file for the Purescript Codegen module"
           )
       )
     <*> genOptsP
+
+mkProgDesc :: forall {a}. String -> InfoMod a
+mkProgDesc backend =
+  progDesc $
+    "Generate "
+      <> backend
+      <> " code for `modules` given a checked LambdaBuffers schema in `input` and configuration in `config`. "
+      <> "Outputs the generated code in `gen-dir` directory and provides any errors encountered in the `output` file."
 
 commandP :: Parser Command
 commandP =
   subparser $
     command
       "gen-haskell"
-      (info (GenHaskell <$> haskellGenOptsP <* helper) (progDesc "Generate Haskell code from a compiled LambdaBuffers schema"))
+      ( info
+          (GenHaskell <$> (helper *> haskellGenOptsP))
+          (mkProgDesc "Haskell")
+      )
       <> command
         "gen-purescript"
-        (info (GenPurescript <$> purescriptGenOptsP <* helper) (progDesc "Generate Purescript code from a compiled LambdaBuffers schema"))
+        ( info
+            (GenPurescript <$> (helper *> purescriptGenOptsP))
+            (mkProgDesc "Purescript")
+        )
 
 parserInfo :: ParserInfo Command
 parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")

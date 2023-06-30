@@ -150,6 +150,8 @@
 
           lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
           lbfPurescript = import ./extras/lbf-purescript.nix clis.lbf clis.lbg-purescript;
+          lbfHaskellPlutus = import ./extras/lbf-haskell-plutus.nix clis.lbf clis.lbg-haskell;
+          lbfPurescriptPlutus = import ./extras/lbf-purescript-plutus.nix clis.lbf clis.lbg-purescript;
           pursFlake = import ./extras/flake-purescript.nix;
 
           # Runtimes
@@ -278,7 +280,7 @@
           lbtPlutusHsBuild = buildAbstraction {
             import-location = ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix;
             additional = {
-              inherit lbfHaskell;
+              inherit lbfHaskellPlutus;
               lbf-prelude = ./libs/lbf-prelude;
               lbr-prelude-hs = ./runtimes/haskell/lbr-prelude;
               lbf-plutus = ./libs/lbf-plutus;
@@ -292,7 +294,7 @@
 
           lbtPlutusPursFlake = pursFlake (
             import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix {
-              inherit pkgs commonTools shellHook lbfPurescript;
+              inherit pkgs commonTools shellHook lbfPurescriptPlutus;
               inherit (lbrPurs) lbr-prelude-purs lbr-plutus-purs;
               inherit (lbfLibs) lbf-prelude-purs lbf-plutus-purs;
             }
