@@ -11,9 +11,10 @@ lbf: lbg-purescript: lbfPurescriptOpts: (import ./lbf-purescript.nix) lbf lbg-pu
     default = [ ];
     override = deps: deps ++ [ "lbf-prelude" "lbr-prelude" "lbf-plutus" "lbr-plutus" ];
   };
+  # TODO(https://github.com/mlabs-haskell/lambda-buffers/issues/98): Add Prelude.Json once the issue is resolved
   "classes" = {
     default = [ ];
-    override = classes: classes ++ [ "Plutus.V1.PlutusData" "Prelude.Eq" "Prelude.Json" ];
+    override = classes: classes ++ [ "Plutus.V1.PlutusData" "Prelude.Eq" ];
   };
 }
   lbfPurescriptOpts
