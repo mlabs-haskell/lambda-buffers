@@ -70,7 +70,7 @@ buildOptsP =
       ( strOption
           ( long "gen-class"
               <> metavar "CLASS"
-              <> help "Class to code generate implementations for (if empty only the type definitions will be printed)"
+              <> help "Class to code generate implementations for (if empty only the type definitions will be printed). For example: --gen-class Prelude.Eq --gen-class Prelude.Json"
               <> showDefault
           )
       )
@@ -78,7 +78,7 @@ buildOptsP =
       ( strOption
           ( long "gen-opt"
               <> metavar "ARGUMENT"
-              <> help "Additional options to provide to the Codegen module"
+              <> help "Additional options to provide to the Codegen module. For example: --gen-opt=--config --gen-opt=haskell.json"
           )
       )
     <*> flag
@@ -107,14 +107,14 @@ formatOptsP =
       ( long "file"
           <> short 'f'
           <> metavar "FILEPATH"
-          <> help "LambdaBuffers file to format"
+          <> help ".lbf schema to format"
       )
     <*> flag
       False
       True
       ( long "inplace"
           <> short 'i'
-          <> help "Replace the file content with the formatted version"
+          <> help "Replace the .lbf schema content with the formatted version"
           <> showDefault
       )
 
@@ -123,10 +123,10 @@ commandP =
   subparser $
     command
       "build"
-      (info (Build <$> buildOptsP <* helper) (progDesc "Build LambdaBuffers .lbf schemas"))
+      (info (Build <$> (helper *> buildOptsP)) (progDesc "Build LambdaBuffers .lbf schemas"))
       <> command
         "format"
-        (info (Format <$> formatOptsP <* helper) (progDesc "Format a LambdaBuffers Module (.lbf)"))
+        (info (Format <$> (helper *> formatOptsP)) (progDesc "Format a LambdaBuffers Module (.lbf)"))
 
 parserInfo :: ParserInfo Command
 parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Frontend command-line interface tool")

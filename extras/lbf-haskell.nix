@@ -5,7 +5,7 @@ lbg-haskell:
 {
   # Nixpkgs
   pkgs
-, # Source that are passed to `lbf` as the `--import-path` flag and used to find `files`.
+, # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.
   # Examples: src = ./api
   src
 , # Additional sources that are passed to `lbf` as the `--import-path` flag.
