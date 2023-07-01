@@ -26,6 +26,7 @@ module Test.LambdaBuffers.ProtoCompat.Utils (
   inst',
   recrd,
   prod',
+  qcln',
 ) where
 
 import Control.Lens ((^.))
@@ -83,6 +84,9 @@ vn n = PC.VarName n def
 
 cln :: Text -> PC.ClassName
 cln n = PC.ClassName n def
+
+qcln' :: PC.ModuleName -> Text -> PC.QClassName
+qcln' mn' n = (PC.mkInfoLess mn', PC.mkInfoLess $ PC.ClassName n def)
 
 abs :: [Text] -> PC.TyBody -> PC.TyAbs
 abs args body = PC.TyAbs (OMap.fromList . fmap arg $ args) body def
