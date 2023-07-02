@@ -150,6 +150,8 @@
 
           lbfHaskell = import ./extras/lbf-haskell.nix clis.lbf clis.lbg-haskell;
           lbfPurescript = import ./extras/lbf-purescript.nix clis.lbf clis.lbg-purescript;
+          lbfHaskellPlutus = import ./extras/lbf-haskell-plutus.nix clis.lbf clis.lbg-haskell;
+          lbfPurescriptPlutus = import ./extras/lbf-purescript-plutus.nix clis.lbf clis.lbg-purescript;
           pursFlake = import ./extras/flake-purescript.nix;
 
           # Runtimes
@@ -175,11 +177,21 @@
 
           ## Plutus runtime - lbr-plutus
 
+          ### Haskell
           lbrPlutusHsBuild = buildAbstraction {
             import-location = ./runtimes/haskell/lbr-plutus/build.nix;
             additional = { lbr-prelude = ./runtimes/haskell/lbr-prelude; };
           };
           lbrPlutusHsFlake = flakeAbstraction lbrPlutusHsBuild;
+
+          ### Purescript
+
+          lbrPlutusPurs = pursFlake (
+            import ./runtimes/purescript/lbr-plutus/build.nix {
+              inherit pkgs commonTools;
+              shellHook = config.pre-commit.installationScript;
+            }
+          );
 
           # Schema libs
 
@@ -209,15 +221,14 @@
               dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
             };
 
-            # TODO
-            # lbf-plutus-purs = lbfPurescript {
-            #   inherit pkgs;
-            #   name = "lbf-plutus";
-            #   src = ./libs/lbf-plutus;
-            #   imports = [ ./libs/lbf-prelude ];
-            #   files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
-            #   dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
-            # };
+            lbf-plutus-purs = lbfPurescript {
+              inherit pkgs;
+              name = "lbf-plutus";
+              src = ./libs/lbf-plutus;
+              imports = [ ./libs/lbf-prelude ];
+              files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+              dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
+            };
           };
 
           # Test Suites
@@ -239,20 +250,37 @@
 
           ### Purescript
 
+          lbrPurs = {
+            lbr-prelude-purs = pkgs.stdenv.mkDerivation {
+              name = "lbr-prelude";
+              src = ./runtimes/purescript/lbr-prelude;
+              phases = "installPhase";
+              installPhase = "ln -s $src $out";
+            };
+            lbr-plutus-purs = pkgs.stdenv.mkDerivation {
+              name = "lbr-plutus";
+              src = ./runtimes/purescript/lbr-plutus;
+              phases = "installPhase";
+              installPhase = "ln -s $src $out";
+            };
+
+          };
           lbtPreludePursFlake = pursFlake (
             import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix {
               inherit pkgs commonTools shellHook lbfPurescript;
-              lbr-prelude-purs = pkgs.stdenv.mkDerivation { name = "lbr-prelude"; src = ./runtimes/purescript/lbr-prelude; phases = "installPhase"; installPhase = "ln -s $src $out"; };
+              inherit (lbrPurs) lbr-prelude-purs;
               inherit (lbfLibs) lbf-prelude-purs;
             }
           );
 
           ## Plutus test suite - lbt-plutus
 
+          ### Haskell
+
           lbtPlutusHsBuild = buildAbstraction {
             import-location = ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix;
             additional = {
-              inherit lbfHaskell;
+              inherit lbfHaskellPlutus;
               lbf-prelude = ./libs/lbf-prelude;
               lbr-prelude-hs = ./runtimes/haskell/lbr-prelude;
               lbf-plutus = ./libs/lbf-plutus;
@@ -261,6 +289,16 @@
             };
           };
           lbtPlutusHsFlake = flakeAbstraction lbtPlutusHsBuild;
+
+          ### Purescript
+
+          lbtPlutusPursFlake = pursFlake (
+            import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix {
+              inherit pkgs commonTools shellHook lbfPurescriptPlutus;
+              inherit (lbrPurs) lbr-prelude-purs lbr-plutus-purs;
+              inherit (lbfLibs) lbf-prelude-purs lbf-plutus-purs;
+            }
+          );
 
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
@@ -277,9 +315,11 @@
           // lbrPreludeHsFlake.packages
           // lbrPreludePurs.packages
           // lbrPlutusHsFlake.packages
+          // lbrPlutusPurs.packages
           // lbtPreludeHsFlake.packages
           // lbtPreludePursFlake.packages
           // lbtPlutusHsFlake.packages
+          // lbtPlutusPursFlake.packages
           // clis
           // lbfLibs;
 
@@ -293,9 +333,11 @@
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
+            dev-lbr-plutus-purescript = lbrPlutusPurs.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
             dev-lbt-prelude-purescript = lbtPreludePursFlake.devShell;
             dev-lbt-plutus-haskell = lbtPlutusHsFlake.devShell;
+            dev-lbt-plutus-purescript = lbtPlutusPursFlake.devShell;
             lb = lbEnv;
           };
 
@@ -303,7 +345,9 @@
           checks = devShells //
             packages //
             lbrPreludePurs.checks //
+            lbrPlutusPurs.checks //
             lbtPreludePursFlake.checks //
+            lbtPlutusPursFlake.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //
                 frontendFlake.checks //

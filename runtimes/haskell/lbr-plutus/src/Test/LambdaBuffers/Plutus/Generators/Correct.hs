@@ -23,6 +23,7 @@ module Test.LambdaBuffers.Plutus.Generators.Correct (
   genDatum,
   genOutputDatum,
   genTxOut,
+  genTxInInfo,
 ) where
 
 import Data.ByteString (ByteString)
@@ -158,6 +159,9 @@ genTxOutRef = PlutusV1.TxOutRef <$> genTxId <*> H.integral (HR.constant 0 100000
 
 genTxOut :: H.Gen PlutusV2.TxOut
 genTxOut = PlutusV2.TxOut <$> genAddress <*> genValue <*> genOutputDatum <*> H.choice [return Nothing, Just <$> genScriptHash]
+
+genTxInInfo :: H.Gen PlutusV2.TxInInfo
+genTxInInfo = PlutusV2.TxInInfo <$> genTxOutRef <*> genTxOut
 
 genOutputDatum :: H.Gen PlutusV2.OutputDatum
 genOutputDatum =

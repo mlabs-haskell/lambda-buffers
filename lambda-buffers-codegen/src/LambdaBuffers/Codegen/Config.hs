@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses, moduleNameFromText) where
+module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses, moduleNameFromText, qClassNameFromText, qClassNameToText) where
 
 import Control.Lens (makeLenses, view)
 import Data.Aeson (FromJSON, ToJSON, parseJSON)
@@ -63,6 +63,7 @@ qNameFromText txt =
 qTyNameFromText :: MonadFail m => Text -> m PC.QTyName
 qTyNameFromText qtyn = qNameFromText qtyn >>= \(mn, n) -> return (mn, PC.mkInfoLess (PC.TyName n def))
 
+-- | `qClassNameFrinText "Foo.Bar.Baz" = (["Foo", "Bar"], "Baz")`
 qClassNameFromText :: MonadFail m => Text -> m PC.QClassName
 qClassNameFromText qcn = qNameFromText qcn >>= \(mn, n) -> return (mn, PC.mkInfoLess (PC.ClassName n def))
 

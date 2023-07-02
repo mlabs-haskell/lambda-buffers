@@ -1,7 +1,7 @@
 module LambdaBuffers.Frontend.Cli.Build (BuildOpts (..), build) where
 
 import Control.Lens (makeLenses, (&), (.~), (^.))
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import Data.ByteString qualified as BS
 import Data.Foldable (Foldable (toList), for_, traverse_)
 import Data.List.NonEmpty (NonEmpty)
@@ -37,6 +37,7 @@ data BuildOpts = BuildOpts
   , _compilerCliFilepath :: Maybe FilePath
   , _codegenCliFilepath :: Maybe FilePath
   , _codegenGenDir :: FilePath
+  , _codegenClasses :: [String]
   , _codegenCliOpts :: [String]
   , _debug :: Bool
   , _workingDir :: Maybe FilePath
@@ -102,9 +103,14 @@ callCompiler opts workDir compInp = do
       compOutFp = workDir </> "compiler-output" <.> ext
   writeCompilerInput compInpFp compInp
   lbcFp <- maybe Env.getLbcFromEnvironment return (opts ^. compilerCliFilepath)
-  let args = ["compile", "--input-file", compInpFp, "--output-file", compOutFp]
-  call lbcFp args
-  _ <- readProcessWithExitCode lbcFp args ""
+  let args =
+        [ "compile"
+        , "--input-file"
+        , compInpFp
+        , "--output-file"
+        , compOutFp
+        ]
+  call (opts ^. debug) lbcFp args
   compOut <- readCompilerOutput compOutFp
   if compOut ^. Compiler.error == defMessage
     then return $ compOut ^. Compiler.result
@@ -141,9 +147,9 @@ readCompilerOutput fp = do
       logError $ "Unknown Compiler Output format (wanted .pb or .textproto) " <> ext
       exitFailure
 
-call :: FilePath -> [String] -> IO ()
-call cliFp cliArgs = do
-  logInfo $ "Calling: " <> showCommandForUser cliFp cliArgs
+call :: Bool -> FilePath -> [String] -> IO ()
+call dbg cliFp cliArgs = do
+  when dbg $ logInfo $ "Calling: " <> showCommandForUser cliFp cliArgs
   (exitCode, stdOut, stdErr) <- readProcessWithExitCode cliFp cliArgs ""
   case exitCode of
     (ExitFailure _) -> do
@@ -152,6 +158,8 @@ call cliFp cliArgs = do
       logError stdOut
       exitFailure
     _ -> do
+      when dbg $ logInfo stdOut
+      when dbg $ logInfo stdErr
       logInfo $ "Success from: " <> showCommandForUser cliFp cliArgs
       return ()
 
@@ -170,9 +178,11 @@ callCodegen opts workDir requestedModules compInp = do
         , "--gen-dir"
         , opts ^. codegenGenDir
         ]
+          <> ["--debug" | opts ^. debug]
+          <> mconcat [["--gen-class", cl] | cl <- opts ^. codegenClasses]
           <> (opts ^. codegenCliOpts)
           <> (toCodegenCliModuleName <$> requestedModules) -- NOTE(bladyjoker): Consider using the proto to supply requested modules.
-  call lbgFp args
+  call (opts ^. debug) lbgFp args
   compOut <- readCodegenOutput compOutFp
   if compOut ^. Codegen.error == defMessage
     then return $ compOut ^. Codegen.result

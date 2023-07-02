@@ -15,6 +15,9 @@ import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
 import Proto.Codegen qualified as P
 
+{- | `runPrint cfg inp mod` prints a LambdaBuffers checked module `mod`, given its entire compilation closure in `inp` and Haskell configuration file in `cfg`.
+  It either errors with an API error message or succeeds with a module filepath, code and package dependencies.
+-}
 runPrint :: Haskell.Config -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text, Set Text)
 runPrint cfg ci m = case runCheck cfg ci m of
   Left err -> Left err

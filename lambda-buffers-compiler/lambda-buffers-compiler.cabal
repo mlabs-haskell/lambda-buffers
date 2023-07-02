@@ -193,6 +193,7 @@ test-suite tests
     Test.KindCheck
     Test.KindCheck.Errors
     Test.LambdaBuffers.Compiler
+    Test.LambdaBuffers.Compiler.ClassClosure
     Test.LambdaBuffers.Compiler.Coverage
     Test.LambdaBuffers.Compiler.LamTy
     Test.LambdaBuffers.Compiler.MiniLog

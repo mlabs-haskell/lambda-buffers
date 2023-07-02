@@ -1,21 +1,24 @@
 module Foo.Bar
 
 import Plutus.V1 (PlutusData)
-import Prelude (Eq, Integer)
+import Prelude (Eq, Json, Integer)
 
 sum FooSum a b c = Foo a b c | Bar a b | Baz b | Qax | Faz Integer
 
 derive Eq (FooSum a b c)
+derive Json (FooSum a b c)
 derive PlutusData (FooSum a b c)
 
 prod FooProd a b c = a b c Integer
 
 derive Eq (FooProd a b c)
+derive Json (FooProd a b c)
 derive PlutusData (FooProd a b c)
 
 record FooRec a b c = { fooA : a, fooB : b, fooC : c, fooInt : Integer }
 
 derive Eq (FooRec a b c)
+derive Json (FooRec a b c)
 derive PlutusData (FooRec a b c)
 
 record FooComplicated a b c = {
@@ -25,4 +28,5 @@ record FooComplicated a b c = {
  }
 
 derive Eq (FooComplicated a b c)
+derive Json (FooComplicated a b c)
 derive PlutusData (FooComplicated a b c)

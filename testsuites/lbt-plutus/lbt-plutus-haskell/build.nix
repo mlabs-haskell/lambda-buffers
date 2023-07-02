@@ -7,7 +7,7 @@
 , lbf-plutus
 , lbr-plutus-hs
 , lbf-plutus-hs
-, lbfHaskell
+, lbfHaskellPlutus
 , compiler-nix-name
 , index-state
 , commonTools
@@ -16,13 +16,11 @@
 let
   inherit pkgs;
 
-  goldenApiHs = lbfHaskell {
+  goldenApiHs = lbfHaskellPlutus {
     inherit pkgs;
     name = "lbf-golden-api";
     src = ./../api;
     files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-    imports = [ lbf-plutus lbf-prelude ];
-    dependencies = [ "lbf-prelude" "lbr-prelude" "lbf-plutus" "lbr-plutus" ];
   };
   goldenData = import ../../../extras/haskell-data.nix {
     inherit pkgs;

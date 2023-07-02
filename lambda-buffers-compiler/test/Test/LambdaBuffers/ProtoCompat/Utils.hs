@@ -26,6 +26,9 @@ module Test.LambdaBuffers.ProtoCompat.Utils (
   inst',
   recrd,
   prod',
+  qcln',
+  mod'prelude'only'eq,
+  mod'prelude'noclass,
 ) where
 
 import Control.Lens ((^.))
@@ -83,6 +86,9 @@ vn n = PC.VarName n def
 
 cln :: Text -> PC.ClassName
 cln n = PC.ClassName n def
+
+qcln' :: PC.ModuleName -> Text -> PC.QClassName
+qcln' mn' n = (PC.mkInfoLess mn', PC.mkInfoLess $ PC.ClassName n def)
 
 abs :: [Text] -> PC.TyBody -> PC.TyAbs
 abs args body = PC.TyAbs (OMap.fromList . fmap arg $ args) body def
@@ -282,4 +288,30 @@ mod'prelude =
     , derive'eq'list
     , derive'ord'list
     ]
+    []
+
+mod'prelude'only'eq :: PC.Module
+mod'prelude'only'eq =
+  mod'
+    ["Prelude"]
+    [td'eitherO, td'maybeO, td'int8, td'bytes, td'mapO, td'listO]
+    [cd'eq]
+    [ inst'eq'int8
+    , inst'eq'bytes
+    , inst'eq'maybeO
+    , inst'eq'eitherO
+    , inst'eq'mapO
+    , inst'eq'listO
+    ]
+    []
+    []
+
+mod'prelude'noclass :: PC.Module
+mod'prelude'noclass =
+  mod'
+    ["Prelude"]
+    [td'eitherO, td'maybeO, td'int8, td'bytes, td'mapO, td'listO]
+    []
+    []
+    []
     []

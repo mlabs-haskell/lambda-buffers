@@ -5,8 +5,8 @@ lbg-haskell:
 {
   # Nixpkgs
   pkgs
-, # Source that are passed to `lbf` as the `--import-path` flag and used to find `files`.
-  # Examples: src = [ ./api ]
+, # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.
+  # Examples: src = ./api
   src
 , # Additional sources that are passed to `lbf` as the `--import-path` flag.
   # Examples: imports = [ lbf-prelude ]
@@ -14,6 +14,8 @@ lbg-haskell:
 , # .lbf files in `src` to compile and codegen.
   # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
   files
+  # Classes for which to generate implementations for (default lbf-prelude classes).
+, classes ? [ "Prelude.Eq" "Prelude.Json" ]
 , # Dependencies to include in the Cabal's `build-depends` stanza.
   # examples: dependencies = [ "lbf-prelude" "lbr-prelude" ]
   dependencies ? [ ]
@@ -25,6 +27,7 @@ lbg-haskell:
   version ? "0.1.0.0"
 }:
 let
+  utils = import ./utils.nix;
   cabalTemplate = pkgs.writeTextFile {
     name = "lambda-buffers-cabal-template";
     text = ''
@@ -55,10 +58,11 @@ pkgs.stdenv.mkDerivation {
     pkgs.jq
   ];
   buildPhase = ''
+    set -vox
     mkdir autogen
     mkdir .work
     ls
-    lbf build ${builtins.concatStringsSep " " (builtins.map (src: "--import-path ${src}") ([src] ++ imports))} \
+    lbf build ${utils.mkFlags "import-path" ([src] ++ imports)} ${utils.mkFlags "gen-class" classes} \
         --work-dir .work \
         --gen ${lbg-haskell}/bin/lbg-haskell \
         --gen-dir autogen \

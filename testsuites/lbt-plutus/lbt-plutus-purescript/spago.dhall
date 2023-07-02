@@ -1,0 +1,33 @@
+{ name = "lbt-plutus"
+, dependencies =
+  [ "aeson"
+  , "aff"
+  , "arraybuffer"
+  , "arraybuffer-types"
+  , "arrays"
+  , "b64"
+  , "bigints"
+  , "cardano-transaction-lib"
+  , "control"
+  , "effect"
+  , "either"
+  , "encoding"
+  , "foldable-traversable"
+  , "foreign-object"
+  , "gen"
+  , "maybe"
+  , "newtype"
+  , "ordered-collections"
+  , "partial"
+  , "prelude"
+  , "quickcheck"
+  , "quickcheck-utf8"
+  , "spec"
+  , "strings"
+  , "tuples"
+  , "uint"
+  , "unfoldable"
+  ]
+, packages = ./packages.dhall
+, sources = [ "test/**/*.purs", ".extras/**/*.purs" ]
+}

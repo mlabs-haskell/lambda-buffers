@@ -5,8 +5,8 @@ lbg-purescript:
 {
   # Nixpkgs
   pkgs
-, # Source that are passed to `lbf` as the `--import-path` flag and used to find `files`.
-  # Examples: src = [ ./api ]
+, # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.
+  # Examples: src = ./api
   src
 , # Additional sources that are passed to `lbf` as the `--import-path` flag.
   # Examples: imports = [ lbf-prelude ]
@@ -14,6 +14,8 @@ lbg-purescript:
 , # .lbf files in `src` to compile and codegen.
   # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
   files
+  # Classes for which to generate implementations for.
+, classes ? [ "Prelude.Eq" "Prelude.Json" ]
 , # TODO(bladyjoker): Dependencies to include in the `build` output
   # examples: dependencies = [ "lbf-prelude" "lbr-prelude" ]
   dependencies ? [ ]
@@ -24,6 +26,9 @@ lbg-purescript:
   # Examples: version = "0.1.0.0"
   version ? "0.1.0.0"
 }:
+let
+  utils = import ./utils.nix;
+in
 pkgs.stdenv.mkDerivation {
   inherit src version;
   pname = name;
@@ -36,7 +41,7 @@ pkgs.stdenv.mkDerivation {
   buildPhase = ''
     mkdir autogen
     mkdir .work
-    lbf build ${builtins.concatStringsSep " " (builtins.map (src: "--import-path ${src}") ([src] ++ imports))} \
+    lbf build ${utils.mkFlags "import-path" ([src] ++ imports)} ${utils.mkFlags "gen-class" classes} \
         --work-dir .work \
         --gen ${lbg-purescript}/bin/lbg-purescript \
         --gen-dir autogen \
