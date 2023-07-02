@@ -4,14 +4,13 @@ module Test.LambdaBuffers.Compiler.ClassClosure (
 
 import Control.Lens ((^.))
 import Data.Foldable (Foldable (toList))
-import Data.Map qualified as Map
 import Data.Set qualified as Set
 import Data.Text (Text)
 import LambdaBuffers.ProtoCompat qualified as PC
 import Test.LambdaBuffers.ProtoCompat.Utils qualified as U
 import Test.Tasty (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
-import Prelude (Monoid (mconcat), Show (show), zip, ($), (.), (<$>), (<>))
+import Prelude (Show (show), zip, ($), (.), (<$>))
 
 tests :: TestTree
 tests =
@@ -19,7 +18,9 @@ tests =
     "LambdaBuffers.Compiler.ClassClosure checks"
     [ testGroup
         "All classes in closure and related rules should be removed"
-        [ classClosureTest "test1" [(["Prelude"], "Ord")] [(["Prelude"], "Eq"), (["Prelude"], "Ord")] test1
+        [ classClosureTest "Restrict to only Eq" [(["Prelude"], "Eq")] [(["Prelude"], "Eq")] testEq
+        , classClosureTest "Restrict to only Ord" [(["Prelude"], "Ord")] [(["Prelude"], "Eq"), (["Prelude"], "Ord")] testOrd
+        , classClosureTest "No class only ty defs" [] [] testNoClass
         ]
     ]
 
@@ -37,17 +38,17 @@ classClosureTest title cls clsWant (ciIn, ciWant) =
       title
       $ testCase "Class closure should be" (cls'' @?= clsWant'')
         : ( [ testGroup
-              (PC.prettyModuleName (mGot' ^. #moduleName))
-              [ testCase "Class definitions should match" $ (mGot' ^. #classDefs) @?= (mWant ^. #classDefs)
-              , testCase "Instances should match" $ (mGot' ^. #instances) @?= (mWant ^. #instances)
-              , testCase "Derives should match" $ (mGot' ^. #derives) @?= (mWant ^. #derives)
+              (show $ PC.prettyModuleName (mGot ^. #moduleName))
+              [ testCase "Class definitions should match" $ (mGot ^. #classDefs) @?= (mWant ^. #classDefs)
+              , testCase "Instances should match" $ (mGot ^. #instances) @?= (mWant ^. #instances)
+              , testCase "Derives should match" $ (mGot ^. #derives) @?= (mWant ^. #derives)
               ]
-            | (mWant, mGot') <- zip (toList $ ciWant ^. #modules) (toList $ ciGot ^. #modules)
+            | (mWant, mGot) <- zip (toList $ ciWant ^. #modules) (toList $ ciGot ^. #modules)
             ]
           )
 
-test1 :: (PC.CompilerInput, PC.CompilerInput)
-test1 =
+testNoClass :: (PC.CompilerInput, PC.CompilerInput)
+testNoClass =
   ( U.ci
       [ U.mod'preludeO
       , U.mod'
@@ -70,7 +71,51 @@ test1 =
           [["Prelude"]]
       ]
   , U.ci
-      [ U.mod'preludeO {PC.classDefs = Map.empty, PC.instances = []}
+      [ U.mod'prelude'noclass
+      , U.mod'
+          ["Foo"]
+          [ U.td
+              "Foo"
+              ( U.abs ["a", "b", "c"] $
+                  U.sum
+                    [ ("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])
+                    , ("MkBar", [U.fr ["Prelude"] "Maybe" U.@ [U.tv "b"], U.fr ["Prelude"] "List" U.@ [U.tv "b"]])
+                    , ("MkBaz", [U.fr ["Prelude"] "Map" U.@ [U.tv "b", U.tv "c"]])
+                    ]
+              )
+          ]
+          []
+          []
+          []
+          [["Prelude"]]
+      ]
+  )
+
+testEq :: (PC.CompilerInput, PC.CompilerInput)
+testEq =
+  ( U.ci
+      [ U.mod'preludeO
+      , U.mod'
+          ["Foo"]
+          [ U.td
+              "Foo"
+              ( U.abs ["a", "b", "c"] $
+                  U.sum
+                    [ ("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])
+                    , ("MkBar", [U.fr ["Prelude"] "Maybe" U.@ [U.tv "b"], U.fr ["Prelude"] "List" U.@ [U.tv "b"]])
+                    , ("MkBaz", [U.fr ["Prelude"] "Map" U.@ [U.tv "b", U.tv "c"]])
+                    ]
+              )
+          ]
+          []
+          []
+          [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+          , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+          ]
+          [["Prelude"]]
+      ]
+  , U.ci
+      [ U.mod'prelude'only'eq
       , U.mod'
           ["Foo"]
           [ U.td
@@ -86,6 +131,50 @@ test1 =
           []
           []
           [deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])]
+          [["Prelude"]]
+      ]
+  )
+
+testOrd :: (PC.CompilerInput, PC.CompilerInput)
+testOrd =
+  ( U.ci
+      [ U.mod'preludeO
+      , U.mod'
+          ["Foo"]
+          [ U.td
+              "Foo"
+              ( U.abs ["a", "b", "c"] $
+                  U.sum
+                    [ ("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])
+                    , ("MkBar", [U.fr ["Prelude"] "Maybe" U.@ [U.tv "b"], U.fr ["Prelude"] "List" U.@ [U.tv "b"]])
+                    , ("MkBaz", [U.fr ["Prelude"] "Map" U.@ [U.tv "b", U.tv "c"]])
+                    ]
+              )
+          ]
+          []
+          []
+          [ deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+          , deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])
+          ]
+          [["Prelude"]]
+      ]
+  , U.ci
+      [ U.mod'preludeO
+      , U.mod'
+          ["Foo"]
+          [ U.td
+              "Foo"
+              ( U.abs ["a", "b", "c"] $
+                  U.sum
+                    [ ("MkFoo", [U.fr ["Prelude"] "Either" U.@ [U.fr ["Prelude"] "Int8", U.tv "a"]])
+                    , ("MkBar", [U.fr ["Prelude"] "Maybe" U.@ [U.tv "b"], U.fr ["Prelude"] "List" U.@ [U.tv "b"]])
+                    , ("MkBaz", [U.fr ["Prelude"] "Map" U.@ [U.tv "b", U.tv "c"]])
+                    ]
+              )
+          ]
+          []
+          []
+          [deriveEq (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"]), deriveOrd (U.lr "Foo" U.@ [U.tv "a", U.tv "b", U.tv "c"])]
           [["Prelude"]]
       ]
   )

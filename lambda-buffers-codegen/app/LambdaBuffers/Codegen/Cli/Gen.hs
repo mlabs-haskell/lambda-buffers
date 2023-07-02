@@ -101,7 +101,7 @@ filterToRequestedClasses reqCls ci =
   let
     ciClassRels = PC.indexClassRelations ci
     ciQClassNames = Map.keysSet ciClassRels
-    requestedClasses' = classClosure ciClassRels reqCls
+    requestedClasses' = PC.classClosure ciClassRels reqCls
    in
     do
       logInfo $ "Computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
@@ -115,28 +115,7 @@ filterToRequestedClasses reqCls ci =
             <> "\nClasses missing: "
             <> unwords (Text.unpack . Config.qClassNameToText <$> toList (reqCls `Set.difference` ciQClassNames))
         exitFailure
-      return $ ci & #modules .~ (filterClassInModule requestedClasses' <$> ci ^. #modules)
-  where
-    classClosure :: PC.ClassRels -> Set PC.QClassName -> Set PC.QClassName
-    classClosure classRels cls =
-      let classRels' = Map.filterWithKey (\k _x -> k `Set.member` cls) classRels
-          cls' = cls <> (Set.fromList . mconcat . Map.elems $ classRels')
-       in if cls == cls'
-            then cls
-            else classClosure classRels cls'
-    filterClassInModule :: Set PC.QClassName -> PC.Module -> PC.Module
-    filterClassInModule cls m =
-      m
-        { PC.classDefs = Map.filterWithKey (\_clName clDef -> PC.qualifyClassName (m ^. #moduleName) (clDef ^. #className) `Set.member` cls) (m ^. #classDefs)
-        , PC.instances = [i | i <- m ^. #instances, filterInstance cls m i]
-        , PC.derives = [d | d <- m ^. #derives, filterDerive cls m d]
-        }
-    filterInstance :: Set PC.QClassName -> PC.Module -> PC.InstanceClause -> Bool
-    filterInstance cls m inst = filterConstraint cls m (inst ^. #head)
-    filterDerive :: Set PC.QClassName -> PC.Module -> PC.Derive -> Bool
-    filterDerive cls m drv = filterConstraint cls m (drv ^. #constraint)
-    filterConstraint :: Set PC.QClassName -> PC.Module -> PC.Constraint -> Bool
-    filterConstraint cls m cnstr = PC.qualifyClassRef (m ^. #moduleName) (cnstr ^. #classRef) `Set.member` cls
+      return $ ci & #modules .~ (PC.filterClassInModule requestedClasses' <$> ci ^. #modules)
 
 filterToRequestedModules :: GenOpts -> Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated) -> IO (Map (PC.InfoLess PC.ModuleName) (Either P.Error Generated))
 filterToRequestedModules opts res = do
