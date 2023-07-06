@@ -12,7 +12,7 @@
         name = "lambda-buffers-book";
         buildInputs = [ pkgs.mdbook ];
         buildPhase = ''
-          cp ${config.packages.lambda-buffers-api-docs}/api.md api.md
+          cp ${config.packages.lambda-buffers-api-docs}/api.md api.md;
           mdbook build . --dest-dir $out
         '';
       };

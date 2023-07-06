@@ -45,11 +45,7 @@ competitors if your project requires:
 
 ## Documentation
 
-- [Design](./docs/design.md),
-- [Compiler](./docs/compiler.md),
-- [Codegen](./docs/codegen.md),
-- [Comparison matrix](./docs/comparison-matrix.md),
-- [User feedback](.docs/feedback)
+Visit [LambdaBuffers Github Pages](https://mlabs-haskell.github.io/lambda-buffers).
 
 ## Getting started
 
