@@ -52,11 +52,13 @@ Visit [LambdaBuffers Github Pages](https://mlabs-haskell.github.io/lambda-buffer
 This project was graciously funded by the Cardano Treasury in [Catalyst Fund 9](https://cardano.ideascale.com/c/idea/421376).
 
 Authors:
+
 - [Drazen Popovic](https://github.com/bladyjoker)
 - [Vlad Posmangiu Luchian](https://github.com/cstml)
 - [Sean Hunter](https://github.com/gnumonik)
 
 Contributors:
+
 - [George Flerovsky](https://github.com/GeorgeFlerovsky)
 - [Andrea Ciceri](https://github.com/aciceri)
 - [Julia Chatain](https://juliachatain.com)
