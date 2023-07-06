@@ -1,8 +1,21 @@
-{ pkgs, commonTools, shellHook }:
-pkgs.mkShell {
-  name = "docs-env";
+{ inputs, lib, ... }: {
+  perSystem = { pkgs, system, inputs', config, ... }:
+    {
+      devShells.dev-docs = pkgs.mkShell {
+        name = "docs-env";
+        packages = [ pkgs.mdbook ];
+        shellHook = config.pre-commit.devShell;
+      };
 
-  packages = [ commonTools.markdownlint-cli commonTools.typos pkgs.mdbook ];
+      packages.lambda-buffers-book = pkgs.stdenv.mkDerivation {
+        src = ./.;
+        name = "lambda-buffers-book";
+        buildInputs = [ pkgs.mdbook ];
+        buildPhase = ''
+          cp ${config.packages.lambda-buffers-api-docs}/api.md api.md
+          mdbook build . --dest-dir $out
+        '';
+      };
 
-  inherit shellHook;
+    };
 }
