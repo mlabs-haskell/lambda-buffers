@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Codegen - Lambda Buffers documentation</title>
+        <title>Getting started - Lambda Buffers documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">5.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">6.</strong> API</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">7.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html" class="active"><strong aria-hidden="true">8.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">9.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">10.</strong> Comparison matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html" class="active"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">5.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">6.</strong> API</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">7.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">8.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">9.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">10.</strong> Comparison matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,77 +144,65 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="lambdabuffers-codegen"><a class="header" href="#lambdabuffers-codegen">LambdaBuffers Codegen</a></h1>
-<p>NOTE: The implementation of the code generation framework is still in early
-stages and will likely undergo substantial changes as development
-continues. This document serves to outline general principles that any
-implementation of the LambdaBuffers code generation framework ought to adhere
-to.</p>
-<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
-<ol>
-<li>Modular &amp; reusable components</li>
-<li>Ergonomic interface</li>
-<li>Extensible to new opaque types</li>
-<li>Extensible to new type classes</li>
-</ol>
-<h3 id="modular--reusable-components"><a class="header" href="#modular--reusable-components">Modular &amp; Reusable Components</a></h3>
-<p>Because the code generation modules for each target language will almost
-certainly constitute the bulk of the final LambdaBuffers codebase, it is
-essential that components of the code generation framework be as modular and
-reusable as is practicable.</p>
-<p>Although each target language has its own distinct syntax and semantics, many
-syntactic forms exist in multiple target languages. For example, Haskell and
-PureScript both use a comma-separated set enclosed in square brackets
-(e.g. <code>[1,2,3]</code>) to represent a <code>List _/[_]</code> value, while Rust uses a similar
-form (in conjunction with a macro, e.g. <code>vec![1,2,3]</code>) to represent a
-<code>Vector&lt;_&gt;</code> value. To reduce redundant and superfluous code, common syntactic
-patterns such at this should be abstracted out into a set of functions that can
-be reused across languages.</p>
-<h3 id="ergonomic-interface"><a class="header" href="#ergonomic-interface">Ergonomic Interface</a></h3>
-<p>While the LambdaBuffers team will support a finite set of specific target
-languages, adding support for an additional language should be as painless as
-possible (ceteris paribus) to encourage and facilitate open source contributions
-by third parties. A basic set of tools which can be used to write code
-generation modules for any target language should be developed, and all code
-generation modules written by the LambdaBuffers team should employ those tools
-(in order to provide a robust set of examples for future contributors, among
-other benefits).</p>
-<h3 id="extensible-to-new-opaque-types"><a class="header" href="#extensible-to-new-opaque-types">Extensible to New Opaque Types</a></h3>
-<p>Users and contributors should be able to easily extend the default set of
-supported opaque types to support additional opaque types. In the context of
-code generation, this means: Users should have the ability to specify the target
-type for a given opaque type in the target language (including the package or
-module that contains the target type if the target type is not part of the
-language's standard library).</p>
-<p>Because type class instances must be derived structurally, and because an opaque
-type is by definition a type with no visible internal structure, users should be
-provided with an ergonomic interface for noting the presence of a type class
-instance for an opaque type's target type in a particular language (if the
-instance exists in the standard library), or for referring to the module where
-such an instance is located (if the instance is defined in a library or by the
-user in one of their own modules).</p>
-<h3 id="extensible-to-new-type-classes"><a class="header" href="#extensible-to-new-type-classes">Extensible to New Type Classes</a></h3>
-<p>Users and contributors should be able to easily extend the default set of
-supported type classes to support additional type classes and facilitate the
-derivation of instances for newly defined classes.</p>
-<p>In practice, the type class code generation machinery must consist of two
-distinct parts: First, a set of deriving rules which correspond to instances
-that already exist (in some module or in a language's standard
-library/prelude). Second, code generation functions that operate on user-defined
-types which satisfy those rules.</p>
-<p>Each of these parts should be ergonomic, well-documented, and the implementation
-of the default set of supported type classes ought to be thoroughly commented in
-order that users have a diverse set of real examples to work from.</p>
+                        <h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
+<h2 id="installing-nix"><a class="header" href="#installing-nix">Installing Nix</a></h2>
+<p>This repository relies heavily on the <a href="https://nixos.org/download.html">Nix Package
+Manager</a> for both development and package
+distribution.</p>
+<p>To install run the following command:</p>
+<pre><code class="language-sh">sh &lt;(curl -L https://nixos.org/nix/install) --daemon
+</code></pre>
+<p>and follow the instructions.</p>
+<pre><code class="language-sh">$ nix --version
+nix (Nix) 2.8.0
+</code></pre>
+<blockquote>
+<p>NOTE: The repository should work with Nix version greater or equal to 2.8.0.</p>
+</blockquote>
+<p>Make sure to enable <a href="https://nixos.wiki/wiki/Flakes#Enable_flakes">Nix Flakes</a>
+and IFD by editing either <code>~/.config/nix/nix.conf</code> or <code>/etc/nix/nix.conf</code> on
+your machine and add the following configuration entries:</p>
+<pre><code class="language-yaml">experimental-features = nix-command flakes
+allow-import-from-derivation = true
+</code></pre>
+<p>Optionally, to improve build speed, it is possible to set up a binary caches
+maintained by IOHK and Plutonomicon by setting additional configuration entries:</p>
+<pre><code class="language-yaml">substituters = https://cache.nixos.org https://iohk.cachix.org https://cache.iog.io https://public-plutonomicon.cachix.org
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo= public-plutonomicon.cachix.org-1:3AKJMhCLn32gri1drGuaZmFrmnue+KkKrhhubQk/CWc=
+</code></pre>
+<h2 id="building-and-development"><a class="header" href="#building-and-development">Building and development</a></h2>
+<p>To facilitate seamlessly moving between directories and associated Nix
+development shells we use <a href="https://direnv.net">direnv</a> and
+<a href="https://github.com/nix-community/nix-direnv">nix-direnv</a>:</p>
+<p>To install both using <code>nixpkgs</code>:</p>
+<pre><code class="language-sh">nix profile install nixpkgs#direnv
+nix profile install nixpkgs#nix-direnv
+</code></pre>
+<p>Your shell and editors should pick up on the <code>.envrc</code> files in different
+directories and prepare the environment accordingly.  Use <code>direnv allow</code> to
+enable the direnv environment and <code>direnv reload</code> to reload it when necessary.</p>
+<p>Additionally, throughout the repository one can use:</p>
+<pre><code class="language-sh">$ pre-commit run --all
+cabal-fmt............................................(no files to check)Skipped
+fourmolu.................................................................Passed
+hlint....................................................................Passed
+markdownlint.............................................................Passed
+nix-linter...............................................................Passed
+nixpkgs-fmt..............................................................Passed
+shellcheck...........................................(no files to check)Skipped
+typos....................................................................Passed
+</code></pre>
+<p>To run all the code quality tooling specified in the <a href="../pre-commit.nix">pre-commit-check config file</a></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="compiler.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="command-line-interface.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="haskell.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -224,11 +212,11 @@ order that users have a diverse set of real examples to work from.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="compiler.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="command-line-interface.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="haskell.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
