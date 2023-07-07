@@ -127,10 +127,25 @@
             lbg-purescript = pkgs.writeShellScriptBin "lbg-purescript" ''
               ${lbg}/bin/lbg gen-purescript $@
             '';
-            lbf = pkgs.writeScriptBin "lbf" ''
+            lbf = pkgs.writeShellScriptBin "lbf" ''
               export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
               export LB_COMPILER=${lbc}/bin/lbc;
               ${lbf-pure}/bin/lbf $@
+            '';
+            lbf-to-haskell = pkgs.writeShellScriptBin "lbf-to-haskell" ''
+              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --gen ${lbg-haskell}/bin/lbg-haskell $@
+            '';
+            lbf-to-haskell-prelude = pkgs.writeShellScriptBin "lbf-to-haskell" ''
+              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
+                  --gen-class Prelude.Eq --gen-class Prelude.Json \
+                  --gen ${lbg-haskell}/bin/lbg-haskell \
+                  $@
             '';
           };
 
