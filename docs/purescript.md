@@ -87,7 +87,7 @@ autogen/LambdaBuffers/Document.purs
 ```
 
 As we can see the `autogen` directory has been created that contains the generated Purescript modules.
-Note the `autogen/build.json` file as it contains all the necessary Hackage dependencies the generated module needs in order to be properly compiled by GHC.
+Note the `autogen/build.json` file as it contains all the necessary dependencies the generated module needs in order to be properly compiled by `purs` compiler.
 
 The outputted Purescript module in `autogen/LambdaBuffers/Document.hs`:
 
