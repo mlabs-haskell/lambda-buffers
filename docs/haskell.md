@@ -14,7 +14,7 @@ environment that comes packaged with all the CLI tools:
 ```shell
 $ nix develop github:mlabs-haskell/lambda-buffers#lb
 $ lb<tab>
-lbc             lbf             lbg             lbg-haskell     lbg-purescript lbf-to-haskell
+lbc lbf lbg lbg-purescript lbg-haskelll lbf-to-purescript lbf-to-haskell
 ```
 
 Or we can simply just refer directly to the `lbf-to-haskell` CLI by `nix run

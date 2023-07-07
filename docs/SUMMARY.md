@@ -3,6 +3,7 @@
 - [Introduction](introduction.md)
 - [Getting started](getting-started.md)
 - [LambdaBuffers to Haskell](haskell.md)
+- [LambdaBuffers to Purescript](purescript.md)
 - [Design](design.md)
 - [API](api.md)
 - [Compiler](compiler.md)

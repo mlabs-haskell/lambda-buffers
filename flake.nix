@@ -133,20 +133,30 @@
               ${lbf-pure}/bin/lbf $@
             '';
             lbf-to-haskell = pkgs.writeShellScriptBin "lbf-to-haskell" ''
-              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
               export LB_COMPILER=${lbc}/bin/lbc;
 
               ${lbf-pure}/bin/lbf build --gen ${lbg-haskell}/bin/lbg-haskell $@
             '';
-            lbf-to-haskell-prelude = pkgs.writeShellScriptBin "lbf-to-haskell" ''
-              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
+            lbf-to-haskell-prelude = pkgs.writeShellScriptBin "lbf-to-haskell-prelude" ''
               export LB_COMPILER=${lbc}/bin/lbc;
 
               ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
                   --gen-class Prelude.Eq --gen-class Prelude.Json \
-                  --gen ${lbg-haskell}/bin/lbg-haskell \
-                  $@
+                  --gen ${lbg-haskell}/bin/lbg-haskell $@
             '';
+            lbf-to-purescript = pkgs.writeShellScriptBin "lbf-to-purescript" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --gen ${lbg-purescript}/bin/lbg-purescript $@
+            '';
+            lbf-to-purescript-prelude = pkgs.writeShellScriptBin "lbf-to-purescript-prelude" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
+                  --gen-class Prelude.Eq --gen-class Prelude.Json \
+                  --gen ${lbg-purescript}/bin/lbg-purescript $@
+            '';
+
           };
 
           # LambdaBuffers environment
