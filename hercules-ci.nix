@@ -17,11 +17,8 @@
     };
   };
   hercules-ci.github-pages.branch = "main";
-  perSystem = { pkgs, ... }: {
-    hercules-ci.github-pages.settings.contents = pkgs.runCommand "lambda-buffers-book"
-      {
-        buildInputs = [ pkgs.mdbook ];
-      } "mdbook build ${self.outPath}/docs --dest-dir $out";
+  perSystem = { pkgs, config, ... }: {
+    hercules-ci.github-pages.settings.contents = config.packages.lambda-buffers-book;
   };
 
   herculesCI.ciSystems = [ "x86_64-linux" ];

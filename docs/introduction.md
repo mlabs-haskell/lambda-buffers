@@ -1,8 +1,6 @@
-# Lambda Buffers
+# Lambda Buffers introduction
 
-![LambdaBuffers banner](docs/images/lambda-buffers-banner.png)
-
-## Introduction
+![LambdaBuffers banner](./images/lambda-buffers-banner.png)
 
 _LambdaBuffers_ is a schema language (similar to ProtoBuffers, ADL, ASN.1, JSON
 Schema, etc.) and associated code generation toolkit. The goal of this project
@@ -10,7 +8,7 @@ is to provide developers tools to define algebraic data types in a
 language-agnostic format such that shared data types can be declared in one
 place while maintaining compatibility across a plethora of supported languages.
 
-Users may refer to the [comparison matrix](./docs/comparison-matrix.md) for an
+Users may refer to the [comparison matrix](./comparison-matrix.md) for an
 in-depth comparison of LambdaBuffers' features against the feature-set of other
 popular schema-languages.
 
@@ -42,27 +40,3 @@ competitors if your project requires:
     work-in-progress, we expect that, upon completion, an extensive test suite
     will provide a high degree of assurance that the instances/methods generated
     by the LamdaBuffers code generator behave identically.
-
-## Documentation
-
-Visit [LambdaBuffers Github Pages](https://mlabs-haskell.github.io/lambda-buffers).
-
-## Acknowledgements
-
-This project was graciously funded by the Cardano Treasury in [Catalyst Fund 9](https://cardano.ideascale.com/c/idea/421376).
-
-Authors:
-
-- [Drazen Popovic](https://github.com/bladyjoker)
-- [Vlad Posmangiu Luchian](https://github.com/cstml)
-- [Sean Hunter](https://github.com/gnumonik)
-
-Contributors:
-
-- [George Flerovsky](https://github.com/GeorgeFlerovsky)
-- [Andrea Ciceri](https://github.com/aciceri)
-- [Julia Chatain](https://juliachatain.com)
-- [Andrea Vezzosi](https://github.com/saizan)
-- [Magnus Viernickel](https://github.com/MangoIV)
-- [Rajdeep Chase Maity](https://github.com/TotallyNotChase)
-- [Ramiro Garay](https://github.com/rmgaray)

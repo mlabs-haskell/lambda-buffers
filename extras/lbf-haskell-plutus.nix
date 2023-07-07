@@ -18,5 +18,3 @@ lbf: lbg-haskell: lbfHaskellOpts: (import ./lbf-haskell.nix) lbf lbg-haskell (ut
 }
   lbfHaskellOpts
 )
-
-  

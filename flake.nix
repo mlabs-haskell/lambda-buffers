@@ -19,6 +19,7 @@
       imports = [
         (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
+        (import ./docs/build.nix)
       ];
       debug = true;
       systems = [ "x86_64-linux" ];
@@ -61,17 +62,11 @@
             inherit pkgs commonTools shellHook;
           };
 
-          # Docs env
-
-          docsDevShell = import ./docs/build.nix {
-            inherit pkgs commonTools shellHook;
-          };
-
           # Protos build
 
           pbnix-lib = protobufs-nix.lib.${system};
 
-          protosBuild = import ./lambda-buffers-proto/build.nix {
+          protosBuild = import ./api/build.nix {
             inherit pkgs pbnix-lib commonTools shellHook;
           };
 
@@ -93,7 +88,7 @@
 
           compilerBuild = buildAbstraction {
             import-location = ./lambda-buffers-compiler/build.nix;
-            additional = { inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
+            additional = { inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
           };
           compilerFlake = flakeAbstraction compilerBuild;
 
@@ -102,7 +97,7 @@
           codegenBuild = buildAbstraction {
             import-location = ./lambda-buffers-codegen/build.nix;
             additional = {
-              inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
+              inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
             };
           };
@@ -113,7 +108,7 @@
           frontendBuild = buildAbstraction {
             import-location = ./lambda-buffers-frontend/build.nix;
             additional = {
-              inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
+              inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
               lambda-buffers-compiler = ./lambda-buffers-compiler;
               inherit (clis) lbc lbg lbg-haskell lbg-purescript;
             };
@@ -132,11 +127,36 @@
             lbg-purescript = pkgs.writeShellScriptBin "lbg-purescript" ''
               ${lbg}/bin/lbg gen-purescript $@
             '';
-            lbf = pkgs.writeScriptBin "lbf" ''
+            lbf = pkgs.writeShellScriptBin "lbf" ''
               export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
               export LB_COMPILER=${lbc}/bin/lbc;
               ${lbf-pure}/bin/lbf $@
             '';
+            lbf-to-haskell = pkgs.writeShellScriptBin "lbf-to-haskell" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --gen ${lbg-haskell}/bin/lbg-haskell $@
+            '';
+            lbf-to-haskell-prelude = pkgs.writeShellScriptBin "lbf-to-haskell-prelude" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
+                  --gen-class Prelude.Eq --gen-class Prelude.Json \
+                  --gen ${lbg-haskell}/bin/lbg-haskell $@
+            '';
+            lbf-to-purescript = pkgs.writeShellScriptBin "lbf-to-purescript" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --gen ${lbg-purescript}/bin/lbg-purescript $@
+            '';
+            lbf-to-purescript-prelude = pkgs.writeShellScriptBin "lbf-to-purescript-prelude" ''
+              export LB_COMPILER=${lbc}/bin/lbc;
+
+              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
+                  --gen-class Prelude.Eq --gen-class Prelude.Json \
+                  --gen ${lbg-purescript}/bin/lbg-purescript $@
+            '';
+
           };
 
           # LambdaBuffers environment
@@ -306,26 +326,23 @@
         rec
         {
           # Standard flake attributes
-          packages = {
-            inherit (protosBuild) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
-          }
-          // compilerFlake.packages
-          // frontendFlake.packages
-          // codegenFlake.packages
-          // lbrPreludeHsFlake.packages
-          // lbrPreludePurs.packages
-          // lbrPlutusHsFlake.packages
-          // lbrPlutusPurs.packages
-          // lbtPreludeHsFlake.packages
-          // lbtPreludePursFlake.packages
-          // lbtPlutusHsFlake.packages
-          // lbtPlutusPursFlake.packages
-          // clis
-          // lbfLibs;
+          packages = protosBuild.packages
+            // compilerFlake.packages
+            // frontendFlake.packages
+            // codegenFlake.packages
+            // lbrPreludeHsFlake.packages
+            // lbrPreludePurs.packages
+            // lbrPlutusHsFlake.packages
+            // lbrPlutusPurs.packages
+            // lbtPreludeHsFlake.packages
+            // lbtPreludePursFlake.packages
+            // lbtPlutusHsFlake.packages
+            // lbtPlutusPursFlake.packages
+            // clis
+            // lbfLibs;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
-            dev-docs = docsDevShell;
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
