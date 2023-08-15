@@ -46,7 +46,7 @@
         1. R. would like it to be seamless. R. mentions:
             1. Auto generate modules
             2. pre-commit hooks
-            3. itterate quickly
+            3. iterate quickly
             4. Nix integration is very important
             5. Not running commands.
             6. Watch function for the compiler.

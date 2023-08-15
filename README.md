@@ -20,7 +20,7 @@ competitors if your project requires:
  1. _Parameterized Data Types_ (aka. type functions): Unlike ProtoBuffers or
     JSON Schema, LambdaBuffers allows users to define algebraic data types which
     take type variable arguments. If your project's domain is most accurately
-    represented by parameterized data types, LamdaBuffers may be a good choice
+    represented by parameterized data types, LambdaBuffers may be a good choice
     for your needs.
 
  2. _Opaque Types_: Almost every competing schema language provides users a
@@ -41,7 +41,7 @@ competitors if your project requires:
     productively make use of the generated types. While LambdaBuffers is still a
     work-in-progress, we expect that, upon completion, an extensive test suite
     will provide a high degree of assurance that the instances/methods generated
-    by the LamdaBuffers code generator behave identically.
+    by the LambdaBuffers code generator behave identically.
 
 ## Documentation
 

@@ -167,7 +167,7 @@ newtype String = String (List Char) deriving (Prelude.Show)
 
 The types `Author`, `Reviewer`, `RichContent`, `Image`, `Gif`, `List`, `Char`,
 `Letter`, `Number` and `Punctuation` have been declared as sum types in the
-LamdaBuffers schema using the `sum` keyword.
+LambdaBuffers schema using the `sum` keyword.
 
 As we can see, notihing too surprising here, all the `sum` types become `data`
 in haskell.
@@ -178,7 +178,7 @@ quote) to the defined constructor names as to make sure they are unique.
 ## Product types
 
 The types `RichDocument` and `String` have been declared as product types in the
-LamdaBuffers schema using the `prod` keyword.
+LambdaBuffers schema using the `prod` keyword.
 
 They become Haskell `newtype` if they have a single type in their body, otherwise they are `data`.
 
@@ -187,7 +187,7 @@ Note that the constructor has the same name as the type.
 ## Record types
 
 The types `Document` and `Chapter` have been declared as record types in the
-LamdaBuffers schema using the `record` keyword.
+LambdaBuffers schema using the `record` keyword.
 
 Like with product types, they become Haskell `newtype` if they have a single
 type in their body, otherwise they are `data`.
