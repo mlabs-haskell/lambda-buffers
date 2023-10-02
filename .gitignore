@@ -15,3 +15,5 @@ result
 **/.spago2nix
 **/dist
 **/output
+.DS_Store
+target

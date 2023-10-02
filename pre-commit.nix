@@ -34,6 +34,7 @@
             markdownlint.enable = true;
             dhall-format.enable = true;
             purty.enable = true;
+            rustfmt.enable = true;
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
           settings.ormolu.cabalDefaultExtensions = true;

@@ -12,6 +12,7 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
+    nci.url = "github:yusdacra/nix-cargo-integration";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, purifix, ... }:
@@ -20,6 +21,9 @@
         (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
         (import ./docs/build.nix)
+        inputs.nci.flakeModule
+
+        ./runtimes/rust/lbr-prelude/crates.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
@@ -195,6 +199,18 @@
             }
           );
 
+          ### Rust
+
+          lbrPreludeRust =
+            let crateName = "lbr-prelude";
+            in {
+              devShell = config.nci.outputs.${crateName}.devShell.overrideAttrs (old: {
+                inherit shellHook;
+              });
+              packages.default = config.nci.outputs.${crateName}.packages.release;
+            };
+
+
           ## Plutus runtime - lbr-plutus
 
           ### Haskell
@@ -332,6 +348,7 @@
             // codegenFlake.packages
             // lbrPreludeHsFlake.packages
             // lbrPreludePurs.packages
+            // lbrPreludeRust.packages
             // lbrPlutusHsFlake.packages
             // lbrPlutusPurs.packages
             // lbtPreludeHsFlake.packages
@@ -349,6 +366,7 @@
             dev-codegen = codegenFlake.devShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
+            dev-lbr-prelude-rust = lbrPreludeRust.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
             dev-lbr-plutus-purescript = lbrPlutusPurs.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
@@ -365,6 +383,7 @@
             lbrPlutusPurs.checks //
             lbtPreludePursFlake.checks //
             lbtPlutusPursFlake.checks //
+            lbrPreludeRust.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //
                 frontendFlake.checks //
