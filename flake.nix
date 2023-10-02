@@ -383,7 +383,6 @@
             lbrPlutusPurs.checks //
             lbtPreludePursFlake.checks //
             lbtPlutusPursFlake.checks //
-            lbrPreludeRust.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //
                 frontendFlake.checks //
