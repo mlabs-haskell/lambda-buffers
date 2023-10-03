@@ -22,7 +22,7 @@
         (import ./docs/build.nix)
       ];
       debug = true;
-      systems = [ "x86_64-linux" ];
+      systems = [ "x86_64-linux" "x86_64-darwin" ];
       perSystem = { system, config, ... }:
         let
           inherit self;
