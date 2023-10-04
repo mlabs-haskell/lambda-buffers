@@ -205,6 +205,7 @@
             let crateName = "lbr-prelude";
             in {
               devShell = config.nci.outputs.${crateName}.devShell.overrideAttrs (old: {
+                packages = (old.packages or [ ]) ++ [ pkgs.rust-analyzer ];
                 inherit shellHook;
               });
               packages.default = config.nci.outputs.${crateName}.packages.release;
