@@ -21,9 +21,7 @@
         (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
         (import ./docs/build.nix)
-        inputs.nci.flakeModule
-
-        ./runtimes/rust/lbr-prelude/crates.nix
+        ./runtimes/rust/lbr-prelude/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
@@ -199,20 +197,6 @@
             }
           );
 
-          ### Rust
-
-          lbrPreludeRust =
-            let crateName = "lbr-prelude";
-            in {
-              devShell = config.nci.outputs.${crateName}.devShell.overrideAttrs (old: {
-                packages = (old.packages or [ ]) ++ [ pkgs.rust-analyzer ];
-                inherit shellHook;
-              });
-              packages."${crateName}-rust" = config.nci.outputs.${crateName}.packages.release;
-              checks."${crateName}-rust-test" = config.nci.outputs.${crateName}.check;
-            };
-
-
           ## Plutus runtime - lbr-plutus
 
           ### Haskell
@@ -350,7 +334,6 @@
             // codegenFlake.packages
             // lbrPreludeHsFlake.packages
             // lbrPreludePurs.packages
-            // lbrPreludeRust.packages
             // lbrPlutusHsFlake.packages
             // lbrPlutusPurs.packages
             // lbtPreludeHsFlake.packages
@@ -368,7 +351,6 @@
             dev-codegen = codegenFlake.devShell;
             dev-lbr-prelude-haskell = lbrPreludeHsFlake.devShell;
             dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
-            dev-lbr-prelude-rust = lbrPreludeRust.devShell;
             dev-lbr-plutus-haskell = lbrPlutusHsFlake.devShell;
             dev-lbr-plutus-purescript = lbrPlutusPurs.devShell;
             dev-lbt-prelude-haskell = lbtPreludeHsFlake.devShell;
@@ -383,7 +365,6 @@
             packages //
             lbtPreludePursFlake.checks //
             lbrPreludePurs.checks //
-            lbrPreludeRust.checks //
             lbrPlutusPurs.checks //
             lbtPlutusPursFlake.checks //
             renameAttrs (n: "check-${n}") (
