@@ -208,7 +208,8 @@
                 packages = (old.packages or [ ]) ++ [ pkgs.rust-analyzer ];
                 inherit shellHook;
               });
-              packages.default = config.nci.outputs.${crateName}.packages.release;
+              packages."${crateName}-rust" = config.nci.outputs.${crateName}.packages.release;
+              checks."${crateName}-rust-test" = config.nci.outputs.${crateName}.check;
             };
 
 
@@ -380,9 +381,10 @@
           # nix flake check
           checks = devShells //
             packages //
-            lbrPreludePurs.checks //
-            lbrPlutusPurs.checks //
             lbtPreludePursFlake.checks //
+            lbrPreludePurs.checks //
+            lbrPreludeRust.checks //
+            lbrPlutusPurs.checks //
             lbtPlutusPursFlake.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //

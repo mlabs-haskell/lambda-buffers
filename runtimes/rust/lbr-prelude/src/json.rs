@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 /// Trait that lbf-prelude::json class maps to
-trait Json {
+pub trait Json {
     fn to_json(&self) -> Result<Value, Error>;
 
     fn from_json(value: Value) -> Result<Self, Error>
@@ -294,7 +294,7 @@ fn error<T>(msg: &str) -> Result<T, Error> {
 pub fn json_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("name".to_owned(), Value::String(ctor_name.to_owned()));
-    obj.insert("field".to_owned(), Value::Array(ctor_product));
+    obj.insert("fields".to_owned(), Value::Array(ctor_product));
 
     Value::Object(obj)
 }
