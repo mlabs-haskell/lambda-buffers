@@ -1,3 +1,0 @@
-[workspace]
-
-members = ["runtimes/rust/lbr-prelude"]

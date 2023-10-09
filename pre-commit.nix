@@ -34,7 +34,7 @@
             markdownlint.enable = true;
             dhall-format.enable = true;
             purty.enable = true;
-            rustfmt.enable = true;
+            # TODO: Enable rustfmt
 
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
