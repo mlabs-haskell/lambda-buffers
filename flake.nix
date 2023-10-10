@@ -18,9 +18,9 @@
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, purifix, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        (import ./hercules-ci.nix)
-        (import ./pre-commit.nix)
-        (import ./docs/build.nix)
+        ./hercules-ci.nix
+        ./pre-commit.nix
+        ./docs/build.nix
         ./runtimes/rust/lbr-prelude/build.nix
       ];
       debug = true;
