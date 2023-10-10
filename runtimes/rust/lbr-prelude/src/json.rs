@@ -77,8 +77,8 @@ where
 {
     fn to_json(&self) -> Result<Value, Error> {
         match self {
-            Some(val) => Ok(json_constructor("Just", vec![val.to_json()?])),
-            None => Ok(json_constructor("Nothing", Vec::with_capacity(0))),
+            Some(val) => Ok(sum_constructor("Just", vec![val.to_json()?])),
+            None => Ok(sum_constructor("Nothing", Vec::with_capacity(0))),
         }
     }
 
@@ -115,8 +115,8 @@ where
 {
     fn to_json(&self) -> Result<Value, Error> {
         match self {
-            Ok(val) => Ok(json_constructor("Right", vec![val.to_json()?])),
-            Err(val) => Ok(json_constructor("Left", vec![val.to_json()?])),
+            Ok(val) => Ok(sum_constructor("Right", vec![val.to_json()?])),
+            Err(val) => Ok(sum_constructor("Left", vec![val.to_json()?])),
         }
     }
 
@@ -287,11 +287,14 @@ where
     }
 }
 
+/// Create a JSON serialisation error with a custom message
 fn error<T>(msg: &str) -> Result<T, Error> {
     Err(ser::Error::custom(msg))
 }
 
-pub fn json_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
+/// Construct a JSON Value from a sum type
+/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON
+pub fn sum_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("name".to_owned(), Value::String(ctor_name.to_owned()));
     obj.insert("fields".to_owned(), Value::Array(ctor_product));
@@ -299,6 +302,8 @@ pub fn json_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     Value::Object(obj)
 }
 
+/// Parse a JSON value into an intermediary representation of a sum type
+/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON
 pub fn sum_parser<'a>(value: &'a Value) -> Result<(&'a str, &'a Vec<Value>), Error> {
     match value {
         Value::Object(obj) => {
