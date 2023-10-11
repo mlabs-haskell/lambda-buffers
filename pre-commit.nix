@@ -1,14 +1,15 @@
-{ inputs, lib, ... }: {
+{ inputs, ... }: {
   imports = [
-    inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
+    ./extras/pre-commit-hooks-extra.nix
   ];
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { self, pkgs, system, inputs', config, ... }:
     {
       devShells.dev-pre-commit = config.pre-commit.devShell;
       devShells.default = config.pre-commit.devShell;
 
       pre-commit = {
         settings = {
+          rawConfig.rust.cargoCratePaths = [ "runtimes/rust/lbr-prelude" ];
 
           excludes = [
             "lambda-buffers-codegen/data/goldens/.*"
@@ -34,11 +35,14 @@
             markdownlint.enable = true;
             dhall-format.enable = true;
             purty.enable = true;
-            # TODO: Enable rustfmt
+            rustfmt-monorepo.enable = true;
+            # clippy-monorepo.enable = true;
 
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
-          settings.ormolu.cabalDefaultExtensions = true;
+          settings = {
+            ormolu.cabalDefaultExtensions = true;
+          };
         };
       };
     };

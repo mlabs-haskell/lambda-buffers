@@ -13,6 +13,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
     nci.url = "github:yusdacra/nix-cargo-integration";
+    nci.inputs.nixpkgs.follows = "nixpkgs";
+    rust-overlay.follows = "nci/rust-overlay";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, purifix, ... }:
@@ -39,6 +41,7 @@
               inputs.iohk-nix.overlays.crypto
               inputs.ctl.overlays.purescript
               inputs.ctl.overlays.spago
+              (import inputs.rust-overlay)
             ];
           };
           haskell-nix = pkgs.haskell-nix;
