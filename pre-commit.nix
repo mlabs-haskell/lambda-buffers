@@ -36,7 +36,7 @@
             dhall-format.enable = true;
             purty.enable = true;
             rustfmt-monorepo.enable = true;
-            # clippy-monorepo.enable = true;
+            clippy-monorepo.enable = true;
 
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
