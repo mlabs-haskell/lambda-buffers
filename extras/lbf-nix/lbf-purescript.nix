@@ -41,7 +41,7 @@ pkgs.stdenv.mkDerivation {
   buildPhase = ''
     mkdir autogen
     mkdir .work
-    lbf build ${utils.mkFlags "import-path" ([src] ++ imports)} ${utils.mkFlags "gen-class" classes} \
+    lbf build ${utils.mkFlags "import-path" imports} ${utils.mkFlags "gen-class" classes} \
         --work-dir .work \
         --gen ${lbg-purescript}/bin/lbg-purescript \
         --gen-dir autogen \
