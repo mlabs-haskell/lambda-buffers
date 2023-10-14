@@ -1,11 +1,12 @@
+pkgs:
 let
-  utils = import ./utils.nix;
+  utils = import ./utils.nix pkgs;
 in
 lbf: lbg-purescript: lbfPurescriptOpts: (import ./lbf-purescript.nix) lbf lbg-purescript (utils.overrideAttrs
 {
   "imports" = {
     default = [ ];
-    override = imps: imps ++ [ ../libs/lbf-plutus ../libs/lbf-prelude ];
+    override = imps: imps ++ [ ../../libs/lbf-plutus ../../libs/lbf-prelude ];
   };
   "dependencies" = {
     default = [ ];

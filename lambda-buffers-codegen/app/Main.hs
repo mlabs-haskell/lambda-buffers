@@ -76,12 +76,12 @@ genOptsP =
 haskellGenOptsP :: Parser Haskell.GenOpts
 haskellGenOptsP =
   Haskell.MkGenOpts
-    <$> optional
+    <$> many
       ( strOption
           ( long "config"
               <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Configuration file for the Haskell Codegen module"
+              <> help "Configuration file for the Haskell Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
           )
       )
     <*> genOptsP

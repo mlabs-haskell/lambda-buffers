@@ -12,7 +12,7 @@ import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _config :: Maybe FilePath
+  { _config :: [FilePath]
   , _common :: Gen.GenOpts
   }
 
@@ -20,8 +20,13 @@ makeLenses 'MkGenOpts
 
 gen :: GenOpts -> IO ()
 gen opts = do
-  cfgFp <- maybe (Paths.getDataFileName "data/haskell.json") pure (opts ^. config)
-  cfg <- readHaskellConfig cfgFp
+  cfg <- case opts ^. config of
+    [] -> do
+      fp <- Paths.getDataFileName "data/haskell-prelude-base.json"
+      readHaskellConfig fp
+    fps -> do
+      cfgs <- traverse readHaskellConfig fps
+      return (mconcat cfgs)
 
   Gen.gen
     (opts ^. common)

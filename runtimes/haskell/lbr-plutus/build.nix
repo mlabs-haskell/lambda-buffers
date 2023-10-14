@@ -1,63 +1,73 @@
-{ pkgs
-, haskell-nix
-, mlabs-tooling
-, lbr-prelude
-, compiler-nix-name
-, index-state
-, commonTools
-, shellHook
-}:
-let
-  inherit pkgs;
-  project = { lib, ... }: {
-    src = ./.;
+self@{ inputs, ... }:
+{
+  perSystem = { pkgs, system, inputs', config, ... }:
+    let
+      project = { lib, ... }: {
+        src = ./.;
 
-    name = "lbr-json-plutus";
+        name = "lbr-plutus";
 
-    inherit compiler-nix-name index-state;
+        inherit (self.config.settings.haskell) index-state compiler-nix-name;
 
-    extraHackage = [
-      "${lbr-prelude}"
-    ];
+        extraHackage = [ "${config.packages.lbr-prelude-haskell-src}" ];
 
-    modules = [
-      (_: {
-        packages = {
-          allComponent.doHoogle = true;
-          allComponent.doHaddock = true;
+        modules = [
+          (_: {
+            packages = {
+              allComponent.doHoogle = true;
+              allComponent.doHaddock = true;
 
-          # Enable strict compilation
-          lbr-plutus.configureFlags = [ "-f-dev" ];
+              # Enable strict compilation
+              lbr-plutus.configureFlags = [ "-f-dev" ];
+            };
+          })
+        ];
+
+        shell = {
+
+          withHoogle = true;
+
+          exactDeps = true;
+
+          #nativeBuildInputs = builtins.attrValues commonTools;
+
+          tools = {
+            cabal = { };
+            haskell-language-server = { };
+          };
+
+          shellHook = lib.mkForce ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+            ${config.pre-commit.installationScript}
+          '';
         };
-      })
-    ];
+      };
+      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
+        inputs.mlabs-tooling.lib.mkHackageMod
+        inputs.mlabs-tooling.lib.moduleMod
+        project
+      ]).flake { };
 
-    shell = {
+    in
 
-      withHoogle = true;
+    {
+      devShells.dev-lbr-plutus-haskell = hsNixFlake.devShell;
 
-      exactDeps = true;
+      packages = {
 
-      nativeBuildInputs = builtins.attrValues commonTools;
+        lbr-plutus-haskell-src = pkgs.stdenv.mkDerivation {
+          name = "lbr-plutus-haskell-src";
+          src = ./.;
+          installPhase = ''mkdir $out; cp -r $src/* $out;'';
+        };
 
-      tools = {
-        cabal = { };
-        haskell-language-server = { };
+        lbr-plutus-haskell-lib = hsNixFlake.packages."lbr-plutus:lib:lbr-plutus";
+        lbr-plutus-haskell-tests = hsNixFlake.packages."lbr-plutus:test:tests";
       };
 
-      shellHook = lib.mkForce ''
-        export LC_CTYPE=C.UTF-8
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        ${shellHook}
-      '';
+      inherit (hsNixFlake) checks;
+
     };
-  };
-in
-{
-  hsNixProj = haskell-nix.cabalProject' [
-    mlabs-tooling.lib.mkHackageMod
-    mlabs-tooling.lib.moduleMod
-    project
-  ];
 }

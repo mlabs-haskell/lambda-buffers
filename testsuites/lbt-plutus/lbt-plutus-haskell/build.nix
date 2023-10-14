@@ -1,87 +1,72 @@
-{ pkgs
-, haskell-nix
-, mlabs-tooling
-, lbf-prelude
-, lbr-prelude-hs
-, lbf-prelude-hs
-, lbf-plutus
-, lbr-plutus-hs
-, lbf-plutus-hs
-, lbfHaskellPlutus
-, compiler-nix-name
-, index-state
-, commonTools
-, shellHook
-}:
-let
-  inherit pkgs;
+self@{ inputs, ... }:
+{
+  perSystem = { pkgs, system, inputs', config, ... }:
+    let
+      project = { lib, ... }: {
+        src = ./.;
 
-  goldenApiHs = lbfHaskellPlutus {
-    inherit pkgs;
-    name = "lbf-golden-api";
-    src = ./../api;
-    files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-  };
-  goldenData = import ../../../extras/haskell-data.nix {
-    inherit pkgs;
-    srcs = [ ../. ];
-    cabalDataPatterns = [ "**/*.lbf" "**/*.json" ];
-    cabalPackageName = "lbt-plutus-golden-data-hs";
-  };
-  project = { lib, ... }: {
-    src = ./.;
+        name = "lbt-plutus-haskell";
 
-    name = "lbt-plutus-haskell";
+        inherit (self.config.settings.haskell) index-state compiler-nix-name;
 
-    inherit compiler-nix-name index-state;
+        extraHackage = [
+          "${config.packages.lbr-prelude-haskell-src}"
+          "${config.packages.lbf-prelude-haskell}"
+          "${config.packages.lbr-plutus-haskell-src}"
+          "${config.packages.lbf-plutus-haskell}"
+          "${config.packages.lbf-plutus-golden-api-haskell}"
+          "${config.packages.lbt-plutus-golden-haskell}"
+        ];
 
-    extraHackage = [
-      "${lbr-prelude-hs}"
-      "${lbf-prelude-hs}"
-      "${lbr-plutus-hs}"
-      "${lbf-plutus-hs}"
-      "${goldenApiHs}"
-      "${goldenData}"
-    ];
+        modules = [
+          (_: {
+            packages = {
+              allComponent.doHoogle = true;
+              allComponent.doHaddock = true;
 
-    modules = [
-      (_: {
-        packages = {
-          allComponent.doHoogle = true;
-          allComponent.doHaddock = true;
+              # Enable strict compilation
+              lbt-plutus-haskell.configureFlags = [ "-f-dev" ];
+            };
+          })
+        ];
 
-          # Enable strict compilation
-          lbt-plutus-haskell.configureFlags = [ "-f-dev" ];
+        shell = {
+
+          withHoogle = true;
+
+          exactDeps = true;
+
+          #nativeBuildInputs = builtins.attrValues commonTools;
+
+          tools = {
+            cabal = { };
+            haskell-language-server = { };
+          };
+
+          shellHook = lib.mkForce ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+            ${config.pre-commit.installationScript}
+          '';
         };
-      })
-    ];
+      };
+      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
+        inputs.mlabs-tooling.lib.mkHackageMod
+        inputs.mlabs-tooling.lib.moduleMod
+        project
+      ]).flake { };
+    in
 
-    shell = {
+    {
+      devShells.dev-lbt-plutus-haskell = hsNixFlake.devShell;
 
-      withHoogle = true;
-
-      exactDeps = true;
-
-      nativeBuildInputs = builtins.attrValues commonTools;
-
-      tools = {
-        cabal = { };
-        haskell-language-server = { };
+      packages = {
+        lbt-plutus-haskell-lib = hsNixFlake.packages."lbt-plutus-haskell:lib:lbt-plutus-haskell";
+        lbt-plutus-haskell-golden-cli = hsNixFlake.packages."lbt-plutus-haskell:exe:lbt-plutus-golden";
+        lbt-plutus-haskell-tests = hsNixFlake.packages."lbt-plutus-haskell:test:tests";
       };
 
-      shellHook = lib.mkForce ''
-        export LC_CTYPE=C.UTF-8
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        ${shellHook}
-      '';
+      checks.check-lbt-plutus-haskell = hsNixFlake.checks."lbt-plutus-haskell:test:tests";
     };
-  };
-in
-{
-  hsNixProj = haskell-nix.cabalProject' [
-    mlabs-tooling.lib.mkHackageMod
-    mlabs-tooling.lib.moduleMod
-    project
-  ];
 }

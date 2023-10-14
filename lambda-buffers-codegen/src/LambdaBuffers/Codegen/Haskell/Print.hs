@@ -20,7 +20,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
-import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveJson, printDeriveToPlutusData)
+import LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveFromPlutusData, printDeriveJson, printDeriveToPlutusData)
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Names (printModName, printModName', printTyName)
@@ -77,7 +77,11 @@ hsClassImplPrinters =
   Map.fromList
     [
       ( (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Eq")
-      , printDeriveEq
+      , printDeriveEqBase
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkClassName "Eq")
+      , printDeriveEqPlutusTx
       )
     ,
       ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "ToData")
@@ -113,7 +117,13 @@ printDerive iTyDefs d = do
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print " <> show qcn) -- TODO(bladyjoker): Fix qcn printing.
-    Just hsqcns -> for hsqcns (\hsqcn -> printHsQClassImpl mn iTyDefs hsqcn d)
+    Just hsqcns ->
+      for
+        hsqcns
+        ( \hsqcn -> do
+            Print.importClass hsqcn
+            printHsQClassImpl mn iTyDefs hsqcn d
+        )
 
 printHsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
 printHsQClassImpl mn iTyDefs hqcn d =
@@ -165,7 +175,8 @@ printImports lbTyImports hsTyImports classImps ruleImps valImps =
 collectPackageDeps :: Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
   let deps =
-        Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList hsTyImports]
+        Set.singleton "base"
+          `Set.union` Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList classImps]
           `Set.union` Set.fromList [cabalPackageNameToText cbl | (cbl, _, _) <- toList valImps]
    in deps

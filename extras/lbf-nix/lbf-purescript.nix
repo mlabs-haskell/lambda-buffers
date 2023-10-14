@@ -27,7 +27,7 @@ lbg-purescript:
   version ? "0.1.0.0"
 }:
 let
-  utils = import ./utils.nix;
+  utils = import ./utils.nix pkgs;
 in
 pkgs.stdenv.mkDerivation {
   inherit src version;
