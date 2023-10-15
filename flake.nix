@@ -37,6 +37,7 @@
         (import ./testsuites/lbt-plutus/golden/build.nix)
         (import ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix)
         (import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix)
+        (import ./experimental/build.nix)
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
@@ -60,12 +61,6 @@
           };
 
           shellHook = config.pre-commit.installationScript;
-
-          # Experimental env
-
-          experimentalDevShell = import ./experimental/build.nix {
-            inherit pkgs commonTools shellHook;
-          };
 
           # Protos build
 
@@ -184,7 +179,6 @@
             // clis;
 
           devShells = rec {
-            dev-experimental = experimentalDevShell;
             dev-protos = protosBuild.devShell;
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
