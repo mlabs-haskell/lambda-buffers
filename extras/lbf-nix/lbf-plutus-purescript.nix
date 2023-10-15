@@ -3,24 +3,24 @@ pkgs: lbf: lbg-purescript: lbfPurescriptOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfPurs = import ./lbf-prelude-purescript.nix pkgs lbf lbg-purescript;
+  lbfPurs = import ./lbf-purescript.nix pkgs lbf lbg-purescript;
   lbfPurescriptOptsForPlutus = utils.overrideAttrs
     {
       imports = {
         default = [ ];
-        override = libs: libs ++ [ ../../libs/lbf-plutus ];
+        override = libs: libs ++ [ ../../libs/lbf-plutus ../../libs/lbf-prelude ];
       };
       dependencies = {
         default = [ ];
-        override = deps: deps ++ [ "lbf-plutus" ];
+        override = deps: deps ++ [ "lbf-plutus" "lbf-prelude" ];
       };
       classes = {
         default = [ ];
-        override = cls: cls ++ [ "Plutus.V1.PlutusData" ];
+        override = cls: [ "Prelude.Eq" "Plutus.V1.PlutusData" ]; # TODO(bladyjoker): When Json instances are implemented for CTL Plutus types, bring back Json.
       };
       configs = {
         default = [ ];
-        override = cfgs: cfgs ++ [ ../../lambda-buffers-codegen/data/purescript-plutus-ctl.json ];
+        override = cfgs: cfgs ++ [ ../../lambda-buffers-codegen/data/purescript-prelude-base.json ../../lambda-buffers-codegen/data/purescript-plutus-ctl.json ];
       };
     }
     lbfPurescriptOpts;

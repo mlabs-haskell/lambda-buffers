@@ -3,7 +3,7 @@ let
   mkFlake = projectName: purs: {
     packages = {
       "purescript:${projectName}:src" = pkgs.stdenv.mkDerivation {
-        name = "lbr-prelude-src";
+        name = projectName;
         inherit (pursProjOpts) src;
         phases = "installPhase";
         installPhase = "ln -s $src $out";

@@ -28,6 +28,7 @@
         (import ./runtimes/haskell/lbr-prelude/build.nix)
         (import ./runtimes/haskell/lbr-plutus/build.nix)
         (import ./runtimes/purescript/lbr-prelude/build.nix)
+        (import ./runtimes/purescript/lbr-plutus/build.nix)
         (import ./testsuites/lbt-prelude/api/build.nix)
         (import ./testsuites/lbt-prelude/golden/build.nix)
         (import ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix)
@@ -35,6 +36,7 @@
         (import ./testsuites/lbt-plutus/api/build.nix)
         (import ./testsuites/lbt-plutus/golden/build.nix)
         (import ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix)
+        (import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix)
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
@@ -169,73 +171,6 @@
             packages = builtins.attrValues clis;
           };
 
-          # lbf Nix API
-
-          lbfPurescript = import ./extras/lbf-nix/lbf-purescript.nix clis.lbf clis.lbg-purescript;
-          lbfPurescriptPlutus = import ./extras/lbf-nix/lbf-purescript-plutus.nix pkgs clis.lbf clis.lbg-purescript;
-          pursFlake = import ./extras/flake-purescript.nix;
-
-          # Runtimes
-
-          ## Plutus runtime - lbr-plutus
-
-          ### Purescript
-
-          lbrPlutusPurs = pursFlake (
-            import ./runtimes/purescript/lbr-plutus/build.nix {
-              inherit pkgs commonTools;
-              shellHook = config.pre-commit.installationScript;
-            }
-          );
-
-          # Schema libs
-
-          lbfLibs = {
-
-            lbf-plutus-purs = lbfPurescript {
-              inherit pkgs;
-              name = "lbf-plutus";
-              src = ./libs/lbf-plutus;
-              imports = [ ./libs/lbf-prelude ];
-              files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
-              dependencies = [ "lbr-plutus" "lbf-prelude" "lbr-prelude" ];
-            };
-          };
-
-          # Test Suites
-
-          ## Prelude test suite - lbt-prelude
-
-          ### Purescript
-
-          lbrPurs = {
-            lbr-prelude-purs = pkgs.stdenv.mkDerivation {
-              name = "lbr-prelude";
-              src = ./runtimes/purescript/lbr-prelude;
-              phases = "installPhase";
-              installPhase = "ln -s $src $out";
-            };
-            lbr-plutus-purs = pkgs.stdenv.mkDerivation {
-              name = "lbr-plutus";
-              src = ./runtimes/purescript/lbr-plutus;
-              phases = "installPhase";
-              installPhase = "ln -s $src $out";
-            };
-
-          };
-
-          ## Plutus test suite - lbt-plutus
-
-          ### Purescript
-
-          lbtPlutusPursFlake = pursFlake (
-            import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix {
-              inherit pkgs commonTools shellHook lbfPurescriptPlutus;
-              inherit (lbrPurs) lbr-prelude-purs lbr-plutus-purs;
-              inherit (lbfLibs) lbf-prelude-purs lbf-plutus-purs;
-            }
-          );
-
           # Utilities
           renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
@@ -246,8 +181,7 @@
             // compilerFlake.packages
             // frontendFlake.packages
             // codegenFlake.packages
-            // clis
-            // lbfLibs;
+            // clis;
 
           devShells = rec {
             dev-experimental = experimentalDevShell;
