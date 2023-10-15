@@ -60,7 +60,8 @@ self@{ inputs, ... }:
         lbr-plutus-haskell-src = pkgs.stdenv.mkDerivation {
           name = "lbr-plutus-haskell-src";
           src = ./.;
-          installPhase = ''mkdir $out; cp -r $src/* $out;'';
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
         };
 
         lbr-plutus-haskell-lib = hsNixFlake.packages."lbr-plutus:lib:lbr-plutus";

@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Control.Applicative (Alternative (many), optional, (<**>))
+import Control.Applicative (Alternative (many), (<**>))
 import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell

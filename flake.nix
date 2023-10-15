@@ -22,13 +22,16 @@
         (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
         (import ./docs/build.nix)
+        (import ./extras/build.nix)
         (import ./extras/lbf-nix/build.nix)
         (import ./libs/build.nix)
         (import ./runtimes/haskell/lbr-prelude/build.nix)
         (import ./runtimes/haskell/lbr-plutus/build.nix)
+        (import ./runtimes/purescript/lbr-prelude/build.nix)
         (import ./testsuites/lbt-prelude/api/build.nix)
         (import ./testsuites/lbt-prelude/golden/build.nix)
         (import ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix)
+        (import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix)
         (import ./testsuites/lbt-plutus/api/build.nix)
         (import ./testsuites/lbt-plutus/golden/build.nix)
         (import ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix)
@@ -174,17 +177,6 @@
 
           # Runtimes
 
-          ## Prelude runtime - lbr-prelude
-
-          ### Purescript
-
-          lbrPreludePurs = pursFlake (
-            import ./runtimes/purescript/lbr-prelude/build.nix {
-              inherit pkgs commonTools;
-              shellHook = config.pre-commit.installationScript;
-            }
-          );
-
           ## Plutus runtime - lbr-plutus
 
           ### Purescript
@@ -199,14 +191,6 @@
           # Schema libs
 
           lbfLibs = {
-
-            lbf-prelude-purs = lbfPurescript {
-              inherit pkgs;
-              name = "lbf-prelude";
-              src = ./libs/lbf-prelude;
-              files = [ "Prelude.lbf" ];
-              dependencies = [ "lbr-prelude" ];
-            };
 
             lbf-plutus-purs = lbfPurescript {
               inherit pkgs;
@@ -239,13 +223,6 @@
             };
 
           };
-          lbtPreludePursFlake = pursFlake (
-            import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix {
-              inherit pkgs commonTools shellHook lbfPurescript;
-              inherit (lbrPurs) lbr-prelude-purs;
-              inherit (lbfLibs) lbf-prelude-purs;
-            }
-          );
 
           ## Plutus test suite - lbt-plutus
 
@@ -269,10 +246,6 @@
             // compilerFlake.packages
             // frontendFlake.packages
             // codegenFlake.packages
-            // lbrPreludePurs.packages
-            // lbrPlutusPurs.packages
-            // lbtPreludePursFlake.packages
-            // lbtPlutusPursFlake.packages
             // clis
             // lbfLibs;
 
@@ -282,20 +255,12 @@
             dev-compiler = compilerFlake.devShell;
             dev-frontend = frontendFlake.devShell;
             dev-codegen = codegenFlake.devShell;
-            dev-lbr-prelude-purescript = lbrPreludePurs.devShell;
-            dev-lbr-plutus-purescript = lbrPlutusPurs.devShell;
-            dev-lbt-prelude-purescript = lbtPreludePursFlake.devShell;
-            dev-lbt-plutus-purescript = lbtPlutusPursFlake.devShell;
             lb = lbEnv;
           };
 
           # nix flake check
           checks = devShells //
             packages //
-            lbrPreludePurs.checks //
-            lbrPlutusPurs.checks //
-            lbtPreludePursFlake.checks //
-            lbtPlutusPursFlake.checks //
             renameAttrs (n: "check-${n}") (
               compilerFlake.checks //
                 frontendFlake.checks //

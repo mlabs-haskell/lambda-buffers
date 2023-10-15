@@ -113,7 +113,13 @@ printDerive iTyDefs d = do
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
   case Map.lookup qcn classes of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print " <> show qcn)
-    Just pqcns -> for pqcns (\pqcn -> printPursQClassImpl mn iTyDefs pqcn d)
+    Just pqcns ->
+      for
+        pqcns
+        ( \pqcn -> do
+            Print.importClass pqcn
+            printPursQClassImpl mn iTyDefs pqcn d
+        )
 
 printPursQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> Purs.QClassName -> PC.Derive -> m (Doc ann)
 printPursQClassImpl mn iTyDefs hqcn d =

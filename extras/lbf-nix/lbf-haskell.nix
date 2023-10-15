@@ -1,4 +1,4 @@
-# Base API for constructing Haskell Cabal packages given .lbf schemas 
+# Base API for constructing Haskell Cabal packages given .lbf schemas
 
 # Nixpkgs
 pkgs:
@@ -23,7 +23,7 @@ let
       # Classes for which to generate implementations for (default lbf-prelude classes).
     , classes ? [ ]
     , # Dependencies to include in the Cabal's `build-depends` stanza.
-      # examples: dependencies = [ "lbf-prelude" "lbr-prelude" ]
+      # examples: dependencies = [ "lbf-prelude" ]
       dependencies ? [ ]
     , configs ? [ ]
     , # Name of the package and also the name of the Cabal package.

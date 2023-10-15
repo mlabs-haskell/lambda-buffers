@@ -59,7 +59,8 @@ self@{ inputs, ... }:
         lbr-prelude-haskell-src = pkgs.stdenv.mkDerivation {
           name = "lbr-prelude-haskell-src";
           src = ./.;
-          installPhase = ''mkdir $out; cp -r $src/* $out;'';
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
         };
 
       } // hsNixFlake.packages;

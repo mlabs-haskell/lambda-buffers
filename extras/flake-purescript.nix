@@ -1,7 +1,13 @@
-pursProjOpts:
+pkgs: pursProjOpts:
 let
   mkFlake = projectName: purs: {
     packages = {
+      "purescript:${projectName}:src" = pkgs.stdenv.mkDerivation {
+        name = "lbr-prelude-src";
+        inherit (pursProjOpts) src;
+        phases = "installPhase";
+        installPhase = "ln -s $src $out";
+      };
       "purescript:${projectName}:lib" = purs.compiled;
       "purescript:${projectName}:node-modules" = purs.nodeModules;
       "purescript:${projectName}:bundle" = purs.bundlePursProject { main = "Test.Main"; entrypoint = "app/index.js"; bundledModuleName = "dist/output.js"; };
@@ -16,4 +22,4 @@ let
     devShell = purs.devShell;
   };
 in
-mkFlake pursProjOpts.projectName (pursProjOpts.pkgs.purescriptProject pursProjOpts)
+mkFlake pursProjOpts.projectName (pkgs.purescriptProject pursProjOpts)
