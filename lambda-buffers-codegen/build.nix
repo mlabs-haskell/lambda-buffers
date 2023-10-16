@@ -1,4 +1,4 @@
-self@{ inputs, ... }:
+{ inputs, ... }:
 {
   perSystem = { pkgs, config, ... }:
     let
@@ -7,7 +7,7 @@ self@{ inputs, ... }:
 
         name = "lambda-buffers-codegen";
 
-        inherit (self.config.settings.haskell) index-state compiler-nix-name;
+        inherit (config.settings.haskell) index-state compiler-nix-name;
 
         extraHackage = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
