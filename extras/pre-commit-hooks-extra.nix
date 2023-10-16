@@ -5,11 +5,9 @@
   ];
   perSystem = { pkgs, lib, config, system, ... }:
     let
-      inherit (config.pre-commit.settings.rawConfig.rust) cargoCratePaths;
+      inherit (config.pre-commit.settings) settings rawConfig;
+      inherit (rawConfig.rust) cargoCratePaths;
       rust-bin = config.nci.toolchains.shell;
-      defClippySettings = { denyWarnings = false; offline = true; };
-      defSettings = { clippy = defClippySettings; };
-      settings = lib.recursiveUpdate defSettings config.pre-commit.settings;
     in
     {
       nci.toolchainConfig = {
