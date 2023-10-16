@@ -1,6 +1,6 @@
-{ inputs, lib, ... }:
+_:
 {
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, config, ... }:
     {
       devShells.dev-lbt-prelude-golden = config.devShells.dev-pre-commit;
 

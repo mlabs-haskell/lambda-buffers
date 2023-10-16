@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+_: {
   perSystem = { pkgs, config, ... }:
     {
 
@@ -19,14 +19,9 @@
           pkgs.protobuf
           pkgs.haskellPackages.proto-lens-protoc
           pkgs.swiPrologWithGui
-        ]; # ++ builtins.attrValues commonTools;
+        ] ++ config.settings.shell.tools;
 
-        shellHook = ''
-          export LC_CTYPE=C.UTF-8;
-          export LC_ALL=C.UTF-8;
-          export LANG=C.UTF-8;
-          ${config.pre-commit.installationScript}
-        '';
+        shellHook = config.settings.shell.hook;
       };
 
     };

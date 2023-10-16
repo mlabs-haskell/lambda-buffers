@@ -1,8 +1,8 @@
 # Foundational .lbf packages
 # TODO(bladyjoker): Make packages that actually try and compile.
-{ inputs, lib, ... }:
+_:
 {
-  perSystem = { pkgs, system, inputs', config, ... }: {
+  perSystem = { pkgs, config, ... }: {
 
     packages = {
       lbf-prelude = pkgs.stdenv.mkDerivation {

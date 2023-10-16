@@ -16,7 +16,7 @@ let
       };
       classes = {
         default = [ ];
-        override = cls: [ "Prelude.Eq" "Plutus.V1.PlutusData" ]; # TODO(bladyjoker): When Json instances are implemented for CTL Plutus types, bring back Json.
+        override = _: [ "Prelude.Eq" "Plutus.V1.PlutusData" ]; # TODO(bladyjoker): When Json instances are implemented for CTL Plutus types, bring back Json.
       };
       configs = {
         default = [ ];

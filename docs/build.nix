@@ -1,5 +1,5 @@
-{ inputs, lib, ... }: {
-  perSystem = { pkgs, system, inputs', config, ... }:
+_: {
+  perSystem = { pkgs, config, ... }:
     {
       devShells.dev-docs = pkgs.mkShell {
         name = "docs-env";

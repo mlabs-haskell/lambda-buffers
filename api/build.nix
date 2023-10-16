@@ -1,4 +1,4 @@
-self@{ inputs, ... }:
+{ inputs, ... }:
 {
   perSystem = { pkgs, system, config, ... }:
     let
@@ -12,14 +12,9 @@ self@{ inputs, ... }:
           pkgs.protobuf
           pkgs.haskellPackages.proto-lens-protoc
           pkgs.protoc-gen-doc
-        ]; # ++ builtins.attrValues commonTools;
+        ] ++ config.settings.shell.tools;
 
-        shellHookd = ''
-          export LC_CTYPE=C.UTF-8;
-          export LC_ALL=C.UTF-8;
-          export LANG=C.UTF-8;
-          ${config.pre-commit.installationScript}
-        '';
+        shellHook = config.settings.shell.hook;
       };
 
       packages = {

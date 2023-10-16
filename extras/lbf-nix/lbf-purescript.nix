@@ -7,8 +7,6 @@ lbf:
 # LambdaBuffers Purescript Codegen
 lbg-purescript:
 let
-  utils = import ./utils.nix pkgs;
-
   lbfPurescriptOpts =
     {
       # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.

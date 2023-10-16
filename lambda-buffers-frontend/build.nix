@@ -1,6 +1,6 @@
 self@{ inputs, ... }:
 {
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, config, ... }:
     let
       project = { lib, ... }: {
         src = ./.;
@@ -39,19 +39,14 @@ self@{ inputs, ... }:
             config.packages.lbg
             config.packages.lbg-haskell
             config.packages.lbg-purescript
-          ]; # ++ builtins.attrValues commonTools;
+          ] ++ config.settings.shell.tools;
 
           tools = {
             cabal = { };
             haskell-language-server = { };
           };
 
-          shellHook = lib.mkForce ''
-            export LC_CTYPE=C.UTF-8;
-            export LC_ALL=C.UTF-8;
-            export LANG=C.UTF-8;
-            ${config.pre-commit.installationScript}
-          '';
+          shellHook = lib.mkForce config.settings.shell.hook;
         };
       };
       hsNixFlake = (pkgs.haskell-nix.cabalProject' [

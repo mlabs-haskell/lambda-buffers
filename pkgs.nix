@@ -1,7 +1,7 @@
 # Repo-wide Nixpkgs with a ton of overlays
-{ inputs, lib, ... }:
+{ inputs, ... }:
 {
-  perSystem = { pkgs, system, inputs', config, ... }: {
+  perSystem = { pkgs, system, config, ... }: {
 
     _module.args.pkgs = import inputs.nixpkgs {
       inherit system;

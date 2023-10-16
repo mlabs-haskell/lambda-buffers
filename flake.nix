@@ -14,13 +14,13 @@
     purifix.url = "github:purifix/purifix";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, pre-commit-hooks, protobufs-nix, mlabs-tooling, hci-effects, iohk-nix, flake-parts, purifix, ... }:
+  outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         (import ./pkgs.nix)
         (import ./settings.nix)
-        (import ./hercules-ci.nix)
         (import ./pre-commit.nix)
+        (import ./hercules-ci.nix)
         (import ./docs/build.nix)
         (import ./extras/build.nix)
         (import ./extras/lbf-nix/build.nix)
@@ -45,23 +45,5 @@
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
-      perSystem = { system, config, pkgs, ... }:
-        let
-          inherit self;
-
-          # pre-commit-hooks.nix
-
-          fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
-
-          apply-refact = pkgs.haskellPackages.apply-refact;
-
-          commonTools = {
-            inherit (pre-commit-hooks.outputs.packages.${system}) nixpkgs-fmt cabal-fmt shellcheck hlint typos markdownlint-cli dhall purty;
-            inherit (pkgs) protolint txtpbfmt;
-            inherit fourmolu;
-            inherit apply-refact;
-          };
-        in
-        { };
     };
 }

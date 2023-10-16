@@ -1,5 +1,5 @@
-{ inputs, lib, ... }: {
-  perSystem = { pkgs, system, inputs', config, ... }:
+_: {
+  perSystem = { config, ... }:
     {
       packages.lbf-prelude-golden-api-haskell = config.overlayAttrs.lbf-nix.lbfPreludeHaskell {
         name = "lbf-prelude-golden-api";

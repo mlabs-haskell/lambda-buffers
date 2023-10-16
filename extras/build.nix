@@ -3,7 +3,7 @@
   imports = [
     inputs.flake-parts.flakeModules.easyOverlay # Adds perSystem.overlayAttrs
   ];
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, ... }:
     {
 
       overlayAttrs = {

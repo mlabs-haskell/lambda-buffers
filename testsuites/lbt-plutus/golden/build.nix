@@ -1,6 +1,6 @@
-{ inputs, lib, ... }:
+_:
 {
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, config, ... }:
     {
       packages = {
         lbt-plutus-golden-haskell = config.overlayAttrs.extras.haskellData {

@@ -1,6 +1,6 @@
-{ inputs, lib, ... }:
+_:
 {
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, config, ... }:
 
     let
       pursFlake = config.overlayAttrs.extras.purescriptFlake {
@@ -27,18 +27,13 @@
         shell = {
           withRuntime = false;
           packageLockOnly = true;
-          packages = #builtins.attrValues commonTools ++ [
+          packages =
             [
               pkgs.nodejs_16
               pkgs.bashInteractive
               pkgs.fd
-            ];
-          shellHook = ''
-            export LC_CTYPE=C.UTF-8;
-            export LC_ALL=C.UTF-8;
-            export LANG=C.UTF-8;
-            ${config.pre-commit.installationScript}
-          '';
+            ] + config.settings.shell.tools;
+          shellHook = config.settings.shell.hook;
         };
 
       };

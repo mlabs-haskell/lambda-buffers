@@ -7,8 +7,6 @@ lbf:
 # LambdaBuffers Haskell Codegen
 lbg-haskell:
 let
-  utils = import ./utils.nix pkgs;
-
   lbfHaskellOpts =
     {
       # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.
