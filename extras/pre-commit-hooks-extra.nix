@@ -1,27 +1,31 @@
 { inputs, ... }: {
   imports = [
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
+    inputs.nci.flakeModule
   ];
-  perSystem = { pkgs, lib, config, ... }:
+  perSystem = { pkgs, lib, config, system, ... }:
     let
       inherit (config.pre-commit.settings.rawConfig.rust) cargoCratePaths;
-      tools = pkgs;
+      rust-bin = config.nci.toolchains.shell;
       defClippySettings = { denyWarnings = false; offline = true; };
       defSettings = { clippy = defClippySettings; };
       settings = lib.recursiveUpdate defSettings config.pre-commit.settings;
-
     in
     {
+      nci.toolchainConfig = {
+        channel = "stable";
+        components = [ "rust-analyzer" "rust-src" "clippy" "rustfmt" "cargo" ];
+      };
       pre-commit.settings.hooks = {
         rustfmt-monorepo =
           let
             wrapper = pkgs.symlinkJoin {
               name = "rustfmt-wrapped";
-              paths = [ tools.rustfmt ];
+              paths = [ rust-bin ];
               nativeBuildInputs = [ pkgs.makeWrapper ];
               postBuild = ''
                 wrapProgram $out/bin/cargo-fmt \
-                  --prefix PATH : ${lib.makeBinPath [ tools.cargo tools.rustfmt ]}
+                  --prefix PATH : ${lib.makeBinPath [ rust-bin ]}
               '';
             };
           in
@@ -42,11 +46,11 @@
           let
             wrapper = pkgs.symlinkJoin {
               name = "clippy-wrapped";
-              paths = [ tools.clippy ];
+              paths = [ rust-bin ];
               nativeBuildInputs = [ pkgs.makeWrapper ];
               postBuild = ''
                 wrapProgram $out/bin/cargo-clippy \
-                  --prefix PATH : ${lib.makeBinPath [ tools.cargo ]}
+                  --prefix PATH : ${lib.makeBinPath [ rust-bin ]}
               '';
             };
           in

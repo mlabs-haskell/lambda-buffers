@@ -1,5 +1,4 @@
-{ inputs, ... }: {
-  imports = [ inputs.nci.flakeModule ];
+{ ... }: {
   perSystem = { pkgs, system, inputs', config, ... }:
     let crateName = "lbr-prelude";
     in {
