@@ -8,6 +8,7 @@
 
       overlayAttrs = {
         lbf-nix = {
+          lbfBuild = import ./lbf-build.nix pkgs config.packages.lbf;
           lbfHaskell = import ./lbf-haskell.nix pkgs config.packages.lbf config.packages.lbg-haskell;
           lbfPreludeHaskell = import ./lbf-prelude-hs.nix pkgs config.packages.lbf config.packages.lbg-haskell;
           lbfPlutusHaskell = import ./lbf-plutus-hs-plutustx.nix pkgs config.packages.lbf config.packages.lbg-haskell;

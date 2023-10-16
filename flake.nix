@@ -25,6 +25,10 @@
         (import ./extras/build.nix)
         (import ./extras/lbf-nix/build.nix)
         (import ./libs/build.nix)
+        (import ./api/build.nix)
+        (import ./lambda-buffers-compiler/build.nix)
+        (import ./lambda-buffers-codegen/build.nix)
+        (import ./lambda-buffers-frontend/build.nix)
         (import ./runtimes/haskell/lbr-prelude/build.nix)
         (import ./runtimes/haskell/lbr-plutus/build.nix)
         (import ./runtimes/purescript/lbr-prelude/build.nix)
@@ -45,8 +49,6 @@
         let
           inherit self;
 
-          haskell-nix = pkgs.haskell-nix;
-
           # pre-commit-hooks.nix
 
           fourmolu = pkgs.haskell.packages.ghc924.fourmolu;
@@ -59,142 +61,7 @@
             inherit fourmolu;
             inherit apply-refact;
           };
-
-          shellHook = config.pre-commit.installationScript;
-
-          # Protos build
-
-          pbnix-lib = protobufs-nix.lib.${system};
-
-          protosBuild = import ./api/build.nix {
-            inherit pkgs pbnix-lib commonTools shellHook;
-          };
-
-          index-state = "2022-12-01T00:00:00Z";
-          compiler-nix-name = "ghc925";
-
-          # Common build abstraction for the components.
-
-          buildAbstraction = { import-location, additional ? { } }:
-            import import-location ({
-              inherit pkgs compiler-nix-name index-state haskell-nix mlabs-tooling commonTools shellHook;
-            } // additional);
-
-          # Common Flake abstraction for the components.
-
-          flakeAbstraction = component-name: component-name.hsNixProj.flake { };
-
-          # Compiler Build
-
-          compilerBuild = buildAbstraction {
-            import-location = ./lambda-buffers-compiler/build.nix;
-            additional = { inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb; };
-          };
-          compilerFlake = flakeAbstraction compilerBuild;
-
-          # Codegen Build
-
-          codegenBuild = buildAbstraction {
-            import-location = ./lambda-buffers-codegen/build.nix;
-            additional = {
-              inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
-              lambda-buffers-compiler = ./lambda-buffers-compiler;
-            };
-          };
-          codegenFlake = flakeAbstraction codegenBuild;
-
-          # Frontend Build
-
-          frontendBuild = buildAbstraction {
-            import-location = ./lambda-buffers-frontend/build.nix;
-            additional = {
-              inherit (protosBuild.packages) lambda-buffers-lang-hs-pb lambda-buffers-compiler-hs-pb lambda-buffers-codegen-hs-pb;
-              lambda-buffers-compiler = ./lambda-buffers-compiler;
-              inherit (clis) lbc lbg lbg-haskell lbg-purescript;
-            };
-          };
-          frontendFlake = flakeAbstraction frontendBuild;
-
-          # LambdaBuffers CLIs
-
-          clis = rec {
-            lbf-pure = frontendFlake.packages."lambda-buffers-frontend:exe:lbf";
-            lbc = compilerFlake.packages."lambda-buffers-compiler:exe:lbc";
-            lbg = codegenFlake.packages."lambda-buffers-codegen:exe:lbg";
-            lbg-haskell = pkgs.writeShellScriptBin "lbg-haskell" ''
-              ${lbg}/bin/lbg gen-haskell $@
-            '';
-            lbg-purescript = pkgs.writeShellScriptBin "lbg-purescript" ''
-              ${lbg}/bin/lbg gen-purescript $@
-            '';
-            lbf = pkgs.writeShellScriptBin "lbf" ''
-              export LB_CODEGEN=${lbg-haskell}/bin/lbg-haskell;
-              export LB_COMPILER=${lbc}/bin/lbc;
-              ${lbf-pure}/bin/lbf $@
-            '';
-            lbf-to-haskell = pkgs.writeShellScriptBin "lbf-to-haskell" ''
-              export LB_COMPILER=${lbc}/bin/lbc;
-
-              ${lbf-pure}/bin/lbf build --gen ${lbg-haskell}/bin/lbg-haskell $@
-            '';
-            lbf-to-haskell-prelude = pkgs.writeShellScriptBin "lbf-to-haskell-prelude" ''
-              export LB_COMPILER=${lbc}/bin/lbc;
-
-              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
-                  --gen-class Prelude.Eq --gen-class Prelude.Json \
-                  --gen ${lbg-haskell}/bin/lbg-haskell $@
-            '';
-            lbf-to-purescript = pkgs.writeShellScriptBin "lbf-to-purescript" ''
-              export LB_COMPILER=${lbc}/bin/lbc;
-
-              ${lbf-pure}/bin/lbf build --gen ${lbg-purescript}/bin/lbg-purescript $@
-            '';
-            lbf-to-purescript-prelude = pkgs.writeShellScriptBin "lbf-to-purescript-prelude" ''
-              export LB_COMPILER=${lbc}/bin/lbc;
-
-              ${lbf-pure}/bin/lbf build --import-path ${./libs/lbf-prelude} \
-                  --gen-class Prelude.Eq --gen-class Prelude.Json \
-                  --gen ${lbg-purescript}/bin/lbg-purescript $@
-            '';
-
-          };
-
-          # LambdaBuffers environment
-
-          lbEnv = pkgs.mkShell {
-            name = "lambdabuffers-env";
-            packages = builtins.attrValues clis;
-          };
-
-          # Utilities
-          renameAttrs = rnFn: pkgs.lib.attrsets.mapAttrs' (n: value: { name = rnFn n; inherit value; });
         in
-        rec
-        {
-          # Standard flake attributes
-          packages = protosBuild.packages
-            // compilerFlake.packages
-            // frontendFlake.packages
-            // codegenFlake.packages
-            // clis;
-
-          devShells = rec {
-            dev-protos = protosBuild.devShell;
-            dev-compiler = compilerFlake.devShell;
-            dev-frontend = frontendFlake.devShell;
-            dev-codegen = codegenFlake.devShell;
-            lb = lbEnv;
-          };
-
-          # nix flake check
-          checks = devShells //
-            packages //
-            renameAttrs (n: "check-${n}") (
-              compilerFlake.checks //
-                frontendFlake.checks //
-                codegenFlake.checks
-            );
-
-        };
+        { };
     };
 }

@@ -74,4 +74,4 @@ let
       '';
     };
 in
-{ inherit buildOpts build; }
+{ inherit buildOpts build buildCall; }

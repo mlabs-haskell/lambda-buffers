@@ -5,6 +5,13 @@
   perSystem = { pkgs, system, inputs', config, ... }: {
 
     packages = {
+      lbf-prelude = pkgs.stdenv.mkDerivation {
+        name = "lbf-prelude";
+        src = ./lbf-prelude;
+        phases = "installPhase";
+        installPhase = "ln -s $src $out";
+      };
+
       lbf-prelude-haskell = config.overlayAttrs.lbf-nix.lbfHaskell {
         name = "lbf-prelude";
         src = ./lbf-prelude;
@@ -19,6 +26,13 @@
         files = [ "Prelude.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" ];
         configs = [ ../lambda-buffers-codegen/data/purescript-prelude-base.json ];
+      };
+
+      lbf-plutus = pkgs.stdenv.mkDerivation {
+        name = "lbf-plutus";
+        src = ./lbf-plutus;
+        phases = "installPhase";
+        installPhase = "ln -s $src $out";
       };
 
       lbf-plutus-haskell = config.overlayAttrs.lbf-nix.lbfHaskell {
