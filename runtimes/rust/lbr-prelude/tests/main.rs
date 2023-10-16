@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     mod json_roundtrip_tests {
+        use lbr_prelude::error::Error;
         use lbr_prelude::generators::correct::{
             arb_bool, arb_bytes, arb_char, arb_complicated, arb_integer, arb_text,
         };
@@ -9,7 +10,6 @@ mod tests {
         use proptest::option;
         use proptest::prelude::*;
         use proptest::result::maybe_err;
-        use serde_json::Error;
 
         fn from_to_json<T>(val: &T) -> Result<T, Error>
         where
