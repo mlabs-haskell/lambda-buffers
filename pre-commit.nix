@@ -43,7 +43,6 @@
 
           settings = {
             ormolu.cabalDefaultExtensions = true;
-            clippy.offline = false;
           };
         };
       };
