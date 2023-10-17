@@ -9,8 +9,6 @@
 
       pre-commit = {
         settings = {
-          rawConfig.rust.cargoCratePaths = [ "runtimes/rust/lbr-prelude" ];
-
           excludes = [
             "lambda-buffers-codegen/data/goldens/.*"
             "experimental/archive/.*"
