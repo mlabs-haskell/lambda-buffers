@@ -10,18 +10,27 @@
       };
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
+      rust-bin = pkgs.rust-bin.stable.latest;
+
     in
     {
       devShells."dev-${crateName}-rust" = craneLib.devShell {
         checks = self'.checks;
-        buildInputs = [ pkgs.rust-analyzer ];
+        buildInputs = [ rust-bin.rust-analyzer ];
       };
 
-      packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; doTest = false; });
+      packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // {
+        inherit cargoArtifacts;
+        doTest = false;
+      });
 
-      checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
+      checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
+        inherit cargoArtifacts;
+      });
 
-      checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // { inherit cargoArtifacts; });
+      checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // {
+        inherit cargoArtifacts;
+      });
     };
 
 }

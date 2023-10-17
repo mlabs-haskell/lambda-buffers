@@ -18,7 +18,7 @@
               nativeBuildInputs = [ pkgs.makeWrapper ];
               postBuild = ''
                 wrapProgram $out/bin/cargo-fmt \
-                  --prefix PATH : ${lib.makeBinPath [ rust-bin.rustfmt ]}
+                  --prefix PATH : ${lib.makeBinPath [ rust-bin.cargo rust-bin.rustfmt ]}
               '';
             };
           in
