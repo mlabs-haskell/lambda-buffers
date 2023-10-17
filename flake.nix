@@ -21,6 +21,7 @@
         ./pkgs.nix
         ./settings.nix
         ./pre-commit.nix
+        ./hercules-ci.nix
         ./docs/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
