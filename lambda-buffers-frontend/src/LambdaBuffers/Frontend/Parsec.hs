@@ -53,9 +53,10 @@ type Parser s m a = ParsecT s () m a
 --  - nonterm -> alt1 | ... | altn
 --
 --
--- Tokens form the vocabulary of Lambda Buffer Files. There are classes of
--- tokens (keyword, modulename, longmodulename, tyname, longtyname, varname,
--- punctuation, fieldname, classname, longclassname) as follows.
+-- Tokens form the vocabulary of Lambda Buffer Files. The classes of *tokens*
+-- (keyword, modulename, longmodulename, tyname, longtyname, varname,
+-- punctuation, fieldname, classname, longclassname) are as follows.
+-- Note that some of the tokens overlap but may be distinguished via parsing.
 --
 --  keyword         -> 'module' | 'sum' | 'prod' | 'record' | 'opaque' | 'class' | 'instance' | 'import' | 'qualified' | 'as'
 --  modulename      -> upperCamelCase
@@ -80,7 +81,13 @@ type Parser s m a = ParsecT s () m a
 -- line comments. At each point, the longest possible token satisfying the
 -- token definitions is read.
 --
+-- A *line comment* is any sequence of characters which begins with '--'
+-- followed by zero or more printable Unicode character to the first end of
+-- line ('\n' or '\r\n').
+--
 -- Finally, the grammar for Lambda Buffer Files is as follows.
+--
+-- start -> module
 --
 -- module -> 'module' modulename imports statements
 --
@@ -89,7 +96,7 @@ type Parser s m a = ParsecT s () m a
 --      [ '(' [ { tyname ',' } tyname [','] ] ')' ]
 -- imports -> { import }
 --
--- statements -> [ { statement newlines1 } statement [ newlines1 ] ]
+-- statements -> { statement }
 -- statement -> tydef
 --            | classdef
 --            | instanceclause
@@ -114,7 +121,7 @@ type Parser s m a = ParsecT s () m a
 -- opaquetydef -> 'opaque' tyname { varname }
 --
 -- classdef    -> 'class' [ classexps '<=' ] classname { varname }
---                          // Warning: this part makes it not LL(1)!
+--                          // Warning: this is not LL(1)!
 --                          // In the future, we should shift to some form of
 --                          // an LALR(1) parser.
 -- classexp    -> classref { varname }
@@ -174,8 +181,8 @@ type Parser s m a = ParsecT s () m a
 -- * Primitives
 
 {- | @'token' pa@ runs the parser @pa@ with 'try' followed by 'junk' to remove
- whitespace. Moreover, this gets the SourceInfo of the parsed token w/o the
- whitespace
+ whitespace. Moreover, this gets the 'SourceInfo' of the parsed token without
+ the whitespace
 
  See [Note: Parser Implementation].
 -}
@@ -215,6 +222,12 @@ runParser :: (Stream s IO Char) => Parser s IO a -> SourceName -> s -> IO (Eithe
 runParser p = runParserT (junk *> p <* eof) ()
 
 -- * Lexical elements
+
+--
+-- - Functions which have @parse@ as a prefix simply parse the token
+--
+--  - Functions which have @token@ as a prefix wrap the corresponding @parse@
+--  function with the 'token' function.
 
 parseModuleNamePart :: Stream s m Char => Parser s m (ModuleNamePart SourceInfo)
 parseModuleNamePart = withSourceInfo . label' "module part name" $ ModuleNamePart <$> pModuleNamePart
@@ -391,6 +404,11 @@ parseField :: Stream s m Char => Parser s m (Field SourceInfo)
 parseField = withSourceInfo . label' "record field" $ do
   fn <- tokenFieldName
   _ <- token $ char ':'
+  -- TODO: strictly speaking, there's a bug with this when parsing
+  -- > record A a = { fieldName :-- a }
+  -- since this will parse the @:--@ as @:@ and @--@ will start a comment.
+  -- Technically, the specification says that this should parse as the token
+  -- @:-@, and then the remaining @-@ should parse error.
   Field fn <$> parseTyTopLevel
 
 parseTyDef :: Stream s m Char => Parser s m (TyDef SourceInfo)
@@ -527,9 +545,11 @@ parseImport = label' "import statement" $ do
       mayNames = fmap snd mayBracketSrcInfoAndNames
 
   return $
-    Import isQual modName mayNames mayModAlias $ -- Get the rightmost position of the rightmost parsed token
+    Import isQual modName mayNames mayModAlias $
       srcInfo
         { to =
+            -- Get the rightmost position of the rightmost parsed token
+            -- Note: the 'fromJust' clearly never fails.
             fromJust $
               fmap to mayBracketSrcInfo
                 <|> ( case mayModAlias of
