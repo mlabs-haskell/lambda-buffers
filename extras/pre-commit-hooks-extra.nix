@@ -3,7 +3,7 @@
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
     inputs.nci.flakeModule
   ];
-  perSystem = { pkgs, lib, config, system, ... }:
+  perSystem = { pkgs, lib, config, ... }:
     let
       inherit (config.pre-commit.settings) settings rawConfig;
       inherit (rawConfig.rust) cargoCratePaths;
