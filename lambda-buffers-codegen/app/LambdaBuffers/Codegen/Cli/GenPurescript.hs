@@ -12,7 +12,7 @@ import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _config :: Maybe FilePath
+  { _config :: [FilePath]
   , _common :: Gen.GenOpts
   }
 
@@ -20,8 +20,13 @@ makeLenses 'MkGenOpts
 
 gen :: GenOpts -> IO ()
 gen opts = do
-  cfgFp <- maybe (Paths.getDataFileName "data/purescript.json") pure (opts ^. config)
-  cfg <- readPurescriptConfig cfgFp
+  cfg <- case opts ^. config of
+    [] -> do
+      fp <- Paths.getDataFileName "data/purescript-prelude-base.json"
+      readPurescriptConfig fp
+    fps -> do
+      cfgs <- traverse readPurescriptConfig fps
+      return (mconcat cfgs)
 
   Gen.gen
     (opts ^. common)

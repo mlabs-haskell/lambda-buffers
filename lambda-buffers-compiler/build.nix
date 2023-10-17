@@ -1,66 +1,75 @@
-{ pkgs
-, haskell-nix
-, mlabs-tooling
-, compiler-nix-name
-, index-state
-, lambda-buffers-lang-hs-pb
-, lambda-buffers-compiler-hs-pb
-, lambda-buffers-codegen-hs-pb
-, commonTools
-, shellHook
-}:
-let
-  inherit pkgs;
-  project = {
-    src = ./.;
+{ inputs, ... }:
+{
+  perSystem = { pkgs, config, ... }:
+    let
+      project = { lib, ... }: {
+        src = ./.;
 
-    name = "lambda-buffers-compiler";
+        name = "lambda-buffers-compiler";
 
-    inherit compiler-nix-name index-state;
+        inherit (config.settings.haskell) index-state compiler-nix-name;
 
-    extraHackage = [
-      "${lambda-buffers-lang-hs-pb}"
-      "${lambda-buffers-compiler-hs-pb}"
-      "${lambda-buffers-codegen-hs-pb}"
-    ];
+        extraHackage = [
+          "${config.packages.lambda-buffers-lang-hs-pb}"
+          "${config.packages.lambda-buffers-compiler-hs-pb}"
+          "${config.packages.lambda-buffers-codegen-hs-pb}"
+        ];
 
-    modules = [
-      (_: {
-        packages = {
-          allComponent.doHoogle = true;
-          allComponent.doHaddock = true;
+        modules = [
+          (_: {
+            packages = {
+              allComponent.doHoogle = true;
+              allComponent.doHaddock = true;
 
-          # Enable strict compilation
-          lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+              # Enable strict compilation
+              lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
+            };
+          })
+        ];
+
+        shell = {
+
+          withHoogle = true;
+
+          exactDeps = true;
+
+          nativeBuildInputs = config.settings.shell.tools;
+
+          tools = {
+            cabal = { };
+            haskell-language-server = { };
+          };
+
+          shellHook = lib.mkForce config.settings.shell.hook;
         };
-      })
-    ];
+      };
+      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
+        inputs.mlabs-tooling.lib.mkHackageMod
+        project
+      ]).flake { };
 
-    shell = {
+    in
 
-      withHoogle = true;
+    {
+      devShells.dev-compiler = hsNixFlake.devShell;
 
-      exactDeps = true;
+      packages = {
 
-      nativeBuildInputs = [ pkgs.swiPrologWithGui ] ++ builtins.attrValues commonTools;
+        lambda-buffers-compiler-src = pkgs.stdenv.mkDerivation {
+          name = "lambda-buffers-compiler-src";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
+        };
 
-      tools = {
-        cabal = { };
-        haskell-language-server = { };
+        lambda-buffers-compiler-lib = hsNixFlake.packages."lambda-buffers-compiler:lib:lambda-buffers-compiler";
+        lambda-buffers-compiler-tests = hsNixFlake.packages."lambda-buffers-compiler:test:tests";
+        lambda-buffers-compiler-cli = hsNixFlake.packages."lambda-buffers-compiler:exe:lbc";
+        lbc = config.packages.lambda-buffers-compiler-cli;
+
       };
 
-      shellHook = ''
-        export LC_CTYPE=C.UTF-8
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        ${shellHook}
-      '';
+      inherit (hsNixFlake) checks;
+
     };
-  };
-in
-{
-  hsNixProj = haskell-nix.cabalProject' [
-    mlabs-tooling.lib.mkHackageMod
-    project
-  ];
 }

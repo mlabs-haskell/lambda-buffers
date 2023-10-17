@@ -1,6 +1,6 @@
 module LambdaBuffers.Codegen.Config (Config (..), cfgOpaques, cfgClasses, moduleNameFromText, qClassNameFromText, qClassNameToText) where
 
-import Control.Lens (makeLenses, view)
+import Control.Lens (makeLenses, view, (^.))
 import Data.Aeson (FromJSON, ToJSON, parseJSON)
 import Data.Aeson.Types (ToJSON (toJSON))
 import Data.Default (Default (def))
@@ -20,6 +20,20 @@ data Config qtn qcn = Config
   deriving stock (Eq, Ord, Show)
 
 makeLenses 'Config
+
+-- | Merging configurations for more flexibility at the CLI level.
+instance Semigroup (Config qtn qcn) where
+  l <> r =
+    Config
+      (Map.union (l ^. cfgOpaques) (r ^. cfgOpaques))
+      (Map.unionWith (<>) (l ^. cfgClasses) (r ^. cfgClasses))
+
+-- | Merging configurations for more flexibility at the CLI level.
+instance Monoid (Config qtn qcn) where
+  mempty =
+    Config
+      mempty
+      mempty
 
 -- | `JsonConfig` is a data type representing the external config format parametrized by qualified type and class names and instantiated per each backend separately.
 data JsonConfig qtn qcn = JsonConfig
@@ -86,6 +100,7 @@ fromJsonConfig :: MonadFail m => JsonConfig qtn qcn -> m (Config qtn qcn)
 fromJsonConfig (JsonConfig opqs cls) = Config <$> fromOpaquesConfig opqs <*> fromClassesConfig cls
 
 instance (ToJSON qtn, ToJSON qcn) => ToJSON (JsonConfig qtn qcn)
+
 instance (FromJSON qtn, FromJSON qcn) => FromJSON (JsonConfig qtn qcn)
 
 instance (ToJSON qtn, ToJSON qcn) => ToJSON (Config qtn qcn) where

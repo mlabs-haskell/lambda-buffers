@@ -5,7 +5,8 @@ import Control.Monad.State.Strict (MonadIO, StateT)
 import Control.Monad.Trans.Except (throwE)
 import Control.Monad.Trans.Reader (ReaderT)
 import Data.Map (Map)
-import LambdaBuffers.Frontend.Errors (FrontendError)
+import Data.Set (Set)
+import LambdaBuffers.Frontend.Errors.Frontend (FrontendError)
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Syntax (Module, ModuleName, SourceInfo)
 import LambdaBuffers.Frontend.Utils (ClassScope, TyScope)
@@ -13,7 +14,7 @@ import LambdaBuffers.Frontend.Utils (ClassScope, TyScope)
 data FrontRead = FrontRead
   { current :: ModuleName SourceInfo
   , visited :: [ModuleName ()]
-  , importPaths :: [FilePath]
+  , importPaths :: Set FilePath
   }
   deriving stock (Eq, Show)
 

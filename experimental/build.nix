@@ -1,22 +1,28 @@
-{ pkgs, commonTools, shellHook }:
-pkgs.mkShell {
-  name = "experimental-env";
-  buildInputs = [
-    pkgs.dhall
-    pkgs.dhall-lsp-server
-    pkgs.dhall-json
+_: {
+  perSystem = { pkgs, config, ... }:
+    {
 
-    (pkgs.haskellPackages.ghcWithPackages (pkgs: [
-      pkgs.text
-      pkgs.unification-fd
-      pkgs.HUnit
-    ]))
-    pkgs.haskell-language-server
+      devShells.dev-experimental = pkgs.mkShell {
+        name = "experimental-env";
+        buildInputs = [
+          pkgs.dhall
+          pkgs.dhall-lsp-server
+          pkgs.dhall-json
 
-    pkgs.protobuf
-    pkgs.haskellPackages.proto-lens-protoc
-    pkgs.swiPrologWithGui
-  ] ++ builtins.attrValues commonTools;
+          (pkgs.haskellPackages.ghcWithPackages (pkgs: [
+            pkgs.text
+            pkgs.unification-fd
+            pkgs.HUnit
+          ]))
+          pkgs.haskell-language-server
 
-  inherit shellHook;
+          pkgs.protobuf
+          pkgs.haskellPackages.proto-lens-protoc
+          pkgs.swiPrologWithGui
+        ] ++ config.settings.shell.tools;
+
+        shellHook = config.settings.shell.hook;
+      };
+
+    };
 }

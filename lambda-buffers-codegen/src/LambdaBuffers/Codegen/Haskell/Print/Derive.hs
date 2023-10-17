@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
+module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
 
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -16,8 +16,11 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
 
-lvEqBuiltins :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
-lvEqBuiltins =
+eqClassMethodName :: H.ValueName
+eqClassMethodName = H.MkValueName "=="
+
+lvEqBuiltinsBase :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
+lvEqBuiltinsBase =
   Map.fromList
     [ ("eq", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "=="))
     , ("and", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "&&"))
@@ -25,13 +28,26 @@ lvEqBuiltins =
     , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
     ]
 
-eqClassMethodName :: H.ValueName
-eqClassMethodName = H.MkValueName "=="
-
-printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
-printDeriveEq mn iTyDefs mkInstanceDoc ty = do
+printDeriveEqBase :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveEqBase mn iTyDefs mkInstanceDoc ty = do
   valE <- deriveEqImpl mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvEqBuiltins (printValueE valE)
+  (implDoc, imps) <- LV.runPrint lvEqBuiltinsBase (printValueE valE)
+  let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+  return (instanceDoc, imps)
+
+lvEqBuiltinsPlutusTx :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
+lvEqBuiltinsPlutusTx =
+  Map.fromList
+    [ ("eq", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkValueName "=="))
+    , ("and", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "&&"))
+    , ("true", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "True"))
+    , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
+    ]
+
+printDeriveEqPlutusTx :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveEqPlutusTx mn iTyDefs mkInstanceDoc ty = do
+  valE <- deriveEqImpl mn iTyDefs ty
+  (implDoc, imps) <- LV.runPrint lvEqBuiltinsPlutusTx (printValueE valE)
   let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
   return (instanceDoc, imps)
 

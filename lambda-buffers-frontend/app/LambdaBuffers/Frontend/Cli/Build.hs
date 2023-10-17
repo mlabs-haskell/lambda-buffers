@@ -14,7 +14,7 @@ import Data.Text.Lazy.IO qualified as LText
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Frontend (runFrontend)
 import LambdaBuffers.Frontend.Cli.Env qualified as Env
-import LambdaBuffers.Frontend.Cli.Utils (logCodegenError, logCompilerError, logError, logFrontendError, logInfo, toCodegenCliModuleName)
+import LambdaBuffers.Frontend.Cli.Utils (FileOrDir (Dir, File), checkExists, logCodegenError, logCompilerError, logError, logFrontendError, logInfo, toCodegenCliModuleName)
 import LambdaBuffers.Frontend.Errors.Codegen qualified as CodegenErrors
 import LambdaBuffers.Frontend.Errors.Compiler qualified as CompilerErrors
 import LambdaBuffers.Frontend.Monad qualified as Frontend
@@ -25,7 +25,7 @@ import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
 import Proto.Compiler_Fields qualified as Compiler
-import System.Directory (doesDirectoryExist, doesFileExist)
+import System.Directory (doesDirectoryExist)
 import System.Exit (ExitCode (ExitFailure), exitFailure)
 import System.FilePath ((<.>), (</>))
 import System.FilePath.Lens (extension)
@@ -50,8 +50,13 @@ makeLenses ''BuildOpts
 -- | Build a filepath containing a LambdaBuffers module
 build :: BuildOpts -> IO ()
 build opts = do
-  checkExists `traverse_` (opts ^. moduleFilepaths)
-  errOrMod <- runFrontend (opts ^. importPaths) (toList $ opts ^. moduleFilepaths)
+  checkExists Dir "import-path" `traverse_` (opts ^. importPaths)
+  checkExists File "compiler" `traverse_` (opts ^. compilerCliFilepath)
+  checkExists File "gen" `traverse_` (opts ^. codegenCliFilepath)
+  checkExists Dir "gen-dir" (opts ^. codegenGenDir)
+  checkExists Dir "work-dir" `traverse_` (opts ^. workingDir)
+  checkExists File "module file" `traverse_` (opts ^. moduleFilepaths)
+  errOrMod <- runFrontend ("." : opts ^. importPaths) (toList $ opts ^. moduleFilepaths)
   case errOrMod of
     Left err -> do
       logFrontendError err
@@ -74,15 +79,6 @@ build opts = do
             _cdgRes <- callCodegen opts workDir (Frontend.fres'requested res) (defMessage & Codegen.modules .~ mods)
             logInfo "Codegen OK"
         )
-
-checkExists :: FilePath -> IO ()
-checkExists fp = do
-  exists <- doesFileExist fp
-  if exists
-    then return ()
-    else do
-      logError $ "Couldn't find the provided file containing an .lbf schema " <> fp
-      exitFailure
 
 getWorkDir :: BuildOpts -> FilePath -> IO FilePath
 getWorkDir opts tempDir = do

@@ -2,7 +2,7 @@
   imports = [
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
   ];
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, system, config, ... }:
     {
       devShells.dev-pre-commit = config.pre-commit.devShell;
       devShells.default = config.pre-commit.devShell;
@@ -25,6 +25,7 @@
 
           hooks = {
             nixpkgs-fmt.enable = true;
+            deadnix.enable = true;
             cabal-fmt.enable = true;
             fourmolu.enable = true;
             shellcheck.enable = true;

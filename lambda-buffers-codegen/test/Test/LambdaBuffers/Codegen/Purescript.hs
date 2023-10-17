@@ -16,8 +16,10 @@ tests =
 
 configParses :: TestTree
 configParses = testCase "Purescript config parses" $ do
-  configFp <- Paths.getDataFileName "data/purescript.json"
-  void $ readPurescriptConfig configFp
+  preludeConfigFp <- Paths.getDataFileName "data/purescript-prelude-base.json"
+  void $ readPurescriptConfig preludeConfigFp
+  plutusConfigFp <- Paths.getDataFileName "data/purescript-plutus-ctl.json"
+  void $ readPurescriptConfig plutusConfigFp
 
 readPurescriptConfig :: FilePath -> IO Purs.Config
 readPurescriptConfig f = do

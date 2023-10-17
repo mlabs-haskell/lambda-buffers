@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Control.Applicative (Alternative (many), optional, (<**>))
+import Control.Applicative (Alternative (many), (<**>))
+import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
@@ -76,12 +77,12 @@ genOptsP =
 haskellGenOptsP :: Parser Haskell.GenOpts
 haskellGenOptsP =
   Haskell.MkGenOpts
-    <$> optional
+    <$> many
       ( strOption
           ( long "config"
               <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Configuration file for the Haskell Codegen module"
+              <> help "Configuration file for the Haskell Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
           )
       )
     <*> genOptsP
@@ -89,12 +90,12 @@ haskellGenOptsP =
 purescriptGenOptsP :: Parser Purescript.GenOpts
 purescriptGenOptsP =
   Purescript.MkGenOpts
-    <$> optional
+    <$> many
       ( strOption
           ( long "config"
               <> short 'c'
               <> metavar "FILEPATH"
-              <> help "Configuration file for the Purescript Codegen module"
+              <> help "Configuration file for the Purescript Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
           )
       )
     <*> genOptsP
@@ -128,6 +129,7 @@ parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Co
 
 main :: IO ()
 main = do
+  setLocaleEncoding utf8
   cmd <- customExecParser (prefs (showHelpOnEmpty <> showHelpOnError)) parserInfo
   case cmd of
     GenHaskell opts -> Haskell.gen opts
