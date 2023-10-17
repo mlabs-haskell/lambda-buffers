@@ -1,17 +1,27 @@
-{ ... }: {
-  perSystem = { config, ... }:
-    let crateName = "lbr-prelude";
-    in {
-      nci.projects.${crateName}.path = ./.;
-      nci.crates.${crateName} = { };
-      nci.toolchainConfig = {
-        channel = "stable";
-        components = [ "rust-analyzer" "rust-src" "clippy" "rustfmt" ];
+{ inputs, ... }: {
+  perSystem = { self', pkgs, system, ... }:
+    let
+      crateName = "lbr-prelude";
+      craneLib = inputs.crane.lib.${system};
+      src = craneLib.cleanCargoSource (craneLib.path ./.);
+      commonArgs = {
+        inherit src;
+        strictDeps = true;
+      };
+      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+    in
+    {
+      devShells."dev-${crateName}-rust" = craneLib.devShell {
+        checks = self'.checks;
+        buildInputs = [ pkgs.rust-analyzer ];
       };
 
-      devShells."dev-${crateName}-rust" = config.nci.outputs.${crateName}.devShell;
-      packages."${crateName}-rust" = config.nci.outputs.${crateName}.packages.release;
-      checks."${crateName}-rust-test" = config.nci.outputs.${crateName}.check;
+      packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; doTest = false; });
+
+      checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
+
+      checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // { inherit cargoArtifacts; });
     };
 
 }
