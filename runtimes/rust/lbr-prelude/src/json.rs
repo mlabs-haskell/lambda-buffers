@@ -190,7 +190,6 @@ where
         let values = self
             .iter()
             .map(|val| val.to_json())
-            .into_iter()
             .collect::<Result<Vec<Value>, Error>>()?;
 
         Ok(Value::Array(values))
@@ -201,7 +200,6 @@ where
             Value::Array(vec) => vec
                 .iter()
                 .map(|val| T::from_json(val.clone()))
-                .into_iter()
                 .collect::<Result<Vec<T>, Error>>(),
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::Array,
@@ -219,7 +217,6 @@ where
         let values = self
             .iter()
             .map(|val| val.to_json())
-            .into_iter()
             .collect::<Result<Vec<Value>, Error>>()?;
 
         Ok(Value::Array(values))
@@ -230,7 +227,6 @@ where
             let set = vec
                 .iter()
                 .map(|val| T::from_json(val.clone()))
-                .into_iter()
                 .collect::<Result<HashSet<T>, Error>>()?;
 
             if set.len() == vec.len() {
@@ -254,7 +250,6 @@ where
         let values = self
             .iter()
             .map(|(key, val)| Ok(Value::Array(vec![key.to_json()?, val.to_json()?])))
-            .into_iter()
             .collect::<Result<Vec<Value>, Error>>()?;
 
         Ok(Value::Array(values))
@@ -265,7 +260,6 @@ where
             let set = vec
                 .iter()
                 .map(|kv_tuple| <(K, V)>::from_json(kv_tuple.clone()))
-                .into_iter()
                 .collect::<Result<HashMap<K, V>, Error>>()?;
 
             if set.len() == vec.len() {
