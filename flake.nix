@@ -17,31 +17,31 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        (import ./pkgs.nix)
-        (import ./settings.nix)
-        (import ./pre-commit.nix)
-        (import ./hercules-ci.nix)
-        (import ./docs/build.nix)
-        (import ./extras/build.nix)
-        (import ./extras/lbf-nix/build.nix)
-        (import ./libs/build.nix)
-        (import ./api/build.nix)
-        (import ./lambda-buffers-compiler/build.nix)
-        (import ./lambda-buffers-codegen/build.nix)
-        (import ./lambda-buffers-frontend/build.nix)
-        (import ./runtimes/haskell/lbr-prelude/build.nix)
-        (import ./runtimes/haskell/lbr-plutus/build.nix)
-        (import ./runtimes/purescript/lbr-prelude/build.nix)
-        (import ./runtimes/purescript/lbr-plutus/build.nix)
-        (import ./testsuites/lbt-prelude/api/build.nix)
-        (import ./testsuites/lbt-prelude/golden/build.nix)
-        (import ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix)
-        (import ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix)
-        (import ./testsuites/lbt-plutus/api/build.nix)
-        (import ./testsuites/lbt-plutus/golden/build.nix)
-        (import ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix)
-        (import ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix)
-        (import ./experimental/build.nix)
+        ./pkgs.nix
+        ./settings.nix
+        ./pre-commit.nix
+        ./hercules-ci.nix
+        ./docs/build.nix
+        ./extras/build.nix
+        ./extras/lbf-nix/build.nix
+        ./libs/build.nix
+        ./api/build.nix
+        ./lambda-buffers-compiler/build.nix
+        ./lambda-buffers-codegen/build.nix
+        ./lambda-buffers-frontend/build.nix
+        ./runtimes/haskell/lbr-prelude/build.nix
+        ./runtimes/haskell/lbr-plutus/build.nix
+        ./runtimes/purescript/lbr-prelude/build.nix
+        ./runtimes/purescript/lbr-plutus/build.nix
+        ./testsuites/lbt-prelude/api/build.nix
+        ./testsuites/lbt-prelude/golden/build.nix
+        ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
+        ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix
+        ./testsuites/lbt-plutus/api/build.nix
+        ./testsuites/lbt-plutus/golden/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
+        ./experimental/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
