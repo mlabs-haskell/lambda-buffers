@@ -1,6 +1,6 @@
 { inputs, ... }: {
   imports = [ inputs.nci.flakeModule ];
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { pkgs, config, ... }:
     let crateName = "lbr-prelude";
     in {
       nci.projects.${crateName}.path = ./.;
