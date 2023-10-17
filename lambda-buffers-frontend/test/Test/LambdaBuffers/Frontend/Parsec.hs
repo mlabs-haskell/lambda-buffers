@@ -472,6 +472,17 @@ testClassDef =
             ]
             parseClassDef
         , parsesEq
+            [ "class (Eq a), Eq b, Eq c <= Ord a"
+            , "class (Eq  a, Eq b), Eq c <= Ord a"
+            , "class Eq  a, (Eq b,      Eq c) <= Ord a"
+            , "class ((Eq  a), Eq b), Eq c <= Ord a"
+            , "class Eq  a, (Eq b,      (Eq c)) <= Ord a"
+            , "class (Eq  a, (Eq b)), Eq c <= Ord a"
+            , "class Eq  a, ((Eq b),      Eq c) <= Ord a"
+            , "class (Eq  a, ((Eq b),      Eq c)) <= Ord a"
+            ]
+            parseClassDef
+        , parsesEq
             [ "class Trivial"
             , "class  Trivial"
             , "class   Trivial"
@@ -497,6 +508,14 @@ testClassDef =
         , fails "class (Eq a)" parseClassDef
         ]
     ]
+
+-- * Parsing testing functions
+
+-- Note: when testing parses, since all parsers assume the invariant that they
+-- _must_ start at a non whitespace character, we always run 'junk' before
+-- before running the parser. When the parser finishes, we of course run 'eof'
+-- to ensure it consumes the entire input.
+-- See [Note: Parser Implementation] in "LambdaBuffers.Frontend.Parsec" for details
 
 parsesEq :: forall a info. (Functor a, Show (a ()), Ord (a ())) => [String] -> Parsec String () (a info) -> TestTree
 parsesEq inputs parser =
