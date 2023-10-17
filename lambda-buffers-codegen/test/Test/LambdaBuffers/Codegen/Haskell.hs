@@ -16,8 +16,10 @@ tests =
 
 configParses :: TestTree
 configParses = testCase "Haskell config parses" $ do
-  configFp <- Paths.getDataFileName "data/haskell.json"
-  void $ readHaskellConfig configFp
+  preludeBaseConfigFp <- Paths.getDataFileName "data/haskell-prelude-base.json"
+  void $ readHaskellConfig preludeBaseConfigFp
+  plutusTxConfigFp <- Paths.getDataFileName "data/haskell-plutus-plutustx.json"
+  void $ readHaskellConfig plutusTxConfigFp
 
 readHaskellConfig :: FilePath -> IO H.Config
 readHaskellConfig f = do

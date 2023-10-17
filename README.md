@@ -49,7 +49,7 @@ Visit [LambdaBuffers Github Pages](https://mlabs-haskell.github.io/lambda-buffer
 
 ## Acknowledgements
 
-This project was graciously funded by the Cardano Treasury in [Catalyst Fund 9](https://cardano.ideascale.com/c/idea/421376).
+This project was graciously funded by the Cardano Treasury in [Catalyst Fund 9](https://cardano.ideascale.com/c/idea/421376) and [Catalyst Fund 10](https://cardano.ideascale.com/c/idea/105975).
 
 Authors:
 

@@ -1,55 +1,5 @@
 {
   "opaquesConfig": {
-    "Prelude.Map": [
-      "ordered-collections",
-      "Data.Map",
-      "Map"
-    ],
-    "Prelude.Set": [
-      "ordered-containers",
-      "Data.Set",
-      "Set"
-    ],
-    "Prelude.List": [
-      "prelude",
-      "Prim",
-      "Array"
-    ],
-    "Prelude.Either": [
-      "either",
-      "Data.Either",
-      "Either"
-    ],
-    "Prelude.Maybe": [
-      "maybe",
-      "Data.Maybe",
-      "Maybe"
-    ],
-    "Prelude.Bytes": [
-      "lbr-prelude",
-      "LambdaBuffers.Runtime.Prelude",
-      "Bytes"
-    ],
-    "Prelude.Text": [
-      "prelude",
-      "Prim",
-      "String"
-    ],
-    "Prelude.Char": [
-      "strings",
-      "Data.String.CodePoints",
-      "CodePoint"
-    ],
-    "Prelude.Integer": [
-      "bigints",
-      "Data.BigInt",
-      "BigInt"
-    ],
-    "Prelude.Bool": [
-      "prelude",
-      "Prim",
-      "Boolean"
-    ],
     "Plutus.V1.PlutusData": [
       "cardano-transaction-lib",
       "Ctl.Internal.Types.PlutusData",
@@ -171,21 +121,20 @@
       "Map"
     ],
     "Plutus.V2.TxOut": [
-        "cardano-transaction-lib",
-        "LambdaBuffers.Runtime.Plutus",
-        "TxInInfo"
+      "cardano-transaction-lib",
+      "LambdaBuffers.Runtime.Plutus",
+      "TxInInfo"
     ],
     "Plutus.V2.TxInInfo": [
-        "lbr-plutus",
-        "LambdaBuffers.Runtime.Plutus",
-        "TxInInfo"
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "TxInInfo"
     ],
     "Plutus.V2.OutputDatum": [
-        "cardano-transaction-lib",
-        "Ctl.Internal.Types.OutputDatum",
-        "OutputDatum"
+      "cardano-transaction-lib",
+      "Ctl.Internal.Types.OutputDatum",
+      "OutputDatum"
     ]
-
   },
   "classesConfig": {
     "Plutus.V1.PlutusData": [
@@ -198,20 +147,6 @@
         "cardano-transaction-lib",
         "Ctl.Internal.FromData",
         "FromData"
-      ]
-    ],
-    "Prelude.Eq": [
-      [
-        "prelude",
-        "Prelude",
-        "Eq"
-      ]
-    ],
-    "Prelude.Json": [
-      [
-        "lbr-prelude",
-        "LambdaBuffers.Runtime.Prelude",
-        "Json"
       ]
     ]
   }

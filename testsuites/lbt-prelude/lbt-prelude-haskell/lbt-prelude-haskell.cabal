@@ -86,16 +86,16 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , base            >=4.16
-    , bytestring      >=0.11
-    , containers      >=0.6
-    , filepath        >=1.4
-    , lbf-golden-api
+    , base                    >=4.16
+    , bytestring              >=0.11
+    , containers              >=0.6
+    , filepath                >=1.4
+    , lbf-prelude-golden-api
     , lbr-prelude
-    , tasty           >=1.4
+    , tasty                   >=1.4
     , tasty-golden
     , tasty-hunit
-    , text            >=1.2
+    , text                    >=1.2
 
   hs-source-dirs:  src
   exposed-modules: LambdaBuffers.Prelude.Json.Golden
@@ -117,14 +117,14 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base                        >=4.16
-    , hedgehog                    >=1.2
-    , lbf-golden-api              >=0.1
+    , base                     >=4.16
+    , hedgehog                 >=1.2
+    , lbf-prelude-golden-api   >=0.1
     , lbr-prelude
-    , lbt-prelude-golden-data-hs
+    , lbt-prelude-golden-data
     , lbt-prelude-haskell
-    , tasty                       >=1.4
-    , tasty-hedgehog              >=1.4
+    , tasty                    >=1.4
+    , tasty-hedgehog           >=1.4
 
   other-modules:
     Test.LambdaBuffers.Runtime.Prelude.Eq

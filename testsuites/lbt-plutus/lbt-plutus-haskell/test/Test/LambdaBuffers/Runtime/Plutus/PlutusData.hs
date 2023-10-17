@@ -1,7 +1,7 @@
 module Test.LambdaBuffers.Runtime.Plutus.PlutusData (tests) where
 
 import Hedgehog qualified as H
-import Paths_lbt_plutus_golden_data_hs qualified as Paths
+import Paths_lbt_plutus_golden_data qualified as Paths
 import PlutusTx (FromData, ToData, fromData, toData)
 import Test.LambdaBuffers.Plutus.Golden qualified as Golden
 import Test.LambdaBuffers.Plutus.Golden.PlutusData qualified as Golden
@@ -63,7 +63,7 @@ toFromTest title gen =
 
 fromToGoldenTest :: forall {a}. (ToData a, FromData a, Eq a, Show a) => TestName -> [a] -> IO TestTree
 fromToGoldenTest title goldens = do
-  goldenDir <- Paths.getDataFileName "data/golden"
+  goldenDir <- Paths.getDataFileName "data"
   Golden.fromToGoldenTest goldenDir title goldens
 
 -- | Foo

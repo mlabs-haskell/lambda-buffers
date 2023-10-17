@@ -1,4 +1,5 @@
-{ pkgs, srcs, cabalDataPatterns, cabalPackageName, cabalPackageVersion ? "0.1.0.0" }:
+# Makes a Cabal package with just a 'data' directory with proper 'data-filers' stanza
+pkgs: { srcs, cabalDataPatterns, cabalPackageName, cabalPackageVersion ? "0.1.0.0" }:
 let
   cabalTemplate = pkgs.writeTextFile {
     name = "haskell-data.nix-cabal-template";

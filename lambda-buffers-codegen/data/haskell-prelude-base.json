@@ -1,0 +1,110 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "containers",
+      "Data.Map",
+      "Map"
+    ],
+    "Prelude.Set": [
+      "containers",
+      "Data.Set",
+      "Set"
+    ],
+    "Prelude.List": [
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "List"
+    ],
+    "Prelude.Either": [
+      "base",
+      "Prelude",
+      "Either"
+    ],
+    "Prelude.Maybe": [
+      "base",
+      "Prelude",
+      "Maybe"
+    ],
+    "Prelude.Bytes": [
+      "bytestring",
+      "Data.ByteString",
+      "ByteString"
+    ],
+    "Prelude.Text": [
+      "text",
+      "Data.Text",
+      "Text"
+    ],
+    "Prelude.Char": [
+      "base",
+      "Prelude",
+      "Char"
+    ],
+    "Prelude.UInt64": [
+      "base",
+      "Data.Word",
+      "Word64"
+    ],
+    "Prelude.UInt32": [
+      "base",
+      "Data.Word",
+      "Word32"
+    ],
+    "Prelude.UInt16": [
+      "base",
+      "Data.Word",
+      "Word16"
+    ],
+    "Prelude.UInt8": [
+      "base",
+      "Data.Word",
+      "Word8"
+    ],
+    "Prelude.Int64": [
+      "base",
+      "Data.Int",
+      "Int64"
+    ],
+    "Prelude.Int32": [
+      "base",
+      "Data.Int",
+      "Int32"
+    ],
+    "Prelude.Int16": [
+      "base",
+      "Data.Int",
+      "Int16"
+    ],
+    "Prelude.Int8": [
+      "base",
+      "Data.Int",
+      "Int8"
+    ],
+    "Prelude.Integer": [
+      "base",
+      "Prelude",
+      "Integer"
+    ],
+    "Prelude.Bool": [
+      "base",
+      "Prelude",
+      "Bool"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "base",
+        "Prelude",
+        "Eq"
+      ]
+    ],
+    "Prelude.Json": [
+      [
+        "lbr-prelude",
+        "LambdaBuffers.Runtime.Prelude",
+        "Json"
+      ]
+    ]
+  }
+}
