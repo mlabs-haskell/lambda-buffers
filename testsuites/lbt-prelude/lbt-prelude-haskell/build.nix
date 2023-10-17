@@ -1,85 +1,64 @@
-{ pkgs
-, haskell-nix
-, mlabs-tooling
-, lbf-prelude
-, lbf-prelude-hs
-, lbr-prelude-hs
-, lbfHaskell
-, compiler-nix-name
-, index-state
-, commonTools
-, shellHook
-}:
-let
-  inherit pkgs;
+{ inputs, ... }:
+{
+  perSystem = { pkgs, config, ... }:
+    let
+      project = { lib, ... }: {
+        src = ./.;
 
-  goldenApiHs = lbfHaskell {
-    inherit pkgs;
-    name = "lbf-golden-api";
-    src = ./../api;
-    files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-    imports = [ ../../../libs/lbf-prelude ];
-    dependencies = [ "lbf-prelude" "lbr-prelude" ];
-  };
+        name = "lbt-prelude-haskell";
 
-  goldenData = import ../../../extras/haskell-data.nix {
-    inherit pkgs;
-    srcs = [ ../. ];
-    cabalDataPatterns = [ "**/*.lbf" "**/*.json" ];
-    cabalPackageName = "lbt-prelude-golden-data-hs";
-  };
+        inherit (config.settings.haskell) index-state compiler-nix-name;
 
-  project = { lib, ... }: {
-    src = ./.;
+        extraHackage = [
+          "${config.packages.lbr-prelude-haskell-src}"
+          "${config.packages.lbf-prelude-haskell}"
+          "${config.packages.lbf-prelude-golden-api-haskell}"
+          "${config.packages.lbt-prelude-golden-haskell}"
+        ];
 
-    name = "lbt-prelude-haskell";
+        modules = [
+          (_: {
+            packages = {
+              allComponent.doHoogle = true;
+              allComponent.doHaddock = true;
 
-    inherit compiler-nix-name index-state;
+              # Enable strict compilation
+              lbt-prelude-haskell.configureFlags = [ "-f-dev" ];
+            };
+          })
+        ];
 
-    extraHackage = [
-      "${lbr-prelude-hs}"
-      "${lbf-prelude-hs}"
-      "${goldenApiHs}"
-      "${goldenData}"
-    ];
+        shell = {
 
-    modules = [
-      (_: {
-        packages = {
-          allComponent.doHoogle = true;
-          allComponent.doHaddock = true;
+          withHoogle = true;
 
-          # Enable strict compilation
-          lbt-prelude-haskell.configureFlags = [ "-f-dev" ];
+          exactDeps = true;
+
+          nativeBuildInputs = config.settings.shell.tools;
+
+          tools = {
+            cabal = { };
+            haskell-language-server = { };
+          };
+
+          shellHook = lib.mkForce config.settings.shell.hook;
         };
-      })
-    ];
+      };
+      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
+        inputs.mlabs-tooling.lib.mkHackageMod
+        project
+      ]).flake { };
+    in
 
-    shell = {
+    {
+      devShells.dev-lbt-prelude-haskell = hsNixFlake.devShell;
 
-      withHoogle = true;
-
-      exactDeps = true;
-
-      nativeBuildInputs = builtins.attrValues commonTools;
-
-      tools = {
-        cabal = { };
-        haskell-language-server = { };
+      packages = {
+        lbt-prelude-haskell-lib = hsNixFlake.packages."lbt-prelude-haskell:lib:lbt-prelude-haskell";
+        lbt-prelude-haskell-golden-cli = hsNixFlake.packages."lbt-prelude-haskell:exe:lbt-prelude-golden";
+        lbt-prelude-haskell-tests = hsNixFlake.packages."lbt-prelude-haskell:test:tests";
       };
 
-      shellHook = lib.mkForce ''
-        export LC_CTYPE=C.UTF-8
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        ${shellHook}
-      '';
+      checks.check-lbt-prelude-haskell = hsNixFlake.checks."lbt-prelude-haskell:test:tests";
     };
-  };
-in
-{
-  hsNixProj = haskell-nix.cabalProject' [
-    mlabs-tooling.lib.mkHackageMod
-    project
-  ];
 }

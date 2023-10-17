@@ -1,5 +1,5 @@
 { ... }: {
-  perSystem = { pkgs, system, inputs', config, ... }:
+  perSystem = { config, ... }:
     let crateName = "lbr-prelude";
     in {
       nci.projects.${crateName}.path = ./.;

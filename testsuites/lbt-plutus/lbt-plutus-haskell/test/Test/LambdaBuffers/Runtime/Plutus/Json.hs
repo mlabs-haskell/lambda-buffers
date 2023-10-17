@@ -1,7 +1,7 @@
 module Test.LambdaBuffers.Runtime.Plutus.Json (tests) where
 
 import LambdaBuffers.Runtime.Prelude (Json)
-import Paths_lbt_plutus_golden_data_hs qualified as Paths
+import Paths_lbt_plutus_golden_data qualified as Paths
 import Test.LambdaBuffers.Plutus.Golden qualified as Golden
 import Test.LambdaBuffers.Plutus.Golden.Json qualified as Golden
 import Test.Tasty (TestName, TestTree, testGroup)
@@ -28,7 +28,7 @@ goldenInstanceTests = do
 
 fromToGoldenTest :: forall {a}. (Json a, Eq a, Show a) => TestName -> [a] -> IO TestTree
 fromToGoldenTest title goldens = do
-  goldenDir <- Paths.getDataFileName "data/golden"
+  goldenDir <- Paths.getDataFileName "data"
   Golden.fromToGoldenTest goldenDir title goldens
 
 -- | Plutus.V1

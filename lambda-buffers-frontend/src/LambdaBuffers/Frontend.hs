@@ -4,13 +4,15 @@ import Control.Monad (foldM, when)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State.Strict (MonadIO (liftIO), MonadTrans (lift), StateT (runStateT), gets, modify)
 import Control.Monad.Trans.Reader (ReaderT (runReaderT), asks, local)
+import Data.Foldable (Foldable (toList))
 import Data.List (isSuffixOf)
 import Data.Map qualified as Map
+import Data.Set qualified as Set
 import Data.Text (Text, unpack)
 import Data.Text.IO qualified as Text
 import LambdaBuffers.Frontend.CheckReferences (checkReferences)
-import LambdaBuffers.Frontend.Errors (FrontendError)
 import LambdaBuffers.Frontend.Errors qualified as Errors
+import LambdaBuffers.Frontend.Errors.Frontend (FrontendError)
 import LambdaBuffers.Frontend.Monad (FrontRead (FrontRead, current, importPaths, visited), FrontState (FrontState, fstate'modules), FrontendResult (FrontendResult), FrontendT, throwE')
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Parsec qualified as Parsec
@@ -23,7 +25,7 @@ import System.FilePath (joinPath, (<.>))
 -- | `runFrontend importPaths modFps` processes all .lbf schemas specified in `modFps` files with `importPaths` directories. Returns modules that represent the entire compilation closure or a Frontend error.
 runFrontend :: MonadIO m => [FilePath] -> [FilePath] -> m (Either FrontendError FrontendResult)
 runFrontend importPaths modFps = do
-  let stM = runReaderT (processSchemas modFps) (FrontRead (ModuleName [] defSourceInfo) [] importPaths)
+  let stM = runReaderT (processSchemas modFps) (FrontRead (ModuleName [] defSourceInfo) [] (Set.fromList importPaths))
       exM = runStateT stM (FrontState mempty)
   ioM <- runExceptT exM
   case ioM of
@@ -70,7 +72,7 @@ processModule m = local
     _ <- lift $ modify (FrontState . Map.insert (strip . moduleName $ m) (m, modScope) . fstate'modules)
     return m
 
--- | `moduleNameToFilepath m` makes a filepath for the module in `m` (eq. 'X.Y.Z' -> 'X/Y/Z.lbf').
+-- | `moduleNameToFilepath m` makes a filepath for the module in `m` (eq. 'X.Y.Z' -> 'X\/Y\/Z.lbf').
 moduleNameToFilepath :: ModuleName info -> FilePath
 moduleNameToFilepath (ModuleName parts _) = joinPath [unpack p | ModuleNamePart p _ <- parts] <.> "lbf"
 
@@ -96,7 +98,7 @@ importModule imp = do
   ims <- gets fstate'modules
   case Map.lookup (strip modName) ims of
     Nothing -> do
-      ips <- asks importPaths
+      ips <- toList <$> asks importPaths
       found <- liftIO $ findFiles ips (moduleNameToFilepath modName)
       case found of
         [] -> do

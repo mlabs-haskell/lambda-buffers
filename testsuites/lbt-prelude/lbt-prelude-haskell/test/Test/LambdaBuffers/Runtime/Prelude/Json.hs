@@ -3,7 +3,7 @@ module Test.LambdaBuffers.Runtime.Prelude.Json (tests) where
 import Hedgehog qualified as H
 import LambdaBuffers.Prelude.Json.Golden qualified as Golden
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
-import Paths_lbt_prelude_golden_data_hs qualified as Paths
+import Paths_lbt_prelude_golden_data qualified as Paths
 import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
@@ -93,7 +93,7 @@ weekDayToFrom =
 
 fromToGoldenTest :: forall {a}. Json a => TestName -> [a] -> IO TestTree
 fromToGoldenTest title goldens = do
-  goldenDir <- Paths.getDataFileName "data/golden"
+  goldenDir <- Paths.getDataFileName "data/"
   Golden.fromToGoldenTest goldenDir title goldens
 
 fooFromToGoldenTests :: IO TestTree

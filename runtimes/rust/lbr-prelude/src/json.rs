@@ -1,7 +1,8 @@
+use crate::error::{Error, JsonType};
+use core::str::FromStr;
 use data_encoding::BASE64;
 use num_bigint::BigInt;
-use serde::ser;
-use serde_json::{self, Error, Value};
+use serde_json::{self, Value};
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
@@ -18,56 +19,95 @@ pub trait Json {
 
 impl Json for BigInt {
     fn to_json(&self) -> Result<Value, Error> {
-        serde_json::to_value(self)
+        let num = serde_json::Number::from_str(&self.to_string())
+            .map_err(|_| Error::InternalError("Failed to convert BigInt to String".to_owned()))?;
+
+        Ok(Value::Number(num))
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        serde_json::from_value(value)
+        match value {
+            Value::Number(number) => {
+                BigInt::from_str(number.as_str()).map_err(|_| Error::UnexpectedJsonInvariant {
+                    wanted: "bigint".to_owned(),
+                    got: "unexpected string".to_owned(),
+                })
+            }
+            _ => Err(Error::UnexpectedJsonType {
+                wanted: JsonType::Number,
+                got: JsonType::from(&value),
+            }),
+        }
     }
 }
 
 impl Json for bool {
     fn to_json(&self) -> Result<Value, Error> {
-        serde_json::to_value(self)
+        Ok(Value::Bool(*self))
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        serde_json::from_value(value)
+        match value {
+            Value::Bool(bool) => Ok(bool),
+            _ => Err(Error::UnexpectedJsonType {
+                wanted: JsonType::Bool,
+                got: JsonType::from(&value),
+            }),
+        }
     }
 }
 
 impl Json for char {
     fn to_json(&self) -> Result<Value, Error> {
-        serde_json::to_value(self)
+        String::from(*self).to_json()
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        serde_json::from_value(value)
+        String::from_json(value).and_then(|str| {
+            let mut chars = str.chars();
+            let ch = chars.next();
+            let rest = chars.next();
+            match (ch, rest) {
+                (Some(ch), None) => Ok(ch),
+                _ => Err(Error::UnexpectedJsonInvariant {
+                    got: "string".to_owned(),
+                    wanted: "char".to_owned(),
+                }),
+            }
+        })
     }
 }
 
 impl Json for Vec<u8> {
     fn to_json(&self) -> Result<Value, Error> {
-        Ok(Value::String(BASE64.encode(self)))
+        BASE64.encode(self).to_json()
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        match value {
-            Value::String(str) => BASE64
+        String::from_json(value).and_then(|str| {
+            BASE64
                 .decode(&str.into_bytes())
-                .map_err(|_| serde::ser::Error::custom("Couldn't decode base64 bytes.")),
-            _ => error("Expected JSON String"),
-        }
+                .map_err(|_| Error::UnexpectedJsonInvariant {
+                    got: "string".to_owned(),
+                    wanted: "base64 string".to_owned(),
+                })
+        })
     }
 }
 
 impl Json for String {
     fn to_json(&self) -> Result<Value, Error> {
-        serde_json::to_value(self)
+        Ok(Value::String(self.to_owned()))
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        serde_json::from_value(value)
+        match value {
+            Value::String(str) => Ok(str),
+            _ => Err(Error::UnexpectedJsonType {
+                wanted: JsonType::String,
+                got: JsonType::from(&value),
+            }),
+        }
     }
 }
 
@@ -83,28 +123,26 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        let map = sum_parser(&value)?;
-
-        match map {
-            ("Nothing", ctor_fields) => 
-                match &ctor_fields[..] {
-                    [] => Ok(None),
-                    _ => Err(serde::ser::Error::custom(format!(
-                        "Expected a JSON Array with 0 fields but got {:?}",
-                        ctor_fields
-                    ))),
-                },
-            ("Just", ctor_fields) => 
-                match &ctor_fields[..] {
-                    [val] => Ok(Some(T::from_json(val.clone())?)),
-                    _ => Err(serde::ser::Error::custom(format!(
-                        "Expected a JSON Array with 1 fields but got {:?}",
-                        ctor_fields
-                    ))),
-                },
-            _ => error(
-                    "Expected a JSON String to contain one of constructor names (Just, Nothing) but got an unknown constructor name.")
-        }
+        sum_parser(&value).and_then(|obj| match obj {
+            ("Nothing", ctor_fields) => match &ctor_fields[..] {
+                [] => Ok(None),
+                _ => Err(Error::UnexpectedArrayLength {
+                    wanted: 0,
+                    got: ctor_fields.len(),
+                }),
+            },
+            ("Just", ctor_fields) => match &ctor_fields[..] {
+                [val] => Ok(Some(T::from_json(val.clone())?)),
+                _ => Err(Error::UnexpectedArrayLength {
+                    wanted: 1,
+                    got: ctor_fields.len(),
+                }),
+            },
+            _ => Err(Error::UnexpectedJsonInvariant {
+                wanted: "constructor names (Nothing, Just)".to_owned(),
+                got: "unknown constructor name".to_owned(),
+            }),
+        })
     }
 }
 
@@ -121,25 +159,26 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        let map = sum_parser(&value)?;
-
-        match map {
-            ("Right", ctor_fields) => 
-                match &ctor_fields[..] {
-                    [val] => Ok(Ok(T::from_json(val.clone())?)),
-                    _ => error(&format!("Expected a JSON Array with 1 fields but got {:?}", ctor_fields)),
-                },
-                ("Left", ctor_fields) => 
-                    match &ctor_fields[..] {
-                        [val] => Ok(Err(E::from_json(val.clone())?)),
-                        _ =>  error(&format!(
-                                        "Expected a JSON Array with 1 fields but got {:?}",
-                                        ctor_fields
-                                        )),
-                    },
-                _ => error(
-                        "Expected a JSON String to contain one of constructor names (Just, Nothing) but got an unknown constructor name.")
-        }
+        sum_parser(&value).and_then(|map| match map {
+            ("Right", ctor_fields) => match &ctor_fields[..] {
+                [val] => Ok(Ok(T::from_json(val.clone())?)),
+                _ => Err(Error::UnexpectedArrayLength {
+                    wanted: 1,
+                    got: ctor_fields.len(),
+                }),
+            },
+            ("Left", ctor_fields) => match &ctor_fields[..] {
+                [val] => Ok(Err(E::from_json(val.clone())?)),
+                _ => Err(Error::UnexpectedArrayLength {
+                    wanted: 1,
+                    got: ctor_fields.len(),
+                }),
+            },
+            _ => Err(Error::UnexpectedJsonInvariant {
+                wanted: "constructor names (Left, Right)".to_owned(),
+                got: "unknown constructor name".to_owned(),
+            }),
+        })
     }
 }
 
@@ -164,7 +203,10 @@ where
                 .map(|val| T::from_json(val.clone()))
                 .into_iter()
                 .collect::<Result<Vec<T>, Error>>(),
-            _ => error(&format!("Expected a JSON Array but got {:?}", value)),
+            _ => Err(Error::UnexpectedJsonType {
+                wanted: JsonType::Array,
+                got: JsonType::from(&value),
+            }),
         }
     }
 }
@@ -184,25 +226,22 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        match value {
-            Value::Array(vec) => {
-                let set = vec
-                    .iter()
-                    .map(|val| T::from_json(val.clone()))
-                    .into_iter()
-                    .collect::<Result<HashSet<T>, Error>>()?;
+        Vec::from_json(value).and_then(|vec: Vec<Value>| {
+            let set = vec
+                .iter()
+                .map(|val| T::from_json(val.clone()))
+                .into_iter()
+                .collect::<Result<HashSet<T>, Error>>()?;
 
-                if set.len() == vec.len() {
-                    Ok(set)
-                } else {
-                    error(&format!(
-                        "Expected the JSON Array to have all unique elements: {:?}",
-                        vec
-                    ))
-                }
+            if set.len() == vec.len() {
+                Ok(set)
+            } else {
+                Err(Error::UnexpectedJsonInvariant {
+                    wanted: "array with all unique elements".to_owned(),
+                    got: "invalid set".to_owned(),
+                })
             }
-            _ => error(&format!("Expected a JSON Array but got {:?}", value)),
-        }
+        })
     }
 }
 
@@ -222,25 +261,22 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        match value {
-            Value::Array(vec) => {
-                let set = vec
-                    .iter()
-                    .map(|kv_tuple| <(K, V)>::from_json(kv_tuple.clone()))
-                    .into_iter()
-                    .collect::<Result<HashMap<K, V>, Error>>()?;
+        Vec::from_json(value).and_then(|vec: Vec<Value>| {
+            let set = vec
+                .iter()
+                .map(|kv_tuple| <(K, V)>::from_json(kv_tuple.clone()))
+                .into_iter()
+                .collect::<Result<HashMap<K, V>, Error>>()?;
 
-                if set.len() == vec.len() {
-                    Ok(set)
-                } else {
-                    error(&format!(
-                        "Expected the JSON Array to have all unique elements: {:?}",
-                        vec
-                    ))
-                }
+            if set.len() == vec.len() {
+                Ok(set)
+            } else {
+                Err(Error::UnexpectedJsonInvariant {
+                    wanted: "array with all unique elements".to_owned(),
+                    got: "invalid set".to_owned(),
+                })
             }
-            _ => error(&format!("Expected a JSON Array but got {:?}", value)),
-        }
+        })
     }
 }
 
@@ -252,7 +288,10 @@ impl Json for () {
     fn from_json(value: Value) -> Result<Self, Error> {
         match value {
             Value::Null => Ok(()),
-            _ => error(&format!("Expected a JSON Null but got {:?}", value)),
+            _ => Err(Error::UnexpectedJsonType {
+                wanted: JsonType::Null,
+                got: JsonType::from(&value),
+            }),
         }
     }
 }
@@ -277,19 +316,14 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        match value {
-            Value::Array(vec) => match &vec[..] {
-                [a, b] => Ok((A::from_json(a.clone())?, B::from_json(b.clone())?)),
-                _ => error("Expected a JSON Array with 2 fields"),
-            },
-            _ => error("Expected a JSON Array with 2 fields"),
-        }
+        Vec::from_json(value).and_then(|vec: Vec<Value>| match &vec[..] {
+            [a, b] => Ok((A::from_json(a.clone())?, B::from_json(b.clone())?)),
+            _ => Err(Error::UnexpectedArrayLength {
+                wanted: 2,
+                got: vec.len(),
+            }),
+        })
     }
-}
-
-/// Create a JSON serialisation error with a custom message
-fn error<T>(msg: &str) -> Result<T, Error> {
-    Err(ser::Error::custom(msg))
 }
 
 /// Construct a JSON Value from a sum type
@@ -304,24 +338,41 @@ pub fn sum_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
 
 /// Parse a JSON value into an intermediary representation of a sum type
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON
-pub fn sum_parser<'a>(value: &'a Value) -> Result<(&'a str, &'a Vec<Value>), Error> {
+pub fn sum_parser(value: &Value) -> Result<(&str, &Vec<Value>), Error> {
     match value {
         Value::Object(obj) => {
             let name = obj
                 .get("name")
-                .ok_or(ser::Error::custom("Expected a 'name' field"))?;
+                .ok_or(Error::UnexpectedFieldName {
+                    wanted: "name".to_owned(),
+                    got: obj.keys().cloned().collect(),
+                })
+                .and_then(|name| match name {
+                    Value::String(str) => Ok(str),
+                    _ => Err(Error::UnexpectedJsonType {
+                        wanted: JsonType::String,
+                        got: JsonType::from(value),
+                    }),
+                })?;
             let fields = obj
                 .get("fields")
-                .ok_or(ser::Error::custom("Expected a 'fields' field"))?;
+                .ok_or(Error::UnexpectedFieldName {
+                    wanted: "fields".to_owned(),
+                    got: obj.keys().cloned().collect(),
+                })
+                .and_then(|fields| match fields {
+                    Value::Array(str) => Ok(str),
+                    _ => Err(Error::UnexpectedJsonType {
+                        wanted: JsonType::Array,
+                        got: JsonType::from(value),
+                    }),
+                })?;
 
-            match (name, fields) {
-                (Value::String(name), Value::Array(values)) => Ok((&name, values)),
-                _ => Err(ser::Error::custom(format!(
-                    "Expected a JSON Object with name and fields but got {:?}",
-                    obj
-                ))),
-            }
+            Ok((name, fields))
         }
-        _ => error(&format!("Expected a JSON Object but got {:?}", value)),
+        _ => Err(Error::UnexpectedJsonType {
+            wanted: JsonType::Null,
+            got: JsonType::from(value),
+        }),
     }
 }

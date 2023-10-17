@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Control.Applicative (Alternative (many), optional, (<**>))
+import GHC.IO.Encoding (setFileSystemEncoding, setLocaleEncoding, utf8)
 import LambdaBuffers.Frontend.Cli.Build (BuildOpts (BuildOpts), build)
 import LambdaBuffers.Frontend.Cli.Env qualified as Env
 import LambdaBuffers.Frontend.Cli.Format (FormatOpts (FormatOpts), format)
@@ -78,7 +79,7 @@ buildOptsP =
       ( strOption
           ( long "gen-opt"
               <> metavar "ARGUMENT"
-              <> help "Additional options to provide to the Codegen module. For example: --gen-opt=--config --gen-opt=haskell.json"
+              <> help "Additional options to provide to the Codegen module. For example: --gen-opt=--config --gen-opt=haskell-prelude-base.json"
           )
       )
     <*> flag
@@ -133,6 +134,8 @@ parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Fr
 
 main :: IO ()
 main = do
+  setFileSystemEncoding utf8
+  setLocaleEncoding utf8
   cmd <- customExecParser (prefs (showHelpOnEmpty <> showHelpOnError)) parserInfo
   case cmd of
     Build opts -> build opts
