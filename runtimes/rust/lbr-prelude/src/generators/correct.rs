@@ -2,12 +2,12 @@ use num_bigint::{BigInt, Sign};
 use proptest::arbitrary::{any, StrategyFor};
 use proptest::char::CharStrategy;
 use proptest::collection::vec;
-use proptest::collection::{hash_map, hash_set};
+use proptest::collection::{btree_map, btree_set};
 use proptest::option;
 use proptest::prelude::{prop_oneof, Just};
 use proptest::result::maybe_err;
 use proptest::strategy::Strategy;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Strategy to generate an arbitrary boolean
 pub fn arb_bool() -> StrategyFor<bool> {
@@ -47,11 +47,12 @@ pub fn arb_text() -> StrategyFor<String> {
 
 /// Strategy to generate a complicated data structure
 pub fn arb_complicated(
-) -> impl Strategy<Value = HashMap<String, Result<HashSet<char>, Option<Result<Vec<u8>, bool>>>>> {
-    hash_map(
+) -> impl Strategy<Value = BTreeMap<String, Result<BTreeSet<char>, Option<Result<Vec<u8>, bool>>>>>
+{
+    btree_map(
         arb_text(),
         maybe_err(
-            hash_set(arb_char(), 20),
+            btree_set(arb_char(), 20),
             option::of(maybe_err(arb_bytes(), arb_bool())),
         ),
         20,

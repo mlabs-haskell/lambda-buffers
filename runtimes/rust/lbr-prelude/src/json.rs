@@ -3,8 +3,7 @@ use core::str::FromStr;
 use data_encoding::BASE64;
 use num_bigint::BigInt;
 use serde_json::{self, Value};
-use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Trait that lbf-prelude::json class maps to
 pub trait Json {
@@ -209,9 +208,9 @@ where
     }
 }
 
-impl<T> Json for HashSet<T>
+impl<T> Json for BTreeSet<T>
 where
-    T: Json + Eq + Hash,
+    T: Json + Eq + Ord,
 {
     fn to_json(&self) -> Result<Value, Error> {
         let values = self
@@ -227,7 +226,7 @@ where
             let set = vec
                 .iter()
                 .map(|val| T::from_json(val.clone()))
-                .collect::<Result<HashSet<T>, Error>>()?;
+                .collect::<Result<BTreeSet<T>, Error>>()?;
 
             if set.len() == vec.len() {
                 Ok(set)
@@ -241,9 +240,9 @@ where
     }
 }
 
-impl<K, V> Json for HashMap<K, V>
+impl<K, V> Json for BTreeMap<K, V>
 where
-    K: Json + Eq + Hash,
+    K: Json + Eq + Ord,
     V: Json,
 {
     fn to_json(&self) -> Result<Value, Error> {
@@ -260,7 +259,7 @@ where
             let set = vec
                 .iter()
                 .map(|kv_tuple| <(K, V)>::from_json(kv_tuple.clone()))
-                .collect::<Result<HashMap<K, V>, Error>>()?;
+                .collect::<Result<BTreeMap<K, V>, Error>>()?;
 
             if set.len() == vec.len() {
                 Ok(set)

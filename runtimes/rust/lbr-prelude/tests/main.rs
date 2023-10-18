@@ -6,7 +6,7 @@ mod tests {
             arb_bool, arb_bytes, arb_char, arb_complicated, arb_integer, arb_text,
         };
         use lbr_prelude::json::Json;
-        use proptest::collection::{hash_map, hash_set, vec};
+        use proptest::collection::{btree_map, btree_set, vec};
         use proptest::option;
         use proptest::prelude::*;
         use proptest::result::maybe_err;
@@ -76,14 +76,14 @@ mod tests {
 
         proptest! {
             #[test]
-            fn test_set(val in hash_set(arb_integer(), 20)) {
+            fn test_set(val in btree_set(arb_integer(), 20)) {
                 assert_eq!(val, from_to_json(&val)?);
             }
         }
 
         proptest! {
             #[test]
-            fn test_map(val in hash_map(arb_integer(), arb_text(), 20)) {
+            fn test_map(val in btree_map(arb_integer(), arb_text(), 20)) {
                 assert_eq!(val, from_to_json(&val)?);
             }
         }
