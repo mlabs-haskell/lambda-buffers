@@ -1,0 +1,12 @@
+[package]
+name = "lbr-plutus-csl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cardano-serialization-lib = "11.5.0"
+proptest = "1.3.1"
+lbr-prelude = { path = "../lbr-prelude" }
+serde_json = { version = "1.0.107", features = ["arbitrary_precision"] }

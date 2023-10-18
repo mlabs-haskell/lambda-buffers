@@ -1,7 +1,7 @@
 { inputs, ... }: {
   perSystem = { self', pkgs, system, ... }:
     let
-      crateName = "lbr-prelude";
+      crateName = "lbr-plutus-csl";
       rustWithTools = pkgs.rust-bin.stable.latest.default.override {
         extensions = [ "rustfmt" "rust-analyzer" "clippy" ];
       };
@@ -12,7 +12,6 @@
         strictDeps = true;
       };
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
     in
     {
       devShells."dev-${crateName}-rust" = craneLib.devShell {
