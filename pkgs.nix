@@ -1,7 +1,7 @@
 # Repo-wide Nixpkgs with a ton of overlays
 { inputs, ... }:
 {
-  perSystem = { pkgs, system, config, ... }: {
+  perSystem = { pkgs, system, ... }: {
 
     _module.args.pkgs = import inputs.nixpkgs {
       inherit system;
@@ -11,6 +11,7 @@
         inputs.iohk-nix.overlays.crypto
         inputs.ctl.overlays.purescript
         inputs.ctl.overlays.spago
+        (import inputs.rust-overlay)
       ];
     };
 

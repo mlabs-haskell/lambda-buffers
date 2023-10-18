@@ -12,6 +12,11 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    rust-overlay.follows = "crane/rust-overlay";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -33,6 +38,7 @@
         ./runtimes/haskell/lbr-plutus/build.nix
         ./runtimes/purescript/lbr-prelude/build.nix
         ./runtimes/purescript/lbr-plutus/build.nix
+        ./runtimes/rust/lbr-prelude/build.nix
         ./testsuites/lbt-prelude/api/build.nix
         ./testsuites/lbt-prelude/golden/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
