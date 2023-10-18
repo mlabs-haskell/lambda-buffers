@@ -1,16 +1,36 @@
 { inputs, ... }: {
-  imports = [ inputs.nci.flakeModule ];
-  perSystem = { pkgs, config, ... }:
-    let crateName = "lbr-prelude";
-    in {
-      nci.projects.${crateName}.path = ./.;
-      nci.crates.${crateName} = { };
+  perSystem = { self', pkgs, system, ... }:
+    let
+      crateName = "lbr-prelude";
+      craneLib = inputs.crane.lib.${system};
+      src = craneLib.cleanCargoSource (craneLib.path ./.);
+      commonArgs = {
+        inherit src;
+        strictDeps = true;
+      };
+      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-      devShells."dev-${crateName}-rust" = config.nci.outputs.${crateName}.devShell.overrideAttrs (old: {
-        packages = (old.packages or [ ]) ++ [ pkgs.rust-analyzer ];
+      rust-bin = pkgs.rust-bin.stable.latest;
+
+    in
+    {
+      devShells."dev-${crateName}-rust" = craneLib.devShell {
+        checks = self'.checks;
+        buildInputs = [ rust-bin.rust-analyzer ];
+      };
+
+      packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // {
+        inherit cargoArtifacts;
+        doTest = false;
       });
-      packages."${crateName}-rust" = config.nci.outputs.${crateName}.packages.release;
-      checks."${crateName}-rust-test" = config.nci.outputs.${crateName}.check;
+
+      checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
+        inherit cargoArtifacts;
+      });
+
+      checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // {
+        inherit cargoArtifacts;
+      });
     };
 
 }
