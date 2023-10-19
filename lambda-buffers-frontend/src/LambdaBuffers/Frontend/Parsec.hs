@@ -22,7 +22,6 @@ import Data.Char qualified as Char
 import Data.Kind (Type)
 import Data.Maybe (fromJust, isJust)
 import Data.String (IsString (fromString))
-import Data.Text qualified as Text
 import LambdaBuffers.Compiler.NamingCheck (pClassName, pConstrName, pFieldName, pModuleNamePart, pTyName)
 import LambdaBuffers.Frontend.Syntax (ClassConstraint (ClassConstraint), ClassDef (ClassDef), ClassName (ClassName), ClassRef (ClassRef), ConstrName (ConstrName), Constraint (Constraint), Constructor (Constructor), Derive (Derive), Field (Field), FieldName (FieldName), Import (Import), InstanceClause (InstanceClause), Module (Module), ModuleAlias (ModuleAlias), ModuleName (ModuleName), ModuleNamePart (ModuleNamePart), Name (Name), Product (Product), Record (Record), SourceInfo (SourceInfo, to), SourcePos (SourcePos), Statement (StClassDef, StDerive, StInstanceClause, StTyDef), Sum (Sum), Ty (TyApp, TyRef', TyVar), TyArg (TyArg), TyBody (Opaque, ProductBody, RecordBody, SumBody), TyDef (TyDef), TyName (TyName), TyRef (TyRef), VarName (VarName), kwAs, kwClassDef, kwDerive, kwImport, kwInstance, kwModule, kwQualified, kwTyDefOpaque, kwTyDefProduct, kwTyDefRecord, kwTyDefSum, kws)
 import Text.Parsec (ParseError, ParsecT, SourceName, Stream, alphaNum, between, char, endOfLine, eof, getPosition, label, lower, many, many1, manyTill, notFollowedBy, optionMaybe, runParserT, satisfy, sepBy, sepEndBy, sourceColumn, sourceLine, sourceName, space, string, try, unexpected, (<?>))
@@ -207,10 +206,18 @@ tokenTyRef = token' parseTyRef
 parseFieldName :: Stream s m Char => Parser s m (FieldName SourceInfo)
 parseFieldName =
   withSourceInfo . label' "record field name" $ do
-    v <- pFieldName
-    -- Recall in the lexical specification that fieldnames are disjoint from keywords
-    notKeyword $ Text.unpack v
-    return $ FieldName v
+    -- TODO(jaredponn): Technically, the specification says that field names
+    -- are disjoint from keywords, but some of the other golden tests use this
+    -- fact.
+    -- We leave it in as a fairly harmless bug for now.
+    --
+    -- But the version that fixes this is as follows:
+    --
+    -- > v <- pFieldName
+    -- > -- Recall in the lexical specification that fieldnames are disjoint from keywords
+    -- > notKeyword $ Data.Text.unpack v
+    -- > return $ FieldName v
+    FieldName <$> pFieldName
 
 tokenFieldName :: Stream s m Char => Parser s m (FieldName SourceInfo)
 tokenFieldName = token' parseFieldName

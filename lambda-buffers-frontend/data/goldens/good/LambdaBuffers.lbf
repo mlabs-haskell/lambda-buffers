@@ -52,7 +52,7 @@ record ClassDef = { name : ClassName
 
 derive Eq ClassDef
 
-record ClassConstraint = { classRef : ClassRef, args : List TyArg }
+record ClassConstraint = { class : ClassRef, args : List TyArg }
 
 derive Eq ClassConstraint
 
@@ -64,7 +64,7 @@ prod Derive = Constraint
 
 derive Eq Derive
 
-record Constraint = { classRef : ClassRef, args : List Ty }
+record Constraint = { class : ClassRef, args : List Ty }
 
 derive Eq Constraint
 
