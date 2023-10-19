@@ -1,15 +1,12 @@
-# LambdaBuffers file
+# LambdaBuffers Frontend (.lbf) syntax
 
-The input to LambdaBuffers is a text file which contains a module that defines
-    a specification of the types you want to generate.
-This section gives the exact syntax of a LambdaBuffers file, and informally describes meaning of the syntactic constructs.
+The input to the LambdaBuffers Frontend is a text file which contains a module that defines a specification of the types and type class instances you want to generate. This chapter gives the exact syntax of a LambdaBuffers Frontend file, and informally describes meaning of the syntactic constructs.
 
-The name of a LambdaBuffers file must end with `.lbf`.
+The name of a LambdaBuffers Frontend file must end with `.lbf`, and hence may also be referred to as a .lbf file or a .lbf schema.
 
 ## Notation
-In the following description of a LambdaBuffers file's syntax, we use
-    a similar BNF syntax from [Section 10.1 of the Haskell Report](https://www.haskell.org/onlinereport/haskell2010/).
-So, the following notational conventions are used for presenting syntax.
+
+In the following description of a LambdaBuffers Frontend file's syntax, we use a similar BNF syntax from [Section 10.1 of the Haskell Report](https://www.haskell.org/onlinereport/haskell2010/). So, the following notational conventions are used for presenting syntax.
 
 |  Syntax       | Description                                                                 |
 | ------------- | --------------------------------------------------------------------------- |
@@ -26,20 +23,20 @@ So, the following notational conventions are used for presenting syntax.
 | `pat1|pat2`  | choice                                                                      | 
 -->
 
-Note that the terminal syntax permits C-style escape sequences e.g.
-    `'\n'` denotes line feed (newline), and `'\r'` denotes carriage return.
+Note that the terminal syntax permits C-style escape sequences e.g. `'\n'` denotes line feed (newline), and `'\r'` denotes carriage return.
 
-Productions will be of the form
+Productions will be of the form:
 
 ```text
 nonterm -> alt1 | ... | altn
 ```
 
 ## Input file representation
-The input file is Unicode text where the encoding is subject to the system locale.
-We will often use the unqualified term *character* to refer to a Unicode code point in the input file.
+
+The input file is Unicode text where the encoding is subject to the system locale. We will often use the unqualified term *character* to refer to a Unicode code point in the input file.
 
 ## Characters
+
 The following terms are used to denote specific Unicode character categories:
 
 - `upper` denotes a Unicode code point categorized as an uppercase letter or titlecase letter (i.e., with General Category value Lt or Lu).
@@ -54,23 +51,22 @@ Interested readers may find details of Unicode character categories in [Section 
 
 ## Lexical syntax
 
-Tokens form the vocabulary of LambdaBuffers files.
-The classes of tokens are defined as follows.
+Tokens form the vocabulary of LambdaBuffers Frontend files. The classes of tokens are defined as follows.
 
 ```text
 keyword         -> 'module' | 'sum' | 'prod' | 'record'
                  | 'opaque' | 'class' | 'instance' | 'import' 
                  | 'qualified' | 'as'
 modulename      -> uppercamelcase
-longmodulename  -> long modulename
+longmodulename  -> modulealias modulename
 typename        -> uppercamelcase
 fieldname       -> lowercamelcase\keyword
-longtypename    -> long typename
+longtypename    -> modulealias typename
 varname         -> lowers\keyword
 punctuation     -> '<=' | ',' | '(' | ')' | '{' | '}' 
                  | ':' | ':-' | '=' | '|'
 classname       -> uppercamelcase
-longclassname   -> long uppercamelcase
+longclassname   -> modulealias uppercamelcase
 ```
 
 where
@@ -78,32 +74,31 @@ where
 ```text
 uppercamelcase -> upper { alphanum }
 lowercamelcase -> lower { alphanum }
-long           -> { uppercamelcase '.' }
+modulealias    -> { uppercamelcase '.' }
 lowers         -> lower { lower }
 ```
 
-Input files are broken into *tokens* which use the *maximal munch* rule i.e.,
-    at each point, the next token is the longest sequence of characters that
-    form a valid token.
-`space`s or line comments are ignored except as it separates tokens that
-    would otherwise combine into a single token.
+Input files are broken into *tokens* which use the *maximal munch* rule i.e., at each point, the next token is the longest sequence of characters that form a valid token. `space`s or line comments are ignored except as it separates tokens that would otherwise combine into a single token.
 
 ### Line comments
+
 A *line comment* starts with the terminal `'--'` followed by zero or more printable Unicode characters stopping at the first end of line (`'\n'` or `'\r\n'`).
 
-## Syntax of LambdaBuffers files
-A LambdaBuffers file defines a module that is a collection of data types, classes, instance clauses, and derive clauses.
+## Syntax of LambdaBuffers Frontend files
 
-The overall layout of a LambdaBuffers file is:
+A LambdaBuffers Frontend file defines a module that is a collection of data types, classes, instance clauses, and derive clauses.
+
+The overall layout of a LambdaBuffers Frontend file is:
 
 ```text
 module -> 'module' longmodulename { import } { statement }
 ```
 
-The file must specify the module's `longmodulename` where its `modulename` must match the file's name not including the `.lbf` extension.
+The file must specify the module's `longmodulename` where its `modulename` must match the LambdaBuffers Frontend file's file name not including the `.lbf` extension.
 After, the file may contain a sequence of `import`s followed by a sequence of `statement`s.
 
 ### Import
+
 Imports bring *entities* (types and classes) of other modules into scope.
 
 ```text
@@ -125,6 +120,7 @@ statement -> typedef
 ```
 
 #### Type definitions
+
 Types may be either sum types, product types, record types, or opaque types.
 
 ```text
@@ -132,6 +128,7 @@ typedef -> prodtypedef | sumtypedef |  recordtypedef | opaquetypedef
 ```
 
 ##### Product type definition
+
 A product type definition defines a new product type.
 
 ```text
@@ -145,6 +142,7 @@ typeexp     -> varname
 Product type definitions instruct the code generator to generate a product type for the target language.
 
 ##### Sum type definition
+
 A sum type definition defines a new sum type.
 
 ```text
@@ -156,6 +154,7 @@ sumconstructor -> typename prod
 Sum type definitions instruct the code generator to generate a sum type for the target language.
 
 ##### Record type definition
+
 A record type definition defines a new record type.
 
 ```text
@@ -167,15 +166,17 @@ field         -> fieldname ':' prod
 Record type definitions instruct the code generator to generate a record type for the target language.
 
 ##### Opaque type definition
+
 An opaque type definition defines a new opaque type.
 
 ```text
 opaquetypedef -> 'opaque' typename { varname }
 ```
 
-Opaque type definitions do not instruct the code generator to generate code, and an opaque type must be instead implemented in the target language.
+Opaque type definitions must map to existing types in the target language and it's up to the Codegen module to determine how that's exactly done.
 
 #### Class definition
+
 A class definition introduces a new class.
 
 ```text
@@ -185,11 +186,10 @@ constraintexp  -> classref { varname }
 constraintexps -> [ constraintexp { ',' constraintexp } ]
 ```
 
-Class definitions do not instruct the code generator to generate code, but
-    instead provides a means to communicate with the code generator the
-    instances one would like to generate (via a derive clause).
+Class definitions communicate with the code generator the implementations that already exist (via instance clauses) or that one would like to generate (via derive clauses).
 
 #### Instance clause
+
 An instance clause specifies a type is an instance of a class.
 
 ```text
@@ -197,12 +197,10 @@ instanceclause -> 'instance'  constraint [ ':-' constraintexps ]
 constraint     -> classref { typeexp }
 ```
 
-Instance clauses do not instruct the code generator to generate code, but
-    instead instructs the compiler (semantic checking) that the target language
-    provides instances for the given type provided that the given `constraintexps`
-    have instances.
+Instance clauses do not instruct the code generator to generate code, but instead instructs the compiler (semantic checking) that the target language environment provides type class implementations for the given type (provided that the given `constraintexps` also have implementations).
 
 #### Derive clause
+
 Derive clauses instruct the code generator to generate code for a type so that it is an instance of a class.
 
 ```text
@@ -212,7 +210,8 @@ deriveclause -> 'derive' constraint
 Note the code generation of a type for a class is implemented via builtin derivation rules (which developers may extend).
 
 ### Syntax reference
-The summarized productions of a LambdaBuffers file is as follows.
+
+The summarized productions of a LambdaBuffers Frontend file is as follows.
 
 ```text
 module -> 'module' longmodulename { import } { statement }
