@@ -135,11 +135,11 @@ typedef -> prodtypedef | sumtypedef |  recordtypedef | opaquetypedef
 A product type definition defines a new product type.
 
 ```text
-prodtypedef  -> 'prod' tyname { varname } '=' prod
-prod -> { tyexpr }
-tyexpr -> varname
-        | longtyname
-        | '(' prod ')'
+prodtypedef -> 'prod' tyname { varname } '=' prod
+prod        -> { tyexpr }
+tyexpr      -> varname
+             | longtyname
+             | '(' prod ')'
 ```
 
 Product type definitions instruct the code generator to generate a product type for the target language.
@@ -148,9 +148,9 @@ Product type definitions instruct the code generator to generate a product type 
 A sum type definition defines a new sum type.
 
 ```text
-sumtypedef  -> 'sum' tyname { varname } '=' sum
-sum -> sumconstructor { '|' sumconstructor }
-sumconstructor  -> tyname prod
+sumtypedef     -> 'sum' tyname { varname } '=' sum
+sum            -> sumconstructor { '|' sumconstructor }
+sumconstructor -> tyname prod
 ```
 
 Sum type definitions instruct the code generator to generate a sum type for the target language.
@@ -159,9 +159,9 @@ Sum type definitions instruct the code generator to generate a sum type for the 
 A record type definition defines a new record type.
 
 ```text
-recordtypedef  -> 'record' tyname { varname } '=' record
-record -> '{' [ field { ',' field  } ] '}'
-field -> fieldname ':' prod
+recordtypedef -> 'record' tyname { varname } '=' record
+record        -> '{' [ field { ',' field  } ] '}'
+field         -> fieldname ':' prod
 ````
 
 Record type definitions instruct the code generator to generate a record type for the target language.
@@ -227,19 +227,19 @@ statement -> typedef
 
 typedef -> prodtypedef | sumtypedef |  recordtypedef | opaquetypedef
 
-prodtypedef  -> 'prod' tyname { varname } '=' prod
-prod -> { tyexpr }
-tyexpr -> varname
-        | longtyname
-        | '(' prod ')'
+prodtypedef -> 'prod' tyname { varname } '=' prod
+prod        -> { tyexpr }
+tyexpr      -> varname
+             | longtyname
+             | '(' prod ')'
 
-sumtypedef  -> 'sum' tyname { varname } '=' sum
-sum -> sumconstructor { '|' sumconstructor }
-sumconstructor  -> tyname prod
+sumtypedef     -> 'sum' tyname { varname } '=' sum
+sum            -> sumconstructor { '|' sumconstructor }
+sumconstructor -> tyname prod
 
-recordtypedef  -> 'record' tyname { varname } '=' record
-record -> '{' [ field { ',' field  } ] '}'
-field -> fieldname ':' prod
+recordtypedef -> 'record' tyname { varname } '=' record
+record        -> '{' [ field { ',' field  } ] '}'
+field         -> fieldname ':' prod
 
 opaquetypedef -> 'opaque' tyname { varname }
 
