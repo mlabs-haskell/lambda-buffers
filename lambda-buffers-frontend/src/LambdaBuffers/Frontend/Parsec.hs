@@ -34,6 +34,12 @@ type Parser s m a = ParsecT s () m a
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -- See docs/syntax.md
 --
+-- Warning: In the production
+--  classdef       -> 'class' [ constraintexps '<=' ] classname { varname }
+-- this is not LL(1)! Either we live with what we currently have which has a
+-- large 'try' around parsing @[ constraintexps '<=' ]@, or we move to an
+-- LALR(1) parser generator which should has no issues with parsing this.
+--
 -- Note: Parser Implementation.
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 --
