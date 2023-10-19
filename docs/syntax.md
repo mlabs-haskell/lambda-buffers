@@ -63,9 +63,9 @@ keyword         -> 'module' | 'sum' | 'prod' | 'record'
                  | 'qualified' | 'as'
 modulename      -> uppercamelcase
 longmodulename  -> long modulename
-tyname          -> uppercamelcase
+typename        -> uppercamelcase
 fieldname       -> lowercamelcase\keyword
-longtyname      -> long tyname
+longtypename    -> long typename
 varname         -> lowers\keyword
 punctuation     -> '<=' | ',' | '(' | ')' | '{' | '}' 
                  | ':' | ':-' | '=' | '|'
@@ -108,7 +108,7 @@ Imports bring *entities* (types and classes) of other modules into scope.
 
 ```text
 import     -> 'import' [ 'qualified' ] longmodulename [ 'as' longmodulename ] [ importspec ]
-importspec -> '(' [ { tyname ',' } tyname [','] ] ')'
+importspec -> '(' [ { typename ',' } typename [','] ] ')'
 ```
 
 If `importspec` is omitted, then all entities specified in the module are imported; otherwise only the specified entities are imported.
@@ -135,10 +135,10 @@ typedef -> prodtypedef | sumtypedef |  recordtypedef | opaquetypedef
 A product type definition defines a new product type.
 
 ```text
-prodtypedef -> 'prod' tyname { varname } '=' prod
-prod        -> { tyexpr }
-tyexpr      -> varname
-             | longtyname
+prodtypedef -> 'prod' typename { varname } '=' prod
+prod        -> { typeexp }
+typeexp     -> varname
+             | longtypename
              | '(' prod ')'
 ```
 
@@ -148,9 +148,9 @@ Product type definitions instruct the code generator to generate a product type 
 A sum type definition defines a new sum type.
 
 ```text
-sumtypedef     -> 'sum' tyname { varname } '=' sum
+sumtypedef     -> 'sum' typename { varname } '=' sum
 sum            -> sumconstructor { '|' sumconstructor }
-sumconstructor -> tyname prod
+sumconstructor -> typename prod
 ```
 
 Sum type definitions instruct the code generator to generate a sum type for the target language.
@@ -159,18 +159,18 @@ Sum type definitions instruct the code generator to generate a sum type for the 
 A record type definition defines a new record type.
 
 ```text
-recordtypedef -> 'record' tyname { varname } '=' record
+recordtypedef -> 'record' typename { varname } '=' record
 record        -> '{' [ field { ',' field  } ] '}'
 field         -> fieldname ':' prod
 ````
 
 Record type definitions instruct the code generator to generate a record type for the target language.
 
-##### Opaque type
+##### Opaque type definition
 An opaque type definition defines a new opaque type.
 
 ```text
-opaquetypedef -> 'opaque' tyname { varname }
+opaquetypedef -> 'opaque' typename { varname }
 ```
 
 Opaque type definitions do not instruct the code generator to generate code, and an opaque type must be instead implemented in the target language.
@@ -194,7 +194,7 @@ An instance clause specifies a type is an instance of a class.
 
 ```text
 instanceclause -> 'instance'  constraint [ ':-' constraintexps ]
-constraint     -> classref { tyexpr }
+constraint     -> classref { typeexp }
 ```
 
 Instance clauses do not instruct the code generator to generate code, but
@@ -218,7 +218,7 @@ The summarized productions of a LambdaBuffers file is as follows.
 module -> 'module' longmodulename { import } { statement }
 
 import     -> 'import' [ 'qualified' ] longmodulename [ 'as' longmodulename ] [ importspec ]
-importspec -> '(' [ { tyname ',' } tyname [','] ] ')'
+importspec -> '(' [ { typename ',' } typename [','] ] ')'
 
 statement -> typedef
            | classdef
@@ -227,21 +227,21 @@ statement -> typedef
 
 typedef -> prodtypedef | sumtypedef |  recordtypedef | opaquetypedef
 
-prodtypedef -> 'prod' tyname { varname } '=' prod
-prod        -> { tyexpr }
-tyexpr      -> varname
-             | longtyname
+prodtypedef -> 'prod' typename { varname } '=' prod
+prod        -> { typeexp }
+typeexp     -> varname
+             | longtypename
              | '(' prod ')'
 
-sumtypedef     -> 'sum' tyname { varname } '=' sum
+sumtypedef     -> 'sum' typename { varname } '=' sum
 sum            -> sumconstructor { '|' sumconstructor }
-sumconstructor -> tyname prod
+sumconstructor -> typename prod
 
-recordtypedef -> 'record' tyname { varname } '=' record
+recordtypedef -> 'record' typename { varname } '=' record
 record        -> '{' [ field { ',' field  } ] '}'
 field         -> fieldname ':' prod
 
-opaquetypedef -> 'opaque' tyname { varname }
+opaquetypedef -> 'opaque' typename { varname }
 
 classdef       -> 'class' [ constraintexps '<=' ] classname { varname }
 constraintexp  -> classref { varname }
@@ -249,7 +249,7 @@ constraintexp  -> classref { varname }
 constraintexps -> [ constraintexp { ',' constraintexp } ]
 
 instanceclause -> 'instance'  constraint [ ':-' constraintexps ]
-constraint     -> classref { tyexpr }
+constraint     -> classref { typeexp }
 
 deriveclause -> 'derive' constraint
 ```
