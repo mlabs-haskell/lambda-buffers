@@ -34,7 +34,7 @@ testInnerTypeExpression =
         "parses"
         [ parsesEq ["a", " a", "a ", " a ", "(a)", "( a )", "(  (a   ) )"] parseTyInner
         , parsesEq ["Int", " Int", "Int ", "(Int)", "( Int)", "(Int )", " (Int)", "(Int) ", "((Int))"] parseTyInner
-        , -- TODO: this test case is screwed.. there's problems with the data
+        , -- TODO(jaredponn): this test case is screwed.. there's problems with the data
           -- representation for why this won't pass e.g. @A a a@ is @A@ applied
           -- to the list @[a,a]@; so breaking this down to the left associative
           -- chain of applications really is broken.
