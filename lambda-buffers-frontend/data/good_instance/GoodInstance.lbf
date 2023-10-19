@@ -1,0 +1,11 @@
+module GoodInstance
+
+instance MyClass A
+
+class MyClass a
+
+sum A = A
+
+-- if we're wondering why this test case is here, previous parser versions
+-- confused 'instance' with 'import' and reported an unexpected 'n' in the
+-- 'instance' keyword.
