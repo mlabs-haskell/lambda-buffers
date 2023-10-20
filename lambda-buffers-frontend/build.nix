@@ -67,6 +67,8 @@
             config.packages.lbf-pure
             config.packages.lbf-prelude-to-haskell
             config.packages.lbf-plutus-to-haskell
+            config.packages.lbf-prelude-to-purescript
+            config.packages.lbf-plutus-to-purescript
           ];
         };
       };
@@ -123,6 +125,40 @@
             work-dir = ".work";
           }} $@;
         '';
+
+        lbf-prelude-to-purescript = pkgs.writeShellScriptBin "lbf-prelude-to-purescript" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir autogen;
+          mkdir .work;
+          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude ];
+            gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";
+            gen-classes = ["Prelude.Eq" "Prelude.Json"];
+            gen-dir = "autogen";
+            gen-opts = ["--config=${config.packages.codegen-configs}/purescript-prelude-base.json"];
+            work-dir = ".work";
+          }} $@;
+        '';
+
+        lbf-plutus-to-purescript = pkgs.writeShellScriptBin "lbf-plutus-to-purescript" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir autogen;
+          mkdir .work;
+          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
+            gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";
+            gen-classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+            gen-dir = "autogen";
+            gen-opts = [
+                "--config=${config.packages.codegen-configs}/purescript-prelude-base.json"
+                "--config=${config.packages.codegen-configs}/purescript-plutus-ctl.json"
+            ];
+            work-dir = ".work";
+          }} $@;
+        '';
+
       };
 
       inherit (hsNixFlake) checks;
