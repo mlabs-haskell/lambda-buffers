@@ -1,0 +1,53 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PMap"
+    ],
+    "Prelude.List": [
+      "plutarch",
+      "Plutarch.Builtin",
+      "PBuiltinList"
+    ],
+    "Prelude.Either": [
+      "plutarch",
+      "Plutarch",
+      "TODO(bladyjoker): PEitherData"
+    ],
+    "Prelude.Maybe": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PMaybeData"
+    ],
+    "Prelude.Bytes": [
+      "plutarch",
+      "Plutarch.ByteString",
+      "PByteString"
+    ],
+    "Prelude.Text": [
+      "plutarch",
+      "Plutarch.String",
+      "PString"
+    ],
+    "Prelude.Integer": [
+      "plutarch",
+      "Plutarch.Integer",
+      "PInteger"
+    ],
+    "Prelude.Bool": [
+      "plutarch",
+      "Plutarch.Bool",
+      "PBool"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "plutarch",
+        "Plutarch.Bool",
+        "PEq"
+      ]
+    ]
+  }
+}
