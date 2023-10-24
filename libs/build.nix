@@ -41,7 +41,13 @@
         imports = [ ./lbf-prelude ];
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
-        dependencies = [ "lbf-prelude" ];
+        dependencies =
+          [
+            "lbf-prelude"
+            # TODO(jaredponn): Investigate why `lbr-plutus` is _not_
+            # being automatically included as a dependency.
+            "lbr-plutus"
+          ];
         configs = [ ../lambda-buffers-codegen/data/haskell-prelude-base.json ../lambda-buffers-codegen/data/haskell-plutus-plutustx.json ];
       };
 
