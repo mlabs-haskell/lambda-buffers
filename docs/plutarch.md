@@ -1,13 +1,10 @@
 # LambdaBuffers for Plutarch
 
-https://github.com/Plutonomicon/plutarch-plutus
-
-> Plutarch is a typed eDSL in Haskell for writing efficient Plutus Core validators.
+[Plutarch](https://github.com/Plutonomicon/plutarch-plutus) is a typed eDSL in Haskell for writing efficient Plutus Core validators.
 
 ## Type definition mapping
 
 Plutarch backend support all types from the LB Plutus module, as to enable full ffeatured Plutus script development. However, it also support some type from the LB Prelude module, namely `Integer`, `Maybe`, `Either` and `List`.
-
 
 ```lbf
 module Foo
@@ -34,7 +31,6 @@ derive Json (FooRec a b)
 derive PlutusData (FooRec a b)
 ```
 
-
 ```haskell
 module LambdaBuffers.Plutarch.Foo where
 
@@ -52,7 +48,6 @@ data FooRec (a :: PType) (b :: PType) (s :: S) = FooRec (Term s a) (Term s (PMay
 
 Plutarch has a couple of fundamental classes essential to its operations.
 Namely, `PlutusType`, `PIsData`, `PTryFrom` and `PEq`.
-
 
 ### PlutusType - (de)constructing Plutarch terms
 
@@ -75,7 +70,7 @@ The `pcon'` implementation must match the LB Plutus PlutusData encoding class st
 Constructing is always only one part of the story, there's also deconstruction that is captured by the `pmatch'` method.
 This method serves to 'pattern match' on a value that was already constructed using `pcon'` and dispatch said value to a provided continuation function.
 It's important to note that there's a subtle but important distinction to be made between the `ptryFrom` and `pmatch'` methods.
-`pmatch'` assumes that the value it recieves is indeed correct, as it was constructed using the `pcon'` method.
+`pmatch'` assumes that the value it receives is indeed correct, as it was constructed using the `pcon'` method.
 This means that `pmatch'` should never error, and if it does that means the implementation is wrong.
 `ptryFrom` is different, as it takes some `PData` and tries to parse it into a `PType`, but can fail.
 
@@ -93,11 +88,11 @@ instance PlutusType FooTrivial where
             # (ptraceError "Got PlutusData Integer but invalid value")
 ```
 
-Note that `pmatch'` doesn't really have to case match on PlutusData as `ptryFrom` has to, we can assume its the corrent representation.
+Note that `pmatch'` doesn't really have to case match on PlutusData as `ptryFrom` has to, we can assume its the current representation.
 
 ### PTryFrom - parsing Data into Plutarch terms
 
-[PTryFrom](https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/TryFrom.hs#L73) serves to convert between Plutarch types. Note that's a fairly generaly use case, and we generally use this class in a very narrow form to specify how `PData` is 'parsed' into a Plutarch type.
+[PTryFrom](https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/TryFrom.hs#L73) serves to convert between Plutarch types. Note that's a fairly general use case, and we generally use this class in a very narrow form to specify how `PData` is 'parsed' into a Plutarch type.
 
 ```haskell
 class PSubtype a b => PTryFrom (a :: PType) (b :: PType) where
@@ -108,7 +103,7 @@ class PSubtype a b => PTryFrom (a :: PType) (b :: PType) where
   ptryFrom' opq f = ptryFrom @(PInner b) @a opq \(inn, exc) -> f (punsafeCoerce inn, exc)
 ```
 
-There's some additionaly features exhibited by this type class, most noteworthy is the `PTryFromExcess` type family that enables us specify the part of the structure that wasn't parsed and is left unexamined. It's a form of optimization that becomes very imporant if you have a very complex data type such as `ScriptContext` from the `plutus-ledger-api`.
+There's some additionally features exhibited by this type class, most noteworthy is the `PTryFromExcess` type family that enables us specify the part of the structure that wasn't parsed and is left unexamined. It's a form of optimization that becomes very important if you have a very complex data type such as `ScriptContext` from the `plutus-ledger-api`.
 Apparently, a good intuition pump for the this 'excess' business is that of a [zipper](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf). We focus on a certain part of a data structure, only ever providing links to other parts that are left un-examined.
 
 LambdaBuffers doesn't use this feature and sets the `PTryFromExcess` to a unit type, signaling that nothing is left unexamined.
@@ -132,11 +127,11 @@ instance PTryFrom PData FooTrivial where
 
 Notice the difference from `pmatch'` implementation. It case matches on the provided PlutusData value, as it must assume it can be anything and errors if it encounters something unexpected.
 
-Additionally, the continuation function receives the `pcon'`structed Plutarch value (`Term`), rather than the Haskell 'native' value.
+Additionally, the continuation function receives the `pcon'` constructed Plutarch value (`Term`), rather than the Haskell 'native' value.
 
 ### PIsData - tracking 'is it plutus data encoded?' with types
 
-https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Builtin.hs#L354
+[PIsData](https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Builtin.hs#L354) TODO.
 
 ```haskell
 newtype PAsData (a :: PType) (s :: S) = PAsData (Term s a)
@@ -150,7 +145,6 @@ class PIsData a where
   default pdataImpl :: PIsData (PInner a) => Term s a -> Term s PData
   pdataImpl x = pdataImpl $ pto x
 ```
-
 
 ```haskell
 instance PIsData FooTrivial where

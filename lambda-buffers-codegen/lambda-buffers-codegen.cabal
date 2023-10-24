@@ -114,13 +114,13 @@ library
     LambdaBuffers.Codegen.Haskell.Print.Names
     LambdaBuffers.Codegen.Haskell.Print.TyDef
     LambdaBuffers.Codegen.Haskell.Syntax
-    LambdaBuffers.Codegen.Plutarch.Print.TyDef
     LambdaBuffers.Codegen.LamVal
     LambdaBuffers.Codegen.LamVal.Derive
     LambdaBuffers.Codegen.LamVal.Eq
     LambdaBuffers.Codegen.LamVal.Json
     LambdaBuffers.Codegen.LamVal.MonadPrint
     LambdaBuffers.Codegen.LamVal.PlutusData
+    LambdaBuffers.Codegen.Plutarch.Print.TyDef
     LambdaBuffers.Codegen.Print
     LambdaBuffers.Codegen.Purescript
     LambdaBuffers.Codegen.Purescript.Config
