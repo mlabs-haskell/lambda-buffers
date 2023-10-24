@@ -72,8 +72,8 @@
         # `packages.lbf-prelude-haskell`) essentially generates a cabal
         # project from the `./Prelude.lbf` schema; and the following uses
         # `haskell.nix` to convert the `.cabal` project into a dev shell.
-        # This is a dev shell which provides ghc with
-        #   - `lbf-prelude-haskell` package (and its dependencies)
+        # This is a dev shell which provides
+        #   - ghc with `lbf-prelude-haskell` package (and its dependencies)
         #   - the CLI application (`lbf-prelude-to-haskell`) to compile `.lbf`
         #   schemas
         let
@@ -96,7 +96,7 @@
                   allComponent.doHaddock = true;
 
                   # Enable strict compilation
-                  lbt-plutus-haskell.configureFlags = [ "-f-dev" ];
+                  lbf-prelude.configureFlags = [ "-f-dev" ];
                 };
               })
             ];
@@ -139,8 +139,8 @@
         # essentially generates a cabal project from the `*.lbf` schemas; and
         # the following uses `haskell.nix` to convert the `.cabal` project into
         # a dev shell.
-        # This is a dev shell which provides ghc with
-        #   - `lbf-plutus-haskell` package (and its dependencies)
+        # This is a dev shell which provides
+        #   - ghc with `lbf-plutus-haskell` package (and its dependencies)
         #   - the CLI application (`lbf-plutus-to-haskell`) to compile `.lbf`
         #   schemas.
         #
@@ -168,7 +168,7 @@
                   allComponent.doHaddock = true;
 
                   # Enable strict compilation
-                  lbt-plutus-haskell.configureFlags = [ "-f-dev" ];
+                  lbf-plutus.configureFlags = [ "-f-dev" ];
                 };
               })
             ];
