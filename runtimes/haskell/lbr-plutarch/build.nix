@@ -8,7 +8,7 @@
         name = "lbr-plutarch";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
-        extraHackage = [ "${inputs.plutarch}" ];
+        extraHackage = [ "${inputs.plutarch}" "${inputs.plutarch}/plutarch-extra" ];
         modules = [
           (_: {
             packages = {
