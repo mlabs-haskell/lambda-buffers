@@ -18587,6 +18587,22 @@
         "type": "github"
       }
     },
+    "plutarch": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1679924828,
+        "narHash": "sha256-6HoSVQvZ8PG5QwOqKLm8QiPKFYYxyHIwMPy19KjTKqk=",
+        "owner": "plutonomicon",
+        "repo": "plutarch-plutus",
+        "rev": "c14ad83479706566fe22e7b7b50b696043326c8f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "plutonomicon",
+        "repo": "plutarch-plutus",
+        "type": "github"
+      }
+    },
     "plutip": {
       "inputs": {
         "CHaP": "CHaP_5",
@@ -19167,6 +19183,7 @@
           "haskell-nix",
           "nixpkgs-unstable"
         ],
+        "plutarch": "plutarch",
         "pre-commit-hooks": "pre-commit-hooks_2",
         "protobufs-nix": "protobufs-nix",
         "purifix": "purifix"

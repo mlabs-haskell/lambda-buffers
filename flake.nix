@@ -12,6 +12,10 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
+    plutarch = {
+      url = "github:plutonomicon/plutarch-plutus";
+      flake = false;
+    };
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -31,6 +35,7 @@
         ./lambda-buffers-frontend/build.nix
         ./runtimes/haskell/lbr-prelude/build.nix
         ./runtimes/haskell/lbr-plutus/build.nix
+        ./runtimes/haskell/lbr-plutarch/build.nix
         ./runtimes/purescript/lbr-prelude/build.nix
         ./runtimes/purescript/lbr-plutus/build.nix
         ./testsuites/lbt-prelude/api/build.nix
