@@ -1,5 +1,8 @@
 module Document
 
+-- We need the opaque Char type
+import Prelude (Char)
+
 -- Author
 sum Author = Ivan | Jovan | Savo
 
@@ -34,15 +37,6 @@ prod RichDocument = (Document RichContent)
 
 -- ## We need a list type
 sum List a = Nil | Cons a (List a)
-
--- ## We need a Char type that is either a letter, number or punctuation
-sum Char = Letter Letter | Number Number | Punctuation Punctuation
-
-sum Letter = A | B | C
-
-sum Number = Num0 | Num1 | Num2
-
-sum Punctuation = Dot | Question
 
 -- ## String
 prod String = (List Char)

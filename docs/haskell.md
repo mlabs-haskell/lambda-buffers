@@ -3,31 +3,29 @@
 Let's take a look at how LambdaBuffers modules map into Haskell modules and how
 LambdaBuffers type definitions map into Haskell type definitions.
 
-Note that in this chapter we work with a 'pure' LambdaBuffers module, no
-`opaque`s or type clasess, to demonstrate how pure type definition mapping
-works.
-
-We'll use the `lbf-to-haskell` CLI tool which is just a convenient wrapper over
+We'll use the `lbf-prelude-to-haskell` CLI tool which is just a convenient wrapper over
 the raw `lbf` CLI. We can get this tool by either loading the LambdaBuffers Nix
 environment that comes packaged with all the CLI tools:
 
 ```shell
 $ nix develop github:mlabs-haskell/lambda-buffers#lb
-$ lb<tab>
-lbc lbf lbg lbg-purescript lbg-haskelll lbf-to-purescript lbf-to-haskell
+$ lbf<tab>
+lbf                        lbf-plutus-to-purescript   lbf-prelude-to-purescript
+lbf-plutus-to-haskell      lbf-prelude-to-haskell
 ```
 
-Or we can simply just refer directly to the `lbf-to-haskell` CLI by `nix run
-github:mlabs-haskell/lambda-buffers#lbf-to-haskell`.
+Or we can simply just refer directly to the `lbf-prelude-to-haskell` CLI by `nix run
+github:mlabs-haskell/lambda-buffers#lbf-prelude-to-haskell`.
 
 In this chapter, we're going to use the latter option.
 
-Let's now use `lbf-to-haskell` to process the
-
-[Document.lbf](examples/Document.lbf) schema
+Let's now use `lbf-prelude-to-haskell` to process the [Document.lbf](examples/Document.lbf) schema.
 
 ```purescript
 module Document
+
+-- We need the opaque Char type
+import Prelude (Char)
 
 -- Author
 sum Author = Ivan | Jovan | Savo
@@ -64,28 +62,17 @@ prod RichDocument = (Document RichContent)
 -- ## We need a list type
 sum List a = Nil | Cons a (List a)
 
--- ## We need a Char type that is either a letter, number or punctuation
-sum Char = Letter Letter | Number Number | Punctuation Punctuation
-
-sum Letter = A | B | C
-
-sum Number = Num0 | Num1 | Num2
-
-sum Punctuation = Dot | Question
-
 -- ## String
 prod String = (List Char)
 ```
 
 ```shell
-$ nix run github:mlabs-haskell/lambda-buffers#lbf-to-haskell -- Document.lbf
+$ nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-haskell -- Document.lbf
 $ find autogen/
 autogen/
-autogen/build.json
 autogen/LambdaBuffers
 autogen/LambdaBuffers/Document.hs
-$ ghc autogen/LambdaBuffers/Document.hs
-[1 of 1] Compiling LambdaBuffers.Document ( autogen/LambdaBuffers/Document.hs, autogen/LambdaBuffers/Document.o )
+autogen/build.json
 ```
 
 As we can see the `autogen` directory has been created that contains the generated Haskell modules.
@@ -94,83 +81,62 @@ Note the `autogen/build.json` file as it contains all the necessary Hackage depe
 The outputted Haskell module in `autogen/LambdaBuffers/Document.hs`:
 
 ```haskell
-module LambdaBuffers.Document
-  ( Author (..),
-    Chapter (..),
-    Char (..),
-    Document (..),
-    Gif (..),
-    Image (..),
-    Letter (..),
-    List (..),
-    Number (..),
-    Punctuation (..),
-    Reviewer (..),
-    RichContent (..),
-    RichDocument (..),
-    String (..),
-  )
-where
+module LambdaBuffers.Document (Author(..)
+                              , Chapter(..)
+                              , Document(..)
+                              , Gif(..)
+                              , Image(..)
+                              , List(..)
+                              , Reviewer(..)
+                              , RichContent(..)
+                              , RichDocument(..)
+                              , String(..)) where
 
+import qualified LambdaBuffers.Prelude
 import qualified Prelude
 
-data Author = Author'Ivan | Author'Jovan | Author'Savo deriving (Prelude.Show)
 
-data Chapter a = Chapter
-  { chapter'content :: a,
-    chapter'subChapters :: List (Chapter a)
-  }
-  deriving (Prelude.Show)
+data Author = Author'Ivan  | Author'Jovan  | Author'Savo  deriving Prelude.Show
 
-data Char
-  = Char'Letter Letter
-  | Char'Number Number
-  | Char'Punctuation Punctuation
-  deriving (Prelude.Show)
+data Chapter a = Chapter { chapter'content :: a
+                         , chapter'subChapters :: List (Chapter a)} deriving Prelude.Show
 
-data Document a = Document
-  { document'author :: Author,
-    document'reviewers :: List Reviewer,
-    document'content :: Chapter a
-  }
-  deriving (Prelude.Show)
+data Document a = Document { document'author :: Author
+                           , document'reviewers :: List Reviewer
+                           , document'content :: Chapter a} deriving Prelude.Show
 
-data Gif = Gif'FunnyGif | Gif'InspiringGif deriving (Prelude.Show)
+data Gif = Gif'FunnyGif  | Gif'InspiringGif  deriving Prelude.Show
 
-data Image = Image'FunnyImage | Image'BoringImage deriving (Prelude.Show)
+data Image = Image'FunnyImage  | Image'BoringImage  deriving Prelude.Show
 
-data Letter = Letter'A | Letter'B | Letter'C deriving (Prelude.Show)
+data List a = List'Nil  | List'Cons a (List a) deriving Prelude.Show
 
-data List a = List'Nil | List'Cons a (List a) deriving (Prelude.Show)
+data Reviewer = Reviewer'Bob  | Reviewer'Alice  deriving Prelude.Show
 
-data Number = Number'Num0 | Number'Num1 | Number'Num2 deriving (Prelude.Show)
+data RichContent = RichContent'Image Image String
+                    | RichContent'Gif Gif String
+                    | RichContent'Text String deriving Prelude.Show
 
-data Punctuation
-  = Punctuation'Dot
-  | Punctuation'Question
-  deriving (Prelude.Show)
+newtype RichDocument = RichDocument (Document RichContent) deriving Prelude.Show
 
-data Reviewer = Reviewer'Bob | Reviewer'Alice deriving (Prelude.Show)
+newtype String = String (List LambdaBuffers.Prelude.Char) deriving Prelude.Show
+```
 
-data RichContent
-  = RichContent'Image Image String
-  | RichContent'Gif Gif String
-  | RichContent'Text String
-  deriving (Prelude.Show)
+We can compile the code with the following commands.
+Note the dev shell `dev-prelude-haskell` as it includes the `LambdaBuffers.Prelude` dependency.
 
-newtype RichDocument = RichDocument (Document RichContent) deriving (Prelude.Show)
-
-newtype String = String (List Char) deriving (Prelude.Show)
+```shell
+$ nix develop github:mlabs-haskell/lambda-buffers#dev-prelude-haskell
+$ ghc autogen/LambdaBuffers/Document.hs
+[1 of 1] Compiling LambdaBuffers.Document ( autogen/LambdaBuffers/Document.hs, autogen/LambdaBuffers/Document.o )
 ```
 
 ## Sum types
 
-The types `Author`, `Reviewer`, `RichContent`, `Image`, `Gif`, `List`, `Char`,
-`Letter`, `Number` and `Punctuation` have been declared as sum types in the
-LamdaBuffers schema using the `sum` keyword.
+The types `Author`, `Reviewer`, `RichContent`, `Image`, `Gif`, and `List` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
 
-As we can see, notihing too surprising here, all the `sum` types become `data`
-in haskell.
+As we can see, nothing too surprising here, all the `sum` types become `data`
+in Haskell.
 
 The only thing to notice is that the type name was prepended with `'` (single
 quote) to the defined constructor names as to make sure they are unique.
