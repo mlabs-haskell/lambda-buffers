@@ -24,8 +24,8 @@ Let's now use `lbf-prelude-to-haskell` to process the [Document.lbf](examples/Do
 ```purescript
 module Document
 
--- We need the opaque Char type
-import Prelude (Char)
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
 
 -- Author
 sum Author = Ivan | Jovan | Savo
@@ -36,7 +36,7 @@ sum Reviewer = Bob | Alice
 -- Document
 record Document a = {
   author : Author,
-  reviewers : List Reviewer,
+  reviewers : Set Reviewer,
   content : Chapter a
  }
 
@@ -47,23 +47,10 @@ record Chapter a = {
  }
 
 -- Some actual content
-sum RichContent = Image Image String | Gif Gif String | Text String
-
-sum Image = FunnyImage | BoringImage
-
-sum Gif = FunnyGif | InspiringGif
+sum RichContent = Image Bytes | Gif Bytes | Text Text
 
 -- Rich document
-
 prod RichDocument = (Document RichContent)
-
--- # Some basic types
-
--- ## We need a list type
-sum List a = Nil | Cons a (List a)
-
--- ## String
-prod String = (List Char)
 ```
 
 ```shell
@@ -84,13 +71,9 @@ The outputted Haskell module in `autogen/LambdaBuffers/Document.hs`:
 module LambdaBuffers.Document (Author(..)
                               , Chapter(..)
                               , Document(..)
-                              , Gif(..)
-                              , Image(..)
-                              , List(..)
                               , Reviewer(..)
                               , RichContent(..)
-                              , RichDocument(..)
-                              , String(..)) where
+                              , RichDocument(..)) where
 
 import qualified LambdaBuffers.Prelude
 import qualified Prelude
@@ -99,27 +82,19 @@ import qualified Prelude
 data Author = Author'Ivan  | Author'Jovan  | Author'Savo  deriving Prelude.Show
 
 data Chapter a = Chapter { chapter'content :: a
-                         , chapter'subChapters :: List (Chapter a)} deriving Prelude.Show
+                         , chapter'subChapters :: LambdaBuffers.Prelude.List (Chapter a)} deriving Prelude.Show
 
 data Document a = Document { document'author :: Author
-                           , document'reviewers :: List Reviewer
+                           , document'reviewers :: LambdaBuffers.Prelude.Set Reviewer
                            , document'content :: Chapter a} deriving Prelude.Show
-
-data Gif = Gif'FunnyGif  | Gif'InspiringGif  deriving Prelude.Show
-
-data Image = Image'FunnyImage  | Image'BoringImage  deriving Prelude.Show
-
-data List a = List'Nil  | List'Cons a (List a) deriving Prelude.Show
 
 data Reviewer = Reviewer'Bob  | Reviewer'Alice  deriving Prelude.Show
 
-data RichContent = RichContent'Image Image String
-                    | RichContent'Gif Gif String
-                    | RichContent'Text String deriving Prelude.Show
+data RichContent = RichContent'Image LambdaBuffers.Prelude.Bytes
+                    | RichContent'Gif LambdaBuffers.Prelude.Bytes
+                    | RichContent'Text LambdaBuffers.Prelude.Text deriving Prelude.Show
 
 newtype RichDocument = RichDocument (Document RichContent) deriving Prelude.Show
-
-newtype String = String (List LambdaBuffers.Prelude.Char) deriving Prelude.Show
 ```
 
 We can compile the code with the following commands.
@@ -133,7 +108,7 @@ $ ghc autogen/LambdaBuffers/Document.hs
 
 ## Sum types
 
-The types `Author`, `Reviewer`, `RichContent`, `Image`, `Gif`, and `List` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
+The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
 
 As we can see, nothing too surprising here, all the `sum` types become `data`
 in Haskell.
@@ -143,7 +118,7 @@ quote) to the defined constructor names as to make sure they are unique.
 
 ## Product types
 
-The types `RichDocument` and `String` have been declared as product types in the
+The type `RichDocument` have been declared as a product type in the
 LamdaBuffers schema using the `prod` keyword.
 
 They become Haskell `newtype` if they have a single type in their body, otherwise they are `data`.
@@ -161,4 +136,4 @@ type in their body, otherwise they are `data`.
 Also like with product types, the constructor has the same name as the type.
 
 The field names, similar to sum constructor names, are prepended with the
-lowercased named of the type with a single quote (`'`) to maintain uniqueness.
+lowercased name of the type with a single quote (`'`) to maintain uniqueness.

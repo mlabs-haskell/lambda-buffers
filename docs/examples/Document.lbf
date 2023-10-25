@@ -1,7 +1,7 @@
 module Document
 
--- We need the opaque Char type
-import Prelude (Char)
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
 
 -- Author
 sum Author = Ivan | Jovan | Savo
@@ -12,7 +12,7 @@ sum Reviewer = Bob | Alice
 -- Document
 record Document a = {
   author : Author,
-  reviewers : List Reviewer,
+  reviewers : Set Reviewer,
   content : Chapter a
  }
 
@@ -23,20 +23,7 @@ record Chapter a = {
  }
 
 -- Some actual content
-sum RichContent = Image Image String | Gif Gif String | Text String
-
-sum Image = FunnyImage | BoringImage
-
-sum Gif = FunnyGif | InspiringGif
+sum RichContent = Image Bytes | Gif Bytes | Text Text
 
 -- Rich document
-
 prod RichDocument = (Document RichContent)
-
--- # Some basic types
-
--- ## We need a list type
-sum List a = Nil | Cons a (List a)
-
--- ## String
-prod String = (List Char)

@@ -19,15 +19,13 @@ github:mlabs-haskell/lambda-buffers#lbf-prelude-to-purescript`.
 
 In this chapter, we're going to use the latter option.
 
-Let's now use `lbf-prelude-to-purescript` to process the
-
-[Document.lbf](examples/Document.lbf) schema
+Let's now use `lbf-prelude-to-purescript` to process the [Document.lbf](examples/Document.lbf) schema
 
 ```purescript
 module Document
 
--- We need the opaque Char type
-import Prelude (Char)
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
 
 -- Author
 sum Author = Ivan | Jovan | Savo
@@ -38,7 +36,7 @@ sum Reviewer = Bob | Alice
 -- Document
 record Document a = {
   author : Author,
-  reviewers : List Reviewer,
+  reviewers : Set Reviewer,
   content : Chapter a
  }
 
@@ -49,23 +47,10 @@ record Chapter a = {
  }
 
 -- Some actual content
-sum RichContent = Image Image String | Gif Gif String | Text String
-
-sum Image = FunnyImage | BoringImage
-
-sum Gif = FunnyGif | InspiringGif
+sum RichContent = Image Bytes | Gif Bytes | Text Text
 
 -- Rich document
-
 prod RichDocument = (Document RichContent)
-
--- # Some basic types
-
--- ## We need a list type
-sum List a = Nil | Cons a (List a)
-
--- ## String
-prod String = (List Char)
 ```
 
 ```shell
@@ -86,13 +71,9 @@ The outputted Purescript module in `autogen/LambdaBuffers/Document.hs`:
 module LambdaBuffers.Document (Author(..)
                               , Chapter(..)
                               , Document(..)
-                              , Gif(..)
-                              , Image(..)
-                              , List(..)
                               , Reviewer(..)
                               , RichContent(..)
-                              , RichDocument(..)
-                              , String(..)) where
+                              , RichDocument(..)) where
 
 import LambdaBuffers.Prelude as LambdaBuffers.Prelude
 import Data.Generic.Rep as Data.Generic.Rep
@@ -106,33 +87,19 @@ derive instance Data.Generic.Rep.Generic Author _
 instance Data.Show.Show Author where
   show = Data.Show.Generic.genericShow
 
-newtype Chapter a = Chapter { content :: a, subChapters :: List (Chapter a)}
+newtype Chapter a = Chapter { content :: a
+                            , subChapters :: LambdaBuffers.Prelude.List (Chapter a)}
 derive instance Data.Newtype.Newtype (Chapter a) _
 derive instance Data.Generic.Rep.Generic (Chapter a) _
 instance (Data.Show.Show a) => Data.Show.Show (Chapter a) where
   show = Data.Show.Generic.genericShow
 
 newtype Document a = Document { author :: Author
-                              , reviewers :: List Reviewer
+                              , reviewers :: LambdaBuffers.Prelude.Set Reviewer
                               , content :: Chapter a}
 derive instance Data.Newtype.Newtype (Document a) _
 derive instance Data.Generic.Rep.Generic (Document a) _
 instance (Data.Show.Show a) => Data.Show.Show (Document a) where
-  show = Data.Show.Generic.genericShow
-
-data Gif = Gif'FunnyGif  | Gif'InspiringGif 
-derive instance Data.Generic.Rep.Generic Gif _
-instance Data.Show.Show Gif where
-  show = Data.Show.Generic.genericShow
-
-data Image = Image'FunnyImage  | Image'BoringImage 
-derive instance Data.Generic.Rep.Generic Image _
-instance Data.Show.Show Image where
-  show = Data.Show.Generic.genericShow
-
-data List a = List'Nil  | List'Cons a (List a)
-derive instance Data.Generic.Rep.Generic (List a) _
-instance (Data.Show.Show a) => Data.Show.Show (List a) where
   show = Data.Show.Generic.genericShow
 
 data Reviewer = Reviewer'Bob  | Reviewer'Alice 
@@ -140,9 +107,9 @@ derive instance Data.Generic.Rep.Generic Reviewer _
 instance Data.Show.Show Reviewer where
   show = Data.Show.Generic.genericShow
 
-data RichContent = RichContent'Image Image String
-                    | RichContent'Gif Gif String
-                    | RichContent'Text String
+data RichContent = RichContent'Image LambdaBuffers.Prelude.Bytes
+                    | RichContent'Gif LambdaBuffers.Prelude.Bytes
+                    | RichContent'Text LambdaBuffers.Prelude.Text
 derive instance Data.Generic.Rep.Generic RichContent _
 instance Data.Show.Show RichContent where
   show = Data.Show.Generic.genericShow
@@ -152,17 +119,11 @@ derive instance Data.Newtype.Newtype RichDocument _
 derive instance Data.Generic.Rep.Generic RichDocument _
 instance Data.Show.Show RichDocument where
   show = Data.Show.Generic.genericShow
-
-newtype String = String (List LambdaBuffers.Prelude.Char)
-derive instance Data.Newtype.Newtype String _
-derive instance Data.Generic.Rep.Generic String _
-instance Data.Show.Show String where
-  show = Data.Show.Generic.genericShow
 ```
 
 ## Sum types
 
-The types `Author`, `Reviewer`, `RichContent`, `Image`, `Gif`, and `List` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
+The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
 
 As we can see, nothing too surprising here, all the `sum` types become `data`
 in Purescript.
@@ -172,7 +133,7 @@ quote) to the defined constructor names as to make sure they are unique.
 
 ## Product types
 
-The types `RichDocument` and `String` have been declared as product types in the
+The type `RichDocument` have been declared as a product type in the
 LamdaBuffers schema using the `prod` keyword.
 
 They become Purescript `newtype` if they have a single type in their body, otherwise they are `data`.
