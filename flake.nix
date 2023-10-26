@@ -39,7 +39,7 @@
         ./runtimes/purescript/lbr-prelude/build.nix
         ./runtimes/purescript/lbr-plutus/build.nix
         ./runtimes/rust/lbr-prelude/build.nix
-        ./runtimes/rust/lbr-plutus-csl/build.nix
+        ./runtimes/rust/lbr-prelude-derive/build.nix
         ./testsuites/lbt-prelude/api/build.nix
         ./testsuites/lbt-prelude/golden/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix

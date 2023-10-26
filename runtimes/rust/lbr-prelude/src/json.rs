@@ -1,8 +1,11 @@
-use crate::error::{Error, JsonType};
+pub use crate::error::{Error, JsonType};
 use core::str::FromStr;
 use data_encoding::BASE64;
+#[cfg(feature = "derive")]
+pub use lbr_prelude_derive::Json;
 use num_bigint::BigInt;
-use serde_json::{self, Value};
+use serde_json;
+use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Trait that lbf-prelude::json class maps to
