@@ -1,3 +1,14 @@
+//! Automatically derive Json trait implementations
+//!
+//! Currently we only support a subset of types with an opinionated serialisation scheme. If you
+//! need anything else than what this library provides, it is advised to hand write the
+//! implementation.
+//!
+//! Supported types:
+//! - **unit structs (newtypes)**: this will simply remove the wrapper, and serialize the wrapped value
+//! - **structs**: serialized into a Json Object
+//! - **enums with unnamed fields**: serialized into an object with the following schema: `{"name": string, "fields": any[]}`
+
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{self, parse_macro_input, DeriveInput};
@@ -59,7 +70,7 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
             let #key = dict
                 .get(#key_str)
                 .ok_or(lbr_prelude::error::Error::UnexpectedFieldName {
-                    wanted: #key_str.to_owned(),
+                    wanted: #key_str.to_owned(),gg
                     got: dict.keys().cloned().collect(),
                 })
                 .cloned()
