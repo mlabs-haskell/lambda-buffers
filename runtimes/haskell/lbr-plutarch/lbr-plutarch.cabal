@@ -25,6 +25,7 @@ common common-language
     NoStarIsType
     BangPatterns
     BinaryLiterals
+    BlockArguments
     ConstrainedClassMethods
     ConstraintKinds
     DataKinds
@@ -80,7 +81,6 @@ common common-language
     TypeOperators
     TypeSynonymInstances
     ViewPatterns
-    BlockArguments
 
   default-language:   Haskell2010
 
@@ -99,5 +99,4 @@ library
     , text               >=1.2
 
   hs-source-dirs:  src
-  exposed-modules:
-    LambdaBuffers.Runtime.Plutarch
+  exposed-modules: LambdaBuffers.Runtime.Plutarch
