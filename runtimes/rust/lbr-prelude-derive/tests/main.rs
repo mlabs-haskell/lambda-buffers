@@ -7,6 +7,6 @@ mod json_derive_macro_tests {
 
         t.pass("tests/newtype.rs");
         t.pass("tests/struct.rs");
-        t.pass("tests/tuple.rs");
+        t.pass("tests/tuple.rs")
     }
 }

@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{self, parse_macro_input, DeriveInput};
 
 /// Derive a `Json` trait implementation
@@ -144,9 +144,113 @@ fn impl_newtype(ident: &syn::Ident) -> proc_macro2::TokenStream {
     }
 }
 
+/// Derive `Json` implementation for an enum type
+/// All fields must implement the `Json` trait
 fn impl_enum(
-    _ident: &syn::Ident,
-    _variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
+    ident: &syn::Ident,
+    variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
 ) -> proc_macro2::TokenStream {
-    unimplemented!("Enums are unsupported")
+    // Arms of the pattern match over the enum variants
+    let to_json_pattern_match = variants.iter().map(|variant| {
+        let variant_ident = &variant.ident;
+        let variant_str = variant.ident.to_string();
+
+        match &variant.fields {
+            syn::Fields::Named(_fields_named) => {
+                unimplemented!("Enums with named fields are unsupported.")
+            }
+            syn::Fields::Unnamed(fields_unnamed) => {
+                let arity = fields_unnamed.unnamed.len();
+                let fields = (0..arity).map(|i| format_ident!("f{}", i));
+                let fields_2 = fields.clone();
+
+                quote! {
+                    #ident::#variant_ident( #(#fields),* ) =>
+                        lbr_prelude::json::sum_constructor(#variant_str, vec![
+                           #(#fields_2.to_json()?,)*
+                        ]),
+                }
+            }
+            syn::Fields::Unit => quote! {
+                #ident::#variant_ident =>
+                    lbr_prelude::json::sum_constructor(#variant_str, Vec::with_capacity(0)),
+            },
+        }
+    });
+
+    let to_json_impl = quote! {
+        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+            Ok(match self {
+                #(#to_json_pattern_match)*
+            })
+        }
+    };
+
+    // Arms of the pattern match over tuple containinig the key-value pair
+    let from_json_pattern_match = variants.iter().map(|variant| {
+        let variant_ident = &variant.ident;
+        let variant_str = variant.ident.to_string();
+
+        match &variant.fields {
+            syn::Fields::Named(_fields_named) => {
+                unimplemented!("Enums with named fields are unsupported.")
+            }
+
+            syn::Fields::Unnamed(fields_unnamed) => {
+                let arity = fields_unnamed.unnamed.len();
+                let fields = (0..arity).map(syn::Index::from);
+
+                quote! {
+                    (#variant_str, ctor_fields) => {
+                        if ctor_fields.len() == #arity {
+                            Ok(#ident::#variant_ident(
+                                #(Json::from_json(ctor_fields[#fields].clone())?),*
+                            ))
+                        } else {
+                            Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                                wanted: #arity,
+                                got: ctor_fields.len(),
+                            })
+                        }
+                    }
+                }
+            }
+
+            syn::Fields::Unit => quote! {
+                (#variant_str, ctor_fields) => match &ctor_fields[..] {
+                    [] => Ok(#ident::#variant),
+                    _ => Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                        wanted: 0,
+                        got: ctor_fields.len(),
+                    }),
+                }
+            },
+        }
+    });
+
+    let variant_names = variants
+        .iter()
+        .map(|variant| variant.ident.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let error_msg = format!("constructor names ({})", variant_names);
+
+    let from_json_impl = quote! {
+        fn from_json(value: Value) -> Result<Self, lbr_prelude::error::Error> {
+            lbr_prelude::json::sum_parser(&value).and_then(|obj| match obj {
+                #(#from_json_pattern_match)*
+                _ => Err(lbr_prelude::error::Error::UnexpectedJsonInvariant {
+                    wanted: #error_msg.to_owned(),
+                    got: "unknown constructor name".to_owned(),
+                }),
+            })
+        }
+    };
+    quote! {
+        impl Json for #ident {
+            #to_json_impl
+            #from_json_impl
+        }
+    }
 }
