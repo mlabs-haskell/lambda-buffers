@@ -29,12 +29,11 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 }
 
 /// Derive `Json` implementations for a struct type
-/// All fields must implement the `Json` traint
+/// All fields must implement the `Json` trait
 fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let named = &fields_named.named;
 
-    // Insert object keys and values to a dictionary
-    // Required by `to_json`
+    // Insert keys and values of the JSON object into a dict
     let dict_insert = named.iter().map(|field| {
         let key = &field.ident;
         let key_str = key.as_ref().unwrap().to_string();
@@ -43,6 +42,16 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
         }
     });
 
+    let to_json_impl = quote! {
+        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+            let mut dict = serde_json::Map::new();
+            #(#dict_insert)*
+
+            Ok(serde_json::Value::Object(dict))
+        }
+    };
+
+    // Get the values from the JSON object
     let dict_get = named.iter().map(|field| {
         let key = &field.ident;
         let key_str = key.as_ref().unwrap().to_string();
@@ -60,30 +69,28 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
 
     let keys = named.iter().map(|field| &field.ident);
 
+    let from_json_impl = quote! {
+        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+            match value {
+                serde_json::Value::Object(dict) => {
+                    #(#dict_get)*
+
+                    Ok(Self {
+                        #(#keys,)*
+                    })
+                }
+                _ => Err(lbr_prelude::error::Error::UnexpectedJsonType {
+                    wanted: lbr_prelude::error::JsonType::Object,
+                    got: lbr_prelude::error::JsonType::from(&value),
+                }),
+            }
+        }
+    };
+
     quote! {
         impl lbr_prelude::json::Json for #ident {
-            fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-                let mut dict = serde_json::Map::new();
-                #(#dict_insert)*
-
-                Ok(serde_json::Value::Object(dict))
-            }
-
-            fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
-                match value {
-                    serde_json::Value::Object(dict) => {
-                        #(#dict_get)*
-
-                        Ok(Self {
-                            #(#keys,)*
-                        })
-                    }
-                    _ => Err(lbr_prelude::error::Error::UnexpectedJsonType {
-                        wanted: lbr_prelude::error::JsonType::Object,
-                        got: lbr_prelude::error::JsonType::from(&value),
-                    }),
-                }
-            }
+            #to_json_impl
+            #from_json_impl
         }
     }
 }
