@@ -11,12 +11,12 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 
     let expanded = match &ast.data {
         syn::Data::Struct(data_struct) => match &data_struct.fields {
-            syn::Fields::Named(fields_named) => impl_struct(ident, &fields_named),
+            syn::Fields::Named(fields_named) => impl_struct(ident, fields_named),
             syn::Fields::Unnamed(fields_unnamed) => {
                 if fields_unnamed.unnamed.len() == 1 {
                     impl_newtype(ident)
                 } else {
-                    impl_tuple(ident, &fields_unnamed)
+                    impl_tuple(ident, fields_unnamed)
                 }
             }
             syn::Fields::Unit => unimplemented!("Units are unsupported"),
@@ -95,13 +95,36 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
     }
 }
 
-/// Derive `Json` implementations for a tuple type
-/// All fields must implement the `Json` traint
-fn impl_tuple(
-    _ident: &syn::Ident,
-    _fields_unnamed: &syn::FieldsUnnamed,
-) -> proc_macro2::TokenStream {
-    unimplemented!("Tuples are unsupported")
+/// Derive `Json` implementations for a tuple struct type
+/// All fields must implement the `Json` trait
+fn impl_tuple(ident: &syn::Ident, fields_unnamed: &syn::FieldsUnnamed) -> proc_macro2::TokenStream {
+    let arity = fields_unnamed.unnamed.len();
+    let to_json_indices = (0..arity).map(syn::Index::from);
+    let from_json_indices = to_json_indices.clone();
+    quote! {
+        impl lbr_prelude::json::Json for #ident {
+            fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+                Ok(serde_json::Value::Array(vec![
+                    #(self.#to_json_indices.to_json()?,)*
+                ]))
+            }
+
+            fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+                Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
+                    if vec.len() == #arity {
+                        Ok(Self(
+                            #(Json::from_json(vec[#from_json_indices].clone())?,)*
+                        ))
+                    } else {
+                        Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                            wanted: #arity,
+                            got: vec.len(),
+                        })
+                    }
+                })
+            }
+        }
+    }
 }
 
 /// Derive transparent `Json` implementations for a tuple type, the wrapper will not be present
