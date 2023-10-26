@@ -40,6 +40,7 @@
         ./runtimes/purescript/lbr-plutus/build.nix
         ./runtimes/rust/lbr-prelude/build.nix
         ./runtimes/rust/lbr-prelude-derive/build.nix
+        ./runtimes/rust/plutus-ledger-types/build.nix
         ./testsuites/lbt-prelude/api/build.nix
         ./testsuites/lbt-prelude/golden/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix

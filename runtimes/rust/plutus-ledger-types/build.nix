@@ -1,7 +1,7 @@
 { inputs, ... }: {
   perSystem = { self', pkgs, system, ... }:
     let
-      crateName = "lbr-plutus-csl";
+      crateName = "plutus-ledger-types";
       rustWithTools = pkgs.rust-bin.stable.latest.default.override {
         extensions = [ "rustfmt" "rust-analyzer" "clippy" ];
       };
