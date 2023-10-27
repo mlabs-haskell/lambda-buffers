@@ -58,13 +58,13 @@ eqRecord (qtyN, recTy) =
     ( \l ->
         LamE
           ( \r ->
-              let assocsRecTy = map (\field -> eqField qtyN field l r) $ OMap.assocs recTy
-               in if null assocsRecTy
+              let eqFieldExprs = map (\field -> eqField qtyN field l r) $ OMap.assocs recTy
+               in if null eqFieldExprs
                     then trueE
                     else
                       foldl1
                         (\tot eqFieldExpr -> andE @ tot @ eqFieldExpr)
-                        assocsRecTy
+                        eqFieldExprs
           )
     )
 
@@ -74,18 +74,18 @@ eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ FieldE (qtyN, fieldName) l
 {- | 'eqListHelper' is an internal function which equates two lists of 'ValueE'
  with their type pairwise.
 
- Invariant:
+ Preconditions:
   - All input lists are the same length
 -}
 eqListHelper :: [ValueE] -> [ValueE] -> [LT.Ty] -> ValueE
 eqListHelper lxs rxs tys =
-  Exception.assert invariantAssertion $
+  Exception.assert preconditionAssertion $
     let eqedLxsRxsTys = map (\(lx, rx, ty) -> eqE ty @ lx @ rx) $ zip3 lxs rxs tys
      in if null eqedLxsRxsTys
           then trueE
           else foldl1 (\tot eqExpr -> andE @ tot @ eqExpr) eqedLxsRxsTys
   where
-    invariantAssertion =
+    preconditionAssertion =
       let lxsLength = length lxs
           rxsLength = length rxs
           tysLength = length tys
