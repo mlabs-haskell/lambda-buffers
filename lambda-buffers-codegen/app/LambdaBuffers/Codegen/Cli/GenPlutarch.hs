@@ -5,8 +5,8 @@ import Control.Monad (unless)
 import Data.Aeson (decodeFileStrict')
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
-import LambdaBuffers.Codegen.Haskell (runPrint)
-import LambdaBuffers.Codegen.Haskell.Config qualified as H
+import LambdaBuffers.Codegen.Haskell.Config qualified as Haskell
+import LambdaBuffers.Codegen.Plutarch qualified as Plutarch
 import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
@@ -29,9 +29,9 @@ gen opts = do
 
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . Plutarch.runPrint cfg ci <$> (ci ^. #modules))
 
-readPlutarchConfig :: FilePath -> IO H.Config
+readPlutarchConfig :: FilePath -> IO Haskell.Config
 readPlutarchConfig f = do
   fExists <- doesFileExist f
   unless

@@ -1,12 +1,11 @@
-module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
+module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson, hsClassImplPrinters) where
 
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
@@ -16,6 +15,38 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
 
+hsClassImplPrinters ::
+  Map
+    H.QClassName
+    ( PC.ModuleName ->
+      PC.TyDefs ->
+      (Doc ann -> Doc ann) ->
+      PC.Ty ->
+      Either P.InternalError (Doc ann, Set H.QValName)
+    )
+hsClassImplPrinters =
+  Map.fromList
+    [
+      ( (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Eq")
+      , printDeriveEqBase
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkClassName "Eq")
+      , printDeriveEqPlutusTx
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "ToData")
+      , printDeriveToPlutusData
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "FromData")
+      , printDeriveFromPlutusData
+      )
+    ,
+      ( (H.MkCabalPackageName "lbr-prelude", H.MkModuleName "LambdaBuffers.Runtime.Prelude", H.MkClassName "Json")
+      , printDeriveJson
+      )
+    ]
 eqClassMethodName :: H.ValueName
 eqClassMethodName = H.MkValueName "=="
 
@@ -79,7 +110,7 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
     )
 
 printValueDef :: H.ValueName -> Doc ann -> Doc ann
-printValueDef valName valDoc = printHsValName valName <+> equals <+> valDoc
+printValueDef valName valDoc = H.printHsValName valName <+> equals <+> valDoc
 
 fromPlutusDataClassMethodName :: H.ValueName
 fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"

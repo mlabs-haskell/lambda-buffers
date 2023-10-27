@@ -7,8 +7,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printFieldName, printHsQValName, printMkCtor)
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Compiler.LamTy qualified as LT
@@ -19,7 +18,7 @@ import Proto.Codegen_Fields qualified as P
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Haskell.Print.LamVal] " <> Text.pack msg
 
-type MonadPrint m = LV.MonadPrint m H.QValName
+type MonadPrint m = LV.MonadPrint m HsSyntax.QValName
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
@@ -30,7 +29,7 @@ printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
   argDocs <- for args printValueE
   let body = ctorCont (ctor, args)
   bodyDoc <- printValueE body
-  let ctorNameDoc = printCtorName (withInfo tyn) . withInfo $ ctorN
+  let ctorNameDoc = HsSyntax.printCtorName (withInfo tyn) . withInfo $ ctorN
   if null argDocs
     then return $ group $ ctorNameDoc <+> "->" <+> group bodyDoc
     else return $ group $ ctorNameDoc <+> hsep argDocs <+> "->" <+> group bodyDoc
@@ -75,7 +74,7 @@ printAppE funVal argVal = do
 printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, tyn), fieldN) recVal = do
   recDoc <- printValueE recVal
-  let mayFnDoc = printFieldName (withInfo tyn) (withInfo fieldN)
+  let mayFnDoc = HsSyntax.printFieldName (withInfo tyn) (withInfo fieldN)
   case mayFnDoc of
     Nothing -> throwInternalError $ "Failed printing a `FieldName` " <> show fieldN
     Just fnDoc -> return $ fnDoc <+> recDoc
@@ -98,7 +97,7 @@ printLetE ((_, tyN), fields) prodVal letCont = do
   argDocs <- for args printValueE
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
-  let prodCtorDoc = printMkCtor (withInfo tyN)
+  let prodCtorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <+> "in" <+> bodyDoc
 
 printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
@@ -145,7 +144,7 @@ printCaseListE caseListVal cases otherCase = do
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals printValueE
-  let ctorNDoc = printCtorName (withInfo tyN) (withInfo ctorN)
+  let ctorNDoc = HsSyntax.printCtorName (withInfo tyN) (withInfo ctorN)
   if null prodDocs
     then return ctorNDoc
     else return $ ctorNDoc <+> align (hsep prodDocs)
@@ -153,18 +152,18 @@ printCtorE ((_, tyN), (ctorN, _)) prodVals = do
 printRecordE :: MonadPrint m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
 printRecordE ((_, tyN), _) vals = do
   fieldDocs <- for vals $
-    \((fieldN, _), val) -> case printFieldName (withInfo tyN) (withInfo fieldN) of
+    \((fieldN, _), val) -> case HsSyntax.printFieldName (withInfo tyN) (withInfo fieldN) of
       Nothing -> throwInternalError $ "Failed printing field name " <> show fieldN
       Just fieldNDoc -> do
         valDoc <- printValueE val
         return $ group $ fieldNDoc <+> equals <+> valDoc
-  let ctorDoc = printMkCtor (withInfo tyN)
+  let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (lbrace <+> encloseSep mempty mempty (comma <> space) fieldDocs <+> rbrace)
 
 printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE ((_, tyN), _) vals = do
   fieldDocs <- for vals printValueE
-  let ctorDoc = printMkCtor (withInfo tyN)
+  let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (hsep fieldDocs)
 
 printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
@@ -195,7 +194,7 @@ printCaseTextE txtVal cases otherCase = do
 printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref = do
   qvn <- LV.resolveRef ref
-  printHsQValName <$> LV.importValue qvn
+  HsSyntax.printHsQValName <$> LV.importValue qvn
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v

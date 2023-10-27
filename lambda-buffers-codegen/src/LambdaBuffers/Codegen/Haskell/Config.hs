@@ -4,7 +4,7 @@ module LambdaBuffers.Codegen.Haskell.Config (Config) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import LambdaBuffers.Codegen.Config qualified as Config
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
 
 type Config = Config.Config H.QTyName H.QClassName
 

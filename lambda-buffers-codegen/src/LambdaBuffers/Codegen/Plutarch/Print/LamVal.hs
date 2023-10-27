@@ -7,10 +7,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
 import Data.Traversable (for)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printCtorName, printHsQValName, printMkCtor)
-import LambdaBuffers.Codegen.Haskell.Print.Names qualified as HsNames
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as HsSyntax
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Compiler.LamTy qualified as LT
@@ -21,7 +18,7 @@ import Proto.Codegen_Fields qualified as P
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] " <> Text.pack msg
 
-type MonadPrint m = LV.MonadPrint m H.QValName
+type MonadPrint m = LV.MonadPrint m HsSyntax.QValName
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
@@ -89,7 +86,7 @@ printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
-  pappDoc <- HsNames.printHsQValName <$> LV.importValue pappRef
+  pappDoc <- HsSyntax.printHsQValName <$> LV.importValue pappRef
   return $ funDoc <+> pappDoc <+> group (parens argDoc)
 
 {- | `printCtorE qctor prodVals` prints a sum type constructor of type `qctor` with the body type of `prodVals` expression.
@@ -111,8 +108,8 @@ pcon (Foo'Bar x y)
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE _qctor@((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals printValueE
-  let ctorNDoc = printCtorName (withInfo tyN) (withInfo ctorN)
-  pconDoc <- HsNames.printHsQValName <$> LV.importValue pconRef
+  let ctorNDoc = HsSyntax.printCtorName (withInfo tyN) (withInfo ctorN)
+  pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   if null prodDocs
     then return $ pconDoc <+> ctorNDoc
     else return $ pconDoc <+> parens (ctorNDoc <+> align (hsep prodDocs))
@@ -155,7 +152,7 @@ printCaseE _qsum@(qtyN, sumTy) caseVal ctorCont = do
             LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
             _ -> throwInternalError "Got a non-product in Sum."
         )
-  pmatchDoc <- HsNames.printHsQValName <$> LV.importValue pmatchRef
+  pmatchDoc <- HsSyntax.printHsQValName <$> LV.importValue pmatchRef
   pmatchContArgDoc <- LV.freshArg >>= printValueE
   let casesDoc = "ca" <> align ("se" <+> pmatchContArgDoc <+> "of" <> line <> ctorCaseDocs)
   return $ pmatchDoc <+> caseValDoc <+> parens (backslash <> pmatchContArgDoc <+> "->" <+> casesDoc)
@@ -166,7 +163,7 @@ printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
   argDocs <- for args printValueE
   let body = ctorCont (ctor, args)
   bodyDoc <- printValueE body
-  let ctorNameDoc = printCtorName (withInfo tyn) . withInfo $ ctorN
+  let ctorNameDoc = HsSyntax.printCtorName (withInfo tyn) . withInfo $ ctorN
   if null argDocs
     then return $ group $ ctorNameDoc <+> "->" <+> group bodyDoc
     else return $ group $ ctorNameDoc <+> hsep argDocs <+> "->" <+> group bodyDoc
@@ -190,8 +187,8 @@ pcon (Foo x y)
 printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE ((_, tyN), _) vals = do
   fieldDocs <- for vals printValueE
-  let ctorDoc = printMkCtor (withInfo tyN)
-  pconDoc <- HsNames.printHsQValName <$> LV.importValue pconRef
+  let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
+  pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   return $ pconDoc <+> parens (ctorDoc <+> align (hsep fieldDocs))
 
 {- | `printLetE qprod prodVal prodCont` prints a product pattern match a `prodVal` value of product type `qprod` and supplies the result to `prodCont`
@@ -219,8 +216,8 @@ printLetE ((_, tyN), fields) prodVal letCont = do
   argDocs <- for args printValueE
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
-  let prodCtorDoc = printMkCtor (withInfo tyN)
-  pmatchDoc <- HsNames.printHsQValName <$> LV.importValue pmatchRef
+  let prodCtorDoc = HsSyntax.printMkCtor (withInfo tyN)
+  pmatchDoc <- HsSyntax.printHsQValName <$> LV.importValue pmatchRef
   return $ pmatchDoc <+> prodValDoc <+> parens (backslash <> parens (prodCtorDoc <+> hsep argDocs) <+> "->" <+> bodyDoc)
 
 {- | `printListE vals` prints a list expression.
@@ -236,11 +233,11 @@ PCons x (PCons y PNil)
 ```
 -}
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
-printListE [] = HsNames.printHsQValName <$> LV.importValue pnilRef
+printListE [] = HsSyntax.printHsQValName <$> LV.importValue pnilRef
 printListE (val : vals) = do
   valDoc <- printValueE val
   valsDoc <- printListE vals
-  pconsDoc <- HsNames.printHsQValName <$> LV.importValue pconsRef
+  pconsDoc <- HsSyntax.printHsQValName <$> LV.importValue pconsRef
   return $ pconsDoc <+> valDoc <+> parens valsDoc
 
 {- | `printCaseListE vals` prints a list pattern match expression.
@@ -291,8 +288,8 @@ printCaseListE xs cases otherCase = do
 printCaseListE' :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> Doc ann -> Int -> Int -> [LV.ValueE] -> m (Doc ann)
 printCaseListE' _xs _cases otherCaseDoc currentLength maxLength _args | currentLength > maxLength = return otherCaseDoc
 printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
-  pnilRefDoc <- HsNames.printHsQValName <$> LV.importValue pnilRef
-  pconsRefDoc <- HsNames.printHsQValName <$> LV.importValue pconsRef
+  pnilRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pnilRef
+  pconsRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconsRef
   xsDoc <- printValueE xs
   xsMatched <- LV.freshArg
   xsMatchedDoc <- printValueE xsMatched
@@ -334,7 +331,7 @@ pconstant 123
 -}
 printIntE :: MonadPrint m => Int -> m (Doc ann)
 printIntE i = do
-  pconstantRefDoc <- HsNames.printHsQValName <$> LV.importValue pconstantRef
+  pconstantRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconstantRef
   return $ pconstantRefDoc <+> pretty i
 
 {- | `printCaseIntE intVal cases otherCase` prints an integer case expression.
@@ -352,8 +349,8 @@ pif (x #== pconstant 0) <A> (pif (x #== pconstant 123) <B> <C>)
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal [] otherCase = printValueE (otherCase caseIntVal) -- TODO(bladyjoker): Why is this a function and not just a ValueE?
 printCaseIntE caseIntVal ((iVal, bodyVal) : cases) otherCase = do
-  pifRefDoc <- HsNames.printHsQValName <$> LV.importValue pifRef
-  peqRefDoc <- HsNames.printHsQValName <$> LV.importValue peqRef
+  pifRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pifRef
+  peqRefDoc <- HsSyntax.printHsQValName <$> LV.importValue peqRef
   caseIntValDoc <- printValueE caseIntVal
   iValDoc <- printValueE iVal -- TODO(bladyjoker): Why am I handing a ValueE and not Int?
   bodyValDoc <- printValueE bodyVal
@@ -374,7 +371,7 @@ pconstant "Dražen Popović"
 -}
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE t = do
-  pconstantRefDoc <- HsNames.printHsQValName <$> LV.importValue pconstantRef
+  pconstantRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconstantRef
   return $ pconstantRefDoc <+> dquotes (pretty t)
 
 {- | `printCaseTextE tVal cases otherCase` prints a text case expression.
@@ -392,8 +389,8 @@ pif (x #== pconstant "a") <A> (pif (x #== pconstant "b") <B> <C>)
 printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE caseTxtVal [] otherCase = printValueE (otherCase caseTxtVal) -- TODO(bladyjoker): Why is this a function and not just a ValueE?
 printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
-  pifRefDoc <- HsNames.printHsQValName <$> LV.importValue pifRef
-  peqRefDoc <- HsNames.printHsQValName <$> LV.importValue peqRef
+  pifRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pifRef
+  peqRefDoc <- HsSyntax.printHsQValName <$> LV.importValue peqRef
   caseTxtValDoc <- printValueE caseTxtVal
   txtValDoc <- printValueE txtVal -- TODO(bladyjoker): Why am I handing a ValueE and not a Text?
   bodyValDoc <- printValueE bodyVal
@@ -403,7 +400,7 @@ printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
 printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref = do
   qvn <- LV.resolveRef ref
-  printHsQValName <$> LV.importValue qvn
+  HsSyntax.printHsQValName <$> LV.importValue qvn
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v

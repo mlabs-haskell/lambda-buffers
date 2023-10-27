@@ -4,13 +4,12 @@ import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
 import Data.Set (Set)
 import Data.Set qualified as Set
-import LambdaBuffers.Codegen.Haskell.Print.Names (printHsQClassName)
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, lparen, rparen, space, (<+>))
 
-printInstanceDef :: H.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
+printInstanceDef :: HsSyntax.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
 printInstanceDef hsQClassName ty =
   let headDoc = printConstraint hsQClassName ty
       freeVars = collectTyVars ty
@@ -18,12 +17,12 @@ printInstanceDef hsQClassName ty =
         [] -> \implDoc -> "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
         _ -> \implDoc -> "instance" <+> printInstanceContext hsQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
 
-printInstanceContext :: H.QClassName -> [PC.Ty] -> Doc ann
+printInstanceContext :: HsSyntax.QClassName -> [PC.Ty] -> Doc ann
 printInstanceContext hsQClassName tys = align . group $ encloseSep lparen rparen comma (printConstraint hsQClassName <$> tys)
 
-printConstraint :: H.QClassName -> PC.Ty -> Doc ann
+printConstraint :: HsSyntax.QClassName -> PC.Ty -> Doc ann
 printConstraint qcn ty =
-  let crefDoc = printHsQClassName qcn
+  let crefDoc = HsSyntax.printHsQClassName qcn
       tyDoc = printTyInner ty
    in crefDoc <+> tyDoc
 
