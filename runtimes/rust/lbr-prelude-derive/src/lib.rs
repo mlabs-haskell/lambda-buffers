@@ -70,7 +70,7 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
             let #key = dict
                 .get(#key_str)
                 .ok_or(lbr_prelude::error::Error::UnexpectedFieldName {
-                    wanted: #key_str.to_owned(),gg
+                    wanted: #key_str.to_owned(),
                     got: dict.keys().cloned().collect(),
                 })
                 .cloned()
@@ -248,7 +248,7 @@ fn impl_enum(
     let error_msg = format!("constructor names ({})", variant_names);
 
     let from_json_impl = quote! {
-        fn from_json(value: Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             lbr_prelude::json::sum_parser(&value).and_then(|obj| match obj {
                 #(#from_json_pattern_match)*
                 _ => Err(lbr_prelude::error::Error::UnexpectedJsonInvariant {
