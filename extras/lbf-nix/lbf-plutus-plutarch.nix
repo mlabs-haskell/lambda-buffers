@@ -12,7 +12,7 @@ let
       };
       dependencies = {
         default = [ ];
-        override = deps: deps ++ [ "lbf-prelude" "lbf-plutus" ];
+        override = deps: deps ++ [ "lbf-prelude-plutarch" "lbf-plutus-plutarch" ];
       };
       classes = {
         default = [ ];

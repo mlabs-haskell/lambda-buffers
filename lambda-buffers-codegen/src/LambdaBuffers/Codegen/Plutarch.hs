@@ -37,3 +37,4 @@ plutarchPrintModuleEnv =
     PlSyntax.printModName
     mempty
     PlPrint.printTyDef
+    ["KindSignatures", "DataKinds"]

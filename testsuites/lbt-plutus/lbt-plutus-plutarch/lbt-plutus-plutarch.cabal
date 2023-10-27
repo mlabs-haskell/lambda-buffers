@@ -1,0 +1,128 @@
+cabal-version: 3.0
+name:          lbt-plutus-plutarch
+version:       0.1.0.0
+synopsis:
+  Integration Test Suite for `lbf-plutus` and Plutarch `lbr-plutus-plutarch`
+
+author:        Drazen Popovic
+maintainer:    bladyjoker@gmail.com
+
+flag dev
+  description: Enable non-strict compilation for development
+  manual:      True
+
+common common-language
+  ghc-options:
+    -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
+    -fwarn-missing-import-lists -Weverything -Wno-unsafe
+    -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
+    -Wno-missing-kind-signatures -Wno-all-missed-specializations
+
+  if !flag(dev)
+    ghc-options: -Werror
+
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    DoAndIfThenElse
+    DuplicateRecordFields
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    ExplicitNamespaces
+    FlexibleContexts
+    FlexibleInstances
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralizedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RecordWildCards
+    RelaxedPolyRec
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TemplateHaskell
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns
+
+  default-language:   Haskell2010
+
+library
+  import:          common-language
+  build-depends:
+    , base                   >=4.16
+    , bytestring             >=0.11
+    , containers             >=0.6
+    , directory              >=1.3
+    , filepath               >=1.4
+    , lbf-plutus-plutarch-golden-api
+    , lbr-plutarch
+    , plutus-ledger-api      >=1.1
+    , plutus-tx              >=1.1
+    , split                  >=0.2
+    , tasty                  >=1.4
+    , tasty-hunit            >=0.10
+
+  hs-source-dirs:  src
+  exposed-modules:
+    Test.LambdaBuffers.Plutus.Golden
+    Test.LambdaBuffers.Plutus.Golden.Json
+    Test.LambdaBuffers.Plutus.Golden.PlutusData
+    Test.LambdaBuffers.Plutus.Golden.Utils
+
+test-suite tests
+  import:         common-language
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+  build-depends:
+    , base                    >=4.16
+    , hedgehog                >=1.2
+    , lbf-plutus-plutarch-golden-api
+    , lbr-plutarch
+    , lbt-plutus-golden-data
+    , lbt-plutus-plutarch
+    , plutus-tx
+    , tasty                   >=1.4
+    , tasty-hedgehog          >=1.4
+
+  other-modules:
+    Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
+    Test.LambdaBuffers.Runtime.Plutus.Json
+    Test.LambdaBuffers.Runtime.Plutus.PlutusData

@@ -46,6 +46,7 @@ data PrintModuleEnv m ann = PrintModuleEnv
           Either P.InternalError (Doc ann, Set H.QValName)
         )
   , env'printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
+  , env'languageExtensions :: [Text]
   }
 
 printModule :: MonadPrint m => PrintModuleEnv m ann -> m (Doc ann, Set Text)
@@ -56,7 +57,8 @@ printModule env = do
   st <- get
   let modDoc =
         align . vsep $
-          [ printModuleHeader env (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
+          [ printLanguageExtensions (env'languageExtensions env)
+          , printModuleHeader env (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
           , mempty
           , printImports
               env
@@ -122,6 +124,9 @@ printHsQClassImpl env mn iTyDefs hqcn d =
         Right (instanceDefsDoc, valImps) -> do
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc
+
+printLanguageExtensions :: Pretty a => [a] -> Doc ann
+printLanguageExtensions exts = "{-# LANGUAGE" <+> encloseSep mempty mempty comma (pretty <$> exts) <+> "#-}"
 
 printModuleHeader :: PrintModuleEnv m ann -> PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader env mn exports = "module" <+> env'printModuleName env mn <+> printExports exports <+> "where"

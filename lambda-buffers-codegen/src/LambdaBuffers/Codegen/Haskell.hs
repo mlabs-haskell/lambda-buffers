@@ -38,3 +38,4 @@ hsPrintModuleEnv =
     HsSyntax.printModName
     HsDerive.hsClassImplPrinters
     HsPrint.printTyDef
+    []

@@ -5,10 +5,20 @@
       project = { lib, ... }: {
         src = ./.;
 
-        name = "lbr-plutarch";
+        name = "lbt-plutus-plutarch";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
-        extraHackage = [ "${inputs.plutarch}" "${inputs.plutarch}/plutarch-extra" ];
+
+        extraHackage = [
+          "${config.packages.lbf-prelude-plutarch}"
+          "${config.packages.lbf-plutus-plutarch}"
+          "${config.packages.lbr-plutarch-src}"
+          "${config.packages.lbf-plutus-golden-api-plutarch}"
+          "${config.packages.lbt-plutus-golden-haskell}"
+          "${inputs.plutarch}"
+          "${inputs.plutarch}/plutarch-extra"
+        ];
+
         modules = [
           (_: {
             packages = {
@@ -16,7 +26,7 @@
               allComponent.doHaddock = true;
 
               # Enable strict compilation
-              lbr-plutarch.configureFlags = [ "-f-dev" ];
+              lbt-plutus-plutarch.configureFlags = [ "-f-dev" ];
             };
           })
         ];
@@ -42,25 +52,16 @@
         inputs.mlabs-tooling.lib.moduleMod
         project
       ]).flake { };
-
     in
 
     {
-      devShells.dev-lbr-plutarch = hsNixFlake.devShell;
+      devShells.dev-lbt-plutus-plutarch = hsNixFlake.devShell;
 
       packages = {
-        lbr-plutarch-lib = hsNixFlake.packages."lbr-plutarch:lib:lbr-plutarch";
-        lbr-plutarch-src = pkgs.stdenv.mkDerivation {
-          name = "lbr-plutus-haskell-src";
-          src = ./.;
-          phases = "installPhase";
-          installPhase = "ln -s $src $out";
-        };
-
-        # lbr-plutarch-tests = hsNixFlake.packages."lbr-plutarch:test:tests";
+        lbt-plutus-plutarch-lib = hsNixFlake.packages."lbt-plutus-plutarch:lib:lbt-plutus-plutarch";
+        lbt-plutus-plutarch-tests = hsNixFlake.packages."lbt-plutus-plutarch:test:tests";
       };
 
-      # checks.check-lbr-plutarch = hsNixFlake.checks."lbr-plutarch:test:tests";
-
+      checks.check-lbt-plutus-plutarch = hsNixFlake.checks."lbt-plutus-plutarch:test:tests";
     };
 }

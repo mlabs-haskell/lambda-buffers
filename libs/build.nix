@@ -69,7 +69,7 @@ _:
         imports = [ ./lbf-prelude ];
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
         classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
-        dependencies = [ "lbf-prelude" ];
+        dependencies = [ "lbf-prelude-plutarch" ];
         configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" "${config.packages.codegen-configs}/plutarch-plutus.json" ];
       };
     };
