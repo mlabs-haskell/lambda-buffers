@@ -28,6 +28,14 @@ _:
         configs = [ ../lambda-buffers-codegen/data/purescript-prelude-base.json ];
       };
 
+      lbf-prelude-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+        name = "lbf-prelude-plutarch";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" ];
+        configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" ];
+      };
+
       lbf-plutus = pkgs.stdenv.mkDerivation {
         name = "lbf-plutus";
         src = ./lbf-plutus;
@@ -55,6 +63,15 @@ _:
         configs = [ ../lambda-buffers-codegen/data/purescript-prelude-base.json ../lambda-buffers-codegen/data/purescript-plutus-ctl.json ];
       };
 
+      lbf-plutus-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+        name = "lbf-plutus-plutarch";
+        src = ./lbf-plutus;
+        imports = [ ./lbf-prelude ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
+        dependencies = [ "lbf-prelude" ];
+        configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" "${config.packages.codegen-configs}/plutarch-plutus.json" ];
+      };
     };
 
   };

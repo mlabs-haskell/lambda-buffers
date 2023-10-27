@@ -4,14 +4,14 @@ import Control.Lens (view)
 import Control.Monad.Reader.Class (asks)
 import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
-import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsPrint
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Plutarch.Print.Syntax qualified as PlSyntax
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, dot, encloseSep, equals, group, hardline, parens, pipe, sep, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, dot, encloseSep, equals, group, hsep, parens, pipe, sep, space, (<+>))
 
 {- | Prints the type definition.
 
@@ -33,55 +33,28 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: Plutarch.Internal.PType) (b :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = FooSum'Foo (Plutarch.Internal.Term s (PMaybe a)) | FooSum'Bar (Plutarch.Internal.Term s b)
-.................................................................................................................................................................................................
-  deriving stock GHC.Generics.Generic
-  ...................................
-  deriving anyclass Plutarch.Show.PShow
-  .....................................
-
-data FooProd (a :: Plutarch.Internal.PType) (b :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = FooProd (Plutarch.Internal.Term s (PMaybe a)) (Plutarch.Internal.Term s b)
-..................................................................................................................................................................................
-  deriving stock GHC.Generics.Generic
-  ...................................
-  deriving anyclass Plutarch.Show.PShow
-  .....................................
-
-data FooRecord (a :: Plutarch.Internal.PType) (b :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = FooRecord (Plutarch.Internal.Term s (PMaybe a)) (Plutarch.Internal.Term s b)
-......................................................................................................................................................................................
-  deriving stock GHC.Generics.Generic
-  ...................................
-  deriving anyclass Plutarch.Show.PShow
-  .....................................
-
-type FooOpaque (a :: Plutarch.Internal.PType) (b :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = Some.Configured.Opaque.FooOpaque a b s
-................................................................................................................................................
-
-newtype FooProdUnit (a :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = FooProdUnit (Plutarch.Internal.Term s (PMaybe a))
-...............................................................................................................................
-  deriving stock GHC.Generics.Generic
-  ...................................
-  deriving anyclass Plutarch.Show.PShow
-  .....................................
-
-newtype FooRecUnit (a :: Plutarch.Internal.PType) (s :: Plutarch.Internal.S) = FooRecUnit (Plutarch.Internal.Term s (PMaybe a))
-...............................................................................................................................
-  deriving stock GHC.Generics.Generic
-  ...................................
-  deriving anyclass Plutarch.Show.PShow
-  .....................................
+data FooSum (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooSum'Foo (Plutarch.Term s (PMaybe a)) | FooSum'Bar (Plutarch.Term s b)
+....................................................................................................................................................
+data FooProd (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooProd (Plutarch.Term s (PMaybe a)) (Plutarch.Term s b)
+.....................................................................................................................................
+data FooRecord (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooRecord (Plutarch.Term s (PMaybe a)) (Plutarch.Term s b)
+.........................................................................................................................................
+type FooOpaque = Some.Configured.Opaque.FooOpaque
+.................................................
+newtype FooProdUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooProdUnit (Plutarch.Term s (PMaybe a))
+......................................................................................................
+newtype FooRecUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooRecUnit (Plutarch.Term s (PMaybe a))
+....................................................................................................
 ```
 
 And signals the following imports:
 
 ```haskell
-import qualified Plutarch.Internal
-import qualified GHC.Generics
-import qualified Plutarch.Show
+import qualified Plutarch
 import qualified Some.Configured.Opaque
 ```
 
-NOTE(bladyjoker): The full qualification and deriving statements are omitted in the following docstrings for brevity.
+NOTE(bladyjoker): The full qualification is omitted in the following docstrings for brevity.
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
@@ -89,12 +62,7 @@ printTyDef (PC.TyDef tyN tyabs _) = do
   Print.importType scopeType
   Print.importType ptypeType
   (kw, absDoc) <- printTyAbs tyN tyabs
-  if kw /= HsSyntax.SynonymTyDef
-    then do
-      drvGenericDoc <- printDerivingGeneric
-      drvShowDoc <- printDerivingShow
-      return $ group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc <> hardline <> vsep [drvGenericDoc, drvShowDoc]
-    else return $ group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc
+  return $ group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc
 
 printTyDefKw :: HsSyntax.TyDefKw -> Doc ann
 printTyDefKw HsSyntax.DataTyDef = "data"
@@ -102,34 +70,33 @@ printTyDefKw HsSyntax.NewtypeTyDef = "newtype"
 printTyDefKw HsSyntax.SynonymTyDef = "type"
 
 -- Plutarch internal type imports (Term, PType, S).
--- FIX(bladyjoker): Use H.QTyName and invent importType
 
 termType :: HsSyntax.QTyName
-termType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Internal", HsSyntax.MkTyName "Term")
+termType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "Term")
 
 scopeType :: HsSyntax.QTyName
-scopeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Internal", HsSyntax.MkTyName "S")
+scopeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "S")
 
 ptypeType :: HsSyntax.QTyName
-ptypeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Internal", HsSyntax.MkTyName "PType")
+ptypeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "PType")
 
 -- Plutarch derived classes (Generic, PShow).
 
-showClass :: HsSyntax.QClassName
-showClass = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Show", HsSyntax.MkClassName "PShow")
+_showClass :: HsSyntax.QClassName
+_showClass = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Show", HsSyntax.MkClassName "PShow")
 
-printDerivingShow :: MonadPrint m => m (Doc ann)
-printDerivingShow = do
-  Print.importClass showClass
-  return $ "deriving anyclass" <+> HsSyntax.printHsQClassName showClass
+_printDerivingShow :: MonadPrint m => m (Doc ann)
+_printDerivingShow = do
+  Print.importClass _showClass
+  return $ "deriving anyclass" <+> HsSyntax.printHsQClassName _showClass
 
-genericClass :: HsSyntax.QClassName
-genericClass = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "GHC.Generics", HsSyntax.MkClassName "Generic")
+_genericClass :: HsSyntax.QClassName
+_genericClass = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "GHC.Generics", HsSyntax.MkClassName "Generic")
 
-printDerivingGeneric :: MonadPrint m => m (Doc ann)
-printDerivingGeneric = do
-  Print.importClass genericClass
-  return $ "deriving stock" <+> HsSyntax.printHsQClassName genericClass
+_printDerivingGeneric :: MonadPrint m => m (Doc ann)
+_printDerivingGeneric = do
+  Print.importClass _genericClass
+  return $ "deriving stock" <+> HsSyntax.printHsQClassName _genericClass
 
 {- | Prints the type abstraction.
 
@@ -157,19 +124,26 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
              ...........................................................................
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                .............................................................................
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
-               ...........................................................................
+type FooOpaque = Some.Configured.Opaque.FooOpaque
+               ..................................
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                     .......................................................
 newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
                    ......................................................
 ```
+
+NOTE(bladyjoker): We don't print the `s` Scope type argument/variable and others because `The type synonym ‘Prelude.Plutarch.Integer’ should have 1 argument, but has been given none` in `Term s Prelude.Plutarch.Integer`. We also don't print other args because it's either all args or none.
 -}
 printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (HsSyntax.TyDefKw, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
-  let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
   (kw, bodyDoc) <- printTyBody tyN (toList args) body
-  return (kw, group $ argsDoc <+> parens ("s" <+> "::" <+> HsSyntax.printHsQTyName scopeType) <> align (equals <+> bodyDoc))
+  let scopeArgDoc :: Doc ann
+      scopeArgDoc = parens ("s" <+> "::" <+> HsSyntax.printHsQTyName scopeType)
+      argsDoc =
+        if kw == HsPrint.SynonymTyDef
+          then mempty
+          else hsep $ (printTyArg <$> toList args) <> [scopeArgDoc]
+  return (kw, group $ argsDoc <+> equals <+> align bodyDoc)
 
 {- | Prints the type body.
 
@@ -196,8 +170,8 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
                                                   ......................................
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                                                     ........................................
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
-                                                    ......................................
+type FooOpaque = Some.Configured.Opaque.FooOpaque
+                 ................................
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                                             ...............................
 newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
@@ -216,12 +190,12 @@ printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
   [] -> return (HsSyntax.DataTyDef, HsSyntax.printMkCtor tyN)
   [_] -> return (HsSyntax.NewtypeTyDef, HsSyntax.printMkCtor tyN <+> printRec r)
   _ -> return (HsSyntax.DataTyDef, HsSyntax.printMkCtor tyN <+> printRec r)
-printTyBody tyN args (PC.OpaqueI si) = do
+printTyBody tyN _args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> Print.throwInternalError si ("Should have an Opaque configured for " <> show tyN)
-    Just hqtyn -> return (HsSyntax.SynonymTyDef, HsSyntax.printHsQTyName hqtyn <> space <> sep ((HsSyntax.printVarName . view #argName <$> args) ++ ["s"]))
+    Just hqtyn -> return (HsSyntax.SynonymTyDef, HsSyntax.printHsQTyName hqtyn)
 
 {- | Prints the type (abstraction) arguments.
 
@@ -249,8 +223,8 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
              ............ ............
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                ............ ............
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
-               ............ ............
+type FooOpaque = Some.Configured.Opaque.FooOpaque
+
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                     ............
 newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
@@ -285,7 +259,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
 
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
 
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
 
@@ -326,7 +300,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
 
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
 
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
 
@@ -367,7 +341,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
 
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                                                               ..............................
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
 
@@ -403,7 +377,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
                                                           ..............................
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
 
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                                                         ...................
@@ -447,7 +421,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
                                                                   ..........
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                                                                        ........
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                                                                  ........
@@ -487,7 +461,7 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
                                                                    ......
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                                                                        ......
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
+type FooOpaque = Some.Configured.Opaque.FooOpaque
 
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                                                                  ......
@@ -525,8 +499,8 @@ data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (T
                                                                           .           .
 data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
                                                                               .           .
-type FooOpaque (a :: PType) (b :: PType) (s :: S) = Some.Configured.Opaque.FooOpaque a b s
-                                                                                     . .
+type FooOpaque = Some.Configured.Opaque.FooOpaque
+
 newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
                                                                         .
 newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))

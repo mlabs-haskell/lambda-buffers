@@ -24,11 +24,9 @@ import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Syntax (
   cabalPackageNameToText,
-  printModName',
   printTyName,
  )
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
-import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -36,7 +34,7 @@ import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, lin
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
-data PrintModuleEnv ann = PrintModuleEnv
+data PrintModuleEnv m ann = PrintModuleEnv
   { env'printModuleName :: PC.ModuleName -> Doc ann
   , env'implementationPrinter ::
       Map
@@ -47,12 +45,13 @@ data PrintModuleEnv ann = PrintModuleEnv
           PC.Ty ->
           Either P.InternalError (Doc ann, Set H.QValName)
         )
+  , env'printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
   }
 
-printModule :: MonadPrint m => PrintModuleEnv ann -> m (Doc ann, Set Text)
+printModule :: MonadPrint m => PrintModuleEnv m ann -> m (Doc ann, Set Text)
 printModule env = do
   ctx <- ask
-  tyDefDocs <- for (toList $ ctx ^. Print.ctxModule . #typeDefs) printTyDef
+  tyDefDocs <- for (toList $ ctx ^. Print.ctxModule . #typeDefs) (env'printTyDef env)
   instDocs <- printInstances env
   st <- get
   let modDoc =
@@ -60,8 +59,9 @@ printModule env = do
           [ printModuleHeader env (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
           , mempty
           , printImports
+              env
               (ctx ^. Print.ctxTyImports)
-              (ctx ^. Print.ctxOpaqueTyImports)
+              (ctx ^. Print.ctxOpaqueTyImports <> st ^. Print.stTypeImports)
               (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
               (ctx ^. Print.ctxRuleImports)
               (st ^. Print.stValueImports)
@@ -73,13 +73,13 @@ printModule env = do
       pkgDeps =
         collectPackageDeps
           (ctx ^. Print.ctxTyImports)
-          (ctx ^. Print.ctxOpaqueTyImports)
+          (ctx ^. Print.ctxOpaqueTyImports <> st ^. Print.stTypeImports)
           (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
           (ctx ^. Print.ctxRuleImports)
           (st ^. Print.stValueImports)
   return (modDoc, pkgDeps)
 
-printInstances :: MonadPrint m => PrintModuleEnv ann -> m [Doc ann]
+printInstances :: MonadPrint m => PrintModuleEnv m ann -> m [Doc ann]
 printInstances env = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
@@ -92,7 +92,7 @@ printInstances env = do
     mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PrintModuleEnv ann -> PC.TyDefs -> PC.Derive -> m [Doc ann]
+printDerive :: MonadPrint m => PrintModuleEnv m ann -> PC.TyDefs -> PC.Derive -> m [Doc ann]
 printDerive env iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
@@ -107,7 +107,7 @@ printDerive env iTyDefs d = do
             printHsQClassImpl env mn iTyDefs hsqcn d
         )
 
-printHsQClassImpl :: MonadPrint m => PrintModuleEnv ann -> PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
+printHsQClassImpl :: MonadPrint m => PrintModuleEnv m ann -> PC.ModuleName -> PC.TyDefs -> H.QClassName -> PC.Derive -> m (Doc ann)
 printHsQClassImpl env mn iTyDefs hqcn d =
   case Map.lookup hqcn (env'implementationPrinter env) of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Haskell type class " <> show hqcn) -- TODO(bladyjoker): Fix hqcn printing
@@ -123,7 +123,7 @@ printHsQClassImpl env mn iTyDefs hqcn d =
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc
 
-printModuleHeader :: PrintModuleEnv ann -> PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
+printModuleHeader :: PrintModuleEnv m ann -> PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader env mn exports = "module" <+> env'printModuleName env mn <+> printExports exports <+> "where"
 
 printExports :: Set (PC.InfoLess PC.TyName) -> Doc ann
@@ -132,12 +132,12 @@ printExports exports = align $ group $ encloseSep lparen rparen (comma <> space)
     printTyExportWithCtors :: PC.TyName -> Doc ann
     printTyExportWithCtors tyn = printTyName tyn <> "(..)"
 
-printImports :: Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Doc ann
-printImports lbTyImports hsTyImports classImps ruleImps valImps =
+printImports :: PrintModuleEnv m ann -> Set PC.QTyName -> Set H.QTyName -> Set H.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set H.QValName -> Doc ann
+printImports env lbTyImports hsTyImports classImps ruleImps valImps =
   let groupedLbImports =
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
           `Set.union` ruleImps
-      lbImportDocs = importQualified . printModName' <$> toList groupedLbImports
+      lbImportDocs = importQualified . env'printModuleName env . (`PC.withInfoLess` id) <$> toList groupedLbImports
 
       groupedHsImports =
         Set.fromList [mn | (_cbl, mn, _tn) <- toList hsTyImports]

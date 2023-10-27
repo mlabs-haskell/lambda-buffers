@@ -3,7 +3,7 @@ pkgs: lbf: lbg-haskell: lbfHaskellOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfHs = import ./lbf-haskell.nix pkgs lbf lbg-haskell;
+  lbfHs = import ./lbf-haskell.nix pkgs lbf "${lbg-haskell}/bin/lbg-haskell";
   lbfHaskellOptsForPrelude = utils.overrideAttrs
     {
       imports = {

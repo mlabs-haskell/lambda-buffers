@@ -13,6 +13,12 @@ _: {
         files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
       };
 
+      packages.lbf-plutus-golden-api-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch {
+        name = "lbf-plutus-plutarch-golden-api";
+        src = ./.;
+        files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
+      };
+
     };
 }
 

@@ -1,6 +1,13 @@
-module LambdaBuffers.Runtime.Plutarch () where
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module LambdaBuffers.Runtime.Plutarch (PEitherData (..), PAssetClass, PMap, PChar, PSet, PValue) where
 
 import Data.Functor.Const (Const)
+import GHC.Exts (IsList (Item, fromList, toList))
+import GHC.TypeLits qualified as GHC
 import Plutarch (
   ClosedTerm,
   PType,
@@ -16,6 +23,8 @@ import Plutarch (
   (#),
   type (:-->),
  )
+import Plutarch.Api.V1 qualified
+import Plutarch.Api.V1.AssocMap qualified as AssocMap
 import Plutarch.Api.V1.Maybe (PMaybeData)
 import Plutarch.Api.V2 (PAddress, PCurrencySymbol, PTokenName, PTuple)
 import Plutarch.Builtin (
@@ -36,6 +45,7 @@ import Plutarch.Builtin (
  )
 import Plutarch.Extra.TermCont (pletC)
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
+import Plutarch.Lift (PUnsafeLiftDecl)
 import Plutarch.List (
   PIsListLike,
   PList,
@@ -45,8 +55,6 @@ import Plutarch.List (
 import Plutarch.Prelude (PEq ((#==)), PInteger, PPair (PPair), PTryFrom, pconstant, pif, ptrace, ptraceError, tcont)
 import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'), ptryFrom)
 import Plutarch.Unsafe (punsafeCoerce)
-
-type PAssetClass = PTuple PCurrencySymbol PTokenName
 
 ptryFromData :: forall a s. PTryFrom PData a => Term s PData -> Term s a
 ptryFromData x = unTermCont $ fst <$> tcont (ptryFrom @a x)
@@ -250,7 +258,7 @@ data FooSum (a :: PType) (b :: PType) (s :: S)
 
 instance (PIsData a, PIsData b) => PIsData (FooSum a b)
 
-instance (PTryFrom PData a, PIsData a, PIsData b) => PTryFrom PData (PAsData (FooSum a b)) where
+instance (PTryFrom PData a, PTryFrom PData b, PIsData a, PIsData b) => PTryFrom PData (PAsData (FooSum a b)) where
   type PTryFromExcess PData (PAsData (FooSum a b)) = Const ()
   ptryFrom' pd f =
     pcasePlutusData
@@ -273,7 +281,7 @@ instance (PTryFrom PData a, PIsData a, PIsData b) => PTryFrom PData (PAsData (Fo
                                             pmatch
                                               x5
                                               ( \case
-                                                  PNil -> f $ (pdata . pcon $ FooSum'Bar (ptryFromData x2) (ptryFromData x4), ())
+                                                  PNil -> f (pdata . pcon $ FooSum'Bar (ptryFromData x2) (ptryFromData x4), ())
                                                   _ -> ptraceError ""
                                               )
                                           _ -> ptraceError ""
@@ -291,7 +299,7 @@ instance (PTryFrom PData a, PIsData a, PIsData b) => PTryFrom PData (PAsData (Fo
       (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
       pd
 
-instance (PTryFrom PData a, PIsData a, PIsData b) => PlutusType (FooSum a b) where
+instance (PIsData a, PIsData b) => PlutusType (FooSum a b) where
   type PInner (FooSum a b) = PData
   pcon' (FooSum'Bar x y) = pforgetData $ pconstrBuiltin # 0 # (pcons # pforgetData (pdata x) # (pcons # pforgetData (pdata y) # pnil))
   pcon' (FooSum'Baz x y) = pforgetData $ pconstrBuiltin # 1 # (pcons # pforgetData (pdata x) # (pcons # pforgetData (pdata y) # pnil))
@@ -310,19 +318,7 @@ instance (PTryFrom PData a, PIsData a, PIsData b) => PlutusType (FooSum a b) whe
                             pmatch
                               x1
                               ( \case
-                                  PCons x2 x3 ->
-                                    pmatch
-                                      x3
-                                      ( \case
-                                          PCons x4 x5 ->
-                                            pmatch
-                                              x5
-                                              ( \case
-                                                  PNil -> f $ FooSum'Bar (punsafeCoerce x2) (punsafeCoerce x4)
-                                                  _ -> ptraceError ""
-                                              )
-                                          _ -> ptraceError ""
-                                      )
+                                  [x2, x3] -> f $ FooSum'Bar (punsafeCoerce $ pcon x2) (punsafeCoerce $ pcon x3)
                                   _ -> ptraceError ""
                               )
                         )
@@ -335,3 +331,152 @@ instance (PTryFrom PData a, PIsData a, PIsData b) => PlutusType (FooSum a b) whe
       (plam $ \pdInt -> pif (pdInt #== 2) (f FooSum'Bad) (ptraceError "Got PlutusData Integer but invalid value"))
       (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
       pd
+
+instance (PIsData a, PUnsafeLiftDecl a) => IsList (Term s (PBuiltinList a)) where
+  type Item (Term s (PBuiltinList a)) = Term s a
+  fromList [] = pcon PNil
+  fromList (x : xs) = pcon $ PCons x (fromList xs)
+  toList = error "unimplemented"
+
+instance (PIsData a, PlutusType a, PUnsafeLiftDecl a) => IsList (PBuiltinList a s) where
+  type Item (PBuiltinList a s) = a s
+  fromList [] = PNil
+  fromList (x : xs) = PCons (pcon x) (fromList . fmap pcon $ xs)
+  toList = error "unimplemented"
+
+type PAssetClass = PTuple PCurrencySymbol PTokenName
+
+data PEitherData (a :: PType) (b :: PType) (s :: S) = PDLeft (Term s a) | PDRight (Term s b)
+
+instance (PIsData a, PIsData b) => PlutusType (PEitherData a b) where
+  type PInner (PEitherData a b) = PData
+  pcon' (PDLeft x) = lvConstrToPlutusData 0 [x]
+  pcon' (PDRight x) = lvConstrToPlutusData 1 [x]
+  pmatch' pd f =
+    pcaseConstr
+      # (pasConstr # pd)
+      # lvListE
+        [ lvTupleE
+            0
+            ( plam $ \x1 ->
+                pmatch
+                  x1
+                  ( \case
+                      PCons x2 x3 ->
+                        pmatch
+                          x3
+                          ( \case
+                              PNil -> f (PDLeft (punsafeCoerce x2))
+                              _ -> ptraceError "err"
+                          )
+                      _ -> ptraceError "err"
+                  )
+            )
+        , lvTupleE
+            1
+            ( plam $ \x1 ->
+                pmatch
+                  x1
+                  ( \case
+                      PCons x2 x3 ->
+                        pmatch
+                          x3
+                          ( \case
+                              PNil -> f (PDRight (punsafeCoerce x2))
+                              _ -> ptraceError "err"
+                          )
+                      _ -> ptraceError "err"
+                  )
+            )
+        ]
+      # ptraceError "err"
+
+instance (PTryFrom PData a, PIsData a, PTryFrom PData b, PIsData b) => PTryFrom PData (PEitherData a b) where
+  type PTryFromExcess PData (PEitherData a b) = Const ()
+  ptryFrom' pd f =
+    pcasePlutusData
+      ( plam $ \pdConstr ->
+          pcaseConstr
+            # pdConstr
+            # lvListE
+              [ lvTupleE
+                  0
+                  ( plam $ \x1 ->
+                      pmatch
+                        x1
+                        ( \case
+                            PCons x2 x3 ->
+                              pmatch
+                                x3
+                                ( \case
+                                    PNil -> f (pcon $ PDLeft (ptryFromData x2), ())
+                                    _ -> ptraceError "err"
+                                )
+                            _ -> ptraceError "err"
+                        )
+                  )
+              , lvTupleE
+                  1
+                  ( plam $ \x1 ->
+                      pmatch
+                        x1
+                        ( \case
+                            PCons x2 x3 ->
+                              pmatch
+                                x3
+                                ( \case
+                                    PNil -> f (pcon $ PDRight (ptryFromData x2), ())
+                                    _ -> ptraceError "err"
+                                )
+                            _ -> ptraceError "err"
+                        )
+                  )
+              ]
+            # ptraceError "err"
+      )
+      (plam $ \_pdList -> ptraceError "Got PlutusData List")
+      (plam $ \_pdInt -> ptraceError "Got PlutusData Integer")
+      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
+      pd
+
+instance PIsData (PEitherData a b) where
+  pdataImpl = punsafeCoerce
+  pfromDataImpl = punsafeCoerce
+
+instance PEq (PEitherData a b) where
+  (#==) l r = pdata l #== pdata r
+
+type PMap = AssocMap.PMap 'AssocMap.Sorted
+
+type PValue = Plutarch.Api.V1.PValue 'Plutarch.Api.V1.Sorted 'Plutarch.Api.V1.NoGuarantees
+
+data PChar (s :: S) = PChar
+
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PlutusType PChar where
+  type PInner PChar = PData
+  pcon' PChar = error "unreachable"
+  pmatch' _pd _f = error "unreachable"
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PTryFrom PData PChar where
+  type PTryFromExcess PData PChar = Const ()
+  ptryFrom' _pd _f = error "unreachable"
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PIsData PChar where
+  pdataImpl = error "unreachable"
+  pfromDataImpl = error "unreachable"
+
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PEq PChar where
+  (#==) _l _r = error "unreachable"
+
+data PSet (a :: PType) (s :: S) = PSet
+
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PlutusType (PSet a) where
+  type PInner (PSet a) = PData
+  pcon' PSet = error "unreachable"
+  pmatch' _pd _f = error "unreachable"
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PTryFrom PData (PSet a) where
+  type PTryFromExcess PData (PSet a) = Const ()
+  ptryFrom' _pd _f = error "unreachable"
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PIsData (PSet a) where
+  pdataImpl = error "unreachable"
+  pfromDataImpl = error "unreachable"
+instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PEq (PSet a) where
+  (#==) _l _r = error "unreachable"

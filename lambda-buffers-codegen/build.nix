@@ -72,6 +72,9 @@
         lbg-purescript = pkgs.writeShellScriptBin "lbg-purescript" ''
           ${config.packages.lbg}/bin/lbg gen-purescript $@
         '';
+        lbg-plutarch = pkgs.writeShellScriptBin "lbg-plutarch" ''
+          ${config.packages.lbg}/bin/lbg gen-plutarch $@
+        '';
 
         codegen-configs = pkgs.stdenv.mkDerivation {
           name = "codegen-configs";

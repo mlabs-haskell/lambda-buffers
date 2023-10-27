@@ -1,8 +1,8 @@
 {
   "opaquesConfig": {
     "Prelude.Map": [
-      "plutarch",
-      "Plutarch.Api.V1",
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
       "PMap"
     ],
     "Prelude.List": [
@@ -11,9 +11,9 @@
       "PBuiltinList"
     ],
     "Prelude.Either": [
-      "plutarch",
-      "Plutarch",
-      "TODO(bladyjoker): PEitherData"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PEitherData"
     ],
     "Prelude.Maybe": [
       "plutarch",
@@ -39,6 +39,16 @@
       "plutarch",
       "Plutarch.Bool",
       "PBool"
+    ],
+    "Prelude.Char": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PChar"
+    ],
+    "Prelude.Set": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PSet"
     ]
   },
   "classesConfig": {

@@ -2,7 +2,7 @@
   "opaquesConfig": {
     "Plutus.V1.PlutusData": [
       "plutarch",
-      "Plutach.Builtin",
+      "Plutarch.Builtin",
       "PData"
     ],
     "Plutus.V1.Address": [
@@ -66,9 +66,9 @@
       "PPOSIXTimeRange"
     ],
     "Plutus.V1.Value": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "TODO(bladyjoker): PValue has additional type args"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PValue"
     ],
     "Plutus.V1.CurrencySymbol": [
       "plutarch",
@@ -76,9 +76,9 @@
       "PCurrencySymbol"
     ],
     "Plutus.V1.AssetClass": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "TODO(bladyjoker): PAssetClass"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PAssetClass"
     ],
     "Plutus.V1.TokenName": [
       "plutarch",
@@ -107,7 +107,7 @@
     ],
     "Plutus.V1.ScriptHash": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.Api.V1.Scripts",
       "PScriptHash"
     ],
     "Plutus.V1.ScriptContext": [
@@ -146,9 +146,9 @@
       "PTxOutRef"
     ],
     "Plutus.V1.Map": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "TODO(bladyjoker): Same as PValue, additional ty args PMap"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PMap"
     ],
     "Plutus.V2.TxInInfo": [
       "plutarch",

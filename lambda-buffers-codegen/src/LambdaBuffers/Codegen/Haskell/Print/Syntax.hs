@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.Syntax (printHsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printHsQValName, printHsClassMethodName, printHsQClassName, printHsValName, QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), cabalPackageNameToText) where
+module LambdaBuffers.Codegen.Haskell.Print.Syntax (printHsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printHsQValName, printHsClassMethodName, printHsQClassName, printHsValName, QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), cabalPackageNameToText) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -41,9 +41,6 @@ fromLbForeignRef fr =
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
 filepathFromModuleName mn = Text.unpack (Text.replace "." "/" (let MkModuleName txt = fromLbModuleName mn in txt)) <> ".hs"
-
-printModName' :: PC.InfoLess PC.ModuleName -> Doc ann
-printModName' = (`PC.withInfoLess` printModName)
 
 printModName :: PC.ModuleName -> Doc ann
 printModName mn = let MkModuleName hmn = fromLbModuleName mn in pretty hmn

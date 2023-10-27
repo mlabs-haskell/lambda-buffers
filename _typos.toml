@@ -1,6 +1,7 @@
 [default.extend-words]
 substituters = "substituters"
 hask= "hask"
+lits="lits"
 
 [type.pdf]
 extend-glob = ["*.pdf"]

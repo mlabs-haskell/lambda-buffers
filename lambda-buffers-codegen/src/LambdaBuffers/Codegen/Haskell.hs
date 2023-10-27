@@ -10,6 +10,7 @@ import LambdaBuffers.Codegen.Haskell.Config qualified as HsConfig
 import LambdaBuffers.Codegen.Haskell.Print qualified as HsPrint
 import LambdaBuffers.Codegen.Haskell.Print.Derive qualified as HsDerive
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
+import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as HsPrint
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
@@ -31,5 +32,9 @@ runPrint cfg ci m = case runCheck cfg ci m of
         , deps
         )
 
-hsPrintModuleEnv :: forall {ann}. HsPrint.PrintModuleEnv ann
-hsPrintModuleEnv = HsPrint.PrintModuleEnv HsSyntax.printModName HsDerive.hsClassImplPrinters
+hsPrintModuleEnv :: HsPrint.PrintModuleEnv m ann
+hsPrintModuleEnv =
+  HsPrint.PrintModuleEnv
+    HsSyntax.printModName
+    HsDerive.hsClassImplPrinters
+    HsPrint.printTyDef

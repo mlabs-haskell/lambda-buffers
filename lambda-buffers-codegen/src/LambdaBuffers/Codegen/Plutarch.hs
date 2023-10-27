@@ -9,6 +9,7 @@ import LambdaBuffers.Codegen.Check (runCheck)
 import LambdaBuffers.Codegen.Haskell.Config qualified as HsConfig
 import LambdaBuffers.Codegen.Haskell.Print qualified as HsPrint
 import LambdaBuffers.Codegen.Plutarch.Print.Syntax qualified as PlSyntax
+import LambdaBuffers.Codegen.Plutarch.Print.TyDef qualified as PlPrint
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
@@ -30,5 +31,9 @@ runPrint cfg ci m = case runCheck cfg ci m of
         , deps
         )
 
-plutarchPrintModuleEnv :: HsPrint.PrintModuleEnv ann
-plutarchPrintModuleEnv = HsPrint.PrintModuleEnv PlSyntax.printModName mempty
+plutarchPrintModuleEnv :: HsPrint.PrintModuleEnv m ann
+plutarchPrintModuleEnv =
+  HsPrint.PrintModuleEnv
+    PlSyntax.printModName
+    mempty
+    PlPrint.printTyDef
