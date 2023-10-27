@@ -1,5 +1,6 @@
 module LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl) where
 
+import Control.Exception qualified as Exception
 import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Codegen.LamVal (Field, QProduct, QRecord, QSum, ValueE (CaseE, FieldE, LamE, LetE, RefE), (@))
 import LambdaBuffers.Codegen.LamVal.Derive (deriveImpl)
@@ -23,11 +24,7 @@ eqSum qsum =
                       r
                       ( \(ctorTyR, rxs) ->
                           if fst ctorTyL == fst ctorTyR
-                            then
-                              foldl
-                                (\tot (lx, rx, ty) -> andE @ tot @ (eqE ty @ lx @ rx))
-                                trueE
-                                (zip3 lxs rxs (snd ctorTyL))
+                            then eqListHelper lxs rxs (snd ctorTyL)
                             else falseE
                       )
                 )
@@ -48,11 +45,7 @@ eqProduct qprod@(_, prodTy) =
                     LetE
                       qprod
                       r
-                      ( \rxs ->
-                          foldl
-                            (\tot (lx, rx, ty) -> andE @ tot @ (eqE ty @ lx @ rx))
-                            trueE
-                            (zip3 lxs rxs prodTy)
+                      ( \rxs -> eqListHelper lxs rxs prodTy
                       )
                 )
           )
@@ -65,15 +58,38 @@ eqRecord (qtyN, recTy) =
     ( \l ->
         LamE
           ( \r ->
-              foldl
-                (\tot field -> andE @ tot @ eqField qtyN field l r)
-                trueE
-                (OMap.assocs recTy)
+              let eqFieldExprs = map (\field -> eqField qtyN field l r) $ OMap.assocs recTy
+               in if null eqFieldExprs
+                    then trueE
+                    else
+                      foldl1
+                        (\tot eqFieldExpr -> andE @ tot @ eqFieldExpr)
+                        eqFieldExprs
           )
     )
 
 eqField :: PC.QTyName -> Field -> ValueE -> ValueE -> ValueE
 eqField qtyN (fieldName, fieldTy) l r = eqE fieldTy @ FieldE (qtyN, fieldName) l @ FieldE (qtyN, fieldName) r
+
+{- | 'eqListHelper' is an internal function which equates two lists of 'ValueE'
+ with their type pairwise.
+
+ Preconditions:
+  - All input lists are the same length
+-}
+eqListHelper :: [ValueE] -> [ValueE] -> [LT.Ty] -> ValueE
+eqListHelper lxs rxs tys =
+  Exception.assert preconditionAssertion $
+    let eqedLxsRxsTys = map (\(lx, rx, ty) -> eqE ty @ lx @ rx) $ zip3 lxs rxs tys
+     in if null eqedLxsRxsTys
+          then trueE
+          else foldl1 (\tot eqExpr -> andE @ tot @ eqExpr) eqedLxsRxsTys
+  where
+    preconditionAssertion =
+      let lxsLength = length lxs
+          rxsLength = length rxs
+          tysLength = length tys
+       in lxsLength == rxsLength && rxsLength == tysLength
 
 -- | Hooks
 deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
