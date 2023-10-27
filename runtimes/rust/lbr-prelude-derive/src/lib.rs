@@ -20,14 +20,14 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 
     let ident = &ast.ident;
 
-    let expanded = match &ast.data {
+    let (to_json_impl, from_json_impl) = match &ast.data {
         syn::Data::Struct(data_struct) => match &data_struct.fields {
-            syn::Fields::Named(fields_named) => impl_struct(ident, fields_named),
+            syn::Fields::Named(fields_named) => impl_struct(fields_named),
             syn::Fields::Unnamed(fields_unnamed) => {
                 if fields_unnamed.unnamed.len() == 1 {
-                    impl_newtype(ident)
+                    impl_newtype()
                 } else {
-                    impl_tuple(ident, fields_unnamed)
+                    impl_tuple(fields_unnamed)
                 }
             }
             syn::Fields::Unit => unimplemented!("Units are unsupported"),
@@ -36,12 +36,23 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
         syn::Data::Union(_data_union) => unimplemented!("Unions are unsupported"),
     };
 
+    let (impl_generics, ty_generics, where_clause) = &ast.generics.split_for_impl();
+
+    let expanded = quote! {
+        impl #impl_generics lbr_prelude::json::Json for #ident #ty_generics #where_clause {
+            #to_json_impl
+            #from_json_impl
+        }
+    };
+
     TokenStream::from(expanded)
 }
 
 /// Derive `Json` implementations for a struct type
 /// All fields must implement the `Json` trait
-fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macro2::TokenStream {
+fn impl_struct(
+    fields_named: &syn::FieldsNamed,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let named = &fields_named.named;
 
     // Insert keys and values of the JSON object into a dict
@@ -98,61 +109,63 @@ fn impl_struct(ident: &syn::Ident, fields_named: &syn::FieldsNamed) -> proc_macr
         }
     };
 
-    quote! {
-        impl lbr_prelude::json::Json for #ident {
-            #to_json_impl
-            #from_json_impl
-        }
-    }
+    (to_json_impl, from_json_impl)
 }
 
 /// Derive `Json` implementations for a tuple struct type
 /// All fields must implement the `Json` trait
-fn impl_tuple(ident: &syn::Ident, fields_unnamed: &syn::FieldsUnnamed) -> proc_macro2::TokenStream {
+fn impl_tuple(
+    fields_unnamed: &syn::FieldsUnnamed,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let arity = fields_unnamed.unnamed.len();
     let to_json_indices = (0..arity).map(syn::Index::from);
     let from_json_indices = to_json_indices.clone();
-    quote! {
-        impl lbr_prelude::json::Json for #ident {
-            fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-                Ok(serde_json::Value::Array(vec![
-                    #(self.#to_json_indices.to_json()?,)*
-                ]))
-            }
 
-            fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
-                Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
-                    if vec.len() == #arity {
-                        Ok(Self(
-                            #(Json::from_json(vec[#from_json_indices].clone())?,)*
-                        ))
-                    } else {
-                        Err(lbr_prelude::error::Error::UnexpectedArrayLength {
-                            wanted: #arity,
-                            got: vec.len(),
-                        })
-                    }
-                })
-            }
+    let to_json_impl = quote! {
+        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+            Ok(serde_json::Value::Array(vec![
+                #(self.#to_json_indices.to_json()?,)*
+            ]))
         }
-    }
+    };
+
+    let from_json_impl = quote! {
+        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+            Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
+                if vec.len() == #arity {
+                    Ok(Self(
+                        #(Json::from_json(vec[#from_json_indices].clone())?,)*
+                    ))
+                } else {
+                    Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                        wanted: #arity,
+                        got: vec.len(),
+                    })
+                }
+            })
+        }
+    };
+
+    (to_json_impl, from_json_impl)
 }
 
 /// Derive transparent `Json` implementations for a tuple type, the wrapper will not be present
 /// in the serialised format
 /// The enclosed field must implement the `Json` trait
-fn impl_newtype(ident: &syn::Ident) -> proc_macro2::TokenStream {
-    quote! {
-        impl lbr_prelude::json::Json for #ident {
-            fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-                self.0.to_json()
-            }
-
-            fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
-                Ok(Self(lbr_prelude::json::Json::from_json(value)?))
-            }
+fn impl_newtype() -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let to_json_impl = quote! {
+        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+            self.0.to_json()
         }
-    }
+    };
+
+    let from_json_impl = quote! {
+        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+            Ok(Self(lbr_prelude::json::Json::from_json(value)?))
+        }
+    };
+
+    (to_json_impl, from_json_impl)
 }
 
 /// Derive `Json` implementation for an enum type
@@ -160,7 +173,7 @@ fn impl_newtype(ident: &syn::Ident) -> proc_macro2::TokenStream {
 fn impl_enum(
     ident: &syn::Ident,
     variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     // Arms of the pattern match over the enum variants
     let to_json_pattern_match = variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
@@ -258,10 +271,6 @@ fn impl_enum(
             })
         }
     };
-    quote! {
-        impl Json for #ident {
-            #to_json_impl
-            #from_json_impl
-        }
-    }
+
+    (to_json_impl, from_json_impl)
 }
