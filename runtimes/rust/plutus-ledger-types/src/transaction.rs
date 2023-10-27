@@ -1,7 +1,12 @@
 use crate::address::Address;
+use crate::crypto::LedgerBytes;
 use crate::datum::OutputDatum;
+use crate::interval::PlutusInterval;
 use crate::script::ScriptHash;
 use crate::value::Value;
+#[cfg(feature = "lbf")]
+use lbr_prelude::json::Json;
+use num_bigint::BigInt;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -12,9 +17,10 @@ use serde::{Deserialize, Serialize};
 /// inside the transaction
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "lbf", derive(Json))]
 pub struct TransactionInput {
     pub transaction_id: TransactionHash,
-    pub index: u32,
+    pub index: BigInt,
 }
 
 /// 32-bytes blake2b256 hash of a transaction body.
@@ -23,7 +29,8 @@ pub struct TransactionInput {
 /// Note: Plutus docs might incorrectly state that it uses SHA256.
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct TransactionHash(pub Vec<u8>);
+#[cfg_attr(feature = "lbf", derive(Json))]
+pub struct TransactionHash(pub LedgerBytes);
 
 /// An output of a transaction
 ///
@@ -31,9 +38,18 @@ pub struct TransactionHash(pub Vec<u8>);
 /// script
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "lbf", derive(Json))]
 pub struct TransactionOutput {
     pub address: Address,
-    pub amount: Value,
     pub datum: OutputDatum,
     pub reference_script: Option<ScriptHash>,
+    pub value: Value,
 }
+
+/// POSIX time is measured as the number of milliseconds since 1970-01-01T00:00:00Z
+#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "lbf", derive(Json))]
+pub struct POSIXTime(pub BigInt);
+
+pub type POSIXTimeRange = PlutusInterval<POSIXTime>;

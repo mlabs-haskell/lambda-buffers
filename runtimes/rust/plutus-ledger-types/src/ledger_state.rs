@@ -20,6 +20,7 @@ pub struct Slot(pub BigInt);
 /// Kind of a network
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "lbf", derive(Json))]
 pub enum NetworkKind {
     Testnet,
     Mainnet,
@@ -28,6 +29,7 @@ pub enum NetworkKind {
 /// Network kind and id (in case of a testnet)
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "lbf", derive(Json))]
 pub enum NetworkId {
     Testnet(BigInt),
     Mainnet,

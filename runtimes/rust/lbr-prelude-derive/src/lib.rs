@@ -40,6 +40,7 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics lbr_prelude::json::Json for #ident #ty_generics #where_clause {
+
             #to_json_impl
             #from_json_impl
         }
