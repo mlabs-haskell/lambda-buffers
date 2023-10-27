@@ -15,6 +15,7 @@ instance Eq PlutusData
 instance Json PlutusData
 
 -- Instances for Prelude types
+-- TODO(bladyjoker): Add other Prelude types (Maybe, Either, Text, Bytes etc.)
 instance PlutusData Bool
 instance PlutusData Integer
 
@@ -47,6 +48,7 @@ instance Eq PubKeyHash
 instance Json PubKeyHash
 
 -- PlutusLedgerApi.V1.Bytes
+-- TODO(bladyjoker): We don't need this, use Prelude.Bytes? Json encoding is different though, base16 vs base64. But, you need base16 for hashes, which is covered regardless. So yeah, remove this and use Prelude.Bytes.
 opaque Bytes
 
 instance PlutusData Bytes

@@ -48,7 +48,12 @@
     {
       devShells.dev-lbr-plutarch = hsNixFlake.devShell;
 
-      packages = { };
+      packages = {
+        lbr-plutarch-lib = hsNixFlake.packages."lbr-plutarch:lib:lbr-plutarch";
+        lbr-plutarch-tests = hsNixFlake.packages."lbr-plutarch:test:tests";
+      };
+
+      checks.check-lbr-plutarch = hsNixFlake.checks."lbr-plutarch:test:tests";
 
     };
 }
