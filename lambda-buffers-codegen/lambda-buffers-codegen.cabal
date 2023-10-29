@@ -4,8 +4,13 @@ version:            0.1.0.0
 synopsis:           Lambda Buffers Codegen
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-data-files:         data/**/*.json
-extra-source-files: data/**/*.json
+data-files:
+  data/**/*.json
+  data/lamval-cases/*.hs
+
+extra-source-files:
+  data/**/*.json
+  data/lamval-cases/*.hs
 
 flag dev
   description: Enable non-strict compilation for development
@@ -171,14 +176,22 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , aeson                   >=2.1
-    , base                    >=4.16
+    , aeson                      >=2.1
+    , base                       >=4.16
+    , containers                 >=0.6
+    , data-default               >=0.7
     , lambda-buffers-codegen
-    , tasty                   >=1.4
-    , tasty-hunit             >=0.10
+    , lambda-buffers-codegen-pb  >=0.1
+    , lambda-buffers-compiler    >=0.1
+    , lens                       >=5.2
+    , ordered-containers         >=0.2
+    , tasty                      >=1.4
+    , tasty-hunit                >=0.10
+    , text                       >=1.2
 
   other-modules:
     Paths_lambda_buffers_codegen
     Test.LambdaBuffers.Codegen
     Test.LambdaBuffers.Codegen.Haskell
+    Test.LambdaBuffers.Codegen.Plutarch
     Test.LambdaBuffers.Codegen.Purescript

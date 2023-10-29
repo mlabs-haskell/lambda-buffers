@@ -25,6 +25,9 @@ withInfo x = PC.withInfoLess x id
 
 -- * Plutarch references *
 
+plamRef :: HsSyntax.QValName
+plamRef = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "plam")
+
 pappRef :: HsSyntax.QValName
 pappRef = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "#")
 
@@ -68,18 +71,19 @@ printLamE lamVal = do
   arg <- LV.freshArg
   bodyDoc <- printValueE (lamVal arg)
   argDoc <- printValueE arg
-  return $ "plam" <+> parens (backslash <> argDoc <+> "->" <+> group bodyDoc)
+  plamDoc <- HsSyntax.printHsQValName <$> LV.importValue plamRef
+  return $ plamDoc <+> parens (backslash <> argDoc <+> "->" <+> group bodyDoc)
 
 {- | `printAppE funVal argVal` prints a `lambda application` expression.
 
 ```haskell
-printAppE (\x -> <expression over x>) argVal
+printAppE funVal argVal
 ```
 
 translates to Plutarch
 
 ```haskell
-plam (\x -> <expression over x>) # argVal
+(#) (funVal) (argVal)
 ```
 -}
 printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
@@ -87,7 +91,7 @@ printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
   pappDoc <- HsSyntax.printHsQValName <$> LV.importValue pappRef
-  return $ funDoc <+> pappDoc <+> group (parens argDoc)
+  return $ pappDoc <+> parens funDoc <+> group (parens argDoc)
 
 {- | `printCtorE qctor prodVals` prints a sum type constructor of type `qctor` with the body type of `prodVals` expression.
 
@@ -102,12 +106,14 @@ printCtorE ("Foo", ("Bar", ["a", "b"])) [<x : a>, <y : b>]
 translates to Plutarch
 
 ```haskell
-pcon (Foo'Bar x y)
+pcon (Foo'Bar (x) (y))
 ```
+
+TODO(bladyjoker): Add import for the `Foo'Bar` constructor value reference.
 -}
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE _qctor@((_, tyN), (ctorN, _)) prodVals = do
-  prodDocs <- for prodVals printValueE
+  prodDocs <- for prodVals (fmap parens . printValueE)
   let ctorNDoc = HsSyntax.printCtorName (withInfo tyN) (withInfo ctorN)
   pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   if null prodDocs
@@ -181,12 +187,14 @@ printProductE ("Foo", ["a", "b"]) [<x : a>, <y : b>]
 translates to Plutarch
 
 ```haskell
-pcon (Foo x y)
+pcon (Foo (x) (y))
 ```
+
+TODO(bladyjoker): Add Product constructor import.
 -}
 printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE ((_, tyN), _) vals = do
-  fieldDocs <- for vals printValueE
+  fieldDocs <- for vals (fmap parens . printValueE)
   let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
   pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   return $ pconDoc <+> parens (ctorDoc <+> align (hsep fieldDocs))
@@ -229,16 +237,20 @@ printListE [`x`, `y`]
 translates to Plutarch
 
 ```haskell
-PCons x (PCons y PNil)
+pcon (PCons x (PCons y PNil))
 ```
 -}
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
-printListE [] = HsSyntax.printHsQValName <$> LV.importValue pnilRef
+printListE [] = do
+  pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
+  pnilDoc <- HsSyntax.printHsQValName <$> LV.importValue pnilRef
+  return $ pconDoc <+> pnilDoc
 printListE (val : vals) = do
   valDoc <- printValueE val
   valsDoc <- printListE vals
+  pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   pconsDoc <- HsSyntax.printHsQValName <$> LV.importValue pconsRef
-  return $ pconsDoc <+> valDoc <+> parens valsDoc
+  return $ pconDoc <+> parens (pconsDoc <+> parens valDoc <+> parens valsDoc)
 
 {- | `printCaseListE vals` prints a list pattern match expression.
 
@@ -320,19 +332,21 @@ printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
 {- | `printIntE i` prints an integer literal expression.
 
 ```haskell
-printIntE 123
+printIntE 1
+printIntE -1
 ```
 
 translates to Plutarch
 
 ```haskell
-pconstant 123
+pconstant 1
+pconstant (-1)
 ```
 -}
 printIntE :: MonadPrint m => Int -> m (Doc ann)
 printIntE i = do
   pconstantRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconstantRef
-  return $ pconstantRefDoc <+> pretty i
+  return $ pconstantRefDoc <+> if i < 0 then parens (pretty i) else pretty i
 
 {- | `printCaseIntE intVal cases otherCase` prints an integer case expression.
 
