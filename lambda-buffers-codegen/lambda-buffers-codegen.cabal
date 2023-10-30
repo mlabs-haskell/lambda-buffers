@@ -126,6 +126,7 @@ library
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Plutarch
     LambdaBuffers.Codegen.Plutarch.Print
+    LambdaBuffers.Codegen.Plutarch.Print.Derive
     LambdaBuffers.Codegen.Plutarch.Print.LamVal
     LambdaBuffers.Codegen.Plutarch.Print.Syntax
     LambdaBuffers.Codegen.Plutarch.Print.TyDef

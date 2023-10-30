@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef) where
+module LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef, printConstraint, collectTyVars, printInstanceContext) where
 
 import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
@@ -9,6 +9,17 @@ import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, lparen, rparen, space, (<+>))
 
+{- | `printInstanceDef hsQClassName ty` return a function that given the printed implementation, creates an entire 'instance <hsQClassName> <ty> where' clause.
+
+
+```haskell
+instance SomeClass SomeSmallTy where
+  someMethod = <implementation>
+
+instance (SomeClass a, SomeClass b, SomeClass c) => SomeClass (SomeTy a b c) where
+  someMethod = <implementation>
+```
+-}
 printInstanceDef :: HsSyntax.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
 printInstanceDef hsQClassName ty =
   let headDoc = printConstraint hsQClassName ty

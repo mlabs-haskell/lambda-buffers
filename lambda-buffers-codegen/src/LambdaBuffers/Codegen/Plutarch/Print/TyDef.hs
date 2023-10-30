@@ -80,24 +80,6 @@ scopeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plut
 ptypeType :: HsSyntax.QTyName
 ptypeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "PType")
 
--- Plutarch derived classes (Generic, PShow).
-
-_showClass :: HsSyntax.QClassName
-_showClass = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Show", HsSyntax.MkClassName "PShow")
-
-_printDerivingShow :: MonadPrint m => m (Doc ann)
-_printDerivingShow = do
-  Print.importClass _showClass
-  return $ "deriving anyclass" <+> HsSyntax.printHsQClassName _showClass
-
-_genericClass :: HsSyntax.QClassName
-_genericClass = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "GHC.Generics", HsSyntax.MkClassName "Generic")
-
-_printDerivingGeneric :: MonadPrint m => m (Doc ann)
-_printDerivingGeneric = do
-  Print.importClass _genericClass
-  return $ "deriving stock" <+> HsSyntax.printHsQClassName _genericClass
-
 {- | Prints the type abstraction.
 
 ```lbf

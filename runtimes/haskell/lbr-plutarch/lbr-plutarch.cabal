@@ -92,4 +92,6 @@ library
     , plutarch-extra
 
   hs-source-dirs:  src
-  exposed-modules: LambdaBuffers.Runtime.Plutarch
+  exposed-modules:
+    LambdaBuffers.Runtime.Plutarch
+    LambdaBuffers.Runtime.Plutarch.LamVal

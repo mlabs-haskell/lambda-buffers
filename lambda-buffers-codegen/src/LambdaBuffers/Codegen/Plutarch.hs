@@ -8,6 +8,7 @@ import Data.Text (Text)
 import LambdaBuffers.Codegen.Check (runCheck)
 import LambdaBuffers.Codegen.Haskell.Config qualified as HsConfig
 import LambdaBuffers.Codegen.Haskell.Print qualified as HsPrint
+import LambdaBuffers.Codegen.Plutarch.Print.Derive qualified as PlDerive
 import LambdaBuffers.Codegen.Plutarch.Print.Syntax qualified as PlSyntax
 import LambdaBuffers.Codegen.Plutarch.Print.TyDef qualified as PlPrint
 import LambdaBuffers.Codegen.Print qualified as Print
@@ -35,6 +36,6 @@ plutarchPrintModuleEnv :: HsPrint.PrintModuleEnv m ann
 plutarchPrintModuleEnv =
   HsPrint.PrintModuleEnv
     PlSyntax.printModName
-    mempty
+    PlDerive.hsClassImplPrinters
     PlPrint.printTyDef
-    ["KindSignatures", "DataKinds"]
+    ["KindSignatures", "DataKinds", "TypeFamilies"]

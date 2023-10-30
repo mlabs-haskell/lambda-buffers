@@ -302,6 +302,7 @@ printCaseListE' _xs _cases otherCaseDoc currentLength maxLength _args | currentL
 printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
   pnilRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pnilRef
   pconsRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconsRef
+  pmatchRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pmatchRef
   xsDoc <- printValueE xs
   xsMatched <- LV.freshArg
   xsMatchedDoc <- printValueE xsMatched
@@ -312,7 +313,7 @@ printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
   otherOrCaseDoc <- maybe (return otherCaseDoc) (\c -> printValueE $ c (reverse args)) (List.lookup currentLength cases)
   restDoc <- printCaseListE' tailArg cases otherCaseDoc (currentLength + 1) maxLength (headArg : args)
   return $
-    "pmatch"
+    pmatchRefDoc
       <+> xsDoc
       <+> parens
         ( backslash <> xsMatchedDoc
@@ -357,7 +358,7 @@ printCaseIntE `x` [(0, <A>), (123, <B>)] (\other -> <C>)
 translates to Plutarch
 
 ```haskell
-pif (x #== pconstant 0) <A> (pif (x #== pconstant 123) <B> <C>)
+pif ((#==) (x) (pconstant 0)) <A> (pif ((#==) (x) (pconstant 123)) <B> <C>)
 ```
 -}
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
@@ -369,7 +370,7 @@ printCaseIntE caseIntVal ((iVal, bodyVal) : cases) otherCase = do
   iValDoc <- printValueE iVal -- TODO(bladyjoker): Why am I handing a ValueE and not Int?
   bodyValDoc <- printValueE bodyVal
   elseDoc <- printCaseIntE caseIntVal cases otherCase
-  return $ pifRefDoc <+> parens (caseIntValDoc <+> peqRefDoc <+> iValDoc) <+> parens bodyValDoc <+> parens elseDoc
+  return $ pifRefDoc <+> parens (peqRefDoc <+> parens caseIntValDoc <+> parens iValDoc) <+> parens bodyValDoc <+> parens elseDoc
 
 {- | `printTextE t` prints a text literal expression.
 
@@ -397,7 +398,7 @@ printCaseTextE `x` [("a", <A>), ("b", <B>)] (\other -> <C>)
 translates to Plutarch
 
 ```haskell
-pif (x #== pconstant "a") <A> (pif (x #== pconstant "b") <B> <C>)
+pif ((#==) (x) (pconstant "a")) <A> (pif ((#==) (x) (pconstant "b")) <B> <C>)
 ```
 -}
 printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
@@ -409,7 +410,7 @@ printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
   txtValDoc <- printValueE txtVal -- TODO(bladyjoker): Why am I handing a ValueE and not a Text?
   bodyValDoc <- printValueE bodyVal
   elseDoc <- printCaseIntE caseTxtVal cases otherCase
-  return $ pifRefDoc <+> parens (caseTxtValDoc <+> peqRefDoc <+> txtValDoc) <+> parens bodyValDoc <+> parens elseDoc
+  return $ pifRefDoc <+> parens (peqRefDoc <+> parens caseTxtValDoc <+> parens txtValDoc) <+> parens bodyValDoc <+> parens elseDoc
 
 printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref = do

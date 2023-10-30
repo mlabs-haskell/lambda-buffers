@@ -16,7 +16,7 @@ let
       };
       classes = {
         default = [ ];
-        override = cls: cls; #++ [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
+        override = cls: cls ++ [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
       };
       configs = {
         default = [ ];

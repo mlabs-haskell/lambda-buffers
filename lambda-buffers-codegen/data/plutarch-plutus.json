@@ -170,13 +170,13 @@
     "Plutus.V1.PlutusData": [
       [
         "plutarch",
-        "Plutarch.Internal.PlutusType",
-        "PlutusType"
+        "Plutarch.Builtin",
+        "PIsData"
       ],
-      [
-        "plutarch",
-        "Plutarch.TryFrom",
-        "PTryFrom"
+        [
+          "plutarch",
+          "Plutarch.Internal.PlutusType",
+          "PlutusType"
       ]
     ]
   }
