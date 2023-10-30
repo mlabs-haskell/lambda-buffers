@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 /// Identifier of a currency, which could be either Ada (or tAda), or a native token represented by
 /// it's minting policy hash. A currency may be associated with multiple `AssetClass`es.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CurrencySymbol {
     Ada,
@@ -45,19 +45,23 @@ impl Json for CurrencySymbol {
 }
 
 /// A value that can contain multiple asset classes
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "lbf", derive(Json))]
 pub struct Value(pub BTreeMap<CurrencySymbol, BTreeMap<TokenName, BigInt>>);
 
 /// Name of a token. This can be any arbitrary bytearray
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "lbf", derive(Json))]
 pub struct TokenName(pub LedgerBytes);
 
+pub fn ada_token_name() -> TokenName {
+    TokenName(LedgerBytes(Vec::with_capacity(0)))
+}
+
 /// AssetClass is uniquely identifying a specific asset
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "lbf", derive(Json))]
 pub struct AssetClass {

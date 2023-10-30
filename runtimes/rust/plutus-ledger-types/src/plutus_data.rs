@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 /// Data representation of on-chain data such as Datums and Redeemers
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PlutusData {
@@ -28,7 +28,7 @@ pub trait FromPlutusData {
         Self: Sized;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum PlutusType {
     Constr,
     Map,
@@ -49,7 +49,7 @@ impl From<&PlutusData> for PlutusType {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum PlutusDataError {
     #[error("Expected a PlutusData type {wanted:?}, but got {got:?}")]
     UnexpectedPlutusType { got: PlutusType, wanted: PlutusType },

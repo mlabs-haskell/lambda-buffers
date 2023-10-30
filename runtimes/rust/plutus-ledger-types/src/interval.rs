@@ -5,12 +5,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "lbf")]
 pub trait FeatureTraits: Json {}
+#[cfg(feature = "lbf")]
+impl<T> FeatureTraits for T where T: Json {}
 
 #[cfg(not(feature = "lbf"))]
 pub trait FeatureTraits {}
 
 /// An abstraction over `PlutusInterval`, allowing valid values only
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Interval<T> {
     Finite(T, T),
@@ -97,18 +99,17 @@ where
 /// use `Interval`s with non-inclusive endpoints on types whose `Enum`
 /// instances have partial methods.
 #[cfg(feature = "lbf")]
-#[derive(Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "lbf", derive(Json))]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PlutusInterval<T>
 where
     T: FeatureTraits,
 {
-    from: LowerBound<T>,
-    to: UpperBound<T>,
+    pub from: LowerBound<T>,
+    pub to: UpperBound<T>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UpperBound<T>
@@ -119,7 +120,7 @@ where
     pub closed: bool,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LowerBound<T>
@@ -131,7 +132,7 @@ where
 }
 
 /// A set extended with a positive and negative infinity.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Extended<T>

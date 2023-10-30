@@ -1,3 +1,4 @@
+use crate::crypto::LedgerBytes;
 use crate::plutus_data::PlutusData;
 #[cfg(feature = "lbf")]
 use lbr_prelude::json::{self, Error, Json};
@@ -10,11 +11,11 @@ use serde::{Deserialize, Serialize};
 /// In case an inline datum is used, the data is embedded inside the transaction body, so it can be
 /// directly retrieved. In case of a datum hash, an off-chain indexer is required to find the
 /// associated datum by its hash.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OutputDatum {
     None,
-    DatumHash(DataHash),
+    DatumHash(DatumHash),
     InlineDatum(Datum),
 }
 
@@ -68,13 +69,13 @@ impl Json for OutputDatum {
 }
 
 /// blake2b-256 hash of a datum
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct DataHash(pub Vec<u8>);
+pub struct DatumHash(pub LedgerBytes);
 
 /// Piece of information associated with a UTxO encoded into a PlutusData type.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Datum(pub PlutusData);
