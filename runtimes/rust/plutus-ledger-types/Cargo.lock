@@ -114,20 +114,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
-name = "lbr-plutus-ledger-types"
-version = "0.1.0"
-dependencies = [
- "data-encoding",
- "lbr-prelude",
- "num-bigint",
- "proptest",
- "serde",
- "serde_json",
- "thiserror",
- "true",
-]
-
-[[package]]
 name = "lbr-prelude"
 version = "0.1.0"
 dependencies = [
@@ -205,6 +191,20 @@ name = "once_cell"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
+
+[[package]]
+name = "plutus-ledger-types"
+version = "0.1.0"
+dependencies = [
+ "data-encoding",
+ "lbr-prelude",
+ "num-bigint",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "true",
+]
 
 [[package]]
 name = "ppv-lite86"
