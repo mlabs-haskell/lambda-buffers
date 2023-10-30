@@ -6,11 +6,10 @@ author:             MLabs LTD
 maintainer:         info@mlabs.city
 data-files:
   data/**/*.json
-  data/lamval-cases/*.hs
-
+  data/lamval-cases/**/*.hs
 extra-source-files:
   data/**/*.json
-  data/lamval-cases/*.hs
+  data/lamval-cases/**/*.hs
 
 flag dev
   description: Enable non-strict compilation for development
