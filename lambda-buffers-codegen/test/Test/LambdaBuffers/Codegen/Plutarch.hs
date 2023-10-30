@@ -127,6 +127,27 @@ lamValCases =
     , Right "lamval-cases/plutarch/LetE-2.hs"
     )
   ,
+    ( "UnitRecord x"
+    , LamVal.RecordE
+        lbUnitRecord
+        [
+          (
+            ( PC.mkInfoLess $ PC.FieldName "foo" def
+            , LT.TyVar $ PC.TyVar (PC.VarName "a" def)
+            )
+          , LamVal.VarE "x"
+          )
+        ]
+    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal record literal expression is not supported for Plutarch"
+    )
+  ,
+    ( "unitRecord.foo"
+    , LamVal.FieldE
+        ((PC.mkInfoLess (PC.ModuleName [] def), PC.mkInfoLess (PC.TyName "UnitProduct" def)), PC.mkInfoLess $ PC.FieldName "foo" def)
+        (LamVal.VarE "unitRecord")
+    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal record field accessor is not supported for Plutarch"
+    )
+  ,
     ( "Foo'Bar \"works\")"
     , LamVal.CtorE
         lbBarCtor
@@ -142,9 +163,12 @@ lamValCases =
         (\(ctor, args) -> LamVal.CtorE ((PC.mkInfoLess (PC.ModuleName [] def), PC.mkInfoLess (PC.TyName "FooSum" def)), ctor) args)
     , Right "lamval-cases/plutarch/CaseE-1.hs"
     )
+  ,
+    ( "error \"some error\"'"
+    , LamVal.ErrorE "some error"
+    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal error builtin was called with: some error"
+    )
   ]
-
---   CaseE :: QSum -> ValueE -> ((Ctor, [ValueE]) -> ValueE) -> ValueE
 
 testLamValInterpretation :: TestTree
 testLamValInterpretation =
@@ -167,7 +191,7 @@ testLamValInterpretation =
                     dataDir <- Path.getDataFileName "data"
                     gotLamValCaseFile <- Text.readFile $ dataDir <> "/" <> gotLamValCaseFilepath
                     case interpreted of
-                      Left perr -> assertFailure $ show ("Wanted a success", gotLamValCaseFilepath, gotLamValCaseFile, "but got a failure", perr)
+                      Left gotErr -> assertFailure $ show ("Wanted a success", gotLamValCaseFilepath, gotLamValCaseFile, "but got a failure", gotErr ^. P.msg)
                       Right (doc, imports) -> gotLamValCaseFile @=? toLamValCaseFile (show doc) imports
              in tc assertion
         )
@@ -219,6 +243,23 @@ lbFooProduct :: LamVal.QProduct
 lbFooProduct =
   ( (PC.mkInfoLess (PC.ModuleName [] def), PC.mkInfoLess (PC.TyName "FooProduct" def))
   , LT.TyVar <$> [PC.TyVar (PC.VarName "a" def), PC.TyVar (PC.VarName "b" def), PC.TyVar (PC.VarName "c" def)]
+  )
+
+{- | Example unit record.
+
+```lbf
+prod UnitRecord a = {foo: a}
+```
+-}
+lbUnitRecord :: LamVal.QRecord
+lbUnitRecord =
+  ( (PC.mkInfoLess (PC.ModuleName [] def), PC.mkInfoLess (PC.TyName "UnitRecord" def))
+  , OMap.fromList
+      [
+        ( PC.mkInfoLess $ PC.FieldName "foo" def
+        , LT.TyVar $ PC.TyVar (PC.VarName "a" def)
+        )
+      ]
   )
 
 {- | Example sum.

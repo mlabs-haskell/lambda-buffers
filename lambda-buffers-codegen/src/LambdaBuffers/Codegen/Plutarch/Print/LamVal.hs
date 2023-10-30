@@ -434,4 +434,4 @@ printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases 
 printValueE (LV.TupleE _l _r) = throwInternalError "LamVal tuple literal expression is not supported for Plutarch (yet)"
 printValueE (LV.RecordE _qrec _vals) = throwInternalError "LamVal record literal expression is not supported for Plutarch"
 printValueE (LV.FieldE _fieldName _recVal) = throwInternalError "LamVal record field accessor is not supported for Plutarch"
-printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
+printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called with: " <> err
