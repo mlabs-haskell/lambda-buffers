@@ -3,16 +3,17 @@ module LambdaBuffers.Runtime.Plutarch.LamVal (
   pconstrData,
   pintegerData,
   pcasePlutusData,
-  toPlutusData',
-  constrData',
-  integerData',
-  casePlutusData',
+  toPlutusData,
+  constrData,
+  integerData,
+  casePlutusData,
   plistData,
-  listData',
+  listData,
   psucceedParse,
   pfailParse,
   pbindParse,
-  pfromPlutusData,
+  pfromPlutusDataPlutusType,
+  pfromPlutusDataPTryFrom,
 ) where
 
 import Plutarch (
@@ -29,7 +30,6 @@ import Plutarch (
 import Plutarch.Builtin (
   PBuiltinList (PNil),
   PData,
-  PIsData,
   pasConstr,
   pasInt,
   pasList,
@@ -40,52 +40,57 @@ import Plutarch.Builtin (
   pfstBuiltin,
   psndBuiltin,
  )
-import Plutarch.Prelude (PBuiltinList (PCons), PInteger, ptrace)
+import Plutarch.Prelude (PAsData, PBuiltinList (PCons), PInteger, PTryFrom, ptrace, ptryFrom)
 import Plutarch.Unsafe (punsafeCoerce)
 
--- | `toPlutusData :: a -> PlutusData`
-ptoPlutusData :: PIsData a => Term s (a :--> PData)
-ptoPlutusData = plam toPlutusData'
+-- | Plutarch `toPlutusData :: a -> PlutusData`
+ptoPlutusData :: Term s (PAsData a :--> PData)
+ptoPlutusData = plam toPlutusData
 
--- | PlutusType's `toPlutusData :: a -> PlutusData`
-toPlutusData' :: PIsData a => Term s a -> Term s PData
-toPlutusData' = pforgetData . pdata
+-- | Haskell `toPlutusData :: a -> PlutusData`
+toPlutusData :: Term s (PAsData a) -> Term s PData
+toPlutusData = pforgetData
 
--- | `fromPlutusData :: PlutusData -> Parser a`
-pfromPlutusData :: Term s (PData :--> a)
-pfromPlutusData = plam punsafeCoerce
+-- | Plutarch PlutusType `fromPlutusData :: PlutusData -> Parser a`
+pfromPlutusDataPlutusType :: Term s (PData :--> PAsData a)
+pfromPlutusDataPlutusType = plam punsafeCoerce
 
-{- | `constrData :: IntE -> ListE PlutusData -> PlutusData`
-TODO(bladyjoker): Why PUnsafeLiftDecl
--}
+-- | Plutarch PTryFrom `fromPlutusData :: PlutusData -> Parser a`
+pfromPlutusDataPTryFrom :: (PTryFrom PData (PAsData a)) => Term s (PData :--> PAsData a)
+pfromPlutusDataPTryFrom = plam ptryFromData
+  where
+    ptryFromData :: forall a s. PTryFrom PData (PAsData a) => Term s PData -> Term s (PAsData a)
+    ptryFromData pd = ptryFrom @(PAsData a) pd fst
+
+-- | Plutarch `constrData :: IntE -> ListE PlutusData -> PlutusData`
 pconstrData :: Term s (PInteger :--> PBuiltinList PData :--> PData)
 pconstrData = plam $ \ix args -> pforgetData $ pconstrBuiltin # ix # args
 
--- | PlutusType's `constrData :: IntE -> ListE PlutusData -> PlutusData`
-constrData' :: Term s PInteger -> [Term s PData] -> Term s PData
-constrData' ix args = pforgetData $ pconstrBuiltin # ix # toBuiltinList args
+-- | Haskell `constrData :: IntE -> ListE PlutusData -> PlutusData`
+constrData :: Term s PInteger -> [Term s PData] -> Term s PData
+constrData ix args = pforgetData $ pconstrBuiltin # ix # toBuiltinList args
 
--- | `integerData :: IntE -> PlutusData`
-pintegerData :: Term s (PInteger :--> PData)
+-- | Plutarch `integerData :: IntE -> PlutusData`
+pintegerData :: Term s (PAsData PInteger :--> PData)
 pintegerData = ptoPlutusData
 
--- | PlutusType's `integerData :: IntE -> PlutusData`
-integerData' :: Term s PInteger -> Term s PData
-integerData' = toPlutusData'
+-- | Haskell `integerData :: IntE -> PlutusData`
+integerData :: Term s (PAsData PInteger) -> Term s PData
+integerData = toPlutusData
 
--- | `listData :: ListE PlutusData -> PlutusData`
+-- | Plutarch `listData :: ListE PlutusData -> PlutusData`
 plistData :: Term s (PBuiltinList PData :--> PData)
 plistData = plam $ pforgetData . pdata
 
--- | PlutusType's `listData :: ListE PlutusData -> PlutusData`
-listData' :: [Term s PData] -> Term s PData
-listData' = pforgetData . pdata . toBuiltinList
+-- | Haskell `listData :: ListE PlutusData -> PlutusData`
+listData :: [Term s PData] -> Term s PData
+listData = pforgetData . pdata . toBuiltinList
 
 toBuiltinList :: [Term s PData] -> Term s (PBuiltinList PData)
 toBuiltinList [] = pcon PNil
 toBuiltinList (x : xs) = pcon (PCons x (toBuiltinList xs))
 
--- | `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
+-- | Plutarch `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
 pcasePlutusData ::
   Term s ((PInteger :--> PBuiltinList PData :--> a) :--> (PBuiltinList PData :--> a) :--> (PInteger :--> a) :--> (PData :--> a) :--> PData :--> a)
 pcasePlutusData = plam $ \handleConstr handleList handleInt handleOther pd ->
@@ -98,24 +103,24 @@ pcasePlutusData = plam $ \handleConstr handleList handleInt handleOther pd ->
       # pdelay (handleInt # (pasInt # pd))
       # pdelay (ptrace "Got PlutusData Bytes" (handleOther # pd))
 
--- | PlutusType's `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
-casePlutusData' ::
+-- | Haskell `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
+casePlutusData ::
   (Term s PInteger -> Term s (PBuiltinList PData) -> Term s a) ->
   (Term s (PBuiltinList PData) -> Term s a) ->
   (Term s PInteger -> Term s a) ->
   (Term s PData -> Term s a) ->
   Term s PData ->
   Term s a
-casePlutusData' handleConstr handleList handleInt handleOther pd = pcasePlutusData # plam handleConstr # plam handleList # plam handleInt # plam handleOther # pd
+casePlutusData handleConstr handleList handleInt handleOther pd = pcasePlutusData # plam handleConstr # plam handleList # plam handleInt # plam handleOther # pd
 
--- | `succeedParse :: a -> Parser a`
+-- | Plutarch `succeedParse :: a -> Parser a`
 psucceedParse :: Term s (a :--> a)
 psucceedParse = plam id
 
--- | `failParse :: Parser a`
+-- | Plutarch `failParse :: Parser a`
 pfailParse :: Term s a
 pfailParse = perror
 
--- | `bindParse :: Parser a -> (a -> Parser b) -> Parser b`
+-- | Plutarch `bindParse :: Parser a -> (a -> Parser b) -> Parser b`
 pbindParse :: Term s (a :--> (a :--> b) :--> b)
 pbindParse = plam (flip (#))

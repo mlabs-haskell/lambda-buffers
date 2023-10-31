@@ -11,13 +11,12 @@ module LambdaBuffers.Codegen.Haskell.Print (MonadPrint, printModule, PrintModule
 import Control.Lens (view, (^.))
 import Control.Monad.Reader.Class (ask, asks)
 import Control.Monad.State.Class (MonadState (get))
-import Data.Foldable (Foldable (toList), foldrM, for_)
+import Data.Foldable (Foldable (toList), foldrM)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
-import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef)
@@ -31,8 +30,6 @@ import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
-import Proto.Codegen qualified as P
-import Proto.Codegen_Fields qualified as P
 
 data PrintModuleEnv m ann = PrintModuleEnv
   { env'printModuleName :: PC.ModuleName -> Doc ann
@@ -43,7 +40,7 @@ data PrintModuleEnv m ann = PrintModuleEnv
           PC.TyDefs ->
           (Doc ann -> Doc ann) ->
           PC.Ty ->
-          Either P.InternalError (Doc ann, Set H.QValName)
+          m (Doc ann)
         )
   , env'printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
   , env'languageExtensions :: [Text]
@@ -116,14 +113,7 @@ printHsQClassImpl env mn iTyDefs hqcn d =
     Just implPrinter -> do
       let ty = d ^. #constraint . #argument
           mkInstanceDoc = printInstanceDef hqcn ty
-      case implPrinter mn iTyDefs mkInstanceDoc ty of
-        Left err ->
-          throwInternalError
-            (d ^. #constraint . #sourceInfo)
-            ("Failed printing the implementation for " <> show hqcn <> "\nGot error: " <> Text.unpack (err ^. P.msg))
-        Right (instanceDefsDoc, valImps) -> do
-          for_ (toList valImps) Print.importValue
-          return instanceDefsDoc
+      implPrinter mn iTyDefs mkInstanceDoc ty
 
 printLanguageExtensions :: Pretty a => [a] -> Doc ann
 printLanguageExtensions [] = mempty

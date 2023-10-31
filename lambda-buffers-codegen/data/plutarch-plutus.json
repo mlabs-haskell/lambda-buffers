@@ -173,10 +173,15 @@
         "Plutarch.Builtin",
         "PIsData"
       ],
-        [
-          "plutarch",
-          "Plutarch.Internal.PlutusType",
-          "PlutusType"
+      [
+        "plutarch",
+        "Plutarch.Internal.PlutusType",
+        "PlutusType"
+      ],
+      [
+        "plutarch",
+        "Plutarch.TryFrom",
+        "PTryFrom"
       ]
     ]
   }

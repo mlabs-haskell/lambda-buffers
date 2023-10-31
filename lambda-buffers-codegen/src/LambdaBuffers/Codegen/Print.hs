@@ -17,6 +17,7 @@ module LambdaBuffers.Codegen.Print (
   stTypeImports,
   throwInternalError,
   importType,
+  throwInternalError',
 ) where
 
 import Control.Lens (makeLenses, (&), (.~))
@@ -92,8 +93,11 @@ importType :: (MonadPrint qtn qcn qvn m, Ord qtn) => qtn -> m ()
 importType qtn = modify (\(State vimps cimps tyimps) -> State vimps cimps (Set.insert qtn tyimps))
 
 throwInternalError :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> String -> m a
-throwInternalError si msg =
+throwInternalError si = throwInternalError' si . Text.pack
+
+throwInternalError' :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> Text -> m a
+throwInternalError' si msg =
   throwError $
     defMessage
-      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> Text.pack msg
+      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> msg
       & P.sourceInfo .~ PC.toProto si

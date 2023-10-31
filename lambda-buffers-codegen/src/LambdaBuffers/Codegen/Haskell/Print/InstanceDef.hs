@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef, printConstraint, collectTyVars, printInstanceContext) where
+module LambdaBuffers.Codegen.Haskell.Print.InstanceDef (printInstanceDef, printConstraint, collectTyVars, printInstanceContext, printInstanceContext', printConstraint') where
 
 import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
@@ -7,7 +7,7 @@ import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, lparen, rparen, space, (<+>))
+import Prettyprinter (Doc, align, comma, encloseSep, group, hardline, hsep, lparen, rparen, space, (<+>))
 
 {- | `printInstanceDef hsQClassName ty` return a function that given the printed implementation, creates an entire 'instance <hsQClassName> <ty> where' clause.
 
@@ -29,13 +29,19 @@ printInstanceDef hsQClassName ty =
         _ -> \implDoc -> "instance" <+> printInstanceContext hsQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
 
 printInstanceContext :: HsSyntax.QClassName -> [PC.Ty] -> Doc ann
-printInstanceContext hsQClassName tys = align . group $ encloseSep lparen rparen comma (printConstraint hsQClassName <$> tys)
+printInstanceContext hsQClassName = printInstanceContext' [hsQClassName]
+
+printInstanceContext' :: [HsSyntax.QClassName] -> [PC.Ty] -> Doc ann
+printInstanceContext' hsQClassNames tys = align . group $ encloseSep lparen rparen comma ([printConstraint hsQClassName ty | ty <- tys, hsQClassName <- hsQClassNames])
 
 printConstraint :: HsSyntax.QClassName -> PC.Ty -> Doc ann
-printConstraint qcn ty =
+printConstraint qcn ty = printConstraint' qcn [ty]
+
+printConstraint' :: HsSyntax.QClassName -> [PC.Ty] -> Doc ann
+printConstraint' qcn tys =
   let crefDoc = HsSyntax.printHsQClassName qcn
-      tyDoc = printTyInner ty
-   in crefDoc <+> tyDoc
+      tyDocs = printTyInner <$> tys
+   in crefDoc <+> hsep tyDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]
 collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . toList . collectVars

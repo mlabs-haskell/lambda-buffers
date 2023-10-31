@@ -16,6 +16,7 @@ import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
 import Proto.Codegen qualified as P
+import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 
 {- | `runPrint cfg inp mod` prints a LambdaBuffers checked module `mod`, given its entire compilation closure in `inp` and Haskell configuration file in `cfg`.
   It either errors with an API error message or succeeds with a module filepath, code and package dependencies.
@@ -32,7 +33,7 @@ runPrint cfg ci m = case runCheck cfg ci m of
         , deps
         )
 
-hsPrintModuleEnv :: HsPrint.PrintModuleEnv m ann
+hsPrintModuleEnv :: MonadPrint m => HsPrint.PrintModuleEnv m ann
 hsPrintModuleEnv =
   HsPrint.PrintModuleEnv
     HsSyntax.printModName

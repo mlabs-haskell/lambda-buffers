@@ -3,441 +3,110 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module LambdaBuffers.Runtime.Plutarch (PEitherData (..), PAssetClass, PMap, PChar, PSet, PValue) where
+module LambdaBuffers.Runtime.Plutarch (PEitherData (..), PAssetClass, PMap, PChar, PSet, PValue, PInt) where
 
 import Data.Functor.Const (Const)
-import GHC.Exts (IsList (Item, fromList, toList))
 import GHC.TypeLits qualified as GHC
+import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
 import Plutarch (
-  ClosedTerm,
   PType,
   PlutusType (PInner),
   S,
   Term,
   pcon,
-  pdelay,
-  pforce,
-  plam,
+  perror,
   pmatch,
-  unTermCont,
   (#),
-  type (:-->),
  )
 import Plutarch.Api.V1 qualified
 import Plutarch.Api.V1.AssocMap qualified as AssocMap
-import Plutarch.Api.V1.Maybe (PMaybeData)
-import Plutarch.Api.V2 (PAddress, PCurrencySymbol, PTokenName, PTuple)
+import Plutarch.Api.V2 (PCurrencySymbol, PMaybeData, PTokenName, PTuple)
 import Plutarch.Builtin (
-  PAsData,
   PBuiltinList (PCons, PNil),
-  PBuiltinPair,
   PData,
   PIsData (pdataImpl, pfromDataImpl),
-  pasConstr,
-  pasInt,
-  pasList,
-  pchooseData,
-  pconstrBuiltin,
   pdata,
-  pforgetData,
-  pfstBuiltin,
-  psndBuiltin,
  )
-import Plutarch.Extra.TermCont (pletC)
+import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
-import Plutarch.Lift (PUnsafeLiftDecl)
-import Plutarch.List (
-  PIsListLike,
-  PList,
-  PListLike (pcons, pnil),
-  pfoldl,
- )
-import Plutarch.Prelude (PEq ((#==)), PInteger, PPair (PPair), PTryFrom, pconstant, pif, ptrace, ptraceError, tcont)
-import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'), ptryFrom)
+import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PTryFrom, pif)
+import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'))
 import Plutarch.Unsafe (punsafeCoerce)
 
-ptryFromData :: forall a s. PTryFrom PData a => Term s PData -> Term s a
-ptryFromData x = unTermCont $ fst <$> tcont (ptryFrom @a x)
+type PInt = PAsData PInteger
 
-pcasePlutusData ::
-  Term s (PBuiltinPair PInteger (PBuiltinList PData) :--> a) ->
-  Term s (PBuiltinList PData :--> a) ->
-  Term s (PInteger :--> a) ->
-  Term s (PData :--> a) ->
-  Term s PData ->
-  Term s a
-pcasePlutusData handleConstr handleList handleInt handleOther pd =
-  pforce $
-    pchooseData
-      # pd
-      # pdelay (handleConstr # (pasConstr # pd))
-      # pdelay (ptrace "Got a PlutusData Map" (handleOther # pd))
-      # pdelay (handleList # (pasList # pd))
-      # pdelay (handleInt # (pasInt # pd))
-      # pdelay (ptrace "Got PlutusData Bytes" (handleOther # pd))
-
--- macro
-lvListE :: PIsListLike list elem => [Term s elem] -> Term s (list elem)
-lvListE = foldr (\x y -> pcons # x # y) pnil
-
-lvIntE :: Integer -> Term s PInteger
-lvIntE = pconstant
-
--- | `toPlutusData :: a -> PlutusData`
-lvToPlutusData :: PIsData a => Term s a -> Term s PData
-lvToPlutusData = pforgetData . pdata
-
--- | `constrData :: IntE -> ListE PlutusData -> PlutusData`
-lvConstrToPlutusData :: PIsData a => Term s PInteger -> [Term s a] -> Term s PData
-lvConstrToPlutusData ix args = pforgetData $ pconstrBuiltin # ix # lvListE (fmap lvToPlutusData args)
-
-lvTupleE :: Term s a -> Term s b -> Term s (PPair a b)
-lvTupleE l r = pcon (PPair l r)
-
-pcaseConstr :: ClosedTerm (PBuiltinPair PInteger (PBuiltinList PData) :--> PList (PPair PInteger (PBuiltinList PData :--> a)) :--> a :--> a)
-pcaseConstr = plam $ \pdConstr alts other -> unTermCont do
-  ix <- pletC $ pfstBuiltin # pdConstr
-  body <- pletC $ psndBuiltin # pdConstr
-  pure $
-    pfoldl
-      # plam
-        ( \res alt ->
-            pmatch alt (\(PPair altIx altHandle) -> pif (ix #== altIx) (altHandle # body) res)
-        )
-      # other
-      # alts
-
-pcaseInt :: ClosedTerm (PInteger :--> PList (PPair PInteger a) :--> (PInteger :--> a) :--> a)
-pcaseInt = plam $ \pdInt alts other -> unTermCont do
-  intToVal <-
-    pletC $
-      pfoldl
-        # plam
-          ( \res alt ->
-              pmatch alt (\(PPair altIx altValue) -> pif (pdInt #== altIx) (plam $ const altValue) res)
-          )
-        # other
-        # alts
-  pure $ intToVal # pdInt
-
-data FooTrivial (s :: S) = FooTrivial
-
-instance PlutusType FooTrivial where
-  type PInner FooTrivial = PData
-  pcon' FooTrivial = lvToPlutusData (lvIntE 0)
-  pmatch' pd f =
-    pcaseInt
-      # (pasInt # pd)
-      # lvListE [lvTupleE 0 (f FooTrivial)]
-      # ptraceError "Got PlutusData Integer but invalid value"
-
-instance PTryFrom PData FooTrivial where
-  type PTryFromExcess PData FooTrivial = Const ()
-  ptryFrom' pd f =
-    pcasePlutusData
-      (plam $ \_pdCons -> ptraceError "Got PlutusData Constr")
-      (plam $ \_pdList -> ptraceError "Got PlutusData List")
-      ( plam $ \pdInt ->
-          pcaseInt
-            # pdInt
-            # lvListE [lvTupleE 0 (f (pcon FooTrivial, ()))]
-            # ptraceError "Got PlutusData Integer but invalid value"
-      )
-      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
-      pd
-
-instance PIsData FooTrivial where
-  pdataImpl = punsafeCoerce
-  pfromDataImpl = punsafeCoerce
-
-instance PEq FooTrivial where
-  (#==) l r = pdata l #== pdata r
-
-newtype FooLessTrivial (a :: PType) (s :: S) = FooLessTrivial (Term s a)
-
-instance (PIsData a) => PlutusType (FooLessTrivial a) where
-  type PInner (FooLessTrivial a) = PData
-  pcon' (FooLessTrivial x) = lvConstrToPlutusData 0 [x]
-  pmatch' pd f =
-    pcaseConstr
-      # (pasConstr # pd)
-      # lvListE
-        [ lvTupleE
-            0
-            ( plam $ \x1 ->
-                pmatch
-                  x1
-                  ( \case
-                      PCons x2 x3 ->
-                        pmatch
-                          x3
-                          ( \case
-                              PNil -> f (FooLessTrivial (punsafeCoerce x2))
-                              _ -> ptraceError "err"
-                          )
-                      _ -> ptraceError "err"
-                  )
-            )
-        ]
-      # ptraceError "err"
-
---    pcasePlutusData
---   ( plam $ \pdConstr ->
---       pcaseConstr
---         # pdConstr
---         # ( lvListE
---               [ lvTupleE
---                   0
---                   ( plam $ \x1 ->
---                       pmatch
---                         x1
---                         ( \case
---                             PCons x2 x3 ->
---                               pmatch
---                                 x3
---                                 ( \case
---                                     PNil -> f (FooLessTrivial (punsafeCoerce x2))
---                                     _ -> ptraceError "err"
---                                 )
---                             _ -> ptraceError "err"
---                         )
---                   )
---               ]
---           )
---         # (ptraceError "err")
---   )
---   (plam $ \_pdList -> ptraceError "Got PlutusData List")
---   (plam $ \_pdInt -> ptraceError "Got PlutusData Integer")
---   (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
---   pd
-
-instance (PTryFrom PData a, PIsData a) => PTryFrom PData (FooLessTrivial a) where
-  type PTryFromExcess PData (FooLessTrivial a) = Const ()
-  ptryFrom' pd f =
-    pcasePlutusData
-      ( plam $ \pdConstr ->
-          pcaseConstr
-            # pdConstr
-            # lvListE
-              [ lvTupleE
-                  0
-                  ( plam $ \x1 ->
-                      pmatch
-                        x1
-                        ( \case
-                            PCons x2 x3 ->
-                              pmatch
-                                x3
-                                ( \case
-                                    PNil -> f (pcon $ FooLessTrivial (ptryFromData x2), ())
-                                    _ -> ptraceError "err"
-                                )
-                            _ -> ptraceError "err"
-                        )
-                  )
-              ]
-            # ptraceError "err"
-      )
-      (plam $ \_pdList -> ptraceError "Got PlutusData List")
-      (plam $ \_pdInt -> ptraceError "Got PlutusData Integer")
-      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
-      pd
-
-instance PIsData (FooLessTrivial a) where
-  pdataImpl = punsafeCoerce
-  pfromDataImpl = punsafeCoerce
-
-instance PEq (FooLessTrivial a) where
-  (#==) l r = pdata l #== pdata r
-
-data FooSum (a :: PType) (b :: PType) (s :: S)
-  = FooSum'Bar (Term s a) (Term s (PMaybeData PAddress))
-  | FooSum'Baz (Term s b) (Term s (PMaybeData PAssetClass))
-  | FooSum'Bad
-  | FooSum'Bax (Term s FooTrivial)
-
-instance (PIsData a, PIsData b) => PIsData (FooSum a b)
-
-instance (PTryFrom PData a, PTryFrom PData b, PIsData a, PIsData b) => PTryFrom PData (PAsData (FooSum a b)) where
-  type PTryFromExcess PData (PAsData (FooSum a b)) = Const ()
-  ptryFrom' pd f =
-    pcasePlutusData
-      ( plam $ \pdCons ->
-          pcaseConstr
-            # pdCons
-            # ( pcons
-                  # pcon
-                    ( PPair
-                        0
-                        ( plam $ \x1 ->
-                            pmatch
-                              x1
-                              ( \case
-                                  PCons x2 x3 ->
-                                    pmatch
-                                      x3
-                                      ( \case
-                                          PCons x4 x5 ->
-                                            pmatch
-                                              x5
-                                              ( \case
-                                                  PNil -> f (pdata . pcon $ FooSum'Bar (ptryFromData x2) (ptryFromData x4), ())
-                                                  _ -> ptraceError ""
-                                              )
-                                          _ -> ptraceError ""
-                                      )
-                                  _ -> ptraceError ""
-                              )
-                        )
-                    )
-                  # pnil
-              )
-            # ptraceError "Got PlutusData Constr but invalid constructor index value"
-      )
-      (plam $ \_pdList -> ptraceError "Got unexpected PlutusData List")
-      (plam $ \pdInt -> pif (pdInt #== 2) (f (pdata $ pcon FooSum'Bad, ())) (ptraceError "Got PlutusData Integer but invalid value"))
-      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
-      pd
-
-instance (PIsData a, PIsData b) => PlutusType (FooSum a b) where
-  type PInner (FooSum a b) = PData
-  pcon' (FooSum'Bar x y) = pforgetData $ pconstrBuiltin # 0 # (pcons # pforgetData (pdata x) # (pcons # pforgetData (pdata y) # pnil))
-  pcon' (FooSum'Baz x y) = pforgetData $ pconstrBuiltin # 1 # (pcons # pforgetData (pdata x) # (pcons # pforgetData (pdata y) # pnil))
-  pcon' FooSum'Bad = pforgetData $ pdata (2 :: Term s PInteger)
-  pcon' (FooSum'Bax x) = pforgetData $ pconstrBuiltin # 3 # (pcons # pforgetData (pdata x) # pnil)
-  pmatch' pd f =
-    pcasePlutusData
-      ( plam $ \pdCons ->
-          pcaseConstr
-            # pdCons
-            # ( pcons
-                  # pcon
-                    ( PPair
-                        0
-                        ( plam $ \x1 ->
-                            pmatch
-                              x1
-                              ( \case
-                                  [x2, x3] -> f $ FooSum'Bar (punsafeCoerce $ pcon x2) (punsafeCoerce $ pcon x3)
-                                  _ -> ptraceError ""
-                              )
-                        )
-                    )
-                  # pnil
-              )
-            # ptraceError "Got PlutusData Constr but invalid constructor index value"
-      )
-      (plam $ \_pdList -> ptraceError "Got unexpected PlutusData List")
-      (plam $ \pdInt -> pif (pdInt #== 2) (f FooSum'Bad) (ptraceError "Got PlutusData Integer but invalid value"))
-      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
-      pd
-
-instance (PIsData a, PUnsafeLiftDecl a) => IsList (Term s (PBuiltinList a)) where
-  type Item (Term s (PBuiltinList a)) = Term s a
-  fromList [] = pcon PNil
-  fromList (x : xs) = pcon $ PCons x (fromList xs)
-  toList = error "unimplemented"
-
-instance (PIsData a, PlutusType a, PUnsafeLiftDecl a) => IsList (PBuiltinList a s) where
-  type Item (PBuiltinList a s) = a s
-  fromList [] = PNil
-  fromList (x : xs) = PCons (pcon x) (fromList . fmap pcon $ xs)
-  toList = error "unimplemented"
-
+-- | PAssetClass missing from Plutarch.
 type PAssetClass = PTuple PCurrencySymbol PTokenName
 
-data PEitherData (a :: PType) (b :: PType) (s :: S) = PDLeft (Term s a) | PDRight (Term s b)
+-- | PEitherData missing from Plutarch.
+data PEitherData (a :: PType) (b :: PType) (s :: S)
+  = PDLeft (Term s (PAsData a))
+  | PDRight (Term s (PAsData b))
 
-instance (PIsData a, PIsData b) => PlutusType (PEitherData a b) where
+instance PlutusType (PEitherData a b) where
   type PInner (PEitherData a b) = PData
-  pcon' (PDLeft x) = lvConstrToPlutusData 0 [x]
-  pcon' (PDRight x) = lvConstrToPlutusData 1 [x]
+  pcon' (PDLeft x) = LamVal.constrData 0 [LamVal.toPlutusData x]
+  pcon' (PDRight x) = LamVal.constrData 1 [LamVal.toPlutusData x]
   pmatch' pd f =
-    pcaseConstr
-      # (pasConstr # pd)
-      # lvListE
-        [ lvTupleE
-            0
-            ( plam $ \x1 ->
-                pmatch
-                  x1
-                  ( \case
-                      PCons x2 x3 ->
-                        pmatch
-                          x3
-                          ( \case
-                              PNil -> f (PDLeft (punsafeCoerce x2))
-                              _ -> ptraceError "err"
-                          )
-                      _ -> ptraceError "err"
-                  )
+    LamVal.casePlutusData
+      ( \ix args ->
+          pif
+            (ix #== 0)
+            ( pmatch args \case
+                PNil -> perror
+                PCons h t -> pif (t #== pcon PNil) (f $ PDLeft (LamVal.pfromPlutusDataPlutusType # h)) perror
             )
-        , lvTupleE
-            1
-            ( plam $ \x1 ->
-                pmatch
-                  x1
-                  ( \case
-                      PCons x2 x3 ->
-                        pmatch
-                          x3
-                          ( \case
-                              PNil -> f (PDRight (punsafeCoerce x2))
-                              _ -> ptraceError "err"
-                          )
-                      _ -> ptraceError "err"
-                  )
+            ( pif
+                (ix #== 1)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pif (t #== pcon PNil) (f $ PDRight (LamVal.pfromPlutusDataPlutusType # h)) perror
+                )
+                perror
             )
-        ]
-      # ptraceError "err"
+      )
+      (const perror)
+      (const perror)
+      (const perror)
+      pd
 
-instance (PTryFrom PData a, PIsData a, PTryFrom PData b, PIsData b) => PTryFrom PData (PEitherData a b) where
+instance (PTryFrom PData (PAsData a), PTryFrom PData (PAsData b)) => PTryFrom PData (PEitherData a b) where
   type PTryFromExcess PData (PEitherData a b) = Const ()
   ptryFrom' pd f =
-    pcasePlutusData
-      ( plam $ \pdConstr ->
-          pcaseConstr
-            # pdConstr
-            # lvListE
-              [ lvTupleE
-                  0
-                  ( plam $ \x1 ->
-                      pmatch
-                        x1
-                        ( \case
-                            PCons x2 x3 ->
-                              pmatch
-                                x3
-                                ( \case
-                                    PNil -> f (pcon $ PDLeft (ptryFromData x2), ())
-                                    _ -> ptraceError "err"
-                                )
-                            _ -> ptraceError "err"
-                        )
-                  )
-              , lvTupleE
-                  1
-                  ( plam $ \x1 ->
-                      pmatch
-                        x1
-                        ( \case
-                            PCons x2 x3 ->
-                              pmatch
-                                x3
-                                ( \case
-                                    PNil -> f (pcon $ PDRight (ptryFromData x2), ())
-                                    _ -> ptraceError "err"
-                                )
-                            _ -> ptraceError "err"
-                        )
-                  )
-              ]
-            # ptraceError "err"
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t ->
+                      pif
+                        (t #== pcon PNil)
+                        (pcon $ PDLeft (LamVal.pfromPlutusDataPTryFrom # h))
+                        perror
+                )
+                ( pif
+                    (ix #== 1)
+                    ( pmatch args \case
+                        PNil -> perror
+                        PCons h t ->
+                          pif
+                            (t #== pcon PNil)
+                            (pcon $ PDRight (LamVal.pfromPlutusDataPTryFrom # h))
+                            perror
+                    )
+                    perror
+                )
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
       )
-      (plam $ \_pdList -> ptraceError "Got PlutusData List")
-      (plam $ \_pdInt -> ptraceError "Got PlutusData Integer")
-      (plam $ \_ -> ptraceError "Got unexpected PlutusData value")
-      pd
+
+instance PTryFrom PData (PAsData (PEitherData a b))
 
 instance PIsData (PEitherData a b) where
   pdataImpl = punsafeCoerce
@@ -446,10 +115,44 @@ instance PIsData (PEitherData a b) where
 instance PEq (PEitherData a b) where
   (#==) l r = pdata l #== pdata r
 
+{- | PTryFrom instance for PBool which is missing from Plutarch.
+https://github.com/input-output-hk/plutus/blob/650a0659cbaacec2166e0153d2393c779cedc4c0/plutus-tx/src/PlutusTx/IsData/Instances.hs
+
+NOTE(bladyjoker): `PAsData PBool` here because its PInner is PBool for some god forsaken reason.
+-}
+instance PTryFrom PData (PAsData PBool) where
+  type PTryFromExcess PData (PAsData PBool) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (args #== pcon PNil)
+                ( pif
+                    (ix #== 0)
+                    (pdata $ pcon PFalse)
+                    ( pif
+                        (ix #== 1)
+                        (pdata $ pcon PTrue)
+                        perror
+                    )
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+-- | LB Plutus.Map maps to this, a sorted Plutus map.
 type PMap = AssocMap.PMap 'AssocMap.Sorted
 
+-- | LB Plutus.V1.Value maps to this, a sorted Value with no value guarantees.
 type PValue = Plutarch.Api.V1.PValue 'Plutarch.Api.V1.Sorted 'Plutarch.Api.V1.NoGuarantees
 
+-- | Not implemented.
 data PChar (s :: S) = PChar
 
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PlutusType PChar where
@@ -466,6 +169,7 @@ instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") 
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PEq PChar where
   (#==) _l _r = error "unreachable"
 
+-- | Not implemented.
 data PSet (a :: PType) (s :: S) = PSet
 
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PlutusType (PSet a) where
@@ -480,3 +184,61 @@ instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") =
   pfromDataImpl = error "unreachable"
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PEq (PSet a) where
   (#==) _l _r = error "unreachable"
+
+data PFoo (a :: PType) (s :: S)
+  = PFoo
+      (Term s (PAsData PInteger))
+      (Term s (PAsData PBool))
+      (Term s (PAsData PByteString))
+      (Term s (PAsData (PMaybeData a)))
+      (Term s (PAsData (PEitherData a a)))
+      (Term s (PAsData PCurrencySymbol))
+      (Term s (PAsData (PFoo a)))
+
+instance PlutusType (PFoo a) where
+  type PInner (PFoo a) = PData
+  pcon' (PFoo i b bs may eit sym foo) =
+    LamVal.listData
+      [ LamVal.toPlutusData i
+      , LamVal.toPlutusData b
+      , LamVal.toPlutusData bs
+      , LamVal.toPlutusData may
+      , LamVal.toPlutusData eit
+      , LamVal.toPlutusData sym
+      , LamVal.toPlutusData foo
+      ]
+  pmatch' pd f =
+    f
+      ( PFoo
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+          (LamVal.pfromPlutusDataPlutusType # pd)
+      )
+
+instance (PTryFrom PData a) => PTryFrom PData (PFoo a) where
+  type PTryFromExcess PData (PFoo a) = Const ()
+  ptryFrom' pd f =
+    f
+      ( pcon $
+          PFoo
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+      , ()
+      )
+instance PTryFrom PData (PAsData (PFoo a))
+
+instance PIsData (PFoo a) where
+  pdataImpl = punsafeCoerce
+  pfromDataImpl = punsafeCoerce
+
+instance PEq (PFoo a) where
+  (#==) l r = pdata l #== pdata r

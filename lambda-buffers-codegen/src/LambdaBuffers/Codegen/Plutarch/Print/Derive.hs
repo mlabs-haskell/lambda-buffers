@@ -1,60 +1,100 @@
 module LambdaBuffers.Codegen.Plutarch.Print.Derive (hsClassImplPrinters) where
 
+import Control.Lens ((^.))
+import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.Set (Set)
-import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
+import LambdaBuffers.Codegen.Haskell.Print (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as HsInstDef
 import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as HsLamVal
-import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as HsTyDef
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImplPlutarch, deriveToPlutusDataImplPlutarch)
-import LambdaBuffers.Codegen.Plutarch.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Plutarch.Print.LamVal qualified as PlLamVal
+import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, defaultLayoutOptions, equals, hardline, layoutPretty, parens, pretty, space, vsep, (<+>))
+import Prettyprinter (Doc, align, comma, defaultLayoutOptions, encloseSep, equals, group, hardline, layoutPretty, lparen, parens, pretty, rparen, space, vsep, (<+>))
 import Prettyprinter.Render.Text (renderStrict)
-import Proto.Codegen qualified as P
-
-plutusTypeHsQClassName :: HsSyntax.QClassName
-plutusTypeHsQClassName = (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Internal.PlutusType", H.MkClassName "PlutusType")
+import Proto.Codegen_Fields qualified as P
 
 hsClassImplPrinters ::
+  MonadPrint m =>
   Map
-    H.QClassName
+    HsSyntax.QClassName
     ( PC.ModuleName ->
       PC.TyDefs ->
       (Doc ann -> Doc ann) ->
       PC.Ty ->
-      Either P.InternalError (Doc ann, Set H.QValName)
+      m (Doc ann)
     )
 hsClassImplPrinters =
   Map.fromList
     [
-      ( (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Bool", H.MkClassName "PEq")
+      ( peqQClassName
       , printDerivePEq
       )
     ,
-      ( (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Builtin", H.MkClassName "PIsData")
+      ( pisDataQClassName
       , printDerivePIsData
       )
     ,
-      ( (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.TryFrom", H.MkClassName "PTryFrom")
-      , printDeriveFromPlutusData
+      ( ptryFromQClassName
+      , printDerivePTryFrom
       )
     ,
-      ( plutusTypeHsQClassName
+      ( plutusTypeQClassName
       , printDerivePlutusType
       )
     ]
 
-peqMethod :: H.ValueName
-peqMethod = H.MkValueName "#=="
+plutusTypeQClassName :: HsSyntax.QClassName
+plutusTypeQClassName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Internal.PlutusType", HsSyntax.MkClassName "PlutusType")
+
+pconMethod :: HsSyntax.ValueName
+pconMethod = HsSyntax.MkValueName "pcon'"
+
+pmatchMethod :: HsSyntax.ValueName
+pmatchMethod = HsSyntax.MkValueName "pmatch'"
+
+peqQClassName :: HsSyntax.QClassName
+peqQClassName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Bool", HsSyntax.MkClassName "PEq")
+
+peqMethod :: HsSyntax.ValueName
+peqMethod = HsSyntax.MkValueName "#=="
+
+pisDataQClassName :: HsSyntax.QClassName
+pisDataQClassName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkClassName "PIsData")
+
+ptryFromQClassName :: HsSyntax.QClassName
+ptryFromQClassName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.TryFrom", HsSyntax.MkClassName "PTryFrom")
+
+ptryFromMethod :: HsSyntax.ValueName
+ptryFromMethod = HsSyntax.MkValueName "ptryFrom'"
+
+pconQValName :: HsSyntax.QValName
+pconQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "pcon")
+
+pappQValName :: HsSyntax.QValName
+pappQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "#")
+
+pdataQValName :: HsSyntax.QValName
+pdataQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkValueName "pdata")
+
+peqQValName :: HsSyntax.QValName
+peqQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Bool", HsSyntax.MkValueName "#==")
+
+punsafeCoerceQValName :: HsSyntax.QValName
+punsafeCoerceQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Unsafe", HsSyntax.MkValueName "punsafeCoerce")
+
+pdataQTyName :: HsSyntax.QTyName
+pdataQTyName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkTyName "PData")
+
+useVal :: MonadPrint m => HsSyntax.QValName -> m (Doc ann)
+useVal qvn = Print.importValue qvn >> return (HsSyntax.printHsQValName qvn)
 
 -- Plutarch derived classes (Generic, PShow).
 
@@ -81,29 +121,28 @@ instance PEq (FooLessTrivial a) where
 
 mkInstanceDoc "\\l r -> (Plutarch.Bool.#==) (Plutarch.Builtin.pdata l) (Plutarch.Builtin.pdata r)"
 -}
-printDerivePEq :: forall ann. PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDerivePEq :: forall ann m. MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDerivePEq _mn _iTyDefs _mkInstanceDoc ty = do
-  let implDoc = "\\l r -> (Plutarch.Bool.#==) (Plutarch.Builtin.pdata l) (Plutarch.Builtin.pdata r)" :: Doc ann
-      imps =
-        Set.fromList
-          [ (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkValueName "pdata")
-          , (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Bool", HsSyntax.MkValueName "#==")
-          ]
-  let instanceDoc = printPEqInstanceDef ty (printValueDef peqMethod implDoc)
-  return (instanceDoc, imps)
+  pdataDoc <- useVal pdataQValName
+  peqDoc <- useVal peqQValName
+  let implDoc = "\\l r ->" <+> parens peqDoc <+> parens (pdataDoc <+> "l") <+> parens (pdataDoc <+> "r")
+  printPEqInstanceDef ty (printValueDef peqMethod implDoc)
 
-printPEqInstanceDef :: PC.Ty -> Doc ann -> Doc ann
-printPEqInstanceDef ty implDefDoc =
-  let headDoc = HsInstDef.printConstraint (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Bool", H.MkClassName "PEq") ty
+printPEqInstanceDef :: MonadPrint m => PC.Ty -> Doc ann -> m (Doc ann)
+printPEqInstanceDef ty implDefDoc = do
+  Print.importClass peqQClassName
+  Print.importClass pisDataQClassName
+  let headDoc = HsInstDef.printConstraint peqQClassName ty
       freeVars = HsInstDef.collectTyVars ty
    in case freeVars of
-        [] -> "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDefDoc
+        [] -> return $ "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDefDoc
         _ ->
-          "instance"
-            <+> HsInstDef.printInstanceContext (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Builtin", H.MkClassName "PIsData") freeVars
-            <+> "=>"
-            <+> headDoc
-            <+> "where" <> hardline <> space <> space <> implDefDoc
+          return $
+            "instance"
+              <+> HsInstDef.printInstanceContext pisDataQClassName freeVars
+              <+> "=>"
+              <+> headDoc
+              <+> "where" <> hardline <> space <> space <> implDefDoc
 
 {- | Deriving PIsData.
 
@@ -115,122 +154,193 @@ instance PIsData (FooLessTrivial a) where
   pfromDataImpl = punsafeCoerce
 ```
 -}
-printDerivePIsData :: forall ann. PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDerivePIsData :: forall ann m. MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDerivePIsData _mn _iTyDefs mkInstanceDoc _ty = do
-  let imps =
-        Set.fromList
-          [ (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Unsafe", HsSyntax.MkValueName "punsafeCoerce")
-          ]
+  punsafeCoerceDoc <- useVal punsafeCoerceQValName
   let pdataImpl, pfromDataImpl :: Doc ann
-      pdataImpl = printValueDef (HsSyntax.MkValueName "pdataImpl") "Plutarch.Unsafe.punsafeCoerce"
-      pfromDataImpl = printValueDef (HsSyntax.MkValueName "pfromDataImpl") "Plutarch.Unsafe.punsafeCoerce"
+      pdataImpl = printValueDef (HsSyntax.MkValueName "pdataImpl") punsafeCoerceDoc
+      pfromDataImpl = printValueDef (HsSyntax.MkValueName "pfromDataImpl") punsafeCoerceDoc
   let instanceDoc = mkInstanceDoc (align $ vsep [pdataImpl, pfromDataImpl])
-  return (instanceDoc, imps)
+  return instanceDoc
 
-lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
-lvPlutusDataBuiltins =
-  Map.fromList
-    [ ("toPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "toBuiltinData"))
-    , ("fromPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "fromBuiltinData"))
-    , ("casePlutusData", (H.MkCabalPackageName "lbr-plutus", H.MkModuleName "LambdaBuffers.Runtime.Plutus", H.MkValueName "casePlutusData"))
-    , ("integerData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkI"))
-    , ("constrData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkConstr"))
-    , ("listData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkList"))
-    , ("succeedParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Just"))
-    , ("failParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Nothing"))
-    , ("bindParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ">>="))
-    ]
-
-lvPlutusDataBuiltinsForPlutusType :: Map LV.ValueName H.QValName
+lvPlutusDataBuiltinsForPlutusType :: Map LV.ValueName HsSyntax.QValName
 lvPlutusDataBuiltinsForPlutusType =
   Map.fromList
-    [ ("toPlutusData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "toPlutusData'"))
-    , ("fromPlutusData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "pfromPlutusData"))
-    , ("casePlutusData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "pcasePlutusData"))
-    , ("integerData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "integerData'"))
-    , ("constrData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "constrData'"))
-    , ("listData", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "listData'"))
-    , ("succeedParse", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "psucceedParse"))
-    , ("failParse", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "pfailParse"))
-    , ("bindParse", (H.MkCabalPackageName "lbr-plutarch", H.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", H.MkValueName "pbindParse"))
+    [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
+    , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPlutusType"))
+    , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
+    , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
+    , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
+    , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
+    , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
+    , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
+    , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
     ]
 
-printDerivePlutusType :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDerivePlutusType :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDerivePlutusType mn iTyDefs _mkInstanceDoc ty = do
-  toDataE <- deriveToPlutusDataImplPlutarch mn iTyDefs ty
-  fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
-  let additionalImps =
-        Set.fromList
-          [ (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "#")
-          ]
-  (pconImplDoc, imps) <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (HsLamVal.printValueE toDataE)
-  (pmatchImplDoc, imps') <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (PlLamVal.printValueE fromDataE)
-  let instanceDoc =
-        printPlutusTypeInstanceDef
-          ty
-          ( align $
-              vsep
-                [ printValueDef (H.MkValueName "pcon'") pconImplDoc
-                , "pmatch' pd f =" <+> parens "Plutarch.Prelude.#" <+> parens (dirtyHack pmatchImplDoc) <+> "pd"
-                ]
-          )
-  return (instanceDoc, imps' <> imps <> additionalImps)
+  pappDoc <- useVal pappQValName
+  pconDoc <- useVal pconQValName
+  -- TODO(bladyjoker): The `fromData` implementation is trying to construct a term, which for Plutarch means `pcon`. However, this is 'pmatch' implementation which is NOT really exactly 'fromData', and has a different type signature for which we do this. I'm sorry.
+  let dirtyHack :: Doc ann -> Doc ann
+      dirtyHack = pretty . Text.replace (docToText pconDoc <> " ") "f " . docToText
+
+  let resOrErr =
+        do
+          toDataE <- deriveToPlutusDataImplPlutarch mn iTyDefs ty
+          fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
+          (pconImplDoc, imps) <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (HsLamVal.printValueE toDataE)
+          (pmatchImplDoc, imps') <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (PlLamVal.printValueE fromDataE)
+          let implDoc =
+                align $
+                  vsep
+                    [ printValueDef pconMethod pconImplDoc
+                    , printValueDef pmatchMethod $ parens ("\\pd f -> " <+> parens pappDoc <+> parens (dirtyHack pmatchImplDoc) <+> "pd")
+                    ]
+
+          return (implDoc, imps' <> imps)
+  case resOrErr of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Printing an instance definition for PlutusType failed with: " <> err ^. P.msg)
+    Right (implDoc, imps) -> do
+      instanceDoc <- printPlutusTypeInstanceDef ty implDoc
+      for_ imps Print.importValue
+      return instanceDoc
   where
     docToText :: Doc ann -> Text
     docToText = renderStrict . layoutPretty defaultLayoutOptions
 
-    -- TODO(bladyjoker): THe `fromData` implementation is trying to construct a term, which for Plutarch means `pcon`. However, this is 'pmatch' implementation which is NOT really exactly 'fromData', and has a different type signature for which we do this. I'm sorry.
-    dirtyHack :: Doc ann -> Doc ann
-    dirtyHack = pretty . Text.replace "Plutarch.Prelude.pcon " "f " . docToText
-
-printPlutusTypeInstanceDef :: PC.Ty -> Doc ann -> Doc ann
-printPlutusTypeInstanceDef ty implDefDoc =
-  let headDoc = HsInstDef.printConstraint plutusTypeHsQClassName ty
+printPlutusTypeInstanceDef :: MonadPrint m => PC.Ty -> Doc ann -> m (Doc ann)
+printPlutusTypeInstanceDef ty implDefDoc = do
+  Print.importClass plutusTypeQClassName
+  Print.importClass pisDataQClassName
+  Print.importType pdataQTyName
+  let headDoc = HsInstDef.printConstraint plutusTypeQClassName ty
       freeVars = HsInstDef.collectTyVars ty
-      pinnerDefDoc = "type PInner" <+> HsTyDef.printTyInner ty <+> "=" <+> "Plutarch.Builtin.PData"
+      pinnerDefDoc = "type PInner" <+> HsTyDef.printTyInner ty <+> "=" <+> HsSyntax.printHsQTyName pdataQTyName
    in case freeVars of
         [] ->
-          "instance"
-            <+> headDoc
-            <+> "where"
-              <> hardline
-              <> space
-              <> space
-              <> pinnerDefDoc
-              <> hardline
-              <> space
-              <> space
-              <> implDefDoc
+          return $
+            "instance"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
         _ ->
-          "instance"
-            <+> HsInstDef.printInstanceContext (H.MkCabalPackageName "plutarch", H.MkModuleName "Plutarch.Builtin", H.MkClassName "PIsData") freeVars
-            <+> "=>"
-            <+> headDoc
-            <+> "where"
-              <> hardline
-              <> space
-              <> space
-              <> pinnerDefDoc
-              <> hardline
-              <> space
-              <> space
-              <> implDefDoc
+          return $
+            "instance"
+              <+> HsInstDef.printInstanceContext pisDataQClassName freeVars
+              <+> "=>"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
 
-printValueDef :: H.ValueName -> Doc ann -> Doc ann
-printValueDef valName valDoc = H.printHsValName valName <+> equals <+> valDoc
+printValueDef :: HsSyntax.ValueName -> Doc ann -> Doc ann
+printValueDef valName valDoc = HsSyntax.printHsValName valName <+> equals <+> valDoc
 
-fromPlutusDataClassMethodName :: H.ValueName
-fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"
+lvPlutusDataBuiltinsForPTryFrom :: Map LV.ValueName HsSyntax.QValName
+lvPlutusDataBuiltinsForPTryFrom =
+  Map.fromList
+    [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
+    , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPTryFrom"))
+    , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
+    , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
+    , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
+    , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
+    , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
+    , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
+    , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
+    ]
 
-builtinDataToDataRef :: H.QValName
-builtinDataToDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "builtinDataToData")
+{- | PTryFrom instance implementation.
 
-printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
-printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
-  valE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
-  let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
-  return
-    ( instanceDoc
-    , Set.singleton builtinDataToDataRef <> imps
-    )
+```haskell
+instance (PTryFrom PData a, PIsData a) => PTryFrom PData (FooLessTrivial a) where
+  type PTryFromExcess PData (FooLessTrivial a) = Data.Functor.Const.Const ()
+  ptryFrom' pd f = <implementation>
+```
+-}
+printDerivePTryFrom :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDerivePTryFrom mn iTyDefs _mkInstanceDoc ty = do
+  pappDoc <- useVal pappQValName
+  let resOrErr = do
+        fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
+        (ptryFromImplDoc, imps) <- LV.runPrint lvPlutusDataBuiltinsForPTryFrom (PlLamVal.printValueE fromDataE)
+        return
+          ( align $ printValueDef ptryFromMethod (parens $ "\\pd f -> f" <+> parens (parens pappDoc <+> parens ptryFromImplDoc <+> "pd" <+> "," <+> "()"))
+          , imps
+          )
+  case resOrErr of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Printing an instance definition for PTryFrom failed with: " <> err ^. P.msg)
+    Right (implDoc, imps) -> do
+      instanceDoc <- printPTryFromInstanceDef ty implDoc
+      for_ imps Print.importValue
+      return instanceDoc
+
+constQTyName :: HsSyntax.QTyName
+constQTyName = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "Data.Functor.Const", HsSyntax.MkTyName "Const")
+
+printPTryFromInstanceDef :: MonadPrint m => PC.Ty -> Doc ann -> m (Doc ann)
+printPTryFromInstanceDef ty implDefDoc = do
+  Print.importClass ptryFromQClassName
+  Print.importType pdataQTyName
+  Print.importType constQTyName
+  let headDoc = HsSyntax.printHsQClassName ptryFromQClassName <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner ty
+      freeVars = HsInstDef.collectTyVars ty
+      pinnerDefDoc = "type PTryFromExcess" <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner ty <+> "=" <+> HsSyntax.printHsQTyName constQTyName <+> "()"
+   in case freeVars of
+        [] ->
+          return $
+            "instance"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
+        _ ->
+          return $
+            "instance"
+              <+> printContext freeVars
+              <+> "=>"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
+  where
+    printContext :: [PC.Ty] -> Doc ann
+    printContext tys =
+      align . group $
+        encloseSep
+          lparen
+          rparen
+          comma
+          ( [ HsInstDef.printConstraint pisDataQClassName t
+            | t <- tys
+            ]
+              <> [ HsSyntax.printHsQClassName ptryFromQClassName <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner t
+                 | t <- tys
+                 ]
+          )
