@@ -8,6 +8,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Print (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as HsInstDef
+import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as HsLamVal
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as HsTyDef
@@ -76,7 +77,7 @@ ptryFromMethod :: HsSyntax.ValueName
 ptryFromMethod = HsSyntax.MkValueName "ptryFrom'"
 
 pconQValName :: HsSyntax.QValName
-pconQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "pcon")
+pconQValName = (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch", HsSyntax.MkValueName "pcon")
 
 pappQValName :: HsSyntax.QValName
 pappQValName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "#")
@@ -267,9 +268,13 @@ lvPlutusDataBuiltinsForPTryFrom =
 {- | PTryFrom instance implementation.
 
 ```haskell
-instance (PTryFrom PData a, PIsData a) => PTryFrom PData (FooLessTrivial a) where
-  type PTryFromExcess PData (FooLessTrivial a) = Data.Functor.Const.Const ()
-  ptryFrom' pd f = <implementation>
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PMaybe a) where
+  type PTryFromExcess PData (PMaybe a) = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) where
+  type PTryFromExcess PData (PAsData (PMaybe a)) = Const ()
+  ptryFrom' pd f = ...
 ```
 -}
 printDerivePTryFrom :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
@@ -285,21 +290,42 @@ printDerivePTryFrom mn iTyDefs _mkInstanceDoc ty = do
   case resOrErr of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Printing an instance definition for PTryFrom failed with: " <> err ^. P.msg)
     Right (implDoc, imps) -> do
-      instanceDoc <- printPTryFromInstanceDef ty implDoc
+      instancePAsDataDoc <- printPTryFromPAsDataInstanceDef ty implDoc
       for_ imps Print.importValue
-      return instanceDoc
+      instanceDoc <- printPTryFromInstanceDef ty
+      return $ align $ vsep [instanceDoc, instancePAsDataDoc]
 
 constQTyName :: HsSyntax.QTyName
 constQTyName = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "Data.Functor.Const", HsSyntax.MkTyName "Const")
 
-printPTryFromInstanceDef :: MonadPrint m => PC.Ty -> Doc ann -> m (Doc ann)
-printPTryFromInstanceDef ty implDefDoc = do
+{- | PTryFrom (PAsData a)
+
+```haskell
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) where
+  type PTryFromExcess PData (PAsData (PMaybe a)) = Const ()
+  ptryFrom' pd f = ...
+```
+-}
+printPTryFromPAsDataInstanceDef :: MonadPrint m => PC.Ty -> Doc ann -> m (Doc ann)
+printPTryFromPAsDataInstanceDef ty implDefDoc = do
   Print.importClass ptryFromQClassName
+  Print.importClass pisDataQClassName
   Print.importType pdataQTyName
+  Print.importType pasDataQTyName
   Print.importType constQTyName
-  let headDoc = HsSyntax.printHsQClassName ptryFromQClassName <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner ty
+
+  let headDoc =
+        HsSyntax.printHsQClassName ptryFromQClassName
+          <+> HsSyntax.printHsQTyName pdataQTyName
+          <+> parens (HsSyntax.printHsQTyName pasDataQTyName <+> HsTyDef.printTyInner ty)
       freeVars = HsInstDef.collectTyVars ty
-      pinnerDefDoc = "type PTryFromExcess" <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner ty <+> "=" <+> HsSyntax.printHsQTyName constQTyName <+> "()"
+      pinnerDefDoc =
+        "type PTryFromExcess"
+          <+> HsSyntax.printHsQTyName pdataQTyName
+          <+> parens (HsSyntax.printHsQTyName pasDataQTyName <+> HsTyDef.printTyInner ty)
+          <+> "="
+          <+> HsSyntax.printHsQTyName constQTyName
+          <+> "()"
    in case freeVars of
         [] ->
           return $
@@ -337,10 +363,92 @@ printPTryFromInstanceDef ty implDefDoc = do
           lparen
           rparen
           comma
-          ( [ HsInstDef.printConstraint pisDataQClassName t
+          ( [ HsSyntax.printHsQClassName ptryFromQClassName
+              <+> HsSyntax.printHsQTyName pdataQTyName
+              <+> parens (HsSyntax.printHsQTyName pasDataQTyName <+> HsTyDef.printTyInner t)
             | t <- tys
             ]
-              <> [ HsSyntax.printHsQClassName ptryFromQClassName <+> HsSyntax.printHsQTyName pdataQTyName <+> HsTyDef.printTyInner t
-                 | t <- tys
-                 ]
+              <> [HsSyntax.printConstraint pisDataQClassName t | t <- tys]
+          )
+
+pasDataQTyName :: HsSyntax.QTyName
+pasDataQTyName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkTyName "PAsData")
+
+ptryFromPAsDataQValName :: HsSyntax.QValName
+ptryFromPAsDataQValName = (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch", HsSyntax.MkValueName "ptryFromPAsData")
+
+{- | PTryFrom instance implementation.
+
+```haskell
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PMaybe a) where
+  type PTryFromExcess PData (PMaybe a) = Const ()
+  ptryFrom' = ptryFromPAsData
+```
+-}
+printPTryFromInstanceDef :: MonadPrint m => PC.Ty -> m (Doc ann)
+printPTryFromInstanceDef ty = do
+  ptryFromPAsDataDoc <- useVal ptryFromPAsDataQValName
+  Print.importClass ptryFromQClassName
+  Print.importClass pisDataQClassName
+  Print.importType pdataQTyName
+  Print.importType pasDataQTyName
+  Print.importType constQTyName
+  let headDoc =
+        HsSyntax.printHsQClassName ptryFromQClassName
+          <+> HsSyntax.printHsQTyName pdataQTyName
+          <+> HsTyDef.printTyInner ty
+      freeVars = HsInstDef.collectTyVars ty
+
+      pinnerDefDoc =
+        "type PTryFromExcess"
+          <+> HsSyntax.printHsQTyName pdataQTyName
+          <+> HsTyDef.printTyInner ty
+          <+> "="
+          <+> HsSyntax.printHsQTyName constQTyName
+          <+> "()"
+
+      implDefDoc = printValueDef ptryFromMethod ptryFromPAsDataDoc
+   in case freeVars of
+        [] ->
+          return $
+            "instance"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
+        _ ->
+          return $
+            "instance"
+              <+> printContext freeVars
+              <+> "=>"
+              <+> headDoc
+              <+> "where"
+                <> hardline
+                <> space
+                <> space
+                <> pinnerDefDoc
+                <> hardline
+                <> space
+                <> space
+                <> implDefDoc
+  where
+    printContext :: [PC.Ty] -> Doc ann
+    printContext tys =
+      align . group $
+        encloseSep
+          lparen
+          rparen
+          comma
+          ( [ HsSyntax.printHsQClassName ptryFromQClassName
+              <+> HsSyntax.printHsQTyName pdataQTyName
+              <+> parens (HsSyntax.printHsQTyName pasDataQTyName <+> HsTyDef.printTyInner t)
+            | t <- tys
+            ]
+              <> [HsSyntax.printConstraint pisDataQClassName t | t <- tys]
           )

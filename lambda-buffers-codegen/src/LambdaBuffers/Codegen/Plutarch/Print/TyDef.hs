@@ -74,6 +74,9 @@ printTyDefKw HsSyntax.SynonymTyDef = "type"
 termType :: HsSyntax.QTyName
 termType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "Term")
 
+pasDataType :: HsSyntax.QTyName
+pasDataType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkTyName "PAsData")
+
 scopeType :: HsSyntax.QTyName
 scopeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "S")
 
@@ -370,7 +373,7 @@ printProd :: PC.Product -> Doc ann
 printProd (PC.Product fields _) = do
   if null fields
     then mempty
-    else align $ sep ((\f -> parens (HsSyntax.printHsQTyName termType <+> "s" <+> printTyInner f)) <$> fields)
+    else align $ sep ((\f -> parens (HsSyntax.printHsQTyName termType <+> "s" <+> parens (HsSyntax.printHsQTyName pasDataType <+> printTyInner f))) <$> fields)
 
 printTyInner :: PC.Ty -> Doc ann
 printTyInner (PC.TyVarI v) = printTyVar v

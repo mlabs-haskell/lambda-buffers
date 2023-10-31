@@ -32,7 +32,7 @@ pappRef :: HsSyntax.QValName
 pappRef = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "#")
 
 pconRef :: HsSyntax.QValName
-pconRef = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "pcon")
+pconRef = (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch", HsSyntax.MkValueName "pcon")
 
 pmatchRef :: HsSyntax.QValName
 pmatchRef = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Prelude", HsSyntax.MkValueName "pmatch")

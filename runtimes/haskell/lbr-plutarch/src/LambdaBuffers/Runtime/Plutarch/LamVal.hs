@@ -71,12 +71,12 @@ constrData :: Term s PInteger -> [Term s PData] -> Term s PData
 constrData ix args = pforgetData $ pconstrBuiltin # ix # toBuiltinList args
 
 -- | Plutarch `integerData :: IntE -> PlutusData`
-pintegerData :: Term s (PAsData PInteger :--> PData)
-pintegerData = ptoPlutusData
+pintegerData :: Term s (PInteger :--> PData)
+pintegerData = plam $ \i -> ptoPlutusData # pdata i
 
 -- | Haskell `integerData :: IntE -> PlutusData`
-integerData :: Term s (PAsData PInteger) -> Term s PData
-integerData = toPlutusData
+integerData :: Term s PInteger -> Term s PData
+integerData = toPlutusData . pdata
 
 -- | Plutarch `listData :: ListE PlutusData -> PlutusData`
 plistData :: Term s (PBuiltinList PData :--> PData)

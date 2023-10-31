@@ -13,12 +13,12 @@
     "Prelude.Either": [
       "lbr-plutarch",
       "LambdaBuffers.Runtime.Plutarch",
-      "PEitherData"
+      "PEither"
     ],
     "Prelude.Maybe": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "PMaybeData"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PMaybe"
     ],
     "Prelude.Bytes": [
       "plutarch",
@@ -27,8 +27,8 @@
     ],
     "Prelude.Text": [
       "plutarch",
-      "Plutarch.String",
-      "PString"
+      "Plutarch.ByteString",
+      "PByteString"
     ],
     "Prelude.Integer": [
       "plutarch",
