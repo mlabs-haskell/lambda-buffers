@@ -1,3 +1,4 @@
+//! Common error type
 use serde_json::Value;
 use thiserror;
 
@@ -25,6 +26,7 @@ impl From<&Value> for JsonType {
     }
 }
 
+/// Error type representing Json conversion errors
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Expected a JSON type: {wanted:?}, but got a JSON type: {got:?}")]

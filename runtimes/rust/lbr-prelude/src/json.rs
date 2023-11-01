@@ -1,3 +1,4 @@
+//! Json serialization of Lambda Buffers types
 pub use crate::error::{Error, JsonType};
 use core::str::FromStr;
 use data_encoding::BASE64;
@@ -322,8 +323,8 @@ where
     }
 }
 
-/// Construct a JSON Value from a sum type
-/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON
+/// Construct a JSON Value from a sum type.
+/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 pub fn sum_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("name".to_owned(), Value::String(ctor_name.to_owned()));
@@ -332,8 +333,8 @@ pub fn sum_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     Value::Object(obj)
 }
 
-/// Parse a JSON value into an intermediary representation of a sum type
-/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON
+/// Parse a JSON value into an intermediary representation of a sum type.
+/// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 pub fn sum_parser(value: &Value) -> Result<(&str, &Vec<Value>), Error> {
     match value {
         Value::Object(obj) => {

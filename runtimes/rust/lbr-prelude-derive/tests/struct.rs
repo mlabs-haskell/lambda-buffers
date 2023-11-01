@@ -15,11 +15,10 @@ fn main() {
         age: BigInt::from(89),
     };
 
-    let mut dict = serde_json::Map::new();
-    dict.insert("name".to_owned(), Value::String("田中太郎".to_owned()));
-    dict.insert("age".to_owned(), Value::Number(Number::from(89)));
-
-    let expected = Value::Object(dict);
+    let expected = Value::Object(serde_json::Map::from_iter([
+        ("name".to_owned(), Value::String("田中太郎".to_owned())),
+        ("age".to_owned(), Value::Number(Number::from(89))),
+    ]));
 
     let actual = data.to_json().unwrap();
 

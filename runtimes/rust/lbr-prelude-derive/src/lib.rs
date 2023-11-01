@@ -175,8 +175,8 @@ fn impl_enum(
     ident: &syn::Ident,
     variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    // Arms of the pattern match over the enum variants
-    let to_json_pattern_match = variants.iter().map(|variant| {
+    // Arms of the pattern match over the variants of the original data
+    let to_json_match_arms = variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
         let variant_str = variant.ident.to_string();
 
@@ -206,13 +206,13 @@ fn impl_enum(
     let to_json_impl = quote! {
         fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
             Ok(match self {
-                #(#to_json_pattern_match)*
+                #(#to_json_match_arms)*
             })
         }
     };
 
-    // Arms of the pattern match over tuple containinig the key-value pair
-    let from_json_pattern_match = variants.iter().map(|variant| {
+    // Arms of the pattern match over the JSON name and fields
+    let from_json_match_arms = variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
         let variant_str = variant.ident.to_string();
 
@@ -264,7 +264,7 @@ fn impl_enum(
     let from_json_impl = quote! {
         fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             lbr_prelude::json::sum_parser(&value).and_then(|obj| match obj {
-                #(#from_json_pattern_match)*
+                #(#from_json_match_arms)*
                 _ => Err(lbr_prelude::error::Error::UnexpectedJsonInvariant {
                     wanted: #error_msg.to_owned(),
                     got: "unknown constructor name".to_owned(),

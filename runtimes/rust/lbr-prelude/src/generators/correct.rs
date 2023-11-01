@@ -1,3 +1,7 @@
+//! Proptest strategies for most common types
+//!
+//! These strategies always return valid values.
+
 use num_bigint::{BigInt, Sign};
 use proptest::arbitrary::{any, StrategyFor};
 use proptest::char::CharStrategy;
