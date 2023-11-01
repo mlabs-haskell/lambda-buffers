@@ -39,7 +39,7 @@ impl Json for OutputDatum {
 
     fn from_json(value: serde_json::Value) -> Result<Self, Error> {
         json::sum_parser(&value).and_then(|obj| match obj {
-            ("PubKeyCredential", ctor_fields) => match &ctor_fields[..] {
+            ("NoOutputDatum", ctor_fields) => match &ctor_fields[..] {
                 [] => Ok(OutputDatum::None),
                 _ => Err(Error::UnexpectedArrayLength {
                     wanted: 0,
@@ -61,7 +61,8 @@ impl Json for OutputDatum {
                 }),
             },
             _ => Err(Error::UnexpectedJsonInvariant {
-                wanted: "constructor names (Nothing, Just)".to_owned(),
+                wanted: "constructor names (PubKeyCredential, OutputDatumHash, OutputDatum)"
+                    .to_owned(),
                 got: "unknown constructor name".to_owned(),
             }),
         })

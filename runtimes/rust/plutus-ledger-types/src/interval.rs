@@ -1,15 +1,13 @@
+use crate::feature_traits::FeatureTraits;
 #[cfg(feature = "lbf")]
 use lbr_prelude::json::Json;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "lbf")]
-pub trait FeatureTraits: Json {}
-#[cfg(feature = "lbf")]
-impl<T> FeatureTraits for T where T: Json {}
-
 #[cfg(not(feature = "lbf"))]
 pub trait FeatureTraits {}
+#[cfg(not(feature = "lbf"))]
+impl<T> FeatureTraits for T {}
 
 /// An abstraction over `PlutusInterval`, allowing valid values only
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -98,8 +96,8 @@ where
 /// handle non-inclusive endpoints. For this reason, it may not be safe to
 /// use `Interval`s with non-inclusive endpoints on types whose `Enum`
 /// instances have partial methods.
-#[cfg(feature = "lbf")]
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "lbf", derive(Json))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PlutusInterval<T>
 where

@@ -3,7 +3,8 @@ use crate::address::{
 };
 use crate::crypto::{Ed25519PubKeyHash, LedgerBytes};
 use crate::datum::{Datum, DatumHash, OutputDatum};
-use crate::interval::{Extended, FeatureTraits, LowerBound, PlutusInterval, UpperBound};
+use crate::feature_traits::FeatureTraits;
+use crate::interval::{Extended, LowerBound, PlutusInterval, UpperBound};
 use crate::ledger_state::Slot;
 use crate::plutus_data::PlutusData;
 use crate::redeemer::Redeemer;
@@ -237,13 +238,23 @@ where
 /// Strategy to generate a PlutusInterval
 ///
 /// This implementation is not normalized, so impossible values might be generated
-pub fn plutus_interval<T>(element: T) -> impl Strategy<Value = PlutusInterval<T::Value>>
+pub fn arb_plutus_interval<T>(
+    lower_bound: T,
+    upper_bound: T,
+) -> impl Strategy<Value = PlutusInterval<T::Value>>
 where
-    T: Strategy + Clone,
+    T: Strategy,
     T::Value: FeatureTraits + Clone,
 {
-    (arb_lower_bound(element.clone()), arb_upper_bound(element))
+    (arb_lower_bound(lower_bound), arb_upper_bound(upper_bound))
         .prop_map(|(from, to)| PlutusInterval { from, to })
+}
+
+/// Strategy to generate a PlutusInterval
+///
+/// This implementation is not normalized, so impossible values might be generated
+pub fn arb_plutus_interval_posix_time() -> impl Strategy<Value = PlutusInterval<POSIXTime>> {
+    arb_plutus_interval(arb_posix_time(), arb_posix_time())
 }
 
 /// Strategy to generate a Cardano address

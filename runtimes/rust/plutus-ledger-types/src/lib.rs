@@ -1,6 +1,7 @@
 pub mod address;
 pub mod crypto;
 pub mod datum;
+pub(crate) mod feature_traits;
 pub mod generators;
 pub mod interval;
 pub mod ledger_state;
