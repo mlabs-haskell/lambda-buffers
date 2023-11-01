@@ -1,0 +1,13 @@
+
+-- Some documentation here
+
+module ModuleDocumentation
+
+-- More documentation
+sum A = A
+
+
+-- Woo hoo, documentation is great
+-- (who reads it anyways)
+
+-- dog pomeranian yorkie maltese
