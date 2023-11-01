@@ -91,8 +91,14 @@ library
     , containers                      >=0.6
     , directory                       >=1.3
     , filepath                        >=1.4
+    , lbf-plutus
+    , lbf-plutus-golden-api
+    , lbf-plutus-plutarch
     , lbf-plutus-plutarch-golden-api
     , lbr-plutarch
+    , lbr-plutus
+    , lbr-prelude
+    , lbt-plutus-golden-data
     , plutarch                        >=1.3
     , plutus-ledger-api               >=1.1
     , plutus-tx                       >=1.1
@@ -101,11 +107,7 @@ library
     , tasty-hunit                     >=0.10
 
   hs-source-dirs:  src
-  exposed-modules:
-    Test.LambdaBuffers.Plutus.Golden
-    Test.LambdaBuffers.Plutus.Golden.Json
-    Test.LambdaBuffers.Plutus.Golden.PlutusData
-    Test.LambdaBuffers.Plutus.Golden.Utils
+  exposed-modules: Test.LambdaBuffers.Plutus.Plutarch.Golden
 
 test-suite tests
   import:         common-language
@@ -114,16 +116,27 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base                            >=4.16
+    , bytestring                      >=0.11
+    , containers                      >=0.6
+    , directory                       >=1.3
+    , filepath                        >=1.4
     , hedgehog                        >=1.2
+    , lbf-plutus
+    , lbf-plutus-golden-api
+    , lbf-plutus-plutarch
     , lbf-plutus-plutarch-golden-api
+    , lbf-prelude
+    , lbf-prelude-plutarch
     , lbr-plutarch
+    , lbr-plutus
+    , lbr-prelude
     , lbt-plutus-golden-data
     , lbt-plutus-plutarch
-    , plutus-tx
+    , plutarch                        >=1.3
+    , plutus-ledger-api               >=1.1
+    , plutus-tx                       >=1.1
     , tasty                           >=1.4
     , tasty-hedgehog                  >=1.4
+    , tasty-hunit                     >=0.10
 
-  other-modules:
-    Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
-    Test.LambdaBuffers.Runtime.Plutus.Json
-    Test.LambdaBuffers.Runtime.Plutus.PlutusData
+  other-modules:  Test.LambdaBuffers.Runtime.Plutus.PlutusData

@@ -10,11 +10,21 @@
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
         extraHackage = [
+          # Load Plutarch Haskell support
           "${config.packages.lbf-prelude-plutarch}"
           "${config.packages.lbf-plutus-plutarch}"
           "${config.packages.lbr-plutarch-src}"
+          # Load pure Haskell support
+          "${config.packages.lbf-prelude-haskell}"
+          "${config.packages.lbf-plutus-haskell}"
+          "${config.packages.lbr-prelude-haskell-src}"
+          "${config.packages.lbr-plutus-haskell-src}"
+          # Golden api
           "${config.packages.lbf-plutus-golden-api-plutarch}"
+          "${config.packages.lbf-plutus-golden-api-haskell}"
+          # Golden data
           "${config.packages.lbt-plutus-golden-haskell}"
+          # Plutarch itself
           "${inputs.plutarch}"
           "${inputs.plutarch}/plutarch-extra"
         ];

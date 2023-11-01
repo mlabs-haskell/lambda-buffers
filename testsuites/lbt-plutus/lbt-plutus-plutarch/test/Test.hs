@@ -1,16 +1,12 @@
 module Main (main) where
 
-import Test.LambdaBuffers.Runtime.Plutus.Json qualified as PlutusJson
-import Test.LambdaBuffers.Runtime.Plutus.PlutusData qualified as PlutusPd
+import Test.LambdaBuffers.Runtime.Plutus.PlutusData qualified as PlutusData
 import Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
 main = do
-  plutusDataTests <- PlutusPd.tests
-  jsonTests <- PlutusJson.tests
   defaultMain $
     testGroup
-      "LambdaBuffers Plutus package tests"
-      [ plutusDataTests
-      , jsonTests
+      "LambdaBuffers Plutarch support tests (for Plutus package but also Prelude)"
+      [ PlutusData.tests
       ]
