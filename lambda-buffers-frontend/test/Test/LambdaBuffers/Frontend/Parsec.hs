@@ -4,7 +4,7 @@ import Test.Tasty (TestTree, testGroup)
 
 import Control.Monad (void)
 import Data.Set qualified as Set
-import LambdaBuffers.Frontend.Parsec (parseClassDef, parseClassSups, parseConstraint, parseDerive, parseInstanceBody, parseInstanceClause, parseProduct, parseRecord, parseSum, parseTyInner, parseTyTopLevel)
+import LambdaBuffers.Frontend.Parsec (junk, parseClassDef, parseClassSups, parseConstraint, parseDerive, parseInstanceBody, parseInstanceClause, parseProduct, parseRecord, parseSum, parseTyInner, parseTyTopLevel)
 import LambdaBuffers.Frontend.Syntax (ClassConstraint, Constraint, SourceInfo)
 import Test.Tasty.HUnit (assertFailure, testCase)
 import Text.Parsec (Parsec, eof, runParser)
@@ -34,7 +34,16 @@ testInnerTypeExpression =
         "parses"
         [ parsesEq ["a", " a", "a ", " a ", "(a)", "( a )", "(  (a   ) )"] parseTyInner
         , parsesEq ["Int", " Int", "Int ", "(Int)", "( Int)", "(Int )", " (Int)", "(Int) ", "((Int))"] parseTyInner
-        , parsesEq
+        , -- TODO(jaredponn): this test case is screwed.. there's problems with the data
+          -- representation for why this won't pass e.g. @A a a@ is @A@ applied
+          -- to the list @[a,a]@; so breaking this down to the left associative
+          -- chain of applications really is broken.
+          -- , parsesEq
+          --     [ "(A.B.A a a a)"
+          --     , "((A.B.A a) a a)"
+          --     ]
+          --     parseTyInner
+          parsesEq
             [ "(Maybe a)"
             , " (Maybe a)"
             , "(Maybe a) "
@@ -179,6 +188,9 @@ testTopLevelTypeExpression =
         , parses "( Maybe ( Maybe ( Maybe (Maybe a ))))" parseTyTopLevel
         , parses "(Maybe (A a) b (c) (d) )" parseTyTopLevel
         , parses "Maybe a Int b String" parseTyTopLevel
+        , parses "Maybe\na" parseTyTopLevel
+        , parses "Maybe \na" parseTyTopLevel
+        , parses "Maybe a\n" parseTyTopLevel
         ]
     , testGroup
         "fails"
@@ -186,9 +198,6 @@ testTopLevelTypeExpression =
         , fails "( a ))" parseTyTopLevel
         , fails "(  (a   ) ))" parseTyTopLevel
         , fails "(Int))" parseTyTopLevel
-        , fails "Maybe\na" parseTyTopLevel
-        , fails "Maybe \na" parseTyTopLevel
-        , fails "Maybe a\n" parseTyTopLevel
         ]
     ]
 
@@ -205,23 +214,23 @@ testRecordExpression =
         , parsesEq ["{x : Either a b}", "{ x : Either a b}", "{x : Either a b }", "{ x : Either a b }", "{x : (Either a b)}"] parseRecord
         , parsesEq ["{x : a, y : Int, z : Maybe a}", "{  x : a,y : Int , z : Maybe a }", "{\n x : a,\n y : Int ,\n z : Maybe a\n }"] parseRecord
         , parsesEq ["{x : a, y : Prelude.Numeric.Int, z : Prelude.Maybe a}", "{  x : a,y : Prelude.Numeric.Int , z : Prelude.Maybe a }", "{\n x : a,\n y : Prelude.Numeric.Int ,\n z : Prelude.Maybe a\n }"] parseRecord
+        , parses "{x:y}" parseRecord
+        , parses "{ x:y }" parseRecord
+        , parses "{ x: y}" parseRecord
+        , parses "{ x :y}" parseRecord
+        , parses "{x :y}" parseRecord
+        , parses "{x: y}" parseRecord
+        , parses "{\nx : a}" parseRecord
+        , parses "{x\n: a}" parseRecord
+        , parses "{x :\na}" parseRecord
+        , parses "{x : a\n}" parseRecord
+        , parses " {}" parseRecord
         ]
     , testGroup
         "fails"
-        [ fails " {}" parseRecord
-        , fails "{x}" parseRecord
+        [ fails "{x}" parseRecord
         , fails "{ x }" parseRecord
-        , fails "{x:y}" parseRecord
-        , fails "{ x:y }" parseRecord
         , fails "{ x: }" parseRecord
-        , fails "{ x: y}" parseRecord
-        , fails "{ x :y}" parseRecord
-        , fails "{x :y}" parseRecord
-        , fails "{x: y}" parseRecord
-        , fails "{\nx : a}" parseRecord
-        , fails "{x\n: a}" parseRecord
-        , fails "{x :\na}" parseRecord
-        , fails "{x : a\n}" parseRecord
         ]
     ]
 
@@ -243,14 +252,15 @@ testProductExpression =
         , parses "a Int (Maybe a)" parseProduct
         , parses "   a y  Int  z  (Maybe a) " parseProduct
         , parses "Maybe\n Int" parseProduct
+        , parses "\n" parseProduct
+        , parses "\nMaybe Int" parseProduct
+        , parses "Maybe \nInt" parseProduct
+        , parses "Maybe Int\n" parseProduct
         ]
     , testGroup
         "fails"
-        [ fails "\n" parseProduct
-        , fails "\nMaybe Int" parseProduct
-        , fails "Maybe \nInt" parseProduct
-        , fails "Maybe Int\n" parseProduct
-        , fails "()" parseProduct
+        [ fails "()" parseProduct
+        , fails "(    ) -- dog" parseProduct
         ]
     ]
 
@@ -271,11 +281,11 @@ testSumExpression =
         , parses "A a b | B b a | C c d" parseSum
         , parses "A ((a) b) | B (b a) | C (c) (d)" parseSum
         , parses "A Int (Maybe Int String) | B (Prelude.Maybe a) | C Prelude.Numeric.Int Prelude.Numeric.String" parseSum
+        , parses "\n" parseSum
         ]
     , testGroup
         "fails"
-        [ fails "\n" parseSum
-        , fails "A |" parseSum
+        [ fails "A |" parseSum
         , fails "A ()| B" parseSum
         , fails "A | B ()" parseSum
         , fails "A (B | C)" parseSum
@@ -317,6 +327,7 @@ testInstanceBodyExpression =
     [ testGroup
         "parses"
         [ parsesEq ["", "()"] parseIB -- TODO(bladyjoker): Figure out ().
+        , parsesEq ["Eq a, Show a", "(Eq a, Show a)"] parseIB
         , parsesEq ["Eq a", "Eq  a", "Eq a ", " Eq a", "\n Eq a", "Eq\n a"] parseIB
         , parsesEq ["Eq a, Eq b", "Eq a , Eq b", "Eq a\n , Eq b", "Eq a\n , Eq b, ()"] parseIB
         , parses "Eq Int" parseIB
@@ -337,11 +348,11 @@ testInstanceBodyExpression =
             , "Eq a, (Show b, Json c), MPTC (Maybe a) (Either a Int) c"
             ]
             parseIB
+        , parses "\n" parseIB
         ]
     , testGroup
         "fails"
-        [ fails "\n" parseIB
-        , fails "eq a" parseIB
+        [ fails "eq a" parseIB
         , fails "a" parseIB
         , fails "Eq a," parseIB
         , fails "Eq a, " parseIB
@@ -405,6 +416,14 @@ testClassSups =
         [ parses "" parseCS
         , parses "Eq a" parseCS
         , parses " Eq a" parseCS
+        , parses " Eq a, Show a, Eq b" parseCS
+        , parsesEq
+            [ " Eq a, Show a, Eq b"
+            , " Eq a, (Show a, Eq b)"
+            , " (Eq a, Show a, Eq b)"
+            , " (Eq a, Show a), Eq b"
+            ]
+            parseCS
         , -- FIX(bladyjoker): parses "Eq a " parseCS
           parsesEq
             [ "Eq a"
@@ -417,10 +436,12 @@ testClassSups =
             , "(Eq  a)"
             ]
             parseCS
+        , parses "\n" parseCS
         ]
     , testGroup
         "fails"
-        [ fails "\n" parseCS
+        [ fails "Eq Int" parseCS
+        , fails "Eq Int, show Int" parseCS
         ]
     ]
   where
@@ -445,6 +466,23 @@ testClassDef =
             ]
             parseClassDef
         , parsesEq
+            [ "class (Eq a), Eq b <= Ord a"
+            , "class (Eq  a, Eq b) <= Ord a"
+            , "class Eq  a ,        Eq b <= Ord a"
+            ]
+            parseClassDef
+        , parsesEq
+            [ "class (Eq a), Eq b, Eq c <= Ord a"
+            , "class (Eq  a, Eq b), Eq c <= Ord a"
+            , "class Eq  a, (Eq b,      Eq c) <= Ord a"
+            , "class ((Eq  a), Eq b), Eq c <= Ord a"
+            , "class Eq  a, (Eq b,      (Eq c)) <= Ord a"
+            , "class (Eq  a, (Eq b)), Eq c <= Ord a"
+            , "class Eq  a, ((Eq b),      Eq c) <= Ord a"
+            , "class (Eq  a, ((Eq b),      Eq c)) <= Ord a"
+            ]
+            parseClassDef
+        , parsesEq
             [ "class Trivial"
             , "class  Trivial"
             , "class   Trivial"
@@ -456,23 +494,33 @@ testClassDef =
             , "class ((MPTC1 b a, MPTC2 c b a)) <= MPTC a b c"
             ]
             parseClassDef
+        , parses " class Eq a" parseClassDef
+        , parses "class Eq a " parseClassDef
+        , parses "class () <= Eq a" parseClassDef
         ]
     , testGroup
         "fails"
         [ fails "\n" parseClassDef
         , fails "" parseClassDef
-        , fails " class Eq a" parseClassDef
-        , fails "class Eq a " parseClassDef
         , fails "class Eq a <=" parseClassDef
         , fails "class Eq a <= " parseClassDef
+        , fails "class Eq a, Eq a <= Eq a<= Eq a" parseClassDef
         , fails "class (Eq a)" parseClassDef
         ]
     ]
 
+-- * Parsing testing functions
+
+-- Note: when testing parses, since all parsers assume the invariant that they
+-- _must_ start at a non whitespace character, we always run 'junk' before
+-- before running the parser. When the parser finishes, we of course run 'eof'
+-- to ensure it consumes the entire input.
+-- See [Note: Parser Implementation] in "LambdaBuffers.Frontend.Parsec" for details
+
 parsesEq :: forall a info. (Functor a, Show (a ()), Ord (a ())) => [String] -> Parsec String () (a info) -> TestTree
 parsesEq inputs parser =
   testCase (show inputs <> " should parse the same") $
-    let ress = runParser (parser <* eof) () "test" <$> inputs
+    let ress = runParser (junk *> parser <* eof) () "test" <$> inputs
      in case foldr
           ( \res (errs, ps) -> case res of
               Left err -> (err : errs, ps)
@@ -484,11 +532,11 @@ parsesEq inputs parser =
           (errs, ps) -> assertFailure $ show ("Wanted all to parse the same" :: String, errs, ps)
 
 parses :: String -> Parsec String () a -> TestTree
-parses input parser = testCase (show input) $ case runParser (parser <* eof) () "test" input of
+parses input parser = testCase (show input) $ case runParser (junk *> parser <* eof) () "test" input of
   Left err -> assertFailure (show err)
   Right _ -> return ()
 
 fails :: Show a => String -> Parsec String () a -> TestTree
-fails input parser = testCase (show input) $ case runParser (parser <* eof) () "test" input of
+fails input parser = testCase (show input) $ case runParser (junk *> parser <* eof) () "test" input of
   Left _ -> return ()
   Right res -> assertFailure (show res)
