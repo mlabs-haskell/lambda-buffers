@@ -9,6 +9,7 @@ import LambdaBuffers.Codegen.Check (runCheck)
 import LambdaBuffers.Codegen.Haskell.Config qualified as HsConfig
 import LambdaBuffers.Codegen.Haskell.Print qualified as HsPrint
 import LambdaBuffers.Codegen.Haskell.Print.Derive qualified as HsDerive
+import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as HsPrint
 import LambdaBuffers.Codegen.Print qualified as Print
@@ -16,7 +17,6 @@ import LambdaBuffers.ProtoCompat.Types qualified as PC
 import Prettyprinter (defaultLayoutOptions, layoutPretty)
 import Prettyprinter.Render.Text (renderStrict)
 import Proto.Codegen qualified as P
-import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 
 {- | `runPrint cfg inp mod` prints a LambdaBuffers checked module `mod`, given its entire compilation closure in `inp` and Haskell configuration file in `cfg`.
   It either errors with an API error message or succeeds with a module filepath, code and package dependencies.

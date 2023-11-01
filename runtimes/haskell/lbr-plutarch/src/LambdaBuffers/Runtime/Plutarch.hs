@@ -19,6 +19,7 @@ import Plutarch (
  )
 import Plutarch.Api.V1 qualified
 import Plutarch.Api.V1.AssocMap qualified as AssocMap
+import Plutarch.Api.V1.Scripts qualified
 import Plutarch.Api.V2 (PCurrencySymbol, PTokenName, PTuple)
 import Plutarch.Builtin (
   PBuiltinList (PCons, PNil),
@@ -28,7 +29,7 @@ import Plutarch.Builtin (
  )
 import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
-import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PTryFrom, pfromData, pif, ptryFrom)
+import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PTryFrom, pdcons, pdnil, pfromData, pif, ptryFrom)
 import Plutarch.Prelude qualified as Pl
 import Plutarch.Reducible (Reduce)
 import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'))
@@ -232,21 +233,181 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PFoo a) where
   type PTryFromExcess PData (PFoo a) = Const ()
   ptryFrom' = ptryFromPAsData
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PFoo a)) where
-  type PTryFromExcess PData (PAsData (PFoo a)) = Const ()
+instance PTryFrom PData (PAsData Plutarch.Api.V1.Scripts.PDatum) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.Scripts.PDatum) = Const ()
   ptryFrom' pd f =
     f
       ( pcon $
-          PFoo
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
-            (LamVal.pfromPlutusDataPTryFrom # pd)
+          Plutarch.Api.V1.Scripts.PDatum
+            (pfromData $ LamVal.pfromPlutusDataPTryFrom # pd)
       , ()
       )
+
+instance PTryFrom PData Plutarch.Api.V1.Scripts.PDatum where
+  type PTryFromExcess PData Plutarch.Api.V1.Scripts.PDatum = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.Scripts.PRedeemer) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.Scripts.PRedeemer) = Const ()
+  ptryFrom' pd f =
+    f
+      ( pcon $
+          Plutarch.Api.V1.Scripts.PRedeemer
+            (pfromData $ LamVal.pfromPlutusDataPTryFrom # pd)
+      , ()
+      )
+
+instance PTryFrom PData Plutarch.Api.V1.Scripts.PRedeemer where
+  type PTryFromExcess PData Plutarch.Api.V1.Scripts.PRedeemer = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.Scripts.PRedeemerHash) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.Scripts.PRedeemerHash) = Const ()
+  ptryFrom' pd f =
+    f
+      ( pcon $
+          Plutarch.Api.V1.Scripts.PRedeemerHash
+            (pfromData $ LamVal.pfromPlutusDataPTryFrom # pd)
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.Scripts.PDatumHash) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.Scripts.PDatumHash) = Const ()
+  ptryFrom' pd f =
+    f
+      ( pcon $
+          Plutarch.Api.V1.Scripts.PDatumHash
+            (pfromData $ LamVal.pfromPlutusDataPTryFrom # pd)
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PInterval a)) where
+  type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PInterval a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V1.PInterval (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _ -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PInterval a) where
+  type PTryFromExcess PData (Plutarch.Api.V1.PInterval a) = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PLowerBound a)) where
+  type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PLowerBound a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V1.PLowerBound (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _ -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PLowerBound a) where
+  type PTryFromExcess PData (Plutarch.Api.V1.PLowerBound a) = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PUpperBound a)) where
+  type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PUpperBound a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V1.PUpperBound (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _ -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PUpperBound a) where
+  type PTryFromExcess PData (Plutarch.Api.V1.PUpperBound a) = Const ()
+  ptryFrom' = ptryFromPAsData
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PExtended a)) where
+  type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PExtended a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> pcon $ Plutarch.Api.V1.PNegInf pdnil
+                    _ -> perror
+                )
+                ( pif
+                    (ix #== 1)
+                    ( pmatch args \case
+                        PNil -> perror
+                        PCons h t -> pmatch t \case
+                          PNil -> pcon $ Plutarch.Api.V1.PFinite (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
+                          _ -> perror
+                    )
+                    ( pif
+                        (ix #== 2)
+                        ( pmatch args \case
+                            PNil -> pcon $ Plutarch.Api.V1.PPosInf pdnil
+                            _ -> perror
+                        )
+                        perror
+                    )
+                )
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PExtended a) where
+  type PTryFromExcess PData (Plutarch.Api.V1.PExtended a) = Const ()
+  ptryFrom' = ptryFromPAsData
 
 {- | PTryFrom instance for PBool which is missing from Plutarch.
 NOTE(bladyjoker): `PAsData PBool` here because its PInner is PBool for some god forsaken reason.
@@ -274,6 +435,22 @@ instance PTryFrom PData (PAsData PBool) where
           (const perror)
           (const perror)
           pd
+      , ()
+      )
+
+instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PFoo a)) where
+  type PTryFromExcess PData (PAsData (PFoo a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( pcon $
+          PFoo
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
       , ()
       )
 
