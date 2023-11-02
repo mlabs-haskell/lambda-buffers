@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Test.LambdaBuffers.Runtime.Plutus.PlutusData where
+module Test.LambdaBuffers.Runtime.Plutus.PlutusData (tests) where
 
 import LambdaBuffers.Days qualified as HlDays
 import LambdaBuffers.Days.Plutarch qualified as PlDays
@@ -9,9 +9,8 @@ import LambdaBuffers.Foo qualified as HlFoo
 import LambdaBuffers.Foo.Plutarch qualified as PlFoo
 import LambdaBuffers.Plutus.V1 qualified as HlPlutus
 import LambdaBuffers.Plutus.V1.Plutarch qualified as PlPlutus
-
--- import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
--- import LambdaBuffers.Plutus.V2.Plutarch qualified as PlPlutusV2
+import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
+import LambdaBuffers.Plutus.V2.Plutarch qualified as PlPlutusV2
 import LambdaBuffers.Prelude qualified as HlPrelude
 import LambdaBuffers.Prelude.Plutarch qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutarch ()
@@ -63,9 +62,9 @@ tests =
     , forallGoldens @HlPlutus.TxOutRef @PlPlutus.TxOutRef "PlutusV1.TxOutRef" 0
     , forallGoldens @(HlPlutus.UpperBound HlPlutus.POSIXTime) @(PlPlutus.UpperBound PlPlutus.POSIXTime) "PlutusV1.UpperBound" 5
     , forallGoldens @HlPlutus.Value @PlPlutus.Value "PlutusV1.Value" 2
-    -- , forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum "PlutusV2.OutputDatum" 2
-    -- , forallGoldens @HlPlutusV2.TxInInfo @PlPlutusV2.TxInInfo "PlutusV2.TxInInfo" 2
-    -- , forallGoldens @HlPlutusV2.TxOut @PlPlutusV2.TxOut "PlutusV2.TxOut" 2
+    , forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum "PlutusV2.OutputDatum" 2
+    , forallGoldens @HlPlutusV2.TxInInfo @PlPlutusV2.TxInInfo "PlutusV2.TxInInfo" 9
+    , forallGoldens @HlPlutusV2.TxOut @PlPlutusV2.TxOut "PlutusV2.TxOut" 9
     ]
 
 evalRoundTrip :: forall a. (PIsData a, PTryFrom PData (PAsData a)) => Data -> Assertion
@@ -95,8 +94,8 @@ roundTripTestCase fp = testCase fp $ do
 forallGoldens :: forall a a'. (ToData a, FromData a, PIsData a', PTryFrom PData (PAsData a')) => FilePath -> Int -> TestTree
 forallGoldens prefix howMany = testGroup prefix $ fmap (\i -> roundTripTestCase @a @a' (prefix <> "." <> show i <> ".pd.json")) [0 .. howMany]
 
-goldens :: [String]
-goldens =
+_goldens :: [String]
+_goldens =
   [ "Days.Day.0.pd.json"
   , "Days.Day.1.pd.json"
   , "Days.Day.2.pd.json"

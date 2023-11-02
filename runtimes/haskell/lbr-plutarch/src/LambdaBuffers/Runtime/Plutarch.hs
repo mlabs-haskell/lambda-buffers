@@ -14,13 +14,18 @@ import Plutarch (
   S,
   Term,
   perror,
+  phoistAcyclic,
+  plam,
   pmatch,
   (#),
+  (:-->),
  )
+import Plutarch.Api.V1 (PMaybeData (PDJust, PDNothing))
 import Plutarch.Api.V1 qualified
 import Plutarch.Api.V1.AssocMap qualified as AssocMap
+import Plutarch.Api.V1.Scripts (PScriptHash)
 import Plutarch.Api.V1.Scripts qualified
-import Plutarch.Api.V2 (PCurrencySymbol, PTokenName, PTuple)
+import Plutarch.Api.V2 qualified (POutputDatum (PNoOutputDatum, POutputDatum, POutputDatumHash), PTxInInfo (PTxInInfo), PTxOut (PTxOut))
 import Plutarch.Builtin (
   PBuiltinList (PCons, PNil),
   PData,
@@ -36,7 +41,7 @@ import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'))
 import Plutarch.Unsafe (punsafeCoerce)
 
 -- | PAssetClass missing from Plutarch.
-type PAssetClass = PTuple PCurrencySymbol PTokenName
+type PAssetClass = Plutarch.Api.V1.PTuple Plutarch.Api.V1.PCurrencySymbol Plutarch.Api.V1.PTokenName
 
 -- | LB Plutus.Map maps to this, a sorted Plutus map.
 type PMap = AssocMap.PMap 'AssocMap.Sorted
@@ -408,6 +413,124 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V
 instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PExtended a) where
   type PTryFromExcess PData (Plutarch.Api.V1.PExtended a) = Const ()
   ptryFrom' = ptryFromPAsData
+
+instance PTryFrom PData (PAsData Plutarch.Api.V2.POutputDatum) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V2.POutputDatum) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> pcon $ Plutarch.Api.V2.PNoOutputDatum pdnil
+                    _ -> perror
+                )
+                ( pif
+                    (ix #== 1)
+                    ( pmatch args \case
+                        PNil -> perror
+                        PCons h t -> pmatch t \case
+                          PNil -> pcon $ Plutarch.Api.V2.POutputDatumHash (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
+                          _ -> perror
+                    )
+                    ( pif
+                        (ix #== 2)
+                        ( pmatch args \case
+                            PNil -> perror
+                            PCons h t -> pmatch t \case
+                              PNil -> pcon $ Plutarch.Api.V2.POutputDatum (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
+                              _ -> perror
+                        )
+                        perror
+                    )
+                )
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxOut) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V2.PTxOut) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> perror
+                        PCons h'' t'' -> pmatch t'' \case
+                          PNil -> perror
+                          PCons h''' t''' -> pmatch t''' \case
+                            PNil ->
+                              pcon $
+                                Plutarch.Api.V2.PTxOut
+                                  ( pdcons
+                                      # (LamVal.pfromPlutusDataPTryFrom # h)
+                                      # ( pdcons
+                                            # (LamVal.pfromPlutusDataPTryFrom # h')
+                                            # ( pdcons
+                                                  # (LamVal.pfromPlutusDataPTryFrom # h'')
+                                                  # ( pdcons
+                                                        # (maybeToMaybe # (LamVal.pfromPlutusDataPTryFrom @(PMaybe PScriptHash) # h'''))
+                                                        # pdnil
+                                                    )
+                                              )
+                                        )
+                                  )
+                            _ -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+-- FIXME(bladyjoker): This is used above and it's a hack because something is off with PMaybeData instances.
+maybeToMaybe :: Term s (PAsData (PMaybe a) :--> PAsData (PMaybeData a))
+maybeToMaybe =
+  phoistAcyclic $
+    plam
+      ( \may -> pmatch (pfromData may) $ \case
+          PJust x -> pcon $ PDJust (pdcons # x # pdnil)
+          PNothing -> pcon $ PDNothing pdnil
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxInInfo) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V2.PTxInInfo) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V2.PTxInInfo (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _ -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
 
 {- | PTryFrom instance for PBool which is missing from Plutarch.
 NOTE(bladyjoker): `PAsData PBool` here because its PInner is PBool for some god forsaken reason.
