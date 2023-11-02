@@ -19,6 +19,8 @@ module LambdaBuffers.Codegen.Plutarch.Print.Refs (
   termQTyName,
   scopeQTyName,
   ptypeQTyName,
+  showQClassName,
+  genericQClassName,
 ) where
 
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
@@ -82,3 +84,9 @@ scopeQTyName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "P
 
 ptypeQTyName :: HsSyntax.QTyName
 ptypeQTyName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "PType")
+
+showQClassName :: HsSyntax.QClassName
+showQClassName = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Show", HsSyntax.MkClassName "PShow")
+
+genericQClassName :: HsSyntax.QClassName
+genericQClassName = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "GHC.Generics", HsSyntax.MkClassName "Generic")

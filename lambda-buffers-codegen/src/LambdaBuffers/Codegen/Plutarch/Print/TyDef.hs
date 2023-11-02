@@ -12,7 +12,7 @@ import LambdaBuffers.Codegen.Plutarch.Print.Refs qualified as PlRefs
 import LambdaBuffers.Codegen.Plutarch.Print.Syntax qualified as PlSyntax
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, dot, encloseSep, equals, group, hsep, parens, pipe, sep, space, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, dot, encloseSep, equals, group, hardline, hsep, parens, pipe, sep, space, vsep, (<+>))
 
 {- | Prints the type definition in Plutarch.
 
@@ -62,8 +62,23 @@ printTyDef (PC.TyDef tyN tyabs _) = do
   Print.importType PlRefs.termQTyName
   Print.importType PlRefs.scopeQTyName
   Print.importType PlRefs.ptypeQTyName
+  drvGenericDoc <- printDerivingGeneric
+  drvShowDoc <- printDerivingShow
   (kw, absDoc) <- printTyAbs tyN tyabs
-  return $ group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc
+  let tyDefDoc = group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc
+  if kw == HsSyntax.SynonymTyDef
+    then return tyDefDoc
+    else return $ tyDefDoc <> hardline <> space <> space <> align (vsep [drvGenericDoc, drvShowDoc])
+
+printDerivingShow :: MonadPrint m => m (Doc ann)
+printDerivingShow = do
+  Print.importClass PlRefs.showQClassName
+  return $ "deriving anyclass" <+> HsSyntax.printHsQClassName PlRefs.showQClassName
+
+printDerivingGeneric :: MonadPrint m => m (Doc ann)
+printDerivingGeneric = do
+  Print.importClass PlRefs.genericQClassName
+  return $ "deriving stock" <+> HsSyntax.printHsQClassName PlRefs.genericQClassName
 
 printTyDefKw :: HsSyntax.TyDefKw -> Doc ann
 printTyDefKw HsSyntax.DataTyDef = "data"

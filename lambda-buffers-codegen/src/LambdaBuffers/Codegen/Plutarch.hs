@@ -39,4 +39,13 @@ plutarchPrintModuleEnv =
     PlSyntax.printModName
     PlDerive.hsClassImplPrinters
     PlPrint.printTyDef
-    ["KindSignatures", "DataKinds", "TypeFamilies", "MultiParamTypeClasses", "FlexibleContexts", "FlexibleInstances"]
+    [ "KindSignatures"
+    , "DataKinds"
+    , "TypeFamilies"
+    , "MultiParamTypeClasses"
+    , "FlexibleContexts"
+    , "FlexibleInstances"
+    , "DerivingStrategies"
+    , "DeriveAnyClass"
+    , "DeriveGeneric"
+    ]
