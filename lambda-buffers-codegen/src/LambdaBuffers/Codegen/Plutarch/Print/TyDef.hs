@@ -14,7 +14,7 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, dot, encloseSep, equals, group, hsep, parens, pipe, sep, space, (<+>))
 
-{- | Prints the type definition.
+{- | Prints the type definition in Plutarch.
 
 ```lbf
 sum FooSum a b = Foo (Maybe a) | Bar b
@@ -34,18 +34,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooSum'Foo (Plutarch.Term s (PMaybe a)) | FooSum'Bar (Plutarch.Term s b)
-....................................................................................................................................................
-data FooProd (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooProd (Plutarch.Term s (PMaybe a)) (Plutarch.Term s b)
-.....................................................................................................................................
-data FooRecord (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooRecord (Plutarch.Term s (PMaybe a)) (Plutarch.Term s b)
-.........................................................................................................................................
+data FooSum (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooSum'Foo (Plutarch.Term s (Plutarch.Builtin.PAsData (PMaybe a))) | FooSum'Bar (Plutarch.Term s (Plutarch.Builtin.PAsData b))
+..........................................................................................................................................................................................................
+data FooProd (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooProd (Plutarch.Term s (Plutarch.Builtin.PAsData (PMaybe a))) (Plutarch.Term s (Plutarch.Builtin.PAsData b))
+...........................................................................................................................................................................................
+data FooRecord (a :: Plutarch.PType) (b :: Plutarch.PType) (s :: Plutarch.S) = FooRecord (Plutarch.Term s (Plutarch.Builtin.PAsData (PMaybe a))) (Plutarch.Term s (Plutarch.Builtin.PAsData b))
+...............................................................................................................................................................................................
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 .................................................
-newtype FooProdUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooProdUnit (Plutarch.Term s (PMaybe a))
-......................................................................................................
-newtype FooRecUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooRecUnit (Plutarch.Term s (PMaybe a))
-....................................................................................................
+newtype FooProdUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooProdUnit (Plutarch.Term s (Plutarch.Builtin.PAsData (PMaybe a)))
+.................................................................................................................................
+newtype FooRecUnit (a :: Plutarch.PType) (s :: Plutarch.S) = FooRecUnit (Plutarch.Term s (Plutarch.Builtin.PAsData (PMaybe a)))
+...............................................................................................................................
 ```
 
 And signals the following imports:
@@ -70,8 +70,6 @@ printTyDefKw HsSyntax.DataTyDef = "data"
 printTyDefKw HsSyntax.NewtypeTyDef = "newtype"
 printTyDefKw HsSyntax.SynonymTyDef = "type"
 
--- Plutarch internal type imports (Term, PType, S).
-
 {- | Prints the type abstraction.
 
 ```lbf
@@ -92,18 +90,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-            ...........................................................................................
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-             ...........................................................................
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-               .............................................................................
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+            ...............................................................................................................
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+             ...............................................................................................
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+               .................................................................................................
 type FooOpaque = Some.Configured.Opaque.FooOpaque
                ..................................
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                    .......................................................
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                   ......................................................
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                    .................................................................
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                   ................................................................
 ```
 
 NOTE(bladyjoker): We don't print the `s` Scope type argument/variable and others because `The type synonym ‘Prelude.Plutarch.Integer’ should have 1 argument, but has been given none` in `Term s Prelude.Plutarch.Integer`. We also don't print other args because it's either all args or none.
@@ -138,18 +136,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                 ......................................................
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-                                                  ......................................
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-                                                    ........................................
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                 ..........................................................................
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                  ..........................................................
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                    ............................................................
 type FooOpaque = Some.Configured.Opaque.FooOpaque
                  ................................
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                                            ...............................
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                                           ..............................
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                                            .........................................
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                                           ........................................
 ```
 
 TODO(bladyjoker): Revisit empty records and prods.
@@ -191,17 +189,17 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
             ............ ............
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
              ............ ............
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
                ............ ............
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
                     ............
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
                    ............
 ```
 -}
@@ -227,17 +225,17 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                 ......................................................
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                 ..........................................................................
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
 
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
 ```
 -}
 printSum :: MonadPrint m => PC.TyName -> PC.Sum -> m (Doc ann)
@@ -268,17 +266,17 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                 ..............................   .....................
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                 ........................................   ...............................
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
 
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
 ```
 -}
 printCtor :: PC.TyName -> PC.Constructor -> Doc ann
@@ -309,18 +307,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
 
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-                                                              ..............................
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                              ..................................................
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
 
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                                                      ...................
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                                                      .............................
 ```
 -}
 printRec :: PC.Record -> Doc ann
@@ -345,17 +343,17 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                            ...................              ..........
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-                                                          ..............................
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                            .............................              ....................
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                          ..................................................
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
 
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                                                        ...................
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                                                        .............................
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
 ```
 -}
 printProd :: PC.Product -> Doc ann
@@ -389,18 +387,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                                    ..........
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-                                                                  ..........
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-                                                                       ........
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                                             ..........
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                           ..........
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                               ..........
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                                                                 ........
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                                                               ........
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                                                                         ..........
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                                                                       ..........
 ```
 -}
 printTyAppInner :: PC.TyApp -> Doc ann
@@ -429,18 +427,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                                     ......
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-                                                                   ......
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-                                                                       ......
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                                              ......
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                            ......
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                                ......
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                                                                 ......
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                                                               ......
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                                                                          ......
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                                                                        ......
 ```
 -}
 printTyRef :: PC.TyRef -> Doc ann
@@ -467,18 +465,18 @@ record FooRecUnit a = { a: Maybe a }
 translates to
 
 ```haskell
-data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PMaybe a)) | FooSum'Bar (Term s b)
-                                                                            .                        .
-data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PMaybe a)) (Term s b)
-                                                                          .           .
-data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PMaybe a)) (Term s b)
-                                                                              .           .
+data FooSum (a :: PType) (b :: PType) (s :: S) = FooSum'Foo (Term s (PAsData (PMaybe a))) | FooSum'Bar (Term s (PAsData b))
+                                                                                     .                                  .
+data FooProd (a :: PType) (b :: PType) (s :: S) = FooProd (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                                   .                     .
+data FooRecord (a :: PType) (b :: PType) (s :: S) = FooRecord (Term s (PAsData (PMaybe a))) (Term s (PAsData b))
+                                                                                       .                     .
 type FooOpaque = Some.Configured.Opaque.FooOpaque
 
-newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PMaybe a))
-                                                                        .
-newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
-                                                                      .
+newtype FooProdUnit (a :: PType) (s :: S) = FooProdUnit (Term s (PAsData (PMaybe a)))
+                                                                                 .
+newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PAsData (PMaybe a)))
+                                                                               .
 
 ```
 -}
