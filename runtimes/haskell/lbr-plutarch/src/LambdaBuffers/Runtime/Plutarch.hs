@@ -6,6 +6,7 @@
 module LambdaBuffers.Runtime.Plutarch (PEither (..), PAssetClass, PMap, PChar, PSet, PValue, ptryFromPAsData, PMaybe (..), pcon) where
 
 import Data.Functor.Const (Const)
+import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
 import Plutarch (
@@ -56,21 +57,27 @@ data PChar (s :: S) = PChar
 data PEither (a :: PType) (b :: PType) (s :: S)
   = PLeft (Term s (PAsData a))
   | PRight (Term s (PAsData b))
+  deriving stock (Generic)
+  deriving anyclass (Pl.PShow)
 
 -- | PMaybe messed up in Plutarch so redefining here.
 data PMaybe (a :: PType) (s :: S)
   = PJust (Term s (PAsData a))
   | PNothing
+  deriving stock (Generic)
+  deriving anyclass (Pl.PShow)
 
 data PFoo (a :: PType) (s :: S)
   = PFoo
-      (Term s (PAsData PInteger))
-      (Term s (PAsData PBool))
+      (Term s (PAsData (PMaybe PInteger)))
+      (Term s (PAsData (PEither PBool PBool)))
       (Term s (PAsData PByteString))
       (Term s (PAsData (PMaybe a)))
       (Term s (PAsData (PEither a a)))
       (Term s (PAsData PAssetClass))
       (Term s (PAsData (PFoo a)))
+  deriving stock (Generic)
+  deriving anyclass (Pl.PShow)
 
 -- PlutusType instances
 -- Encodings: https://github.com/input-output-hk/plutus/blob/650a0659cbaacec2166e0153d2393c779cedc4c0/plutus-tx/src/PlutusTx/IsData/Instances.hs

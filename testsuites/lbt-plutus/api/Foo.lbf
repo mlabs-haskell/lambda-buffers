@@ -3,7 +3,7 @@ module Foo
 import Foo.Bar
 import Plutus.V1 (PlutusData, Address, AssetClass, Bytes, Credential, CurrencySymbol, Datum, DatumHash, Extended, Interval, LowerBound, Map, POSIXTime, POSIXTimeRange, PlutusData, PubKeyHash, Redeemer, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, UpperBound, Value)
 import Plutus.V2 (OutputDatum, TxInInfo, TxOut)
-import Prelude (Eq, Json)
+import Prelude (Eq, Json, Maybe, Either, List)
 
 prod A = (FooSum Address Value Datum)
 
@@ -29,8 +29,37 @@ derive Eq D
 derive Json D
 derive PlutusData D
 
-prod E = Address AssetClass Bytes Credential CurrencySymbol Datum DatumHash (Extended POSIXTime) (Interval POSIXTime) (LowerBound POSIXTime) (Map Bytes Credential) POSIXTime POSIXTimeRange PlutusData PubKeyHash Redeemer RedeemerHash ScriptHash StakingCredential TokenName TxId TxOutRef (UpperBound POSIXTime) Value OutputDatum TxInInfo TxOut
+prod E a b = Address
+     AssetClass
+     Bytes
+     Credential
+     CurrencySymbol
+     Datum
+     DatumHash
+     (Extended POSIXTime)
+     (Interval POSIXTime)
+     (LowerBound POSIXTime)
+     (Map Bytes Credential)
+     POSIXTime
+     POSIXTimeRange
+     PlutusData
+     PubKeyHash
+     Redeemer
+     RedeemerHash
+     ScriptHash
+     StakingCredential
+     TokenName
+     TxId
+     TxOutRef
+     (UpperBound POSIXTime)
+     Value
+     OutputDatum
+     TxInInfo
+     TxOut
+     (Maybe a)
+     (Either a b)
+     -- (List b) -- FIXME(bladyjoker): Using PBuiltinList in Plutarch breaks the compilation.
 
-derive Eq E
-derive Json E
-derive PlutusData E
+derive Eq (E a b)
+derive Json (E a b)
+derive PlutusData (E a b)

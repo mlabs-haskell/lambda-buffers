@@ -1,11 +1,9 @@
 module Plutus.V1
 
-import Prelude (Eq, Json, Integer, Bool)
+import Prelude (Eq, Json, Integer, Bool, Maybe, Either, List)
 
 -- PlutusData encoding
 class PlutusData a
-
--- TODO(bladyjoker): PlutusTx has an Eq class: class Eq a
 
 -- PlutusTx.Builtins
 opaque PlutusData
@@ -18,6 +16,9 @@ instance Json PlutusData
 -- TODO(bladyjoker): Add other Prelude types (Maybe, Either, Text, Bytes etc.)
 instance PlutusData Bool
 instance PlutusData Integer
+instance PlutusData (Maybe a) :- PlutusData a
+instance PlutusData (List a) :- PlutusData a
+instance PlutusData (Either a b) :- PlutusData a, PlutusData b
 
 -- PlutusLedgerApi.V1.Address
 

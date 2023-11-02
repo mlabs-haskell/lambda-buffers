@@ -117,7 +117,7 @@ printHsQClassImpl env mn iTyDefs hqcn d =
 
 printLanguageExtensions :: Pretty a => [a] -> Doc ann
 printLanguageExtensions [] = mempty
-printLanguageExtensions exts = "{-# LANGUAGE" <+> encloseSep mempty mempty comma (pretty <$> exts) <+> "#-}"
+printLanguageExtensions exts = "{-# LANGUAGE" <+> align (encloseSep mempty mempty comma (pretty <$> exts)) <+> "#-}"
 
 printModuleHeader :: PrintModuleEnv m ann -> PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader env mn exports = "module" <+> env'printModuleName env mn <+> printExports exports <+> "where"

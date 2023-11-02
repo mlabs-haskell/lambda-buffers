@@ -17,11 +17,13 @@ module LambdaBuffers.Runtime.Plutarch.LamVal (
 ) where
 
 import Plutarch (
+  ClosedTerm,
   Term,
   pcon,
   pdelay,
   perror,
   pforce,
+  phoistAcyclic,
   plam,
   plet,
   (#),
@@ -44,7 +46,7 @@ import Plutarch.Prelude (PAsData, PBuiltinList (PCons), PInteger, PTryFrom, ptra
 import Plutarch.Unsafe (punsafeCoerce)
 
 -- | Plutarch `toPlutusData :: a -> PlutusData`
-ptoPlutusData :: Term s (PAsData a :--> PData)
+ptoPlutusData :: ClosedTerm (PAsData a :--> PData)
 ptoPlutusData = plam toPlutusData
 
 -- | Haskell `toPlutusData :: a -> PlutusData`
@@ -52,35 +54,35 @@ toPlutusData :: Term s (PAsData a) -> Term s PData
 toPlutusData = pforgetData
 
 -- | Plutarch PlutusType `fromPlutusData :: PlutusData -> Parser a`
-pfromPlutusDataPlutusType :: Term s (PData :--> PAsData a)
+pfromPlutusDataPlutusType :: ClosedTerm (PData :--> PAsData a)
 pfromPlutusDataPlutusType = plam punsafeCoerce
 
 -- | Plutarch PTryFrom `fromPlutusData :: PlutusData -> Parser a`
-pfromPlutusDataPTryFrom :: (PTryFrom PData (PAsData a)) => Term s (PData :--> PAsData a)
-pfromPlutusDataPTryFrom = plam ptryFromData
+pfromPlutusDataPTryFrom :: (PTryFrom PData (PAsData a)) => ClosedTerm (PData :--> PAsData a)
+pfromPlutusDataPTryFrom = phoistAcyclic $ plam ptryFromData
   where
     ptryFromData :: forall a s. PTryFrom PData (PAsData a) => Term s PData -> Term s (PAsData a)
     ptryFromData pd = ptryFrom @(PAsData a) pd fst
 
 -- | Plutarch `constrData :: IntE -> ListE PlutusData -> PlutusData`
-pconstrData :: Term s (PInteger :--> PBuiltinList PData :--> PData)
-pconstrData = plam $ \ix args -> pforgetData $ pconstrBuiltin # ix # args
+pconstrData :: ClosedTerm (PInteger :--> PBuiltinList PData :--> PData)
+pconstrData = phoistAcyclic $ plam $ \ix args -> pforgetData $ pconstrBuiltin # ix # args
 
 -- | Haskell `constrData :: IntE -> ListE PlutusData -> PlutusData`
 constrData :: Term s PInteger -> [Term s PData] -> Term s PData
 constrData ix args = pforgetData $ pconstrBuiltin # ix # toBuiltinList args
 
 -- | Plutarch `integerData :: IntE -> PlutusData`
-pintegerData :: Term s (PInteger :--> PData)
-pintegerData = plam $ \i -> ptoPlutusData # pdata i
+pintegerData :: ClosedTerm (PInteger :--> PData)
+pintegerData = phoistAcyclic $ plam $ \i -> ptoPlutusData # pdata i
 
 -- | Haskell `integerData :: IntE -> PlutusData`
 integerData :: Term s PInteger -> Term s PData
 integerData = toPlutusData . pdata
 
 -- | Plutarch `listData :: ListE PlutusData -> PlutusData`
-plistData :: Term s (PBuiltinList PData :--> PData)
-plistData = plam $ pforgetData . pdata
+plistData :: ClosedTerm (PBuiltinList PData :--> PData)
+plistData = phoistAcyclic $ plam $ pforgetData . pdata
 
 -- | Haskell `listData :: ListE PlutusData -> PlutusData`
 listData :: [Term s PData] -> Term s PData
@@ -92,8 +94,8 @@ toBuiltinList (x : xs) = pcon (PCons x (toBuiltinList xs))
 
 -- | Plutarch `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
 pcasePlutusData ::
-  Term s ((PInteger :--> PBuiltinList PData :--> a) :--> (PBuiltinList PData :--> a) :--> (PInteger :--> a) :--> (PData :--> a) :--> PData :--> a)
-pcasePlutusData = plam $ \handleConstr handleList handleInt handleOther pd ->
+  ClosedTerm ((PInteger :--> PBuiltinList PData :--> a) :--> (PBuiltinList PData :--> a) :--> (PInteger :--> a) :--> (PData :--> a) :--> PData :--> a)
+pcasePlutusData = phoistAcyclic $ plam $ \handleConstr handleList handleInt handleOther pd ->
   pforce $
     pchooseData
       # pd
@@ -114,13 +116,13 @@ casePlutusData ::
 casePlutusData handleConstr handleList handleInt handleOther pd = pcasePlutusData # plam handleConstr # plam handleList # plam handleInt # plam handleOther # pd
 
 -- | Plutarch `succeedParse :: a -> Parser a`
-psucceedParse :: Term s (a :--> a)
+psucceedParse :: ClosedTerm (a :--> a)
 psucceedParse = plam id
 
 -- | Plutarch `failParse :: Parser a`
-pfailParse :: Term s a
+pfailParse :: ClosedTerm a
 pfailParse = perror
 
 -- | Plutarch `bindParse :: Parser a -> (a -> Parser b) -> Parser b`
-pbindParse :: Term s (a :--> (a :--> b) :--> b)
-pbindParse = plam (flip (#))
+pbindParse :: ClosedTerm (a :--> (a :--> b) :--> b)
+pbindParse = phoistAcyclic $ plam (flip (#))
