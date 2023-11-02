@@ -1,3 +1,4 @@
-import "plutarch" qualified Plutarch.Prelude (PNil, pcon)
+import "lbr-plutarch" qualified LambdaBuffers.Runtime.Plutarch (pcon)
+import "plutarch" qualified Plutarch.Prelude (PNil)
 
-Plutarch.Prelude.pcon Plutarch.Prelude.PNil
+LambdaBuffers.Runtime.Plutarch.pcon Plutarch.Prelude.PNil

@@ -1,3 +1,4 @@
-import "plutarch" qualified Plutarch.Prelude (pcon, pconstant)
+import "lbr-plutarch" qualified LambdaBuffers.Runtime.Plutarch (pcon)
+import "plutarch" qualified Plutarch.Prelude (pconstant)
 
-Plutarch.Prelude.pcon (FooProduct (x) (Plutarch.Prelude.pconstant 1) (Plutarch.Prelude.pcon (UnitProduct (Plutarch.Prelude.pconstant "works"))))
+LambdaBuffers.Runtime.Plutarch.pcon (FooProduct (x) (Plutarch.Prelude.pconstant 1) (LambdaBuffers.Runtime.Plutarch.pcon (UnitProduct (Plutarch.Prelude.pconstant "works"))))

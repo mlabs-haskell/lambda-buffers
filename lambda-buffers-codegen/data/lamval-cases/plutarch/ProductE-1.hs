@@ -1,3 +1,3 @@
-import "plutarch" qualified Plutarch.Prelude (pcon)
+import "lbr-plutarch" qualified LambdaBuffers.Runtime.Plutarch (pcon)
 
-Plutarch.Prelude.pcon (UnitProduct (x))
+LambdaBuffers.Runtime.Plutarch.pcon (UnitProduct (x))

@@ -1,3 +1,4 @@
-import "plutarch" qualified Plutarch.Prelude (PCons, PNil, pcon, pconstant)
+import "lbr-plutarch" qualified LambdaBuffers.Runtime.Plutarch (pcon)
+import "plutarch" qualified Plutarch.Prelude (PCons, PNil, pconstant)
 
-Plutarch.Prelude.pcon (Plutarch.Prelude.PCons (Plutarch.Prelude.pconstant 1) (Plutarch.Prelude.pcon (Plutarch.Prelude.PCons (Plutarch.Prelude.pconstant 2) (Plutarch.Prelude.pcon (Plutarch.Prelude.PCons (a) (Plutarch.Prelude.pcon Plutarch.Prelude.PNil))))))
+LambdaBuffers.Runtime.Plutarch.pcon (Plutarch.Prelude.PCons (Plutarch.Prelude.pconstant 1) (LambdaBuffers.Runtime.Plutarch.pcon (Plutarch.Prelude.PCons (Plutarch.Prelude.pconstant 2) (LambdaBuffers.Runtime.Plutarch.pcon (Plutarch.Prelude.PCons (a) (LambdaBuffers.Runtime.Plutarch.pcon Plutarch.Prelude.PNil))))))
