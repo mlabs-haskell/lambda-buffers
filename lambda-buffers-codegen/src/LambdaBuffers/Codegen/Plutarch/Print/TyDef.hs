@@ -8,6 +8,7 @@ import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Haskell.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsPrint
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
+import LambdaBuffers.Codegen.Plutarch.Print.Refs qualified as PlRefs
 import LambdaBuffers.Codegen.Plutarch.Print.Syntax qualified as PlSyntax
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -58,9 +59,9 @@ NOTE(bladyjoker): The full qualification is omitted in the following docstrings 
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
-  Print.importType termType
-  Print.importType scopeType
-  Print.importType ptypeType
+  Print.importType PlRefs.termQTyName
+  Print.importType PlRefs.scopeQTyName
+  Print.importType PlRefs.ptypeQTyName
   (kw, absDoc) <- printTyAbs tyN tyabs
   return $ group $ printTyDefKw kw <+> HsSyntax.printTyName tyN <+> absDoc
 
@@ -70,18 +71,6 @@ printTyDefKw HsSyntax.NewtypeTyDef = "newtype"
 printTyDefKw HsSyntax.SynonymTyDef = "type"
 
 -- Plutarch internal type imports (Term, PType, S).
-
-termType :: HsSyntax.QTyName
-termType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "Term")
-
-pasDataType :: HsSyntax.QTyName
-pasDataType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Builtin", HsSyntax.MkTyName "PAsData")
-
-scopeType :: HsSyntax.QTyName
-scopeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "S")
-
-ptypeType :: HsSyntax.QTyName
-ptypeType = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch", HsSyntax.MkTyName "PType")
 
 {- | Prints the type abstraction.
 
@@ -123,7 +112,7 @@ printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (HsSyntax.TyDefKw, Doc 
 printTyAbs tyN (PC.TyAbs args body _) = do
   (kw, bodyDoc) <- printTyBody tyN (toList args) body
   let scopeArgDoc :: Doc ann
-      scopeArgDoc = parens ("s" <+> "::" <+> HsSyntax.printHsQTyName scopeType)
+      scopeArgDoc = parens ("s" <+> "::" <+> HsSyntax.printHsQTyName PlRefs.scopeQTyName)
       argsDoc =
         if kw == HsPrint.SynonymTyDef
           then mempty
@@ -217,7 +206,7 @@ newtype FooRecUnit (a :: PType) (s :: S) = FooRecUnit (Term s (PMaybe a))
 ```
 -}
 printTyArg :: PC.TyArg -> Doc ann
-printTyArg (PC.TyArg vn _ _) = parens (HsSyntax.printVarName vn <+> "::" <+> HsSyntax.printHsQTyName ptypeType)
+printTyArg (PC.TyArg vn _ _) = parens (HsSyntax.printVarName vn <+> "::" <+> HsSyntax.printHsQTyName PlRefs.ptypeQTyName)
 
 {- | Prints the sum body.
 
@@ -373,7 +362,7 @@ printProd :: PC.Product -> Doc ann
 printProd (PC.Product fields _) = do
   if null fields
     then mempty
-    else align $ sep ((\f -> parens (HsSyntax.printHsQTyName termType <+> "s" <+> parens (HsSyntax.printHsQTyName pasDataType <+> printTyInner f))) <$> fields)
+    else align $ sep ((\f -> parens (HsSyntax.printHsQTyName PlRefs.termQTyName <+> "s" <+> parens (HsSyntax.printHsQTyName PlRefs.pasDataQTyName <+> printTyInner f))) <$> fields)
 
 printTyInner :: PC.Ty -> Doc ann
 printTyInner (PC.TyVarI v) = printTyVar v
