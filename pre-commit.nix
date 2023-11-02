@@ -1,6 +1,6 @@
-{ inputs, lib, ... }: {
+{ inputs, ... }: {
   imports = [
-    inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
+    ./extras/pre-commit-hooks-extra.nix
   ];
   perSystem = { pkgs, system, config, ... }:
     {
@@ -9,7 +9,6 @@
 
       pre-commit = {
         settings = {
-
           excludes = [
             "lambda-buffers-codegen/data/goldens/.*"
             "lambda-buffers-codegen/data/lamval-cases/.*"
@@ -36,9 +35,13 @@
             markdownlint.enable = true;
             dhall-format.enable = true;
             purty.enable = true;
+            rustfmt-monorepo.enable = true;
+
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
-          settings.ormolu.cabalDefaultExtensions = true;
+          settings = {
+            ormolu.cabalDefaultExtensions = true;
+          };
         };
       };
     };

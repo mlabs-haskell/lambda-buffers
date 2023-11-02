@@ -2,6 +2,7 @@
 substituters = "substituters"
 hask= "hask"
 lits="lits"
+Nd = "Nd"
 
 [type.pdf]
 extend-glob = ["*.pdf"]

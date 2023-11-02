@@ -59,7 +59,7 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError ("[" <> fileErr <> ":(3:1)] \nunexpected 't'\nexpecting lb new line, import statement, type definition, class definition, instance clause, derive statement, space or end of input") errOrMod
+        assertError ("[" <> fileErr <> ":(3:1)] \nunexpected 't'\nexpecting import statement, type definition, class definition, instance clause, derive statement or end of input") errOrMod
     , testCase "Multiple modules found" $ do
         let workDir = dataDir </> "multiple_modules_found"
             fileIn = workDir </> "A.lbf"
@@ -115,6 +115,16 @@ frontendSuccessTests dataDir =
                 fileIn = workDir </> "BadFormat.lbf"
             errOrMod' <- runFrontend [workDir] [fileIn]
             assertSuccess ["A", "BadFormat"] errOrMod'
+        , testCase "good_module_documentation/ModuleDocumentation.lbf also compiles" $ do
+            let workDir = dataDir </> "good_module_documentation"
+                fileIn = workDir </> "ModuleDocumentation.lbf"
+            errOrMod' <- runFrontend [workDir] [fileIn]
+            assertSuccess ["ModuleDocumentation"] errOrMod'
+        , testCase "good_instance/GoodInstance.lbf also compiles" $ do
+            let workDir = dataDir </> "good_instance"
+                fileIn = workDir </> "GoodInstance.lbf"
+            errOrMod' <- runFrontend [workDir] [fileIn]
+            assertSuccess ["GoodInstance"] errOrMod'
         ]
     ]
 

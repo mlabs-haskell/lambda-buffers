@@ -38,6 +38,11 @@ module LambdaBuffers.Frontend.Syntax (
   kwDerive,
   kwClassDef,
   kwInstance,
+  kwImport,
+  kwQualified,
+  kwAs,
+  kwModule,
+  kws,
 ) where
 
 import Data.Text (Text)
@@ -56,6 +61,32 @@ kwInstance :: String
 kwInstance = "instance" :: String
 kwClassDef :: String
 kwClassDef = "class" :: String
+kwImport :: String
+kwImport = "import" :: String
+kwQualified :: String
+kwQualified = "qualified" :: String
+kwAs :: String
+kwAs = "as" :: String
+kwModule :: String
+kwModule = "module" :: String
+
+{- | 'kws' is a list of all keywords.
+ Warning: this invariant must be maintained manually
+-}
+kws :: [String]
+kws =
+  [ kwTyDefSum
+  , kwTyDefProduct
+  , kwTyDefRecord
+  , kwTyDefOpaque
+  , kwDerive
+  , kwInstance
+  , kwClassDef
+  , kwImport
+  , kwModule
+  , kwQualified
+  , kwAs
+  ]
 
 tyBodyToTyDefKw :: TyBody info -> String
 tyBodyToTyDefKw (SumBody _) = kwTyDefSum
