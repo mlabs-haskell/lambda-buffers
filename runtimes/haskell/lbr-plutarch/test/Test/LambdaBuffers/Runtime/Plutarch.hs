@@ -6,9 +6,9 @@ import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import LambdaBuffers.Runtime.Plutarch (PList)
 import LambdaBuffers.Runtime.Plutarch qualified as Lb
-import Plutarch (ClosedTerm, Config (Config), Term, TracingMode (DoTracingAndBinds), compile, pcon, perror, (#))
+import Plutarch (ClosedTerm, Config (Config), TracingMode (DoTracingAndBinds), compile, pcon, perror)
 import Plutarch.Evaluate (evalScript)
-import Plutarch.Prelude (PBool (PTrue), PEq ((#==)), PInteger, PIsData, pconstant, pif)
+import Plutarch.Prelude (PBool (PTrue), PEq ((#==)), PInteger, pconstant, pif)
 import Test.Tasty (TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (assertFailure)
 import Test.Tasty.Hedgehog (testProperty)
@@ -19,21 +19,26 @@ test =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "PList tests"
-      [ testProperty "forall xs :: [Integer] ys :: [Integer]. (xs == ys) === evalEq (toPlutarch xs) (toPlutarch ys)" $
+      [ testProperty "forall xs :: [Integer] ys :: [Integer]. (xs == ys) === evalEq (plistFrom xs) (plistFrom ys)" $
           H.property $
             H.forAll
               ((,) <$> genInts <*> genInts)
               >>= ( \(xs, ys) -> do
-                      b <- liftIO $ evalEq (fromList $ pconstant <$> xs) (fromList $ pconstant <$> ys)
+                      b <- liftIO $ evalEq (Lb.plistFrom $ pconstant <$> xs) (Lb.plistFrom $ pconstant <$> ys)
                       (xs == ys) H.=== b
+                  )
+      , testProperty "forall xs :: [Integer]. evalEq (plistCase plistCons plistNil (plistFrom xs)) (plistFrom xs)" $
+          H.property $
+            H.forAll
+              genInts
+              >>= ( \xs -> do
+                      b <- liftIO $ evalEq (Lb.plistCase Lb.plistCons Lb.plistNil (Lb.plistFrom $ pconstant <$> xs)) (Lb.plistFrom $ pconstant <$> xs)
+                      True H.=== b
                   )
       ]
   where
     genInts :: H.Gen [Integer]
     genInts = Gen.list (Range.linear 0 100) (Gen.integral (Range.linear 0 100))
-
-fromList :: PIsData a => [Term s a] -> Term s (PList a)
-fromList = foldr (\x -> (#) (Lb.pcons # x)) Lb.pnil
 
 evalEq :: ClosedTerm (PList PInteger) -> ClosedTerm (PList PInteger) -> IO Bool
 evalEq l r =

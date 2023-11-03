@@ -16,9 +16,10 @@ module LambdaBuffers.Runtime.Plutarch (
   PMaybe (..),
   pcon,
   PList (..),
-  caseList,
-  pcons,
-  pnil,
+  plistCase,
+  plistCons,
+  plistNil,
+  plistFrom,
 ) where
 
 import Data.Functor.Const (Const)
@@ -697,13 +698,16 @@ pcon = pdata . Pl.pcon
 
 TODO(bladyjoker): Upstream with PList and plan to remove.
 -}
-caseList :: (PIsData a) => (Term s a -> Term s (PList a) -> Term s r) -> Term s r -> Term s (PList a) -> Term s r
-caseList consCase nilCase ls = pmatch (Pl.pto ls) $ \case
-  Pl.PCons x xs -> consCase (Pl.pfromData x) (Pl.pcon $ PList xs)
+plistCase :: (PIsData a) => Term s (a :--> PList a :--> r) -> Term s r -> Term s (PList a) -> Term s r
+plistCase consCase nilCase ls = pmatch (Pl.pto ls) $ \case
+  Pl.PCons x xs -> consCase # Pl.pfromData x # Pl.pcon (PList xs)
   Pl.PNil -> nilCase
 
-pcons :: PIsData a => Term s (a :--> (PList a :--> PList a))
-pcons = phoistAcyclic $ plam $ \x xs -> Pl.pcon $ PList (Pl.pcons # Pl.pdata x # Pl.pto xs)
+plistCons :: PIsData a => Term s (a :--> (PList a :--> PList a))
+plistCons = phoistAcyclic $ plam $ \x xs -> Pl.pcon $ PList (Pl.pcons # Pl.pdata x # Pl.pto xs)
 
-pnil :: Term s (PList a)
-pnil = Pl.pcon $ PList $ Pl.pcon Pl.PNil
+plistNil :: Term s (PList a)
+plistNil = Pl.pcon $ PList $ Pl.pcon Pl.PNil
+
+plistFrom :: PIsData a => [Term s a] -> Term s (PList a)
+plistFrom = foldr (\x -> (#) (plistCons # x)) plistNil
