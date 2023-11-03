@@ -6,9 +6,9 @@
       "PMap"
     ],
     "Prelude.List": [
-      "plutarch",
-      "Plutarch.Builtin",
-      "PBuiltinList"
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PList"
     ],
     "Prelude.Either": [
       "lbr-plutarch",

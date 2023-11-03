@@ -1,13 +1,30 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module LambdaBuffers.Runtime.Plutarch (PEither (..), PAssetClass, PMap, PChar, PSet, PValue, ptryFromPAsData, PMaybe (..), pcon) where
+module LambdaBuffers.Runtime.Plutarch (
+  PEither (..),
+  PAssetClass,
+  PMap,
+  PChar,
+  PSet,
+  PValue,
+  ptryFromPAsData,
+  PMaybe (..),
+  pcon,
+  PList (..),
+  caseList,
+  pcons,
+  pnil,
+) where
 
 import Data.Functor.Const (Const)
 import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
+import LambdaBuffers.Runtime.Plutarch.LamVal (pfromPlutusDataPTryFrom)
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
 import Plutarch (
   PType,
@@ -41,6 +58,14 @@ import Plutarch.Reducible (Reduce)
 import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'))
 import Plutarch.Unsafe (punsafeCoerce)
 
+{- | PList because PBuiltinList misses `PAsData` on its constituents which causes type errors when used.
+TODO(bladyjoker): Upstream these changes or fix PBuiltinList.
+-}
+newtype PList (a :: PType) (s :: S)
+  = PList (Term s (PBuiltinList (PAsData a)))
+  deriving stock (Generic)
+  deriving anyclass (Pl.PShow)
+
 -- | PAssetClass missing from Plutarch.
 type PAssetClass = Plutarch.Api.V1.PTuple Plutarch.Api.V1.PCurrencySymbol Plutarch.Api.V1.PTokenName
 
@@ -52,6 +77,9 @@ type PValue = Plutarch.Api.V1.PValue 'Plutarch.Api.V1.Sorted 'Plutarch.Api.V1.No
 
 -- | Not implemented.
 data PChar (s :: S) = PChar
+
+-- | Not implemented.
+data PSet (a :: PType) (s :: S) = PSet
 
 -- | PEither missing from Plutarch.
 data PEither (a :: PType) (b :: PType) (s :: S)
@@ -76,6 +104,7 @@ data PFoo (a :: PType) (s :: S)
       (Term s (PAsData (PEither a a)))
       (Term s (PAsData PAssetClass))
       (Term s (PAsData (PFoo a)))
+      (Term s (PAsData (PList a)))
   deriving stock (Generic)
   deriving anyclass (Pl.PShow)
 
@@ -136,9 +165,14 @@ instance PlutusType (PEither a b) where
       (const perror)
       pd
 
+instance PlutusType (PList a) where
+  type PInner (PList a) = (PBuiltinList (PAsData a))
+  pcon' (PList x) = x
+  pmatch' x f = f (PList x)
+
 instance PlutusType (PFoo a) where
   type PInner (PFoo a) = PData
-  pcon' (PFoo i b bs may eit ac foo) =
+  pcon' (PFoo i b bs may eit ac foo xs) =
     LamVal.listData
       [ LamVal.toPlutusData i
       , LamVal.toPlutusData b
@@ -147,10 +181,12 @@ instance PlutusType (PFoo a) where
       , LamVal.toPlutusData eit
       , LamVal.toPlutusData ac
       , LamVal.toPlutusData foo
+      , LamVal.toPlutusData xs
       ]
   pmatch' pd f =
     f
       ( PFoo
+          (LamVal.pfromPlutusDataPlutusType # pd)
           (LamVal.pfromPlutusDataPlutusType # pd)
           (LamVal.pfromPlutusDataPlutusType # pd)
           (LamVal.pfromPlutusDataPlutusType # pd)
@@ -235,6 +271,20 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) whe
                 )
           )
           (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (PList a)) where
+  type PTryFromExcess PData (PAsData (PList a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pcon $ PList $ Pl.pmap # pfromPlutusDataPTryFrom # xs
+          )
           (const perror)
           (const perror)
           pd
@@ -504,7 +554,7 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxOut) where
       , ()
       )
 
--- FIXME(bladyjoker): This is used above and it's a hack because something is off with PMaybeData instances.
+-- HACK(bladyjoker): This is used above and it's a hack because something is off with PMaybeData instances.
 maybeToMaybe :: Term s (PAsData (PMaybe a) :--> PAsData (PMaybeData a))
 maybeToMaybe =
   phoistAcyclic $
@@ -581,6 +631,7 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PFoo a)) where
             (LamVal.pfromPlutusDataPTryFrom # pd)
             (LamVal.pfromPlutusDataPTryFrom # pd)
             (LamVal.pfromPlutusDataPTryFrom # pd)
+            (LamVal.pfromPlutusDataPTryFrom # pd)
       , ()
       )
 
@@ -597,9 +648,6 @@ instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") 
 
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Char not implemented") => PEq PChar where
   (#==) _l _r = error "unreachable"
-
--- | Not implemented.
-data PSet (a :: PType) (s :: S) = PSet
 
 instance GHC.TypeError ('GHC.Text "LambdaBuffers Prelude.Set not implemented") => PlutusType (PSet a) where
   type PInner (PSet a) = PData
@@ -626,6 +674,10 @@ instance PIsData (PEither a b) where
   pdataImpl = punsafeCoerce
   pfromDataImpl = punsafeCoerce
 
+instance PIsData (PList a) where
+  pdataImpl = punsafeCoerce
+  pfromDataImpl = punsafeCoerce
+
 instance PEq (PFoo a) where
   (#==) l r = pdata l #== pdata r
 
@@ -635,5 +687,23 @@ instance PEq (PMaybe a) where
 instance PEq (PEither a b) where
   (#==) l r = pdata l #== pdata r
 
+instance PEq (PList a) where
+  (#==) l r = Pl.plistEquals # Pl.pto l # Pl.pto r
+
 pcon :: (PlutusType a, PIsData a) => a s -> Term s (PAsData a)
 pcon = pdata . Pl.pcon
+
+{- | PListLike instance was a problem for PList, so this is done instead.
+
+TODO(bladyjoker): Upstream with PList and plan to remove.
+-}
+caseList :: (PIsData a) => (Term s a -> Term s (PList a) -> Term s r) -> Term s r -> Term s (PList a) -> Term s r
+caseList consCase nilCase ls = pmatch (Pl.pto ls) $ \case
+  Pl.PCons x xs -> consCase (Pl.pfromData x) (Pl.pcon $ PList xs)
+  Pl.PNil -> nilCase
+
+pcons :: PIsData a => Term s (a :--> (PList a :--> PList a))
+pcons = phoistAcyclic $ plam $ \x xs -> Pl.pcon $ PList (Pl.pcons # Pl.pdata x # Pl.pto xs)
+
+pnil :: Term s (PList a)
+pnil = Pl.pcon $ PList $ Pl.pcon Pl.PNil

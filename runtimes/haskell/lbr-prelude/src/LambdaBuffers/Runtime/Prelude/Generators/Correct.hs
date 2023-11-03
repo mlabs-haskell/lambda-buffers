@@ -17,7 +17,7 @@ genInteger :: H.Gen Integer
 genInteger = H.integral (HR.constant (-100000000000000000000000000000000000000000000000) 100000000000000000000000000000000000000000000000)
 
 genChar :: H.Gen Char
-genChar = H.unicode -- TODO(bladyjoker): Using H.unicodeAll breaks the tests \65533 != \55296
+genChar = H.unicode -- WARN(bladyjoker): Using H.unicodeAll breaks the tests \65533 != \55296
 
 genBytes :: H.Gen ByteString
 genBytes = H.bytes (HR.constant 0 500)

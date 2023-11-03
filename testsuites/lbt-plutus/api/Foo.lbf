@@ -58,7 +58,7 @@ prod E a b = Address
      TxOut
      (Maybe a)
      (Either a b)
-     -- (List b) -- FIXME(bladyjoker): Using PBuiltinList in Plutarch breaks the compilation.
+     (List b)
 
 derive Eq (E a b)
 derive Json (E a b)

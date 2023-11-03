@@ -56,20 +56,6 @@ hsClassImplPrinters =
 useVal :: MonadPrint m => HsSyntax.QValName -> m (Doc ann)
 useVal qvn = Print.importValue qvn >> return (HsSyntax.printHsQValName qvn)
 
--- Plutarch derived classes (Generic, PShow).
-
--- showClass :: HsSyntax.QClassName
--- showClass = (HsSyntax.MkCabalPackageName "plutarch", HsSyntax.MkModuleName "Plutarch.Show", HsSyntax.MkClassName "PShow")
-
--- derivingShowDoc :: Doc ann
--- derivingShowDoc = "deriving anyclass" <+> HsSyntax.printHsQClassName showClass
-
--- genericClass :: HsSyntax.QClassName
--- genericClass = (HsSyntax.MkCabalPackageName "base", HsSyntax.MkModuleName "GHC.Generics", HsSyntax.MkClassName "Generic")
-
--- derivingGenericDoc :: Doc ann
--- derivingGenericDoc = "deriving stock" <+> HsSyntax.printHsQClassName genericClass
-
 {- | Deriving PEq.
 
 NOTE(bladyjoker): Doesn't derive the implementation but only uses the underlying PData representation for equality.
@@ -141,7 +127,7 @@ printDerivePlutusType :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann 
 printDerivePlutusType mn iTyDefs _mkInstanceDoc ty = do
   pappDoc <- useVal PlRefs.pappQValName
   pconDoc <- useVal PlRefs.pconQValName
-  -- TODO(bladyjoker): The `fromData` implementation is trying to construct a term, which for Plutarch means `pcon`. However, this is 'pmatch' implementation which is NOT really exactly 'fromData', and has a different type signature for which we do this. I'm sorry.
+  -- HACK(bladyjoker): The `fromData` implementation is trying to construct a term, which for Plutarch means `pcon`. However, this is 'pmatch' implementation which is NOT really exactly 'fromData', and has a different type signature for which we do this. I'm sorry.
   let dirtyHack :: Doc ann -> Doc ann
       dirtyHack = pretty . Text.replace (docToText pconDoc <> " ") "f " . docToText
 
