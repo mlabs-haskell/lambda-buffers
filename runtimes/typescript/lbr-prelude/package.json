@@ -1,0 +1,26 @@
+{
+  "name": "lbr-prelude",
+  "version": "1.0.0",
+  "description": "LambdaBuffers Prelude runtime",
+  "exports": {
+      "./Prelude.js": "./dist/LambdaBuffers/Prelude.js",
+      "./package.json": "./package.json"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc -b src/LambdaBuffers",
+    "test": "npx tsc -b src/Tests && node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mlabs-haskell/lambda-buffers"
+  },
+  "author": "Jared Pon",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.8.10"
+  },
+  "files": [ "./dist/LambdaBuffers/**/*"] ,
+  "dependencies": { }
+}

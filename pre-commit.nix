@@ -36,6 +36,8 @@
             dhall-format.enable = true;
             purty.enable = true;
             rustfmt-monorepo.enable = true;
+            denofmt.enable = true;
+            denolint.enable = true;
 
           } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
 
