@@ -37,9 +37,11 @@ generatePlutusData opts = do
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxId" $ take n Golden.txIdGoldens
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxOutRef" $ take n Golden.txOutRefGoldens
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.Map" $ take n Golden.mapGoldens
-      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxInInfo" $ take n Golden.txInInfoGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxInInfo" $ take n Golden.txInInfoGoldensV1
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxOut" $ take n Golden.txOutGoldensV1
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxInInfo" $ take n Golden.txInInfoGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.OutputDatum" $ take n Golden.outDatumGoldens
-      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "Days.Day" $ take n Golden.dayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.WorkDay" $ take n Golden.workDayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.FreeDay" $ take n Golden.freeDayGoldens
@@ -47,6 +49,12 @@ generatePlutusData opts = do
       , GoldenPlutusData.writeGoldens goldenDir "Foo.B" $ take n Golden.bGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Foo.C" $ take n Golden.cGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Foo.D" $ take n Golden.dGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Foo.FInt" $ take n Golden.fIntGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Foo.GInt" $ take n Golden.gIntGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Prelude.Bool" $ take n Golden.boolGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Prelude.Maybe" $ take n Golden.maybeGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Prelude.Either" $ take n Golden.eitherGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "Prelude.List" $ take n Golden.listGoldens
       ]
   putStrLn "[lbt-plutus-golden] Wrote PlutusData goldens:"
   for_ fps putStrLn

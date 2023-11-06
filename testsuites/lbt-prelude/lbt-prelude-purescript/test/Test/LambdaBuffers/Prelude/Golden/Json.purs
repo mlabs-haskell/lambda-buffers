@@ -59,18 +59,12 @@ fooFromToGoldenTests :: Effect (Spec Unit)
 fooFromToGoldenTests =
   sequence_
     <$> sequence
-        [ fromToGoldenTest
-            "Foo.A"
-            Golden.aGoldens
-        , fromToGoldenTest
-            "Foo.B"
-            Golden.bGoldens
-        , fromToGoldenTest
-            "Foo.C"
-            Golden.cGoldens
-        , fromToGoldenTest
-            "Foo.D"
-            Golden.dGoldens
+        [ fromToGoldenTest "Foo.A" Golden.aGoldens
+        , fromToGoldenTest "Foo.B" Golden.bGoldens
+        , fromToGoldenTest "Foo.C" Golden.cGoldens
+        , fromToGoldenTest "Foo.D" Golden.dGoldens
+        , fromToGoldenTest "Foo.FInt" Golden.fIntGoldens
+        , fromToGoldenTest "Foo.GInt" Golden.gIntGoldens
         ]
 
 daysFromToGoldenTests :: Effect (Spec Unit)

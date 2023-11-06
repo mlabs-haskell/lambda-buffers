@@ -26,8 +26,8 @@ module Test.LambdaBuffers.Plutus.Golden (
   txIdGoldens,
   txOutRefGoldens,
   outDatumGoldens,
-  txOutGoldens,
-  txInInfoGoldens,
+  txOutGoldensV2,
+  txInInfoGoldensV2,
   plutusDataGoldens',
   freeDayGoldens,
   workDayGoldens,
@@ -36,12 +36,20 @@ module Test.LambdaBuffers.Plutus.Golden (
   cGoldens,
   bGoldens,
   aGoldens,
+  txOutGoldensV1,
+  txInInfoGoldensV1,
+  fIntGoldens,
+  gIntGoldens,
+  maybeGoldens,
+  eitherGoldens,
+  listGoldens,
+  boolGoldens,
 ) where
 
 import Data.ByteString qualified as B
 import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay (FreeDay), WorkDay (WorkDay))
-import LambdaBuffers.Foo (A (A), B (B), C (C), D (D))
-import LambdaBuffers.Foo.Bar (FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Foo (A (A), B (B), C (C), D (D), FInt (FInt), GInt (GInt))
+import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G (G'Nil, G'Rec))
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
@@ -190,12 +198,20 @@ txIdGoldens = [PlutusV1.TxId blake2b_256Hash]
 txOutRefGoldens :: [PlutusV1.TxOutRef]
 txOutRefGoldens = mconcat [PlutusV1.TxOutRef <$> txIdGoldens <*> [0]]
 
--- | Plutus.V2
-txInInfoGoldens :: [PlutusV2.TxInInfo]
-txInInfoGoldens = mconcat [PlutusV2.TxInInfo <$> txOutRefGoldens <*> txOutGoldens]
+txInInfoGoldensV1 :: [PlutusV1.TxInInfo]
+txInInfoGoldensV1 = mconcat [PlutusV1.TxInInfo <$> txOutRefGoldens <*> txOutGoldensV1]
 
-txOutGoldens :: [PlutusV2.TxOut]
-txOutGoldens =
+txOutGoldensV1 :: [PlutusV1.TxOut]
+txOutGoldensV1 =
+  mconcat
+    [PlutusV1.TxOut <$> addressGoldens <*> valueGoldens <*> (Nothing : (Just <$> datumHashGoldens))]
+
+-- | Plutus.V2
+txInInfoGoldensV2 :: [PlutusV2.TxInInfo]
+txInInfoGoldensV2 = mconcat [PlutusV2.TxInInfo <$> txOutRefGoldens <*> txOutGoldensV2]
+
+txOutGoldensV2 :: [PlutusV2.TxOut]
+txOutGoldensV2 =
   mconcat
     [ PlutusV2.TxOut <$> addressGoldens <*> valueGoldens <*> take 2 outDatumGoldens <*> (Nothing : (Just <$> scriptHashGoldens))
     ]
@@ -242,6 +258,13 @@ dGoldens =
     fooRec <- take 2 $ mconcat $ fooRecGoldens <$> addressGoldens <*> valueGoldens <*> datumGoldens
     return (D $ FooComplicated fooSum fooProd fooRec)
 
+fIntGoldens :: [FInt]
+fIntGoldens = FInt <$> [F'Nil, F'Rec G'Nil]
+
+gIntGoldens :: [GInt]
+gIntGoldens = GInt <$> [G'Nil, G'Rec F'Nil]
+
+-- | Days
 dayGoldens :: [Day]
 dayGoldens = [Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursday, Day'Friday, Day'Saturday, Day'Sunday]
 
@@ -250,3 +273,16 @@ workDayGoldens = WorkDay <$> [Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursd
 
 freeDayGoldens :: [FreeDay]
 freeDayGoldens = FreeDay <$> [Day'Saturday, Day'Sunday]
+
+-- | Prelude types.
+boolGoldens :: [Bool]
+boolGoldens = [False, True]
+
+maybeGoldens :: [Maybe Bool]
+maybeGoldens = [Nothing, Just True, Just False]
+
+eitherGoldens :: [Either Bool Bool]
+eitherGoldens = [Left True, Left False, Right True]
+
+listGoldens :: [[Bool]]
+listGoldens = [[], [True], [False], [True, True, False, False]]

@@ -57,10 +57,10 @@
           installPhase = "ln -s $src $out";
         };
 
-        # lbr-plutarch-tests = hsNixFlake.packages."lbr-plutarch:test:tests";
+        lbr-plutarch-tests = hsNixFlake.packages."lbr-plutarch:test:tests";
       };
 
-      # checks.check-lbr-plutarch = hsNixFlake.checks."lbr-plutarch:test:tests";
+      checks.check-lbr-plutarch = hsNixFlake.checks."lbr-plutarch:test:tests";
 
     };
 }

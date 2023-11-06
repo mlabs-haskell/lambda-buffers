@@ -48,4 +48,5 @@ plutarchPrintModuleEnv =
     , "DerivingStrategies"
     , "DeriveAnyClass"
     , "DeriveGeneric"
+    , "UndecidableInstances"
     ]

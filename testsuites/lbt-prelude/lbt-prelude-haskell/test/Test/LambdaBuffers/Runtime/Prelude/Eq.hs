@@ -17,13 +17,31 @@ hedgehogTests =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "Property tests"
-      [ aEq
-      , bEq
-      , cEq
-      , dEq
-      , dayEq
-      , workDayEq
-      , weekDayEq
+      [ eqTest "Foo.A" Correct.genA
+      , eqTest
+          "Foo.B"
+          Correct.genB
+      , eqTest
+          "Foo.C"
+          Correct.genC
+      , eqTest
+          "Foo.D"
+          Correct.genD
+      , eqTest
+          "Foo.FInt"
+          Correct.genFInt
+      , eqTest
+          "Foo.GInt"
+          Correct.genGInt
+      , eqTest
+          "Days.Day"
+          Correct.genDay
+      , eqTest
+          "Days.WorkDay"
+          Correct.genWorkDay
+      , eqTest
+          "Days.WeekDay"
+          Correct.genWeekDay
       ]
 
 eqTest :: forall {a}. (Show a, Eq a) => TestName -> H.Gen a -> TestTree
@@ -34,45 +52,3 @@ eqTest title gen =
         x <- H.forAll gen
         x H.=== x
     )
-
-aEq :: TestTree
-aEq =
-  eqTest
-    "Foo.A"
-    Correct.genA
-
-bEq :: TestTree
-bEq =
-  eqTest
-    "Foo.B"
-    Correct.genB
-
-cEq :: TestTree
-cEq =
-  eqTest
-    "Foo.C"
-    Correct.genC
-
-dEq :: TestTree
-dEq =
-  eqTest
-    "Foo.D"
-    Correct.genD
-
-dayEq :: TestTree
-dayEq =
-  eqTest
-    "Days.Day"
-    Correct.genDay
-
-workDayEq :: TestTree
-workDayEq =
-  eqTest
-    "Days.WorkDay"
-    Correct.genWorkDay
-
-weekDayEq :: TestTree
-weekDayEq =
-  eqTest
-    "Days.WeekDay"
-    Correct.genWeekDay

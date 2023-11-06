@@ -65,7 +65,7 @@ printShowInstance :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printShowInstance tyd = do
   importClass showClass
   importValue genericShow
-  return $ printInstanceDef showClass (toSaturatedTyApp tyd) ("show" <+> equals <+> printPursQValName genericShow)
+  return $ printInstanceDef showClass (toSaturatedTyApp tyd) ("show x" <+> equals <+> printPursQValName genericShow <+> "x")
 
 {- | `printDerive qcn tyD` prints a Purescript `derive instance` statement for a type class `qcn` for a type definition `tyd`.
  For a `Show` type class on a `Maybe a` type definition it prints

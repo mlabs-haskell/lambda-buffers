@@ -19,10 +19,17 @@ tests = do
         fromToTest "Foo.B" Correct.genB
         fromToTest "Foo.C" Correct.genC
         fromToTest "Foo.D" Correct.genD
+        fromToTest "Foo.FInt" Correct.genFInt
+        fromToTest "Foo.GInt" Correct.genGInt
       describe "Days" do
         fromToTest "Days.Day" Correct.genDay
         fromToTest "Days.WorkDay" Correct.genWorkDay
         fromToTest "Days.FreeDay" Correct.genFreeDay
+      describe "Prelude" do
+        fromToTest "Prelude.Bool" Correct.genBool
+        fromToTest "Prelude.Maybe" Correct.genMaybe
+        fromToTest "Prelude.Either" Correct.genEither
+        fromToTest "Prelude.List" Correct.genList
 
 fromToTest :: forall a. ToData a => FromData a => Show a => Eq a => String -> Q.Gen a -> Spec Unit
 fromToTest title gen =

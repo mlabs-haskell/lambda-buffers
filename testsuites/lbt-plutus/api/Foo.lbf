@@ -3,7 +3,7 @@ module Foo
 import Foo.Bar
 import Plutus.V1 (PlutusData, Address, AssetClass, Bytes, Credential, CurrencySymbol, Datum, DatumHash, Extended, Interval, LowerBound, Map, POSIXTime, POSIXTimeRange, PlutusData, PubKeyHash, Redeemer, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, UpperBound, Value)
 import Plutus.V2 (OutputDatum, TxInInfo, TxOut)
-import Prelude (Eq, Json, Maybe, Either, List)
+import Prelude (Eq, Json, Maybe, Either, List, Integer)
 
 prod A = (FooSum Address Value Datum)
 
@@ -63,3 +63,15 @@ prod E a b = Address
 derive Eq (E a b)
 derive Json (E a b)
 derive PlutusData (E a b)
+
+prod FInt = (F Integer)
+
+derive Eq FInt
+derive Json FInt
+derive PlutusData FInt
+
+prod GInt = (G Integer)
+
+derive Eq GInt
+derive Json GInt
+derive PlutusData GInt

@@ -14,7 +14,7 @@ import LambdaBuffers.Codegen.Purescript.Syntax (normalValName)
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hardline, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 type MonadPrint m = LV.MonadPrint m Purs.QValName
@@ -52,11 +52,13 @@ printCaseE :: MonadPrint m => (PC.QTyName, LV.Sum) -> LV.ValueE -> ((LV.Ctor, [L
 printCaseE (qtyN, sumTy) caseVal ctorCont = do
   caseValDoc <- printValueE caseVal
   ctorCaseDocs <-
-    vsep
+    align . encloseSep mempty mempty mempty
       <$> for
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
-            LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
+            LT.TyProduct fields _ -> do
+              ctorCaseDoc <- printCtorCase qtyN ctorCont (cn, fields)
+              return $ ctorCaseDoc <> hardline
             _ -> throwInternalError "Got a non-product in Sum."
         )
   return $ align $ "case" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs

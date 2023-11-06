@@ -13,7 +13,7 @@ instance Eq PlutusData
 instance Json PlutusData
 
 -- Instances for Prelude types
--- TODO(bladyjoker): Add other Prelude types (Maybe, Either, Text, Bytes etc.)
+-- TODO(bladyjoker): Add other Prelude types (Text, Bytes etc.)?
 instance PlutusData Bool
 instance PlutusData Integer
 instance PlutusData (Maybe a) :- PlutusData a

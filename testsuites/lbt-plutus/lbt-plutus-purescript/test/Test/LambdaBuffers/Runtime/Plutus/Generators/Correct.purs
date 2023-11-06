@@ -1,24 +1,32 @@
 module Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
-  ( genFooSum
-  , genFooProd
-  , genFooRec
-  , genFooComplicated
-  , genDay
-  , genFreeDay
-  , genWorkDay
-  , genA
+  ( genA
   , genB
   , genC
   , genD
+  , genDay
+  , genEither
+  , genBool
+  , genFInt
+  , genFooComplicated
+  , genFooProd
+  , genFooRec
+  , genFooSum
+  , genFreeDay
+  , genGInt
+  , genList
+  , genMaybe
+  , genWorkDay
   ) where
 
 import Prelude
 import Control.Alternative ((<|>))
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
+import Data.Either (Either(Left, Right))
+import Data.Maybe (Maybe(Nothing, Just))
 import LambdaBuffers.Days (Day(Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay(FreeDay), WorkDay(WorkDay))
-import LambdaBuffers.Foo (A(A), B(B), C(C), D(D))
-import LambdaBuffers.Foo.Bar (FooComplicated(FooComplicated), FooProd(FooProd), FooRec(FooRec), FooSum(FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Foo (A(A), B(B), C(C), D(D), FInt(..), GInt(..))
+import LambdaBuffers.Foo.Bar (F(..), FooComplicated(FooComplicated), FooProd(FooProd), FooRec(FooRec), FooSum(FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G(..))
 import Test.LambdaBuffers.Plutus.Generators.Correct as Lbr
 import Test.QuickCheck.Gen as Q
 
@@ -33,6 +41,12 @@ genC = C <$> genFooRec Lbr.genAddress Lbr.genValue Lbr.genDatum
 
 genD :: Q.Gen D
 genD = D <$> genFooComplicated Lbr.genAddress Lbr.genValue Lbr.genDatum
+
+genFInt :: Q.Gen FInt
+genFInt = pure (FInt F'Nil) <|> pure (FInt $ F'Rec G'Nil)
+
+genGInt :: Q.Gen GInt
+genGInt = pure (GInt G'Nil) <|> pure (GInt $ G'Rec F'Nil)
 
 genInteger :: Q.Gen BigInt
 genInteger = BigInt.fromInt <$> Q.chooseInt 0 10
@@ -73,3 +87,23 @@ genWorkDay = WorkDay <$> genDay
 
 genFreeDay :: Q.Gen FreeDay
 genFreeDay = FreeDay <$> ({ day: _ } <$> genDay)
+
+genBool :: Q.Gen Boolean
+genBool =
+  pure false
+    <|> pure true
+
+genMaybe :: Q.Gen (Maybe Boolean)
+genMaybe =
+  pure Nothing
+    <|> pure (Just true)
+
+genEither :: Q.Gen (Either Boolean Boolean)
+genEither =
+  pure (Left false)
+    <|> pure (Right true)
+
+genList :: Q.Gen (Array Boolean)
+genList =
+  pure []
+    <|> pure [ true, false ]
