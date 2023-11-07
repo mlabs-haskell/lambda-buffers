@@ -85,6 +85,7 @@ printTyDef (PC.TyDef tyN tyabs _) = do
   Print.importType PlRefs.termQTyName
   Print.importType PlRefs.scopeQTyName
   Print.importType PlRefs.ptypeQTyName
+  Print.importType PlRefs.pasDataQTyName
   drvGenericDoc <- printDerivingGeneric
   drvShowDoc <- printDerivingShow
   (kw, absDoc) <- printTyAbs tyN tyabs
