@@ -4,7 +4,7 @@
 - [Getting started](getting-started.md)
 - [LambdaBuffers to Haskell](haskell.md)
 - [LambdaBuffers to Purescript](purescript.md)
-- [LambdaBuffers for Plutarch](purescript.md)
+- [LambdaBuffers for Plutarch](plutarch.md)
 - [Design](design.md)
 - [API](api.md)
 - [LambdaBuffers Frontend (.lbf) syntax](syntax.md)
