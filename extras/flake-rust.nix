@@ -1,47 +1,70 @@
 pkgs:
 
-{ crane, src, system, crateName, localDeps, dataDeps }:
+{ crane, src, system, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data" }:
 let
   rustWithTools = pkgs.rust-bin.stable.latest.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" ];
   };
   craneLib = crane.lib.${system}.overrideToolchain rustWithTools;
 
-  buildEnv = pkgs.stdenv.mkDerivation {
-    inherit src;
-    name = "lbf-rust-workspace";
-    unpackPhase = builtins.concatStringsSep "\n"
-      ([
-        "mkdir -p $out"
-        "cp -r $src $out/${crateName}"
-      ]
-      ++ (map ({ name, path }: "cp -r ${path} $out/${name}") localDeps)
-      ++ (map ({ name, path }: "cp -r ${path} $out/${name}") dataDeps)
-      );
+  # Library source code with extra dependencies attached
+  fullSrc = pkgs.stdenv.mkDerivation {
+    src = craneLib.cleanCargoSource (craneLib.path src);
+    name = "lbf-rust-build-env";
+    unpackPhase = ''
+      mkdir $out
+      cp -r $src/* $out
+      cd $out
+      ${copyExtraSources}
+      ${copyData} 
+    '';
   };
   commonArgs = {
-    src = buildEnv;
+    src = fullSrc;
     pname = crateName;
     strictDeps = true;
-    cargoLock = "${src}/Cargo.lock";
-    cargoToml = "${src}/Cargo.toml";
-    postUnpack = ''
-      cd $sourceRoot/${crateName}
-      sourceRoot="."
-    '';
   };
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
+  # Extra sources
+  extra-sources = pkgs.linkFarm "extra-sources" extraSources;
+  hasExtraSources = builtins.length extraSources > 0;
+  linkExtraSources = pkgs.lib.optionalString hasExtraSources ''
+    echo "Linking extra sources"
+    if [ -e ./${extraSourcesDir} ]; then rm ./${extraSourcesDir}; fi
+    ln -s ${extra-sources} ./${extraSourcesDir}
+  '';
+  copyExtraSources = pkgs.lib.optionalString hasExtraSources ''
+    echo "Copying extra sources"
+    cp -Lr ${extra-sources} ./${extraSourcesDir}
+  '';
+
+  # Data
+  data-drv = pkgs.linkFarm "data" data;
+  hasData = builtins.length data > 0;
+  linkData = pkgs.lib.optionalString hasData ''
+    echo "Linking data"
+    if [ -e ./${dataDir} ]; then rm ./${dataDir}; fi
+    ln -s ${data-drv} ./${dataDir}
+  '';
+  copyData = pkgs.lib.optionalString hasData ''
+    echo "Copying data"
+    cp -Lr ${data-drv} ./${dataDir}
+  '';
 in
 {
   devShells."dev-${crateName}-rust" = craneLib.devShell {
-    # checks = self'.checks;
+    shellHook = ''
+      ${linkExtraSources}
+      ${linkData}
+    '';
   };
 
-  packages."${crateName}-rust" = craneLib.buildPackage commonArgs // {
+  packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // {
     inherit cargoArtifacts;
     doCheck = false;
-  };
+    doInstallCargoArtifacts = true;
+  });
 
   checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
     inherit cargoArtifacts;

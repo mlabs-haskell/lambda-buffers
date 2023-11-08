@@ -7,13 +7,12 @@
           src = ./.;
           crane = inputs.crane;
           crateName = "lbr-prelude-derive";
-          localDeps = [
+          extraSources = [
             {
               name = "lbr-prelude";
               path = ../lbr-prelude;
             }
           ];
-          dataDeps = [ ];
         };
     in
     {
