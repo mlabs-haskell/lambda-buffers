@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">5.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">6.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">7.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">8.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">9.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">10.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">11.</strong> Comparison matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">5.</strong> LambdaBuffers for Plutarch</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">6.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">7.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">8.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">9.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">10.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">11.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">12.</strong> Comparison matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -462,6 +462,130 @@ LamdaBuffers schema using the <code>prod</code> keyword.</p>
 <p>They become Purescript <code>newtype</code> if they have a single type in their body, otherwise they are <code>data</code>.</p>
 <p>Note that the constructor has the same name as the type.</p>
 <h2 id="record-types-1"><a class="header" href="#record-types-1">Record types</a></h2>
+<p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the
+LamdaBuffers schema using the <code>record</code> keyword.</p>
+<p>They always become Purescript <code>newtype</code>, and wrapped within is a Purescript
+record type with the fields named exactly like they are named in the
+LambdaBuffers source module.</p>
+<p>Also like with product types, the constructor has the same name as the type.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="lambdabuffers-to-purescript-1"><a class="header" href="#lambdabuffers-to-purescript-1">LambdaBuffers to Purescript</a></h1>
+<p>Let's take a look at how LambdaBuffers modules map into Purescript modules and how
+LambdaBuffers type definitions map into Purescript type definitions.</p>
+<p>We'll use the <code>lbf-prelude-to-purescript</code> CLI tool which is just a convenient wrapper over
+the raw <code>lbf</code> CLI. We can get this tool by either loading the LambdaBuffers Nix
+environment that comes packaged with all the CLI tools:</p>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf&lt;tab&gt;
+lbf                        lbf-plutus-to-purescript   lbf-prelude-to-purescript
+lbf-plutus-to-haskell      lbf-prelude-to-haskell
+</code></pre>
+<p>Or we can simply just refer directly to the <code>lbf-prelude-to-purescript</code> CLI by <code>nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-purescript</code>.</p>
+<p>In this chapter, we're going to use the latter option.</p>
+<p>Let's now use <code>lbf-prelude-to-purescript</code> to process the <a href="examples/Document.lbf">Document.lbf</a> schema</p>
+<pre><code class="language-purescript">module Document
+
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
+
+-- Author
+sum Author = Ivan | Jovan | Savo
+
+-- Reviewer
+sum Reviewer = Bob | Alice
+
+-- Document
+record Document a = {
+  author : Author,
+  reviewers : Set Reviewer,
+  content : Chapter a
+ }
+
+-- Chapter
+record Chapter a = {
+  content : a,
+  subChapters : List (Chapter a)
+ }
+
+-- Some actual content
+sum RichContent = Image Bytes | Gif Bytes | Text Text
+
+-- Rich document
+prod RichDocument = (Document RichContent)
+</code></pre>
+<pre><code class="language-shell">$ nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-purescript -- Document.lbf
+$ find autogen/
+autogen/
+autogen/build.json
+autogen/LambdaBuffers
+autogen/LambdaBuffers/Document.purs
+</code></pre>
+<p>As we can see the <code>autogen</code> directory has been created that contains the generated Purescript modules.
+Note the <code>autogen/build.json</code> file as it contains all the necessary dependencies the generated module needs in order to be properly compiled by <code>purs</code> compiler.</p>
+<p>The outputted Purescript module in <code>autogen/LambdaBuffers/Document.hs</code>:</p>
+<pre><code class="language-purescript">module LambdaBuffers.Document (Author(..)
+                              , Chapter(..)
+                              , Document(..)
+                              , Reviewer(..)
+                              , RichContent(..)
+                              , RichDocument(..)) where
+
+import LambdaBuffers.Prelude as LambdaBuffers.Prelude
+import Data.Generic.Rep as Data.Generic.Rep
+import Data.Newtype as Data.Newtype
+import Data.Show as Data.Show
+import Data.Show.Generic as Data.Show.Generic
+
+
+data Author = Author'Ivan  | Author'Jovan  | Author'Savo 
+derive instance Data.Generic.Rep.Generic Author _
+instance Data.Show.Show Author where
+  show = Data.Show.Generic.genericShow
+
+newtype Chapter a = Chapter { content :: a
+                            , subChapters :: LambdaBuffers.Prelude.List (Chapter a)}
+derive instance Data.Newtype.Newtype (Chapter a) _
+derive instance Data.Generic.Rep.Generic (Chapter a) _
+instance (Data.Show.Show a) =&gt; Data.Show.Show (Chapter a) where
+  show = Data.Show.Generic.genericShow
+
+newtype Document a = Document { author :: Author
+                              , reviewers :: LambdaBuffers.Prelude.Set Reviewer
+                              , content :: Chapter a}
+derive instance Data.Newtype.Newtype (Document a) _
+derive instance Data.Generic.Rep.Generic (Document a) _
+instance (Data.Show.Show a) =&gt; Data.Show.Show (Document a) where
+  show = Data.Show.Generic.genericShow
+
+data Reviewer = Reviewer'Bob  | Reviewer'Alice 
+derive instance Data.Generic.Rep.Generic Reviewer _
+instance Data.Show.Show Reviewer where
+  show = Data.Show.Generic.genericShow
+
+data RichContent = RichContent'Image LambdaBuffers.Prelude.Bytes
+                    | RichContent'Gif LambdaBuffers.Prelude.Bytes
+                    | RichContent'Text LambdaBuffers.Prelude.Text
+derive instance Data.Generic.Rep.Generic RichContent _
+instance Data.Show.Show RichContent where
+  show = Data.Show.Generic.genericShow
+
+newtype RichDocument = RichDocument (Document RichContent)
+derive instance Data.Newtype.Newtype RichDocument _
+derive instance Data.Generic.Rep.Generic RichDocument _
+instance Data.Show.Show RichDocument where
+  show = Data.Show.Generic.genericShow
+</code></pre>
+<h2 id="sum-types-2"><a class="header" href="#sum-types-2">Sum types</a></h2>
+<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LamdaBuffers schema using the <code>sum</code> keyword.</p>
+<p>As we can see, nothing too surprising here, all the <code>sum</code> types become <code>data</code>
+in Purescript.</p>
+<p>The only thing to notice is that the type name was prepended with <code>'</code> (single
+quote) to the defined constructor names as to make sure they are unique.</p>
+<h2 id="product-types-2"><a class="header" href="#product-types-2">Product types</a></h2>
+<p>The type <code>RichDocument</code> have been declared as a product type in the
+LamdaBuffers schema using the <code>prod</code> keyword.</p>
+<p>They become Purescript <code>newtype</code> if they have a single type in their body, otherwise they are <code>data</code>.</p>
+<p>Note that the constructor has the same name as the type.</p>
+<h2 id="record-types-2"><a class="header" href="#record-types-2">Record types</a></h2>
 <p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the
 LamdaBuffers schema using the <code>record</code> keyword.</p>
 <p>They always become Purescript <code>newtype</code>, and wrapped within is a Purescript
@@ -2061,14 +2185,14 @@ bring about support for new targets, opaque types and typeclasses.</p>
 </tbody></table>
 </div>
 <h2 id="descriptions"><a class="header" href="#descriptions">Descriptions</a></h2>
-<h3 id="sum-types-2"><a class="header" href="#sum-types-2">Sum Types</a></h3>
+<h3 id="sum-types-3"><a class="header" href="#sum-types-3">Sum Types</a></h3>
 <p>Types of the form <code>Time = Present | Past | Future</code>, which allow a type do be
 constructed by one of many variants. Think Rust's <code>enums</code>.</p>
-<h3 id="product-types-2"><a class="header" href="#product-types-2">Product Types</a></h3>
+<h3 id="product-types-3"><a class="header" href="#product-types-3">Product Types</a></h3>
 <p>Types of the form <code>Person = MkPerson Age Name</code>, where <code>MkPerson</code> is of Kind
 <code>Type-&gt;Type-&gt;Type</code>. Product types combine multiple elements into one data type
 without tagging the elements.</p>
-<h3 id="record-types-2"><a class="header" href="#record-types-2">Record Types</a></h3>
+<h3 id="record-types-3"><a class="header" href="#record-types-3">Record Types</a></h3>
 <p>Types of the form <code>Person = MkPerson { age :: Age, name :: Name }</code>. Record types
 are similar to <code>structs</code> in most programming languages.</p>
 <h3 id="recursive-types"><a class="header" href="#recursive-types">Recursive Types</a></h3>
