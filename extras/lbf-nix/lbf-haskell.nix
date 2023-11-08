@@ -41,7 +41,7 @@ let
         opts = {
           inherit files;
           import-paths = imports;
-          gen = "${lbg-haskell}/bin/lbg-haskell";
+          gen = lbg-haskell;
           gen-classes = classes;
           gen-dir = "autogen";
           gen-opts = builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
@@ -62,10 +62,10 @@ let
         library
             exposed-modules: <EXPOSED_MODULES>
             autogen-modules: <EXPOSED_MODULES>
-
             hs-source-dirs:     autogen
 
             default-language: Haskell2010
+            default-extensions: NoImplicitPrelude
             build-depends: <DEPS>
       '';
     };
@@ -83,6 +83,7 @@ let
         pkgs.jq
       ];
       buildPhase = ''
+        set -vox;
         ln -s ${lbfBuilt} autogen;
         ln -s ${lbfBuilt.workdir} .work-dir;
         ln -s ${lbfBuilt.buildjson} build.json;

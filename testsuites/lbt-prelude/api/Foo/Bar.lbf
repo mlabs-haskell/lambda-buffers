@@ -25,3 +25,15 @@ record FooComplicated a b c = {
 
 derive Eq (FooComplicated a b c)
 derive Json (FooComplicated a b c)
+
+-- Making sure recursive definitions work.
+
+sum F a = Rec (G a) | Nil
+
+derive Eq (F a)
+derive Json (F a)
+
+sum G a = Rec (F a) | Nil
+
+derive Eq (G a)
+derive Json (G a)

@@ -41,7 +41,7 @@ let
         opts = {
           inherit files;
           import-paths = imports;
-          gen = "${lbg-purescript}/bin/lbg-purescript";
+          gen = lbg-purescript;
           gen-classes = classes;
           gen-dir = "autogen";
           gen-opts = builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.

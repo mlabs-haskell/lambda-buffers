@@ -296,6 +296,29 @@ instance Json PlutusV1.TxOutRef where
           return $ PlutusV1.TxOutRef txId index
       )
 
+instance Json PlutusV1.TxOut where
+  toJson (PlutusV1.TxOut addr val datHash) = object ["address" .= toJson addr, "value" .= toJson val, "datum_hash" .= toJson datHash]
+  fromJson =
+    withObject
+      "Plutus.V1.TxOut"
+      ( \obj -> do
+          addr <- obj .: "address"
+          val <- obj .: "value"
+          datHash <- obj .: "datum_hash"
+          return $ PlutusV1.TxOut addr val datHash
+      )
+
+instance Json PlutusV1.TxInInfo where
+  toJson (PlutusV1.TxInInfo outRef out) = object ["reference" .= toJson outRef, "output" .= toJson out]
+  fromJson =
+    withObject
+      "Plutus.V1.TxInInfo"
+      ( \obj -> do
+          outRef <- obj .: "reference"
+          out <- obj .: "output"
+          return $ PlutusV1.TxInInfo outRef out
+      )
+
 instance Json PlutusV2.TxOut where
   toJson (PlutusV2.TxOut addr val dat mayRefScript) = object ["address" .= toJson addr, "value" .= toJson val, "datum" .= toJson dat, "reference_script" .= toJson mayRefScript]
   fromJson =

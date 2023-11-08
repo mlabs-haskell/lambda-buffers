@@ -2,16 +2,18 @@ module Test.LambdaBuffers.Prelude.Golden
   ( aGoldens
   , bGoldens
   , boolGoldens
-  , charGoldens
   , bytesGoldens
   , cGoldens
+  , charGoldens
   , dGoldens
   , dayGoldens
   , eitherGoldens
+  , fIntGoldens
   , fooProdGoldens
   , fooRecGoldens
   , fooSumGoldens
   , freeDayGoldens
+  , gIntGoldens
   , integerGoldens
   , listGoldens
   , mapGoldens
@@ -34,8 +36,8 @@ import Data.Set as Set
 import Data.String (CodePoint)
 import Data.Tuple (Tuple(..))
 import LambdaBuffers.Days (Day(..), FreeDay(FreeDay), WorkDay(WorkDay))
-import LambdaBuffers.Foo (A(A), B(B), C(C), D(D))
-import LambdaBuffers.Foo.Bar (FooComplicated(FooComplicated), FooProd(FooProd), FooRec(FooRec), FooSum(FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Foo (A(A), B(B), C(C), D(D), FInt(..), GInt(..))
+import LambdaBuffers.Foo.Bar (F(..), FooComplicated(FooComplicated), FooProd(FooProd), FooRec(FooRec), FooSum(FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G(..))
 import LambdaBuffers.Runtime.Prelude (Bytes)
 import LambdaBuffers.Runtime.Prelude as Bytes
 
@@ -75,6 +77,12 @@ dGoldens = do
   fooProd <- fooProdGoldens (bi 1337) false someBytes
   fooRec <- fooRecGoldens (bi 1337) false someBytes
   pure (D $ FooComplicated { sum: fooSum, prod: fooProd, rec: fooRec })
+
+fIntGoldens :: Array FInt
+fIntGoldens = [ FInt F'Nil, FInt (F'Rec G'Nil) ]
+
+gIntGoldens :: Array GInt
+gIntGoldens = [ GInt G'Nil, GInt (G'Rec F'Nil) ]
 
 dayGoldens :: Array Day
 dayGoldens = [ Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursday, Day'Friday, Day'Saturday, Day'Sunday ]

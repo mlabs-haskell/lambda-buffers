@@ -22,3 +22,13 @@ prod D = (FooComplicated Integer Bool Bytes)
 
 derive Eq D
 derive Json D
+
+prod FInt = (F Integer)
+
+derive Eq FInt
+derive Json FInt
+
+prod GInt = (G Integer)
+
+derive Eq GInt
+derive Json GInt

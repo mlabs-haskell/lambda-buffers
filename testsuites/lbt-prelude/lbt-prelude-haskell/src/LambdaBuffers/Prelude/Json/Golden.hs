@@ -1,4 +1,4 @@
-module LambdaBuffers.Prelude.Json.Golden (aGoldens, bGoldens, cGoldens, dGoldens, dayGoldens, workDayGoldens, integerGoldens, boolGoldens, bytesGoldens, charGoldens, textGoldens, maybeGoldens, eitherGoldens, listGoldens, setGoldens, mapGoldens, freeDayGoldens, fromToGoldenTest, writeGoldens) where
+module LambdaBuffers.Prelude.Json.Golden (aGoldens, bGoldens, cGoldens, dGoldens, dayGoldens, workDayGoldens, integerGoldens, boolGoldens, bytesGoldens, charGoldens, textGoldens, maybeGoldens, eitherGoldens, listGoldens, setGoldens, mapGoldens, freeDayGoldens, fromToGoldenTest, writeGoldens, gIntGoldens, fIntGoldens) where
 
 import Control.Monad (when)
 import Data.ByteString qualified as B
@@ -9,8 +9,8 @@ import Data.Set qualified as Set
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay (FreeDay), WorkDay (WorkDay))
-import LambdaBuffers.Foo (A (A), B (B), C (C), D (D))
-import LambdaBuffers.Foo.Bar (FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Foo (A (A), B (B), C (C), D (D), FInt (FInt), GInt (GInt))
+import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G (G'Nil, G'Rec))
 import LambdaBuffers.Runtime.Prelude (Json, fromJsonBytes, toJsonBytes)
 import System.FilePath (takeBaseName, (</>))
 import Test.Tasty (TestName, TestTree, testGroup)
@@ -79,6 +79,12 @@ dGoldens = do
   fooProd <- fooProdGoldens 1337 False "some bytes"
   fooRec <- fooRecGoldens 1337 False "some bytes"
   return (D $ FooComplicated fooSum fooProd fooRec)
+
+fIntGoldens :: [FInt]
+fIntGoldens = [FInt F'Nil, FInt (F'Rec G'Nil)]
+
+gIntGoldens :: [GInt]
+gIntGoldens = [GInt G'Nil, GInt (G'Rec F'Nil)]
 
 dayGoldens :: [Day]
 dayGoldens = [Day'Monday, Day'Tuesday, Day'Wednesday, Day'Thursday, Day'Friday, Day'Saturday, Day'Sunday]

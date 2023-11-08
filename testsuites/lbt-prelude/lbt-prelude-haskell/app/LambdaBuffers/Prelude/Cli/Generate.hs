@@ -15,6 +15,8 @@ generate opts = do
       , writeGoldens goldenDir "Foo.B" Golden.bGoldens
       , writeGoldens goldenDir "Foo.C" Golden.cGoldens
       , writeGoldens goldenDir "Foo.D" Golden.dGoldens
+      , writeGoldens goldenDir "Foo.FInt" Golden.fIntGoldens
+      , writeGoldens goldenDir "Foo.GInt" Golden.gIntGoldens
       , writeGoldens goldenDir "Days.Day" Golden.dayGoldens
       , writeGoldens goldenDir "Days.WorkDay" Golden.workDayGoldens
       , writeGoldens goldenDir "Days.FreeDay" Golden.freeDayGoldens

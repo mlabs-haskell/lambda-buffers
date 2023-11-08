@@ -11,6 +11,7 @@
         settings = {
           excludes = [
             "lambda-buffers-codegen/data/goldens/.*"
+            "lambda-buffers-codegen/data/lamval-cases/.*"
             "experimental/archive/.*"
             "experimental/ctl-env/autogen/.*"
             "experimental/plutustx-env/autogen/.*"

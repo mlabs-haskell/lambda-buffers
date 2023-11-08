@@ -10,14 +10,16 @@ module Test.LambdaBuffers.Runtime.Plutus.Generators.Correct (
   genB,
   genC,
   genD,
+  genFInt,
+  genGInt,
 ) where
 
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Hedgehog.Range qualified as HR
 import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay (FreeDay), WorkDay (WorkDay))
-import LambdaBuffers.Foo (A (A), B (B), C (C), D (D))
-import LambdaBuffers.Foo.Bar (FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax))
+import LambdaBuffers.Foo (A (A), B (B), C (C), D (D), FInt (FInt), GInt (GInt))
+import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G (G'Nil, G'Rec))
 import Test.LambdaBuffers.Plutus.Generators.Correct qualified as Lbr
 
 genA :: H.Gen A
@@ -31,6 +33,26 @@ genC = C <$> genFooRec Lbr.genAddress Lbr.genValue Lbr.genDatum
 
 genD :: H.Gen D
 genD = D <$> genFooComplicated Lbr.genAddress Lbr.genValue Lbr.genDatum
+
+genF :: H.Gen a -> H.Gen (F a)
+genF genx =
+  H.choice
+    [ return F'Nil
+    , F'Rec <$> genG genx
+    ]
+
+genG :: H.Gen a -> H.Gen (G a)
+genG genx =
+  H.choice
+    [ return G'Nil
+    , G'Rec <$> genF genx
+    ]
+
+genFInt :: H.Gen FInt
+genFInt = FInt <$> genF genInteger
+
+genGInt :: H.Gen GInt
+genGInt = GInt <$> genG genInteger
 
 genInteger :: H.Gen Integer
 genInteger = H.integral (HR.constant 0 10)

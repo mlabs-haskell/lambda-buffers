@@ -1,0 +1,188 @@
+{
+  "opaquesConfig": {
+    "Plutus.V1.PlutusData": [
+      "plutarch",
+      "Plutarch.Builtin",
+      "PData"
+    ],
+    "Plutus.V1.Address": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PAddress"
+    ],
+    "Plutus.V1.Credential": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PCredential"
+    ],
+    "Plutus.V1.StakingCredential": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PStakingCredential"
+    ],
+    "Plutus.V1.PubKeyHash": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PPubKeyHash"
+    ],
+    "Plutus.V1.DCert": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PDCert"
+    ],
+    "Plutus.V1.Bytes": [
+      "plutarch",
+      "Plutarch.ByteString",
+      "PByteString"
+    ],
+    "Plutus.V1.Interval": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PInterval"
+    ],
+    "Plutus.V1.Extended": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PExtended"
+    ],
+    "Plutus.V1.LowerBound": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PLowerBound"
+    ],
+    "Plutus.V1.UpperBound": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PUpperBound"
+    ],
+    "Plutus.V1.POSIXTime": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PPOSIXTime"
+    ],
+    "Plutus.V1.POSIXTimeRange": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PPOSIXTimeRange"
+    ],
+    "Plutus.V1.Value": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PValue"
+    ],
+    "Plutus.V1.CurrencySymbol": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PCurrencySymbol"
+    ],
+    "Plutus.V1.AssetClass": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PAssetClass"
+    ],
+    "Plutus.V1.TokenName": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTokenName"
+    ],
+    "Plutus.V1.Redeemer": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PRedeemer"
+    ],
+    "Plutus.V1.Datum": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PDatum"
+    ],
+    "Plutus.V1.DatumHash": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PDatumHash"
+    ],
+    "Plutus.V1.RedeemerHash": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PRedeemerHash"
+    ],
+    "Plutus.V1.ScriptHash": [
+      "plutarch",
+      "Plutarch.Api.V1.Scripts",
+      "PScriptHash"
+    ],
+    "Plutus.V1.ScriptContext": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PScriptContext"
+    ],
+    "Plutus.V1.ScriptPurpose": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PScriptPurpose"
+    ],
+    "Plutus.V1.TxInInfo": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxInInfo"
+    ],
+    "Plutus.V1.TxInfo": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxInfo"
+    ],
+    "Plutus.V1.TxId": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxId"
+    ],
+    "Plutus.V1.TxOut": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxOut"
+    ],
+    "Plutus.V1.TxOutRef": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxOutRef"
+    ],
+    "Plutus.V1.Map": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PMap"
+    ],
+    "Plutus.V2.TxInInfo": [
+      "plutarch",
+      "Plutarch.Api.V2",
+      "PTxInInfo"
+    ],
+    "Plutus.V2.OutputDatum": [
+      "plutarch",
+      "Plutarch.Api.V2",
+      "POutputDatum"
+    ],
+    "Plutus.V2.TxOut": [
+      "plutarch",
+      "Plutarch.Api.V2",
+      "PTxOut"
+    ]
+  },
+  "classesConfig": {
+    "Plutus.V1.PlutusData": [
+      [
+        "plutarch",
+        "Plutarch.Builtin",
+        "PIsData"
+      ],
+      [
+        "plutarch",
+        "Plutarch.Internal.PlutusType",
+        "PlutusType"
+      ],
+      [
+        "plutarch",
+        "Plutarch.TryFrom",
+        "PTryFrom"
+      ]
+    ]
+  }
+}

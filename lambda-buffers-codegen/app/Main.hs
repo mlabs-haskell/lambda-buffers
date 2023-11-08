@@ -4,6 +4,7 @@ import Control.Applicative (Alternative (many), (<**>))
 import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
+import LambdaBuffers.Codegen.Cli.GenPlutarch qualified as Plutarch
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
 import Options.Applicative (
   InfoMod,
@@ -34,6 +35,7 @@ import Options.Applicative.NonEmpty (some1)
 data Command
   = GenHaskell Haskell.GenOpts
   | GenPurescript Purescript.GenOpts
+  | GenPlutarch Plutarch.GenOpts
 
 genOptsP :: Parser GenOpts
 genOptsP =
@@ -100,6 +102,19 @@ purescriptGenOptsP =
       )
     <*> genOptsP
 
+plutarchGenOptsP :: Parser Plutarch.GenOpts
+plutarchGenOptsP =
+  Plutarch.MkGenOpts
+    <$> many
+      ( strOption
+          ( long "config"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help "Configuration file for the Plutarch Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
+          )
+      )
+    <*> genOptsP
+
 mkProgDesc :: forall {a}. String -> InfoMod a
 mkProgDesc backend =
   progDesc $
@@ -123,6 +138,12 @@ commandP =
             (GenPurescript <$> (helper *> purescriptGenOptsP))
             (mkProgDesc "Purescript")
         )
+      <> command
+        "gen-plutarch"
+        ( info
+            (GenPlutarch <$> (helper *> plutarchGenOptsP))
+            (mkProgDesc "Plutarch")
+        )
 
 parserInfo :: ParserInfo Command
 parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
@@ -134,3 +155,4 @@ main = do
   case cmd of
     GenHaskell opts -> Haskell.gen opts
     GenPurescript opts -> Purescript.gen opts
+    GenPlutarch opts -> Plutarch.gen opts

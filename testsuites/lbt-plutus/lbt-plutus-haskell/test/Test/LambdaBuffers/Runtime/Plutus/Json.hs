@@ -58,7 +58,9 @@ plutusFromToGoldenTests =
   , fromToGoldenTest "PlutusV1.TxId" Golden.txIdGoldens
   , fromToGoldenTest "PlutusV1.TxOutRef" Golden.txOutRefGoldens
   , fromToGoldenTest "PlutusV1.Map" Golden.mapGoldens
-  , fromToGoldenTest "PlutusV2.TxInInfo" Golden.txInInfoGoldens
+  , fromToGoldenTest "PlutusV1.TxInInfo" Golden.txInInfoGoldensV1
+  , fromToGoldenTest "PlutusV1.TxOut" Golden.txOutGoldensV1
+  , fromToGoldenTest "PlutusV2.TxInInfo" Golden.txInInfoGoldensV2
   , fromToGoldenTest "PlutusV2.OutputDatum" Golden.outDatumGoldens
-  , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldens
+  , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldensV2
   ]

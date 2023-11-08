@@ -22,13 +22,33 @@ hedgehogTests =
   adjustOption (\_ -> H.HedgehogTestLimit $ Just 1000) $
     testGroup
       "Property tests"
-      [ aToFrom
-      , bToFrom
-      , cToFrom
-      , dToFrom
-      , dayToFrom
-      , workDayToFrom
-      , weekDayToFrom
+      [ toFromTest
+          "Foo.A"
+          Correct.genA
+      , toFromTest
+          "Foo.B"
+          Correct.genB
+      , toFromTest
+          "Foo.C"
+          Correct.genC
+      , toFromTest
+          "Foo.D"
+          Correct.genD
+      , toFromTest
+          "Foo.FInt"
+          Correct.genFInt
+      , toFromTest
+          "Foo.GInt"
+          Correct.genGInt
+      , toFromTest
+          "Days.Day"
+          Correct.genDay
+      , toFromTest
+          "Days.WorkDay"
+          Correct.genWorkDay
+      , toFromTest
+          "Days.WeekDay"
+          Correct.genWeekDay
       ]
 
 goldenTests :: IO TestTree
@@ -48,48 +68,6 @@ toFromTest title gen =
         x <- H.forAll gen
         (fromJsonBytes . toJsonBytes) x H.=== Right x
     )
-
-aToFrom :: TestTree
-aToFrom =
-  toFromTest
-    "Foo.A"
-    Correct.genA
-
-bToFrom :: TestTree
-bToFrom =
-  toFromTest
-    "Foo.B"
-    Correct.genB
-
-cToFrom :: TestTree
-cToFrom =
-  toFromTest
-    "Foo.C"
-    Correct.genC
-
-dToFrom :: TestTree
-dToFrom =
-  toFromTest
-    "Foo.D"
-    Correct.genD
-
-dayToFrom :: TestTree
-dayToFrom =
-  toFromTest
-    "Days.Day"
-    Correct.genDay
-
-workDayToFrom :: TestTree
-workDayToFrom =
-  toFromTest
-    "Days.WorkDay"
-    Correct.genWorkDay
-
-weekDayToFrom :: TestTree
-weekDayToFrom =
-  toFromTest
-    "Days.WeekDay"
-    Correct.genWeekDay
 
 fromToGoldenTest :: forall {a}. Json a => TestName -> [a] -> IO TestTree
 fromToGoldenTest title goldens = do
@@ -112,6 +90,12 @@ fooFromToGoldenTests =
       , fromToGoldenTest
           "Foo.D"
           Golden.dGoldens
+      , fromToGoldenTest
+          "Foo.FInt"
+          Golden.fIntGoldens
+      , fromToGoldenTest
+          "Foo.GInt"
+          Golden.gIntGoldens
       ]
 
 daysFromToGoldenTests :: IO TestTree

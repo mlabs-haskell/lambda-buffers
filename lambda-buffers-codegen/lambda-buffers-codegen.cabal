@@ -4,8 +4,13 @@ version:            0.1.0.0
 synopsis:           Lambda Buffers Codegen
 author:             MLabs LTD
 maintainer:         info@mlabs.city
-data-files:         data/**/*.json
-extra-source-files: data/**/*.json
+data-files:
+  data/**/*.json
+  data/lamval-cases/**/*.hs
+
+extra-source-files:
+  data/**/*.json
+  data/lamval-cases/**/*.hs
 
 flag dev
   description: Enable non-strict compilation for development
@@ -111,15 +116,21 @@ library
     LambdaBuffers.Codegen.Haskell.Print.InstanceDef
     LambdaBuffers.Codegen.Haskell.Print.LamVal
     LambdaBuffers.Codegen.Haskell.Print.MonadPrint
-    LambdaBuffers.Codegen.Haskell.Print.Names
+    LambdaBuffers.Codegen.Haskell.Print.Syntax
     LambdaBuffers.Codegen.Haskell.Print.TyDef
-    LambdaBuffers.Codegen.Haskell.Syntax
     LambdaBuffers.Codegen.LamVal
     LambdaBuffers.Codegen.LamVal.Derive
     LambdaBuffers.Codegen.LamVal.Eq
     LambdaBuffers.Codegen.LamVal.Json
     LambdaBuffers.Codegen.LamVal.MonadPrint
     LambdaBuffers.Codegen.LamVal.PlutusData
+    LambdaBuffers.Codegen.Plutarch
+    LambdaBuffers.Codegen.Plutarch.Print
+    LambdaBuffers.Codegen.Plutarch.Print.Derive
+    LambdaBuffers.Codegen.Plutarch.Print.LamVal
+    LambdaBuffers.Codegen.Plutarch.Print.Refs
+    LambdaBuffers.Codegen.Plutarch.Print.Syntax
+    LambdaBuffers.Codegen.Plutarch.Print.TyDef
     LambdaBuffers.Codegen.Print
     LambdaBuffers.Codegen.Purescript
     LambdaBuffers.Codegen.Purescript.Config
@@ -155,6 +166,7 @@ executable lbg
   other-modules:
     LambdaBuffers.Codegen.Cli.Gen
     LambdaBuffers.Codegen.Cli.GenHaskell
+    LambdaBuffers.Codegen.Cli.GenPlutarch
     LambdaBuffers.Codegen.Cli.GenPurescript
     Paths_lambda_buffers_codegen
 
@@ -166,14 +178,22 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , aeson                   >=2.1
-    , base                    >=4.16
+    , aeson                      >=2.1
+    , base                       >=4.16
+    , containers                 >=0.6
+    , data-default               >=0.7
     , lambda-buffers-codegen
-    , tasty                   >=1.4
-    , tasty-hunit             >=0.10
+    , lambda-buffers-codegen-pb  >=0.1
+    , lambda-buffers-compiler    >=0.1
+    , lens                       >=5.2
+    , ordered-containers         >=0.2
+    , tasty                      >=1.4
+    , tasty-hunit                >=0.10
+    , text                       >=1.2
 
   other-modules:
     Paths_lambda_buffers_codegen
     Test.LambdaBuffers.Codegen
     Test.LambdaBuffers.Codegen.Haskell
+    Test.LambdaBuffers.Codegen.Plutarch
     Test.LambdaBuffers.Codegen.Purescript

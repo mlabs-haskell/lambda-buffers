@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl, deriveFromPlutusDataImpl) where
+module LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl, deriveFromPlutusDataImpl, deriveToPlutusDataImplPlutarch, deriveFromPlutusDataImplPlutarch) where
 
 import Data.Map.Ordered qualified as OMap
 import LambdaBuffers.Codegen.LamVal (Product, QProduct, QRecord, QSum, Sum, ValueE (CaseE, CaseIntE, CaseListE, CtorE, ErrorE, FieldE, IntE, LamE, LetE, ListE, ProductE, RecordE, RefE), (@))
@@ -169,6 +169,32 @@ deriveToPlutusDataImpl mn tydefs = deriveImpl mn tydefs toPlutusDataSum toPlutus
 
 deriveFromPlutusDataImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveFromPlutusDataImpl mn tydefs ty = deriveImpl mn tydefs (fromPlutusDataSum (LT.fromTy ty)) (fromPlutusDataProduct (LT.fromTy ty)) (fromPlutusDataRecord $ LT.fromTy ty) ty
+
+{- Hacks for Plutarch
+
+Translates a record into a product. Record fields are listed in the order they are defined at source.
+-}
+deriveToPlutusDataImplPlutarch :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
+deriveToPlutusDataImplPlutarch mn tydefs =
+  deriveImpl
+    mn
+    tydefs
+    toPlutusDataSum
+    toPlutusDataProduct
+    (toPlutusDataProduct . recordToProduct)
+
+deriveFromPlutusDataImplPlutarch :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
+deriveFromPlutusDataImplPlutarch mn tydefs ty =
+  deriveImpl
+    mn
+    tydefs
+    (fromPlutusDataSum (LT.fromTy ty))
+    (fromPlutusDataProduct (LT.fromTy ty))
+    (fromPlutusDataProduct (LT.fromTy ty) . recordToProduct)
+    ty
+
+recordToProduct :: QRecord -> QProduct
+recordToProduct (qtyn, fields) = (qtyn, snd <$> OMap.assocs fields)
 
 -- | Helpers
 isUnitProd :: Product -> Bool

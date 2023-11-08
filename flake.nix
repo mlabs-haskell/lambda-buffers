@@ -12,6 +12,10 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     purifix.url = "github:purifix/purifix";
+    plutarch = {
+      url = "github:plutonomicon/plutarch-plutus";
+      flake = false;
+    };
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -27,6 +31,7 @@
         ./pre-commit.nix
         ./hercules-ci.nix
         ./docs/build.nix
+        ./docs/plutarch/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
         ./libs/build.nix
@@ -36,6 +41,7 @@
         ./lambda-buffers-frontend/build.nix
         ./runtimes/haskell/lbr-prelude/build.nix
         ./runtimes/haskell/lbr-plutus/build.nix
+        ./runtimes/haskell/lbr-plutarch/build.nix
         ./runtimes/purescript/lbr-prelude/build.nix
         ./runtimes/purescript/lbr-plutus/build.nix
         ./runtimes/rust/lbr-prelude/build.nix
@@ -47,6 +53,7 @@
         ./testsuites/lbt-plutus/golden/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./experimental/build.nix
       ];
       debug = true;

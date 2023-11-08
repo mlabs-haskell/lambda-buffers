@@ -1,6 +1,7 @@
 [default.extend-words]
 substituters = "substituters"
-hask = "hask"
+hask= "hask"
+lits="lits"
 Nd = "Nd"
 
 [type.pdf]

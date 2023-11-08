@@ -16,3 +16,6 @@ result
 **/dist
 **/output
 .DS_Store
+**/.work
+**/.extras
+**/autogen

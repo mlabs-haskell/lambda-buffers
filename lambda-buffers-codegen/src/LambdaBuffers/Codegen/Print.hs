@@ -14,7 +14,10 @@ module LambdaBuffers.Codegen.Print (
   importClass,
   stValueImports,
   stClassImports,
+  stTypeImports,
   throwInternalError,
+  importType,
+  throwInternalError',
 ) where
 
 import Control.Lens (makeLenses, (&), (.~))
@@ -49,27 +52,28 @@ data Context qtn qcn = Context
 
 makeLenses 'Context
 
-data State qcn qvn = State
+data State qcn qvn qtn = State
   { _stValueImports :: Set qvn
   , _stClassImports :: Set qcn
+  , _stTypeImports :: Set qtn
   }
   deriving stock (Eq, Ord, Show)
 
 makeLenses 'State
 
-type MonadPrint qtn qcn qvn m = (MonadError Error m, MonadRWS (Context qtn qcn) () (State qcn qvn) m)
+type MonadPrint qtn qcn qvn m = (MonadError Error m, MonadRWS (Context qtn qcn) () (State qcn qvn qtn) m)
 
-type PrintM qtn qcn qvn = RWST (Context qtn qcn) () (State qcn qvn) (Except Error)
+type PrintM qtn qcn qvn = RWST (Context qtn qcn) () (State qcn qvn qtn) (Except Error)
 
 -- | `runPrint ctx printer` runs a printing workflow that yields a module document and a set of package dependencies.
 runPrint ::
   forall qtn qcn qvn.
-  (Ord qvn, Ord qcn) =>
+  (Ord qvn, Ord qcn, Ord qtn) =>
   Context qtn qcn ->
   PrintM qtn qcn qvn (Doc (), Set Text) ->
   Either P.Error (Doc (), Set Text)
 runPrint ctx modPrinter =
-  let p = runRWST modPrinter ctx (State mempty mempty)
+  let p = runRWST modPrinter ctx (State mempty mempty mempty)
    in case runExcept p of
         Left err ->
           Left $
@@ -80,14 +84,20 @@ runPrint ctx modPrinter =
         Right (r, _, _) -> Right r
 
 importValue :: (MonadPrint qtn qcn qvn m, Ord qvn) => qvn -> m ()
-importValue qvn = modify (\(State vimps cimps) -> State (Set.insert qvn vimps) cimps)
+importValue qvn = modify (\(State vimps cimps tyimps) -> State (Set.insert qvn vimps) cimps tyimps)
 
 importClass :: (MonadPrint qtn qcn qvn m, Ord qcn) => qcn -> m ()
-importClass qcn = modify (\(State vimps cimps) -> State vimps (Set.insert qcn cimps))
+importClass qcn = modify (\(State vimps cimps tyimps) -> State vimps (Set.insert qcn cimps) tyimps)
+
+importType :: (MonadPrint qtn qcn qvn m, Ord qtn) => qtn -> m ()
+importType qtn = modify (\(State vimps cimps tyimps) -> State vimps cimps (Set.insert qtn tyimps))
 
 throwInternalError :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> String -> m a
-throwInternalError si msg =
+throwInternalError si = throwInternalError' si . Text.pack
+
+throwInternalError' :: MonadPrint qtn qcn qvn m => PC.SourceInfo -> Text -> m a
+throwInternalError' si msg =
   throwError $
     defMessage
-      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> Text.pack msg
+      & P.msg .~ "[LambdaBuffers.Codegen.Print] " <> msg
       & P.sourceInfo .~ PC.toProto si

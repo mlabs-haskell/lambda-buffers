@@ -1,21 +1,57 @@
-module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
+module LambdaBuffers.Codegen.Haskell.Print.Derive (printDeriveEqBase, printDeriveEqPlutusTx, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson, hsClassImplPrinters) where
 
+import Control.Lens ((^.))
+import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
-import Data.Set qualified as Set
+import LambdaBuffers.Codegen.Haskell.Print (MonadPrint)
 import LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE)
-import LambdaBuffers.Codegen.Haskell.Print.Names (printHsValName)
-import LambdaBuffers.Codegen.Haskell.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
+import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
+import Proto.Codegen_Fields qualified as P
 
+hsClassImplPrinters ::
+  MonadPrint m =>
+  Map
+    H.QClassName
+    ( PC.ModuleName ->
+      PC.TyDefs ->
+      (Doc ann -> Doc ann) ->
+      PC.Ty ->
+      m (Doc ann)
+    )
+hsClassImplPrinters =
+  Map.fromList
+    [
+      ( (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkClassName "Eq")
+      , printDeriveEqBase
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkClassName "Eq")
+      , printDeriveEqPlutusTx
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "ToData")
+      , printDeriveToPlutusData
+      )
+    ,
+      ( (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkClassName "FromData")
+      , printDeriveFromPlutusData
+      )
+    ,
+      ( (H.MkCabalPackageName "lbr-prelude", H.MkModuleName "LambdaBuffers.Runtime.Prelude", H.MkClassName "Json")
+      , printDeriveJson
+      )
+    ]
 eqClassMethodName :: H.ValueName
 eqClassMethodName = H.MkValueName "=="
 
@@ -28,12 +64,17 @@ lvEqBuiltinsBase =
     , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
     ]
 
-printDeriveEqBase :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveEqBase mn iTyDefs mkInstanceDoc ty = do
-  valE <- deriveEqImpl mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvEqBuiltinsBase (printValueE valE)
-  let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
-  return (instanceDoc, imps)
+  case deriveEqImpl mn iTyDefs ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right valE -> do
+      case LV.runPrint lvEqBuiltinsBase (printValueE valE) of
+        Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
+        Right (implDoc, imps) -> do
+          let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+          for_ imps Print.importValue
+          return instanceDoc
 
 lvEqBuiltinsPlutusTx :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.ValueName)
 lvEqBuiltinsPlutusTx =
@@ -44,12 +85,17 @@ lvEqBuiltinsPlutusTx =
     , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
     ]
 
-printDeriveEqPlutusTx :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveEqPlutusTx :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveEqPlutusTx mn iTyDefs mkInstanceDoc ty = do
-  valE <- deriveEqImpl mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvEqBuiltinsPlutusTx (printValueE valE)
-  let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
-  return (instanceDoc, imps)
+  case deriveEqImpl mn iTyDefs ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right valE -> do
+      case LV.runPrint lvEqBuiltinsPlutusTx (printValueE valE) of
+        Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
+        Right (implDoc, imps) -> do
+          let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+          for_ imps Print.importValue
+          return instanceDoc
 
 lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
 lvPlutusDataBuiltins =
@@ -68,18 +114,20 @@ lvPlutusDataBuiltins =
 toPlutusDataClassMethodName :: H.ValueName
 toPlutusDataClassMethodName = H.MkValueName "toBuiltinData"
 
-printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveToPlutusData :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
-  valE <- deriveToPlutusDataImpl mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
-  let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
-  return
-    ( instanceDoc
-    , imps
-    )
+  case deriveToPlutusDataImpl mn iTyDefs ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right valE -> do
+      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+        Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
+        Right (implDoc, imps) -> do
+          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
+          for_ imps Print.importValue
+          return instanceDoc
 
 printValueDef :: H.ValueName -> Doc ann -> Doc ann
-printValueDef valName valDoc = printHsValName valName <+> equals <+> valDoc
+printValueDef valName valDoc = H.printHsValName valName <+> equals <+> valDoc
 
 fromPlutusDataClassMethodName :: H.ValueName
 fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"
@@ -87,15 +135,18 @@ fromPlutusDataClassMethodName = H.MkValueName "fromBuiltinData"
 builtinDataToDataRef :: H.QValName
 builtinDataToDataRef = (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "builtinDataToData")
 
-printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveFromPlutusData :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
-  valE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (implDoc, imps) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
-  let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
-  return
-    ( instanceDoc
-    , Set.singleton builtinDataToDataRef <> imps
-    )
+  case deriveFromPlutusDataImpl mn iTyDefs ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right valE -> do
+      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+        Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
+        Right (implDoc, imps) -> do
+          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
+          Print.importValue builtinDataToDataRef
+          for_ imps Print.importValue
+          return instanceDoc
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
 lvJsonBuiltins :: Map LV.ValueName H.QValName
@@ -121,8 +172,16 @@ toJsonClassMethodName = H.MkValueName "toJson"
 fromJsonClassMethodName :: H.ValueName
 fromJsonClassMethodName = H.MkValueName "fromJson"
 
-printDeriveJson :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveJson :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveJson mn iTyDefs mkInstanceDoc ty = do
+  case printDeriveJson' mn iTyDefs mkInstanceDoc ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Json LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right (jsonInstDefDoc, imps) -> do
+      for_ imps Print.importValue
+      return jsonInstDefDoc
+
+printDeriveJson' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set H.QValName)
+printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
   (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty

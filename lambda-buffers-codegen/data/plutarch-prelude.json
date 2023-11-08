@@ -1,0 +1,63 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PMap"
+    ],
+    "Prelude.List": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PList"
+    ],
+    "Prelude.Either": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PEither"
+    ],
+    "Prelude.Maybe": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PMaybe"
+    ],
+    "Prelude.Bytes": [
+      "plutarch",
+      "Plutarch.ByteString",
+      "PByteString"
+    ],
+    "Prelude.Text": [
+      "plutarch",
+      "Plutarch.ByteString",
+      "PByteString"
+    ],
+    "Prelude.Integer": [
+      "plutarch",
+      "Plutarch.Integer",
+      "PInteger"
+    ],
+    "Prelude.Bool": [
+      "plutarch",
+      "Plutarch.Bool",
+      "PBool"
+    ],
+    "Prelude.Char": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PChar"
+    ],
+    "Prelude.Set": [
+      "lbr-plutarch",
+      "LambdaBuffers.Runtime.Plutarch",
+      "PSet"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "plutarch",
+        "Plutarch.Bool",
+        "PEq"
+      ]
+    ]
+  }
+}

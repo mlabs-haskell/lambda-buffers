@@ -17,7 +17,7 @@
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" ];
-        configs = [ ../lambda-buffers-codegen/data/haskell-prelude-base.json ];
+        configs = [ "${config.packages.codegen-configs}/haskell-prelude-base.json" ];
       };
 
       lbf-prelude-purescript = config.overlayAttrs.lbf-nix.lbfPurescript {
@@ -25,7 +25,15 @@
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" ];
-        configs = [ ../lambda-buffers-codegen/data/purescript-prelude-base.json ];
+        configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
+      };
+
+      lbf-prelude-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+        name = "lbf-prelude-plutarch";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" ];
+        configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" ];
       };
 
       lbf-plutus = pkgs.stdenv.mkDerivation {
@@ -48,7 +56,10 @@
             # being automatically included as a dependency.
             "lbr-plutus"
           ];
-        configs = [ ../lambda-buffers-codegen/data/haskell-prelude-base.json ../lambda-buffers-codegen/data/haskell-plutus-plutustx.json ];
+        configs = [
+          "${config.packages.codegen-configs}/haskell-prelude-base.json"
+          "${config.packages.codegen-configs}/haskell-plutus-plutustx.json"
+        ];
       };
 
       lbf-plutus-purescript = config.overlayAttrs.lbf-nix.lbfPurescript {
@@ -58,9 +69,24 @@
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         dependencies = [ "lbf-prelude" ];
-        configs = [ ../lambda-buffers-codegen/data/purescript-prelude-base.json ../lambda-buffers-codegen/data/purescript-plutus-ctl.json ];
+        configs = [
+          "${config.packages.codegen-configs}/purescript-prelude-base.json"
+          "${config.packages.codegen-configs}/purescript-plutus-ctl.json"
+        ];
       };
 
+      lbf-plutus-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+        name = "lbf-plutus-plutarch";
+        src = ./lbf-plutus;
+        imports = [ ./lbf-prelude ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
+        dependencies = [ "lbf-prelude-plutarch" ];
+        configs = [
+          "${config.packages.codegen-configs}/plutarch-prelude.json"
+          "${config.packages.codegen-configs}/plutarch-plutus.json"
+        ];
+      };
     };
 
     # The following devShells allow one to conveniently play with some of the
@@ -80,7 +106,7 @@
           project = { lib, ... }: {
             src = config.packages.lbf-prelude-haskell;
 
-            name = "lbf-prelude-haskell";
+            name = "dev-prelude-haskell";
 
             inherit (config.settings.haskell) index-state compiler-nix-name;
 
@@ -94,9 +120,6 @@
                 packages = {
                   allComponent.doHoogle = true;
                   allComponent.doHaddock = true;
-
-                  # Enable strict compilation
-                  lbf-prelude.configureFlags = [ "-f-dev" ];
                 };
               })
             ];
@@ -150,7 +173,7 @@
           project = { lib, ... }: {
             src = config.packages.lbf-plutus-haskell;
 
-            name = "lbf-plutus-haskell";
+            name = "dev-plutustx";
 
             inherit (config.settings.haskell) index-state compiler-nix-name;
 
@@ -166,9 +189,6 @@
                 packages = {
                   allComponent.doHoogle = true;
                   allComponent.doHaddock = true;
-
-                  # Enable strict compilation
-                  lbf-plutus.configureFlags = [ "-f-dev" ];
                 };
               })
             ];
@@ -205,6 +225,78 @@
           ]).flake { };
         in
         hsNixFlake.devShell;
+
+      dev-plutarch =
+        let
+          project = { lib, ... }: {
+            src = config.packages.lbf-plutus-plutarch;
+
+            name = "dev-plutarch";
+
+            inherit (config.settings.haskell) index-state compiler-nix-name;
+
+            extraHackage = [
+              # Load Plutarch support (Prelude, Plutus)
+              "${config.packages.lbf-prelude-plutarch}"
+              "${config.packages.lbf-plutus-plutarch}"
+              "${config.packages.lbr-plutarch-src}"
+              # Load Haskell support (Prelude, Plutus)
+              "${config.packages.lbf-prelude-haskell}"
+              "${config.packages.lbf-plutus-haskell}"
+              "${config.packages.lbr-prelude-haskell-src}"
+              "${config.packages.lbr-plutus-haskell-src}"
+              # Plutarch itself
+              "${inputs.plutarch}"
+              "${inputs.plutarch}/plutarch-extra"
+            ];
+
+            modules = [
+              (_: {
+                packages = {
+                  #allComponent.doHoogle = true;
+                  #allComponent.doHaddock = true;
+
+                  # lbf-prelude.configureFlags = [ "-f-dev" ];
+                };
+              })
+            ];
+
+            shell = {
+
+              withHoogle = true;
+
+              exactDeps = true;
+
+              nativeBuildInputs = config.settings.shell.tools ++ [
+                config.packages.lbf-plutus-to-plutarch
+                config.packages.lbf-prelude-to-haskell
+                config.packages.lbf-plutus-to-haskell
+              ];
+
+              additional = ps: [
+                ps.lbf-prelude-plutarch
+                ps.lbf-plutus-plutarch
+                ps.lbr-plutarch
+                ps.plutus-tx
+                ps.plutus-ledger-api
+              ];
+
+              tools = {
+                cabal = { };
+                haskell-language-server = { };
+              };
+
+              shellHook = lib.mkForce config.settings.shell.hook;
+            };
+          };
+          hsNixFlake = (pkgs.haskell-nix.cabalProject' [
+            inputs.mlabs-tooling.lib.mkHackageMod
+            inputs.mlabs-tooling.lib.moduleMod
+            project
+          ]).flake { };
+        in
+        hsNixFlake.devShell;
+
     };
   };
 }

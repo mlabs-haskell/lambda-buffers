@@ -45,7 +45,7 @@ goldenInstanceTests :: IO TestTree
 goldenInstanceTests = do
   gts <-
     id
-      `traverse` plutusFromToGoldenTests
+      `traverse` (plutusFromToGoldenTests <> preludeFromToGoldenTests)
 
   return $
     testGroup
@@ -81,6 +81,12 @@ fooToFromTests =
   , toFromTest
       "Foo.D"
       Correct.genD
+  , toFromTest
+      "Foo.FInt"
+      Correct.genFInt
+  , toFromTest
+      "Foo.GInt"
+      Correct.genGInt
   ]
 
 fooFromToGoldenTests :: [IO TestTree]
@@ -89,6 +95,8 @@ fooFromToGoldenTests =
   , fromToGoldenTest "Foo.B" Golden.bGoldens
   , fromToGoldenTest "Foo.C" Golden.cGoldens
   , fromToGoldenTest "Foo.D" Golden.dGoldens
+  , fromToGoldenTest "Foo.FInt" Golden.fIntGoldens
+  , fromToGoldenTest "Foo.GInt" Golden.gIntGoldens
   ]
 
 -- | Days
@@ -139,7 +147,18 @@ plutusFromToGoldenTests =
   , fromToGoldenTest "PlutusV1.TxId" Golden.txIdGoldens
   , fromToGoldenTest "PlutusV1.TxOutRef" Golden.txOutRefGoldens
   , fromToGoldenTest "PlutusV1.Map" Golden.mapGoldens
-  , fromToGoldenTest "PlutusV2.TxInInfo" Golden.txInInfoGoldens
+  , fromToGoldenTest "PlutusV1.TxInInfo" Golden.txInInfoGoldensV1
+  , fromToGoldenTest "PlutusV1.TxOut" Golden.txOutGoldensV1
+  , fromToGoldenTest "PlutusV2.TxInInfo" Golden.txInInfoGoldensV2
   , fromToGoldenTest "PlutusV2.OutputDatum" Golden.outDatumGoldens
-  , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldens
+  , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldensV2
+  ]
+
+-- | Prelude tests.
+preludeFromToGoldenTests :: [IO TestTree]
+preludeFromToGoldenTests =
+  [ fromToGoldenTest "Prelude.Bool" Golden.boolGoldens
+  , fromToGoldenTest "Prelude.Maybe" Golden.maybeGoldens
+  , fromToGoldenTest "Prelude.Either" Golden.eitherGoldens
+  , fromToGoldenTest "Prelude.List" Golden.listGoldens
   ]
