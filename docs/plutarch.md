@@ -44,8 +44,8 @@ For a full example see [Example](#example).
 Writing .lbf schemas with API types intended for Plutarch backend will typically use the following LambdaBuffers modules:
 
 1. [Prelude](../libs/lbf-prelude/Prelude.lbf),
-1. [Plutus.V1](../libs/lbf-plutus/Plutus/V1.lbf),
-2. [Plutus.V2](../libs/lbf-plutus/Plutus/V2.lbf).
+2. [Plutus.V1](../libs/lbf-plutus/Plutus/V1.lbf),
+3. [Plutus.V2](../libs/lbf-plutus/Plutus/V2.lbf).
 
 Take a look at [Example.lbf](./plutarch/api/Example.lbf) schema as an example.
 
@@ -99,16 +99,16 @@ import Plutarch.Api.V1 ()
 import Plutarch.Api.V2 ()
 ```
 
-1. [LambdaBuffers.Plutus.V1.Plutarch]() is a module generated from [Plutus.V1](../libs/lbf-plutus/Plutus/V1.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](../libs/lbf-plutus) runtime library.
-2. [LambdaBuffers.Plutus.V2.Plutarch]() is a module generated from [Plutus.V2](../libs/lbf-plutus/Plutus/V2.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](../libs/lbf-plutus) runtime library.
-3. [LambdaBuffers.Prelude.Plutarch]() is a module generated from [Prelude](../libs/lbf-prelude/Prelude.lbf) LambdaBuffers schema and provided by the [lbf-prelude-plutarch](../libs/lbf-prelude) runtime library.
-3. [LambdaBuffers.Runtime.Plutarch]() is a module provided by the [lbr-plutarch](../runtimes/haskell/lbr-plutarch) runtime library.
+1. LambdaBuffers.Plutus.V1.Plutarch is a module generated from [Plutus.V1](../libs/lbf-plutus/Plutus/V1.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](../libs/lbf-plutus) runtime library.
+2. LambdaBuffers.Plutus.V2.Plutarch is a module generated from [Plutus.V2](../libs/lbf-plutus/Plutus/V2.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](../libs/lbf-plutus) runtime library.
+3. LambdaBuffers.Prelude.Plutarch is a module generated from [Prelude](../libs/lbf-prelude/Prelude.lbf) LambdaBuffers schema and provided by the [lbf-prelude-plutarch](../libs/lbf-prelude) runtime library.
+4. LambdaBuffers.Runtime.Plutarch is a module provided by the [lbr-plutarch](../runtimes/haskell/lbr-plutarch) runtime library.
 
 > Generated Plutarch module for a LambdaBuffers schema `Foo/Bar.lbf` (ie. `Foo.Bar`) is stored at `Foo/Bar/Plutarch.hs`
 
 ## Restrictions
 
-Plutarch backend doesn't support recursive type definitions unfortunatelly (see #131).
+Plutarch backend doesn't support recursive type definitions unfortunately (see #131).
 
 The following will not work:
 
@@ -153,9 +153,9 @@ The Plutarch backend doesn't support the use of `Char`, `Text`, `Bytes` (there's
 
 ### Type definition mapping
 
-Plutarch backend support all types from the LambdaBuffers Plutus module, as to enable full featured Plutus script development.
+Plutarch backend supports all types from the LambdaBuffers Plutus module, as to enable full featured Plutus script development.
 
-Additionally, it also support some types from the LambdaBuffers Prelude module, namely `Bool`, `Integer`, `Maybe`, `Either` and `List`.
+Additionally, it also supports some types from the LambdaBuffers Prelude module, namely `Bool`, `Integer`, `Maybe`, `Either` and `List`.
 
 ```lbf
 module Foo
@@ -203,7 +203,7 @@ data Product (a :: PType) (s :: Plutarch.S) = Product (Plutarch.Term s (Plutarch
 
 ### Type class implementations
 
-Plutarch has a couple of fundamental classes essential to its operations namely, `PlutusType`, `PIsData`, `PTryFrom` and `PEq`.
+Plutarch has a couple of fundamental type classes essential to its operations namely, `PlutusType`, `PIsData`, `PTryFrom` and `PEq`.
 
 #### PlutusType
 
@@ -232,7 +232,7 @@ It's important to note that there's a subtle but important distinction to be mad
 This means that `pmatch'` should never error, and if it does that means the implementation is wrong.
 `ptryFrom` is different, as it takes some `PData` and tries to parse it into a `PType`, but can fail.
 
-However, in LambdaBuffers, both of these methods follow the exact same logic pattern, and they correspond and can be generated using the `from Plutus data` specification.
+However, in LambdaBuffers, both of these methods follow the exact same logical pattern, and they correspond and can be generated using the `from Plutus data` specification.
 
 #### PTryFrom
 
@@ -254,7 +254,7 @@ class PSubtype a b => PTryFrom (a :: PType) (b :: PType) where
 There's some additionally features exhibited by this type class, most noteworthy is the `PTryFromExcess` type family that enables us specify the part of the structure that wasn't parsed and is left unexamined.
 It's a form of optimization that becomes very important if you have a very complex data type such as `ScriptContext` from the `plutus-ledger-api`.
 
-Apparently, a good intuition pump for the this 'excess' business is that of a [zipper](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf).
+Apparently, a good intuition pump for this 'excess' business is that of a [zipper](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf).
 We focus on a certain part of a data structure, only ever providing links to other parts that are left un-examined.
 
 LambdaBuffers doesn't use this feature and sets the `PTryFromExcess` to a unit type, signaling that nothing is left unexamined.
@@ -263,7 +263,7 @@ LambdaBuffers doesn't use this feature and sets the `PTryFromExcess` to a unit t
 
 Printing an implementation for this class for a particular type is governed by `derive Plutus.V1.PlutusData <type>` statements in .lbf schemas.
 
-[PIsData](https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Builtin.hs#L354) serves to track 'is it plutus data encoded?' with types.
+[PIsData](https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Builtin.hs#L354) serves to track 'is it Plutus data encoded?' with types.
 
 ```haskell
 newtype PAsData (a :: PType) (s :: S) = PAsData (Term s a)
@@ -355,7 +355,7 @@ autogen/LambdaBuffers/Example
 autogen/LambdaBuffers/Example/Plutarch.hs
 ```
 
-> The name of the generated library `lbf-plutarch-example-api` is set in the [Nix build file][./plutarch/build.nix#L67].
+> The name of the generated library `lbf-plutarch-example-api` is set in the ./plutarch/build.nix Nix build file.
 
 However, it's not expected for users to need to do this. If you have any issue please reach out.
 

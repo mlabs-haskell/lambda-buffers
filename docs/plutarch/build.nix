@@ -40,7 +40,7 @@
 
           exactDeps = true;
 
-          nativeBuildInputs = config.settings.shell.tools ++ [config.packages.lbf-plutus-to-plutarch];
+          nativeBuildInputs = config.settings.shell.tools ++ [ config.packages.lbf-plutus-to-plutarch ];
 
           tools = {
             cabal = { };

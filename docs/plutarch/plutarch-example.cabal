@@ -82,7 +82,7 @@ common common-language
   default-language:   Haskell2010
 
 executable plutarch-example
-  import:          common-language
+  import:         common-language
   build-depends:
     , base                      >=4.16
     , lbf-plutarch-example-api
@@ -93,5 +93,5 @@ executable plutarch-example
     , plutarch-extra
     , text                      >=1.2
 
-  hs-source-dirs:  app
-  main-is:         Example.hs
+  hs-source-dirs: app
+  main-is:        Example.hs
