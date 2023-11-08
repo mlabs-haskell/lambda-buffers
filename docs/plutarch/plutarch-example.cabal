@@ -94,5 +94,4 @@ executable plutarch-example
     , text                      >=1.2
 
   hs-source-dirs:  app
-  exposed-modules: Main
   main-is:         Example.hs
