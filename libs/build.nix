@@ -253,8 +253,10 @@
             modules = [
               (_: {
                 packages = {
-                  allComponent.doHoogle = true;
-                  allComponent.doHaddock = true;
+                  #allComponent.doHoogle = true;
+                  #allComponent.doHaddock = true;
+
+                  # lbf-prelude.configureFlags = [ "-f-dev" ];
                 };
               })
             ];
@@ -267,9 +269,17 @@
 
               nativeBuildInputs = config.settings.shell.tools ++ [
                 config.packages.lbf-plutus-to-plutarch
+                config.packages.lbf-prelude-to-haskell
+                config.packages.lbf-plutus-to-haskell
               ];
 
-              additional = ps: [ ps.lbf-prelude-plutarch ps.lbf-plutus-plutarch ps.lbr-plutarch ps.plutus-tx ps.plutus-ledger-api ];
+              additional = ps: [
+                ps.lbf-prelude-plutarch
+                ps.lbf-plutus-plutarch
+                ps.lbr-plutarch
+                ps.plutus-tx
+                ps.plutus-ledger-api
+              ];
 
               tools = {
                 cabal = { };

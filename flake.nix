@@ -31,6 +31,7 @@
         ./pre-commit.nix
         ./hercules-ci.nix
         ./docs/build.nix
+        ./docs/plutarch/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
         ./libs/build.nix

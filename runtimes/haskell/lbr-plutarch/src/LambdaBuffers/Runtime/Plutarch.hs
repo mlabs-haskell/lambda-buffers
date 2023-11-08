@@ -16,16 +16,12 @@ module LambdaBuffers.Runtime.Plutarch (
   PMaybe (..),
   pcon,
   PList (..),
-  plistCase,
-  plistCons,
-  plistNil,
   plistFrom,
 ) where
 
 import Data.Functor.Const (Const)
 import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
-import LambdaBuffers.Runtime.Plutarch.LamVal (pfromPlutusDataPTryFrom)
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
 import Plutarch (
   PType,
@@ -49,23 +45,16 @@ import Plutarch.Builtin (
   PBuiltinList (PCons, PNil),
   PData,
   PIsData (pdataImpl, pfromDataImpl),
+  pasList,
   pdata,
  )
 import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
-import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PTryFrom, pdcons, pdnil, pfromData, pif, ptryFrom)
+import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PListLike, PTryFrom, pdcons, pdnil, pfromData, pif, ptryFrom)
 import Plutarch.Prelude qualified as Pl
 import Plutarch.Reducible (Reduce)
 import Plutarch.TryFrom (PTryFrom (PTryFromExcess, ptryFrom'))
 import Plutarch.Unsafe (punsafeCoerce)
-
-{- | PList because PBuiltinList misses `PAsData` on its constituents which causes type errors when used.
-TODO(bladyjoker): Upstream these changes or fix PBuiltinList.
--}
-newtype PList (a :: PType) (s :: S)
-  = PList (Term s (PBuiltinList (PAsData a)))
-  deriving stock (Generic)
-  deriving anyclass (Pl.PShow)
 
 -- | PAssetClass missing from Plutarch.
 type PAssetClass = Plutarch.Api.V1.PTuple Plutarch.Api.V1.PCurrencySymbol Plutarch.Api.V1.PTokenName
@@ -166,10 +155,10 @@ instance PlutusType (PEither a b) where
       (const perror)
       pd
 
-instance PlutusType (PList a) where
-  type PInner (PList a) = (PBuiltinList (PAsData a))
-  pcon' (PList x) = x
-  pmatch' x f = f (PList x)
+-- instance PlutusType (PList a) where
+--   type PInner (PList a) = (PBuiltinList (PAsData a))
+--   pcon' (PList x) = x
+--   pmatch' x f = f (PList x)
 
 instance PlutusType (PFoo a) where
   type PInner (PFoo a) = PData
@@ -272,20 +261,6 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) whe
                 )
           )
           (const perror)
-          (const perror)
-          (const perror)
-          pd
-      , ()
-      )
-
-instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (PList a)) where
-  type PTryFromExcess PData (PAsData (PList a)) = Const ()
-  ptryFrom' pd f =
-    f
-      ( LamVal.casePlutusData
-          (const $ const perror)
-          ( \xs -> pcon $ PList $ Pl.pmap # pfromPlutusDataPTryFrom # xs
-          )
           (const perror)
           (const perror)
           pd
@@ -675,10 +650,6 @@ instance PIsData (PEither a b) where
   pdataImpl = punsafeCoerce
   pfromDataImpl = punsafeCoerce
 
-instance PIsData (PList a) where
-  pdataImpl = punsafeCoerce
-  pfromDataImpl = punsafeCoerce
-
 instance PEq (PFoo a) where
   (#==) l r = pdata l #== pdata r
 
@@ -688,26 +659,56 @@ instance PEq (PMaybe a) where
 instance PEq (PEither a b) where
   (#==) l r = pdata l #== pdata r
 
-instance PEq (PList a) where
-  (#==) l r = Pl.plistEquals # Pl.pto l # Pl.pto r
-
 pcon :: (PlutusType a, PIsData a) => a s -> Term s (PAsData a)
 pcon = pdata . Pl.pcon
 
-{- | PListLike instance was a problem for PList, so this is done instead.
-
-TODO(bladyjoker): Upstream with PList and plan to remove.
+{- | PList because PBuiltinList misses `PAsData` on its constituents which causes type errors when used.
+TODO(bladyjoker): Upstream these changes or fix PBuiltinList.
 -}
-plistCase :: (PIsData a) => Term s (a :--> PList a :--> r) -> Term s r -> Term s (PList a) -> Term s r
-plistCase consCase nilCase ls = pmatch (Pl.pto ls) $ \case
-  Pl.PCons x xs -> consCase # Pl.pfromData x # Pl.pcon (PList xs)
-  Pl.PNil -> nilCase
+newtype PList (a :: PType) (s :: S)
+  = PList (Term s (PBuiltinList (PAsData a)))
+  deriving stock (Generic)
+  deriving anyclass (Pl.PShow)
 
-plistCons :: PIsData a => Term s (a :--> (PList a :--> PList a))
-plistCons = phoistAcyclic $ plam $ \x xs -> Pl.pcon $ PList (Pl.pcons # Pl.pdata x # Pl.pto xs)
+instance PlutusType (PList a) where
+  type PInner (PList a) = PData
+  pcon' (PList xs) = LamVal.toPlutusData $ pdata $ Pl.pmap # plam LamVal.toPlutusData # xs
+  pmatch' pd f = f $ PList (punsafeCoerce $ pasList # pd)
 
-plistNil :: Term s (PList a)
-plistNil = Pl.pcon $ PList $ Pl.pcon Pl.PNil
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PList a) where
+  type PTryFromExcess PData (PList a) = Const ()
+  ptryFrom' = ptryFromPAsData
 
-plistFrom :: PIsData a => [Term s a] -> Term s (PList a)
-plistFrom = foldr (\x -> (#) (plistCons # x)) plistNil
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (PList a)) where
+  type PTryFromExcess PData (PAsData (PList a)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs ->
+              pcon $ PList $ Pl.pmap # plam (LamVal.pfromPlutusDataPTryFrom #) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PIsData (PList a) where
+  pdataImpl = punsafeCoerce
+  pfromDataImpl = punsafeCoerce
+
+instance PEq (PList a) where
+  (#==) l r = Pl.pdata l #== Pl.pdata r
+
+instance PListLike PList where
+  type PElemConstraint PList a = PIsData a
+  pelimList consCase nilCase ls = pmatch ls $ \case
+    PList ls' -> pmatch ls' $ \case
+      PCons x xs -> consCase (pfromData x) (Pl.pcon (PList xs))
+      PNil -> nilCase
+  pcons = phoistAcyclic $ plam $ \x xs -> pmatch xs (\(PList xs') -> Pl.pcon $ PList $ Pl.pcon (PCons (pdata x) xs'))
+  pnil = Pl.pcon $ PList (Pl.pcon PNil)
+
+plistFrom :: (PListLike l, Pl.PElemConstraint l a) => [Term s a] -> Term s (l a)
+plistFrom = foldr (\x -> (#) (Pl.pcons # x)) Pl.pnil

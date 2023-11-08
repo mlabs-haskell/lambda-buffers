@@ -44,7 +44,7 @@ tests =
     , ignoreTestBecause "TODO(#131): Plutarch codegen: Recursive data type support" $ forallGoldens @HlFoo.GInt @PlFoo.GInt "Foo.GInt" 1
     , forallGoldens @(HlPrelude.Maybe HlPrelude.Bool) @(PlPrelude.Maybe PlPrelude.Bool) "Prelude.Maybe" 2
     , forallGoldens @(HlPrelude.Either HlPrelude.Bool HlPrelude.Bool) @(PlPrelude.Either PlPrelude.Bool PlPrelude.Bool) "Prelude.Either" 2
-    , ignoreTestBecause "TODO(bladyjoker): PList test fails because `#==` triggers the PData instance PEq and not `PBuiltinList` which is its inner." $ forallGoldens @(HlPrelude.List HlPrelude.Bool) @(PlPrelude.List PlPrelude.Bool) "Prelude.List" 3
+    , forallGoldens @(HlPrelude.List HlPrelude.Bool) @(PlPrelude.List PlPrelude.Bool) "Prelude.List" 3
     , forallGoldens @HlPlutus.Address @PlPlutus.Address "PlutusV1.Address" 7
     , forallGoldens @HlPlutus.AssetClass @PlPlutus.AssetClass "PlutusV1.AssetClass" 3
     , forallGoldens @HlPlutus.Bytes @PlPlutus.Bytes "PlutusV1.Bytes" 2
