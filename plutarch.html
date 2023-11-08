@@ -1,0 +1,501 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>LambdaBuffers for Plutarch - Lambda Buffers documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="plutarch.html" class="active"><strong aria-hidden="true">5.</strong> LambdaBuffers for Plutarch</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">6.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">7.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">8.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">9.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">10.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">11.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">12.</strong> Comparison matrix</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Lambda Buffers documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="lambdabuffers-for-plutarch"><a class="header" href="#lambdabuffers-for-plutarch">LambdaBuffers for Plutarch</a></h1>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus">Plutarch</a> is a typed eDSL in Haskell for writing efficient Plutus Core validators.</p>
+<p>LambdaBuffers creates Plutarch type definitions and associated Plutarch type class implementations for <a href="#plutustype">PlutusType</a>, <a href="#pisdata">PIsData</a> and <a href="#pshow">PShow</a> classes.</p>
+<p>Additionally, when instructed by a LambdaBuffers <code>derive</code> statement type class implementations for <a href="#peq">PEq</a> and <a href="#ptryfrom">PTryFrom</a> are also printed.</p>
+<p>A small example:</p>
+<pre><code class="language-shell">❯ nix develop github:mlabs-haskell/lambda-buffers#dev-plutarch
+❯ cat &gt; Example.lbf
+module Example
+
+import Prelude
+import Plutus.V1 (PlutusData, AssetClass)
+
+record Example a = {
+  foo : AssetClass,
+  bar : a
+  }
+
+derive Eq (Example a)
+derive Json (Example a)
+derive PlutusData (Example a)
+
+❯ lbf-plutus-to-plutarch Example.lbf
+[lbf][INFO] Compilation OK
+[lbf][INFO] Codegen OK
+
+❯ find autogen/
+autogen/
+autogen/build.json
+autogen/LambdaBuffers
+autogen/LambdaBuffers/Example
+autogen/LambdaBuffers/Example/Plutarch.hs
+</code></pre>
+<p>For a full example see <a href="#example">Example</a>.</p>
+<h2 id="lambdabuffers-modules"><a class="header" href="#lambdabuffers-modules">LambdaBuffers modules</a></h2>
+<p>Writing .lbf schemas with API types intended for Plutarch backend will typically use the following LambdaBuffers schema modules:</p>
+<ol>
+<li><a href="../libs/lbf-prelude/Prelude.lbf">Prelude</a>,</li>
+<li><a href="../libs/lbf-plutus/Plutus/V1.lbf">Plutus.V1</a>,</li>
+<li><a href="../libs/lbf-plutus/Plutus/V2.lbf">Plutus.V2</a>.</li>
+</ol>
+<p>Take a look at <a href="./plutarch/api/Example.lbf">Example.lbf</a> schema as an example.</p>
+<h2 id="haskell-libraries"><a class="header" href="#haskell-libraries">Haskell libraries</a></h2>
+<p>The necessary LambdaBuffers runtime libraries a typical Plutarch project needs when working with LambdaBuffers:</p>
+<ol>
+<li><a href="../runtimes/haskell/lbr-plutarch">lbr-plutarch</a> a Haskell runtime library necessary for working with <code>lbf-xyz</code> libraries.</li>
+<li><a href="../libs/lbf-prelude">lbf-prelude-plutarch</a> that contains the <a href="../libs/lbf-prelude">LambdaBuffers Prelude</a> schema library generated by LambdaBuffers.</li>
+<li><a href="../libs/lbf-plutus">lbf-plutus-plutarch</a> that contains the <a href="../libs/lbf-plutus">LambdaBuffers Plutus</a> schema library generated by LambdaBuffers.</li>
+</ol>
+<p>Of course, additional imports for Plutarch libraries are also necessary <a href="https://github.com/Plutonomicon/plutarch-plutus">plutarch</a> and optionally <a href="https://github.com/Plutonomicon/plutarch-plutus/plutarch-extra">plutarch-extra</a>.</p>
+<p>For a full example see <a href="#example">Example</a>.</p>
+<h3 id="inspecting-the-generated-output"><a class="header" href="#inspecting-the-generated-output">Inspecting the generated output</a></h3>
+<p>You can inspect the generated libraries using Nix:</p>
+<pre><code class="language-shell">❯ nix build .#lbf-prelude-plutarch
+❯ find result/autogen/
+result/autogen/
+result/autogen/LambdaBuffers
+result/autogen/LambdaBuffers/Prelude
+result/autogen/LambdaBuffers/Prelude/Plutarch.hs
+
+❯ nix build .#lbf-plutus-plutarch
+❯ find result/autogen/
+result/autogen/
+result/autogen/LambdaBuffers
+result/autogen/LambdaBuffers/Plutus
+result/autogen/LambdaBuffers/Plutus/V2
+result/autogen/LambdaBuffers/Plutus/V2/Plutarch.hs
+result/autogen/LambdaBuffers/Plutus/V1
+result/autogen/LambdaBuffers/Plutus/V1/Plutarch.hs
+</code></pre>
+<h2 id="haskell-modules"><a class="header" href="#haskell-modules">Haskell modules</a></h2>
+<p>The set of imports a Plutarch program using LambdaBuffers would typically need is the following:</p>
+<pre><code class="language-haskell">import LambdaBuffers.Plutus.V1.Plutarch ()
+import LambdaBuffers.Plutus.V2.Plutarch ()
+import LambdaBuffers.Prelude.Plutarch ()
+import LambdaBuffers.Runtime.Plutarch ()
+import Plutarch ()
+import Plutarch.Prelude ()
+import Plutarch.Api.V1 ()
+import Plutarch.Api.V2 ()
+</code></pre>
+<ol>
+<li>LambdaBuffers.Plutus.V1.Plutarch is a module generated from <a href="../libs/lbf-plutus/Plutus/V1.lbf">Plutus.V1</a> LambdaBuffers schema and provided by the <a href="../libs/lbf-plutus">lbf-plutus-plutarch</a> runtime library.</li>
+<li>LambdaBuffers.Plutus.V2.Plutarch is a module generated from <a href="../libs/lbf-plutus/Plutus/V2.lbf">Plutus.V2</a> LambdaBuffers schema and provided by the <a href="../libs/lbf-plutus">lbf-plutus-plutarch</a> runtime library.</li>
+<li>LambdaBuffers.Prelude.Plutarch is a module generated from <a href="../libs/lbf-prelude/Prelude.lbf">Prelude</a> LambdaBuffers schema and provided by the <a href="../libs/lbf-prelude">lbf-prelude-plutarch</a> runtime library.</li>
+<li>LambdaBuffers.Runtime.Plutarch is a module provided by the <a href="../runtimes/haskell/lbr-plutarch">lbr-plutarch</a> runtime library.</li>
+</ol>
+<blockquote>
+<p>Generated Plutarch module for a LambdaBuffers schema <code>Foo/Bar.lbf</code> (ie. <code>Foo.Bar</code>) is stored at <code>Foo/Bar/Plutarch.hs</code></p>
+</blockquote>
+<h2 id="restrictions"><a class="header" href="#restrictions">Restrictions</a></h2>
+<p>Plutarch backend doesn't support recursive type definitions unfortunately (see #131).</p>
+<p>The following will not work:</p>
+<pre><code class="language-lbf">module ModuleWithRecursiveType
+
+import Prelude (Eq)
+import Plutus.V1 (PlutusData)
+
+sum List a = Cons a (List a) | Nil
+derive Eq (List a)
+derive PlutusData (List a)
+</code></pre>
+<p>Additionally, LambdaBuffers record types are mapped to Plutarch product types:</p>
+<pre><code class="language-lbf">module ModuleWithARecordType
+
+import Prelude (Eq, Integer, Bool)
+import Plutus.V1 (PlutusData)
+
+record Foo = {
+  bar: Integer,
+  baz: Bool
+  }
+derive Eq Foo
+derive PlutusData Foo
+</code></pre>
+<p>Essentially, the record definitions are 'degraded' into product types such that the order of product fields is the order of record fields as they are defined at source.</p>
+<p>For example the <code>Foo</code> record defined above would have no difference in Plutarch if it was defined as product <code>Foo</code> below:</p>
+<pre><code class="language-lbf">prod Foo = Integer Bool
+</code></pre>
+<p>The Plutarch backend doesn't support the use of <code>Char</code>, <code>Text</code>, <code>Bytes</code> (there's a Plutus.V1.Bytes), <code>Set</code> and <code>Map</code> (there's a Plutus.V1.Map) from <a href="../libs/lbf-prelude/Prelude.lbf">LambdaBuffers Prelude</a> module.</p>
+<h2 id="plutarch"><a class="header" href="#plutarch">Plutarch</a></h2>
+<h3 id="type-definition-mapping"><a class="header" href="#type-definition-mapping">Type definition mapping</a></h3>
+<p>Plutarch backend supports all types from the <a href="../libs/lbf-plutus">LambdaBuffers Plutus</a> schema library, as to enable full featured Plutus script development.</p>
+<p>Additionally, it also supports some types from the <a href="../libs/lbf-prelude">LambdaBuffers Prelude</a> schema library, namely <code>Bool</code>, <code>Integer</code>, <code>Maybe</code>, <code>Either</code> and <code>List</code>.</p>
+<pre><code class="language-lbf">module Foo
+
+sum Sum = Some a | Nothing
+
+record Record a = {
+  foo : Bytes,
+  bar: a
+}
+
+prod Product a = Bytes a
+</code></pre>
+<p>translates into Plutarch equivalent:</p>
+<pre><code class="language-haskell">module LambdaBuffers.Foo.Plutarch (Sum(..), Record(..), Product(..)) where
+
+import qualified LambdaBuffers.Plutus.V1.Plutarch
+import qualified LambdaBuffers.Prelude.Plutarch
+import qualified LambdaBuffers.Runtime.Plutarch
+import qualified Plutarch
+import qualified Plutarch.Bool
+import qualified Plutarch.Builtin
+import qualified Plutarch.Internal.PlutusType
+import qualified Plutarch.Prelude
+import qualified Plutarch.Show
+import qualified Plutarch.TryFrom
+import qualified Plutarch.Unsafe
+
+data Sum (a :: PType) (s :: Plutarch.S) = Sum'Some (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+                                  | Sum'Nothing
+  deriving stock GHC.Generics.Generic
+  deriving anyclass Plutarch.Show.PShow
+
+data Record (a :: PType) (s :: Plutarch.S) = Record (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+  deriving stock GHC.Generics.Generic
+  deriving anyclass Plutarch.Show.PShow
+
+data Product (a :: PType) (s :: Plutarch.S) = Product (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+  deriving stock GHC.Generics.Generic
+  deriving anyclass Plutarch.Show.PShow
+</code></pre>
+<h3 id="type-class-implementations"><a class="header" href="#type-class-implementations">Type class implementations</a></h3>
+<p>Plutarch has a couple of fundamental type classes essential to its operations namely, <code>PlutusType</code>, <code>PIsData</code>, <code>PTryFrom</code> and <code>PEq</code>.</p>
+<h4 id="plutustype"><a class="header" href="#plutustype">PlutusType</a></h4>
+<p>Printing an implementation for this class for a particular type is governed by <code>derive Plutus.V1.PlutusData &lt;type&gt;</code> statements in .lbf schemas.</p>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Internal/PlutusType.hs#L56">PlutusType</a> serves to (de)construct Plutarch eDSL terms from Haskell 'native' terms.</p>
+<pre><code class="language-haskell">class PlutusType (a :: PType) where
+  type PInner a :: PType
+  pcon' :: forall s. a s -&gt; Term s (PInner a)
+  pmatch' :: forall s b. Term s (PInner a) -&gt; (a s -&gt; Term s b) -&gt; Term s b
+</code></pre>
+<p>Additionally, Plutarch enables specifying terms to have different 'value' representation, like Scott encoded terms or PlutusData encoded terms.
+This is what the <code>PInner</code> type family is used to specify.
+LambdaBuffers only cares about <code>PlutusData</code> encoded terms since we're using it to specify Plutus datum structures.</p>
+<p>The task is to generate a <code>pcon'</code> implementation such that we can construct Plutarch <code>Term</code>s that have some <code>PInner</code> representation of type <code>PData</code>, from Haskell 'native' values.
+The <code>pcon'</code> implementation must match the LB Plutus PlutusData encoding class standard, and so we'll use the same 'to Plutus data' specification to generate <code>pcon'</code> implementations.</p>
+<p>Constructing is always only one part of the story, there's also deconstruction that is captured by the <code>pmatch'</code> method.
+This method serves to 'pattern match' on a value that was already constructed using <code>pcon'</code> and dispatch said value to a provided continuation function.
+It's important to note that there's a subtle but important distinction to be made between the <code>ptryFrom</code> and <code>pmatch'</code> methods.
+<code>pmatch'</code> assumes that the value it receives is indeed correct, as it was constructed using the <code>pcon'</code> method.
+This means that <code>pmatch'</code> should never error, and if it does that means the implementation is wrong.
+<code>ptryFrom</code> is different, as it takes some <code>PData</code> and tries to parse it into a <code>PType</code>, but can fail.</p>
+<p>However, in LambdaBuffers, both of these methods follow the exact same logical pattern, and they correspond and can be generated using the <code>from Plutus data</code> specification.</p>
+<h4 id="ptryfrom"><a class="header" href="#ptryfrom">PTryFrom</a></h4>
+<p>Printing an implementation for this class for a particular type is governed by <code>derive Plutus.V1.PlutusData &lt;type&gt;</code> statements in .lbf schemas.</p>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/TryFrom.hs#L73">PTryFrom</a> serves specify how <code>PData</code> is 'parsed' into a Plutarch type.
+N
+It's generally used to convert between Plutarch types, but that's a fairly general use case, and we generally use this class in a very narrow form to specify how <code>PData</code> is 'parsed' into a Plutarch type.</p>
+<pre><code class="language-haskell">class PSubtype a b =&gt; PTryFrom (a :: PType) (b :: PType) where
+  type PTryFromExcess a b :: PType
+  type PTryFromExcess a b = PTryFromExcess a (PInner b)
+  ptryFrom' :: forall s r. Term s a -&gt; ((Term s b, Reduce (PTryFromExcess a b s)) -&gt; Term s r) -&gt; Term s r
+  default ptryFrom' :: forall s r. (PTryFrom a (PInner b), PTryFromExcess a b ~ PTryFromExcess a (PInner b)) =&gt; Term s a -&gt; ((Term s b, Reduce (PTryFromExcess a b s)) -&gt; Term s r) -&gt; Term s r
+  ptryFrom' opq f = ptryFrom @(PInner b) @a opq \(inn, exc) -&gt; f (punsafeCoerce inn, exc)
+</code></pre>
+<p>There's some additionally features exhibited by this type class, most noteworthy is the <code>PTryFromExcess</code> type family that enables us specify the part of the structure that wasn't parsed and is left unexamined.
+It's a form of optimization that becomes very important if you have a very complex data type such as <code>ScriptContext</code> from the <code>plutus-ledger-api</code>.</p>
+<p>Apparently, a good intuition pump for this 'excess' business is that of a <a href="https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf">zipper</a>.
+We focus on a certain part of a data structure, only ever providing links to other parts that are left un-examined.</p>
+<p>LambdaBuffers doesn't use this feature and sets the <code>PTryFromExcess</code> to a unit type, signaling that nothing is left unexamined.</p>
+<h4 id="pisdata"><a class="header" href="#pisdata">PIsData</a></h4>
+<p>Printing an implementation for this class for a particular type is governed by <code>derive Plutus.V1.PlutusData &lt;type&gt;</code> statements in .lbf schemas.</p>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Builtin.hs#L354">PIsData</a> serves to track 'is it Plutus data encoded?' with types.</p>
+<pre><code class="language-haskell">newtype PAsData (a :: PType) (s :: S) = PAsData (Term s a)
+
+class PIsData a where
+  pfromDataImpl :: Term s (PAsData a) -&gt; Term s a
+  default pfromDataImpl :: PIsData (PInner a) =&gt; Term s (PAsData a) -&gt; Term s a
+  pfromDataImpl x = punsafeDowncast $ pfromDataImpl (punsafeCoerce x :: Term _ (PAsData (PInner a)))
+
+  pdataImpl :: Term s a -&gt; Term s PData
+  default pdataImpl :: PIsData (PInner a) =&gt; Term s a -&gt; Term s PData
+  pdataImpl x = pdataImpl $ pto x
+</code></pre>
+<pre><code class="language-haskell">instance PIsData FooTrivial where
+  pdataImpl = punsafeCoerce
+  pfromDataImpl = punsafeCoerce
+
+instance PEq FooTrivial where
+  (#==) = \l r -&gt; pdata l #== pdata r
+</code></pre>
+<blockquote>
+<p>Due to generated types having a <code>PAsData</code> attached to them, be ready to use <code>pdata</code> and <code>pfromData</code> to switch between forms.</p>
+</blockquote>
+<h4 id="peq"><a class="header" href="#peq">PEq</a></h4>
+<p>Printing an implementation for this class for a particular type is governed by <code>derive Prelude.Eq &lt;type&gt;</code> statements in .lbf schemas.</p>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Bool.hs#L74">PEq</a> serves to track provide equality checks to Plutarch types.</p>
+<pre><code class="language-haskell">class PEq t where
+  (#==) :: Term s t -&gt; Term s t -&gt; Term s PBool
+  default (#==) ::
+    (PGeneric t, PlutusType t, All2 PEq (PCode t)) =&gt;
+    Term s t -&gt;
+    Term s t -&gt;
+    Term s PBool
+  a #== b = gpeq # a # b
+
+infix 4 #==
+</code></pre>
+<blockquote>
+<p>We don't generate an implementation from the LambdaBuffers 'equality spec', rather we delegate the equality check to the underlying 'PData' representations that all generated types have for performance.</p>
+</blockquote>
+<h4 id="pshow"><a class="header" href="#pshow">PShow</a></h4>
+<p>All generated types have a PShow instance derived using the internal Plutarch deriving mechanism.</p>
+<p><a href="https://github.com/Plutonomicon/plutarch-plutus/blob/c14ad83479706566fe22e7b7b50b696043326c8f/Plutarch/Show.hs#L52">PShow</a> serves to stringify Plutarch types which is very useful during debugging.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Let work through the <a href="./plutarch">Plutarch example</a> available in the repo.</p>
+<p>First, please check the <a href="getting-started.html">Getting started</a> guide on how to prepare to work with the repo and setup Nix.</p>
+<p>Let's see what we have here:</p>
+<pre><code class="language-shell">lambda-buffers/docs/plutarch ❯ find
+.
+./build.nix
+./cabal.project
+./hie.yaml
+./plutarch-example.cabal
+./app
+./app/Example.hs
+./api
+./api/Example.lbf
+./.envrc
+</code></pre>
+<p>The salient bits we should focus on are:</p>
+<ol>
+<li>The LambdaBuffers .lbf schema in <a href="./plutarch/api/Example.lbf">./api/Example.lbf</a> that describes the API types used by our little program,</li>
+<li>The Haskell Plutarch program in <a href="./plutarch/app/Example.hs">./app/Example.hs</a> that works with the API types.</li>
+</ol>
+<p>To inspect the generated library:</p>
+<pre><code class="language-shell">lambda-buffers/docs/plutarch ❯ nix build .#lbf-plutarch-example-api
+lambda-buffers/docs/plutarch ❯ find autogen/
+autogen/
+autogen/build.json
+autogen/LambdaBuffers
+autogen/LambdaBuffers/Example
+autogen/LambdaBuffers/Example/Plutarch.hs
+</code></pre>
+<blockquote>
+<p>The name of the generated library <code>lbf-plutarch-example-api</code> is set in the ./plutarch/build.nix Nix build file.</p>
+</blockquote>
+<p>However, it's not expected for users to need to do this. If you have any issue please reach out.</p>
+<p>Inspecting the <a href="./plutarch/plutarch-example.cabal">Cabal file</a> shows the standard runtime libraries we need:</p>
+<pre><code class="language-shell">lambda-buffers/docs/plutarch ❯ cabal info .
+* plutarch-example-0.1.0.0 (program)
+    Synopsis:      LambdaBuffers Plutarch example
+    Versions available: [ Not available from server ]
+    Versions installed: [ Unknown ]
+    Homepage:      [ Not specified ]
+    Bug reports:   [ Not specified ]
+    License:       NONE
+    Author:        Drazen Popovic
+    Maintainer:    bladyjoker@gmail.com
+    Source repo:   [ Not specified ]
+    Executables:   plutarch-example
+    Flags:         dev
+    Dependencies:  base &gt;=4.16, lbf-plutarch-example-api, lbf-plutus-plutarch,
+                   lbf-prelude-plutarch, lbr-plutarch, plutarch, plutarch-extra,
+                   text &gt;=1.2
+    Cached:        Yes
+</code></pre>
+<p>Run the program:</p>
+<pre><code class="language-shell">lambda-buffers/docs/plutarch ❯ cabal run
+&quot;Friends, peace and love!!!&quot;
+</code></pre>
+<p>Take a look at the <a href="./plutarch/app/Example.hs">Example.hs</a> to see how generated types are used, namely how they are constructed with <code>pcon</code> and deconstructed with <code>pmatch</code> (or <code>pmatchC</code>).</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="purescript.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="design.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="purescript.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="design.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
