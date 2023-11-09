@@ -16,11 +16,8 @@
       url = "github:plutonomicon/plutarch-plutus";
       flake = false;
     };
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    rust-overlay.follows = "crane/rust-overlay";
+    crane.url = "github:ipetkov/crane";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
   outputs = inputs@{ flake-parts, ... }:
