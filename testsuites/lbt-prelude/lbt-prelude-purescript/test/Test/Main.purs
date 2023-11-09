@@ -3,7 +3,6 @@ module Test.Main
   ) where
 
 import Prelude
-
 import Data.Either (either)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
@@ -18,7 +17,8 @@ main :: Effect Unit
 main = do
   goldenJson <- GoldenJson.tests
   either (fail <<< show) (launchAff_)
-    ( map (const unit) <$> runSpecT defaultConfig [ consoleReporter ] do
-        describe "LambdaBuffers Prelude runtime tests" do
-          goldenJson
+    ( map (const unit)
+        <$> runSpecT defaultConfig [ consoleReporter ] do
+            describe "LambdaBuffers Prelude runtime tests" do
+              goldenJson
     )
