@@ -15,7 +15,7 @@ _:
           packageLockOnly = true;
           packages =
             [
-              pkgs.nodejs_16
+              pkgs.nodejs-18_x
               pkgs.bashInteractive
               pkgs.fd
             ] ++ config.settings.shell.tools;

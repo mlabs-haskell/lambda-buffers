@@ -6,7 +6,7 @@ import Aeson as Aeson
 import Data.Array (fromFoldable)
 import Data.Array as Array
 import Data.ArrayBuffer.Types (Uint8Array)
-import Data.BigInt (BigInt)
+import JS.BigInt (BigInt)
 import Data.Binary.Base64 as Base64
 import Data.Either (Either(..), either, note)
 import Data.Map (Map)

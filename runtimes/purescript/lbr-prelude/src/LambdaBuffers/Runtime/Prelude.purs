@@ -5,7 +5,7 @@ module LambdaBuffers.Runtime.Prelude
   ) where
 
 import Data.Array (filter, uncons)
-import Data.BigInt (BigInt)
+import JS.BigInt (BigInt)
 import Data.Eq ((==))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
