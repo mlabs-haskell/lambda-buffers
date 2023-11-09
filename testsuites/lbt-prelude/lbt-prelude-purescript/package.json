@@ -14,9 +14,8 @@
   "author": "Drazen Popovic",
   "license": "MIT",
   "dependencies": {
-    "@mlabs-haskell/json-bigint": " 1.0.0",
+    "@mlabs-haskell/json-bigint": "2.0.0",
     "base64-js": "^1.5.1",
-    "big-integer": "1.6.51",
     "bignumber.js": "^9.1.1",
     "bufferutil": "4.0.5",
     "node-polyfill-webpack-plugin": "1.1.4"
