@@ -6,11 +6,11 @@
           inherit system;
           src = ./.;
           crane = inputs.crane;
-          crateName = "lbr-prelude";
+          crateName = "lbr-prelude-derive";
           extraSources = [
             {
-              name = "lbr-prelude-derive";
-              path = ../lbr-prelude-derive;
+              name = "lbr-prelude";
+              path = ../lbr-prelude;
             }
           ];
         };

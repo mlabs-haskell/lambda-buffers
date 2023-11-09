@@ -9,6 +9,7 @@
       overlayAttrs = {
         extras = {
           purescriptFlake = import ./flake-purescript.nix pkgs;
+          rustFlake = import ./flake-rust.nix pkgs;
           haskellData = import ./haskell-data.nix pkgs;
         };
       };
