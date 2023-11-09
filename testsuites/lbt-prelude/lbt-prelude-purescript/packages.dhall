@@ -173,5 +173,4 @@ let additions =
         }
       }
 
-in  (upstream // additions)
-  with parsing.version = "v7.0.1"
+in  upstream // additions

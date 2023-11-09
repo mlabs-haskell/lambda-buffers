@@ -1,5 +1,6 @@
 {
     "name": "lbr-plutus",
+    "type": "module",
     "version": "0.1.0",
     "description": "LambdaBuffers Plutus runtime",
     "main": "app/index.js",
@@ -32,7 +33,11 @@
         "html-webpack-plugin": "5.5.0",
         "webpack": "^5.88.0",
         "webpack-cli": "4.10",
-        "webpack-dev-server": "^4.15.1"
+        "webpack-dev-server": "^4.15.1",
+        "esbuild": "0.18.11",
+        "esbuild-plugin-polyfill-node": "^0.3.0",
+        "esbuild-plugin-wasm": "^1.1.0",
+        "node-polyfill-webpack-plugin": "2.0.1"
     },
     "prettier": {
         "arrowParens": "avoid"

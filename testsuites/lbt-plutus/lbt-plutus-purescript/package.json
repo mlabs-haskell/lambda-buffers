@@ -1,5 +1,6 @@
 {
     "name": "lbt-plutus",
+    "type": "module",
     "version": "0.1.0",
     "description": "LambdaBuffers Plutus test suite",
     "main": "app/index.js",
@@ -9,7 +10,7 @@
     "scripts": {
         "test": "spago test",
         "bundle": "spago bundle-module -m Test.Main --to dist/output.js",
-        "test-web": "spago bundle-module -m Test.Main --to dist/output.js && BROWSER_RUNTIME=1 webpack serve --static-directory app/"
+        "test-web": "nix -L --keep-failed build .#purescript:lbt-plutus:esbundle-browser && mkdir -p dist && cp result/index.js dist/output.js && BROWSER_RUNTIME=1 webpack serve --static-directory app/"
     },
     "author": "Drazen Popovic",
     "license": "MIT",
@@ -32,7 +33,11 @@
         "html-webpack-plugin": "5.5.0",
         "webpack": "^5.88.0",
         "webpack-cli": "4.10",
-        "webpack-dev-server": "^4.15.1"
+        "webpack-dev-server": "^4.15.1",
+        "esbuild": "0.18.11",
+        "esbuild-plugin-polyfill-node": "^0.3.0",
+        "esbuild-plugin-wasm": "^1.1.0",
+        "node-polyfill-webpack-plugin": "2.0.1"
     },
     "prettier": {
         "arrowParens": "avoid"
