@@ -4,7 +4,7 @@
   , "arraybuffer"
   , "arraybuffer-types"
   , "arrays"
-  , "bigints"
+  , "js-bigints"
   , "cardano-transaction-lib"
   , "control"
   , "effect"

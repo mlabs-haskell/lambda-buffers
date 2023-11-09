@@ -146,29 +146,6 @@ let additions =
         , repo = "https://github.com/mlabs-haskell/purescript-aeson.git"
         , version = "v2.0.0"
         }
-      , sequences =
-        { dependencies =
-          [ "arrays"
-          , "assert"
-          , "console"
-          , "effect"
-          , "lazy"
-          , "maybe"
-          , "newtype"
-          , "nonempty"
-          , "partial"
-          , "prelude"
-          , "profunctor"
-          , "psci-support"
-          , "quickcheck"
-          , "quickcheck-laws"
-          , "tuples"
-          , "unfoldable"
-          , "unsafe-coerce"
-          ]
-        , repo = "https://github.com/hdgarrood/purescript-sequences"
-        , version = "v3.0.2"
-        }
       , mote =
         { dependencies = [ "these", "transformers", "arrays" ]
         , repo = "https://github.com/garyb/purescript-mote"
