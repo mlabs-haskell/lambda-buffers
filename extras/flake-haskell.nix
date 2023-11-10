@@ -7,11 +7,12 @@ let
     , dependencies ? [ ]
     , devShellTools ? [ ]
     , devShellHook
+    , devShellAdditionalPackages ? [ ]
     , index-state
     , compiler-nix-name
     , modules ? [ ]
     }: {
-      inherit src name dependencies devShellTools devShellHook index-state compiler-nix-name modules;
+      inherit src name dependencies devShellTools devShellHook index-state compiler-nix-name modules devShellAdditionalPackages;
     };
 
   hsNixProj = opts: with (haskellNixOpts opts);
@@ -35,6 +36,7 @@ let
           withHoogle = true;
           exactDeps = true;
           nativeBuildInputs = devShellTools;
+          additional = devShellAdditionalPackages;
 
           tools = {
             cabal = { };
