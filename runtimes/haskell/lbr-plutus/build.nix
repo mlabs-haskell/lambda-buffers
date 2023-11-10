@@ -1,54 +1,23 @@
-{ inputs, ... }:
+_:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.overlayAttrs.extras.haskellPlutusFlake {
         src = ./.;
 
         name = "lbr-plutus";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [ "${config.packages.lbr-prelude-haskell-src}" ];
+        dependencies = [ "${config.packages.lbr-prelude-haskell-src}" ];
 
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lbr-plutus.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        inputs.mlabs-tooling.lib.moduleMod
-        project
-      ]).flake { };
 
     in
-
     {
-      devShells.dev-lbr-plutus-haskell = hsNixFlake.devShell;
+      devShells.dev-lbr-plutus-haskell = hsFlake.devShell;
 
       packages = {
 
@@ -59,11 +28,11 @@
           installPhase = "ln -s $src $out";
         };
 
-        lbr-plutus-haskell-lib = hsNixFlake.packages."lbr-plutus:lib:lbr-plutus";
-        lbr-plutus-haskell-tests = hsNixFlake.packages."lbr-plutus:test:tests";
+        lbr-plutus-haskell-lib = hsFlake.packages."lbr-plutus:lib:lbr-plutus";
+        lbr-plutus-haskell-tests = hsFlake.packages."lbr-plutus:test:tests";
       };
 
-      inherit (hsNixFlake) checks;
+      inherit (hsFlake) checks;
 
     };
 }

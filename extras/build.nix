@@ -11,6 +11,8 @@
           purescriptFlake = import ./flake-purescript.nix pkgs;
           rustFlake = import ./flake-rust.nix pkgs;
           haskellData = import ./haskell-data.nix pkgs;
+          haskellFlake = import ./flake-haskell.nix pkgs;
+          haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgs;
         };
       };
 

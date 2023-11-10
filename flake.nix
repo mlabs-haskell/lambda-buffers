@@ -16,6 +16,9 @@
     };
     crane.url = "github:ipetkov/crane";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+    cardano-haskell-packages.flake = false;
+    plutus.url = "github:input-output-hk/plutus";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -53,6 +56,6 @@
         ./experimental/build.nix
       ];
       debug = true;
-      systems = [ "x86_64-linux" "x86_64-darwin" ];
+      systems = [ "x86_64-linux" ];
     };
 }

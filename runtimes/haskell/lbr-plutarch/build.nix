@@ -1,55 +1,30 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.overlayAttrs.extras.haskellPlutusFlake {
         src = ./.;
 
         name = "lbr-plutarch";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
-        extraHackage = [ "${inputs.plutarch}" "${inputs.plutarch}/plutarch-extra" ];
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
 
-              # Enable strict compilation
-              lbr-plutarch.configureFlags = [ "-f-dev" ];
-            };
-          })
+        dependencies = [
+          "${inputs.plutarch}"
+          "${inputs.plutarch}/plutarch-extra"
         ];
 
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        inputs.mlabs-tooling.lib.moduleMod
-        project
-      ]).flake { };
 
     in
 
     {
-      devShells.dev-lbr-plutarch = hsNixFlake.devShell;
+      devShells.dev-lbr-plutarch = hsFlake.devShell;
 
       packages = {
-        lbr-plutarch-lib = hsNixFlake.packages."lbr-plutarch:lib:lbr-plutarch";
+        lbr-plutarch-lib = hsFlake.packages."lbr-plutarch:lib:lbr-plutarch";
         lbr-plutarch-src = pkgs.stdenv.mkDerivation {
           name = "lbr-plutus-haskell-src";
           src = ./.;
@@ -57,10 +32,10 @@
           installPhase = "ln -s $src $out";
         };
 
-        lbr-plutarch-tests = hsNixFlake.packages."lbr-plutarch:test:tests";
+        lbr-plutarch-tests = hsFlake.packages."lbr-plutarch:test:tests";
       };
 
-      checks.check-lbr-plutarch = hsNixFlake.checks."lbr-plutarch:test:tests";
+      checks.check-lbr-plutarch = hsFlake.checks."lbr-plutarch:test:tests";
 
     };
 }

@@ -1,53 +1,22 @@
-{ inputs, ... }:
+_:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.overlayAttrs.extras.haskellFlake {
         src = ./.;
 
         name = "lbr-prelude";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [ ];
-
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lbr-prelude.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        project
-      ]).flake { };
 
     in
 
     {
-      devShells.dev-lbr-prelude-haskell = hsNixFlake.devShell;
+      devShells.dev-lbr-prelude-haskell = hsFlake.devShell;
 
       packages = {
 
@@ -58,9 +27,9 @@
           installPhase = "ln -s $src $out";
         };
 
-      } // hsNixFlake.packages;
+      } // hsFlake.packages;
 
-      inherit (hsNixFlake) checks;
+      inherit (hsFlake) checks;
 
     };
 }
