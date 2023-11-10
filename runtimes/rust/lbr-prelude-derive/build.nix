@@ -2,7 +2,7 @@
   perSystem = { system, config, ... }:
     let
       rustFlake =
-        config.overlayAttrs.extras.rustFlake {
+        config.lbf-nix.rustFlake {
           inherit system;
           src = ./.;
           crane = inputs.crane;

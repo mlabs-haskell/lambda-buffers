@@ -2,7 +2,7 @@ _:
 {
   perSystem = { config, pkgs, ... }:
     let
-      hsFlake = config.overlayAttrs.extras.haskellPlutusFlake {
+      hsFlake = config.lbf-nix.haskellPlutusFlake {
         src = ./.;
 
         name = "lbr-plutus";

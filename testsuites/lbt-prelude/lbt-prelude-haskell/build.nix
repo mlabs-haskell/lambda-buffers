@@ -2,7 +2,7 @@ _:
 {
   perSystem = { config, ... }:
     let
-      hsFlake = config.overlayAttrs.extras.haskellFlake {
+      hsFlake = config.lbf-nix.haskellFlake {
         src = ./.;
 
         name = "lbt-prelude-haskell";

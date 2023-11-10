@@ -2,7 +2,7 @@ _:
 {
   perSystem = { config, pkgs, ... }:
     let
-      hsFlake = config.overlayAttrs.extras.haskellFlake {
+      hsFlake = config.lbf-nix.haskellFlake {
         src = ./.;
 
         name = "lambda-buffers-frontend";
@@ -68,7 +68,7 @@ _:
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude ];
             gen = "${config.packages.lbg-haskell}/bin/lbg-haskell";
@@ -83,7 +83,7 @@ _:
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-haskell}/bin/lbg-haskell";
@@ -101,7 +101,7 @@ _:
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir autogen;
           mkdir .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-plutarch}/bin/lbg-plutarch";
@@ -119,7 +119,7 @@ _:
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude ];
             gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";
@@ -134,7 +134,7 @@ _:
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";

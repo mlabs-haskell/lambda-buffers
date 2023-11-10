@@ -12,7 +12,7 @@
         installPhase = "ln -s $src $out";
       };
 
-      lbf-prelude-haskell = config.overlayAttrs.lbf-nix.lbfHaskell {
+      lbf-prelude-haskell = config.lbf-nix.lbfHaskell {
         name = "lbf-prelude";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
@@ -20,7 +20,7 @@
         configs = [ "${config.packages.codegen-configs}/haskell-prelude-base.json" ];
       };
 
-      lbf-prelude-purescript = config.overlayAttrs.lbf-nix.lbfPurescript {
+      lbf-prelude-purescript = config.lbf-nix.lbfPurescript {
         name = "lbf-prelude";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
@@ -28,7 +28,7 @@
         configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
       };
 
-      lbf-prelude-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+      lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
@@ -43,7 +43,7 @@
         installPhase = "ln -s $src $out";
       };
 
-      lbf-plutus-haskell = config.overlayAttrs.lbf-nix.lbfHaskell {
+      lbf-plutus-haskell = config.lbf-nix.lbfHaskell {
         name = "lbf-plutus";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
@@ -62,7 +62,7 @@
         ];
       };
 
-      lbf-plutus-purescript = config.overlayAttrs.lbf-nix.lbfPurescript {
+      lbf-plutus-purescript = config.lbf-nix.lbfPurescript {
         name = "lbf-plutus";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
@@ -75,7 +75,7 @@
         ];
       };
 
-      lbf-plutus-plutarch = config.overlayAttrs.lbf-nix.lbfPlutarch' {
+      lbf-plutus-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-plutus-plutarch";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];

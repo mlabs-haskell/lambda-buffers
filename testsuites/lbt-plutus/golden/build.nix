@@ -3,7 +3,7 @@ _:
   perSystem = { pkgs, config, ... }:
     {
       packages = {
-        lbt-plutus-golden-haskell = config.overlayAttrs.extras.haskellData {
+        lbt-plutus-golden-haskell = config.lbf-nix.haskellData {
           srcs = [ ./. ];
           cabalDataPatterns = [ "**/*.json" ];
           cabalPackageName = "lbt-plutus-golden-data";
