@@ -2,8 +2,9 @@
   "name": "lbr-prelude",
   "version": "1.0.0",
   "description": "LambdaBuffers Prelude runtime",
+  "lockfileVersion": 2,
   "exports": {
-      "./Prelude.js": "./dist/LambdaBuffers/Prelude.js",
+      ".": "./dist/LambdaBuffers/Prelude.js",
       "./package.json": "./package.json"
   },
   "type": "module",

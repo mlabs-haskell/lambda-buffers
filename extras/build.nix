@@ -10,6 +10,7 @@
         extras = {
           purescriptFlake = import ./flake-purescript.nix pkgs;
           rustFlake = import ./flake-rust.nix pkgs;
+          typescriptFlake = import ./flake-typescript.nix pkgs;
           haskellData = import ./haskell-data.nix pkgs;
         };
       };
