@@ -1,20 +1,18 @@
 #!/bin/bash
 function lbf {
-    cabal run lbf -- $@
+    cabal run lbf -- "$@"
 }
 
 function lbf-build {
-    DIR=$1
-    lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug --import-path $1 --gen-dir "$1/autogen" "$1/$2"
+    lbf build --compiler "$(which lbc)" --gen "$(which lbg-haskell)" --debug --import-path "$1" --gen-dir "$1/autogen" "$1/$2"
 }
 
 function lbf-build2 {
-    DIR=$1
-    lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug --import-path $1 --gen-dir "$1/autogen" "$1/$2"
+    lbf build --compiler "$(which lbc)" --gen "$(which lbg-haskell)" --debug --import-path "$1" --gen-dir "$1/autogen" "$1/$2"
 }
 
 function lbf-form {
-    lbf format -i -f $@
+    lbf format -i -f "$@"
 }
 
 lbf-build duplicate_tydef A.lbf
@@ -23,7 +21,7 @@ lbf-build imported_not_found A.lbf
 lbf-build invalid_module_filepath A.lbf
 lbf-build module_not_found A.lbf
 lbf-build module_parse_error A.lbf
-lbf build --compiler `which lbc` --gen `which lbg-haskell` --debug \
+lbf build --compiler "$(which lbc)" --gen "$(which lbg-haskell)" --debug \
     --import-path multiple_modules_found \
     --import-path multiple_modules_found/another_import_path \
     --gen-dir multiple_modules_found/autogen \
