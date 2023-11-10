@@ -56,8 +56,8 @@ import Data.Array as Array
 import Data.ArrayBuffer.Typed (fromArray) as ArrayBuffer
 import Data.ArrayBuffer.Typed.Gen (genUint8) as ArrayBuffer
 import Data.ArrayBuffer.Types (Uint8Array)
-import Data.BigInt (BigInt)
-import Data.BigInt as BigInt
+import JS.BigInt (BigInt)
+import JS.BigInt as BigInt
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (unwrap, wrap)
 import Data.Traversable (traverse)

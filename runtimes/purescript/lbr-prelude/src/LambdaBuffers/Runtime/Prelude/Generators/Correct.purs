@@ -4,8 +4,8 @@ import Prelude
 import Control.Monad.Gen.Common as MGC
 import Data.Array (fromFoldable)
 import Data.ArrayBuffer.Typed.Gen (genTypedArray, genUint8) as ArrayBuffer
-import Data.BigInt (BigInt)
-import Data.BigInt as BigInt
+import JS.BigInt (BigInt)
+import JS.BigInt as BigInt
 import Data.Either (Either)
 import Data.Map (Map)
 import Data.Map as Map

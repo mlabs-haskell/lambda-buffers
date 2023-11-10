@@ -35,7 +35,7 @@ caseInt :: Purs.QValName
 caseInt = normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseInt"
 
 fromInt :: Purs.QValName
-fromInt = normalValName "bigint" "Data.BigInt" "fromInt"
+fromInt = normalValName "js-bigints" "JS.BigInt" "fromInt"
 
 printCtorCase :: MonadPrint m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
 printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do

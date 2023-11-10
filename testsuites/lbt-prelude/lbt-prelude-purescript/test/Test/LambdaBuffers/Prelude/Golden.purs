@@ -24,8 +24,8 @@ module Test.LambdaBuffers.Prelude.Golden
   ) where
 
 import Prelude
-import Data.BigInt (BigInt, pow)
-import Data.BigInt as BigInt
+import JS.BigInt (BigInt, pow)
+import JS.BigInt as BigInt
 import Data.Either (Either(..))
 import Data.Enum (toEnumWithDefaults)
 import Data.Map (Map)

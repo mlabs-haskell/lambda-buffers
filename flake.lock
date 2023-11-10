@@ -3463,17 +3463,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1687772868,
-        "narHash": "sha256-87oDH5rKhflPTonifUrXD9F1ABrmgnIsxzmIV3bmwqQ=",
+        "lastModified": 1699525353,
+        "narHash": "sha256-m/DqG0rK3piDthCZXzacbWHcogzomDbcN8VvzsVCczw=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "41a574c3fef82e5107cfef5505eca52d811b4dd7",
+        "rev": "fbf56b2965752ced05fd7f3a2d7ae6778e566df9",
         "type": "github"
       },
       "original": {
         "owner": "plutonomicon",
-        "ref": "bladyjoker/lambda-buffers-catalyst",
         "repo": "cardano-transaction-lib",
+        "rev": "fbf56b2965752ced05fd7f3a2d7ae6778e566df9",
         "type": "github"
       }
     },
@@ -4740,17 +4740,17 @@
     "easy-purescript-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1666686938,
-        "narHash": "sha256-/UOLRdnEhIOcxcm5ouOipOiSgHRzJde0ccAx4xB1dnU=",
+        "lastModified": 1679861376,
+        "narHash": "sha256-LLqaLPJNiap2U8I77K5XVPGJA/Be30Z8lyGOyYXmBlc=",
         "owner": "justinwoo",
         "repo": "easy-purescript-nix",
-        "rev": "da7acb2662961fd355f0a01a25bd32bf33577fa8",
+        "rev": "0c10ff170461aed0c336f5c21ed0f430c2c3574b",
         "type": "github"
       },
       "original": {
         "owner": "justinwoo",
         "repo": "easy-purescript-nix",
-        "rev": "da7acb2662961fd355f0a01a25bd32bf33577fa8",
+        "rev": "0c10ff170461aed0c336f5c21ed0f430c2c3574b",
         "type": "github"
       }
     },

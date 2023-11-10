@@ -105,8 +105,8 @@ in  upstream
 -------------------------------
 -}
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.14.5-20220224/packages.dhall
-        sha256:67cc3d4f0e8fb72bb1413ba94ddd72a3ceb0783eb725e3b22ad7568b3b581163
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20230105/packages.dhall
+        sha256:3e9fbc9ba03e9a1fcfd895f65e2d50ee2f5e86c4cd273f3d5c841b655a0e1bda
 
 let additions =
       { aeson =
@@ -117,8 +117,6 @@ let additions =
           , "argonaut-core"
           , "arrays"
           , "bifunctors"
-          , "bigints"
-          , "bignumber"
           , "const"
           , "control"
           , "effect"
@@ -127,6 +125,7 @@ let additions =
           , "foldable-traversable"
           , "foreign-object"
           , "integers"
+          , "js-bigints"
           , "lists"
           , "maybe"
           , "mote"
@@ -136,7 +135,6 @@ let additions =
           , "prelude"
           , "quickcheck"
           , "record"
-          , "sequences"
           , "spec"
           , "strings"
           , "tuples"
@@ -146,35 +144,7 @@ let additions =
           , "untagged-union"
           ]
         , repo = "https://github.com/mlabs-haskell/purescript-aeson.git"
-        , version = "bfd8f4dcd0522a076320f9dc710c24817438e02e"
-        }
-      , sequences =
-        { dependencies =
-          [ "arrays"
-          , "assert"
-          , "console"
-          , "effect"
-          , "lazy"
-          , "maybe"
-          , "newtype"
-          , "nonempty"
-          , "partial"
-          , "prelude"
-          , "profunctor"
-          , "psci-support"
-          , "quickcheck"
-          , "quickcheck-laws"
-          , "tuples"
-          , "unfoldable"
-          , "unsafe-coerce"
-          ]
-        , repo = "https://github.com/hdgarrood/purescript-sequences"
-        , version = "v3.0.2"
-        }
-      , mote =
-        { dependencies = [ "these", "transformers", "arrays" ]
-        , repo = "https://github.com/garyb/purescript-mote"
-        , version = "v1.1.0"
+        , version = "v2.0.0"
         }
       , bignumber =
         { dependencies =
@@ -189,116 +159,22 @@ let additions =
           , "tuples"
           ]
         , repo = "https://github.com/mlabs-haskell/purescript-bignumber"
-        , version = "705923edd892a3397b90d28ce7db9a7181dcd599"
+        , version = "760d11b41ece31b8cdd3c53349c5c2fd48d3ff89"
         }
-      , cardano-transaction-lib =
-        { dependencies =
-          [ "aeson"
-          , "aff"
-          , "aff-promise"
-          , "aff-retry"
-          , "affjax"
-          , "argonaut"
-          , "argonaut-codecs"
-          , "arraybuffer-types"
-          , "arrays"
-          , "avar"
-          , "bifunctors"
-          , "bigints"
-          , "bignumber"
-          , "checked-exceptions"
-          , "console"
-          , "control"
-          , "crypto"
-          , "datetime"
-          , "debug"
-          , "effect"
-          , "either"
-          , "encoding"
-          , "enums"
-          , "exceptions"
-          , "foldable-traversable"
-          , "foreign"
-          , "foreign-object"
-          , "formatters"
-          , "functions"
-          , "gen"
-          , "heterogeneous"
-          , "http-methods"
-          , "identity"
-          , "integers"
-          , "js-date"
-          , "lattice"
-          , "lists"
-          , "math"
-          , "maybe"
-          , "medea"
-          , "media-types"
-          , "monad-logger"
-          , "mote"
-          , "newtype"
-          , "noble-secp256k1"
-          , "node-buffer"
-          , "node-child-process"
-          , "node-fs"
-          , "node-fs-aff"
-          , "node-path"
-          , "node-process"
-          , "node-readline"
-          , "node-streams"
-          , "nonempty"
-          , "now"
-          , "numbers"
-          , "optparse"
-          , "ordered-collections"
-          , "orders"
-          , "parallel"
-          , "partial"
-          , "posix-types"
-          , "prelude"
-          , "profunctor"
-          , "profunctor-lenses"
-          , "purescript-toppokki"
-          , "quickcheck"
-          , "quickcheck-combinators"
-          , "quickcheck-laws"
-          , "rationals"
-          , "record"
-          , "refs"
-          , "safe-coerce"
-          , "spec"
-          , "spec-quickcheck"
-          , "strings"
-          , "stringutils"
-          , "tailrec"
-          , "these"
-          , "transformers"
-          , "tuples"
-          , "typelevel"
-          , "typelevel-prelude"
-          , "uint"
-          , "undefined"
-          , "unfoldable"
-          , "untagged-union"
-          , "variant"
-          , "web-storage"
-          , "web-html"
-          ]
-        , repo = "https://github.com/Plutonomicon/cardano-transaction-lib.git"
-        , version = "167bc59308d00be43c01706e03f8c0e7993b6d69"
+      , properties =
+        { dependencies = [ "prelude", "console" ]
+        , repo = "https://github.com/Risto-Stevcev/purescript-properties.git"
+        , version = "v0.2.0"
         }
-      , purescript-toppokki =
-        { dependencies =
-          [ "prelude"
-          , "record"
-          , "functions"
-          , "node-http"
-          , "aff-promise"
-          , "node-buffer"
-          , "node-fs-aff"
-          ]
-        , repo = "https://github.com/firefrorefiddle/purescript-toppokki"
-        , version = "6983e07bf0aa55ab779bcef12df3df339a2b5bd9"
+      , lattice =
+        { dependencies = [ "prelude", "console", "properties" ]
+        , repo = "https://github.com/Risto-Stevcev/purescript-lattice.git"
+        , version = "v0.3.0"
+        }
+      , mote =
+        { dependencies = [ "these", "transformers", "arrays" ]
+        , repo = "https://github.com/garyb/purescript-mote"
+        , version = "v1.1.0"
         }
       , medea =
         { dependencies =
@@ -342,18 +218,21 @@ let additions =
           , "unordered-collections"
           , "unsafe-coerce"
           ]
-        , repo = "https://github.com/juspay/medea-ps.git"
-        , version = "8b215851959aa8bbf33e6708df6bd683c89d1a5a"
+        , repo = "https://github.com/mlabs-haskell/medea-ps.git"
+        , version = "9a03a7b7b983fc1d21c4e1fef4cf0748b42f3734"
         }
-      , properties =
-        { dependencies = [ "prelude", "console" ]
-        , repo = "https://github.com/Risto-Stevcev/purescript-properties.git"
-        , version = "v0.2.0"
-        }
-      , lattice =
-        { dependencies = [ "prelude", "console", "properties" ]
-        , repo = "https://github.com/Risto-Stevcev/purescript-lattice.git"
-        , version = "v0.3.0"
+      , toppokki =
+        { dependencies =
+          [ "prelude"
+          , "record"
+          , "functions"
+          , "node-http"
+          , "aff-promise"
+          , "node-buffer"
+          , "node-fs-aff"
+          ]
+        , repo = "https://github.com/mlabs-haskell/purescript-toppokki"
+        , version = "5992e93396a734c980ef61c74df5b6ab46108920"
         }
       , noble-secp256k1 =
         { dependencies =
@@ -367,9 +246,108 @@ let additions =
           ]
         , repo =
             "https://github.com/mlabs-haskell/purescript-noble-secp256k1.git"
-        , version = "710c15c48c5afae5e0623664d982a587ff2bd177"
+        , version = "a3c0f67e9fdb0086016d7aebfad35d09a08b4ecd"
+        }
+      , js-bigints =
+        { dependencies = [ "integers", "maybe", "prelude" ]
+        , repo = "https://github.com/purescript-contrib/purescript-js-bigints"
+        , version = "36a7d8ac75a7230043ae511f3145f9ed130954a9"
+        }
+      , cardano-transaction-lib =
+        { dependencies =
+          [ "aeson"
+          , "aff"
+          , "aff-promise"
+          , "aff-retry"
+          , "affjax"
+          , "argonaut"
+          , "argonaut-codecs"
+          , "arraybuffer-types"
+          , "arrays"
+          , "avar"
+          , "bifunctors"
+          , "js-bigints"
+          , "bignumber"
+          , "checked-exceptions"
+          , "console"
+          , "control"
+          , "crypto"
+          , "datetime"
+          , "debug"
+          , "effect"
+          , "either"
+          , "encoding"
+          , "enums"
+          , "exceptions"
+          , "foldable-traversable"
+          , "foreign"
+          , "foreign-object"
+          , "formatters"
+          , "functions"
+          , "gen"
+          , "heterogeneous"
+          , "http-methods"
+          , "identity"
+          , "integers"
+          , "js-date"
+          , "lattice"
+          , "lists"
+          , "maybe"
+          , "medea"
+          , "media-types"
+          , "monad-logger"
+          , "mote"
+          , "newtype"
+          , "noble-secp256k1"
+          , "node-buffer"
+          , "node-child-process"
+          , "node-fs"
+          , "node-fs-aff"
+          , "node-path"
+          , "node-process"
+          , "node-readline"
+          , "node-streams"
+          , "nonempty"
+          , "now"
+          , "numbers"
+          , "optparse"
+          , "ordered-collections"
+          , "orders"
+          , "parallel"
+          , "partial"
+          , "posix-types"
+          , "prelude"
+          , "profunctor"
+          , "profunctor-lenses"
+          , "toppokki"
+          , "quickcheck"
+          , "quickcheck-combinators"
+          , "quickcheck-laws"
+          , "random"
+          , "rationals"
+          , "record"
+          , "refs"
+          , "safe-coerce"
+          , "spec"
+          , "spec-quickcheck"
+          , "strings"
+          , "stringutils"
+          , "tailrec"
+          , "these"
+          , "transformers"
+          , "tuples"
+          , "typelevel"
+          , "typelevel-prelude"
+          , "uint"
+          , "unfoldable"
+          , "untagged-union"
+          , "variant"
+          , "web-html"
+          , "web-storage"
+          ]
+        , repo = "https://github.com/Plutonomicon/cardano-transaction-lib"
+        , version = "fbf56b2965752ced05fd7f3a2d7ae6778e566df9"
         }
       }
 
-in  (upstream // additions)
-  with parsing.version = "v7.0.1"
+in  upstream // additions

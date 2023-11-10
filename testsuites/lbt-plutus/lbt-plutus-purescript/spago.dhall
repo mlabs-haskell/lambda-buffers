@@ -6,7 +6,7 @@
   , "arraybuffer-types"
   , "arrays"
   , "b64"
-  , "bigints"
+  , "js-bigints"
   , "cardano-transaction-lib"
   , "control"
   , "effect"

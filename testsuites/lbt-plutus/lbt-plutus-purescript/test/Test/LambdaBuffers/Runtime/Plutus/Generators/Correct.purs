@@ -20,8 +20,8 @@ module Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
 
 import Prelude
 import Control.Alternative ((<|>))
-import Data.BigInt (BigInt)
-import Data.BigInt as BigInt
+import JS.BigInt (BigInt)
+import JS.BigInt as BigInt
 import Data.Either (Either(Left, Right))
 import Data.Maybe (Maybe(Nothing, Just))
 import LambdaBuffers.Days (Day(Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay(FreeDay), WorkDay(WorkDay))
