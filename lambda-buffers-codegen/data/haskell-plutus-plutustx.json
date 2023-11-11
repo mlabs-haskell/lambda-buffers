@@ -178,13 +178,6 @@
         "PlutusTx",
         "FromData"
       ]
-    ],
-    "Prelude.Eq": [
-      [
-        "plutus-tx",
-        "PlutusTx.Eq",
-        "Eq"
-      ]
     ]
   }
 }

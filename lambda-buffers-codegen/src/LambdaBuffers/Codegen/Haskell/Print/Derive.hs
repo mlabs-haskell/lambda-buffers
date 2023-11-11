@@ -80,9 +80,9 @@ lvEqBuiltinsPlutusTx :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.Va
 lvEqBuiltinsPlutusTx =
   Map.fromList
     [ ("eq", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkValueName "=="))
-    , ("and", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "&&"))
-    , ("true", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "True"))
-    , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
+    , ("and", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "&&"))
+    , ("true", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "True"))
+    , ("false", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "False"))
     ]
 
 printDeriveEqPlutusTx :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
