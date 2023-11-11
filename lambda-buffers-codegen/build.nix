@@ -1,58 +1,28 @@
-{ inputs, ... }:
+_:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.lbf-nix.haskellFlake {
         src = ./.;
 
         name = "lambda-buffers-codegen";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [
+        dependencies = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
           "${config.packages.lambda-buffers-compiler-src}"
         ];
 
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lambda-buffers-codegen.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        project
-      ]).flake { };
-
     in
 
     {
-      devShells.dev-codegen = hsNixFlake.devShell;
+      devShells.dev-codegen = hsFlake.devShell;
 
       packages = {
 
@@ -62,9 +32,9 @@
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
-        lambda-buffers-codegen-lib = hsNixFlake.packages."lambda-buffers-codegen:lib:lambda-buffers-codegen";
-        lambda-buffers-codegen-tests = hsNixFlake.packages."lambda-buffers-codegen:test:tests";
-        lambda-buffers-codegen-cli = hsNixFlake.packages."lambda-buffers-codegen:exe:lbg";
+        lambda-buffers-codegen-lib = hsFlake.packages."lambda-buffers-codegen:lib:lambda-buffers-codegen";
+        lambda-buffers-codegen-tests = hsFlake.packages."lambda-buffers-codegen:test:tests";
+        lambda-buffers-codegen-cli = hsFlake.packages."lambda-buffers-codegen:exe:lbg";
         lbg = config.packages.lambda-buffers-codegen-cli;
         lbg-haskell = pkgs.writeShellScriptBin "lbg-haskell" ''
           ${config.packages.lbg}/bin/lbg gen-haskell $@
@@ -85,7 +55,7 @@
 
       };
 
-      inherit (hsNixFlake) checks;
+      inherit (hsFlake) checks;
 
     };
 }

@@ -5,7 +5,6 @@
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
-    mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
     ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=fbf56b2965752ced05fd7f3a2d7ae6778e566df9";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
@@ -16,6 +15,9 @@
     };
     crane.url = "github:ipetkov/crane";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+    cardano-haskell-packages.flake = false;
+    plutus.url = "github:input-output-hk/plutus";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -53,6 +55,6 @@
         ./experimental/build.nix
       ];
       debug = true;
-      systems = [ "x86_64-linux" "x86_64-darwin" ];
+      systems = [ "x86_64-linux" ];
     };
 }

@@ -3,7 +3,7 @@ _:
   perSystem = { pkgs, config, ... }:
 
     let
-      pursFlake = config.overlayAttrs.extras.purescriptFlake {
+      pursFlake = config.lbf-nix.purescriptFlake {
         src = ./.;
         projectName = "lbt-prelude";
         strictComp = true;

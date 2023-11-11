@@ -1,57 +1,27 @@
-{ inputs, ... }:
+_:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.lbf-nix.haskellFlake {
         src = ./.;
 
         name = "lambda-buffers-compiler";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [
+        dependencies = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
         ];
 
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lambda-buffers-compiler.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        project
-      ]).flake { };
-
     in
 
     {
-      devShells.dev-compiler = hsNixFlake.devShell;
+      devShells.dev-compiler = hsFlake.devShell;
 
       packages = {
 
@@ -62,14 +32,14 @@
           installPhase = "ln -s $src $out";
         };
 
-        lambda-buffers-compiler-lib = hsNixFlake.packages."lambda-buffers-compiler:lib:lambda-buffers-compiler";
-        lambda-buffers-compiler-tests = hsNixFlake.packages."lambda-buffers-compiler:test:tests";
-        lambda-buffers-compiler-cli = hsNixFlake.packages."lambda-buffers-compiler:exe:lbc";
+        lambda-buffers-compiler-lib = hsFlake.packages."lambda-buffers-compiler:lib:lambda-buffers-compiler";
+        lambda-buffers-compiler-tests = hsFlake.packages."lambda-buffers-compiler:test:tests";
+        lambda-buffers-compiler-cli = hsFlake.packages."lambda-buffers-compiler:exe:lbc";
         lbc = config.packages.lambda-buffers-compiler-cli;
 
       };
 
-      inherit (hsNixFlake) checks;
+      inherit (hsFlake) checks;
 
     };
 }
