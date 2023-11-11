@@ -1,6 +1,9 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module LambdaBuffers.Runtime.Plutus.PlutusData (casePlutusData) where
 
 import PlutusTx (BuiltinData)
+import PlutusTx.Base (const)
 import PlutusTx.Builtins (matchData)
 import PlutusTx.Integer qualified
 
