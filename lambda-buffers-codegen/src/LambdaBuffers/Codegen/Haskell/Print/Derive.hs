@@ -106,9 +106,9 @@ lvPlutusDataBuiltins =
     , ("integerData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkI"))
     , ("constrData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkConstr"))
     , ("listData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkList"))
-    , ("succeedParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Just"))
-    , ("failParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Nothing"))
-    , ("bindParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ">>="))
+    , ("succeedParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Maybe", H.MkValueName "Just"))
+    , ("failParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Maybe", H.MkValueName "Nothing"))
+    , ("bindParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Prelude", H.MkValueName ">>="))
     ]
 
 toPlutusDataClassMethodName :: H.ValueName
