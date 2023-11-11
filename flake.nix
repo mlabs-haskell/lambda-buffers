@@ -3,7 +3,6 @@
   inputs = {
     haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
@@ -11,7 +10,6 @@
     ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=fbf56b2965752ced05fd7f3a2d7ae6778e566df9";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    purifix.url = "github:purifix/purifix";
     plutarch = {
       url = "github:plutonomicon/plutarch-plutus";
       flake = false;
