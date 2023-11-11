@@ -12,7 +12,7 @@
   };
 
   # Sets the above set option to system ones.
-  config.lbf-nix = lib.genAttrs config.systems (system: (config.perSystem { inherit system; }).lbf-nix);
+  config.lbf-nix = lib.genAttrs config.systems (system: (config.perSystem system).lbf-nix);
 
   # Makes `lib.x86_64-linux.xyz` available
   config.flake.lib = config.lbf-nix;
