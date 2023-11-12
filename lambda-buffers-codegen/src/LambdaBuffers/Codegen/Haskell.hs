@@ -39,4 +39,10 @@ hsPrintModuleEnv =
     HsSyntax.printModName
     HsDerive.hsClassImplPrinters
     HsPrint.printTyDef
-    ["NoImplicitPrelude"]
+    ["NoImplicitPrelude", "NoPolyKinds"] -- NOTE(bladyjoker): NoPolyKinds is needed for PlutusTx compiler, quite safe.
+    [ "-fno-ignore-interface-pragmas" -- NOTE(bladyjoker): All this is necessary for PlutusTx compiler, apparently safe.
+    , "-fno-omit-interface-pragmas"
+    , "-fno-specialise"
+    , "-fno-strictness"
+    , "-fobject-code"
+    ]
