@@ -32,7 +32,7 @@ let
       checks = {
         "purescript:${projectName}:check-nodejs" = purs.runPursTest {
           testMain = "Test.Main";
-          buildInputs = if "shell" ? pursProjOpts then if "packages" ? pursProjOpts.shell then pursProjOpts.shell.packages else [ ] else [ ];
+          buildInputs = if pursProjOpts ? "shell" then if pursProjOpts.shell ? "packages" then pursProjOpts.shell.packages else [ ] else [ ];
         };
       };
 
