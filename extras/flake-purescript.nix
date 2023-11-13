@@ -33,6 +33,7 @@ let
         "purescript:${projectName}:check-nodejs" = purs.runPursTest {
           testMain = "Test.Main";
           buildInputs = if pursProjOpts ? "shell" then if pursProjOpts.shell ? "packages" then pursProjOpts.shell.packages else [ ] else [ ];
+          nodeModules = purs.mkNodeModules { withDevDeps = false; };
         };
       };
 
