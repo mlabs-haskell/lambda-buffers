@@ -3352,17 +3352,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1699525353,
-        "narHash": "sha256-m/DqG0rK3piDthCZXzacbWHcogzomDbcN8VvzsVCczw=",
+        "lastModified": 1699881565,
+        "narHash": "sha256-GtJ+lU1EeA1pNJ0JBFotcncHhqBdJEmmrf9FisqPOOQ=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "fbf56b2965752ced05fd7f3a2d7ae6778e566df9",
+        "rev": "02869ce91023a5c57c836037e84067e4fa90263e",
         "type": "github"
       },
       "original": {
         "owner": "plutonomicon",
+        "ref": "bladyjoker/runpurstest-fix",
         "repo": "cardano-transaction-lib",
-        "rev": "fbf56b2965752ced05fd7f3a2d7ae6778e566df9",
         "type": "github"
       }
     },
