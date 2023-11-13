@@ -30,7 +30,10 @@ let
       };
 
       checks = {
-        "purescript:${projectName}:check" = purs.runPursTest { testMain = "Test.Main"; };
+        "purescript:${projectName}:check-nodejs" = purs.runPursTest {
+          testMain = "Test.Main";
+          buildInputs = if "shell" ? pursProjOpts then if "packages" ? pursProjOpts.shell then pursProjOpts.shell.packages else [ ] else [ ];
+        };
       };
 
       devShell = purs.devShell;
