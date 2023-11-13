@@ -167,6 +167,13 @@
     ]
   },
   "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "plutus-tx",
+        "PlutusTx.Eq",
+        "Eq"
+      ]
+    ],
     "Plutus.V1.PlutusData": [
       [
         "plutus-tx",
@@ -177,13 +184,6 @@
         "plutus-tx",
         "PlutusTx",
         "FromData"
-      ]
-    ],
-    "Prelude.Eq": [
-      [
-        "plutus-tx",
-        "PlutusTx.Eq",
-        "Eq"
       ]
     ]
   }

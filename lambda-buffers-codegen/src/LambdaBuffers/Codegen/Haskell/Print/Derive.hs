@@ -15,7 +15,7 @@ import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, equals, vsep, (<+>))
+import Prettyprinter (Doc, align, equals, hardline, vsep, (<+>))
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
@@ -80,9 +80,9 @@ lvEqBuiltinsPlutusTx :: Map LV.ValueName (H.CabalPackageName, H.ModuleName, H.Va
 lvEqBuiltinsPlutusTx =
   Map.fromList
     [ ("eq", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkValueName "=="))
-    , ("and", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "&&"))
-    , ("true", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "True"))
-    , ("false", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "False"))
+    , ("and", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "&&"))
+    , ("true", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "True"))
+    , ("false", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Bool", H.MkValueName "False"))
     ]
 
 printDeriveEqPlutusTx :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
@@ -93,9 +93,12 @@ printDeriveEqPlutusTx mn iTyDefs mkInstanceDoc ty = do
       case LV.runPrint lvEqBuiltinsPlutusTx (printValueE valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
-          let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
+          let instanceDoc = mkInstanceDoc (align $ printInlineable eqClassMethodName <> hardline <> printValueDef eqClassMethodName implDoc)
           for_ imps Print.importValue
           return instanceDoc
+
+printInlineable :: H.ValueName -> Doc ann
+printInlineable valName = "{-# INLINABLE" <+> H.printHsValName valName <+> "#-}"
 
 lvPlutusDataBuiltins :: Map LV.ValueName H.QValName
 lvPlutusDataBuiltins =
@@ -106,9 +109,9 @@ lvPlutusDataBuiltins =
     , ("integerData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkI"))
     , ("constrData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkConstr"))
     , ("listData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Builtins", H.MkValueName "mkList"))
-    , ("succeedParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Just"))
-    , ("failParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "Nothing"))
-    , ("bindParse", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName ">>="))
+    , ("succeedParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Maybe", H.MkValueName "Just"))
+    , ("failParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Maybe", H.MkValueName "Nothing"))
+    , ("bindParse", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Prelude", H.MkValueName ">>="))
     ]
 
 toPlutusDataClassMethodName :: H.ValueName
@@ -122,7 +125,7 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
       case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
-          let instanceDoc = mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
+          let instanceDoc = mkInstanceDoc (align $ printInlineable toPlutusDataClassMethodName <> hardline <> printValueDef toPlutusDataClassMethodName implDoc)
           for_ imps Print.importValue
           return instanceDoc
 
@@ -143,7 +146,7 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
       case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
-          let instanceDoc = mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
+          let instanceDoc = mkInstanceDoc (align $ printInlineable fromPlutusDataClassMethodName <> hardline <> printValueDef fromPlutusDataClassMethodName implDoc)
           Print.importValue builtinDataToDataRef
           for_ imps Print.importValue
           return instanceDoc

@@ -6,7 +6,7 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
-    ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=fbf56b2965752ced05fd7f3a2d7ae6778e566df9";
+    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=bladyjoker/runpurstest-fix";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     plutarch = {
@@ -55,6 +55,6 @@
         ./experimental/build.nix
       ];
       debug = true;
-      systems = [ "x86_64-linux" ];
+      systems = [ "x86_64-linux" "x86_64-darwin" ];
     };
 }
