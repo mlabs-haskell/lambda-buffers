@@ -7,7 +7,13 @@ pkgs:
   # [ nix derivation for a tarball from `npm pack` ]
   # ```
   # for the the extra dependencies (not included in the `package.json`) for
-  # `node` to execute.
+  # `node` to execute. This will _not_ install the "transitive" dependencies.
+  # 
+  # Loosely, this will `npm install` each of the tarballs in order so its
+  # important that
+  # 
+  #     - The dependencies are sorted topologically i.e., each tarball should
+  #     _only_ depend on packages before it in the list.
   #
   # For example, if one wanted to include `typescript` as a dependency, then
   # one could have
@@ -61,11 +67,11 @@ let
         # Verify that `package.json` and `package-lock.json` exist
         #########################################################
         if ! test -f package.json
-        then { echo "No `package.json` provided"; exit 1; }
+        then { echo 'No `package.json` provided'; exit 1; }
         fi
 
         if ! test -f package-lock.json
-        then { echo "No `package-lock.json` provided. Running `npm install --package-lock-only` may fix this"; exit 1; }
+        then { echo 'No `package-lock.json` provided. Running `npm install --package-lock-only` may fix this'; exit 1; }
         fi
 
         #########################################################
@@ -85,6 +91,7 @@ let
                 (pkgPath: 
                     ''
                         PKG="${pkgPath}"
+                        echo "Installing $PKG..."
                         cp "$PKG" .nix-node-deps/
                         HOME=$TMPDIR npm install --save --package-lock-only ".nix-node-deps/$(basename "$PKG")"
                     ''
@@ -94,15 +101,16 @@ let
 
         }
 
+        #########################################################
+        # Run `node2nix`
+        #########################################################
+        echo 'Running `node2nix`...'
+        node2nix --input package.json --lock package-lock.json ${builtins.concatStringsSep " " extraFlags}
+
         # Reset the permissions for  `package.json` and `package-lock.json` to
         # read only for everyone.
         chmod =444 package.json
         chmod =444 package-lock.json
-
-        #########################################################
-        # Run `node2nix`
-        #########################################################
-        node2nix --input package.json --lock package-lock.json ${builtins.concatStringsSep " " extraFlags}
       '';
 
   node2nixDevelop = node2nixExprs { extraFlags = [ "--development" ]; };
