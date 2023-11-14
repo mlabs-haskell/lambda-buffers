@@ -86,19 +86,18 @@ let
         # dependencies from `nix`.
         mkdir .nix-node-deps/
 
-        ${builtins.concatStringsSep "\n"
-            ( builtins.map
-                (pkgPath: 
+        ${ if builtins.length dependencies == 0 then "" else
+            ''
+                ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
                     ''
-                        PKG="${pkgPath}"
-                        echo "Installing $PKG..."
-                        cp "$PKG" .nix-node-deps/
-                        HOME=$TMPDIR npm install --save --package-lock-only ".nix-node-deps/$(basename "$PKG")"
+                        echo "Copying ${pkgPath}..."
+                        cp "${pkgPath}" .nix-node-deps/
                     ''
-                )
-                dependencies
-            )
+                        )dependencies)}
 
+                echo 'Running `npm install`...'
+                HOME=$TMPDIR npm install --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''".nix-node-deps/$(basename "${pkgPath}")"'') dependencies) }
+            ''
         }
 
         #########################################################
