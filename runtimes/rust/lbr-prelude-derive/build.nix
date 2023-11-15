@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  perSystem = { system, config, ... }:
+  perSystem = { config, ... }:
     let
       rustFlake =
         config.lbf-nix.rustFlake {
