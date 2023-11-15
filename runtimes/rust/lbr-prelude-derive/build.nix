@@ -3,7 +3,6 @@
     let
       rustFlake =
         config.lbf-nix.rustFlake {
-          inherit system;
           src = ./.;
           crane = inputs.crane;
           crateName = "lbr-prelude-derive";
@@ -13,6 +12,7 @@
               path = ../lbr-prelude;
             }
           ];
+          devShellHook = config.settings.shell.hook;
         };
     in
     {

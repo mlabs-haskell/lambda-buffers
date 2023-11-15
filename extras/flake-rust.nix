@@ -1,11 +1,11 @@
 pkgs:
 
-{ crane, src, system, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data" }:
+{ crane, src, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [] }:
 let
   rustWithTools = pkgs.rust-bin.stable.latest.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" ];
   };
-  craneLib = crane.lib.${system}.overrideToolchain rustWithTools;
+  craneLib = crane.lib.${pkgs.system}.overrideToolchain rustWithTools;
 
   # Library source code with extra dependencies attached
   fullSrc = pkgs.stdenv.mkDerivation {
@@ -16,7 +16,7 @@ let
       cp -r $src/* $out
       cd $out
       ${copyExtraSources}
-      ${copyData} 
+      ${copyData}
     '';
   };
   commonArgs = {
@@ -54,9 +54,11 @@ let
 in
 {
   devShells."dev-${crateName}-rust" = craneLib.devShell {
+    packages = devShellTools;
     shellHook = ''
       ${linkExtraSources}
       ${linkData}
+      ${devShellHook}
     '';
   };
 
