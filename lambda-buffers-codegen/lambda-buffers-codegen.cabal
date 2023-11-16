@@ -143,6 +143,15 @@ library
     LambdaBuffers.Codegen.Purescript.Print.Ty
     LambdaBuffers.Codegen.Purescript.Print.TyDef
     LambdaBuffers.Codegen.Purescript.Syntax
+    LambdaBuffers.Codegen.Rust
+    LambdaBuffers.Codegen.Rust.Config
+    LambdaBuffers.Codegen.Rust.Print
+    LambdaBuffers.Codegen.Rust.Print.Derive
+    LambdaBuffers.Codegen.Rust.Print.InstanceDef
+    LambdaBuffers.Codegen.Rust.Print.LamVal
+    LambdaBuffers.Codegen.Rust.Print.MonadPrint
+    LambdaBuffers.Codegen.Rust.Print.Syntax
+    LambdaBuffers.Codegen.Rust.Print.TyDef
 
 executable lbg
   import:          common-language
@@ -168,6 +177,7 @@ executable lbg
     LambdaBuffers.Codegen.Cli.GenHaskell
     LambdaBuffers.Codegen.Cli.GenPlutarch
     LambdaBuffers.Codegen.Cli.GenPurescript
+    LambdaBuffers.Codegen.Cli.GenRust
     Paths_lambda_buffers_codegen
 
   autogen-modules: Paths_lambda_buffers_codegen
