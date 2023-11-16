@@ -20,24 +20,26 @@ data CompileOpts = CompileOpts
 
 makeLenses ''CompileOpts
 
-logInfo :: String -> IO ()
-logInfo msg = putStrLn $ "[lbc][INFO] " <> msg
+logInfo :: FilePath -> String -> IO ()
+logInfo "" msg = putStrLn $ msg <> " [INFO]"
+logInfo fp msg = putStrLn $ fp <> ": " <> msg <> " [INFO]"
 
-logError :: String -> IO ()
-logError msg = putStrLn $ "[lbc][ERROR] " <> msg
+logError :: FilePath -> String -> IO ()
+logError "" msg = putStrLn $ msg <> " [ERROR]"
+logError fp msg = putStrLn $ fp <> ": " <> msg <> " [ERROR]"
 
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
-  logInfo $ "Compiler input at " <> opts ^. input
+  logInfo "" $ "Reading Compiler Input from " <> (opts ^. input)
   compInp <- readCompilerInput (opts ^. input)
   let compOut = runCompiler compInp
   case compOut ^. maybe'error of
     Nothing -> do
-      logInfo "Compilation succeeded"
+      logInfo (opts ^. input) "Compilation succeeded"
     Just _ -> do
-      logError "Compilation failed"
-  logInfo $ "Compiler output at " <> opts ^. output
+      logError (opts ^. input) "Compilation failed"
+  logInfo "" $ "Writing Compiler Output at " <> (opts ^. output)
   writeCompilerOutput (opts ^. output) compOut
 
 readCompilerInput :: FilePath -> IO Input
@@ -51,7 +53,7 @@ readCompilerInput fp = do
       content <- Text.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError $ "Unknown Compiler Input format (wanted .pb or .textproto) " <> ext
+      logError "" $ "Unknown Compiler Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure
 
 writeCompilerOutput :: FilePath -> Output -> IO ()
@@ -61,5 +63,5 @@ writeCompilerOutput fp cr = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
     _ -> do
-      logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+      logError "" $ "Unknown Codegen Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure
