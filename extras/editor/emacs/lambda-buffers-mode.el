@@ -7,7 +7,7 @@
   (haskell-indent-mode)
   (font-lock-add-keywords
    nil
-   '(("\\<\\(record\\|sum\\|derive\\)\\>" . 'font-lock-keyword-face)))
+   '(("\\<\\(record\\|sum\\|derive\\|opaque\\|prod\\)\\>" . 'font-lock-keyword-face)))
   (setq lsp-warn-no-matched-clients nil))
 
 (add-to-list 'auto-mode-alist '("\\.lbf$" . lambda-buffers-mode))
