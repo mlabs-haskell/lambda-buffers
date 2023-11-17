@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.InstanceDef (printInstanceDef, printConstraint, collectTyVars, printInstanceContext, printInstanceContext', printConstraint') where
+module LambdaBuffers.Codegen.Rust.Print.InstanceDef (printInstanceDef, printTraitBound, collectTyVars, printInstanceContext, printInstanceContext', printTraitBound') where
 
 import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
@@ -7,41 +7,45 @@ import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as RsSyntax
 import LambdaBuffers.Codegen.Rust.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, braces, comma, encloseSep, group, hardline, hsep, line, lparen, rparen, space, (<+>))
+import Prettyprinter (Doc, align, braces, colon, comma, encloseSep, group, hardline, hsep, langle, line, lparen, rangle, rparen, space, (<+>))
 
-{- | `printInstanceDef hsQClassName ty` return a function that given the printed implementation, creates an entire 'instance <hsQClassName> <ty> where' clause.
+{- | `printInstanceDef rsQTraitName ty` return a function that given the printed implementation, creates an entire 'instance <rsQTraitName> <ty> where' clause.
 
 
 ```haskell
-instance SomeClass SomeSmallTy where
+impl SomeClass for SomeSmallTy where
   someMethod = <implementation>
 
-instance (SomeClass a, SomeClass b, SomeClass c) => SomeClass (SomeTy a b c) where
-  someMethod = <implementation>
+impl<A: SomeClass, B: SomeClass, C: SomeClass> SomeClass for SomeTy<A, B, C> {
+  fn some_method = <implementation>
+}
 ```
 -}
-printInstanceDef :: RsSyntax.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
-printInstanceDef hsQClassName ty =
-  let headDoc = printConstraint hsQClassName ty
+printInstanceDef :: RsSyntax.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
+printInstanceDef rsQTraitName ty =
+  let headDoc = RsSyntax.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner ty
       freeVars = collectTyVars ty
    in case freeVars of
         [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
-        _ -> \implDoc -> "impl" <+> printInstanceContext hsQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
+        _ -> \implDoc ->
+          "impl" <> printInstanceContext rsQTraitName freeVars
+            <+> headDoc
+            <+> braces (hardline <> space <> space <> implDoc)
 
-printInstanceContext :: RsSyntax.QClassName -> [PC.Ty] -> Doc ann
-printInstanceContext hsQClassName = printInstanceContext' [hsQClassName]
+printInstanceContext :: RsSyntax.QTraitName -> [PC.Ty] -> Doc ann
+printInstanceContext rsQTraitName = printInstanceContext' [rsQTraitName]
 
-printInstanceContext' :: [RsSyntax.QClassName] -> [PC.Ty] -> Doc ann
-printInstanceContext' hsQClassNames tys = align . group $ encloseSep lparen rparen comma ([printConstraint hsQClassName ty | ty <- tys, hsQClassName <- hsQClassNames])
+printInstanceContext' :: [RsSyntax.QTraitName] -> [PC.Ty] -> Doc ann
+printInstanceContext' rsQTraitNames tys = align . group $ encloseSep langle rangle comma ([printTraitBound rsQTraitName ty | ty <- tys, rsQTraitName <- rsQTraitNames])
 
-printConstraint :: RsSyntax.QClassName -> PC.Ty -> Doc ann
-printConstraint qcn ty = printConstraint' qcn [ty]
+printTraitBound :: RsSyntax.QTraitName -> PC.Ty -> Doc ann
+printTraitBound qcn ty = printTraitBound' qcn [ty]
 
-printConstraint' :: RsSyntax.QClassName -> [PC.Ty] -> Doc ann
-printConstraint' qcn tys =
-  let crefDoc = RsSyntax.printRsQClassName qcn
+printTraitBound' :: RsSyntax.QTraitName -> [PC.Ty] -> Doc ann
+printTraitBound' qcn tys =
+  let crefDoc = RsSyntax.printRsQTraitName qcn
       tyDocs = printTyInner <$> tys
-   in crefDoc <+> "for" <+> hsep tyDocs
+   in crefDoc <> colon <+> hsep tyDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]
 collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . toList . collectVars

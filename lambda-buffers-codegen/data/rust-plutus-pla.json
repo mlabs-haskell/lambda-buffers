@@ -152,11 +152,6 @@
         "plutus-ledger-api",
         "plutus-data",
         "IsPlutusData"
-      ],
-      [
-        "plutus-ledger-api",
-        "plutus-data",
-        "IsPlutusData"
       ]
     ]
   }

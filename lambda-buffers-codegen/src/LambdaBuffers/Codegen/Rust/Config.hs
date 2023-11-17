@@ -6,7 +6,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 
-type Config = Config.Config R.QTyName R.QClassName
+type Config = Config.Config R.QTyName R.QTraitName
 
 instance ToJSON R.TyName
 instance FromJSON R.TyName

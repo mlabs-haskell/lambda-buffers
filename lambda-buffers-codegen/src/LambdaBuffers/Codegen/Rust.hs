@@ -39,4 +39,4 @@ rsPrintModuleEnv =
     RsSyntax.printModName
     RsDerive.rsClassImplPrinters
     RsPrint.printTyDef
-    ["no_implicit_prelude"] -- NOTE(bladyjoker): NoPolyKinds is needed for PlutusTx compiler, quite safe.
+    ["no_implicit_prelude"]

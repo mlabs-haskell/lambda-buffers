@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE) where
+module LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE, printFunc) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -12,7 +12,7 @@ import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as RsSyntax
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, brackets, comma, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, braces, brackets, comma, dot, dquotes, encloseSep, equals, group, hsep, indent, lbrace, lbracket, line, lparen, parens, pipe, punctuate, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 throwInternalError :: MonadPrint m => String -> m a
@@ -31,34 +31,49 @@ printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
   bodyDoc <- printValueE body
   let ctorNameDoc = RsSyntax.printQualifiedCtorName (withInfo tyn) . withInfo $ ctorN
   if null argDocs
-    then return $ group $ ctorNameDoc <+> "->" <+> group bodyDoc
-    else return $ group $ ctorNameDoc <+> hsep argDocs <+> "->" <+> group bodyDoc
+    then return $ group $ ctorNameDoc <+> "=>" <+> group bodyDoc
+    else return $ group $ ctorNameDoc <+> hsep argDocs <+> "=>" <+> group bodyDoc
 
 printCaseE :: MonadPrint m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
 printCaseE (qtyN, sumTy) caseVal ctorCont = do
   caseValDoc <- printValueE caseVal
   ctorCaseDocs <-
-    vsep
+    vsep . punctuate comma
       <$> for
         (OMap.assocs sumTy)
-        ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
+        ( \(cn, ty) -> case ty of
             LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
             _ -> throwInternalError "Got a non-product in Sum."
         )
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)
+  return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> ctorCaseDocs))
 
 printLamE :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
   arg <- LV.freshArg
   bodyDoc <- printValueE (lamVal arg)
   argDoc <- printValueE arg
-  return $ lparen <> "\\" <> argDoc <+> "->" <+> group bodyDoc <+> rparen
+  return $ pipe <> argDoc <> pipe <+> braces (space <> group bodyDoc)
+
+uncurryValE :: MonadPrint m => LV.ValueE -> m ([LV.ValueE], LV.ValueE)
+uncurryValE (LV.LamE lamVal) = do
+  arg <- LV.freshArg
+  (args, val) <- uncurryValE (lamVal arg)
+  return (arg : args, val)
+uncurryValE valE = return ([], valE)
+
+printFunc :: MonadPrint m => RsSyntax.ValueName -> LV.ValueE -> m (Doc ann)
+printFunc fnName valE = do
+  (args, impl) <- uncurryValE valE
+  implDoc <- printValueE impl
+  argsDoc <- traverse printValueE args
+
+  return $ indent 4 $ "fn" <+> RsSyntax.printRsValName fnName <> encloseSep lparen rparen comma argsDoc <+> equals <+> braces (space <> implDoc)
 
 printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
-  return $ funDoc <+> group (parens argDoc)
+  return $ funDoc <> group (parens argDoc)
 
 {- | Prints a record field accessor expression on a `ValueE` of type `Field`'.
 
@@ -69,13 +84,13 @@ printAppE funVal argVal = do
 
   `FieldE` on a field named `foo` of a record value `x` of type `Foo a b` translates into:
 
-   foo'foo x
+   x.foo
 -}
 printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, _), fieldN) recVal = do
   recDoc <- printValueE recVal
   let fnDoc = RsSyntax.printFieldName (withInfo fieldN)
-  return $ fnDoc <+> recDoc
+  return $ recDoc <> dot <> fnDoc
 
 {- | Prints a `let` expression on a `ValueE` of type `Product`.
 
@@ -86,7 +101,8 @@ printFieldE ((_, _), fieldN) recVal = do
 
  `LetE` on `Foo a b` translates into:
 
-   let MkFoo x1 x2 x3 = <letVal> in <letCont>
+   let MkFoo x1 x2 x3 = <letVal>;
+   <letCont>
 -}
 printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
 printLetE ((_, tyN), fields) prodVal letCont = do
@@ -96,14 +112,14 @@ printLetE ((_, tyN), fields) prodVal letCont = do
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
   let prodCtorDoc = RsSyntax.printMkCtor (withInfo tyN)
-  return $ "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <+> "in" <+> bodyDoc
+  return $ "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <> ";" <> line <> bodyDoc
 
 printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printOtherCase otherCase = do
   arg <- LV.freshArg
   argDoc <- printValueE arg
   bodyDoc <- printValueE $ otherCase arg
-  return $ group $ argDoc <+> "->" <+> bodyDoc
+  return $ group $ argDoc <+> "=>" <+> bodyDoc
 
 -- HACK(bladyjoker): This is an utter hack due to PlutusTx needing this to use the PlutusTx.Eq instances.
 caseIntERef :: RsSyntax.QValName
@@ -143,7 +159,7 @@ printCaseListE caseListVal cases otherCase = do
           return $ group $ conditionDoc <+> "=>" <+> bodyDoc
       )
   otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+  return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
@@ -193,7 +209,7 @@ printCaseTextE txtVal cases otherCase = do
           (_wrongCaseVal, _) -> throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
       )
   otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+  return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
 printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref = do

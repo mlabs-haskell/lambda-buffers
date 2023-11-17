@@ -22,7 +22,7 @@ gen :: GenOpts -> IO ()
 gen opts = do
   cfg <- case opts ^. config of
     [] -> do
-      fp <- Paths.getDataFileName "data/haskell-prelude-base.json"
+      fp <- Paths.getDataFileName "data/rust-prelude-base.json"
       readRustConfig fp
     fps -> do
       cfgs <- traverse readRustConfig fps

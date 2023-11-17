@@ -15,7 +15,7 @@ import LambdaBuffers.Codegen.Rust.Print.Syntax (
   doubleColon,
   printCtorName,
   printFieldName,
-  printRsQClassName,
+  printRsQTraitName,
   printRsQTyName,
   printTyArg,
   printTyName,
@@ -53,12 +53,12 @@ printTyDefKw StructTyDef = "pub struct"
 printTyDefKw EnumTyDef = "pub enum"
 printTyDefKw SynonymTyDef = "pub type"
 
-debugMacro :: R.QClassName
+debugMacro :: R.QTraitName
 debugMacro = (R.MkCrateName "std", R.MkModuleName "fmt", R.MkClassName "Debug")
 
 printDeriveDebug :: Doc ann
 printDeriveDebug =
-  "#" <> brackets ("derive" <> parens (printRsQClassName debugMacro))
+  "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro))
 
 {- | Prints the type abstraction.
 
@@ -139,7 +139,7 @@ printTyAppInner :: PC.TyApp -> Doc ann
 printTyAppInner (PC.TyApp f args _) =
   let fDoc = printTyInner f
       argsDoc = printTyInner <$> args
-   in group $ fDoc <> align (sep argsDoc)
+   in group $ fDoc <> encloseGenerics argsDoc
 
 printTyTopLevel :: PC.Ty -> Doc ann
 printTyTopLevel (PC.TyVarI v) = printTyVar v

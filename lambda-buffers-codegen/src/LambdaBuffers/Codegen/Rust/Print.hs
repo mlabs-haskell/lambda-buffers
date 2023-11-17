@@ -2,7 +2,7 @@
 
  The monad is instantiated with `R.QTyName` which are qualified Rust type
  names referring to `Opaque` type imports. It's also instantiated with
- `[R.QClassName]` which denotes the qualified Rust class names to import.
+ `[R.QTraitName]` which denotes the qualified Rust class names to import.
  Note that a single LambdaBuffers 'class' can be unpacked into several related
  Rust classes and that's why it's a list of qualified Rust class names.
 -}
@@ -32,7 +32,7 @@ data PrintModuleEnv m ann = PrintModuleEnv
   { env'printModuleName :: PC.ModuleName -> Doc ann
   , env'implementationPrinter ::
       Map
-        R.QClassName
+        R.QTraitName
         ( PC.ModuleName ->
           PC.TyDefs ->
           (Doc ann -> Doc ann) ->
@@ -91,11 +91,11 @@ printDerive env iTyDefs d = do
         hsqcns
         ( \hsqcn -> do
             Print.importClass hsqcn
-            printRsQClassImpl env mn iTyDefs hsqcn d
+            printRsQTraitImpl env mn iTyDefs hsqcn d
         )
 
-printRsQClassImpl :: MonadPrint m => PrintModuleEnv m ann -> PC.ModuleName -> PC.TyDefs -> R.QClassName -> PC.Derive -> m (Doc ann)
-printRsQClassImpl env mn iTyDefs hqcn d =
+printRsQTraitImpl :: MonadPrint m => PrintModuleEnv m ann -> PC.ModuleName -> PC.TyDefs -> R.QTraitName -> PC.Derive -> m (Doc ann)
+printRsQTraitImpl env mn iTyDefs hqcn d =
   case Map.lookup hqcn (env'implementationPrinter env) of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Rust trait " <> show hqcn) -- TODO(bladyjoker): Fix hqcn printing
     Just implPrinter -> do
@@ -110,7 +110,7 @@ printCompilationCfgs exts = "#" <> brackets (align (encloseSep mempty mempty com
 {- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
  Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).
 -}
-collectPackageDeps :: Set PC.QTyName -> Set R.QTyName -> Set R.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set R.QValName -> Set Text
+collectPackageDeps :: Set PC.QTyName -> Set R.QTyName -> Set R.QTraitName -> Set (PC.InfoLess PC.ModuleName) -> Set R.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
   let deps =
         Set.singleton "base"

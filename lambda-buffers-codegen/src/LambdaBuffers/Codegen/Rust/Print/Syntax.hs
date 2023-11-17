@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsClassMethodName, printRsQClassName, printRsValName, QTyName, QClassName, QValName, CrateName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon) where
+module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsClassMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, CrateName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -9,7 +9,7 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), colon, dot, enclose, lparen, rparen)
 
 type QTyName = (CrateName, ModuleName, TyName)
-type QClassName = (CrateName, ModuleName, ClassName)
+type QTraitName = (CrateName, ModuleName, ClassName)
 type QValName = (CrateName, ModuleName, ValueName)
 
 newtype CrateName = MkCrateName Text deriving stock (Eq, Ord, Show, Generic)
@@ -49,8 +49,8 @@ printRsQTyName :: QTyName -> Doc ann
 printRsQTyName (MkCrateName rsCrateName, MkModuleName rsModName, MkTyName rsTyName) =
   pretty rsCrateName <> doubleColon <> pretty rsModName <> doubleColon <> pretty rsTyName
 
-printRsQClassName :: QClassName -> Doc ann
-printRsQClassName (MkCrateName rsCrateName, MkModuleName rsModName, MkClassName rsClassName) =
+printRsQTraitName :: QTraitName -> Doc ann
+printRsQTraitName (MkCrateName rsCrateName, MkModuleName rsModName, MkClassName rsClassName) =
   pretty rsCrateName <> doubleColon <> pretty rsModName <> doubleColon <> pretty rsClassName
 
 printRsQValName :: QValName -> Doc ann
