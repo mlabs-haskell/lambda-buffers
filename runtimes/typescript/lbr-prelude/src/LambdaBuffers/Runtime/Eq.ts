@@ -2,7 +2,7 @@
  * `Eq` is a typeclass for "deep" i.e., all substructures recursively are equal by
  * value.
  */
-export type Eq<A> = {
-  eq: (l: A, r: A) => boolean;
-  neq: (l: A, r: A) => boolean;
-};
+export interface Eq<A> {
+  readonly eq: (l: Readonly<A>, r: Readonly<A>) => boolean;
+  readonly neq: (l: Readonly<A>, r: Readonly<A>) => boolean;
+}

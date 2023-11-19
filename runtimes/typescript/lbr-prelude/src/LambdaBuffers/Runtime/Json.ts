@@ -5,10 +5,10 @@
  * @remarks
  * `fromJson` throws an exception (most likely {@link JsonError}) when it fails.
  */
-export type Json<A> = {
-  toJson: (arg: A) => Value;
-  fromJson: (arg: Value) => A;
-};
+export interface Json<A> {
+  readonly toJson: (arg: Readonly<A>) => Value;
+  readonly fromJson: (arg: Readonly<Value>) => A;
+}
 
 /**
  * `Value` is a JSON value.
@@ -27,29 +27,29 @@ export type Value =
   | null;
 
 export function isJsonObject(
-  value: Value,
+  value: Readonly<Value>,
 ): value is { [index: string]: Value } {
   return value !== null && value instanceof Object &&
     !(value instanceof Scientific) && !(value instanceof Array);
 }
 
-export function isJsonArray(value: Value): value is Value[] {
+export function isJsonArray(value: Readonly<Value>): value is Value[] {
   return value !== null && value instanceof Array;
 }
 
-export function isJsonString(value: Value): value is string {
+export function isJsonString(value: Readonly<Value>): value is string {
   return typeof value === "string";
 }
 
-export function isJsonNumber(value: Value): value is Scientific {
+export function isJsonNumber(value: Readonly<Value>): value is Scientific {
   return value !== null && value instanceof Scientific;
 }
 
-export function isJsonNull(value: Value): value is null {
+export function isJsonNull(value: Readonly<Value>): value is null {
   return value === null;
 }
 
-export function isJsonBoolean(value: Value): value is boolean {
+export function isJsonBoolean(value: Readonly<Value>): value is boolean {
   return typeof value === "boolean";
 }
 
@@ -154,10 +154,10 @@ export class Scientific {
  * since it'll print something like `999999999999999999999999999` as
  * `"999999999999999999999999999"`.
  */
-export function stringify(input: Value): string {
+export function stringify(input: Readonly<Value>): string {
   const strs: string[] = [];
 
-  function printValue(val: Value): void {
+  function printValue(val: Readonly<Value>): void {
     if (isJsonObject(val)) {
       strs.push("{");
       const entries = Object.entries(val);
@@ -248,7 +248,7 @@ export function jsonConstructor(title: string, fields: Value[]): Value {
 export function caseJsonConstructor<A>(
   title: string,
   fromJsonFields: { [index: string]: (fields: Value[]) => A },
-  value: Value,
+  value: Readonly<Value>,
 ): A {
   if (isJsonObject(value)) {
     const ctori = value["name"];
@@ -289,7 +289,7 @@ export function caseJsonConstructor<A>(
 export function caseJsonMap<K, V>(
   _title: string,
   parseElem: (arg: [Value, Value]) => [K, V],
-  value: Value,
+  value: Readonly<Value>,
 ): Map<K, V> {
   // TODO(jaredponn): actually use `title` in the error messages.
   const map: Map<K, V> = new Map();
@@ -325,7 +325,7 @@ export function caseJsonMap<K, V>(
 export function caseJsonArray<A>(
   _title: string,
   parseElem: (arg: Value) => A,
-  value: Value,
+  value: Readonly<Value>,
 ): A[] {
   // TODO(jaredponn): actually use `title` in the error messages.
   if (isJsonArray(value)) {
@@ -342,7 +342,7 @@ export function caseJsonArray<A>(
 export function caseFieldWithValue<A>(
   title: string,
   parseValue: (arg: Value) => A,
-  value: Value,
+  value: Readonly<Value>,
 ): A {
   if (isJsonObject(value)) {
     const v = value[title];

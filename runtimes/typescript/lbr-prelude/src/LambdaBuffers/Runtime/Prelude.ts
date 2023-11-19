@@ -117,7 +117,7 @@ export const jsonBytes: Json<Bytes> = {
     const bufferBytes = Buffer.from(bytes);
     return bufferBytes.toString("base64");
   },
-  fromJson: (value: Value) => {
+  fromJson: (value) => {
     if (typeof value === "string") {
       return Buffer.from(value, "base64");
     } else {
@@ -161,8 +161,9 @@ export function charFromString(str: string): Char {
  *
  * @returns The corresponding string
  */
-export function charToString(chr: Char): string {
-  return chr;
+export function charToString(chr: Readonly<Char>): string {
+  // Strange trick to satisfy the `Readonly`
+  return `${chr}`;
 }
 
 /**
@@ -264,7 +265,7 @@ export function jsonMaybe<A>(dict: Json<A>): Json<Maybe<A>> {
         return LbJson.jsonConstructor("Just", [dict.toJson(maybe)]);
       }
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       return LbJson.caseJsonConstructor<Maybe<A>>("Prelude.Maybe", {
         "Nothing": (ctorFields) => {
           if (ctorFields.length === 0) {
@@ -335,7 +336,7 @@ export function jsonEither<L, R>(
         ]);
       }
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       return LbJson.caseJsonConstructor<Either<L, R>>("Prelude.Either", {
         "Left": (ctorFields) => {
           if (ctorFields.length === 1) {
@@ -430,7 +431,7 @@ export function jsonMap<K, V>(dictK: Json<K>, dictV: Json<V>): Json<Map<K, V>> {
       }
       return result;
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       return LbJson.caseJsonMap<K, V>("Map", (arg) => {
         return [dictK.fromJson(arg[0]), dictV.fromJson(arg[1])];
       }, value);
@@ -491,7 +492,7 @@ export function jsonSet<K>(dictK: Json<K>): Json<Set<K>> {
       }
       return result;
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       const arr = LbJson.caseJsonArray<K>("Set", dictK.fromJson, value);
 
       const set = new Set(arr);
@@ -539,10 +540,10 @@ export function eqList<A>(dict: Eq<A>): Eq<List<A>> {
 
 export function jsonList<A>(dict: Json<A>): Json<List<A>> {
   return {
-    toJson: (list: List<A>) => {
+    toJson: (list) => {
       return list.map(dict.toJson);
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       return LbJson.caseJsonArray("List", dict.fromJson, value);
     },
   };
@@ -572,7 +573,7 @@ export function jsonPair<L, R>(
     toJson: (pair) => {
       return [dict1.toJson(pair[0]), dict2.toJson(pair[1])];
     },
-    fromJson: (value: Value) => {
+    fromJson: (value) => {
       if (!(LbJson.isJsonArray(value) && value.length === 2)) {
         throw new JsonError(
           "Expected JSON Array of length 2 but got " + LbJson.stringify(value),
