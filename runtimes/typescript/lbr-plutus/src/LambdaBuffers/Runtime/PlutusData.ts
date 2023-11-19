@@ -11,12 +11,16 @@ export class FromDataError extends Error {
 /**
  * `ToData<A>` is a type class to translate to `PlutusData`
  */
-export type ToData<A> = { toData: (arg: A) => PlutusData };
+export interface ToData<A> {
+  readonly toData: (arg: Readonly<A>) => PlutusData;
+}
 
 /**
  * `FromData<A>` is a type class to translate from `PlutusData`
  */
-export type FromData<A> = { fromData: (arg: PlutusData) => A };
+export interface FromData<A> {
+  readonly fromData: (arg: Readonly<PlutusData>) => A;
+}
 
 /**
  * `PlutusData`
