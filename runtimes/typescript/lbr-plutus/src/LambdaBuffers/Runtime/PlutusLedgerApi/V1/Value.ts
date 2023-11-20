@@ -2,7 +2,7 @@ import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import type { FromData, ToData } from "../../PlutusData.js";
 import type { Map } from "../../AssocMap.js";
 import * as AssocMap from "../../AssocMap.js";
-import type { Bytes, Eq, Integer, Json } from "lbr-prelude";
+import type { Eq, Integer, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import * as LbBytes from "./Bytes.js";
@@ -18,23 +18,49 @@ import * as LbBytes from "./Bytes.js";
 // instance Eq CurrencySymbol
 // instance Json CurrencySymbol
 
-export type CurrencySymbol = Bytes;
+export type CurrencySymbol = LbBytes.LedgerBytes & {
+  __compileTimeOnlyCurrencySymbol: CurrencySymbol;
+};
 
-export const eqCurrencySymbol: Eq<CurrencySymbol> = LbBytes.eqLedgerBytes;
+/**
+ * Checks if the bytes are 28 bytes long.
+ */
+export function currencySymbolFromBytes(
+  bytes: LbBytes.LedgerBytes,
+): CurrencySymbol | undefined {
+  if (bytes.length === 28) {
+    return bytes as CurrencySymbol;
+  } else {
+    return undefined;
+  }
+}
+
+/**
+ * Alias for the identity function
+ */
+export function currencySymbolToBytes(
+  currencysymbol: CurrencySymbol,
+): LbBytes.LedgerBytes {
+  return currencysymbol;
+}
+
+export const eqCurrencySymbol: Eq<CurrencySymbol> = LbBytes.eqLedgerBytes as Eq<
+  CurrencySymbol
+>;
 export const jsonCurrencySymbol: Json<CurrencySymbol> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
-    const bs = LbBytes.jsonLedgerBytes.fromJson(value);
-    if (bs.length !== 28) {
-      throw new JsonError("Expected 28 bytes");
+    const bs = currencySymbolFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
+    if (bs === undefined) {
+      throw new JsonError("CurrencySymbol should be 28 bytes");
     }
     return bs;
   },
 };
-export const toDataCurrencySymbol: ToData<CurrencySymbol> =
-  LbBytes.toDataLedgerBytes;
-export const fromDataCurrencySymbol: FromData<CurrencySymbol> =
-  LbBytes.fromDataLedgerBytes;
+export const toDataCurrencySymbol: ToData<CurrencySymbol> = LbBytes
+  .toDataLedgerBytes as ToData<CurrencySymbol>;
+export const fromDataCurrencySymbol: FromData<CurrencySymbol> = LbBytes
+  .fromDataLedgerBytes as FromData<CurrencySymbol>;
 
 // opaque TokenName
 //
@@ -42,22 +68,47 @@ export const fromDataCurrencySymbol: FromData<CurrencySymbol> =
 // instance Eq TokenName
 // instance Json TokenName
 
-export type TokenName = Bytes;
+export type TokenName = LbBytes.LedgerBytes & {
+  __compileTimeOnlyTokenName: TokenName;
+};
 
-export const eqTokenName: Eq<TokenName> = LbBytes.eqLedgerBytes;
+/**
+ * Checks if the bytes are at most 32 bytes long.
+ */
+export function tokenNameFromBytes(
+  bytes: LbBytes.LedgerBytes,
+): TokenName | undefined {
+  if (bytes.length <= 32) {
+    return bytes as TokenName;
+  } else {
+    return undefined;
+  }
+}
+
+/**
+ * Alias for the identity function
+ */
+export function tokenNameToBytes(tokenname: TokenName): LbBytes.LedgerBytes {
+  return tokenname;
+}
+
+export const eqTokenName: Eq<TokenName> = LbBytes.eqLedgerBytes as Eq<
+  TokenName
+>;
 export const jsonTokenName: Json<TokenName> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
-    const bs = LbBytes.jsonLedgerBytes.fromJson(value);
-    if (!(bs.length <= 32)) {
-      throw new JsonError("Expected 28 bytes");
+    const bs = tokenNameFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
+    if (bs === undefined) {
+      throw new JsonError("TokenName should be at most 32 bytes");
     }
     return bs;
   },
 };
-export const toDataTokenName: ToData<TokenName> = LbBytes.toDataLedgerBytes;
-export const fromDataTokenName: FromData<TokenName> =
-  LbBytes.fromDataLedgerBytes;
+export const toDataTokenName: ToData<TokenName> = LbBytes
+  .toDataLedgerBytes as ToData<TokenName>;
+export const fromDataTokenName: FromData<TokenName> = LbBytes
+  .fromDataLedgerBytes as FromData<TokenName>;
 
 // opaque AssetClass
 //
@@ -74,7 +125,7 @@ export const jsonAssetClass: Json<AssetClass> = {
   toJson: (assetClass) => {
     return {
       "currency_symbol": jsonCurrencySymbol.toJson(assetClass[0]),
-      "token_name": jsonCurrencySymbol.toJson(assetClass[1]),
+      "token_name": jsonTokenName.toJson(assetClass[1]),
     };
   },
   fromJson: (value) => {

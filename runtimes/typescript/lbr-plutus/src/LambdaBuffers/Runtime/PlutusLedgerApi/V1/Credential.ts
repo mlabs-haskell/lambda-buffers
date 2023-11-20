@@ -221,7 +221,7 @@ export const jsonCredential: Json<Credential> = {
     }
   },
   fromJson: (value) => {
-    return LbPrelude.caseJsonConstructor("Plutus.V1.Credential", {
+    return LbPrelude.caseJsonConstructor<Credential>("Plutus.V1.Credential", {
       "PubKeyCredential": (ctorFields) => {
         if (ctorFields.length !== 1) {
           throw new JsonError(`Expected one field`);
@@ -236,7 +236,7 @@ export const jsonCredential: Json<Credential> = {
           throw new JsonError(`Expected one field`);
         }
         return {
-          name: "PubKeyCredential",
+          name: "ScriptCredential",
           fields: LbScript.jsonScriptHash.fromJson(ctorFields[0]!),
         };
       },

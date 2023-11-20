@@ -1,6 +1,6 @@
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs
 
-import type { Bytes, Eq, Integer, Json } from "lbr-prelude";
+import type { Eq, Integer, Json } from "lbr-prelude";
 import type { FromData, ToData } from "../../PlutusData.js";
 import { FromDataError } from "../../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
@@ -15,15 +15,33 @@ import * as LbBytes from "./Bytes.js";
 // instance Eq TxId
 // instance Json TxId
 
-type TxId = Bytes;
+type TxId = LbBytes.LedgerBytes & { __compileTimeOnlyTxId: TxId };
 
-export const eqTxId = LbBytes.eqLedgerBytes;
+/**
+ * Checks if the bytes are 32 bytes long.
+ */
+export function txIdFromBytes(bytes: LbBytes.LedgerBytes): TxId | undefined {
+  if (bytes.length === 32) {
+    return bytes as TxId;
+  } else {
+    return undefined;
+  }
+}
+
+/**
+ * Alias for the identity function
+ */
+export function txIdToBytes(txid: TxId): LbBytes.LedgerBytes {
+  return txid;
+}
+
+export const eqTxId: Eq<TxId> = LbBytes.eqLedgerBytes as Eq<TxId>;
 export const jsonTxId: Json<TxId> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
-    const bs = LbBytes.jsonLedgerBytes.fromJson(value);
-    if (bs.length !== 32) {
-      throw new JsonError(`Expected 32 bytes`);
+    const bs = txIdFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
+    if (bs === undefined) {
+      throw new JsonError(`TxId should be 32 bytes`);
     }
     return bs;
   },
@@ -41,7 +59,13 @@ export const fromDataTxId: FromData<TxId> = {
     switch (plutusData.name) {
       case "Constr":
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 1) {
-          return LbBytes.fromDataLedgerBytes.fromData(plutusData.fields[1][0]!);
+          const res = txIdFromBytes(
+            LbBytes.fromDataLedgerBytes.fromData(plutusData.fields[1][0]!),
+          );
+          if (res === undefined) {
+            break;
+          }
+          return res;
         }
         break;
       default:
