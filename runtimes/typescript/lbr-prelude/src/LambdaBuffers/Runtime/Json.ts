@@ -1,3 +1,5 @@
+import type { Ord } from "./Ord.js";
+import * as LbMap from "./Map.js";
 /**
  * `Json<A>` is a type class to provide `toJson` and `fromJson` instances for
  * type `A`.
@@ -288,11 +290,12 @@ export function caseJsonConstructor<A>(
  */
 export function caseJsonMap<K, V>(
   _title: string,
+  dictOrd: Ord<K>,
   parseElem: (arg: [Value, Value]) => [K, V],
   value: Readonly<Value>,
-): Map<K, V> {
+): LbMap.Map<K, V> {
   // TODO(jaredponn): actually use `title` in the error messages.
-  const map: Map<K, V> = new Map();
+  const map: LbMap.Map<K, V> = new LbMap.Map();
 
   if (!isJsonArray(value)) {
     throw new JsonError(`Expected JSON array`);
@@ -305,12 +308,10 @@ export function caseJsonMap<K, V>(
 
     const [k, v] = parseElem(kv as [Value, Value]);
 
-    map.set(k, v);
+    LbMap.insert(dictOrd, k, v, map);
   }
 
-  if (map.size !== value.length) {
-    // TODO(jaredponn): this check is broken and doesn't work when the keys
-    // are objects
+  if (LbMap.toList(map).length !== value.length) {
     throw new JsonError(`Map should have unique keys`);
   }
 

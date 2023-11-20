@@ -5,6 +5,8 @@
   "lockfileVersion": 2,
   "exports": {
       ".": "./dist/LambdaBuffers/Prelude.js",
+      "./Map.js": "./dist/LambdaBuffers/Runtime/Map.js",
+      "./Set.js": "./dist/LambdaBuffers/Runtime/Set.js",
       "./package.json": "./package.json"
   },
   "type": "module",

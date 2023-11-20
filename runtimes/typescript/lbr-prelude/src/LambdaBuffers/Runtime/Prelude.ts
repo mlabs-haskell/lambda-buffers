@@ -1,10 +1,11 @@
-import type { Json, Value } from "./Json.js";
+import type { Json } from "./Json.js";
 import { JsonError, Scientific } from "./Json.js";
 import * as LbJson from "./Json.js";
 import type { Eq } from "./Eq.js";
+import type { Ord } from "./Ord.js";
 import { Buffer } from "node:buffer";
-
-// export type {Map, Set}
+import * as LbMap from "./Map.js";
+import * as LbSet from "./Set.js";
 
 /**
  * `Eq` instance for primitive types. This simply wraps `===`.
@@ -20,6 +21,24 @@ export const eqPrimitive: Eq<any> = {
 };
 
 /**
+ * `Ord` instance for primitive types. This simply wraps `<`, `>`
+ */
+// deno-lint-ignore no-explicit-any
+export const ordPrimitive: Ord<any> = {
+  compare: (l, r) => {
+    if (l < r) {
+      return "LT";
+    } else if (l > r) {
+      return "GT";
+    } else {
+      return "EQ";
+    }
+  },
+  eq: eqPrimitive.eq,
+  neq: eqPrimitive.neq,
+};
+
+/**
  * `Bool` wraps the primitive `boolean`
  */
 export type Bool = boolean;
@@ -28,6 +47,11 @@ export type Bool = boolean;
  * `Eq` instance for `Bool`
  */
 export const eqBool: Eq<Bool> = eqPrimitive;
+
+/**
+ * `Ord` instance for `Bool`
+ */
+export const ordBool: Ord<Bool> = ordPrimitive;
 
 /**
  * `Json` instance for `Bool`
@@ -54,6 +78,11 @@ export type Integer = bigint;
  * `Eq` instance for `Integer`
  */
 export const eqInteger: Eq<Integer> = eqPrimitive;
+
+/**
+ * `Ord` instance for `Integer`
+ */
+export const ordInteger: Ord<Integer> = ordPrimitive;
 
 /**
  * `Json` instance for `Integer`
@@ -101,6 +130,24 @@ export const eqBytes: Eq<Bytes> = {
   },
   neq: (l, r) => {
     return Buffer.compare(l, r) !== 0;
+  },
+};
+
+/**
+ * `Ord` instance for `Bytes` which orders the bytes lexicographically
+ */
+export const ordBytes: Ord<Bytes> = {
+  eq: eqBytes.eq,
+  neq: eqBytes.neq,
+  compare: (l, r) => {
+    const res = Buffer.compare(l, r);
+    if (res === -1) {
+      return "LT";
+    } else if (res === 1) {
+      return "GT";
+    } else {
+      return "EQ";
+    }
   },
 };
 
@@ -172,6 +219,11 @@ export function charToString(chr: Readonly<Char>): string {
 export const eqChar: Eq<Char> = eqPrimitive;
 
 /**
+ * `Ord` instance for `Char`
+ */
+export const ordChar: Ord<Char> = ordPrimitive;
+
+/**
  * `Json` instance for `Char`
  */
 export const jsonChar: Json<Char> = {
@@ -196,6 +248,11 @@ export type Text = string;
  * `Eq` instance for `Text`
  */
 export const eqText: Eq<Text> = eqPrimitive;
+
+/**
+ * `Ord` instance for `Text`
+ */
+export const ordText: Ord<Text> = ordPrimitive;
 
 /**
  * `Json` instance for `Text`
@@ -249,6 +306,29 @@ export function eqMaybe<A>(dict: Eq<A>): Eq<Maybe<A>> {
       } else {
         return true;
       }
+    },
+  };
+}
+
+/**
+ * `Ord` instance for `Maybe<A>`
+ */
+export function ordMaybe<A>(dict: Ord<A>): Ord<Maybe<A>> {
+  return {
+    eq: eqMaybe(dict).eq,
+    neq: eqMaybe(dict).neq,
+    compare: (l, r) => {
+      if (l !== undefined && r !== undefined) {
+        return dict.compare(l, r);
+      }
+      if (l === undefined && r !== undefined) {
+        return "LT";
+      }
+      if (l !== undefined && r === undefined) {
+        return "GT";
+      }
+      // if (l === undefined && r === undefined)
+      return "EQ";
     },
   };
 }
@@ -322,6 +402,28 @@ export function eqEither<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Either<L, R>> {
   };
 }
 
+export function ordEither<L, R>(
+  dict1: Ord<L>,
+  dict2: Ord<R>,
+): Ord<Either<L, R>> {
+  return {
+    eq: eqEither(dict1, dict2).eq,
+    neq: eqEither(dict1, dict2).neq,
+    compare: (l, r) => {
+      if (l.name === "Left" && r.name === "Left") {
+        return dict1.compare(l.fields, r.fields);
+      } else if (l.name === "Right" && r.name === "Right") {
+        return dict2.compare(l.fields, r.fields);
+      } else if (l.name === "Left" && r.name === "Right") {
+        return "LT";
+      } //if (l.name === "Right" && r.name === "Left")
+      else {
+        return "GT";
+      }
+    },
+  };
+}
+
 export function jsonEither<L, R>(
   dict1: Json<L>,
   dict2: Json<R>,
@@ -369,75 +471,56 @@ export function jsonEither<L, R>(
   };
 }
 
-// `Map<K,V>` is identical to `Map<K,V>`
-// There's no need to wrap `Map` and `Set` as its already provided by
-// Typescript / Javascript
-//
-// ```
-// export type Map<K,V> = Map<K,V>
-// export type Set<K> = Set<K>
-// ```
+export type Map<K, V> = LbMap.Map<K, V>;
 
 /**
  * `Eq` instance for a map. Returns true iff
  * - Both maps have the same number of elements
  * - Every key value pair in one map is in the other.
  */
-export function eqMap<K, V>(dict: Eq<V>): Eq<Map<K, V>> {
+export function eqMap<K, V>(dictK: Eq<K>, dictV: Eq<V>): Eq<Map<K, V>> {
   return {
     eq: (l, r) => {
-      if (!(l.size === r.size)) {
-        return false;
-      }
-
-      for (const [k, v] of l) {
-        const rv = r.get(k);
-        if (rv === undefined) {
-          return false;
-        }
-
-        if (dict.neq(v, rv)) {
-          return false;
-        }
-      }
-      return true;
+      return eqList(eqPair(dictK, dictV)).eq(LbMap.toList(l), LbMap.toList(r));
     },
     neq: (l, r) => {
-      if (!(l.size === r.size)) {
-        return true;
-      }
-
-      for (const [k, v] of l) {
-        const rv = r.get(k);
-        if (rv === undefined) {
-          return true;
-        }
-
-        if (dict.neq(v, rv)) {
-          return true;
-        }
-      }
-      return false;
+      return eqList(eqPair(dictK, dictV)).neq(LbMap.toList(l), LbMap.toList(r));
     },
   };
 }
 
-export function jsonMap<K, V>(dictK: Json<K>, dictV: Json<V>): Json<Map<K, V>> {
+export function ordMap<K, V>(dictK: Ord<K>, dictV: Ord<V>): Ord<Map<K, V>> {
+  return {
+    eq: eqMap(dictK, dictV).eq,
+    neq: eqMap(dictK, dictV).neq,
+    compare: (l, r) => {
+      return ordList(ordPair(dictK, dictV)).compare(
+        LbMap.toList(l),
+        LbMap.toList(r),
+      );
+    },
+  };
+}
+
+export function jsonMap<K, V>(
+  ordDict: Ord<K>,
+  dictK: Json<K>,
+  dictV: Json<V>,
+): Json<Map<K, V>> {
   return {
     toJson: (map) => {
-      const result: [Value, Value][] = [];
-      for (const [k, v] of map) {
-        result.push([dictK.toJson(k), dictV.toJson(v)] as [Value, Value]);
-      }
-      return result;
+      const kvs = LbMap.toList(map);
+      return jsonList(jsonPair(dictK, dictV)).toJson(kvs);
     },
     fromJson: (value) => {
-      return LbJson.caseJsonMap<K, V>("Map", (arg) => {
+      return LbJson.caseJsonMap<K, V>("Map", ordDict, (arg) => {
         return [dictK.fromJson(arg[0]), dictV.fromJson(arg[1])];
       }, value);
     },
   };
 }
+
+export type Set<K> = LbSet.Set<K>;
 
 /**
  * `Eq` instance for a set. Returns true iff
@@ -447,34 +530,26 @@ export function jsonMap<K, V>(dictK: Json<K>, dictV: Json<V>): Json<Map<K, V>> {
  * @remarks
  * Warning; this uses the `Set`'s equality of keys ("shallow" equality)
  */
-// export function eqSet<K>(dict : Eq<K>) : Eq<Set<K>> {
-// deno-lint-ignore no-explicit-any
-export const eqSet: Eq<Set<any>> = {
-  eq: (l, r) => {
-    if (!(l.size === r.size)) {
-      return false;
-    }
+export function eqSet<K>(dictK: Eq<K>): Eq<Set<K>> {
+  return {
+    eq: (l, r) => {
+      return eqList(dictK).eq(LbSet.toList(l), LbSet.toList(r));
+    },
+    neq: (l, r) => {
+      return eqList(dictK).neq(LbSet.toList(l), LbSet.toList(r));
+    },
+  };
+}
 
-    for (const v of l) {
-      if (!r.has(v)) {
-        return false;
-      }
-    }
-    return true;
-  },
-  neq: (l, r) => {
-    if (!(l.size === r.size)) {
-      return true;
-    }
-
-    for (const v of l) {
-      if (!r.has(v)) {
-        return true;
-      }
-    }
-    return false;
-  },
-};
+export function ordSet<K>(dictK: Ord<K>): Ord<Set<K>> {
+  return {
+    eq: eqSet(dictK).eq,
+    neq: eqSet(dictK).neq,
+    compare: (l, r) => {
+      return ordList(dictK).compare(LbSet.toList(l), LbSet.toList(r));
+    },
+  };
+}
 
 /**
  * `Json` instance for a set.
@@ -483,21 +558,20 @@ export const eqSet: Eq<Set<any>> = {
  * Warning; this uses the `Set`'s equality of keys ("shallow" equality)
  * and non primitive set elements probably won't do what is expected.
  */
-export function jsonSet<K>(dictK: Json<K>): Json<Set<K>> {
+export function jsonSet<K>(ordDict: Ord<K>, dictK: Json<K>): Json<Set<K>> {
   return {
     toJson: (set) => {
-      const result: Value[] = [];
-      for (const k of set) {
-        result.push(dictK.toJson(k));
-      }
-      return result;
+      return jsonList(dictK).toJson(LbSet.toList(set));
     },
     fromJson: (value) => {
       const arr = LbJson.caseJsonArray<K>("Set", dictK.fromJson, value);
 
-      const set = new Set(arr);
+      const set: LbSet.Set<K> = new LbSet.Set();
+      for (const k of arr) {
+        LbSet.insert(ordDict, k, set);
+      }
 
-      if (arr.length !== set.size) {
+      if (LbSet.toList(set).length !== arr.length) {
         throw new JsonError(`Set should have unique keys`);
       }
 
@@ -538,6 +612,32 @@ export function eqList<A>(dict: Eq<A>): Eq<List<A>> {
   };
 }
 
+export function ordList<A>(dict: Ord<A>): Ord<List<A>> {
+  return {
+    eq: eqList(dict).eq,
+    neq: eqList(dict).neq,
+    compare: (l, r) => {
+      let i = 0;
+      let j = 0;
+      for (; i < l.length && j < r.length; ++i, ++j) {
+        const cmp = dict.compare(l[i]!, r[i]!);
+        if (cmp !== "EQ") {
+          return cmp;
+        }
+      }
+      if (i === j) {
+        return "EQ";
+      }
+      if (i < j) {
+        return "LT";
+      }
+
+      // if (i > j)
+      return "GT";
+    },
+  };
+}
+
 export function jsonList<A>(dict: Json<A>): Json<List<A>> {
   return {
     toJson: (list) => {
@@ -561,6 +661,21 @@ export function eqPair<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Pair<L, R>> {
     },
     neq: (l, r) => {
       return dict1.neq(l[0], r[0]) || dict2.neq(l[1], r[1]);
+    },
+  };
+}
+
+export function ordPair<L, R>(dict1: Ord<L>, dict2: Ord<R>): Ord<Pair<L, R>> {
+  return {
+    eq: eqPair(dict1, dict2).eq,
+    neq: eqPair(dict1, dict2).neq,
+    compare: (l, r) => {
+      const res = dict1.compare(l[0], r[0]);
+      if (res === "EQ") {
+        return dict2.compare(l[1], r[1]);
+      } else {
+        return res;
+      }
     },
   };
 }
