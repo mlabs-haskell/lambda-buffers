@@ -1,12 +1,11 @@
 { ... }:
 {
-  perSystem = { system, config, ... }:
+  perSystem = { config, ... }:
     let
       typescriptFlake =
         config.overlayAttrs.extras.typescriptFlake {
           name = "lbr-prelude-typescript";
           src = ./.;
-          inherit system;
         };
     in
     {

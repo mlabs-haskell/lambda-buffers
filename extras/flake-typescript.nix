@@ -1,7 +1,6 @@
 pkgs:
 { name
 , src
-, system
 , # `dependencies` is of type
   # ```
   # [ nix derivation for a tarball from `npm pack` ]
@@ -113,7 +112,7 @@ let
       '';
 
   node2nixDevelop = node2nixExprs { extraFlags = [ "--development" ]; };
-  node2nixDevelopAttrs = ((import node2nixDevelop) { inherit nodejs pkgs system; });
+  node2nixDevelopAttrs = ((import node2nixDevelop) { inherit nodejs pkgs; inherit (pkgs) system; });
 
   # Build the project (runs `npm run build`), and puts the entire output in the
   # nix store
