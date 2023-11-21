@@ -17,10 +17,6 @@
             files = "\\.rs$";
           };
 
-
-        # TODO(jaredponn): I'm fairly certain later versions of flake-parts
-        # includes `denofmt` and `denolint` so we don't have to reimplement
-        # this ourselves
         denofmt =
           {
             name = "denofmt";
