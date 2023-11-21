@@ -4,10 +4,10 @@
   "description": "LambdaBuffers Prelude runtime",
   "lockfileVersion": 2,
   "exports": {
-      ".": "./dist/LambdaBuffers/Prelude.js",
-      "./Map.js": "./dist/LambdaBuffers/Runtime/Map.js",
-      "./Set.js": "./dist/LambdaBuffers/Runtime/Set.js",
-      "./package.json": "./package.json"
+    ".": "./dist/LambdaBuffers/Prelude.js",
+    "./Map.js": "./dist/LambdaBuffers/Runtime/Map.js",
+    "./Set.js": "./dist/LambdaBuffers/Runtime/Set.js",
+    "./package.json": "./package.json"
   },
   "type": "module",
   "scripts": {
@@ -24,6 +24,6 @@
     "typescript": "^5.2.2",
     "@types/node": "^20.8.10"
   },
-  "files": [ "./dist/LambdaBuffers/**/*"] ,
-  "dependencies": { }
+  "files": ["./dist/LambdaBuffers/**/*"],
+  "dependencies": {}
 }

@@ -1,7 +1,7 @@
 {
-  "extends" : "../tsconfig-base",
-  "include" : ["**/*"],
+  "extends": "../tsconfig-base",
+  "include": ["**/*"],
   "references": [
-      { "path" : "../LambdaBuffers" }
+    { "path": "../LambdaBuffers" }
   ]
 }
