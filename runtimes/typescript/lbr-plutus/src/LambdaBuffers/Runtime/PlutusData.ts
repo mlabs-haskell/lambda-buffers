@@ -1,6 +1,7 @@
 import type { Bytes, Eq, Integer, Json, List } from "lbr-prelude";
 import { JsonError, Scientific } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
+import * as LbHex from "./Hex.js";
 
 export class FromDataError extends Error {
   constructor(message: string) {
@@ -110,7 +111,7 @@ export const jsonPlutusData: Json<PlutusData> = {
       }
       case "Bytes": {
         return LbPrelude.jsonConstructor(plutusData.name, [
-          Buffer.from(plutusData.fields).toString("hex"),
+          LbHex.bytesToHex(plutusData.fields),
         ]);
       }
       case "Integer": {
@@ -215,7 +216,7 @@ export const jsonPlutusData: Json<PlutusData> = {
         if (ctorFields.length === 1) {
           const bytesValue = ctorFields[0]!;
           if (LbPrelude.isJsonString(bytesValue)) {
-            return { name: "Bytes", fields: Buffer.from(bytesValue, "hex") };
+            return { name: "Bytes", fields: LbHex.bytesFromHex(bytesValue) };
           } else {
             throw new JsonError("JSON Value is not a string");
           }

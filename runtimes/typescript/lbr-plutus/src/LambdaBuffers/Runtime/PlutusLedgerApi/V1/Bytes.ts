@@ -1,9 +1,9 @@
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import { FromDataError } from "../../PlutusData.js";
+import * as LbHex from "../../Hex.js";
 import type { FromData, ToData } from "../../PlutusData.js";
 import type { Bytes, Json } from "lbr-prelude";
-import { Buffer } from "node:buffer";
 
 /**
  * `Bytes`
@@ -26,10 +26,10 @@ export const eqLedgerBytes = LbPrelude.eqBytes;
  * (hexadecimal) string.
  */
 export const jsonLedgerBytes: Json<LedgerBytes> = {
-  toJson: (bytes) => Buffer.from(bytes).toString("hex"),
+  toJson: (bytes) => LbHex.bytesToHex(bytes),
   fromJson: (value) => {
     if (typeof value === "string") {
-      return Buffer.from(value, "hex");
+      return LbHex.bytesFromHex(value);
     } else {
       throw new JsonError("JSON Value is not a string");
     }
