@@ -60,8 +60,16 @@ describe("Integer instance tests", () => {
   describe("Json Integer", () => {
     jsonInstanceIt(LbPrelude.jsonInteger, 10n, Scientific.fromString("10"));
     jsonInstanceIt(LbPrelude.jsonInteger, 13n, Scientific.fromString("13"));
-    jsonInstanceIt(LbPrelude.jsonInteger, -10n, Scientific.fromString("-10"));
-    jsonInstanceIt(LbPrelude.jsonInteger, -13n, Scientific.fromString("-13"));
+    jsonInstanceIt(
+      LbPrelude.jsonInteger,
+      -10n,
+      Scientific.fromString("-10"),
+    );
+    jsonInstanceIt(
+      LbPrelude.jsonInteger,
+      -13n,
+      Scientific.fromString("-13"),
+    );
   });
 });
 
@@ -69,38 +77,38 @@ describe("Bytes instance tests", () => {
   describe("Eq Bytes", () => {
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("a"),
-      LbPrelude.bytesFrom("a"),
+      LbPrelude.bytesFromOctets("a"),
+      LbPrelude.bytesFromOctets("a"),
       true,
     );
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("b"),
-      LbPrelude.bytesFrom("b"),
+      LbPrelude.bytesFromOctets("b"),
+      LbPrelude.bytesFromOctets("b"),
       true,
     );
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("1234"),
-      LbPrelude.bytesFrom("1234"),
+      LbPrelude.bytesFromOctets("1234"),
+      LbPrelude.bytesFromOctets("1234"),
       true,
     );
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("ab"),
-      LbPrelude.bytesFrom("ab"),
+      LbPrelude.bytesFromOctets("ab"),
+      LbPrelude.bytesFromOctets("ab"),
       true,
     );
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("ab"),
-      LbPrelude.bytesFrom("a"),
+      LbPrelude.bytesFromOctets("ab"),
+      LbPrelude.bytesFromOctets("a"),
       false,
     );
     eqInstanceIt(
       LbPrelude.eqBytes,
-      LbPrelude.bytesFrom("b"),
-      LbPrelude.bytesFrom("a"),
+      LbPrelude.bytesFromOctets("b"),
+      LbPrelude.bytesFromOctets("a"),
       false,
     );
   });
@@ -108,12 +116,12 @@ describe("Bytes instance tests", () => {
   describe("Json Bytes", () => {
     jsonInstanceIt(
       LbPrelude.jsonBytes,
-      LbPrelude.bytesFrom("ilikedogs"),
+      LbPrelude.bytesFromOctets("ilikedogs"),
       "aWxpa2Vkb2dz",
     );
     jsonInstanceIt(
       LbPrelude.jsonBytes,
-      LbPrelude.bytesFrom("Your midas touch on your chevy door"),
+      LbPrelude.bytesFromOctets("Your midas touch on your chevy door"),
       "WW91ciBtaWRhcyB0b3VjaCBvbiB5b3VyIGNoZXZ5IGRvb3I=",
     );
   });
@@ -155,7 +163,11 @@ describe("Char instance tests", () => {
 
   describe("Json Char", () => {
     jsonInstanceIt(LbPrelude.jsonChar, LbPrelude.charFromString("i"), "i");
-    jsonInstanceIt(LbPrelude.jsonChar, LbPrelude.charFromString("𠮷"), "𠮷");
+    jsonInstanceIt(
+      LbPrelude.jsonChar,
+      LbPrelude.charFromString("𠮷"),
+      "𠮷",
+    );
   });
 });
 
@@ -176,7 +188,12 @@ describe("Text instance tests", () => {
 describe("Maybe instance tests", () => {
   describe("Eq Maybe", () => {
     eqInstanceIt(LbPrelude.eqMaybe(LbPrelude.eqInteger), 212n, 212n, true);
-    eqInstanceIt(LbPrelude.eqMaybe(LbPrelude.eqInteger), -212n, -212n, true);
+    eqInstanceIt(
+      LbPrelude.eqMaybe(LbPrelude.eqInteger),
+      -212n,
+      -212n,
+      true,
+    );
     eqInstanceIt(
       LbPrelude.eqMaybe(LbPrelude.eqInteger),
       undefined,

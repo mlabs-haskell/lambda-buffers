@@ -3,7 +3,6 @@ import { JsonError, Scientific } from "./Json.js";
 import * as LbJson from "./Json.js";
 import type { Eq } from "./Eq.js";
 import type { Ord } from "./Ord.js";
-import { Buffer } from "node:buffer";
 import * as LbMap from "./Map.js";
 import * as LbSet from "./Set.js";
 
@@ -116,9 +115,12 @@ export const jsonInteger: Json<Integer> = {
 export type Bytes = Uint8Array;
 
 /**
- * `bytesFrom` is an alias for {@link Buffer.from }.
+ * `bytesFromOctets` converts a string of octets into a `Bytes`.
+ * Values outside the range of an octet are clamped.
  */
-export const bytesFrom = Buffer.from;
+export function bytesFromOctets(str: string): Bytes {
+  return Uint8Array.from(str, (v: string, _ix: number) => v.codePointAt(0)!);
+}
 
 /**
  * `Eq` instance for `Bytes` which is true iff the arrays are the same length
@@ -126,10 +128,26 @@ export const bytesFrom = Buffer.from;
  */
 export const eqBytes: Eq<Bytes> = {
   eq: (l, r) => {
-    return Buffer.compare(l, r) === 0;
+    if (!(l.length === r.length)) {
+      return false;
+    }
+    for (let i = 0; i < l.length; ++i) {
+      if (l[i]! !== r[i]!) {
+        return false;
+      }
+    }
+    return true;
   },
   neq: (l, r) => {
-    return Buffer.compare(l, r) !== 0;
+    if (!(l.length === r.length)) {
+      return true;
+    }
+    for (let i = 0; i < l.length; ++i) {
+      if (l[i]! !== r[i]!) {
+        return true;
+      }
+    }
+    return false;
   },
 };
 
@@ -140,14 +158,22 @@ export const ordBytes: Ord<Bytes> = {
   eq: eqBytes.eq,
   neq: eqBytes.neq,
   compare: (l, r) => {
-    const res = Buffer.compare(l, r);
-    if (res === -1) {
-      return "LT";
-    } else if (res === 1) {
-      return "GT";
-    } else {
+    let i = 0;
+    let j = 0;
+    for (; i < l.length && j < r.length; ++i, ++j) {
+      if (l[i]! !== r[i]!) {
+        return l[i]! < r[i]! ? "LT" : "GT";
+      }
+    }
+    if (l.length === r.length) {
       return "EQ";
     }
+    if (l.length < r.length) {
+      return "LT";
+    }
+
+    // if (i > j)
+    return "GT";
   },
 };
 
@@ -156,17 +182,13 @@ export const ordBytes: Ord<Bytes> = {
  */
 export const jsonBytes: Json<Bytes> = {
   toJson: (bytes) => {
-    // The copy is necessary otherwise the buffer gets mutated under the hood
-    // and the tests break i.e., the following is broken
-    // ```
-    // const bufferBytes = Buffer.from(bytes.buffer);
-    // ```
-    const bufferBytes = Buffer.from(bytes);
-    return bufferBytes.toString("base64");
+    const binString = String.fromCodePoint(...bytes);
+    return btoa(binString);
   },
   fromJson: (value) => {
     if (typeof value === "string") {
-      return Buffer.from(value, "base64");
+      const binString = atob(value);
+      return bytesFromOctets(binString);
     } else {
       throw new JsonError("JSON Value is not a string");
     }
@@ -431,7 +453,9 @@ export function jsonEither<L, R>(
   return {
     toJson: (either) => {
       if (either.name === "Left") {
-        return LbJson.jsonConstructor("Left", [dict1.toJson(either.fields)]);
+        return LbJson.jsonConstructor("Left", [
+          dict1.toJson(either.fields),
+        ]);
       } else {
         return LbJson.jsonConstructor("Right", [
           dict2.toJson(either.fields),
@@ -481,10 +505,16 @@ export type Map<K, V> = LbMap.Map<K, V>;
 export function eqMap<K, V>(dictK: Eq<K>, dictV: Eq<V>): Eq<Map<K, V>> {
   return {
     eq: (l, r) => {
-      return eqList(eqPair(dictK, dictV)).eq(LbMap.toList(l), LbMap.toList(r));
+      return eqList(eqPair(dictK, dictV)).eq(
+        LbMap.toList(l),
+        LbMap.toList(r),
+      );
     },
     neq: (l, r) => {
-      return eqList(eqPair(dictK, dictV)).neq(LbMap.toList(l), LbMap.toList(r));
+      return eqList(eqPair(dictK, dictV)).neq(
+        LbMap.toList(l),
+        LbMap.toList(r),
+      );
     },
   };
 }
@@ -625,10 +655,10 @@ export function ordList<A>(dict: Ord<A>): Ord<List<A>> {
           return cmp;
         }
       }
-      if (i === j) {
+      if (l.length === r.length) {
         return "EQ";
       }
-      if (i < j) {
+      if (l.length < r.length) {
         return "LT";
       }
 
@@ -691,7 +721,8 @@ export function jsonPair<L, R>(
     fromJson: (value) => {
       if (!(LbJson.isJsonArray(value) && value.length === 2)) {
         throw new JsonError(
-          "Expected JSON Array of length 2 but got " + LbJson.stringify(value),
+          "Expected JSON Array of length 2 but got " +
+            LbJson.stringify(value),
         );
       }
       return [dict1.fromJson(value[0]!), dict2.fromJson(value[1]!)];
