@@ -126,26 +126,31 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        sum_parser(&value).and_then(|obj| match obj {
-            ("Nothing", ctor_fields) => match &ctor_fields[..] {
-                [] => Ok(None),
-                _ => Err(Error::UnexpectedArrayLength {
-                    wanted: 0,
-                    got: ctor_fields.len(),
-                }),
-            },
-            ("Just", ctor_fields) => match &ctor_fields[..] {
-                [val] => Ok(Some(T::from_json(val.clone())?)),
-                _ => Err(Error::UnexpectedArrayLength {
-                    wanted: 1,
-                    got: ctor_fields.len(),
-                }),
-            },
-            _ => Err(Error::UnexpectedJsonInvariant {
-                wanted: "constructor names (Nothing, Just)".to_owned(),
-                got: "unknown constructor name".to_owned(),
-            }),
-        })
+        case_json_constructor(
+            "Prelude.Maybe",
+            vec![
+                (
+                    "Nothing",
+                    Box::new(|ctor_fields| match &ctor_fields[..] {
+                        [] => Ok(None),
+                        _ => Err(Error::UnexpectedArrayLength {
+                            wanted: 0,
+                            got: ctor_fields.len(),
+                        }),
+                    }),
+                ),
+                (
+                    "Just",
+                    Box::new(|ctor_fields| match &ctor_fields[..] {
+                        [val] => Ok(Some(T::from_json(val.clone())?)),
+                        _ => Err(Error::UnexpectedArrayLength {
+                            wanted: 1,
+                            got: ctor_fields.len(),
+                        }),
+                    }),
+                ),
+            ],
+        )(value)
     }
 }
 
@@ -162,26 +167,31 @@ where
     }
 
     fn from_json(value: Value) -> Result<Self, Error> {
-        sum_parser(&value).and_then(|map| match map {
-            ("Right", ctor_fields) => match &ctor_fields[..] {
-                [val] => Ok(Ok(T::from_json(val.clone())?)),
-                _ => Err(Error::UnexpectedArrayLength {
-                    wanted: 1,
-                    got: ctor_fields.len(),
-                }),
-            },
-            ("Left", ctor_fields) => match &ctor_fields[..] {
-                [val] => Ok(Err(E::from_json(val.clone())?)),
-                _ => Err(Error::UnexpectedArrayLength {
-                    wanted: 1,
-                    got: ctor_fields.len(),
-                }),
-            },
-            _ => Err(Error::UnexpectedJsonInvariant {
-                wanted: "constructor names (Left, Right)".to_owned(),
-                got: "unknown constructor name".to_owned(),
-            }),
-        })
+        case_json_constructor(
+            "Prelude.Either",
+            vec![
+                (
+                    "Right",
+                    Box::new(|ctor_fields| match &ctor_fields[..] {
+                        [val] => Ok(Ok(T::from_json(val.clone())?)),
+                        _ => Err(Error::UnexpectedArrayLength {
+                            wanted: 1,
+                            got: ctor_fields.len(),
+                        }),
+                    }),
+                ),
+                (
+                    "Left",
+                    Box::new(|ctor_fields| match &ctor_fields[..] {
+                        [val] => Ok(Err(E::from_json(val.clone())?)),
+                        _ => Err(Error::UnexpectedArrayLength {
+                            wanted: 1,
+                            got: ctor_fields.len(),
+                        }),
+                    }),
+                ),
+            ],
+        )(value)
     }
 }
 
@@ -333,11 +343,17 @@ pub fn sum_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
     Value::Object(obj)
 }
 
-/// Parse a JSON value into an intermediary representation of a sum type.
+/// Construct a closure that can parse a JSON object, based on a list of constructor field parsers.
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
-pub fn sum_parser(value: &Value) -> Result<(&str, &Vec<Value>), Error> {
-    match value {
-        Value::Object(obj) => {
+pub fn case_json_constructor<'a, T: 'a>(
+    title: &'a str,
+    ctor_parsers: Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
+) -> Box<dyn Fn(Value) -> Result<T, Error> + 'a> {
+    let ctor_parsers: BTreeMap<&str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>> =
+        BTreeMap::from_iter(ctor_parsers);
+
+    Box::new(move |value| match value {
+        Value::Object(ref obj) => {
             let name = obj
                 .get("name")
                 .ok_or(Error::UnexpectedFieldName {
@@ -348,7 +364,7 @@ pub fn sum_parser(value: &Value) -> Result<(&str, &Vec<Value>), Error> {
                     Value::String(str) => Ok(str),
                     _ => Err(Error::UnexpectedJsonType {
                         wanted: JsonType::String,
-                        got: JsonType::from(value),
+                        got: JsonType::from(&value),
                     }),
                 })?;
             let fields = obj
@@ -361,15 +377,29 @@ pub fn sum_parser(value: &Value) -> Result<(&str, &Vec<Value>), Error> {
                     Value::Array(str) => Ok(str),
                     _ => Err(Error::UnexpectedJsonType {
                         wanted: JsonType::Array,
-                        got: JsonType::from(value),
+                        got: JsonType::from(&value),
                     }),
                 })?;
 
-            Ok((name, fields))
+            let names = ctor_parsers
+                .keys()
+                .map(std::ops::Deref::deref)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            let ctor_parser =
+                ctor_parsers
+                    .get(name.as_str())
+                    .ok_or(Error::UnexpectedJsonInvariant {
+                        wanted: format!("constructor names ({}) of {}", names, title),
+                        got: format!("unknown constructor name: {}", name),
+                    })?;
+
+            ctor_parser(fields)
         }
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Null,
-            got: JsonType::from(value),
+            got: JsonType::from(&value),
         }),
-    }
+    })
 }
