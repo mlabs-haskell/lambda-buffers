@@ -42,11 +42,13 @@ data GenOpts = GenOpts
 
 makeLenses ''GenOpts
 
-logInfo :: String -> IO ()
-logInfo msg = putStrLn $ "[lbg][INFO] " <> msg <> "."
+logInfo :: FilePath -> String -> IO ()
+logInfo "" msg = putStrLn $ msg <> " [INFO]"
+logInfo fp msg = putStrLn $ fp <> ": " <> msg <> " [INFO]"
 
-logError :: String -> IO ()
-logError msg = putStrLn $ "[lbg][ERROR] " <> msg <> "."
+logError :: FilePath -> String -> IO ()
+logError "" msg = putStrLn $ msg <> " [ERROR]"
+logError fp msg = putStrLn $ fp <> ": " <> msg <> " [ERROR]"
 
 data Generated = Generated
   { _generatedFilePath :: FilePath
@@ -61,8 +63,8 @@ type Handler = (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Err
 
 gen :: GenOpts -> Handler -> IO ()
 gen opts cont = do
-  logInfo $ "Codegen Input at " <> opts ^. inputFile
-  when (opts ^. debug) $ logInfo $ "Options received: " <> show opts
+  logInfo "" $ "Reading Codegen Input at " <> opts ^. inputFile
+  when (opts ^. debug) $ logInfo "" $ "Options received: " <> show opts
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   ci'' <- filterToRequestedClasses' opts ci'
@@ -73,11 +75,11 @@ gen opts cont = do
     then do
       writeCodegenResult (opts ^. outputFile)
       writePackageDeps (opts ^. genDir </> "build.json") allDeps
-      logInfo "Code generation successful"
+      logInfo (opts ^. inputFile) "Code generation successful"
     else do
       writeCodegenError (opts ^. outputFile) allErrors
-      logError "Code generation reported errors"
-  logInfo $ "Codegen Output at " <> opts ^. outputFile
+      logError (opts ^. inputFile) "Code generation failed"
+  logInfo "" $ "Writing Codegen Output at " <> opts ^. outputFile
 
 instance MonadFail (Either String) where
   fail = Left
@@ -90,7 +92,7 @@ filterToRequestedClasses' opts ci = do
       ( \cl -> do
           case Config.qClassNameFromText . Text.pack $ cl of
             Left err -> do
-              logError err
+              logError "" err
               exitFailure
             Right qcn -> return qcn
       )
@@ -104,10 +106,10 @@ filterToRequestedClasses reqCls ci =
     requestedClasses' = PC.classClosure ciClassRels reqCls
    in
     do
-      logInfo $ "Computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
+      logInfo "" $ "Computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
       unless (null (reqCls `Set.difference` ciQClassNames)) $ do
-        logError $
-          "Requested to print classes that are not available in the provided context."
+        logError "" $
+          "Requested to print implementations for classes that are not available in the provided context (HINT: Import the module where the type class is defined)."
             <> "\nClasses requested: "
             <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
             <> "\nClasses available: "
@@ -130,13 +132,13 @@ collectErrorsAndDeps opts res = do
     ( \(mn, errOrPrint) (errs, deps) -> do
         case errOrPrint of
           Left err -> do
-            logInfo $
+            logInfo (opts ^. inputFile) $
               "Code generation failed for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
             return (err : errs, deps)
           Right gend -> do
             writeFileAndCreate (opts ^. genDir </> (gend ^. generatedFilePath)) (gend ^. generatedCode)
-            logInfo $
+            logInfo (opts ^. inputFile) $
               "Code generation succeeded for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
                 <> " at file path "
@@ -150,7 +152,7 @@ runFromProto :: FilePath -> P.Input -> IO PC.CodegenInput
 runFromProto ofp ci = case PC.codegenInputFromProto ci of
   Left err -> do
     writeCodegenError ofp [err]
-    logError $ "Code generation failed due to problems with the input file, inspect the error in " <> ofp <> " to find out the details"
+    logError "" $ "Code generation failed due to problems with the input file, inspect the error in " <> ofp <> " to find out the details"
     exitFailure
   Right ci' -> return ci'
 
@@ -177,7 +179,7 @@ readCodegenInput fp = do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
+      logError "" $ "Unknown Codegen Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure
 
 writeCodegenError :: FilePath -> [P.Error] -> IO ()
@@ -193,7 +195,7 @@ writeCodegenOutput fp cr = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
     _ -> do
-      logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+      logError "" $ "Unknown Codegen Output format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure
 
 writePackageDeps :: FilePath -> Set Text -> IO ()

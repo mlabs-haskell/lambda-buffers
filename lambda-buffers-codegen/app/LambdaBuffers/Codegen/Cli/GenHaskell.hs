@@ -38,12 +38,12 @@ readHaskellConfig f = do
   unless
     fExists
     ( do
-        logError $ "Provided Haskell Codegen configuration file doesn't exists: " <> f
+        logError "" $ "Provided Haskell Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
   mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
-      logError $ "Invalid Haskell configuration file " <> f
+      logError "" $ "Invalid Haskell configuration file " <> f
       exitFailure
     Just cfg -> return cfg
