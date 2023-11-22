@@ -216,7 +216,7 @@ export function checkInvariants<K>(
       const [hl, vl] = go(node.left);
       const [hr, vr] = go(node.right);
 
-      if (node.height !== Math.max(hl, hr) + 1) {
+      if (!(node.height === Math.max(hl, hr) + 1 && Math.abs(hl - hr) <= 1)) {
         throw new Error(`Height invariant violated ${JSON.stringify(node)}`);
       }
 
