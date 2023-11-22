@@ -18,6 +18,20 @@ describe("Hex tests", () => {
     });
   }
 
+  function hexRoundTripIt(hex: string) {
+    const hexRoundTrip = LbHex.bytesToHex(LbHex.bytesFromHex(hex));
+    it(`Roundtrip for hex ${hex}`, () => {
+      assert.deepStrictEqual(hex, hexRoundTrip);
+    });
+  }
+
+  function bytesRoundTripIt(bytes: Uint8Array) {
+    const bytesRoundTrip = LbHex.bytesFromHex(LbHex.bytesToHex(bytes));
+    it(`Roundtrip for bytes ${bytes}`, () => {
+      assert.deepStrictEqual(bytes, bytesRoundTrip);
+    });
+  }
+
   bytesIsHexIt(Uint8Array.from([0xff, 0x11]), "ff11");
   bytesIsHexIt(Uint8Array.from([0xff]), "ff");
   bytesIsHexIt(Uint8Array.from([]), "");
@@ -47,4 +61,23 @@ describe("Hex tests", () => {
   hexIsBytesIt("FFAAFF00", Uint8Array.from([0xff, 0xaa, 0xff, 0x00]));
   hexIsBytesIt("ffAAfF00", Uint8Array.from([0xff, 0xaa, 0xff, 0x00]));
   hexIsBytesIt("ffAAfF00", Uint8Array.from([0xff, 0xaa, 0xff, 0x00]));
+
+  hexRoundTripIt("ffaabbaacc011245");
+  hexRoundTripIt("000000ffaabbaacc011245");
+  hexRoundTripIt("000000ffaabbaacc011245000000");
+  hexRoundTripIt("");
+  hexRoundTripIt("abcdef");
+  hexRoundTripIt("01234567890a");
+
+  bytesRoundTripIt(Uint8Array.from([]));
+  bytesRoundTripIt(Uint8Array.from([0x00]));
+  bytesRoundTripIt(Uint8Array.from([0x01]));
+  bytesRoundTripIt(Uint8Array.from([0x01, 0xff]));
+  bytesRoundTripIt(Uint8Array.from([0x01, 0xf0]));
+  bytesRoundTripIt(Uint8Array.from([0x01, 0xf0]));
+  bytesRoundTripIt(Uint8Array.from([0x00, 0xf0]));
+  bytesRoundTripIt(Uint8Array.from([0x00, 0xf0, 0x00]));
+  bytesRoundTripIt(Uint8Array.from([0x00, 0xf0, 0x00, 0x00]));
+  bytesRoundTripIt(Uint8Array.from([0x00, 0x00, 0x00, 0x00]));
+  bytesRoundTripIt(Uint8Array.from([0xf0, 0x00, 0x00, 0xf0]));
 });
