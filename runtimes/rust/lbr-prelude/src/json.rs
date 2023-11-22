@@ -9,6 +9,8 @@ use serde_json;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+pub mod curried;
+
 /// Trait that lbf-prelude::json class maps to
 pub trait Json {
     fn to_json(&self) -> Result<Value, Error>;
@@ -358,11 +360,13 @@ pub fn json_array(array: Vec<Value>) -> Value {
 }
 
 /// Parse a JSON Array and its elements
-pub fn case_json_array<A>(
+///
+/// LamVal Json builtin
+pub fn case_json_array<T>(
     parser_name: &str,
-    parse_arr: impl Fn(Vec<Value>) -> Result<A, Error>,
+    parse_arr: impl FnOnce(Vec<Value>) -> Result<T, Error>,
     value: Value,
-) -> Result<A, Error> {
+) -> Result<T, Error> {
     match value {
         Value::Array(array) => parse_arr(array),
         _ => Err(Error::UnexpectedJsonType {
@@ -423,11 +427,11 @@ pub fn json_object(kvs: Vec<(String, Value)>) -> Value {
 /// Parse a JSON Object and its fields
 ///
 /// LamVal Json builtin
-pub fn case_json_object<A>(
+pub fn case_json_object<T>(
     parser_name: &str,
-    parse_obj: impl Fn(serde_json::Map<String, Value>) -> Result<A, Error>,
+    parse_obj: impl FnOnce(serde_json::Map<String, Value>) -> Result<T, Error>,
     value: Value,
-) -> Result<A, Error> {
+) -> Result<T, Error> {
     match value {
         Value::Object(obj) => parse_obj(obj),
         _ => Err(Error::UnexpectedJsonType {
