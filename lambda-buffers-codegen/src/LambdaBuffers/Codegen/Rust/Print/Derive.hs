@@ -1,7 +1,6 @@
-module LambdaBuffers.Codegen.Rust.Print.Derive (printDeriveEqBase, printDeriveIsPlutusData, printDeriveJson, rsClassImplPrinters) where
+module LambdaBuffers.Codegen.Rust.Print.Derive (printDeriveEqBase, printDeriveIsPlutusData, printDeriveJson, rsTraitImplPrinters) where
 
 import Control.Lens ((^.))
-import Data.Bifunctor (second)
 import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -10,17 +9,17 @@ import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
-import LambdaBuffers.Codegen.LamVal.PlutusData (deriveToPlutusDataImpl)
+import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print (MonadPrint)
-import LambdaBuffers.Codegen.Rust.Print.LamVal (printFunc, printValueE)
+import LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE)
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, braces, equals, hardline, indent, space, vsep, (<+>))
+import Prettyprinter (Doc, align, braces, colon, comma, encloseSep, hcat, indent, lparen, parens, rparen, space, vsep, (<+>))
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
-rsClassImplPrinters ::
+rsTraitImplPrinters ::
   MonadPrint m =>
   Map
     R.QTraitName
@@ -30,96 +29,179 @@ rsClassImplPrinters ::
       PC.Ty ->
       m (Doc ann)
     )
-rsClassImplPrinters =
+rsTraitImplPrinters =
   Map.fromList
     [
-      ( (R.MkCrateName "std", R.MkModuleName "cmp", R.MkClassName "Eq")
+      ( R.qLibRef R.MkTraitName "std" "cmp" "PartialEq"
+      , printDerivePartialEqBase
+      )
+    ,
+      ( R.qLibRef R.MkTraitName "std" "cmp" "Eq"
       , printDeriveEqBase
       )
     ,
-      ( (R.MkCrateName "plutus-ledger-api", R.MkModuleName "plutus-data", R.MkClassName "IsPlutusData")
+      ( R.qLibRef R.MkTraitName "plutus-ledger-api" "plutus_data" "IsPlutusData"
       , printDeriveIsPlutusData
       )
     ,
-      ( (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkClassName "Json")
+      ( R.qLibRef R.MkTraitName "lbr-prelude" "json" "Json"
       , printDeriveJson
       )
     ]
-eqClassMethodName :: R.ValueName
-eqClassMethodName = R.MkValueName "eq"
+eqTraitMethodName :: R.ValueName
+eqTraitMethodName = R.MkValueName "eq"
 
-lvEqBuiltinsBase :: Map LV.ValueName (R.CrateName, R.ModuleName, R.ValueName)
+eqTraitMethodArgs :: [(R.ValueName, R.QTyName)]
+eqTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self"), (R.MkValueName "other", R.qBuiltin R.MkTyName "&Self")]
+
+eqTraitMethodReturns :: R.QTyName
+eqTraitMethodReturns = R.qBuiltin R.MkTyName "bool"
+
+lvEqBuiltinsBase :: Map LV.ValueName R.QValName
 lvEqBuiltinsBase =
   Map.fromList
-    [ ("eq", (R.MkCrateName "std", R.MkModuleName "cmp", R.MkValueName "eq"))
-    , ("and", (R.MkCrateName "std", R.MkModuleName "ops", R.MkValueName "bitand"))
-    , ("true", (R.MkCrateName "std", R.MkModuleName "primitive", R.MkValueName "true"))
-    , ("false", (R.MkCrateName "std", R.MkModuleName "primitive", R.MkValueName "false"))
+    [ ("eq", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "eq")
+    , ("and", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "and")
+    , ("true", R.qBuiltin R.MkValueName "true")
+    , ("false", R.qBuiltin R.MkValueName "false")
     ]
 
-printDeriveEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveEqBase mn iTyDefs mkInstanceDoc ty = do
+printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDerivePartialEqBase mn iTyDefs mkInstance ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsBase (printFunc eqClassMethodName valE) of
+      case LV.runPrint lvEqBuiltinsBase (printValueE valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           for_ imps Print.importValue
-          return implDoc
+          return $
+            mkInstance $
+              printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
+
+printDeriveEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveEqBase _ _ mkInstance _ = return $ mkInstance mempty
 
 lvPlutusDataBuiltins :: Map LV.ValueName R.QValName
 lvPlutusDataBuiltins =
   Map.fromList
-    [ ("toPlutusData", (R.MkCrateName "plutus-ledger-api", R.MkModuleName "plutus-data", R.MkValueName "to_plutus_data"))
-    , ("fromPlutusData", (R.MkCrateName "plutus-ledger-api", R.MkModuleName "plutus-data", R.MkValueName "from_plutus_data"))
-    , ("casePlutusData", (R.MkCrateName "plutus-ledger-api", R.MkModuleName "LambdaBuffers.Runtime.Plutus", R.MkValueName "casePlutusData"))
-    , ("integerData", (R.MkCrateName "plutus-ledger-api", R.MkModuleName "plutus-data", R.MkValueName "mkI"))
-    , ("constrData", (R.MkCrateName "plutus-ledger-api", R.MkModuleName "plutus-data", R.MkValueName "mkConstr"))
-    , ("listData", (R.MkCrateName "plutus-tx", R.MkModuleName "PlutusTx.Builtins", R.MkValueName "mkList"))
+    [ ("toPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::PlutusData" "to_plutus_data")
+    , ("fromPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::PlutusData" "from_plutus_data")
+    , ("casePlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "case_plutus_data")
+    , ("integerData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::integer")
+    , ("constrData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::constr")
+    , ("listData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::list")
+    , ("succeedParse", R.qLibRef R.MkValueName "std" "result" "Result::Ok")
+    , ("failParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "fail_parse")
+    , ("bindParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "bind_parse")
     ]
 
-toPlutusDataClassMethodName :: R.ValueName
-toPlutusDataClassMethodName = R.MkValueName "to_plutus_data"
+toPlutusDataTraitMethodName :: R.ValueName
+toPlutusDataTraitMethodName = R.MkValueName "to_plutus_data"
+
+toPlutusDataTraitMethodArgs :: [(R.ValueName, R.QTyName)]
+toPlutusDataTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self")]
+
+toPlutusDataTraitMethodReturns :: R.QTyName
+toPlutusDataTraitMethodReturns =
+  R.qLibRef R.MkTyName "plutus-ledger-api" "plutus_data" "PlutusData"
+
+fromPlutusDataTraitMethodName :: R.ValueName
+fromPlutusDataTraitMethodName = R.MkValueName "from_plutus_data"
+
+fromPlutusDataTraitMethodArgs :: [(R.ValueName, R.QTyName)]
+fromPlutusDataTraitMethodArgs =
+  [
+    ( R.MkValueName "plutus_data"
+    , R.qLibRef
+        R.MkTyName
+        "plutus-ledger-api"
+        "plutus_data"
+        "PlutusData"
+    )
+  ]
+
+fromPlutusDataTraitMethodReturns :: R.QTyName
+fromPlutusDataTraitMethodReturns =
+  R.qLibRef
+    R.MkTyName
+    "std"
+    "result"
+    "Result<Self, plutus_ledger_api::plutus_data::PlutusDataError>"
 
 printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
-  case deriveToPlutusDataImpl mn iTyDefs ty of
-    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
-    Right valE -> do
-      case LV.runPrint lvPlutusDataBuiltins (printFunc toPlutusDataClassMethodName valE) of
-        Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
-        Right (implDoc, imps) -> do
-          for_ imps Print.importValue
-          return implDoc
+  case printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty of
+    Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.IsPlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
+    Right (plutusDataInstDefDoc, imps) -> do
+      for_ imps Print.importValue
+      return plutusDataInstDefDoc
 
-printValueDef :: R.ValueName -> Doc ann -> Doc ann
-printValueDef valName valDoc =
-  indent 4 $ "fn" <+> R.printRsValName valName <+> equals <+> braces (space <> valDoc)
+printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
+printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
+  toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
+  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printValueE toPlutusDataValE)
+  fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
+  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printValueE fromPlutusDataValE)
+
+  let instanceDoc =
+        mkInstanceDoc
+          ( align $
+              vsep
+                [ printTraitMethod
+                    toPlutusDataTraitMethodName
+                    toPlutusDataTraitMethodArgs
+                    toPlutusDataTraitMethodReturns
+                    toPlutusDataImplDoc
+                , printTraitMethod
+                    fromPlutusDataTraitMethodName
+                    fromPlutusDataTraitMethodArgs
+                    fromPlutusDataTraitMethodReturns
+                    fromPlutusDataImplDoc
+                ]
+          )
+  return
+    ( instanceDoc
+    , impsA <> impsB
+    )
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
 lvJsonBuiltins :: Map LV.ValueName R.QValName
 lvJsonBuiltins =
   Map.fromList
-    [ ("toJson", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "to_json"))
-    , ("fromJson", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "from_json"))
-    , ("jsonObject", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "jsonObject"))
-    , ("jsonConstructor", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "sum_constructor"))
-    , ("jsonArray", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "jsonArray"))
-    , ("caseJsonConstructor", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "caseJsonConstructor"))
-    , ("caseJsonArray", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "caseJsonArray"))
-    , ("caseJsonObject", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "caseJsonObject"))
-    , ("jsonField", (R.MkCrateName "lbr-prelude", R.MkModuleName "json", R.MkValueName "jsonField"))
-    , ("succeedParse", (R.MkCrateName "base", R.MkModuleName "Prelude", R.MkValueName "return"))
-    , ("failParse", (R.MkCrateName "base", R.MkModuleName "Prelude", R.MkValueName "fail"))
-    , ("bindParse", (R.MkCrateName "base", R.MkModuleName "Prelude", R.MkValueName ">>="))
+    [ ("toJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "to_json")
+    , ("fromJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "from_json")
+    , ("jsonObject", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_object")
+    , ("jsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "sum_constructor")
+    , ("jsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_array")
+    , ("caseJsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_constructor")
+    , ("caseJsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_array")
+    , ("caseJsonObject", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_object")
+    , ("jsonField", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_field")
+    , ("succeedParse", R.qLibRef R.MkValueName "std" "result" "Result::Ok")
+    , ("failParse", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "fail_parse")
+    , ("bindParse", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "bind_parse")
     ]
 
-toJsonClassMethodName :: R.ValueName
-toJsonClassMethodName = R.MkValueName "to_json"
+toJsonTraitMethodName :: R.ValueName
+toJsonTraitMethodName = R.MkValueName "to_json"
 
-fromJsonClassMethodName :: R.ValueName
-fromJsonClassMethodName = R.MkValueName "from_json"
+toJsonTraitMethodArgs :: [(R.ValueName, R.QTyName)]
+toJsonTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self")]
+
+toJsonTraitMethodReturns :: R.QTyName
+toJsonTraitMethodReturns =
+  R.qLibRef R.MkTyName "std" "result" "Result<serde_json::Value, lbr_prelude::error::Error>"
+
+fromJsonTraitMethodName :: R.ValueName
+fromJsonTraitMethodName = R.MkValueName "from_json"
+
+fromJsonTraitMethodArgs :: [(R.ValueName, R.QTyName)]
+fromJsonTraitMethodArgs = [(R.MkValueName "value", R.qLibRef R.MkTyName "serde_json" "" "Value")]
+
+fromJsonTraitMethodReturns :: R.QTyName
+fromJsonTraitMethodReturns =
+  R.qLibRef R.MkTyName "std" "result" "Result<Self, lbr_prelude::error::Error>"
 
 printDeriveJson :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveJson mn iTyDefs mkInstanceDoc ty = do
@@ -132,19 +214,41 @@ printDeriveJson mn iTyDefs mkInstanceDoc ty = do
 printDeriveJson' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
 printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printFunc toJsonClassMethodName toJsonValE)
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printFunc fromJsonClassMethodName fromJsonValE)
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
 
   let instanceDoc =
         mkInstanceDoc
           ( align $
               vsep
-                [ toJsonImplDoc
-                , fromJsonImplDoc
+                [ printTraitMethod
+                    toJsonTraitMethodName
+                    toJsonTraitMethodArgs
+                    toJsonTraitMethodReturns
+                    toJsonImplDoc
+                , printTraitMethod
+                    fromJsonTraitMethodName
+                    fromJsonTraitMethodArgs
+                    fromJsonTraitMethodReturns
+                    fromJsonImplDoc
                 ]
           )
   return
     ( instanceDoc
     , impsA <> impsB
     )
+
+printTraitMethod ::
+  R.ValueName -> [(R.ValueName, R.QTyName)] -> R.Qualified R.TyName -> Doc ann -> Doc ann
+printTraitMethod fnName args returns implDoc =
+  let argsWithTypes =
+        encloseSep lparen rparen comma $ (\(arg, ty) -> R.printRsValName arg <> colon <+> R.printRsQTyName ty) <$> args
+      argsLst = hcat $ parens . R.printRsValName . fst <$> args
+   in indent 4 $
+        "fn"
+          <+> R.printRsValName fnName
+            <> argsWithTypes
+          <+> "->"
+          <+> R.printRsQTyName returns
+          <+> braces (space <> implDoc <> argsLst)

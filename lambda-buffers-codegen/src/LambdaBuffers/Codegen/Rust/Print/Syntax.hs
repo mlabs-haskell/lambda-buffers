@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsClassMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, CrateName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon) where
+module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qLibRef, qBuiltin) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -6,16 +6,31 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), colon, dot, enclose, lparen, rparen)
+import Prettyprinter (Doc, Pretty (pretty), colon, enclose, lparen, rparen)
 
-type QTyName = (CrateName, ModuleName, TyName)
-type QTraitName = (CrateName, ModuleName, ClassName)
-type QValName = (CrateName, ModuleName, ValueName)
+data Qualified a
+  = Qualified'Builtin a
+  | Qualified'LibRef CrateName ModuleName a
+  deriving stock (Eq, Ord, Show)
+
+type QValName = Qualified ValueName
+type QTyName = Qualified TyName
+type QTraitName = Qualified TraitName
+
+qLibRef :: (Text -> a) -> Text -> Text -> Text -> Qualified a
+qLibRef mkA cn mn a = Qualified'LibRef (MkCrateName cn) (MkModuleName mn) (mkA a)
+
+qBuiltin :: (Text -> a) -> Text -> Qualified a
+qBuiltin mkA = Qualified'Builtin . mkA
+
+qualifiedToCrate :: Qualified a -> Maybe CrateName
+qualifiedToCrate (Qualified'Builtin _) = Nothing
+qualifiedToCrate (Qualified'LibRef c _ _) = Just c
 
 newtype CrateName = MkCrateName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
 newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
-newtype ClassName = MkClassName Text deriving stock (Eq, Ord, Show, Generic)
+newtype TraitName = MkTraitName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ValueName = MkValueName Text deriving stock (Eq, Ord, Show, Generic)
 
 data TyDefKw = StructTyDef | EnumTyDef | SynonymTyDef deriving stock (Eq, Ord, Show, Generic)
@@ -24,20 +39,20 @@ fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
 
 fromLbModuleName :: PC.ModuleName -> ModuleName
-fromLbModuleName mn = MkModuleName $ Text.intercalate "::" ([Text.toLower $ p ^. #name | p <- mn ^. #parts])
+fromLbModuleName mn = MkModuleName $ Text.intercalate "::" ([Text.replace "-" "_" $ Text.toLower $ p ^. #name | p <- mn ^. #parts])
 
 crateFromLbModuleName :: PC.ModuleName -> CrateName
-crateFromLbModuleName mn = MkCrateName $ Text.intercalate "-" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
+crateFromLbModuleName mn = MkCrateName $ Text.intercalate "_" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
 
 crateNameToText :: CrateName -> Text
 crateNameToText (MkCrateName cpn) = cpn
 
 fromLbForeignRef :: PC.ForeignRef -> QTyName
 fromLbForeignRef fr =
-  ( crateFromLbModuleName $ fr ^. #moduleName
-  , fromLbModuleName $ fr ^. #moduleName
-  , fromLbTyName $ fr ^. #tyName
-  )
+  Qualified'LibRef
+    (crateFromLbModuleName $ fr ^. #moduleName)
+    (fromLbModuleName $ fr ^. #moduleName)
+    (fromLbTyName $ fr ^. #tyName)
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
 filepathFromModuleName mn = Text.unpack (Text.replace "::" "/" (let MkModuleName txt = fromLbModuleName mn in txt)) <> ".rs"
@@ -45,19 +60,17 @@ filepathFromModuleName mn = Text.unpack (Text.replace "::" "/" (let MkModuleName
 printModName :: PC.ModuleName -> Doc ann
 printModName mn = let MkModuleName hmn = fromLbModuleName mn in pretty hmn
 
-printRsQTyName :: QTyName -> Doc ann
-printRsQTyName (MkCrateName rsCrateName, MkModuleName rsModName, MkTyName rsTyName) =
-  pretty rsCrateName <> doubleColon <> pretty rsModName <> doubleColon <> pretty rsTyName
+printQualified :: (a -> Doc ann) -> Qualified a -> Doc ann
+printQualified p (Qualified'Builtin entity) = p entity
+printQualified p (Qualified'LibRef (MkCrateName crateName) (MkModuleName rsModName) entity) =
+  let modules = if Text.null rsModName then mempty else doubleColon <> pretty rsModName
+   in pretty (Text.replace "-" "_" crateName) <> modules <> doubleColon <> p entity
 
-printRsQTraitName :: QTraitName -> Doc ann
-printRsQTraitName (MkCrateName rsCrateName, MkModuleName rsModName, MkClassName rsClassName) =
-  pretty rsCrateName <> doubleColon <> pretty rsModName <> doubleColon <> pretty rsClassName
+printRsTyName :: TyName -> Doc ann
+printRsTyName (MkTyName rsTyName) = pretty rsTyName
 
-printRsQValName :: QValName -> Doc ann
-printRsQValName (_, MkModuleName rsModName, MkValueName rsValName) = case Text.uncons rsValName of
-  Nothing -> "TODO(bladyjoker): Got an empty Rust value name"
-  Just (c, _) | Char.isAlpha c -> pretty rsModName <> dot <> pretty rsValName
-  _ -> enclose lparen rparen $ pretty rsModName <> dot <> pretty rsValName
+printRsTraitName :: TraitName -> Doc ann
+printRsTraitName (MkTraitName rsTraitName) = pretty rsTraitName
 
 printRsValName :: ValueName -> Doc ann
 printRsValName (MkValueName rsValName) = case Text.uncons rsValName of
@@ -65,12 +78,22 @@ printRsValName (MkValueName rsValName) = case Text.uncons rsValName of
   Just (c, _) | Char.isAlpha c -> pretty rsValName
   _ -> enclose lparen rparen $ pretty rsValName
 
+printRsQTyName :: QTyName -> Doc ann
+printRsQTyName = printQualified printRsTyName
+
+printRsQTraitName :: QTraitName -> Doc ann
+printRsQTraitName = printQualified printRsTraitName
+
+printRsQValName :: QValName -> Doc ann
+printRsQValName = printQualified printRsValName
+
 {- | Print the Rust class method name (ie. (==), toJSON etc.).
  This doesn't require a qualified print as it's treated special, we just need to
  import the class and the class methods are made available in the scope.
 -}
-printRsClassMethodName :: QValName -> Doc ann
-printRsClassMethodName (_, _, MkValueName rsValName) = pretty rsValName
+printRsTraitMethodName :: QValName -> Doc ann
+printRsTraitMethodName (Qualified'Builtin rsValName) = printRsValName rsValName
+printRsTraitMethodName (Qualified'LibRef _ _ rsValName) = printRsValName rsValName
 
 printCtorName :: PC.ConstrName -> Doc ann
 printCtorName (PC.ConstrName n _) = pretty n

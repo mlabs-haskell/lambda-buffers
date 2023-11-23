@@ -81,3 +81,28 @@ pub fn case_json_constructor<'a, T: 'a>(
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_constructor(x0, x1, x2)))
 }
+
+/// Curried eq function
+pub fn eq<'a, T>(x: T) -> Box<dyn FnOnce(T) -> bool + 'a>
+where
+    T: PartialEq + 'a,
+{
+    Box::new(move |y| x == y)
+}
+
+/// Curried boolean and function
+pub fn and<'a>(x: bool) -> Box<dyn FnOnce(bool) -> bool + 'a> {
+    Box::new(move |y| x && y)
+}
+
+/// Fail JSON parsing with an internal error
+pub fn fail_parse<T>(err: &str) -> Result<T, Error> {
+    Err(Error::InternalError(err.to_owned()))
+}
+
+/// Curried Result::and_then function
+pub fn bind_parse<'a, A: 'a, B: 'a>(
+    x: Result<A, Error>,
+) -> Box<dyn FnOnce(Box<dyn Fn(A) -> Result<B, Error>>) -> Result<B, Error> + 'a> {
+    Box::new(move |f| x.and_then(f))
+}

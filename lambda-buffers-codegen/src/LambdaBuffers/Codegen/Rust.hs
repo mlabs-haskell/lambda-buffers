@@ -37,6 +37,6 @@ rsPrintModuleEnv :: MonadPrint m => RsPrint.PrintModuleEnv m ann
 rsPrintModuleEnv =
   RsPrint.PrintModuleEnv
     RsSyntax.printModName
-    RsDerive.rsClassImplPrinters
+    RsDerive.rsTraitImplPrinters
     RsPrint.printTyDef
     ["no_implicit_prelude"]

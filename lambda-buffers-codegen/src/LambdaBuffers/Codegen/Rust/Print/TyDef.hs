@@ -12,7 +12,6 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Rust.Print.Syntax (
   TyDefKw (EnumTyDef, StructTyDef, SynonymTyDef),
-  doubleColon,
   printCtorName,
   printFieldName,
   printRsQTraitName,
@@ -23,7 +22,7 @@ import LambdaBuffers.Codegen.Rust.Print.Syntax (
  )
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, braces, brackets, colon, comma, encloseSep, equals, group, hardline, langle, parens, punctuate, rangle, semi, sep, vsep, (<+>))
+import Prettyprinter (Doc, align, braces, brackets, colon, comma, encloseSep, equals, group, hardline, langle, parens, punctuate, rangle, semi, sep, vsep, (<+>))
 
 {- | Prints the type definition.
 
@@ -37,7 +36,7 @@ type Maybe a = Prelude.Maybe a
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
-  (kw, generics, absDoc) <- printTyAbs tyN tyabs
+  (kw, generics, absDoc, trailingSemi) <- printTyAbs tyN tyabs
   if kw /= SynonymTyDef
     then
       return $
@@ -45,7 +44,8 @@ printTyDef (PC.TyDef tyN tyabs _) = do
           <> hardline
           <> group (printTyDefKw kw <+> printTyName tyN <> generics)
           <> absDoc
-    else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc
+          <> (if trailingSemi then semi else mempty)
+    else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc <> (if trailingSemi then semi else mempty)
 
 -- TODO(szg251): should we have a Pub wrapper type?
 printTyDefKw :: TyDefKw -> Doc ann
@@ -54,7 +54,7 @@ printTyDefKw EnumTyDef = "pub enum"
 printTyDefKw SynonymTyDef = "pub type"
 
 debugMacro :: R.QTraitName
-debugMacro = (R.MkCrateName "std", R.MkModuleName "fmt", R.MkClassName "Debug")
+debugMacro = R.qLibRef R.MkTraitName "std" "fmt" "Debug"
 
 printDeriveDebug :: Doc ann
 printDeriveDebug =
@@ -67,11 +67,11 @@ For the above examples it prints
 a b = Foo'MkFoo a | Foo'MkBar b
 a = Prelude.Maybe a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann)
+printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann, Bool)
 printTyAbs tyN (PC.TyAbs args body _) = do
   let argsDoc = if OMap.empty == args then mempty else encloseGenerics (printTyArg <$> toList args)
-  (kw, bodyDoc) <- printTyBody tyN (toList args) body
-  return (kw, argsDoc, group $ align bodyDoc)
+  (kw, bodyDoc, trailingSemi) <- printTyBody tyN (toList args) body
+  return (kw, argsDoc, group $ align bodyDoc, trailingSemi)
 
 {- | Prints the type body.
 
@@ -80,20 +80,20 @@ For the above examples it prints
 Foo'MkFoo a | Foo'MkBar b
 Prelude.Maybe a
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
-printTyBody _ _ (PC.SumI s) = return (EnumTyDef, printSum s)
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann, Bool)
+printTyBody _ _ (PC.SumI s) = return (EnumTyDef, printSum s, False)
 printTyBody _ _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
-  [] -> return (StructTyDef, semi)
-  _ -> return (StructTyDef, printProd p)
+  [] -> return (StructTyDef, mempty, True)
+  _ -> return (StructTyDef, printProd p, True)
 printTyBody _ _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
-  [] -> return (StructTyDef, semi)
-  _ -> printRec r >>= \recDoc -> return (StructTyDef, recDoc)
+  [] -> return (StructTyDef, mempty, True)
+  _ -> printRec r >>= \recDoc -> return (StructTyDef, recDoc, False)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwInternalError si ("Should have an Opaque configured for " <> show tyN)
-    Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args) <> semi)
+    Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args), True)
 
 printSum :: PC.Sum -> Doc ann
 printSum (PC.Sum ctors _) = do
@@ -160,4 +160,6 @@ encloseGenerics args =
 
 printTyRef :: PC.TyRef -> Doc ann
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) = let (R.MkCrateName ccn, R.MkModuleName hmn, R.MkTyName htn) = R.fromLbForeignRef fr in pretty ccn <> doubleColon <> pretty hmn <> doubleColon <> pretty htn
+printTyRef (PC.ForeignI fr) =
+  let qTyName = R.fromLbForeignRef fr
+   in R.printRsQTyName qTyName

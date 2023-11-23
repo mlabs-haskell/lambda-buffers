@@ -2,7 +2,7 @@
   "opaquesConfig": {
     "Plutus.V1.PlutusData": [
       "plutus-ledger-api",
-      "plutus-data",
+      "plutus_data",
       "PlutusData"
     ],
     "Plutus.V1.Address": [
@@ -150,7 +150,7 @@
     "Plutus.V1.PlutusData": [
       [
         "plutus-ledger-api",
-        "plutus-data",
+        "plutus_data",
         "IsPlutusData"
       ]
     ]

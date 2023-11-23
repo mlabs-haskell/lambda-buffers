@@ -103,6 +103,7 @@ library
     , prettyprinter              >=1.7
     , proto-lens                 >=0.7
     , text                       >=1.2
+    , vector                     >=0.12
 
   hs-source-dirs:  src
   exposed-modules:

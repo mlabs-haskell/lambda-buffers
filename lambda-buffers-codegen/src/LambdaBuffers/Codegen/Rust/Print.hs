@@ -14,6 +14,7 @@ import Control.Monad.State.Class (MonadState (get))
 import Data.Foldable (Foldable (toList), foldrM)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
@@ -114,7 +115,7 @@ collectPackageDeps :: Set PC.QTyName -> Set R.QTyName -> Set R.QTraitName -> Set
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
   let deps =
         Set.singleton "base"
-          `Set.union` Set.fromList [crateNameToText cbl | (cbl, _, _) <- toList hsTyImports]
-          `Set.union` Set.fromList [crateNameToText cbl | (cbl, _, _) <- toList classImps]
-          `Set.union` Set.fromList [crateNameToText cbl | (cbl, _, _) <- toList valImps]
+          `Set.union` Set.fromList [crateNameToText cbl | cbl <- mapMaybe R.qualifiedToCrate $ toList hsTyImports]
+          `Set.union` Set.fromList [crateNameToText cbl | cbl <- mapMaybe R.qualifiedToCrate $ toList classImps]
+          `Set.union` Set.fromList [crateNameToText cbl | cbl <- mapMaybe R.qualifiedToCrate $ toList valImps]
    in deps
