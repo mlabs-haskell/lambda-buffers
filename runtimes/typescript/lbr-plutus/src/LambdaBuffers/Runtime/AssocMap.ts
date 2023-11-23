@@ -121,7 +121,7 @@ export function fromList<K, V>(elems: Readonly<List<[K, V]>>): Map<K, V> {
  * {@link toList} translates a {@link Map} to a list of key value pairs.
  *
  * @remarks
- * This copies the Haskell function which does _not_ test whether the set of
+ * This copies the Haskell function which does _not_ test whether the list of
  * keys are unique.
  */
 export function toList<K, V>(map: Readonly<Map<K, V>>): List<[K, V]> {
