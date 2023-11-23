@@ -1,7 +1,7 @@
 import type { Ord } from "./Ord.js";
 
 /**
- * `Node` is an AVL tree i.e., a height balanced tree.
+ * {@link Node} is an AVL tree i.e., a height balanced tree.
  *
  * Recall that an AVL tree satisfies the invariants:
  *
@@ -13,7 +13,7 @@ export type Node<K> =
   | { element: K; height: number; left: Node<K>; right: Node<K> };
 
 /**
- * `forEach` iterates through each element in the AVL tree from smallest
+ * {@link forEach} iterates through each element in the AVL tree from smallest
  * element to largest element.
  * This does not modify the tree.
  */
@@ -103,7 +103,7 @@ export function remove<K>(ordDict: Ord<K>, key: K, node: Node<K>): Node<K> {
 }
 
 /**
- * `nodeHeight(node)` returns the path of the length of the longest path from
+ * {@link nodeHeight} returns the path of the length of the longest path from
  * the tree rooted at `node` to any leaf.
  * The height of `null` is -1.
  */
@@ -124,7 +124,7 @@ export function newHeight<K>(node: Readonly<Node<K>>): number {
 }
 
 /**
- * The cases consider the cases when
+ * The cases consider the following scenario
  *  1. We started with an AVL tree
  *
  *  2. We inserted / or deleted something in the AVL tree so the sorting

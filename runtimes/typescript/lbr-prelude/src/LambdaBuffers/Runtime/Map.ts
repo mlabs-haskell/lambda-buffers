@@ -3,7 +3,7 @@ import * as LbAvlTree from "./AvlTree.js";
 import type { Node } from "./AvlTree.js";
 
 /**
- * A mapping from `K` to `V` where `K` must have a `Ord` instance.
+ * A mapping from `K` to `V` where `K` must have a {@link Ord} instance.
  */
 export class Map<K, V> {
   tree: Node<[K, V]>;
@@ -13,6 +13,9 @@ export class Map<K, V> {
   }
 }
 
+/**
+ * {@link ordOnFst} compares pairs on the first projection.
+ */
 function ordOnFst<K, V>(ordDict: Ord<K>): Ord<[K, V]> {
   return {
     eq: (l, r) => {
@@ -28,7 +31,7 @@ function ordOnFst<K, V>(ordDict: Ord<K>): Ord<[K, V]> {
 }
 
 /**
- * `insert` adds a key value pair in the map. If the key already exists, the
+ * {@link insert} adds a key value pair in the map. If the key already exists, the
  * value is replaced with the new value.
  *
  * Complexity: `O(log n)`
@@ -43,7 +46,7 @@ export function insert<K, V>(
 }
 
 /**
- * `remove` removes a key (and its corresponding value) in the map. If the key
+ * {@link remove} removes a key (and its corresponding value) in the map. If the key
  * does not exist, then this does nothing.
  *
  * Complexity: `O(log n)`
@@ -53,7 +56,7 @@ export function remove<K, V>(ordDict: Ord<K>, key: K, map: Map<K, V>): void {
 }
 
 /**
- * `lookup` lookups up the value corresponding to the given key, and returns
+ * {@link lookup} lookups up the value corresponding to the given key, and returns
  * `undefined` if no such key exists.
  *
  * Complexity: `O(log n)`
@@ -84,7 +87,7 @@ export function toList<K, V>(map: Readonly<Map<K, V>>): [K, V][] {
 }
 
 /**
- * Checks the invariants of an AVL tree.
+ * Checks the invariants of the internal AVL tree.
  *
  * @internal
  */

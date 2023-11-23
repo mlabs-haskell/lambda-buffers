@@ -3,7 +3,7 @@ import * as LbAvlTree from "./AvlTree.js";
 import type { Node } from "./AvlTree.js";
 
 /**
- * A mapping from `K` to `V` where `K` must have a `Ord` instance.
+ * A set of elements `K` where `K` must have a {@link Ord} instance.
  */
 export class Set<K> {
   tree: Node<K>;
@@ -14,7 +14,7 @@ export class Set<K> {
 }
 
 /**
- * `insert` adds a key in the map.
+ * {@link insert} adds a key in the map.
  *
  * Complexity: `O(log n)`
  */
@@ -23,7 +23,7 @@ export function insert<K>(ordDict: Ord<K>, key: K, map: Set<K>): void {
 }
 
 /**
- * `remove` removes a key from the map. If the key does not exist, then this
+ * {@link remove} removes a key from the map. If the key does not exist, then this
  * does nothing.
  *
  * Complexity: `O(log n)`
@@ -33,7 +33,7 @@ export function remove<K>(ordDict: Ord<K>, key: K, map: Set<K>): void {
 }
 
 /**
- * `member` returns true if the given key is in the set, and returns false otherwise
+ * {@link member} returns true if the given key is in the set, and returns false otherwise
  *
  * Complexity: `O(log n)`
  */
@@ -46,7 +46,7 @@ export function member<K>(
 }
 
 /**
- * Checks the invariants of an AVL tree.
+ * Checks the invariants of the internal AVL tree.
  *
  * @internal
  */

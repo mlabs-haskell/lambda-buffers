@@ -7,7 +7,7 @@ import * as LbMap from "./Map.js";
 import * as LbSet from "./Set.js";
 
 /**
- * `Eq` instance for primitive types. This simply wraps `===`.
+ * {@link Eq} instance for primitive types. This simply wraps `===`.
  */
 // deno-lint-ignore no-explicit-any
 export const eqPrimitive: Eq<any> = {
@@ -20,7 +20,7 @@ export const eqPrimitive: Eq<any> = {
 };
 
 /**
- * `Ord` instance for primitive types. This simply wraps `<`, `>`
+ * {@link Ord} instance for primitive types. This simply wraps `<`, `>`
  */
 // deno-lint-ignore no-explicit-any
 export const ordPrimitive: Ord<any> = {
@@ -38,22 +38,22 @@ export const ordPrimitive: Ord<any> = {
 };
 
 /**
- * `Bool` wraps the primitive `boolean`
+ * {@link Bool} wraps the primitive {@link boolean}
  */
 export type Bool = boolean;
 
 /**
- * `Eq` instance for `Bool`
+ * {@link Eq} instance for {@link Bool}
  */
 export const eqBool: Eq<Bool> = eqPrimitive;
 
 /**
- * `Ord` instance for `Bool`
+ * {@link Ord} instance for {@link Bool}
  */
 export const ordBool: Ord<Bool> = ordPrimitive;
 
 /**
- * `Json` instance for `Bool`
+ * {@link Json} instance for {@link Bool}
  */
 export const jsonBool: Json<Bool> = {
   toJson: (arg) => {
@@ -69,22 +69,22 @@ export const jsonBool: Json<Bool> = {
 };
 
 /**
- * `Integer` wraps the primitive `bigint`
+ * {@link Integer} wraps the primitive {@link bigint}
  */
 export type Integer = bigint;
 
 /**
- * `Eq` instance for `Integer`
+ * {@link Eq} instance for {@link Integer}
  */
 export const eqInteger: Eq<Integer> = eqPrimitive;
 
 /**
- * `Ord` instance for `Integer`
+ * {@link Ord} instance for {@link Integer}
  */
 export const ordInteger: Ord<Integer> = ordPrimitive;
 
 /**
- * `Json` instance for `Integer`
+ * {@link Json} instance for {@link Integer}
  */
 export const jsonInteger: Json<Integer> = {
   toJson: (arg) => {
@@ -110,12 +110,12 @@ export const jsonInteger: Json<Integer> = {
 };
 
 /**
- * `Bytes` wraps the object `Uint8Array`
+ * {@link Bytes} wraps the object {@link Uint8Array}
  */
 export type Bytes = Uint8Array;
 
 /**
- * `bytesFromOctets` converts a string of octets into a `Bytes`.
+ * {@link bytesFromOctets} converts a string of octets into a {@link Bytes}.
  * Values outside the range of an octet are clamped.
  */
 export function bytesFromOctets(str: string): Bytes {
@@ -123,8 +123,8 @@ export function bytesFromOctets(str: string): Bytes {
 }
 
 /**
- * `Eq` instance for `Bytes` which is true iff the arrays are the same length
- * and each element is the same pairwise.
+ * {@link Eq} instance for {@link Bytes} which is true iff the arrays are the
+ * same length and each element is the same pairwise.
  */
 export const eqBytes: Eq<Bytes> = {
   eq: (l, r) => {
@@ -152,7 +152,7 @@ export const eqBytes: Eq<Bytes> = {
 };
 
 /**
- * `Ord` instance for `Bytes` which orders the bytes lexicographically
+ * {@link Ord} instance for {@link Bytes} which orders the bytes lexicographically
  */
 export const ordBytes: Ord<Bytes> = {
   eq: eqBytes.eq,
@@ -178,7 +178,7 @@ export const ordBytes: Ord<Bytes> = {
 };
 
 /**
- * `Json` instance for `Bytes` encodes / decodes the bytes as a base64 string.
+ * {@link Json} instance for {@link Bytes} encodes / decodes the bytes as a base64 string.
  */
 export const jsonBytes: Json<Bytes> = {
   toJson: (bytes) => {
@@ -196,7 +196,7 @@ export const jsonBytes: Json<Bytes> = {
 };
 
 /**
- * `Char` wraps the primitive `string` which represents a single unicode
+ * {@link Char} wraps the primitive {@link string} which represents a single unicode
  * codepoint.
  *
  * See {@link charFromString} and {@link charToString} for type conversions.
@@ -204,12 +204,12 @@ export const jsonBytes: Json<Bytes> = {
 export type Char = string & { __compileTimeOnlyChar: Char };
 
 /**
- * `charFromString` converts a string to a character
+ * {@link charFromString} converts a string to a character
  *
  * @param str - A string which contains a single Unicode codepoint
  *
  * @returns The corresponding Unicode codepoint
- j
+ *
  * @throws {@link Error}
  * Thrown when the input string is not a single Unicode codepoint
  */
@@ -224,7 +224,7 @@ export function charFromString(str: string): Char {
 }
 
 /**
- * `charToString` converts a character (a Unicode codepoint) to a `string`.
+ * {@link charToString} converts a character (a Unicode codepoint) to a `string`.
  *
  * @param chr - A character that is Unicode codepoint
  *
@@ -236,17 +236,17 @@ export function charToString(chr: Readonly<Char>): string {
 }
 
 /**
- * `Eq` instance for `Char`
+ * {@link Eq} instance for {@link Char}
  */
 export const eqChar: Eq<Char> = eqPrimitive;
 
 /**
- * `Ord` instance for `Char`
+ * {@link Ord} instance for {@link Char}
  */
 export const ordChar: Ord<Char> = ordPrimitive;
 
 /**
- * `Json` instance for `Char`
+ * {@link Json} instance for {@link Char}
  */
 export const jsonChar: Json<Char> = {
   toJson: (arg) => {
@@ -262,22 +262,22 @@ export const jsonChar: Json<Char> = {
 };
 
 /**
- * `Text` wraps the primitive `string`
+ * {@link Text} wraps the primitive {@link string}
  */
 export type Text = string;
 
 /**
- * `Eq` instance for `Text`
+ * {@link Eq} instance for {@link Text}
  */
 export const eqText: Eq<Text> = eqPrimitive;
 
 /**
- * `Ord` instance for `Text`
+ * {@link Ord} instance for {@link Text}
  */
 export const ordText: Ord<Text> = ordPrimitive;
 
 /**
- * `Json` instance for `Text`
+ * {@link Json} instance for {@link Text}
  */
 export const jsonText: Json<Text> = {
   toJson: (arg) => {
@@ -293,7 +293,7 @@ export const jsonText: Json<Text> = {
 };
 
 /**
- * `Maybe<A>` is either the value `A` or undefined.
+ * {@link Maybe} is either the value `A` or undefined.
  *
  * @remarks
  * Note this type is compatible with Typescript's _optional parameters_ `?`.
@@ -307,7 +307,7 @@ export const jsonText: Json<Text> = {
 export type Maybe<A> = A | undefined;
 
 /**
- * `Eq` instance for `Maybe<A>`
+ * {@link Eq} instance for {@link Maybe}
  */
 export function eqMaybe<A>(dict: Eq<A>): Eq<Maybe<A>> {
   return {
@@ -333,7 +333,7 @@ export function eqMaybe<A>(dict: Eq<A>): Eq<Maybe<A>> {
 }
 
 /**
- * `Ord` instance for `Maybe<A>`
+ * {@link Ord} instance for {@link Maybe}
  */
 export function ordMaybe<A>(dict: Ord<A>): Ord<Maybe<A>> {
   return {
@@ -356,7 +356,7 @@ export function ordMaybe<A>(dict: Ord<A>): Ord<Maybe<A>> {
 }
 
 /**
- * `Json` instance for `Maybe<A>`
+ * {@link Json} instance for {@link Maybe}
  */
 export function jsonMaybe<A>(dict: Json<A>): Json<Maybe<A>> {
   return {
@@ -395,12 +395,15 @@ export function jsonMaybe<A>(dict: Json<A>): Json<Maybe<A>> {
 }
 
 /**
- * `Either<L,R>` provides either `L` or `R` exclusively
+ * {@link Either} provides either `L` or `R` exclusively
  */
 export type Either<L, R> =
   | { name: "Left"; fields: L }
   | { name: "Right"; fields: R };
 
+/**
+ * {@link Eq} instance for {@link Either}
+ */
 export function eqEither<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Either<L, R>> {
   return {
     eq: (l, r) => {
@@ -424,6 +427,9 @@ export function eqEither<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Either<L, R>> {
   };
 }
 
+/**
+ * {@link Ord} instance for {@link Either}
+ */
 export function ordEither<L, R>(
   dict1: Ord<L>,
   dict2: Ord<R>,
@@ -446,6 +452,9 @@ export function ordEither<L, R>(
   };
 }
 
+/**
+ * {@link Json} instance for {@link Either}
+ */
 export function jsonEither<L, R>(
   dict1: Json<L>,
   dict2: Json<R>,
@@ -495,10 +504,13 @@ export function jsonEither<L, R>(
   };
 }
 
+/**
+ * {@link Map}
+ */
 export type Map<K, V> = LbMap.Map<K, V>;
 
 /**
- * `Eq` instance for a map. Returns true iff
+ * {@link Eq} instance for a {@link Map}. Returns true iff
  * - Both maps have the same number of elements
  * - Every key value pair in one map is in the other.
  */
@@ -519,6 +531,10 @@ export function eqMap<K, V>(dictK: Eq<K>, dictV: Eq<V>): Eq<Map<K, V>> {
   };
 }
 
+/**
+ * {@link Ord} instance for a {@link Map} where the sorted lists of key value
+ * pairs are compared lexicographically.
+ */
 export function ordMap<K, V>(dictK: Ord<K>, dictV: Ord<V>): Ord<Map<K, V>> {
   return {
     eq: eqMap(dictK, dictV).eq,
@@ -532,6 +548,9 @@ export function ordMap<K, V>(dictK: Ord<K>, dictV: Ord<V>): Ord<Map<K, V>> {
   };
 }
 
+/**
+ * {@link Json} instance for {@link Map}
+ */
 export function jsonMap<K, V>(
   ordDict: Ord<K>,
   dictK: Json<K>,
@@ -553,12 +572,9 @@ export function jsonMap<K, V>(
 export type Set<K> = LbSet.Set<K>;
 
 /**
- * `Eq` instance for a set. Returns true iff
+ * {@link Eq} instance for a set. Returns true iff
  * - Both sets have the same number of elements
  * - Every key pair in one set is in the other.
- *
- * @remarks
- * Warning; this uses the `Set`'s equality of keys ("shallow" equality)
  */
 export function eqSet<K>(dictK: Eq<K>): Eq<Set<K>> {
   return {
@@ -571,6 +587,10 @@ export function eqSet<K>(dictK: Eq<K>): Eq<Set<K>> {
   };
 }
 
+/**
+ * {@link Ord} instance for a {@link Set} where the sorted lists of keys are
+ * compared lexicographically.
+ */
 export function ordSet<K>(dictK: Ord<K>): Ord<Set<K>> {
   return {
     eq: eqSet(dictK).eq,
@@ -582,11 +602,7 @@ export function ordSet<K>(dictK: Ord<K>): Ord<Set<K>> {
 }
 
 /**
- * `Json` instance for a set.
- *
- * @remarks
- * Warning; this uses the `Set`'s equality of keys ("shallow" equality)
- * and non primitive set elements probably won't do what is expected.
+ * {@link Json} instance for a {@link Set}
  */
 export function jsonSet<K>(ordDict: Ord<K>, dictK: Json<K>): Json<Set<K>> {
   return {
@@ -611,10 +627,13 @@ export function jsonSet<K>(ordDict: Ord<K>, dictK: Json<K>): Json<Set<K>> {
 }
 
 /**
- * `List<A>` wraps `A[]`
+ * {@link List} wraps {@link Array}
  */
-export type List<A> = A[];
+export type List<A> = Array<A>;
 
+/**
+ * {@link Eq} instance for {@link List}
+ */
 export function eqList<A>(dict: Eq<A>): Eq<List<A>> {
   return {
     eq: (l, r) => {
@@ -642,6 +661,9 @@ export function eqList<A>(dict: Eq<A>): Eq<List<A>> {
   };
 }
 
+/**
+ * {@link Ord} instance for {@link List}
+ */
 export function ordList<A>(dict: Ord<A>): Ord<List<A>> {
   return {
     eq: eqList(dict).eq,
@@ -668,6 +690,9 @@ export function ordList<A>(dict: Ord<A>): Ord<List<A>> {
   };
 }
 
+/**
+ * {@link Json} instance for {@link List}
+ */
 export function jsonList<A>(dict: Json<A>): Json<List<A>> {
   return {
     toJson: (list) => {
@@ -680,10 +705,13 @@ export function jsonList<A>(dict: Json<A>): Json<List<A>> {
 }
 
 /**
- * Pair is an array of a fixed size 2.
+ * {@link Pair} is an array of fixed size 2
  */
 export type Pair<L, R> = [L, R];
 
+/**
+ * {@link Eq} instance for {@link Pair}
+ */
 export function eqPair<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Pair<L, R>> {
   return {
     eq: (l, r) => {
@@ -695,6 +723,9 @@ export function eqPair<L, R>(dict1: Eq<L>, dict2: Eq<R>): Eq<Pair<L, R>> {
   };
 }
 
+/**
+ * {@link Ord} instance for {@link Pair}
+ */
 export function ordPair<L, R>(dict1: Ord<L>, dict2: Ord<R>): Ord<Pair<L, R>> {
   return {
     eq: eqPair(dict1, dict2).eq,
@@ -710,6 +741,9 @@ export function ordPair<L, R>(dict1: Ord<L>, dict2: Ord<R>): Ord<Pair<L, R>> {
   };
 }
 
+/**
+ * {@link Json} instance for {@link Pair}
+ */
 export function jsonPair<L, R>(
   dict1: Json<L>,
   dict2: Json<R>,
