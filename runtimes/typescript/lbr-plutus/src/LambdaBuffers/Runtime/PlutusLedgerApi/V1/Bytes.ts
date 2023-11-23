@@ -5,25 +5,25 @@ import * as LbHex from "../../Hex.js";
 import type { FromData, ToData } from "../../PlutusData.js";
 import type { Bytes, Json } from "lbr-prelude";
 
-/**
- * `Bytes`
- * {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs}
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs
 
-// -- PlutusLedgerApi.V1.Bytes
-// -- TODO(bladyjoker): We don't need this, use Prelude.Bytes? Json encoding is different though, base16 vs base64. But, you need base16 for hashes, which is covered regardless. So yeah, remove this and use Prelude.Bytes.
-// opaque Bytes
-//
-// instance PlutusData Bytes
-// instance Eq Bytes
-// instance Json Bytes
+/**
+ * {@link LedgerBytes}
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs#L70-L74 }
+ */
 export type LedgerBytes = Bytes;
 
+/**
+ * {@link Eq} instance for {@link LedgerBytes}
+ */
 export const eqLedgerBytes = LbPrelude.eqBytes;
 
 /**
- * `Json` instance for `LedgerBytes` encodes / decodes the bytes as a base16
- * (hexadecimal) string.
+ * {@link Json} instance for {@link LedgerBytes}.
+ *
+ * @remarks
+ * This encodes / decodes the bytes as a base16 (hexadecimal) string.
  */
 export const jsonLedgerBytes: Json<LedgerBytes> = {
   toJson: (bytes) => LbHex.bytesToHex(bytes),
@@ -36,12 +36,18 @@ export const jsonLedgerBytes: Json<LedgerBytes> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link LedgerBytes}
+ */
 export const toDataLedgerBytes: ToData<LedgerBytes> = {
   toData: (bytes) => {
     return { name: "Bytes", fields: bytes };
   },
 };
 
+/**
+ * {@link FromData} instance for {@link LedgerBytes}
+ */
 export const fromDataLedgerBytes: FromData<LedgerBytes> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

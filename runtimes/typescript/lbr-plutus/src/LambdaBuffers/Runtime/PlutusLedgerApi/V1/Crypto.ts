@@ -1,28 +1,26 @@
 import * as LbBytes from "./Bytes.js";
-import type { Eq, Json } from "lbr-prelude";
+import type { Eq, Json, Maybe } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import type { FromData, ToData } from "../../PlutusData.js";
 
-/**
- * {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Crypto.hs}
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Crypto.hs
 
-// -- PlutusLedgerApi.V1.Crypto
-// opaque PubKeyHash
-//
-// instance PlutusData PubKeyHash
-// instance Eq PubKeyHash
-// instance Json PubKeyHash
+/**
+ * {@link PubKeyHash}
+ *
+ * @see {@link  https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Crypto.hs#L22-L44 }
+ */
 export type PubKeyHash = LbBytes.LedgerBytes & {
   __compileTimeOnlyPubKeyHash: PubKeyHash;
 };
 
 /**
- * Checks if the bytes are 28 bytes long.
+ * {@link pubKeyHashFromBytes} verifies that the provided bytes are 28 bytes
+ * long.
  */
 export function pubKeyHashFromBytes(
   bytes: LbBytes.LedgerBytes,
-): PubKeyHash | undefined {
+): Maybe<PubKeyHash> {
   if (bytes.length === 28) {
     return bytes as PubKeyHash;
   } else {
@@ -31,18 +29,18 @@ export function pubKeyHashFromBytes(
 }
 
 /**
- * Alias for the identity function
+ * {@link Eq} instance for {@link PubKeyHash}
  */
-export function pubKeyHashToBytes(pubkeyhash: PubKeyHash): LbBytes.LedgerBytes {
-  return pubkeyhash;
-}
-
 export const eqPubKeyHash: Eq<PubKeyHash> = LbBytes.eqLedgerBytes as Eq<
   PubKeyHash
 >;
+
+/**
+ * {@link Json} instance for {@link PubKeyHash}
+ */
 export const jsonPubKeyHash: Json<PubKeyHash> = {
   toJson: (pubkeyhash) => {
-    return LbBytes.jsonLedgerBytes.toJson(pubKeyHashToBytes(pubkeyhash));
+    return LbBytes.jsonLedgerBytes.toJson(pubkeyhash);
   },
   fromJson: (value) => {
     const res = pubKeyHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
@@ -52,7 +50,18 @@ export const jsonPubKeyHash: Json<PubKeyHash> = {
     return res;
   },
 };
+
+/**
+ * {@link ToData} instance for {@link PubKeyHash}
+ */
 export const toDataPubKeyHash: ToData<PubKeyHash> = LbBytes
   .toDataLedgerBytes as ToData<PubKeyHash>;
+
+/**
+ * {@link FromData} instance for {@link PubKeyHash}
+ *
+ * @remarks
+ * This does _not_ do any length checks.
+ */
 export const fromDataPubKeyHash: FromData<PubKeyHash> = LbBytes
   .fromDataLedgerBytes as FromData<PubKeyHash>;

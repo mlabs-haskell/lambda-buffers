@@ -1,5 +1,5 @@
 /**
- * Type for the error thrown from {@link bytesFromHex}
+ * Class for the error thrown from {@link bytesFromHex}
  */
 export class HexError extends Error {
   constructor(msg: string) {
@@ -8,10 +8,10 @@ export class HexError extends Error {
 }
 
 /**
- * Given a hex encoded (case insensitive) string (base 16), return the
+ * Given a (case insensitive) hex encoded (base 16) string, return the
  * corresponding bytes.
  *
- * Internally, we copy the algorithm from {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs#L39-L68}
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs#L39-L68 | the original algorithm }
  *
  * @throws
  * {@link HexError} is thrown if there is an odd number of hex digits or there
@@ -35,7 +35,7 @@ export function bytesFromHex(hex: string): Uint8Array {
       const c0 = theChar.value!;
       theChar = iterator.next();
       if (theChar.done) {
-        //  we have an odd number of hex digits, so should error
+        //  We have an odd number of hex digits, so should error
         throw new HexError("Unmatched hex digit");
       }
 
@@ -58,8 +58,7 @@ export function bytesFromHex(hex: string): Uint8Array {
 }
 
 /**
- * Hex encodes the given byte array. This is the inverse of {@link
- * bytesFromHex}.
+ * Hex encodes the given byte array. This is the inverse of {@link bytesFromHex}.
  */
 export function bytesToHex(bytes: Uint8Array): string {
   const result: string[] = [];

@@ -1,6 +1,6 @@
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs
 
-import type { Eq, Integer, Json } from "lbr-prelude";
+import type { Eq, Integer, Json, Maybe } from "lbr-prelude";
 import type { FromData, ToData } from "../../PlutusData.js";
 import { FromDataError } from "../../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
@@ -8,19 +8,19 @@ import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import * as LbBytes from "./Bytes.js";
 
-// -- PlutusLedgerApi.V1.Tx
-// opaque TxId
-//
-// instance PlutusData TxId
-// instance Eq TxId
-// instance Json TxId
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs
 
+/**
+ * {@link TxId} is a transaction id i.e., the hash of a transaction. 32 bytes.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs#L51-L65}
+ */
 type TxId = LbBytes.LedgerBytes & { __compileTimeOnlyTxId: TxId };
 
 /**
- * Checks if the bytes are 32 bytes long.
+ * {@link txIdFromBytes} checks if the bytes are 32 bytes long.
  */
-export function txIdFromBytes(bytes: LbBytes.LedgerBytes): TxId | undefined {
+export function txIdFromBytes(bytes: LbBytes.LedgerBytes): Maybe<TxId> {
   if (bytes.length === 32) {
     return bytes as TxId;
   } else {
@@ -29,13 +29,13 @@ export function txIdFromBytes(bytes: LbBytes.LedgerBytes): TxId | undefined {
 }
 
 /**
- * Alias for the identity function
+ * {@link Eq} instance for {@link TxId}
  */
-export function txIdToBytes(txid: TxId): LbBytes.LedgerBytes {
-  return txid;
-}
-
 export const eqTxId: Eq<TxId> = LbBytes.eqLedgerBytes as Eq<TxId>;
+
+/**
+ * {@link Json} instance for {@link TxId}
+ */
 export const jsonTxId: Json<TxId> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
@@ -46,6 +46,12 @@ export const jsonTxId: Json<TxId> = {
     return bs;
   },
 };
+
+/**
+ * {@link ToData} instance for {@link TxId}
+ *
+ * Note this includes the `0` tag.
+ */
 export const toDataTxId: ToData<TxId> = {
   toData: (txid) => {
     return {
@@ -54,6 +60,12 @@ export const toDataTxId: ToData<TxId> = {
     };
   },
 };
+
+/**
+ * {@link FromData} instance for {@link TxId}
+ *
+ * Note this includes the `0` tag.
+ */
 export const fromDataTxId: FromData<TxId> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
@@ -75,14 +87,16 @@ export const fromDataTxId: FromData<TxId> = {
   },
 };
 
-// opaque TxOutRef
-//
-// instance PlutusData TxOutRef
-// instance Eq TxOutRef
-// instance Json TxOutRef
-//
+/**
+ * {@link TxOutRef} is a reference to a transaction output.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs#L83-L91}
+ */
 export type TxOutRef = { txOutRefId: TxId; txOutRefIdx: Integer };
 
+/**
+ *  {@link Eq} instance for {@link TxOutRef}
+ */
 export const eqTxOutRef: Eq<TxOutRef> = {
   eq: (l, r) => {
     return eqTxId.eq(l.txOutRefId, r.txOutRefId) &&
@@ -93,6 +107,10 @@ export const eqTxOutRef: Eq<TxOutRef> = {
       LbPrelude.eqInteger.neq(l.txOutRefIdx, r.txOutRefIdx);
   },
 };
+
+/**
+ *  {@link Json} instance for {@link TxOutRef}
+ */
 export const jsonTxOutRef: Json<TxOutRef> = {
   toJson: (txoutRef) => {
     return {
@@ -115,6 +133,9 @@ export const jsonTxOutRef: Json<TxOutRef> = {
   },
 };
 
+/**
+ *  {@link ToData} instance for {@link TxOutRef}
+ */
 export const toDataTxOutRef: ToData<TxOutRef> = {
   toData: (txoutref) => {
     return {
@@ -127,6 +148,9 @@ export const toDataTxOutRef: ToData<TxOutRef> = {
   },
 };
 
+/**
+ *  {@link FromData} instance for {@link TxOutRef}
+ */
 export const fromDataTxOutRef: FromData<TxOutRef> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

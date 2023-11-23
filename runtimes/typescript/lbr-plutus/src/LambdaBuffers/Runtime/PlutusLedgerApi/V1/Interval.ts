@@ -5,20 +5,23 @@ import type { Bool, Eq, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 
-/**
- * {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs}
- *
- * https://github.com/Plutonomicon/cardano-transaction-lib/blob/3943ad5435c9e848368db9d6ff7cb9139a587afe/src/Internal/Types/Interval.purs#L200C25-L200C25
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs
 
-// -- PlutusLedgerApi.V1.Interval
-// opaque Interval a
-//
-// instance PlutusData (Interval a) :- PlutusData a
-// instance Eq (Interval a) :- Eq a
-// instance Json (Interval a) :- Json a
+/**
+ * {@link Interval} of `A`s
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs#L49-L67}
+ */
 export type Interval<A> = { ivFrom: LowerBound<A>; ivTo: UpperBound<A> };
 
+/**
+ * {@link Eq} instance for {@link Interval}
+ *
+ * @remarks
+ * This differs from the Haskell implementation in that this simply tests if the two intervals are
+ * "structurally" equal (it does not do normalization for open / closed enumerable intervals).
+ * This is identical to the behavior from CTL {@link https://github.com/Plutonomicon/cardano-transaction-lib/blob/3943ad5435c9e848368db9d6ff7cb9139a587afe/src/Internal/Types/Interval.purs#L200C25-L200C25}
+ */
 export function eqInterval<A>(dictA: Eq<A>): Eq<Interval<A>> {
   return {
     eq: (l, r) => {
@@ -32,6 +35,9 @@ export function eqInterval<A>(dictA: Eq<A>): Eq<Interval<A>> {
   };
 }
 
+/**
+ * {@link Json} instance for {@link Interval}
+ */
 export function jsonInterval<A>(dictA: Json<A>): Json<Interval<A>> {
   return {
     toJson: (interval) => {
@@ -56,6 +62,9 @@ export function jsonInterval<A>(dictA: Json<A>): Json<Interval<A>> {
   };
 }
 
+/**
+ * {@link ToData} instance for {@link Interval}
+ */
 export function toDataInterval<A>(dictA: ToData<A>): ToData<Interval<A>> {
   return {
     toData: (interval) => {
@@ -69,6 +78,10 @@ export function toDataInterval<A>(dictA: ToData<A>): ToData<Interval<A>> {
     },
   };
 }
+
+/**
+ * {@link FromData} instance for {@link Interval}
+ */
 export function fromDataInterval<A>(dictA: FromData<A>): FromData<Interval<A>> {
   return {
     fromData: (plutusData) => {
@@ -96,16 +109,19 @@ export function fromDataInterval<A>(dictA: FromData<A>): FromData<Interval<A>> {
   };
 }
 
-// opaque Extended a
-//
-// instance PlutusData (Extended a) :- PlutusData a
-// instance Eq (Extended a) :- Eq a
-// instance Json (Extended a) :- Json a
+/**
+ * {@link Extended} is a set extended with positive and negative infinity.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs#L75-L78 }
+ */
 export type Extended<A> =
   | { name: "NegInf" }
   | { name: "PosInf" }
   | { name: "Finite"; fields: A };
 
+/**
+ * {@link Eq} instance for {@link Extended}
+ */
 export function eqExtended<A>(dictA: Eq<A>): Eq<Extended<A>> {
   return {
     eq: (l, r) => {
@@ -133,6 +149,9 @@ export function eqExtended<A>(dictA: Eq<A>): Eq<Extended<A>> {
   };
 }
 
+/**
+ * {@link Json} instance for {@link Extended}
+ */
 export function jsonExtended<A>(dictA: Json<A>): Json<Extended<A>> {
   return {
     toJson: (extended) => {
@@ -174,6 +193,9 @@ export function jsonExtended<A>(dictA: Json<A>): Json<Extended<A>> {
   };
 }
 
+/**
+ * {@link ToData} instance for {@link Extended}
+ */
 export function toDataExtended<A>(dictA: ToData<A>): ToData<Extended<A>> {
   return {
     toData: (extended) => {
@@ -192,6 +214,9 @@ export function toDataExtended<A>(dictA: ToData<A>): ToData<Extended<A>> {
   };
 }
 
+/**
+ * {@link FromData} instance for {@link Extended}
+ */
 export function fromDataExtended<A>(dictA: FromData<A>): FromData<Extended<A>> {
   return {
     fromData: (plutusData) => {
@@ -224,17 +249,23 @@ export function fromDataExtended<A>(dictA: FromData<A>): FromData<Extended<A>> {
   };
 }
 
-// opaque LowerBound a
-//
-// instance PlutusData (LowerBound a) :- PlutusData a
-// instance Eq (LowerBound a) :- Eq a
-// instance Json (LowerBound a) :- Json a
-
+/**
+ * {@link LowerBound} is the lower bound of an interval
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs#L123-L126}
+ */
 export type LowerBound<A> = [Extended<A>, Closure];
 
+/**
+ * {@link Eq} instance for {@link LowerBound}
+ */
 export function eqLowerBound<A>(dictA: Eq<A>): Eq<LowerBound<A>> {
   return LbPrelude.eqPair(eqExtended(dictA), LbPrelude.eqBool);
 }
+
+/**
+ * {@link Json} instance for {@link LowerBound}
+ */
 export function jsonLowerBound<A>(dictA: Json<A>): Json<LowerBound<A>> {
   return {
     toJson: (lowerBound) => {
@@ -259,6 +290,9 @@ export function jsonLowerBound<A>(dictA: Json<A>): Json<LowerBound<A>> {
   };
 }
 
+/**
+ * {@link ToData} instance for {@link LowerBound}
+ */
 export function toDataLowerBound<A>(dictA: ToData<A>): ToData<LowerBound<A>> {
   return LbPreludeInstances.toDataPairWithTag(
     toDataExtended(dictA),
@@ -266,6 +300,9 @@ export function toDataLowerBound<A>(dictA: ToData<A>): ToData<LowerBound<A>> {
   );
 }
 
+/**
+ * {@link FromData} instance for {@link LowerBound}
+ */
 export function fromDataLowerBound<A>(
   dictA: FromData<A>,
 ): FromData<LowerBound<A>> {
@@ -275,28 +312,58 @@ export function fromDataLowerBound<A>(
   );
 }
 
-// opaque UpperBound a
-//
-// instance PlutusData (UpperBound a) :- PlutusData a
-// instance Eq (UpperBound a) :- Eq a
-// instance Json (UpperBound a) :- Json a
+/**
+ * {@link UpperBound} is an upper bound of an interval
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs#L94-L97}
+ */
 export type UpperBound<A> = [Extended<A>, Closure];
 
+/**
+ * {@link Eq} instance for {@link UpperBound}
+ *
+ * @privateremarks
+ * This is identical to {@link eqLowerBound}
+ */
 export function eqUpperBound<A>(dictA: Eq<A>): Eq<UpperBound<A>> {
   return eqLowerBound(dictA);
 }
+
+/**
+ * {@link Json} instance for {@link UpperBound}
+ *
+ * @privateremarks
+ * This is identical to {@link jsonLowerBound}
+ */
 export function jsonUpperBound<A>(dictA: Json<A>): Json<UpperBound<A>> {
   return jsonLowerBound(dictA);
 }
 
+/**
+ * {@link ToData} instance for {@link UpperBound}
+ *
+ * @privateremarks
+ * This is identical to {@link toDataLowerBound}
+ */
 export function toDataUpperBound<A>(dictA: ToData<A>): ToData<UpperBound<A>> {
   return toDataLowerBound(dictA);
 }
 
+/**
+ * {@link FromData} instance for {@link UpperBound}
+ *
+ * @privateremarks
+ * This is identical to {@link fromDataUpperBound}
+ */
 export function fromDataUpperBound<A>(
   dictA: FromData<A>,
 ): FromData<UpperBound<A>> {
   return fromDataLowerBound(dictA);
 }
 
+/**
+ * {@link Closure} is an alias for {@link Bool} and indicates whether a bound is inclusive or not.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Interval.hs#L90-L92}
+ */
 export type Closure = Bool;

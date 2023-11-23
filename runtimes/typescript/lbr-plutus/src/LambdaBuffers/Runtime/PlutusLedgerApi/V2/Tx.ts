@@ -11,22 +11,21 @@ import * as LbAddress from "../V1/Address.js";
 import type { Value } from "../V1/Value.js";
 import * as LbValue from "../V1/Value.js";
 
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Tx.hs
+
 /**
- * https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Tx.hs
+ * {@link OutputDatum} the datum attached to an output.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Tx.hs#L51-L54}
  */
-
-// -- PlutusLedgerApi.V2.Tx
-// opaque OutputDatum
-//
-// instance PlutusData OutputDatum
-// instance Eq OutputDatum
-// instance Json OutputDatum
-
 export type OutputDatum =
   | { name: "NoOutputDatum" }
   | { name: "OutputDatumHash"; fields: DatumHash }
   | { name: "OutputDatum"; fields: Datum };
 
+/**
+ * {@link Eq} instance for {@link OutputDatum}
+ */
 export const eqOutputDatum: Eq<OutputDatum> = {
   eq: (l, r) => {
     if (l.name === "NoOutputDatum" && r.name === "NoOutputDatum") {
@@ -52,6 +51,9 @@ export const eqOutputDatum: Eq<OutputDatum> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link OutputDatum}
+ */
 export const jsonOutputDatum: Json<OutputDatum> = {
   toJson: (outputDatum) => {
     switch (outputDatum.name) {
@@ -97,6 +99,9 @@ export const jsonOutputDatum: Json<OutputDatum> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link OutputDatum}
+ */
 export const toDataOutputDatum: ToData<OutputDatum> = {
   toData: (outputDatum) => {
     switch (outputDatum.name) {
@@ -116,6 +121,9 @@ export const toDataOutputDatum: ToData<OutputDatum> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link OutputDatum}
+ */
 export const fromDataOutputDatum: FromData<OutputDatum> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
@@ -147,12 +155,11 @@ export const fromDataOutputDatum: FromData<OutputDatum> = {
   },
 };
 
-// opaque TxOut
-//
-// instance PlutusData TxOut
-// instance Eq TxOut
-// instance Json TxOut
-
+/**
+ * {@link TxOut} a transaction output.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Tx.hs#L68-L77}
+ */
 export type TxOut = {
   txOutAddress: Address;
   txOutValue: Value;
@@ -160,6 +167,9 @@ export type TxOut = {
   txOutReferenceScript: Maybe<ScriptHash>;
 };
 
+/**
+ * {@link Eq} instance for {@link TxOut}
+ */
 export const eqTxOut: Eq<TxOut> = {
   eq: (l, r) => {
     return LbAddress.eqAddress.eq(l.txOutAddress, r.txOutAddress) &&
@@ -181,6 +191,9 @@ export const eqTxOut: Eq<TxOut> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link TxOut}
+ */
 export const jsonTxOut: Json<TxOut> = {
   toJson: (txout) => {
     return {
@@ -223,6 +236,9 @@ export const jsonTxOut: Json<TxOut> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link TxOut}
+ */
 export const toDataTxOut: ToData<TxOut> = {
   toData: (txout) => {
     return {
@@ -238,6 +254,10 @@ export const toDataTxOut: ToData<TxOut> = {
     };
   },
 };
+
+/**
+ * {@link FromData} instance for {@link TxOut}
+ */
 export const fromDataTxOut: FromData<TxOut> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

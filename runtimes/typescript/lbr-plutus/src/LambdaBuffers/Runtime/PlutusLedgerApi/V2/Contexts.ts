@@ -7,19 +7,18 @@ import * as LbPrelude from "lbr-prelude";
 import type { TxOut } from "./Tx.js";
 import * as LbV2Tx from "./Tx.js";
 
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Contexts.hs
+
 /**
- * https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Contexts.hs
+ * {@link TxInInfo} is an input of a pending transaction.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V2/Contexts.hs#L58-L62}
  */
-
-// -- PlutusLedgerApi.V2.Contexts
-// opaque TxInInfo
-//
-// instance PlutusData TxInInfo
-// instance Eq TxInInfo
-// instance Json TxInInfo
-
 export type TxInInfo = { txInInfoOutRef: TxOutRef; txInInfoResolved: TxOut };
 
+/**
+ * {@link Eq} instance for {@link TxInInfo}
+ */
 export const eqTxInInfo: Eq<TxInInfo> = {
   eq: (l, r) => {
     return LbV1Tx.eqTxOutRef.eq(l.txInInfoOutRef, r.txInInfoOutRef) &&
@@ -31,6 +30,9 @@ export const eqTxInInfo: Eq<TxInInfo> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link TxInInfo}
+ */
 export const jsonTxInInfo: Json<TxInInfo> = {
   toJson: (txininfo) => {
     return {
@@ -53,6 +55,9 @@ export const jsonTxInInfo: Json<TxInInfo> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link TxInInfo}
+ */
 export const toDataTxInInfo: ToData<TxInInfo> = {
   toData: (txininfo) => {
     return {
@@ -65,6 +70,9 @@ export const toDataTxInInfo: ToData<TxInInfo> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link TxInInfo}
+ */
 export const fromDataTxInInfo: FromData<TxInInfo> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

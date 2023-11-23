@@ -3,6 +3,9 @@ import type { FromData, ToData } from "../PlutusData.js";
 
 import type { Bool, Either, Integer, List, Maybe, Pair } from "lbr-prelude";
 
+/**
+ * {@link ToData} instance for {@link Bool}
+ */
 export const toDataBool: ToData<Bool> = {
   toData: (arg) => {
     if (arg) {
@@ -13,6 +16,9 @@ export const toDataBool: ToData<Bool> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link Bool}
+ */
 export const fromDataBool: FromData<Bool> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
@@ -33,12 +39,18 @@ export const fromDataBool: FromData<Bool> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link Integer}
+ */
 export const toDataInteger: ToData<Integer> = {
   toData: (arg) => {
     return { name: "Integer", fields: arg };
   },
 };
 
+/**
+ * {@link FromData} instance for {@link Integer}
+ */
 export const fromDataInteger: FromData<Integer> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
@@ -50,6 +62,9 @@ export const fromDataInteger: FromData<Integer> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link Maybe}
+ */
 export function toDataMaybe<A>(dict: ToData<A>): ToData<Maybe<A>> {
   return {
     toData: (arg) => {
@@ -62,6 +77,9 @@ export function toDataMaybe<A>(dict: ToData<A>): ToData<Maybe<A>> {
   };
 }
 
+/**
+ * {@link FromData} instance for {@link Maybe}
+ */
 export function fromDataMaybe<A>(dict: FromData<A>): FromData<Maybe<A>> {
   return {
     fromData: (plutusData) => {
@@ -84,6 +102,9 @@ export function fromDataMaybe<A>(dict: FromData<A>): FromData<Maybe<A>> {
   };
 }
 
+/**
+ * {@link ToData} instance for {@link List}
+ */
 export function toDataList<A>(dict: ToData<A>): ToData<List<A>> {
   return {
     toData: (arg) => {
@@ -92,6 +113,9 @@ export function toDataList<A>(dict: ToData<A>): ToData<List<A>> {
   };
 }
 
+/**
+ * {@link FromData} instance for {@link List}
+ */
 export function fromDataList<A>(dict: FromData<A>): FromData<List<A>> {
   return {
     fromData: (plutusData) => {
@@ -105,6 +129,9 @@ export function fromDataList<A>(dict: FromData<A>): FromData<List<A>> {
   };
 }
 
+/**
+ * {@link ToData} instance for {@link Either}
+ */
 export function toDataEither<A, B>(
   dictA: ToData<A>,
   dictB: ToData<B>,
@@ -121,6 +148,9 @@ export function toDataEither<A, B>(
   };
 }
 
+/**
+ * {@link FromData} instance for {@link Either}
+ */
 export function fromDataEither<A, B>(
   dictA: FromData<A>,
   dictB: FromData<B>,
@@ -154,8 +184,10 @@ export function fromDataEither<A, B>(
 }
 
 /**
- * Many encodings of opaque types are isomorphic to a pair, and are encoded
- * with a `0` tag
+ * A {@link ToData} instance for {@link Pair} which encodes elements `A` and
+ * `B` as `Constr 0 [A,B]` where we note the `0` "tag".
+ *
+ * @remarks many encodings of opaque types are encoded with the `0` tag
  */
 export function toDataPairWithTag<A, B>(
   dictA: ToData<A>,
@@ -171,6 +203,9 @@ export function toDataPairWithTag<A, B>(
   };
 }
 
+/**
+ * A {@link FromData} instance for {@link Pair} which is the inverse of {@link toDataPairWithoutTag}
+ */
 export function fromDataPairWithTag<A, B>(
   dictA: FromData<A>,
   dictB: FromData<B>,
@@ -196,6 +231,10 @@ export function fromDataPairWithTag<A, B>(
   };
 }
 
+/**
+ * A {@link ToData} instance for {@link Pair} which encodes elements `A` and
+ * `B` as just `[A,B]`.
+ */
 export function toDataPairWithoutTag<A, B>(
   dictA: ToData<A>,
   dictB: ToData<B>,
@@ -210,6 +249,9 @@ export function toDataPairWithoutTag<A, B>(
   };
 }
 
+/**
+ * A {@link FromData} instance for {@link Pair} which is the inverse of {@link toDataPairWithoutTag}
+ */
 export function fromDataPairWithoutTag<A, B>(
   dictA: FromData<A>,
   dictB: FromData<B>,
@@ -223,12 +265,12 @@ export function fromDataPairWithoutTag<A, B>(
               dictA.fromData(plutusData.fields[0]!),
               dictB.fromData(plutusData.fields[1]!),
             ];
-          } else {
-            throw new FromDataError("Malformed List but got " + plutusData);
           }
+          break;
         default:
-          throw new FromDataError("Expected List but got " + plutusData);
+          break;
       }
+      throw new FromDataError(`Expected List of size 2 but got ${plutusData}`);
     },
   };
 }

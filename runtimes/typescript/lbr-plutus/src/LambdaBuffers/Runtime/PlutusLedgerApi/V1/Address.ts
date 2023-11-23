@@ -7,22 +7,21 @@ import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import type { Credential, StakingCredential } from "./Credential.js";
 import * as LbCredential from "./Credential.js";
 
-/**
- * {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Address.hs | Address }
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Address.hs
 
-// -- PlutusLedgerApi.V1.Address
-//
-// opaque Address
-//
-// instance PlutusData Address
-// instance Eq Address
-// instance Json Address
+/**
+ * An {@link Address} that may contain two credentials.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Address.hs#L30-L36}
+ */
 export type Address = {
   addressCredential: Credential;
   addressStakingCredential: Maybe<StakingCredential>;
 };
 
+/**
+ * {@link Eq} instance for {@link Address}
+ */
 export const eqAddress: Eq<Address> = {
   eq: (l, r) => {
     return LbCredential.eqCredential.eq(
@@ -46,6 +45,9 @@ export const eqAddress: Eq<Address> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link Address}
+ */
 export const jsonAddress: Json<Address> = {
   toJson: (address) => {
     return {
@@ -75,6 +77,9 @@ export const jsonAddress: Json<Address> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link Address}
+ */
 export const toDataAddress: ToData<Address> = {
   toData: (address) => {
     return {
@@ -89,6 +94,9 @@ export const toDataAddress: ToData<Address> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link Address}
+ */
 export const fromDataAddress: FromData<Address> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

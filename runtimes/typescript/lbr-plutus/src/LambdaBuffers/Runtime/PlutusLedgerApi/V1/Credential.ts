@@ -10,19 +10,20 @@ import * as LbPrelude from "lbr-prelude";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import { JsonError } from "lbr-prelude";
 
-/**
- * {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Credential.hs}
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Credential.hs
 
-// opaque StakingCredential
-//
-// instance PlutusData StakingCredential
-// instance Eq StakingCredential
-// instance Json StakingCredential
+/**
+ * {@link StakingCredential} used to assign rewards
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Credential.hs#L25-L40 }
+ */
 export type StakingCredential =
   | { name: "StakingHash"; fields: Credential }
   | { name: "StakingPtr"; fields: [Integer, Integer, Integer] };
 
+/**
+ * {@link Eq} instance for {@link StakingCredential}
+ */
 export const eqStakingCredential: Eq<StakingCredential> = {
   eq: (l, r) => {
     if (l.name === "StakingHash" && r.name === "StakingHash") {
@@ -44,6 +45,9 @@ export const eqStakingCredential: Eq<StakingCredential> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link StakingCredential}
+ */
 export const jsonStakingCredential: Json<StakingCredential> = {
   toJson: (stakingCredential) => {
     switch (stakingCredential.name) {
@@ -112,6 +116,9 @@ export const jsonStakingCredential: Json<StakingCredential> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link StakingCredential}
+ */
 export const toDataStakingCredential: ToData<StakingCredential> = {
   toData: (stakingCredential) => {
     switch (stakingCredential.name) {
@@ -139,6 +146,9 @@ export const toDataStakingCredential: ToData<StakingCredential> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link StakingCredential}
+ */
 export const fromDataStakingCredential: FromData<StakingCredential> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
@@ -176,16 +186,18 @@ export const fromDataStakingCredential: FromData<StakingCredential> = {
   },
 };
 
-// -- PlutusLedgerApi.V1.Credential
-// opaque Credential
-//
-// instance PlutusData Credential
-// instance Eq Credential
-// instance Json Credential
+/**
+ * {@link Credential} required to unlock a transaction output.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Credential.hs#L55-L65}
+ */
 export type Credential =
   | { name: "PubKeyCredential"; fields: PubKeyHash }
   | { name: "ScriptCredential"; fields: ScriptHash };
 
+/**
+ * {@link Eq} instance for {@link Credential}
+ */
 export const eqCredential: Eq<Credential> = {
   eq: (l, r) => {
     if (l.name === "PubKeyCredential" && r.name === "PubKeyCredential") {
@@ -207,6 +219,9 @@ export const eqCredential: Eq<Credential> = {
   },
 };
 
+/**
+ * {@link Json} instance for {@link Credential}
+ */
 export const jsonCredential: Json<Credential> = {
   toJson: (credential) => {
     switch (credential.name) {
@@ -244,6 +259,9 @@ export const jsonCredential: Json<Credential> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link Credential}
+ */
 export const toDataCredential: ToData<Credential> = {
   toData: (credential) => {
     switch (credential.name) {
@@ -261,6 +279,9 @@ export const toDataCredential: ToData<Credential> = {
   },
 };
 
+/**
+ * {@link FromData} instance for {@link Credential}
+ */
 export const fromDataCredential: FromData<Credential> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {

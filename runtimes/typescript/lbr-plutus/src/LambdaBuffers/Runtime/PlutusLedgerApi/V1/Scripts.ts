@@ -1,19 +1,16 @@
 import * as LbPlutusData from "../../PlutusData.js";
 import type { FromData, PlutusData, ToData } from "../../PlutusData.js";
-import type { Eq, Json } from "lbr-prelude";
+import type { Eq, Json, Maybe } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import * as LbBytes from "./Bytes.js";
 
-/**
- * https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs
- */
+// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs
 
-// -- PlutusLedgerApi.V1.Scripts
-// opaque Redeemer
-//
-// instance PlutusData Redeemer
-// instance Eq Redeemer
-// instance Json Redeemer
+/**
+ * {@link Redeemer} is wrapper around {@link PlutusData} values that are used as redeemers in transaction inputs.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L67-L71}
+ */
 export type Redeemer = PlutusData;
 
 export const eqRedeemer: Eq<Redeemer> = LbPlutusData.eqPlutusData;
@@ -22,13 +19,11 @@ export const toDataRedeemer: ToData<Redeemer> = LbPlutusData.toDataPlutusData;
 export const fromDataRedeemer: FromData<Redeemer> =
   LbPlutusData.fromDataPlutusData;
 
-//
-// opaque Datum
-//
-// instance PlutusData Datum
-// instance Eq Datum
-// instance Json Datum
-
+/**
+ * {@link Datum} is wrapper around {@link PlutusData} values that are used as redeemers in transaction inputs.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L56-L60 }
+ */
 export type Datum = PlutusData;
 
 export const eqDatum: Eq<Datum> = LbPlutusData.eqPlutusData;
@@ -36,21 +31,21 @@ export const jsonDatum: Json<Datum> = LbPlutusData.jsonPlutusData;
 export const toDataDatum: ToData<Datum> = LbPlutusData.toDataPlutusData;
 export const fromDataDatum: FromData<Datum> = LbPlutusData.fromDataPlutusData;
 
-// opaque DatumHash
-//
-// instance PlutusData DatumHash
-// instance Eq DatumHash
-// instance Json DatumHash
+/**
+ * {@link DatumHash} represents a hash of a datum. 32 bytes.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L94-L108 }
+ */
 export type DatumHash = LbBytes.LedgerBytes & {
   __compileTimeOnlyDatumHash: DatumHash;
 };
 
 /**
- * Checks if the bytes are 32 bytes long.
+ * {@link datumHashFromBytes} checks if the provided bytes are 32 bytes long.
  */
 export function datumHashFromBytes(
   bytes: LbBytes.LedgerBytes,
-): DatumHash | undefined {
+): Maybe<DatumHash> {
   if (bytes.length === 32) {
     return bytes as DatumHash;
   } else {
@@ -58,19 +53,12 @@ export function datumHashFromBytes(
   }
 }
 
-/**
- * Alias for the identity function
- */
-export function datumHashToBytes(datumhash: DatumHash): LbBytes.LedgerBytes {
-  return datumhash;
-}
-
 export const eqDatumHash: Eq<DatumHash> = LbBytes.eqLedgerBytes as Eq<
   DatumHash
 >;
 export const jsonDatumHash: Json<DatumHash> = {
   toJson: (datumhash) => {
-    return LbBytes.jsonLedgerBytes.toJson(datumHashToBytes(datumhash));
+    return LbBytes.jsonLedgerBytes.toJson(datumhash);
   },
   fromJson: (value) => {
     const res = datumHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
@@ -85,22 +73,21 @@ export const toDataDatumHash: ToData<DatumHash> = LbBytes
 export const fromDataDatumHash: FromData<DatumHash> = LbBytes
   .fromDataLedgerBytes as FromData<DatumHash>;
 
-// opaque RedeemerHash
-//
-// instance PlutusData RedeemerHash
-// instance Eq RedeemerHash
-// instance Json RedeemerHash
-
+/**
+ * {@link RedeemerHash} represents the hash of a redeemer. 32 bytes.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L110-L125}
+ */
 export type RedeemerHash = LbBytes.LedgerBytes & {
   __compileTimeOnlyRedeemerHash: RedeemerHash;
 };
 
 /**
- * Checks if the bytes are 32 bytes long.
+ * {@link redeemerHashFromBytes } checks if the provided bytes are 32 bytes long.
  */
 export function redeemerHashFromBytes(
   bytes: LbBytes.LedgerBytes,
-): RedeemerHash | undefined {
+): Maybe<RedeemerHash> {
   if (bytes.length === 32) {
     return bytes as RedeemerHash;
   } else {
@@ -108,21 +95,12 @@ export function redeemerHashFromBytes(
   }
 }
 
-/**
- * Alias for the identity function
- */
-export function redeemerHashToBytes(
-  redeemerhash: RedeemerHash,
-): LbBytes.LedgerBytes {
-  return redeemerhash;
-}
-
 export const eqRedeemerHash: Eq<RedeemerHash> = LbBytes.eqLedgerBytes as Eq<
   RedeemerHash
 >;
 export const jsonRedeemerHash: Json<RedeemerHash> = {
   toJson: (redeemerhash) => {
-    return LbBytes.jsonLedgerBytes.toJson(redeemerHashToBytes(redeemerhash));
+    return LbBytes.jsonLedgerBytes.toJson(redeemerhash);
   },
   fromJson: (value) => {
     const res = redeemerHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
@@ -137,22 +115,21 @@ export const toDataRedeemerHash: ToData<RedeemerHash> = LbBytes
 export const fromDataRedeemerHash: FromData<RedeemerHash> = LbBytes
   .fromDataLedgerBytes as FromData<RedeemerHash>;
 
-// opaque ScriptHash
-//
-// instance PlutusData ScriptHash
-// instance Eq ScriptHash
-// instance Json ScriptHash
-
+/**
+ * {@link ScriptHash} is the hash of a script. 28 bytes.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L78-L92 }
+ */
 export type ScriptHash = LbBytes.LedgerBytes & {
   __compileTimeOnlyScriptHash: ScriptHash;
 };
 
 /**
- * Checks if the bytes are 28 bytes long.
+ * {@link scriptHashFromBytes } checks if the provided bytes are 28 bytes long.
  */
 export function scriptHashFromBytes(
   bytes: LbBytes.LedgerBytes,
-): ScriptHash | undefined {
+): Maybe<ScriptHash> {
   if (bytes.length === 28) {
     return bytes as ScriptHash;
   } else {
@@ -160,19 +137,12 @@ export function scriptHashFromBytes(
   }
 }
 
-/**
- * Alias for the identity function
- */
-export function scriptHashToBytes(scripthash: ScriptHash): LbBytes.LedgerBytes {
-  return scripthash;
-}
-
 export const eqScriptHash: Eq<ScriptHash> = LbBytes.eqLedgerBytes as Eq<
   ScriptHash
 >;
 export const jsonScriptHash: Json<ScriptHash> = {
   toJson: (scripthash) => {
-    return LbBytes.jsonLedgerBytes.toJson(scriptHashToBytes(scripthash));
+    return LbBytes.jsonLedgerBytes.toJson(scripthash);
   },
   fromJson: (value) => {
     const res = scriptHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));

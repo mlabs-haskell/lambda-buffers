@@ -1,30 +1,12 @@
 import type { Bytes, Eq, Integer, Json, List } from "lbr-prelude";
-import { JsonError, Scientific } from "lbr-prelude";
+import { JsonError } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import * as LbHex from "./Hex.js";
 
-export class FromDataError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
-
 /**
- * `ToData<A>` is a type class to translate to `PlutusData`
- */
-export interface ToData<A> {
-  readonly toData: (arg: Readonly<A>) => PlutusData;
-}
-
-/**
- * `FromData<A>` is a type class to translate from `PlutusData`
- */
-export interface FromData<A> {
-  readonly fromData: (arg: Readonly<PlutusData>) => A;
-}
-
-/**
- * `PlutusData`
+ * {@link PlutusData} is a generic "data" type.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-core/plutus-core/src/PlutusCore/Data.hs#L33-L48 | `Data`}
  */
 export type PlutusData =
   | { name: "Constr"; fields: [Integer, List<PlutusData>] }
@@ -34,12 +16,36 @@ export type PlutusData =
   | { name: "Integer"; fields: Integer };
 
 /**
- * `Eq` instance for `PlutusData`
+ * {@link FromDataError} is thrown when `fromData` fails in the type class {@link FromData}
+ */
+export class FromDataError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * {@link ToData} is a type class to translate to {@link PlutusData}
+ */
+export interface ToData<A> {
+  readonly toData: (arg: Readonly<A>) => PlutusData;
+}
+
+/**
+ * {@link FromData} is a type class to translate from {@link PlutusData}
+ */
+export interface FromData<A> {
+  readonly fromData: (arg: Readonly<PlutusData>) => A;
+}
+
+/**
+ * {@link Eq} instance for {@link PlutusData}
  */
 export const eqPlutusData: Eq<PlutusData> = {
   eq: (l, r) => {
     if (
-      l.name === "Constr" && r.name === "Constr" && l.fields[0] === r.fields[0]
+      l.name === "Constr" && r.name === "Constr" &&
+      LbPrelude.eqInteger.eq(l.fields[0], r.fields[0])
     ) {
       return LbPrelude.eqList(eqPlutusData).eq(l.fields[1], r.fields[1]);
     } else if (l.name === "Map" && r.name === "Map") {
@@ -59,7 +65,8 @@ export const eqPlutusData: Eq<PlutusData> = {
   },
   neq: (l, r) => {
     if (
-      l.name === "Constr" && r.name === "Constr" && l.fields[0] === r.fields[0]
+      l.name === "Constr" && r.name === "Constr" &&
+      LbPrelude.eqInteger.eq(l.fields[0], r.fields[0])
     ) {
       return LbPrelude.eqList(eqPlutusData).neq(l.fields[1], r.fields[1]);
     } else if (l.name === "Map" && r.name === "Map") {
@@ -79,13 +86,23 @@ export const eqPlutusData: Eq<PlutusData> = {
   },
 };
 
+/**
+ * {@link ToData} instance for {@link PlutusData}
+ */
 export const toDataPlutusData: ToData<PlutusData> = {
   toData: (arg) => arg,
 };
 
+/**
+ * {@link FromData} instance for {@link PlutusData}
+ */
 export const fromDataPlutusData: FromData<PlutusData> = {
   fromData: (arg) => arg,
 };
+
+/**
+ * {@link Json} instance for {@link PlutusData}
+ */
 export const jsonPlutusData: Json<PlutusData> = {
   toJson: (plutusData) => {
     switch (plutusData.name) {
@@ -94,7 +111,7 @@ export const jsonPlutusData: Json<PlutusData> = {
           plutusData.fields[1],
         );
         return LbPrelude.jsonConstructor(plutusData.name, [{
-          index: new Scientific(plutusData.fields[0], 0n),
+          index: LbPrelude.jsonInteger.toJson(plutusData.fields[0]),
           fields: fields,
         }]);
       }
@@ -129,16 +146,14 @@ export const jsonPlutusData: Json<PlutusData> = {
 
           if (!LbPrelude.isJsonObject(indexAndFields)) {
             throw new JsonError(
-              "Expected JSON object but got" +
-                LbPrelude.stringify(value),
+              `Expected JSON object but got ${LbPrelude.stringify(value)}`,
             );
           }
 
           const indexValue = indexAndFields["index"];
           if (indexValue === undefined) {
             throw new JsonError(
-              "Expected index field but got" +
-                LbPrelude.stringify(value),
+              `Expected index field but got ${LbPrelude.stringify(value)}`,
             );
           }
 
@@ -148,8 +163,7 @@ export const jsonPlutusData: Json<PlutusData> = {
 
           if (fieldsValue === undefined) {
             throw new JsonError(
-              "Expected fields field but got" +
-                LbPrelude.stringify(value),
+              `Expected fields field but got ${LbPrelude.stringify(value)}`,
             );
           }
 
@@ -163,8 +177,9 @@ export const jsonPlutusData: Json<PlutusData> = {
           };
         } else {
           throw new JsonError(
-            "Expected JSON Array with 1 field but got" +
-              LbPrelude.stringify(value),
+            `Expected JSON Array with 1 field but got ${
+              LbPrelude.stringify(value)
+            }`,
           );
         }
       },
@@ -176,8 +191,9 @@ export const jsonPlutusData: Json<PlutusData> = {
             fields: LbPrelude.caseJsonArray("Map", (kv) => {
               if (!(LbPrelude.isJsonArray(kv) && kv.length == 2)) {
                 throw new JsonError(
-                  "Expected JSON Array with 2 elements but got" +
-                    LbPrelude.stringify(kv),
+                  `Expected JSON Array with 2 elements but got ${
+                    LbPrelude.stringify(kv)
+                  }`,
                 );
               }
               return LbPrelude.caseJsonArray(
@@ -189,8 +205,9 @@ export const jsonPlutusData: Json<PlutusData> = {
           };
         } else {
           throw new JsonError(
-            "Expected JSON Array with 1 element but got" +
-              LbPrelude.stringify(value),
+            `Expected JSON Array with 1 element but got ${
+              LbPrelude.stringify(value)
+            }`,
           );
         }
       },
@@ -207,8 +224,9 @@ export const jsonPlutusData: Json<PlutusData> = {
           };
         } else {
           throw new JsonError(
-            "Expected JSON Array with 1 element but got" +
-              LbPrelude.stringify(value),
+            `Expected JSON Array with 1 element but got ${
+              LbPrelude.stringify(value)
+            }`,
           );
         }
       },
@@ -218,12 +236,13 @@ export const jsonPlutusData: Json<PlutusData> = {
           if (LbPrelude.isJsonString(bytesValue)) {
             return { name: "Bytes", fields: LbHex.bytesFromHex(bytesValue) };
           } else {
-            throw new JsonError("JSON Value is not a string");
+            throw new JsonError(`JSON Value is not a string`);
           }
         } else {
           throw new JsonError(
-            "Expected JSON Array with 1 element but got" +
-              LbPrelude.stringify(value),
+            `Expected JSON Array with 1 element but got ${
+              LbPrelude.stringify(value)
+            }`,
           );
         }
       },
@@ -236,8 +255,9 @@ export const jsonPlutusData: Json<PlutusData> = {
           };
         } else {
           throw new JsonError(
-            "Expected JSON Array with 1 element but got" +
-              LbPrelude.stringify(value),
+            `Expected JSON Array with 1 element but got ${
+              LbPrelude.stringify(value)
+            }`,
           );
         }
       },
