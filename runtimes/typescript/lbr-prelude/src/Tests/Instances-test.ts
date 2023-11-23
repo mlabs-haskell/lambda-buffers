@@ -2,6 +2,8 @@
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
 
+import * as LbMap from "../LambdaBuffers/Runtime/Map.js";
+import * as LbSet from "../LambdaBuffers/Runtime/Set.js";
 import * as LbPrelude from "../LambdaBuffers/Prelude.js";
 import { Scientific } from "../LambdaBuffers/Prelude.js";
 import type {
@@ -392,4 +394,251 @@ describe("Pair instance tests", () => {
   });
 });
 
-// TODO: do Map and Set tests
+describe("Set instance tests", () => {
+  describe("Eq Set", () => {
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      const set2: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 0n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set2);
+      eqInstanceIt(
+        LbPrelude.eqSet(LbPrelude.eqInteger),
+        set1,
+        set2,
+        true,
+      );
+    }
+
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      const set2: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 1n, set2);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set2);
+      eqInstanceIt(
+        LbPrelude.eqSet(LbPrelude.eqInteger),
+        set1,
+        set2,
+        true,
+      );
+    }
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      const set2: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set2);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 0n, set2);
+      eqInstanceIt(
+        LbPrelude.eqSet(LbPrelude.eqInteger),
+        set1,
+        set2,
+        false,
+      );
+    }
+  });
+
+  describe("Json Set", () => {
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 2n, set1);
+
+      jsonInstanceIt(
+        LbPrelude.jsonSet(LbPrelude.ordInteger, LbPrelude.jsonInteger),
+        set1,
+        [
+          Scientific.fromString("1"),
+          Scientific.fromString("2"),
+        ],
+      );
+    }
+
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+
+      jsonInstanceIt(
+        LbPrelude.jsonSet(LbPrelude.ordInteger, LbPrelude.jsonInteger),
+        set1,
+        [
+          Scientific.fromString("1"),
+        ],
+      );
+    }
+
+    {
+      const set1: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+      LbSet.insert(LbPrelude.ordInteger, 1n, set1);
+
+      const set2: LbSet.Set<Integer> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordInteger, 1n, set2);
+      LbSet.insert(LbPrelude.ordInteger, 1n, set2);
+
+      const set3: LbSet.Set<LbSet.Set<Integer>> = new LbSet.Set();
+      LbSet.insert(LbPrelude.ordSet(LbPrelude.ordInteger), set1, set3);
+      LbSet.insert(LbPrelude.ordSet(LbPrelude.ordInteger), set2, set3);
+
+      jsonInstanceIt(
+        LbPrelude.jsonSet(
+          LbPrelude.ordSet(LbPrelude.ordInteger),
+          LbPrelude.jsonSet(LbPrelude.ordInteger, LbPrelude.jsonInteger),
+        ),
+        set3,
+        [
+          [Scientific.fromString("1")],
+        ],
+      );
+    }
+  });
+});
+
+describe("Map instance tests", () => {
+  describe("Eq Map", () => {
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      const map2: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 0n, 0n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 0n, 0n, map2);
+      eqInstanceIt(
+        LbPrelude.eqMap(LbPrelude.eqInteger, LbPrelude.eqInteger),
+        map1,
+        map2,
+        true,
+      );
+    }
+
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      const map2: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 0n, 1n, map1);
+
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map2);
+      LbMap.insert(LbPrelude.ordInteger, 0n, 1n, map2);
+      eqInstanceIt(
+        LbPrelude.eqMap(LbPrelude.eqInteger, LbPrelude.eqInteger),
+        map1,
+        map2,
+        true,
+      );
+    }
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      const map2: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 0n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 0n, 1n, map1);
+
+      LbMap.insert(LbPrelude.ordInteger, 0n, 0n, map2);
+      LbMap.insert(LbPrelude.ordInteger, 0n, 1n, map2);
+      eqInstanceIt(
+        LbPrelude.eqMap(LbPrelude.eqInteger, LbPrelude.eqInteger),
+        map1,
+        map2,
+        false,
+      );
+    }
+
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      const map2: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 0n, 0n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map1);
+
+      LbMap.insert(LbPrelude.ordInteger, 0n, 0n, map2);
+      LbMap.insert(LbPrelude.ordInteger, 1n, 0n, map2);
+      eqInstanceIt(
+        LbPrelude.eqMap(LbPrelude.eqInteger, LbPrelude.eqInteger),
+        map1,
+        map2,
+        false,
+      );
+    }
+  });
+
+  describe("Json Map", () => {
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 2n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 2n, 3n, map1);
+
+      jsonInstanceIt(
+        LbPrelude.jsonMap(
+          LbPrelude.ordInteger,
+          LbPrelude.jsonInteger,
+          LbPrelude.jsonInteger,
+        ),
+        map1,
+        [
+          [Scientific.fromString("1"), Scientific.fromString("2")],
+          [Scientific.fromString("2"), Scientific.fromString("3")],
+        ],
+      );
+    }
+
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 12n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 1n, 69n, map1);
+
+      jsonInstanceIt(
+        LbPrelude.jsonMap(
+          LbPrelude.ordInteger,
+          LbPrelude.jsonInteger,
+          LbPrelude.jsonInteger,
+        ),
+        map1,
+        [
+          [Scientific.fromString("1"), Scientific.fromString("69")],
+        ],
+      );
+    }
+
+    {
+      const map1: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map1);
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map1);
+
+      const map2: LbMap.Map<Integer, Integer> = new LbMap.Map();
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map2);
+      LbMap.insert(LbPrelude.ordInteger, 1n, 1n, map2);
+
+      const map3: LbMap.Map<LbMap.Map<Integer, Integer>, Integer> = new LbMap
+        .Map();
+      LbMap.insert(
+        LbPrelude.ordMap(LbPrelude.ordInteger, LbPrelude.ordInteger),
+        map1,
+        0n,
+        map3,
+      );
+      LbMap.insert(
+        LbPrelude.ordMap(LbPrelude.ordInteger, LbPrelude.ordInteger),
+        map2,
+        0n,
+        map3,
+      );
+
+      jsonInstanceIt(
+        LbPrelude.jsonMap(
+          LbPrelude.ordMap(LbPrelude.ordInteger, LbPrelude.ordInteger),
+          LbPrelude.jsonMap(
+            LbPrelude.ordInteger,
+            LbPrelude.jsonInteger,
+            LbPrelude.jsonInteger,
+          ),
+          LbPrelude.jsonInteger,
+        ),
+        map3,
+        [
+          [
+            [[Scientific.fromString("1"), Scientific.fromString("1")]],
+            Scientific.fromString("0"),
+          ],
+        ],
+      );
+    }
+  });
+});
