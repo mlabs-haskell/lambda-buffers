@@ -574,7 +574,7 @@ export type Set<K> = LbSet.Set<K>;
 /**
  * {@link Eq} instance for a set. Returns true iff
  * - Both sets have the same number of elements
- * - Every key pair in one set is in the other.
+ * - Every key in one set is in the other.
  */
 export function eqSet<K>(dictK: Eq<K>): Eq<Set<K>> {
   return {
