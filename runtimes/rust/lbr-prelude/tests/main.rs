@@ -97,7 +97,7 @@ mod tests {
     }
 
     mod lamval_builtins {
-        use lbr_prelude::json::curried;
+        use lbr_prelude::json::lamval;
         use lbr_prelude::json::{self, Json};
         use serde_json::Value;
 
@@ -127,11 +127,11 @@ mod tests {
             ]);
 
             let result: Vec<String> = json::case_json_array(x0, x1.clone(), x2.clone()).unwrap();
-            let curried_result: Vec<String> = curried::case_json_array(x0)(x1)(x2).unwrap();
+            let lamval_result: Vec<String> = lamval::case_json_array(x0)(x1)(x2).unwrap();
             let expected = vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
 
             assert_eq!(result, expected);
-            assert_eq!(curried_result, expected);
+            assert_eq!(lamval_result, expected);
         }
     }
 }

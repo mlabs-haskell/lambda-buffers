@@ -8,12 +8,12 @@ use std::collections::BTreeMap;
 /// Parse a JSON Array and its elements
 ///
 /// LamVal Json builtin
-pub fn case_json_array<'a, A: 'a>(
+pub fn case_json_array<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
     dyn Fn(
-            Box<dyn Fn(Vec<Value>) -> Result<A, Error> + 'a>,
-        ) -> Box<dyn FnOnce(Value) -> Result<A, Error> + 'a>
+            Box<dyn Fn(Vec<Value>) -> Result<T, Error> + 'a>,
+        ) -> Box<dyn FnOnce(Value) -> Result<T, Error> + 'a>
         + 'a,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_array(x0, x1, x2)))

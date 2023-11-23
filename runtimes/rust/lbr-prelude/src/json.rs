@@ -9,7 +9,7 @@ use serde_json;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub mod curried;
+pub mod lamval;
 
 /// Trait that lbf-prelude::json class maps to
 pub trait Json {
