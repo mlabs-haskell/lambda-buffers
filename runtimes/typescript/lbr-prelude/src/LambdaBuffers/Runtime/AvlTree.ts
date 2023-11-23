@@ -41,6 +41,55 @@ export function toList<K>(node: Readonly<Node<K>>): K[] {
   return list;
 }
 
+/**
+ * @example
+ * ```
+ * alter(ordDict, f, k, node)
+ * ```
+ * finds the node with element `k`, say `k'` (setting `k'` to undefined if it
+ * doesn't exist), runs `f(k')` where
+ * - if `f(k')` is undefined, it removes `k'` from the AvlTree.
+ * - otherwise `f(k')` is not undefined, so `f(k')` replaces the node element
+ *   for the node in the tree.
+ */
+export function alter<K>(
+  ordDict: Ord<K>,
+  f: (arg: K | undefined) => K | undefined,
+  k: K,
+  node: Node<K>,
+): Node<K> {
+  function go(n: Node<K>): Node<K> {
+    if (n === null) {
+      const result = f(undefined);
+      if (result === undefined) {
+        return null;
+      } else {
+        return { element: result, height: 0, left: null, right: null };
+      }
+    } else {
+      switch (ordDict.compare(k, n.element)) {
+        case "LT":
+          n.left = go(n.left);
+          return balance(n);
+        case "GT":
+          n.right = go(n.right);
+          return balance(n);
+        case "EQ": {
+          const result = f(n.element);
+          if (result === undefined) {
+            return remove(ordDict, k, n);
+          } else {
+            n.element = result;
+            return n;
+          }
+        }
+      }
+    }
+  }
+
+  return go(node);
+}
+
 export function insert<K>(ordDict: Ord<K>, k: K, node: Node<K>): Node<K> {
   function go(n: Node<K>): Node<K> {
     if (n === null) {

@@ -4,17 +4,40 @@ import type { Node } from "./AvlTree.js";
 
 /**
  * A mapping from `K` to `V` where `K` must have a {@link Ord} instance.
+ *
+ * @example
+ * ```ts
+ * import * as LbPrelude from "lbr-prelude"
+ *
+ * let map : Map<string, string> = new Map();
+ * insert(LbPrelude.ordString,  "a", "b", map)
+ * lookup(LbPrelude.ordString,  "a", map) // returns `"b"`
+ * map.length // is 1
+ *
+ * insert(LbPrelude.ordString. "a", "c", map)
+ * lookup(LbPrelude.ordString,  "a", map) // returns `"c"`
+ * map.length // is 1
+ *
+ * remove(LbPrelude.ordString,  "a", map)
+ * lookup(LbPrelude.ordString,  "a", map) // returns `undefined`
+ * map.length // is 0
+ * ```
  */
 export class Map<K, V> {
   tree: Node<[K, V]>;
+  length: number;
 
   constructor() {
     this.tree = null;
+    this.length = 0;
   }
 }
 
 /**
  * {@link ordOnFst} compares pairs on the first projection.
+ *
+ * @privateRemarks
+ * This isn't a total order, but it is useful to implement a `Map` from a `Set`
  */
 function ordOnFst<K, V>(ordDict: Ord<K>): Ord<[K, V]> {
   return {
@@ -42,7 +65,19 @@ export function insert<K, V>(
   value: V,
   map: Map<K, V>,
 ): void {
-  map.tree = LbAvlTree.insert(ordOnFst(ordDict), [key, value], map.tree);
+  map.tree = LbAvlTree.alter(
+    ordOnFst(ordDict),
+    (arg) => {
+      if (arg === undefined) {
+        ++map.length;
+        return [key, value];
+      } else {
+        return [key, value];
+      }
+    },
+    [key, null as V],
+    map.tree,
+  );
 }
 
 /**
@@ -52,7 +87,19 @@ export function insert<K, V>(
  * Complexity: `O(log n)`
  */
 export function remove<K, V>(ordDict: Ord<K>, key: K, map: Map<K, V>): void {
-  map.tree = LbAvlTree.remove(ordOnFst(ordDict), [key, null as V], map.tree);
+  map.tree = LbAvlTree.alter(
+    ordOnFst(ordDict),
+    (arg) => {
+      if (arg === undefined) {
+        return undefined;
+      } else {
+        --map.length;
+        return undefined;
+      }
+    },
+    [key, null as V],
+    map.tree,
+  );
 }
 
 /**

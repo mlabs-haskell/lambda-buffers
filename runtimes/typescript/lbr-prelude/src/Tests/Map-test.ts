@@ -40,7 +40,17 @@ export function removeAndCheck<K, V>(ordDict: Ord<K>, k: K, map: Map<K, V>) {
   }
 }
 
-function randomIntUpToButNotIncluding(max: number) {
+export function checkMapLength<K, V>(map: Map<K, V>, expectedLength: number) {
+  if (map.length !== expectedLength) {
+    throw new Error(
+      `Expected map of length ${expectedLength} but got ${map.length} for map ${
+        JSON.stringify(map.tree)
+      }`,
+    );
+  }
+}
+
+export function randomIntUpToButNotIncluding(max: number) {
   return Math.floor(Math.random() * max);
 }
 
@@ -48,17 +58,29 @@ describe("Map tests", () => {
   describe("Ascending insertion invariant checks", () => {
     const map: Map<number, number> = new Map();
 
+    checkMapLength(map, 0);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 1);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 3);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    checkMapLength(map, 4);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 4, 4, map);
+    checkMapLength(map, 5);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 5, 5, map);
+    checkMapLength(map, 6);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 6, 6, map);
+    checkMapLength(map, 7);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 7, 7, map);
+    checkMapLength(map, 8);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 8, 8, map);
+    checkMapLength(map, 9);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 9, 9, map);
+    checkMapLength(map, 10);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 10, 10, map);
+    checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
       if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
@@ -66,6 +88,8 @@ describe("Map tests", () => {
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
       }
+      // lookups shouldn't change the length
+      checkMapLength(map, 11);
     }
 
     for (let i = 11; i <= 20; ++i) {
@@ -78,17 +102,29 @@ describe("Map tests", () => {
   describe("Descending insertion invariant checks", () => {
     const map: Map<number, number> = new Map();
 
+    checkMapLength(map, 0);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 10, 10, map);
+    checkMapLength(map, 1);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 9, 9, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 8, 8, map);
+    checkMapLength(map, 3);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 7, 7, map);
+    checkMapLength(map, 4);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 6, 6, map);
+    checkMapLength(map, 5);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 5, 5, map);
+    checkMapLength(map, 6);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 4, 4, map);
+    checkMapLength(map, 7);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    checkMapLength(map, 8);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 9);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
+    checkMapLength(map, 10);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
       if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
@@ -96,6 +132,7 @@ describe("Map tests", () => {
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
       }
+      checkMapLength(map, 11);
     }
 
     for (let i = 11; i <= 20; ++i) {
@@ -105,20 +142,42 @@ describe("Map tests", () => {
     }
   });
 
+  describe("Insert replaces elements", () => {
+    const map: Map<number, number> = new Map();
+
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 1, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 2, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 3, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 4, map);
+  });
+
   describe("Assorted insertion invariant checks 1.", () => {
     const map: Map<number, number> = new Map();
 
+    checkMapLength(map, 0);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 9, 9, map);
+    checkMapLength(map, 1);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 7, 7, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 8, 8, map);
+    checkMapLength(map, 3);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 10, 10, map);
+    checkMapLength(map, 4);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 5, 5, map);
+    checkMapLength(map, 5);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
+    checkMapLength(map, 6);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 6, 6, map);
+    checkMapLength(map, 7);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    checkMapLength(map, 8);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 9);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 4, 4, map);
+    checkMapLength(map, 10);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
       if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
@@ -126,6 +185,7 @@ describe("Map tests", () => {
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
       }
+      checkMapLength(map, 11);
     }
 
     for (let i = 11; i <= 20; ++i) {
@@ -137,17 +197,29 @@ describe("Map tests", () => {
 
   describe("Assorted insertion invariant checks 2.", () => {
     const map: Map<number, number> = new Map();
+    checkMapLength(map, 0);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 1);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 4, 4, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 3);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    checkMapLength(map, 4);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 6, 6, map);
+    checkMapLength(map, 5);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
+    checkMapLength(map, 6);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 5, 5, map);
+    checkMapLength(map, 7);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 10, 10, map);
+    checkMapLength(map, 8);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 8, 8, map);
+    checkMapLength(map, 9);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 7, 7, map);
+    checkMapLength(map, 10);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 9, 9, map);
+    checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
       if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
@@ -155,6 +227,7 @@ describe("Map tests", () => {
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
       }
+      checkMapLength(map, 11);
     }
 
     for (let i = 11; i <= 20; ++i) {
@@ -220,13 +293,19 @@ describe("Map tests", () => {
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    checkMapLength(map, 4);
 
     removeAndCheck(LbPrelude.ordPrimitive, 3, map);
+    checkMapLength(map, 3);
+
     removeAndCheck(LbPrelude.ordPrimitive, 0, map);
+    checkMapLength(map, 2);
 
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 3);
 
     removeAndCheck(LbPrelude.ordPrimitive, 2, map);
+    checkMapLength(map, 2);
   });
 
   describe("Small ascending insertion / deletion invariant checks 2.", () => {
@@ -235,11 +314,28 @@ describe("Map tests", () => {
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 3);
     removeAndCheck(LbPrelude.ordPrimitive, 3, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 1, 1, map);
+    checkMapLength(map, 3);
     removeAndCheck(LbPrelude.ordPrimitive, 0, map);
+    checkMapLength(map, 2);
     insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    checkMapLength(map, 3);
     removeAndCheck(LbPrelude.ordPrimitive, 2, map);
+    checkMapLength(map, 2);
+  });
+
+  describe("Small ascending insertion / deletion invariant checks 3.", () => {
+    const map: Map<number, number> = new Map();
+
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 3, 3, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 0, 0, map);
+    insertAndCheck(LbPrelude.ordPrimitive, LbPrelude.eqPrimitive, 2, 2, map);
+    checkMapLength(map, 3);
+    removeAndCheck(LbPrelude.ordPrimitive, 69, map);
+    checkMapLength(map, 3);
   });
 
   describe("Large random insertion/deletion invariant checks 1.", () => {
@@ -285,6 +381,8 @@ describe("Map tests", () => {
         );
       }
     }
+
+    checkMapLength(map, Object.keys(insertions).length);
   });
 
   describe("Large random insertion/deletion invariant checks 2.", () => {
@@ -329,6 +427,41 @@ describe("Map tests", () => {
             JSON.stringify(map.tree)
           }`,
         );
+      }
+    }
+
+    checkMapLength(map, Object.keys(insertions).length);
+  });
+
+  describe("toList ascending string tests", () => {
+    const map: Map<string, string> = new Map();
+
+    insertAndCheck(
+      LbPrelude.ordPrimitive,
+      LbPrelude.eqPrimitive,
+      "b",
+      "c",
+      map,
+    );
+    insertAndCheck(
+      LbPrelude.ordPrimitive,
+      LbPrelude.eqPrimitive,
+      "a",
+      "b",
+      map,
+    );
+    insertAndCheck(
+      LbPrelude.ordPrimitive,
+      LbPrelude.eqPrimitive,
+      "d",
+      "f",
+      map,
+    );
+
+    const old = "";
+    for (const [k, _v] of LbMap.toList(map)) {
+      if (!(old < k)) {
+        throw new Error("toList not strictly increasing");
       }
     }
   });
