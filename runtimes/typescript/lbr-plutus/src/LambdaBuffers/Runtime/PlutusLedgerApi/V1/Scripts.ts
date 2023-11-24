@@ -47,9 +47,9 @@ export function datumHashFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<DatumHash> {
   if (bytes.length === 32) {
-    return bytes as DatumHash;
+    return { name: "Just", fields: bytes as DatumHash };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -62,10 +62,10 @@ export const jsonDatumHash: Json<DatumHash> = {
   },
   fromJson: (value) => {
     const res = datumHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (res === undefined) {
+    if (res.name === "Nothing") {
       throw new JsonError("DatumHash should be 32 bytes long");
     }
-    return res;
+    return res.fields;
   },
 };
 export const toDataDatumHash: ToData<DatumHash> = LbBytes
@@ -89,9 +89,9 @@ export function redeemerHashFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<RedeemerHash> {
   if (bytes.length === 32) {
-    return bytes as RedeemerHash;
+    return { name: "Just", fields: bytes as RedeemerHash };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -104,10 +104,10 @@ export const jsonRedeemerHash: Json<RedeemerHash> = {
   },
   fromJson: (value) => {
     const res = redeemerHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (res === undefined) {
+    if (res.name === "Nothing") {
       throw new JsonError("RedeemerHash should be 32 bytes long");
     }
-    return res;
+    return res.fields;
   },
 };
 export const toDataRedeemerHash: ToData<RedeemerHash> = LbBytes
@@ -131,9 +131,9 @@ export function scriptHashFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<ScriptHash> {
   if (bytes.length === 28) {
-    return bytes as ScriptHash;
+    return { name: "Just", fields: bytes as ScriptHash };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -146,10 +146,10 @@ export const jsonScriptHash: Json<ScriptHash> = {
   },
   fromJson: (value) => {
     const res = scriptHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (res === undefined) {
+    if (res.name === "Nothing") {
       throw new JsonError("ScriptHash should be 28 bytes long");
     }
-    return res;
+    return res.fields;
   },
 };
 export const toDataScriptHash: ToData<ScriptHash> = LbBytes

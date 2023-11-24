@@ -22,9 +22,9 @@ export function pubKeyHashFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<PubKeyHash> {
   if (bytes.length === 28) {
-    return bytes as PubKeyHash;
+    return { name: "Just", fields: bytes as PubKeyHash };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -44,10 +44,10 @@ export const jsonPubKeyHash: Json<PubKeyHash> = {
   },
   fromJson: (value) => {
     const res = pubKeyHashFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (res === undefined) {
+    if (res.name === "Nothing") {
       throw new JsonError("PubKeyHash should be 28 bytes");
     }
-    return res;
+    return res.fields;
   },
 };
 

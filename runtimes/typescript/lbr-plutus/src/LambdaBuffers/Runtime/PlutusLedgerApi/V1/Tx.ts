@@ -22,9 +22,9 @@ type TxId = LbBytes.LedgerBytes & { __compileTimeOnlyTxId: TxId };
  */
 export function txIdFromBytes(bytes: LbBytes.LedgerBytes): Maybe<TxId> {
   if (bytes.length === 32) {
-    return bytes as TxId;
+    return { name: "Just", fields: bytes as TxId };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -40,10 +40,10 @@ export const jsonTxId: Json<TxId> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
     const bs = txIdFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (bs === undefined) {
+    if (bs.name === "Nothing") {
       throw new JsonError(`TxId should be 32 bytes`);
     }
-    return bs;
+    return bs.fields;
   },
 };
 
@@ -74,10 +74,10 @@ export const fromDataTxId: FromData<TxId> = {
           const res = txIdFromBytes(
             LbBytes.fromDataLedgerBytes.fromData(plutusData.fields[1][0]!),
           );
-          if (res === undefined) {
+          if (res.name === "Nothing") {
             break;
           }
-          return res;
+          return res.fields;
         }
         break;
       default:

@@ -141,10 +141,10 @@ export function lookup<K, V>(
 ): Maybe<V> {
   for (let i = 0; i < map.length; ++i) {
     if (eq.eq(map[i]![0], key)) {
-      return map[i]![1];
+      return { name: "Just", fields: map[i]![1] };
     }
   }
-  return undefined;
+  return { name: "Nothing" };
 }
 
 /**

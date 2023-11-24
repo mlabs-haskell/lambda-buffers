@@ -26,9 +26,9 @@ export function currencySymbolFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<CurrencySymbol> {
   if (bytes.length === 28) {
-    return bytes as CurrencySymbol;
+    return { name: "Just", fields: bytes as CurrencySymbol };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -45,10 +45,10 @@ export const jsonCurrencySymbol: Json<CurrencySymbol> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
     const bs = currencySymbolFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (bs === undefined) {
+    if (bs.name === "Nothing") {
       throw new JsonError("CurrencySymbol should be 28 bytes");
     }
-    return bs;
+    return bs.fields;
   },
 };
 
@@ -79,9 +79,9 @@ export function tokenNameFromBytes(
   bytes: LbBytes.LedgerBytes,
 ): Maybe<TokenName> {
   if (bytes.length <= 32) {
-    return bytes as TokenName;
+    return { name: "Just", fields: bytes as TokenName };
   } else {
-    return undefined;
+    return { name: "Nothing" };
   }
 }
 
@@ -99,10 +99,10 @@ export const jsonTokenName: Json<TokenName> = {
   toJson: LbBytes.jsonLedgerBytes.toJson,
   fromJson: (value) => {
     const bs = tokenNameFromBytes(LbBytes.jsonLedgerBytes.fromJson(value));
-    if (bs === undefined) {
+    if (bs.name === "Nothing") {
       throw new JsonError("TokenName should be at most 32 bytes");
     }
-    return bs;
+    return bs.fields;
   },
 };
 /**

@@ -68,10 +68,10 @@ export const fromDataInteger: FromData<Integer> = {
 export function toDataMaybe<A>(dict: ToData<A>): ToData<Maybe<A>> {
   return {
     toData: (arg) => {
-      if (arg === undefined) {
+      if (arg.name === "Nothing") {
         return { name: "Constr", fields: [1n, []] };
       } else {
-        return { name: "Constr", fields: [0n, [dict.toData(arg)]] };
+        return { name: "Constr", fields: [0n, [dict.toData(arg.fields)]] };
       }
     },
   };
@@ -86,12 +86,15 @@ export function fromDataMaybe<A>(dict: FromData<A>): FromData<Maybe<A>> {
       switch (plutusData.name) {
         case "Constr":
           if (plutusData.fields[0] == 1n) {
-            return undefined;
+            return { name: "Nothing" };
           } else if (plutusData.fields[0] == 0n) {
             if (plutusData.fields[1].length !== 1) {
               throw new FromDataError("Malformed Constr" + plutusData);
             }
-            return dict.fromData(plutusData.fields[1][0]!);
+            return {
+              name: "Just",
+              fields: dict.fromData(plutusData.fields[1][0]!),
+            };
           } else {
             throw new FromDataError("Malformed Constr" + plutusData);
           }
