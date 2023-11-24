@@ -77,15 +77,33 @@ let
         # dependencies from `nix`.
         mkdir .nix-node-deps/
 
-        ${ if builtins.length dependencies == 0 then "" else
+        ${ if dependencies == [] then "" else
             ''
+                # We write the list of `dependencies` as 
+                # `<dependency1>`, `<dependency2>`, ... ,`<dependencyN>`
+
+                # Copying all `dependencies` into `.nix-nodes-deps/` i.e.,
+                # we run:
+                # ```
+                # echo "Copying <dependency1>"
+                # cp Copying <dependency1> .nix-node-deps/
+                # echo "Copying <dependency2>"
+                # cp Copying <dependency2> .nix-node-deps/
+                # ...
+                # echo "Copying <dependencyN>"
+                # cp Copying <dependencyN> .nix-node-deps/
+                # ```
                 ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
                     ''
                         echo "Copying ${pkgPath}..."
                         cp "${pkgPath}" .nix-node-deps/
                     ''
-                        )dependencies)}
+                        ) dependencies)}
 
+                # Run `npm install` with the previous dependencies i.e., we run
+                # ```
+                # npm install --save --package-lock-only <dependency1> <dependency2>  ... <dependencyN>
+                # ```
                 echo 'Running `npm install`...'
                 HOME=$TMPDIR npm install --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''".nix-node-deps/$(basename "${pkgPath}")"'') dependencies) }
             ''
