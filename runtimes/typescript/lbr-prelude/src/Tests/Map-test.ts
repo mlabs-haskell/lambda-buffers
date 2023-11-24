@@ -22,7 +22,7 @@ export function insertAndCheck<K, V>(
 
   const lkup = LbMap.lookup(ordDict, k, map);
 
-  if (!(lkup !== undefined && eqDict.eq(lkup, v))) {
+  if (!(lkup.name === "Just" && eqDict.eq(lkup.fields, v))) {
     throw new Error(
       `Insertion for [${k}, ${v}] failed for map ${JSON.stringify(map.tree)}`,
     );
@@ -33,7 +33,7 @@ export function removeAndCheck<K, V>(ordDict: Ord<K>, k: K, map: Map<K, V>) {
   LbMap.remove(ordDict, k, map);
   LbMap.checkInvariants(ordDict, map);
 
-  if (LbMap.lookup(ordDict, k, map) !== undefined) {
+  if (LbMap.lookup(ordDict, k, map).name === "Just") {
     throw new Error(
       `Removal failed for ${k} for map ${JSON.stringify(map.tree)}`,
     );
@@ -83,7 +83,7 @@ describe("Map tests", () => {
     checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Nothing") {
         throw new Error(
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
@@ -93,7 +93,7 @@ describe("Map tests", () => {
     }
 
     for (let i = 11; i <= 20; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) !== undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Just") {
         throw new Error(`${i} is in the map: ${JSON.stringify(map.tree)}`);
       }
     }
@@ -127,7 +127,7 @@ describe("Map tests", () => {
     checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Nothing") {
         throw new Error(
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
@@ -136,7 +136,7 @@ describe("Map tests", () => {
     }
 
     for (let i = 11; i <= 20; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) !== undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Just") {
         throw new Error(`${i} is in the map: ${JSON.stringify(map.tree)}`);
       }
     }
@@ -180,7 +180,7 @@ describe("Map tests", () => {
     checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Nothing") {
         throw new Error(
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
@@ -189,7 +189,7 @@ describe("Map tests", () => {
     }
 
     for (let i = 11; i <= 20; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) !== undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Just") {
         throw new Error(`${i} is in the map: ${JSON.stringify(map.tree)}`);
       }
     }
@@ -222,7 +222,7 @@ describe("Map tests", () => {
     checkMapLength(map, 11);
 
     for (let i = 0; i <= 10; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) === undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Nothing") {
         throw new Error(
           `${i} not found in the map: ${JSON.stringify(map.tree)}`,
         );
@@ -231,7 +231,7 @@ describe("Map tests", () => {
     }
 
     for (let i = 11; i <= 20; ++i) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map) !== undefined) {
+      if (LbMap.lookup(LbPrelude.ordPrimitive, i, map).name === "Just") {
         throw new Error(`${i} is in the map: ${JSON.stringify(map.tree)}`);
       }
     }
@@ -251,7 +251,12 @@ describe("Map tests", () => {
     }
 
     for (const [key, value] of Object.entries(insertions)) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, key, map) !== value) {
+      if (
+        LbPrelude.eqMaybe(LbPrelude.eqPrimitive).neq(
+          LbMap.lookup(LbPrelude.ordPrimitive, key, map),
+          { name: "Just", fields: value },
+        )
+      ) {
         throw new Error(
           `[${key}, ${value}] is either not in the map or the wrong value in the map: ${
             JSON.stringify(map.tree)
@@ -276,7 +281,12 @@ describe("Map tests", () => {
     }
 
     for (const [key, value] of Object.entries(insertions)) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, key, map) !== value) {
+      if (
+        LbPrelude.eqMaybe(LbPrelude.eqPrimitive).neq(
+          LbMap.lookup(LbPrelude.ordPrimitive, key, map),
+          { name: "Just", fields: value },
+        )
+      ) {
         throw new Error(
           `[${key}, ${value}] is either not in the map or the wrong value in the map: ${
             JSON.stringify(map.tree)
@@ -373,7 +383,12 @@ describe("Map tests", () => {
     }
 
     for (const [key, value] of Object.entries(insertions)) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, key, map) !== value) {
+      if (
+        LbPrelude.eqMaybe(LbPrelude.eqPrimitive).neq(
+          LbMap.lookup(LbPrelude.ordPrimitive, key, map),
+          { name: "Just", fields: value },
+        )
+      ) {
         throw new Error(
           `[${key}, ${value}] is either not in the map or the wrong value in the map: ${
             JSON.stringify(map.tree)
@@ -421,7 +436,12 @@ describe("Map tests", () => {
     }
 
     for (const [key, value] of Object.entries(insertions)) {
-      if (LbMap.lookup(LbPrelude.ordPrimitive, key, map) !== value) {
+      if (
+        LbPrelude.eqMaybe(LbPrelude.eqPrimitive).neq(
+          LbMap.lookup(LbPrelude.ordPrimitive, key, map),
+          { name: "Just", fields: value },
+        )
+      ) {
         throw new Error(
           `[${key}, ${value}] is either not in the map or the wrong value in the map: ${
             JSON.stringify(map.tree)
