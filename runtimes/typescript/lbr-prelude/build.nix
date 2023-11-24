@@ -4,7 +4,7 @@
     let
       typescriptFlake =
         config.overlayAttrs.extras.typescriptFlake {
-          name = "lbr-prelude-typescript";
+          name = "lbr-prelude";
           src = ./.;
         };
     in

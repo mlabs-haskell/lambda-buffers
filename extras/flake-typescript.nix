@@ -125,7 +125,16 @@ let
     };
 
   shell = node2nixDevelopAttrs.shell.override
-    { };
+    {
+      shellHook =
+        node2nixDevelopAttrs.shell.shellHook
+        +
+        ''
+          # Note: `node2nix` sets `$NODE_PATH` s.t. it is a single path.
+          echo 'Creating a symbolic link from `$NODE_PATH` to `node_modules`...'
+          ln -snf "$NODE_PATH" node_modules
+        '';
+    };
 
   # Creates a tarball of `project` using `npm pack` and puts it in the nix
   # store.
@@ -164,22 +173,16 @@ let
 in
 {
   devShells = {
-    # Note: when using the devshell, when in the project root directory, type
-    # ```
-    # ln -s "$NODE_PATH" node_modules
-    # ```
-    # so when `node` executes, it will use the dependencies gathered together
-    # by nix
-    "${name}" = shell;
+    "${name}-typescript" = shell;
   };
 
   packages = {
-    "${name}" = project;
-    "${name}-tarball" = tarball;
-    "${name}-node2nix" = node2nixDevelop;
+    "${name}-typescript" = project;
+    "${name}-typescript-tarball" = tarball;
+    "${name}-typescript-node2nix" = node2nixDevelop;
   };
 
   checks = {
-    "${name}-test" = test;
+    "${name}-typescript-test" = test;
   };
 }
