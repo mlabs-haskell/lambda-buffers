@@ -148,7 +148,7 @@ let
 
   # Creates a tarball of `project` using `npm pack` and puts it in the nix
   # store.
-  tarball = pkgs.stdenv.mkDerivation {
+  npmPack = pkgs.stdenv.mkDerivation {
     buildInputs = [ nodejs ];
     name = "${node2nixDevelopAttrs.args.name}.tgz";
 
@@ -188,7 +188,7 @@ in
 
   packages = {
     "${name}-typescript" = project;
-    "${name}-typescript-tarball" = tarball;
+    "${name}-typescript-tgz" = npmPack;
     "${name}-typescript-node2nix" = node2nixDevelop;
   };
 

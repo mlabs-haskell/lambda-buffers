@@ -6,7 +6,7 @@
         config.overlayAttrs.extras.typescriptFlake {
           name = "lbr-plutus";
           src = ./.;
-          dependencies = [ config.packages."lbr-prelude-typescript-tarball" ];
+          dependencies = [ config.packages."lbr-prelude-typescript-tgz" ];
         };
     in
     {
