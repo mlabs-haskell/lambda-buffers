@@ -281,11 +281,6 @@ export function caseJsonConstructor<A>(
 
 /**
  * Corresponds to the Haskell function
- * @remarks
- * TODO(jaredponn): This is completely broken for non primitive types as keys,
- * since non primitive types (objects) as keys are considered equal by identity
- * (pointer comparison)
- *
  * @internal
  */
 export function caseJsonMap<K, V>(
@@ -358,11 +353,11 @@ export function caseFieldWithValue<A>(
 }
 
 /**
- * `parseJson` parses a JSON value.
+ * {@link parseJson} parses a JSON value.
  *
  * @remarks
- * This differs from {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | JSON.parse()}
- * as `parseJson` will correctly parse `bigint`s
+ * This differs from {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | `JSON.parse()`}
+ * as `parseJson` will correctly parse {@link bigint}s
  *
  * @throws {@link SyntaxError}
  * Thrown if the provided string is invalid JSON.
@@ -372,9 +367,9 @@ export function parseJson(input: string): Value {
   //  - Using the iterator is necessary (as opposed to simply indexing bytes
   //  in the string) since JS strings are UTF16, but 16 bits are not enough
   //  to encode all Unicode code points, so some UTF16 characters require 2
-  //  array elements in the underlying string. So, the iterator is clever
-  //  enough to handle this mess for us to ensure that we consume each
-  //  character at most once.
+  //  array elements in the underlying string.
+  //  Fortunately, using the iterator is enough to handle this mess for
+  //  us as it iterates through the string by Unicode code points.
   const iterator: IterableIterator<string> = input[Symbol.iterator]();
 
   // `theChar`: the current character being read
@@ -391,7 +386,7 @@ export function parseJson(input: string): Value {
   //
   // In particular, every function prefixed with a lower case 'p'
   // will be a parser for a production in [2] with [2]'s grammar just above
-  // it.
+  // it in comments.
 
   // Either returns
   //  - the character (as a string); or
@@ -778,6 +773,15 @@ export function parseJson(input: string): Value {
     consume();
   }
 
+  function pChars(str: string): void {
+    for (const c of str) {
+      if (c !== peek()) {
+        bad(c);
+      }
+      consume();
+    }
+  }
+
   // value
   //     object
   //     array
@@ -798,23 +802,13 @@ export function parseJson(input: string): Value {
     } else if (c.match(/^[-0-9]$/)) {
       return pNumber();
     } else if (c === "t") {
-      consume();
-      pChar("r");
-      pChar("u");
-      pChar("e");
+      pChars("true");
       return true;
     } else if (c === "f") {
-      consume();
-      pChar("a");
-      pChar("l");
-      pChar("s");
-      pChar("e");
+      pChars("false");
       return false;
     } else if (c === "n") {
-      consume();
-      pChar("u");
-      pChar("l");
-      pChar("l");
+      pChars("null");
       return null;
     } else {
       bad(c);
