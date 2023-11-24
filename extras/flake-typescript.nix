@@ -30,15 +30,7 @@ pkgs:
 
   dependencies ? [ ]
 
-, # TODO(jaredponn): Why do we use such an old version of node?
-  # This node version uses npm 8.19.3 which generates `"lockfileVersion": 2`
-  # in the `package-lock.json` which is compatible with `node2nix`; and
-  # routine verification will show that newer versions of node (npm) use
-  # `"lockfileVersion": 3` which is incompatible with `node2nix`... 
-  # So to fix this, we could either patch `node2nix` or roll our own
-  # thing that scans lock files / fetches the tarballs. The latter really
-  # doesn't seem that hard to do...
-  nodejs ? pkgs.nodejs-16_x
+, nodejs ? pkgs.nodejs-18_x
 , ...
 }:
 let
