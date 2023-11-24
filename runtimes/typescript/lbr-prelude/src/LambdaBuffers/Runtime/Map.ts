@@ -1,6 +1,7 @@
 import type { Ord } from "./Ord.js";
 import * as LbAvlTree from "./AvlTree.js";
 import type { Node } from "./AvlTree.js";
+import type { Maybe } from "./Maybe.js";
 
 /**
  * A mapping from `K` to `V` where `K` must have a {@link Ord} instance.
@@ -112,15 +113,15 @@ export function lookup<K, V>(
   ordDict: Ord<K>,
   key: K,
   map: Readonly<Map<K, V>>,
-): V | undefined {
+): Maybe<V> {
   const lkup: undefined | [K, V] = LbAvlTree.lookup(ordOnFst(ordDict), [
     key,
     null as V,
   ], map.tree);
   if (lkup === undefined) {
-    return undefined;
+    return { name: "Nothing" };
   } else {
-    return lkup[1];
+    return { name: "Just", fields: lkup[1] };
   }
 }
 

@@ -189,39 +189,49 @@ describe("Text instance tests", () => {
 
 describe("Maybe instance tests", () => {
   describe("Eq Maybe", () => {
-    eqInstanceIt(LbPrelude.eqMaybe(LbPrelude.eqInteger), 212n, 212n, true);
     eqInstanceIt(
       LbPrelude.eqMaybe(LbPrelude.eqInteger),
-      -212n,
-      -212n,
+      { name: "Just", fields: 212n },
+      { name: "Just", fields: 212n },
       true,
     );
     eqInstanceIt(
       LbPrelude.eqMaybe(LbPrelude.eqInteger),
-      undefined,
-      undefined,
+      { name: "Just", fields: -212n },
+      { name: "Just", fields: -212n },
       true,
     );
     eqInstanceIt(
       LbPrelude.eqMaybe(LbPrelude.eqInteger),
-      undefined,
-      212n,
+      { name: "Nothing" },
+      { name: "Nothing" },
+      true,
+    );
+    eqInstanceIt(
+      LbPrelude.eqMaybe(LbPrelude.eqInteger),
+      { name: "Nothing" },
+      { name: "Just", fields: 212n },
       false,
     );
     eqInstanceIt(
       LbPrelude.eqMaybe(LbPrelude.eqInteger),
-      212n,
-      undefined,
+      { name: "Just", fields: 212n },
+      { name: "Nothing" },
       false,
     );
   });
 
   describe("Json Maybe", () => {
-    jsonInstanceIt(LbPrelude.jsonMaybe(LbPrelude.jsonInteger), undefined, {
+    jsonInstanceIt(LbPrelude.jsonMaybe(LbPrelude.jsonInteger), {
+      name: "Nothing",
+    }, {
       name: "Nothing",
       fields: [],
     });
-    jsonInstanceIt(LbPrelude.jsonMaybe(LbPrelude.jsonInteger), 12n, {
+    jsonInstanceIt(LbPrelude.jsonMaybe(LbPrelude.jsonInteger), {
+      name: "Just",
+      fields: 12n,
+    }, {
       name: "Just",
       fields: [Scientific.fromString("12")],
     });
