@@ -344,7 +344,6 @@ describe("Map tests", () => {
     const NUM_INSERTIONS_DELETIONS = 5000;
 
     for (let i = 0; i < NUM_INSERTIONS_DELETIONS; ++i) {
-      console.log(`${JSON.stringify(map.tree)}`);
       if (Math.random() > 0.5) {
         const keys = Object.keys(insertions);
         if (keys.length === 0) {
@@ -370,6 +369,7 @@ describe("Map tests", () => {
           map,
         );
       }
+      checkMapLength(map, Object.keys(insertions).length);
     }
 
     for (const [key, value] of Object.entries(insertions)) {
@@ -392,7 +392,6 @@ describe("Map tests", () => {
     const NUM_INSERTIONS_DELETIONS = 5000;
 
     for (let i = 0; i < NUM_INSERTIONS_DELETIONS; ++i) {
-      console.log(`${JSON.stringify(map.tree)}`);
       if (Math.random() > 0.5) {
         const keys = Object.keys(insertions);
         if (keys.length === 0) {
@@ -418,6 +417,7 @@ describe("Map tests", () => {
           map,
         );
       }
+      checkMapLength(map, Object.keys(insertions).length);
     }
 
     for (const [key, value] of Object.entries(insertions)) {
