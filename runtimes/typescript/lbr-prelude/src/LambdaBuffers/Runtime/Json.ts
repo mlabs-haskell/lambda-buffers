@@ -86,11 +86,18 @@ export class Scientific {
   coefficient: bigint;
   base10Exponent: bigint;
 
-  constructor(coefficient: bigint, base10Exponent: bigint) {
+  /**
+   * @param coefficient - the coefficient
+   * @param base10Exponent - the base 10 exponent (0 if not provided)
+   */
+  constructor(coefficient: bigint, base10Exponent?: bigint) {
     if (coefficient === 0n) {
       this.coefficient = 0n;
       this.base10Exponent = 0n;
     } else {
+      if (base10Exponent === undefined) {
+        base10Exponent = 0n;
+      }
       // Remove the trailing 0s by "shifting" powers of 10 over.
       while (coefficient % 10n === 0n) {
         coefficient = coefficient / 10n;

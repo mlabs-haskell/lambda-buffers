@@ -12,6 +12,20 @@ export type Maybe<A> =
   | { name: "Nothing" };
 
 /**
+ * {@link fromJust} returns `Just`'s `.fields` if it exists -- otherwise
+ * throwing an error
+ *
+ * @throws {@link Error}
+ * Thrown if the provided value has `.name` as `"Nothing"`
+ */
+export function fromJust<A>(maybe: Maybe<A>): A {
+  if (maybe.name === "Just") {
+    return maybe.fields;
+  }
+  throw new Error(`Expected Just but got Nothing`);
+}
+
+/**
  * {@link Eq} instance for {@link Maybe}
  */
 export function eqMaybe<A>(dict: Eq<A>): Eq<Maybe<A>> {
