@@ -357,14 +357,19 @@ describe("Map tests", () => {
       if (Math.random() > 0.5) {
         const keys = Object.keys(insertions);
         if (keys.length === 0) {
-          continue;
+          // just delete something random since nothing exists in the map
+
+          const k = randomIntUpToButNotIncluding(NUM_INSERTIONS_DELETIONS);
+          removeAndCheck(LbPrelude.ordPrimitive, k, map);
+        } else {
+          // delete something already existing in the map
+          const randomkey: number = insertions[
+            parseInt(keys[Math.floor(keys.length * Math.random())]!)
+          ]!;
+          delete insertions[randomkey];
+
+          removeAndCheck(LbPrelude.ordPrimitive, randomkey, map);
         }
-
-        const randomkey: number =
-          insertions[parseInt(keys[Math.floor(keys.length * Math.random())]!)]!;
-        delete insertions[randomkey];
-
-        removeAndCheck(LbPrelude.ordPrimitive, randomkey, map);
       } else {
         // insert
         const k = randomIntUpToButNotIncluding(NUM_INSERTIONS_DELETIONS);
