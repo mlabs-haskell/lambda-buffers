@@ -20,7 +20,7 @@ export const fromDataRedeemer: FromData<Redeemer> =
   LbPlutusData.fromDataPlutusData;
 
 /**
- * {@link Datum} is wrapper around {@link PlutusData} values that are used as redeemers in transaction inputs.
+ * {@link Datum} is wrapper around {@link PlutusData} values that are used as data in transaction outputs.
  *
  * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Scripts.hs#L56-L60 }
  */

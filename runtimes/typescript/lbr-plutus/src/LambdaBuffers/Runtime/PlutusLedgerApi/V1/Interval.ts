@@ -94,7 +94,7 @@ export function fromDataInterval<A>(dictA: FromData<A>): FromData<Interval<A>> {
               plutusData.fields[1][0]!,
             );
             const ivTo = fromDataUpperBound(dictA).fromData(
-              plutusData.fields[1][0]!,
+              plutusData.fields[1][1]!,
             );
             return { "ivFrom": ivFrom, "ivTo": ivTo };
           } else {

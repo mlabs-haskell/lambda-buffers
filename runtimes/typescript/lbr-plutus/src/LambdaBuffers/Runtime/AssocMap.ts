@@ -13,6 +13,13 @@ import type { FromData, PlutusData, ToData } from "./PlutusData.js";
 export type Map<K, V> = List<[K, V]> & { __compileTimeOnlyMap: Map<K, V> };
 
 /**
+ * Returns a new empty {@link Map}
+ */
+export function empty<K, V>(): Map<K, V> {
+  return [] as unknown as Map<K, V>;
+}
+
+/**
  * {@link Eq} instance for {@link Map}. Note that we follow Haskell's implementation which
  * unintuitively is "structurally equal" so
  * ```
@@ -112,19 +119,30 @@ export function fromDataMap<K, V>(
  * @remarks
  * This copies the Haskell function which does _not_ test whether the set of
  * keys are unique.
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-tx/src/PlutusTx/AssocMap.hs#L151-L153}
  */
 export function fromList<K, V>(elems: Readonly<List<[K, V]>>): Map<K, V> {
   return elems as Map<K, V>;
 }
 
 /**
- * {@link toList} translates a {@link Map} to a list of key value pairs.
+ * {@link fromListSafe} translates a list of key value pairs to a {@link Map}.
  *
  * @remarks
- * This copies the Haskell function which does _not_ test whether the list of
- * keys are unique.
+ * This ensures that all elements are unique
+ *
+ * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-tx/src/PlutusTx/AssocMap.hs#L155-L157}
  */
-export function toList<K, V>(map: Readonly<Map<K, V>>): List<[K, V]> {
+export function fromListSafe<K, V>(
+  dict: Eq<K>,
+  elems: Readonly<List<[K, V]>>,
+): Map<K, V> {
+  const map: Map<K, V> = empty();
+  for (let i = elems.length; i-- > 0;) {
+    insert(dict, elems[i]![0], elems[i]![1], map);
+  }
+
   return map;
 }
 
@@ -149,7 +167,7 @@ export function lookup<K, V>(
 
 /**
  * {@link member} calls {@link lookup} and returns true iff {@link lookup} does
- * not return `undefined`.
+ * not return `Nothing`.
  *
  * Complexity: `O(n)`.
  */
@@ -158,7 +176,7 @@ export function member<K, V>(
   key: K,
   map: Readonly<Map<K, V>>,
 ): Bool {
-  if (lookup(eq, key, map) === undefined) {
+  if (lookup(eq, key, map).name === "Nothing") {
     return false;
   } else {
     return true;

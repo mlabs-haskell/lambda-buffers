@@ -15,7 +15,7 @@ import * as LbBytes from "./Bytes.js";
  *
  * @see {@link https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs#L51-L65}
  */
-type TxId = LbBytes.LedgerBytes & { __compileTimeOnlyTxId: TxId };
+export type TxId = LbBytes.LedgerBytes & { __compileTimeOnlyTxId: TxId };
 
 /**
  * {@link txIdFromBytes} checks if the bytes are 32 bytes long.

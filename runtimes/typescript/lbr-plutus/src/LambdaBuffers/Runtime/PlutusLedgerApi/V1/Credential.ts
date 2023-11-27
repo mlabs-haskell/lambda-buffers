@@ -130,7 +130,7 @@ export const toDataStakingCredential: ToData<StakingCredential> = {
       case "StakingPtr":
         return {
           name: "Constr",
-          fields: [0n, [
+          fields: [1n, [
             LbPreludeInstances.toDataInteger.toData(
               stakingCredential.fields[0],
             ),

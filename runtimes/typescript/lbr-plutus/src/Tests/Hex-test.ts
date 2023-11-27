@@ -2,6 +2,23 @@ import * as LbHex from "../LambdaBuffers/Runtime/Hex.js";
 
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
+import fc from "fast-check";
+
+/**
+ * Random generator for hex strings
+ */
+export function fcHexString(): fc.Arbitrary<string> {
+  return fc.uint8Array().map((t) => {
+    return Buffer.from(t).toString("hex");
+  });
+}
+
+/**
+ * Random generator for Uint8Arrays
+ */
+export function fcBytes(): fc.Arbitrary<Uint8Array> {
+  return fc.uint8Array();
+}
 
 describe("Hex tests", () => {
   function bytesIsHexIt(bytes: Uint8Array, expectedHex: string) {
@@ -21,14 +38,14 @@ describe("Hex tests", () => {
   function hexRoundTripIt(hex: string) {
     const hexRoundTrip = LbHex.bytesToHex(LbHex.bytesFromHex(hex));
     it(`Roundtrip for hex ${hex}`, () => {
-      assert.deepStrictEqual(hex, hexRoundTrip);
+      assert.deepStrictEqual(hexRoundTrip, hex);
     });
   }
 
   function bytesRoundTripIt(bytes: Uint8Array) {
     const bytesRoundTrip = LbHex.bytesFromHex(LbHex.bytesToHex(bytes));
     it(`Roundtrip for bytes ${bytes}`, () => {
-      assert.deepStrictEqual(bytes, bytesRoundTrip);
+      assert.deepStrictEqual(bytesRoundTrip, bytes);
     });
   }
 
@@ -80,4 +97,32 @@ describe("Hex tests", () => {
   bytesRoundTripIt(Uint8Array.from([0x00, 0xf0, 0x00, 0x00]));
   bytesRoundTripIt(Uint8Array.from([0x00, 0x00, 0x00, 0x00]));
   bytesRoundTripIt(Uint8Array.from([0xf0, 0x00, 0x00, 0xf0]));
+
+  it(`bytesToHex/bytesFromHex property based roundtrips`, () => {
+    fc.assert(
+      fc.property(
+        fcBytes(),
+        (bytes) => {
+          assert.deepStrictEqual(
+            LbHex.bytesFromHex(LbHex.bytesToHex(bytes)),
+            bytes,
+          );
+        },
+      ),
+    );
+  });
+
+  it(`bytesFromHex/bytesToHex property based roundtrips`, () => {
+    fc.assert(
+      fc.property(
+        fcHexString(),
+        (hexstr) => {
+          assert.deepStrictEqual(
+            LbHex.bytesToHex(LbHex.bytesFromHex(hexstr)),
+            hexstr,
+          );
+        },
+      ),
+    );
+  });
 });
