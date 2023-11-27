@@ -15,7 +15,7 @@ mod tests {
         where
             T: Json + PartialEq,
         {
-            T::from_json(val.to_json()?)
+            T::from_json(&val.to_json()?)
         }
 
         proptest! {
@@ -119,15 +119,15 @@ mod tests {
         #[test]
         fn test_case_json_array() {
             let x0 = "Test";
-            let x1 = Box::new(|vals: Vec<Value>| vals.into_iter().map(String::from_json).collect());
+            let x1 = Box::new(|vals: &Vec<Value>| vals.iter().map(String::from_json).collect());
             let x2 = Value::Array(vec![
                 Value::String("a".to_owned()),
                 Value::String("b".to_owned()),
                 Value::String("c".to_owned()),
             ]);
 
-            let result: Vec<String> = json::case_json_array(x0, x1.clone(), x2.clone()).unwrap();
-            let lamval_result: Vec<String> = lamval::case_json_array(x0)(x1)(x2).unwrap();
+            let result: Vec<String> = json::case_json_array(&x0, x1.clone(), &x2).unwrap();
+            let lamval_result: Vec<String> = lamval::case_json_array(&x0)(x1)(&x2).unwrap();
             let expected = vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
 
             assert_eq!(result, expected);

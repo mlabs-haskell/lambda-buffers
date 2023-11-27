@@ -15,7 +15,7 @@ pub mod lamval;
 pub trait Json {
     fn to_json(&self) -> Result<Value, Error>;
 
-    fn from_json(value: Value) -> Result<Self, Error>
+    fn from_json(value: &Value) -> Result<Self, Error>
     where
         Self: Sized;
 }
@@ -30,7 +30,7 @@ impl Json for BigInt {
         Ok(Value::Number(num))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         match value {
             Value::Number(number) => {
                 BigInt::from_str(number.as_str()).map_err(|_| Error::UnexpectedJsonInvariant {
@@ -41,7 +41,7 @@ impl Json for BigInt {
             }
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::Number,
-                got: JsonType::from(&value),
+                got: JsonType::from(value),
                 parser: "Prelude.Integer".to_owned(),
             }),
         }
@@ -53,12 +53,12 @@ impl Json for bool {
         Ok(Value::Bool(*self))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         match value {
-            Value::Bool(bool) => Ok(bool),
+            Value::Bool(bool) => Ok(*bool),
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::Bool,
-                got: JsonType::from(&value),
+                got: JsonType::from(value),
                 parser: "Prelude.Bool".to_owned(),
             }),
         }
@@ -70,7 +70,7 @@ impl Json for char {
         String::from(*self).to_json()
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         String::from_json(value).and_then(|str| {
             let mut chars = str.chars();
             let ch = chars.next();
@@ -92,7 +92,7 @@ impl Json for Vec<u8> {
         BASE64.encode(self).to_json()
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         String::from_json(value).and_then(|str| {
             BASE64
                 .decode(&str.into_bytes())
@@ -110,12 +110,12 @@ impl Json for String {
         Ok(Value::String(self.to_owned()))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         match value {
-            Value::String(str) => Ok(str),
+            Value::String(str) => Ok(str.clone()),
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::String,
-                got: JsonType::from(&value),
+                got: JsonType::from(value),
                 parser: "Prelude.Text".to_owned(),
             }),
         }
@@ -128,12 +128,12 @@ where
 {
     fn to_json(&self) -> Result<Value, Error> {
         match self {
-            Some(val) => Ok(json_constructor("Just", vec![val.to_json()?])),
-            None => Ok(json_constructor("Nothing", Vec::with_capacity(0))),
+            Some(val) => Ok(json_constructor("Just", &vec![val.to_json()?])),
+            None => Ok(json_constructor("Nothing", &Vec::with_capacity(0))),
         }
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         case_json_constructor(
             "Prelude.Maybe",
             vec![
@@ -151,7 +151,7 @@ where
                 (
                     "Just",
                     Box::new(|ctor_fields| match &ctor_fields[..] {
-                        [val] => Ok(Some(T::from_json(val.clone())?)),
+                        [val] => Ok(Some(T::from_json(val)?)),
                         _ => Err(Error::UnexpectedArrayLength {
                             wanted: 1,
                             got: ctor_fields.len(),
@@ -172,19 +172,19 @@ where
 {
     fn to_json(&self) -> Result<Value, Error> {
         match self {
-            Ok(val) => Ok(json_constructor("Right", vec![val.to_json()?])),
-            Err(val) => Ok(json_constructor("Left", vec![val.to_json()?])),
+            Ok(val) => Ok(json_constructor("Right", &vec![val.to_json()?])),
+            Err(val) => Ok(json_constructor("Left", &vec![val.to_json()?])),
         }
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         case_json_constructor(
             "Prelude.Either",
             vec![
                 (
                     "Right",
                     Box::new(|ctor_fields| match &ctor_fields[..] {
-                        [val] => Ok(Ok(T::from_json(val.clone())?)),
+                        [val] => Ok(Ok(T::from_json(val)?)),
                         _ => Err(Error::UnexpectedArrayLength {
                             wanted: 1,
                             got: ctor_fields.len(),
@@ -195,7 +195,7 @@ where
                 (
                     "Left",
                     Box::new(|ctor_fields| match &ctor_fields[..] {
-                        [val] => Ok(Err(E::from_json(val.clone())?)),
+                        [val] => Ok(Err(E::from_json(val)?)),
                         _ => Err(Error::UnexpectedArrayLength {
                             wanted: 1,
                             got: ctor_fields.len(),
@@ -222,15 +222,15 @@ where
         Ok(Value::Array(values))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         match value {
             Value::Array(vec) => vec
                 .iter()
-                .map(|val| T::from_json(val.clone()))
+                .map(|val| T::from_json(val))
                 .collect::<Result<Vec<T>, Error>>(),
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::Array,
-                got: JsonType::from(&value),
+                got: JsonType::from(value),
                 parser: "Prelude.List".to_owned(),
             }),
         }
@@ -250,11 +250,11 @@ where
         Ok(Value::Array(values))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         Vec::from_json(value).and_then(|vec: Vec<Value>| {
             let set = vec
                 .iter()
-                .map(|val| T::from_json(val.clone()))
+                .map(|val| T::from_json(val))
                 .collect::<Result<BTreeSet<T>, Error>>()?;
 
             if set.len() == vec.len() {
@@ -284,11 +284,11 @@ where
         Ok(Value::Array(values))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         Vec::from_json(value).and_then(|vec: Vec<Value>| {
             let set = vec
                 .iter()
-                .map(|kv_tuple| <(K, V)>::from_json(kv_tuple.clone()))
+                .map(|kv_tuple| <(K, V)>::from_json(kv_tuple))
                 .collect::<Result<BTreeMap<K, V>, Error>>()?;
 
             if set.len() == vec.len() {
@@ -309,12 +309,12 @@ impl Json for () {
         Ok(Value::Null)
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         match value {
             Value::Null => Ok(()),
             _ => Err(Error::UnexpectedJsonType {
                 wanted: JsonType::Null,
-                got: JsonType::from(&value),
+                got: JsonType::from(value),
                 parser: "Prelude.Unit".to_owned(),
             }),
         }
@@ -326,8 +326,8 @@ impl Json for Value {
         Ok(self.clone())
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
-        Ok(value)
+    fn from_json(value: &Value) -> Result<Self, Error> {
+        Ok(value.clone())
     }
 }
 
@@ -340,9 +340,9 @@ where
         Ok(Value::Array(vec![self.0.to_json()?, self.1.to_json()?]))
     }
 
-    fn from_json(value: Value) -> Result<Self, Error> {
+    fn from_json(value: &Value) -> Result<Self, Error> {
         Vec::from_json(value).and_then(|vec: Vec<Value>| match &vec[..] {
-            [a, b] => Ok((A::from_json(a.clone())?, B::from_json(b.clone())?)),
+            [a, b] => Ok((A::from_json(a)?, B::from_json(b)?)),
             _ => Err(Error::UnexpectedArrayLength {
                 wanted: 2,
                 got: vec.len(),
@@ -364,14 +364,14 @@ pub fn json_array(array: Vec<Value>) -> Value {
 /// LamVal Json builtin
 pub fn case_json_array<T>(
     parser_name: &str,
-    parse_arr: impl FnOnce(Vec<Value>) -> Result<T, Error>,
-    value: Value,
+    parse_arr: impl FnOnce(&Vec<Value>) -> Result<T, Error>,
+    value: &Value,
 ) -> Result<T, Error> {
     match value {
         Value::Array(array) => parse_arr(array),
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Array,
-            got: JsonType::from(&value),
+            got: JsonType::from(value),
             parser: parser_name.to_owned(),
         }),
     }
@@ -394,8 +394,8 @@ pub fn json_map(map: Vec<(Value, Value)>) -> Value {
 /// LamVal Json builtin
 pub fn case_json_map<K, V>(
     parser_name: &str,
-    parse_elem: impl Fn((Value, Value)) -> Result<(K, V), Error>,
-    value: Value,
+    parse_elem: impl Fn(&(Value, Value)) -> Result<(K, V), Error>,
+    value: &Value,
 ) -> Result<BTreeMap<K, V>, Error>
 where
     K: Ord,
@@ -403,11 +403,11 @@ where
     match value {
         Value::Array(vec) => vec
             .into_iter()
-            .map(|kv_tuple| parse_elem(<(Value, Value)>::from_json(kv_tuple)?))
+            .map(|kv_tuple| parse_elem(&<(Value, Value)>::from_json(kv_tuple)?))
             .collect::<Result<BTreeMap<K, V>, Error>>(),
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Array,
-            got: JsonType::from(&value),
+            got: JsonType::from(value),
             parser: parser_name.to_owned(),
         }),
     }
@@ -416,9 +416,10 @@ where
 /// Construct a JSON Object for a list of key-value pairs
 ///
 /// LamVal Json builtin
-pub fn json_object(kvs: Vec<(String, Value)>) -> Value {
+pub fn json_object(kvs: &Vec<(String, Value)>) -> Value {
     Value::Object(
-        kvs.into_iter()
+        kvs.iter()
+            .cloned()
             .map(|(k, v)| (k, v))
             .collect::<serde_json::Map<String, Value>>(),
     )
@@ -429,14 +430,14 @@ pub fn json_object(kvs: Vec<(String, Value)>) -> Value {
 /// LamVal Json builtin
 pub fn case_json_object<T>(
     parser_name: &str,
-    parse_obj: impl FnOnce(serde_json::Map<String, Value>) -> Result<T, Error>,
-    value: Value,
+    parse_obj: impl FnOnce(&serde_json::Map<String, Value>) -> Result<T, Error>,
+    value: &Value,
 ) -> Result<T, Error> {
     match value {
         Value::Object(obj) => parse_obj(obj),
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Object,
-            got: JsonType::from(&value),
+            got: JsonType::from(value),
             parser: parser_name.to_owned(),
         }),
     }
@@ -459,10 +460,10 @@ pub fn json_field(name: &str, obj: &serde_json::Map<String, Value>) -> Result<Va
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 ///
 /// LamVal Json builtin
-pub fn json_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
+pub fn json_constructor(ctor_name: &str, ctor_product: &Vec<Value>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("name".to_owned(), Value::String(ctor_name.to_owned()));
-    obj.insert("fields".to_owned(), Value::Array(ctor_product));
+    obj.insert("fields".to_owned(), Value::Array(ctor_product.clone()));
 
     Value::Object(obj)
 }
@@ -474,7 +475,7 @@ pub fn json_constructor(ctor_name: &str, ctor_product: Vec<Value>) -> Value {
 pub fn case_json_constructor<'a, T: 'a>(
     parser_name: &'a str,
     ctor_parsers: Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
-    value: Value,
+    value: &Value,
 ) -> Result<T, Error> {
     let ctor_parsers: BTreeMap<&str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>> =
         BTreeMap::from_iter(ctor_parsers);
@@ -492,7 +493,7 @@ pub fn case_json_constructor<'a, T: 'a>(
                     Value::String(str) => Ok(str),
                     _ => Err(Error::UnexpectedJsonType {
                         wanted: JsonType::String,
-                        got: JsonType::from(&value),
+                        got: JsonType::from(value),
                         parser: parser_name.to_owned(),
                     }),
                 })?;
@@ -507,7 +508,7 @@ pub fn case_json_constructor<'a, T: 'a>(
                     Value::Array(str) => Ok(str),
                     _ => Err(Error::UnexpectedJsonType {
                         wanted: JsonType::Array,
-                        got: JsonType::from(&value),
+                        got: JsonType::from(value),
                         parser: parser_name.to_owned(),
                     }),
                 })?;
@@ -531,7 +532,7 @@ pub fn case_json_constructor<'a, T: 'a>(
         }
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Null,
-            got: JsonType::from(&value),
+            got: JsonType::from(value),
             parser: parser_name.to_owned(),
         }),
     }

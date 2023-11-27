@@ -12,8 +12,8 @@ pub fn case_json_array<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
     dyn Fn(
-            Box<dyn Fn(Vec<Value>) -> Result<T, Error> + 'a>,
-        ) -> Box<dyn FnOnce(Value) -> Result<T, Error> + 'a>
+            Box<dyn Fn(&Vec<Value>) -> Result<T, Error> + 'a>,
+        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
         + 'a,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_array(x0, x1, x2)))
@@ -26,8 +26,8 @@ pub fn case_json_map<'a, K: 'a, V: 'a>(
     x0: &'a str,
 ) -> Box<
     dyn Fn(
-            Box<dyn Fn((Value, Value)) -> Result<(K, V), Error> + 'a>,
-        ) -> Box<dyn FnOnce(Value) -> Result<BTreeMap<K, V>, Error> + 'a>
+            Box<dyn Fn(&(Value, Value)) -> Result<(K, V), Error> + 'a>,
+        ) -> Box<dyn FnOnce(&Value) -> Result<BTreeMap<K, V>, Error> + 'a>
         + 'a,
 >
 where
@@ -43,8 +43,8 @@ pub fn case_json_object<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
     dyn Fn(
-            Box<dyn Fn(serde_json::Map<String, Value>) -> Result<T, Error> + 'a>,
-        ) -> Box<dyn FnOnce(Value) -> Result<T, Error> + 'a>
+            Box<dyn Fn(&serde_json::Map<String, Value>) -> Result<T, Error> + 'a>,
+        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
         + 'a,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_object(x0, x1, x2)))
@@ -63,7 +63,7 @@ pub fn json_field<'a>(
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 ///
 /// LamVal Json builtin
-pub fn json_constructor<'a, T: 'a>(x0: &'a str) -> Box<dyn FnOnce(Vec<Value>) -> Value + 'a> {
+pub fn json_constructor<'a, T: 'a>(x0: &'a str) -> Box<dyn FnOnce(&Vec<Value>) -> Value + 'a> {
     Box::new(move |x1| super::json_constructor(x0, x1))
 }
 
@@ -76,7 +76,7 @@ pub fn case_json_constructor<'a, T: 'a>(
 ) -> Box<
     dyn Fn(
             Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
-        ) -> Box<dyn FnOnce(Value) -> Result<T, Error> + 'a>
+        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
         + 'a,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_constructor(x0, x1, x2)))
