@@ -86,7 +86,6 @@ fn impl_struct(
                     got: dict.keys().cloned().collect(),
                     parser: #ident_str.to_owned(),
                 })
-                .cloned()
                 .and_then(lbr_prelude::json::Json::from_json)?;
         }
     });
@@ -94,7 +93,7 @@ fn impl_struct(
     let keys = named.iter().map(|field| &field.ident);
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             match value {
                 serde_json::Value::Object(dict) => {
                     #(#dict_get)*
@@ -105,7 +104,7 @@ fn impl_struct(
                 }
                 _ => Err(lbr_prelude::error::Error::UnexpectedJsonType {
                     wanted: lbr_prelude::error::JsonType::Object,
-                    got: lbr_prelude::error::JsonType::from(&value),
+                    got: lbr_prelude::error::JsonType::from(value),
                     parser: #ident_str.to_owned(),
                 }),
             }
@@ -136,11 +135,11 @@ fn impl_tuple(
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
                 if vec.len() == #arity {
                     Ok(Self(
-                        #(Json::from_json(vec[#from_json_indices].clone())?,)*
+                        #(Json::from_json(&vec[#from_json_indices])?,)*
                     ))
                 } else {
                     Err(lbr_prelude::error::Error::UnexpectedArrayLength {
@@ -167,7 +166,7 @@ fn impl_newtype() -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             Ok(Self(lbr_prelude::json::Json::from_json(value)?))
         }
     };
@@ -198,14 +197,14 @@ fn impl_enum(
 
                 quote! {
                     #ident::#variant_ident( #(#fields),* ) =>
-                        lbr_prelude::json::json_constructor(#variant_str, vec![
+                        lbr_prelude::json::json_constructor(#variant_str, &vec![
                            #(#fields_2.to_json()?,)*
                         ]),
                 }
             }
             syn::Fields::Unit => quote! {
                 #ident::#variant_ident =>
-                    lbr_prelude::json::json_constructor(#variant_str, Vec::with_capacity(0)),
+                    lbr_prelude::json::json_constructor(#variant_str, &Vec::with_capacity(0)),
             },
         }
     });
@@ -238,7 +237,7 @@ fn impl_enum(
                         Box::new(|ctor_fields| {
                             if ctor_fields.len() == #arity {
                                 Ok(#ident::#variant_ident(
-                                    #(Json::from_json(ctor_fields[#fields].clone())?),*
+                                    #(Json::from_json(&ctor_fields[#fields])?),*
                                 ))
                             } else {
                                 Err(lbr_prelude::error::Error::UnexpectedArrayLength {
@@ -270,7 +269,7 @@ fn impl_enum(
     });
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             lbr_prelude::json::case_json_constructor(#ident_str, vec![
                 #(#from_json_match_arms),*
             ],
