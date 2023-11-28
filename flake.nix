@@ -3,24 +3,21 @@
   inputs = {
     haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
-    mlabs-tooling.url = "github:mlabs-haskell/mlabs-tooling.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
-    ctl.url = "github:plutonomicon/cardano-transaction-lib/bladyjoker/lambda-buffers-catalyst"; # path:/home/bladyjoker/Desktop/cardano-transaction-lib;
+    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=bladyjoker/runpurstest-fix";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    purifix.url = "github:purifix/purifix";
     plutarch = {
       url = "github:plutonomicon/plutarch-plutus";
       flake = false;
     };
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    rust-overlay.follows = "crane/rust-overlay";
+    crane.url = "github:ipetkov/crane";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+    cardano-haskell-packages.flake = false;
+    plutus.url = "github:input-output-hk/plutus";
   };
 
   outputs = inputs@{ flake-parts, ... }:

@@ -41,8 +41,8 @@
       "CodePoint"
     ],
     "Prelude.Integer": [
-      "bigints",
-      "Data.BigInt",
+      "js-bigints",
+      "JS.BigInt",
       "BigInt"
     ],
     "Prelude.Bool": [

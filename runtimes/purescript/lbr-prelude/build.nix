@@ -3,7 +3,7 @@ _:
   perSystem = { pkgs, config, ... }:
 
     let
-      pursFlake = config.overlayAttrs.extras.purescriptFlake {
+      pursFlake = config.lbf-nix.purescriptFlake {
         inherit pkgs;
         src = ./.;
         projectName = "lbr-prelude";
@@ -15,7 +15,7 @@ _:
           packageLockOnly = true;
           packages =
             [
-              pkgs.nodejs_16
+              pkgs.nodejs-18_x
               pkgs.bashInteractive
               pkgs.fd
             ] ++ config.settings.shell.tools;

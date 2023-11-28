@@ -1,15 +1,15 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.lbf-nix.haskellPlutusFlake {
         src = ./.;
 
         name = "lbt-plutus-plutarch";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [
+        dependencies = [
           # Load Plutarch Haskell support
           "${config.packages.lbf-prelude-plutarch}"
           "${config.packages.lbf-plutus-plutarch}"
@@ -29,49 +29,19 @@
           "${inputs.plutarch}/plutarch-extra"
         ];
 
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lbt-plutus-plutarch.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        inputs.mlabs-tooling.lib.moduleMod
-        project
-      ]).flake { };
-    in
 
+    in
     {
-      devShells.dev-lbt-plutus-plutarch = hsNixFlake.devShell;
+      devShells.dev-lbt-plutus-plutarch = hsFlake.devShell;
 
       packages = {
-        lbt-plutus-plutarch-lib = hsNixFlake.packages."lbt-plutus-plutarch:lib:lbt-plutus-plutarch";
-        lbt-plutus-plutarch-tests = hsNixFlake.packages."lbt-plutus-plutarch:test:tests";
+        lbt-plutus-plutarch-lib = hsFlake.packages."lbt-plutus-plutarch:lib:lbt-plutus-plutarch";
+        lbt-plutus-plutarch-tests = hsFlake.packages."lbt-plutus-plutarch:test:tests";
       };
 
-      checks.check-lbt-plutus-plutarch = hsNixFlake.checks."lbt-plutus-plutarch:test:tests";
+      checks.check-lbt-plutus-plutarch = hsFlake.checks."lbt-plutus-plutarch:test:tests";
     };
 }

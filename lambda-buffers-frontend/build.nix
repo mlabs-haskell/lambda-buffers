@@ -1,64 +1,35 @@
-{ inputs, ... }:
+_:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { config, pkgs, ... }:
     let
-      project = { lib, ... }: {
+      hsFlake = config.lbf-nix.haskellFlake {
         src = ./.;
 
         name = "lambda-buffers-frontend";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
-        extraHackage = [
+        dependencies = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
           "${config.packages.lambda-buffers-compiler-src}"
         ];
 
-        modules = [
-          (_: {
-            packages = {
-              allComponent.doHoogle = true;
-              allComponent.doHaddock = true;
-
-              # Enable strict compilation
-              lambda-buffers-frontend.configureFlags = [ "-f-dev" ];
-            };
-          })
-        ];
-
-        shell = {
-
-          withHoogle = true;
-
-          exactDeps = true;
-
-          nativeBuildInputs = [
-            config.packages.lbc
-            config.packages.lbg
-            config.packages.lbg-haskell
-            config.packages.lbg-purescript
-          ] ++ config.settings.shell.tools;
-
-          tools = {
-            cabal = { };
-            haskell-language-server = { };
-          };
-
-          shellHook = lib.mkForce config.settings.shell.hook;
-        };
+        devShellTools = [
+          config.packages.lbc
+          config.packages.lbg
+          config.packages.lbg-haskell
+          config.packages.lbg-purescript
+        ] ++ config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
       };
-      hsNixFlake = (pkgs.haskell-nix.cabalProject' [
-        inputs.mlabs-tooling.lib.mkHackageMod
-        project
-      ]).flake { };
 
     in
 
     {
       devShells = {
-        dev-frontend = hsNixFlake.devShell;
+        dev-frontend = hsFlake.devShell;
 
         lb = pkgs.mkShell {
           name = "lambdabuffers-env";
@@ -81,9 +52,9 @@
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
-        lambda-buffers-frontend-lib = hsNixFlake.packages."lambda-buffers-frontend:lib:lambda-buffers-frontend";
-        lambda-buffers-frontend-tests = hsNixFlake.packages."lambda-buffers-frontend:test:tests";
-        lambda-buffers-frontend-cli = hsNixFlake.packages."lambda-buffers-frontend:exe:lbf";
+        lambda-buffers-frontend-lib = hsFlake.packages."lambda-buffers-frontend:lib:lambda-buffers-frontend";
+        lambda-buffers-frontend-tests = hsFlake.packages."lambda-buffers-frontend:test:tests";
+        lambda-buffers-frontend-cli = hsFlake.packages."lambda-buffers-frontend:exe:lbf";
 
         lbf-pure = config.packages.lambda-buffers-frontend-cli;
 
@@ -97,7 +68,7 @@
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude ];
             gen = "${config.packages.lbg-haskell}/bin/lbg-haskell";
@@ -112,7 +83,7 @@
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-haskell}/bin/lbg-haskell";
@@ -130,7 +101,7 @@
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir autogen;
           mkdir .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-plutarch}/bin/lbg-plutarch";
@@ -148,7 +119,7 @@
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude ];
             gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";
@@ -163,15 +134,15 @@
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
           mkdir -p .work;
-          ${config.overlayAttrs.lbf-nix.lbfBuild.buildCall {
+          ${config.lbf-nix.lbfBuild.buildCall {
             files = [];
             import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
             gen = "${config.packages.lbg-purescript}/bin/lbg-purescript";
             gen-classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
             gen-dir = "autogen";
             gen-opts = [
-                "--config=${config.packages.codegen-configs}/purescript-prelude-base.json"
-                "--config=${config.packages.codegen-configs}/purescript-plutus-ctl.json"
+              "--config=${config.packages.codegen-configs}/purescript-prelude-base.json"
+              "--config=${config.packages.codegen-configs}/purescript-plutus-ctl.json"
             ];
             work-dir = ".work";
           }} "$@";
@@ -179,7 +150,7 @@
 
       };
 
-      inherit (hsNixFlake) checks;
+      inherit (hsFlake) checks;
 
     };
 }

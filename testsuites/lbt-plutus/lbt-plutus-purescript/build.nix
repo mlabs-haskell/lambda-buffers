@@ -3,7 +3,7 @@ _:
   perSystem = { pkgs, config, ... }:
 
     let
-      pursFlake = config.overlayAttrs.extras.purescriptFlake {
+      pursFlake = config.lbf-nix.purescriptFlake {
         src = ./.;
         projectName = "lbt-plutus";
         strictComp = true;
@@ -29,7 +29,7 @@ _:
           packageLockOnly = true;
           packages =
             [
-              pkgs.nodejs_16
+              pkgs.nodejs-18_x
               pkgs.bashInteractive
               pkgs.fd
             ] ++ config.settings.shell.tools;

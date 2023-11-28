@@ -1,9 +1,8 @@
 { inputs, ... }: {
-  perSystem = { system, config, ... }:
+  perSystem = { config, ... }:
     let
       rustFlake =
-        config.overlayAttrs.extras.rustFlake {
-          inherit system;
+        config.lbf-nix.rustFlake {
           src = ./.;
           crane = inputs.crane;
           crateName = "lbr-prelude";
@@ -13,6 +12,7 @@
               path = ../lbr-prelude-derive;
             }
           ];
+          devShellHook = config.settings.shell.hook;
         };
     in
     {

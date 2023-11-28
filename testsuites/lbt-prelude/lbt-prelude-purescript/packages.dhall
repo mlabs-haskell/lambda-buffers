@@ -105,8 +105,8 @@ in  upstream
 -------------------------------
 -}
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.14.5-20220224/packages.dhall
-        sha256:67cc3d4f0e8fb72bb1413ba94ddd72a3ceb0783eb725e3b22ad7568b3b581163
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20230105/packages.dhall
+        sha256:3e9fbc9ba03e9a1fcfd895f65e2d50ee2f5e86c4cd273f3d5c841b655a0e1bda
 
 let additions =
       { aeson =
@@ -117,8 +117,6 @@ let additions =
           , "argonaut-core"
           , "arrays"
           , "bifunctors"
-          , "bigints"
-          , "bignumber"
           , "const"
           , "control"
           , "effect"
@@ -127,6 +125,7 @@ let additions =
           , "foldable-traversable"
           , "foreign-object"
           , "integers"
+          , "js-bigints"
           , "lists"
           , "maybe"
           , "mote"
@@ -136,7 +135,6 @@ let additions =
           , "prelude"
           , "quickcheck"
           , "record"
-          , "sequences"
           , "spec"
           , "strings"
           , "tuples"
@@ -146,30 +144,7 @@ let additions =
           , "untagged-union"
           ]
         , repo = "https://github.com/mlabs-haskell/purescript-aeson.git"
-        , version = "bfd8f4dcd0522a076320f9dc710c24817438e02e"
-        }
-      , sequences =
-        { dependencies =
-          [ "arrays"
-          , "assert"
-          , "console"
-          , "effect"
-          , "lazy"
-          , "maybe"
-          , "newtype"
-          , "nonempty"
-          , "partial"
-          , "prelude"
-          , "profunctor"
-          , "psci-support"
-          , "quickcheck"
-          , "quickcheck-laws"
-          , "tuples"
-          , "unfoldable"
-          , "unsafe-coerce"
-          ]
-        , repo = "https://github.com/hdgarrood/purescript-sequences"
-        , version = "v3.0.2"
+        , version = "v2.0.0"
         }
       , mote =
         { dependencies = [ "these", "transformers", "arrays" ]
@@ -191,7 +166,11 @@ let additions =
         , repo = "https://github.com/mlabs-haskell/purescript-bignumber"
         , version = "705923edd892a3397b90d28ce7db9a7181dcd599"
         }
+      , js-bigints =
+        { dependencies = [ "integers", "maybe", "prelude" ]
+        , repo = "https://github.com/purescript-contrib/purescript-js-bigints"
+        , version = "36a7d8ac75a7230043ae511f3145f9ed130954a9"
+        }
       }
 
-in  (upstream // additions)
-  with parsing.version = "v7.0.1"
+in  upstream // additions

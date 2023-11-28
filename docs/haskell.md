@@ -19,7 +19,7 @@ github:mlabs-haskell/lambda-buffers#lbf-prelude-to-haskell`.
 
 In this chapter, we're going to use the latter option.
 
-Let's now use `lbf-prelude-to-haskell` to process the [Document.lbf](examples/Document.lbf) schema.
+Let's now use `lbf-prelude-to-haskell` to process the [Document.lbf](https://github.com/mlabs-haskell/lambda-buffers/tree/main/docs/examples/Document.lbf) schema.
 
 ```purescript
 module Document

@@ -5,7 +5,7 @@ _:
       devShells.dev-lbt-prelude-golden = config.devShells.dev-pre-commit;
 
       packages = {
-        lbt-prelude-golden-haskell = config.overlayAttrs.extras.haskellData {
+        lbt-prelude-golden-haskell = config.lbf-nix.haskellData {
           srcs = [ ./. ];
           cabalDataPatterns = [ "**/*.json" ];
           cabalPackageName = "lbt-prelude-golden-data";
