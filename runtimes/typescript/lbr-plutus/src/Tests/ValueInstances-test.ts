@@ -1,6 +1,6 @@
 // Tests for the instances for various types in the `V1/Value.js` file
 import * as LbV1 from "../LambdaBuffers/Runtime/PlutusLedgerApi/V1.js";
-import * as LbAssocMap from "../LambdaBuffers/Runtime/AssocMap.js";
+import * as LbAssocMap from "../LambdaBuffers/Runtime/PlutusLedgerApi/AssocMap.js";
 import * as LbPrelude from "lbr-prelude";
 
 import { describe, it } from "node:test";

@@ -1,5 +1,5 @@
 import * as LbPlutusData from "../LambdaBuffers/Runtime/PlutusLedgerApi/PlutusData.js";
-import * as LbAssocMap from "../LambdaBuffers/Runtime/AssocMap.js";
+import * as LbAssocMap from "../LambdaBuffers/Runtime/PlutusLedgerApi/AssocMap.js";
 
 import { describe, it } from "node:test";
 
