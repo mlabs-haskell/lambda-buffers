@@ -17,7 +17,13 @@
             files = "\\.rs$";
           };
 
-        denofmt =
+        # TODO(jaredponn): Why do we use our strange version of `denofmt` and
+        # `denolint`? The default implemented version in `pre-commit-hooks.nix`
+        # is a bit buggy (see
+        # https://github.com/cachix/pre-commit-hooks.nix/issues/374), and the
+        # latest version of `deno` on nix doesn't allow explicitly applying
+        # the formatter to specific files
+        my-denofmt =
           {
             name = "denofmt";
             description = "Format Typescript code.";
@@ -25,7 +31,7 @@
             files = "(\\.ts$)|(^tsconfig?(-base)\\.json$)";
           };
 
-        denolint =
+        my-denolint =
           {
             name = "denolint";
             description = "Lint Typescript code.";
