@@ -1,8 +1,8 @@
 import * as LbPrelude from "lbr-prelude";
 import * as LbPreludeInstances from "./Prelude/Instances.js";
 import type { Bool, Eq, Json, List, Maybe } from "lbr-prelude";
-import { IsPlutusDataError } from "./PlutusData.js";
-import type { IsPlutusData, PlutusData } from "./PlutusData.js";
+import { IsPlutusDataError } from "./PlutusLedgerApi/PlutusData.js";
+import type { IsPlutusData, PlutusData } from "./PlutusLedgerApi/PlutusData.js";
 
 /**
  * {@link Map | `Map<K,V>`} is an mapping from keys `K` to values `V` where `K` only needs an

@@ -2,7 +2,6 @@
 import * as LbAssocMap from "../LambdaBuffers/Runtime/AssocMap.js";
 import * as LbV1 from "../LambdaBuffers/Runtime/PlutusLedgerApi/V1.js";
 import * as LbV2 from "../LambdaBuffers/Runtime/PlutusLedgerApi/V2.js";
-//import * as LbPlutusData from "../LambdaBuffers/Runtime/PlutusData.js";
 import * as LbPrelude from "lbr-prelude";
 
 import { describe, it } from "node:test";

@@ -1,5 +1,5 @@
-import { IsPlutusDataError } from "../../PlutusData.js";
-import type { IsPlutusData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 import type { Integer } from "lbr-prelude";
 import type { PubKeyHash } from "./Crypto.js";
 import type { ScriptHash } from "./Scripts.js";

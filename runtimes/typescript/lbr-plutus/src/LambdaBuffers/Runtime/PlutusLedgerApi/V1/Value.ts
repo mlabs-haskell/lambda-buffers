@@ -1,5 +1,5 @@
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
-import type { IsPlutusData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 import type { Map } from "../../AssocMap.js";
 import * as AssocMap from "../../AssocMap.js";
 import type { Eq, Integer, Json } from "lbr-prelude";

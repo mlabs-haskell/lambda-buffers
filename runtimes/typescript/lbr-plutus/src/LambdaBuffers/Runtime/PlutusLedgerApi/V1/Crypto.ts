@@ -1,7 +1,7 @@
 import * as LbBytes from "./Bytes.js";
 import type { Eq, Json, Maybe } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
-import type { IsPlutusData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Crypto.hs
 

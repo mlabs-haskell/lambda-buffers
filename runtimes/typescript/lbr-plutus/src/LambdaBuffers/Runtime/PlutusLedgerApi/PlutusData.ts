@@ -1,7 +1,7 @@
 import type { Bytes, Eq, Integer, Json, List } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
-import * as LbHex from "./Hex.js";
+import * as LbHex from "../Hex.js";
 
 /**
  * {@link PlutusData} is a generic "data" type.

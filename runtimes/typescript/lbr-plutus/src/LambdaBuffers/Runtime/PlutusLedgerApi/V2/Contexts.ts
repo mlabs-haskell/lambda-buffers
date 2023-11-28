@@ -1,7 +1,7 @@
 import type { TxOutRef } from "../V1/Tx.js";
 import * as LbV1Tx from "../V1/Tx.js";
-import type { IsPlutusData } from "../../PlutusData.js";
-import { IsPlutusDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
+import { IsPlutusDataError } from "../PlutusData.js";
 import type { Eq, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import type { TxOut } from "./Tx.js";

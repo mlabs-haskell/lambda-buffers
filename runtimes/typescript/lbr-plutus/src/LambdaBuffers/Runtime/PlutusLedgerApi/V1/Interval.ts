@@ -1,5 +1,5 @@
-import { IsPlutusDataError } from "../../PlutusData.js";
-import type { IsPlutusData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import type { Bool, Eq, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";

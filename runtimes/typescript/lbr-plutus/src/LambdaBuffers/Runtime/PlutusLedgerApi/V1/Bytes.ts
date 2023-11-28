@@ -1,8 +1,8 @@
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
-import { IsPlutusDataError } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../PlutusData.js";
 import * as LbHex from "../../Hex.js";
-import type { IsPlutusData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 import type { Bytes, Json } from "lbr-prelude";
 
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs
