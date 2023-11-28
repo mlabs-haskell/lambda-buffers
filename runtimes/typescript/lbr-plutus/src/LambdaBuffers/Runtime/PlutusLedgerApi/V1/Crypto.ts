@@ -1,7 +1,7 @@
 import * as LbBytes from "./Bytes.js";
 import type { Eq, Json, Maybe } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
-import type { FromData, ToData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Crypto.hs
 
@@ -52,16 +52,10 @@ export const jsonPubKeyHash: Json<PubKeyHash> = {
 };
 
 /**
- * {@link ToData} instance for {@link PubKeyHash}
- */
-export const toDataPubKeyHash: ToData<PubKeyHash> = LbBytes
-  .toDataLedgerBytes as ToData<PubKeyHash>;
-
-/**
- * {@link FromData} instance for {@link PubKeyHash}
+ * {@link IsPlutusData} instance for {@link PubKeyHash}
  *
  * @remarks
- * This does _not_ do any length checks.
+ * `fromData` does _not_ do any length checks.
  */
-export const fromDataPubKeyHash: FromData<PubKeyHash> = LbBytes
-  .fromDataLedgerBytes as FromData<PubKeyHash>;
+export const isPlutusDataPubKeyHash: IsPlutusData<PubKeyHash> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<PubKeyHash>;

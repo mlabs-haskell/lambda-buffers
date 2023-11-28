@@ -162,22 +162,19 @@ describe("Extended tests", () => {
     });
   });
 
-  describe("ToData/FromData Address tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataExtended(LbV1.toDataInteger),
-      LbV1.fromDataExtended(LbV1.fromDataInteger),
+  describe("IsPlutusData Address tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger),
       { name: "NegInf" },
       { name: "Constr", fields: [0n, []] },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataExtended(LbV1.toDataInteger),
-      LbV1.fromDataExtended(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger),
       { name: "Finite", fields: 69n },
-      { name: "Constr", fields: [1n, [LbV1.toDataInteger.toData(69n)]] },
+      { name: "Constr", fields: [1n, [LbV1.isPlutusDataInteger.toData(69n)]] },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataExtended(LbV1.toDataInteger),
-      LbV1.fromDataExtended(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger),
       { name: "PosInf" },
       { name: "Constr", fields: [2n, []] },
     );
@@ -187,9 +184,8 @@ describe("Extended tests", () => {
         fc.property(
           fcExtended(fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataExtended(LbV1.toDataInteger),
-              LbV1.fromDataExtended(LbV1.fromDataInteger),
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger),
               data,
             );
           },
@@ -363,84 +359,86 @@ describe("LowerBound tests", () => {
     });
   });
 
-  describe("ToData/FromData Address tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+  describe("IsPlutusData Address tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "NegInf" }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "NegInf" }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "NegInf",
+          }),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "NegInf" }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "NegInf" }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "NegInf",
+          }),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "Finite", fields: 69n }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
             name: "Finite",
             fields: 69n,
           }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "Finite", fields: 69n }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
             name: "Finite",
             fields: 69n,
           }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "PosInf" }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "PosInf" }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "PosInf",
+          }),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLowerBound(LbV1.toDataInteger),
-      LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
       [{ name: "PosInf" }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "PosInf" }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "PosInf",
+          }),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
@@ -450,9 +448,8 @@ describe("LowerBound tests", () => {
         fc.property(
           fcLowerBound(fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataLowerBound(LbV1.toDataInteger),
-              LbV1.fromDataLowerBound(LbV1.fromDataInteger),
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger),
               data,
             );
           },
@@ -627,84 +624,86 @@ describe("UpperBound tests", () => {
     });
   });
 
-  describe("ToData/FromData Address tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+  describe("IsPlutusData/IsPlutusData Address tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "NegInf" }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "NegInf" }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "NegInf",
+          }),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "NegInf" }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "NegInf" }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "NegInf",
+          }),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "Finite", fields: 69n }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
             name: "Finite",
             fields: 69n,
           }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "Finite", fields: 69n }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
             name: "Finite",
             fields: 69n,
           }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "PosInf" }, true],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "PosInf" }),
-          LbV1.toDataBool.toData(true),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "PosInf",
+          }),
+          LbV1.isPlutusDataBool.toData(true),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataUpperBound(LbV1.toDataInteger),
-      LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
       [{ name: "PosInf" }, false],
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataExtended(LbV1.toDataInteger).toData({ name: "PosInf" }),
-          LbV1.toDataBool.toData(false),
+          LbV1.isPlutusDataExtended(LbV1.isPlutusDataInteger).toData({
+            name: "PosInf",
+          }),
+          LbV1.isPlutusDataBool.toData(false),
         ]],
       },
     );
@@ -714,9 +713,8 @@ describe("UpperBound tests", () => {
         fc.property(
           fcUpperBound(fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataUpperBound(LbV1.toDataInteger),
-              LbV1.fromDataUpperBound(LbV1.fromDataInteger),
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger),
               data,
             );
           },
@@ -861,19 +859,18 @@ describe("Interval tests", () => {
     });
   });
 
-  describe("ToData/FromData Address tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataInterval(LbV1.toDataInteger),
-      LbV1.fromDataInterval(LbV1.fromDataInteger),
+  describe("IsPlutusData Address tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataInterval(LbV1.isPlutusDataInteger),
       { ivFrom: [{ name: "PosInf" }, true], ivTo: [{ name: "NegInf" }, true] },
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataLowerBound(LbV1.toDataInteger).toData([
+          LbV1.isPlutusDataLowerBound(LbV1.isPlutusDataInteger).toData([
             { name: "PosInf" },
             true,
           ]),
-          LbV1.toDataUpperBound(LbV1.toDataInteger).toData([
+          LbV1.isPlutusDataUpperBound(LbV1.isPlutusDataInteger).toData([
             { name: "NegInf" },
             true,
           ]),
@@ -885,9 +882,8 @@ describe("Interval tests", () => {
         fc.property(
           fcInterval(fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataInterval(LbV1.toDataInteger),
-              LbV1.fromDataInterval(LbV1.fromDataInteger),
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataInterval(LbV1.isPlutusDataInteger),
               data,
             );
           },

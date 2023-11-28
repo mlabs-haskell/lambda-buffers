@@ -1,6 +1,6 @@
 // Some utility functions to make testing easier.
 
-import type { FromData, ToData } from "../LambdaBuffers/Runtime/PlutusData.js";
+import type { IsPlutusData } from "../LambdaBuffers/Runtime/PlutusData.js";
 import * as LbPlutusData from "../LambdaBuffers/Runtime/PlutusData.js";
 import * as LbPrelude from "lbr-prelude";
 import type { Bool, Eq, Json } from "lbr-prelude";
@@ -119,47 +119,23 @@ export function fromJsonIt<A>(
 }
 
 /**
- * `toDataAndFromDataIt` is a unit test to test that
+ * `isPlutusDataIt` is a unit test to test that
  *  - `v : A` encodes to  `pData : LbPlutusData.PlutusData`; and
  *  - `pData : LbPlutusData.PlutusData` decodes to  `v : A`.
  */
-export function toDataAndFromDataIt<A>(
-  dictToData: ToData<A>,
-  dictFromData: FromData<A>,
+export function isPlutusDataIt<A>(
+  dict: IsPlutusData<A>,
   v: A,
   pData: LbPlutusData.PlutusData,
 ) {
-  toDataIt(dictToData, v, pData);
-  fromDataIt(dictFromData, pData, v);
-}
-
-/**
- * `toDataIt` is a unit test to verify that the provided value encodes to the
- * provided Data value.
- */
-export function toDataIt<A>(
-  dict: ToData<A>,
-  v: A,
-  expectedPlutusData: LbPlutusData.PlutusData,
-) {
-  it(`toData \`${stringify(v)}\` should encode to \`${stringify(expectedPlutusData)}\``, () => {
+  it(`toData \`${stringify(v)}\` should encode to \`${stringify(pData)}\``, () => {
     const plutusData = dict.toData(v);
-    assert.deepStrictEqual(plutusData, expectedPlutusData);
+    assert.deepStrictEqual(plutusData, pData);
   });
-}
 
-/**
- * `fromDataIt` is a unit test to verify that the provided plutus data decodes to the
- * provided argument
- */
-export function fromDataIt<A>(
-  dict: FromData<A>,
-  plutusData: LbPlutusData.PlutusData,
-  expectedA: A,
-) {
-  it(`fromData \`${stringify(plutusData)}\` should decode to \`${stringify(expectedA)}\``, () => {
-    const a = dict.fromData(plutusData);
-    assert.deepStrictEqual(a, expectedA);
+  it(`fromData \`${stringify(pData)}\` should decode to \`${stringify(v)}\``, () => {
+    const a = dict.fromData(pData);
+    assert.deepStrictEqual(a, v);
   });
 }
 
@@ -175,11 +151,10 @@ export function fromDataIt<A>(
  *  ```
  *  commutes
  */
-export function toDataFromDataRoundTrip<A>(
-  dictToData: ToData<A>,
-  dictFromData: FromData<A>,
+export function isPlutusDataRoundTrip<A>(
+  dictIsPlutusData: IsPlutusData<A>,
   v: A,
 ) {
-  const plutusData = dictToData.toData(v);
-  assert.deepStrictEqual(dictFromData.fromData(plutusData), v);
+  const plutusData = dictIsPlutusData.toData(v);
+  assert.deepStrictEqual(dictIsPlutusData.fromData(plutusData), v);
 }

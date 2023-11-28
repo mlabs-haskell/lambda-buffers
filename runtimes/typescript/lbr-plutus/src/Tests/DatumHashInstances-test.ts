@@ -149,16 +149,14 @@ describe("DatumHash tests", () => {
     });
   });
 
-  describe("ToData/FromData DatumHash tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataDatumHash,
-      LbV1.fromDataDatumHash,
+  describe("IsPlutusData DatumHash tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataDatumHash,
       datumHash2,
       { name: "Bytes", fields: datumHash2 },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataDatumHash,
-      LbV1.fromDataDatumHash,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataDatumHash,
       datumHash1,
       { name: "Bytes", fields: datumHash1 },
     );
@@ -168,9 +166,8 @@ describe("DatumHash tests", () => {
         fc.property(
           fcDatumHash(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataDatumHash,
-              LbV1.fromDataDatumHash,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataDatumHash,
               data,
             );
           },

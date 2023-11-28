@@ -275,23 +275,21 @@ describe("Credential tests", () => {
     });
   });
 
-  describe("ToData/FromData Credential tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataCredential,
-      LbV1.fromDataCredential,
+  describe("IsPlutusData Credential tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataCredential,
       credential1,
       {
         name: "Constr",
-        fields: [0n, [LbV1.toDataPubKeyHash.toData(pubKeyHash1)]],
+        fields: [0n, [LbV1.isPlutusDataPubKeyHash.toData(pubKeyHash1)]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataCredential,
-      LbV1.fromDataCredential,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataCredential,
       credential3,
       {
         name: "Constr",
-        fields: [1n, [LbV1.toDataScriptHash.toData(scriptHash1)]],
+        fields: [1n, [LbV1.isPlutusDataScriptHash.toData(scriptHash1)]],
       },
     );
 
@@ -300,9 +298,8 @@ describe("Credential tests", () => {
         fc.property(
           fcCredential(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataCredential,
-              LbV1.fromDataCredential,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataCredential,
               data,
             );
           },

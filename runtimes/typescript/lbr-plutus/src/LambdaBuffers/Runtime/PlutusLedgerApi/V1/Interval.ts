@@ -1,5 +1,5 @@
-import { FromDataError } from "../../PlutusData.js";
-import type { FromData, ToData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import type { Bool, Eq, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
@@ -63,37 +63,31 @@ export function jsonInterval<A>(dictA: Json<A>): Json<Interval<A>> {
 }
 
 /**
- * {@link ToData} instance for {@link Interval}
+ * {@link IsPlutusData} instance for {@link Interval}
  */
-export function toDataInterval<A>(dictA: ToData<A>): ToData<Interval<A>> {
+export function isPlutusDataInterval<A>(
+  dictA: IsPlutusData<A>,
+): IsPlutusData<Interval<A>> {
   return {
     toData: (interval) => {
       return {
         name: "Constr",
         fields: [0n, [
-          toDataLowerBound(dictA).toData(interval.ivFrom),
-          toDataUpperBound(dictA).toData(interval.ivTo),
+          isPlutusDataLowerBound(dictA).toData(interval.ivFrom),
+          isPlutusDataUpperBound(dictA).toData(interval.ivTo),
         ]],
       };
     },
-  };
-}
-
-/**
- * {@link FromData} instance for {@link Interval}
- */
-export function fromDataInterval<A>(dictA: FromData<A>): FromData<Interval<A>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Constr": {
           if (
             plutusData.fields[0] === 0n && plutusData.fields[1].length === 2
           ) {
-            const ivFrom = fromDataLowerBound(dictA).fromData(
+            const ivFrom = isPlutusDataLowerBound(dictA).fromData(
               plutusData.fields[1][0]!,
             );
-            const ivTo = fromDataUpperBound(dictA).fromData(
+            const ivTo = isPlutusDataUpperBound(dictA).fromData(
               plutusData.fields[1][1]!,
             );
             return { "ivFrom": ivFrom, "ivTo": ivTo };
@@ -104,7 +98,7 @@ export function fromDataInterval<A>(dictA: FromData<A>): FromData<Interval<A>> {
         default:
           break;
       }
-      throw new FromDataError("Unexpected data");
+      throw new IsPlutusDataError("Unexpected data");
     },
   };
 }
@@ -194,9 +188,11 @@ export function jsonExtended<A>(dictA: Json<A>): Json<Extended<A>> {
 }
 
 /**
- * {@link ToData} instance for {@link Extended}
+ * {@link IsPlutusData} instance for {@link Extended}
  */
-export function toDataExtended<A>(dictA: ToData<A>): ToData<Extended<A>> {
+export function isPlutusDataExtended<A>(
+  dictA: IsPlutusData<A>,
+): IsPlutusData<Extended<A>> {
   return {
     toData: (extended) => {
       switch (extended.name) {
@@ -211,14 +207,6 @@ export function toDataExtended<A>(dictA: ToData<A>): ToData<Extended<A>> {
           return { name: "Constr", fields: [2n, []] };
       }
     },
-  };
-}
-
-/**
- * {@link FromData} instance for {@link Extended}
- */
-export function fromDataExtended<A>(dictA: FromData<A>): FromData<Extended<A>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Constr": {
@@ -244,7 +232,7 @@ export function fromDataExtended<A>(dictA: FromData<A>): FromData<Extended<A>> {
         default:
           break;
       }
-      throw new FromDataError("Unexpected data");
+      throw new IsPlutusDataError("Unexpected data");
     },
   };
 }
@@ -291,24 +279,14 @@ export function jsonLowerBound<A>(dictA: Json<A>): Json<LowerBound<A>> {
 }
 
 /**
- * {@link ToData} instance for {@link LowerBound}
+ * {@link IsPlutusData} instance for {@link LowerBound}
  */
-export function toDataLowerBound<A>(dictA: ToData<A>): ToData<LowerBound<A>> {
-  return LbPreludeInstances.toDataPairWithTag(
-    toDataExtended(dictA),
-    LbPreludeInstances.toDataBool,
-  );
-}
-
-/**
- * {@link FromData} instance for {@link LowerBound}
- */
-export function fromDataLowerBound<A>(
-  dictA: FromData<A>,
-): FromData<LowerBound<A>> {
-  return LbPreludeInstances.fromDataPairWithTag(
-    fromDataExtended(dictA),
-    LbPreludeInstances.fromDataBool,
+export function isPlutusDataLowerBound<A>(
+  dictA: IsPlutusData<A>,
+): IsPlutusData<LowerBound<A>> {
+  return LbPreludeInstances.isPlutusDataPairWithTag(
+    isPlutusDataExtended(dictA),
+    LbPreludeInstances.isPlutusDataBool,
   );
 }
 
@@ -340,25 +318,15 @@ export function jsonUpperBound<A>(dictA: Json<A>): Json<UpperBound<A>> {
 }
 
 /**
- * {@link ToData} instance for {@link UpperBound}
+ * {@link IsPlutusData} instance for {@link UpperBound}
  *
  * @privateremarks
- * This is identical to {@link toDataLowerBound}
+ * This is identical to {@link isPlutusDataLowerBound}
  */
-export function toDataUpperBound<A>(dictA: ToData<A>): ToData<UpperBound<A>> {
-  return toDataLowerBound(dictA);
-}
-
-/**
- * {@link FromData} instance for {@link UpperBound}
- *
- * @privateremarks
- * This is identical to {@link fromDataUpperBound}
- */
-export function fromDataUpperBound<A>(
-  dictA: FromData<A>,
-): FromData<UpperBound<A>> {
-  return fromDataLowerBound(dictA);
+export function isPlutusDataUpperBound<A>(
+  dictA: IsPlutusData<A>,
+): IsPlutusData<UpperBound<A>> {
+  return isPlutusDataLowerBound(dictA);
 }
 
 /**

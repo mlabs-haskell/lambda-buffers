@@ -37,23 +37,20 @@ describe("Integer tests", () => {
     });
   });
 
-  describe("ToData/FromData Integer tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataInteger,
-      LbPreludeInstances.fromDataInteger,
+  describe("IsPlutusData Integer tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataInteger,
       69n,
       { name: "Integer", fields: 69n },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataInteger,
-      LbPreludeInstances.fromDataInteger,
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataInteger,
       -69n,
       { name: "Integer", fields: -69n },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataInteger,
-      LbPreludeInstances.fromDataInteger,
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataInteger,
       0n,
       { name: "Integer", fields: 0n },
     );
@@ -63,9 +60,8 @@ describe("Integer tests", () => {
         fc.property(
           fc.bigInt(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbPreludeInstances.toDataInteger,
-              LbPreludeInstances.fromDataInteger,
+            TestUtils.isPlutusDataRoundTrip(
+              LbPreludeInstances.isPlutusDataInteger,
               data,
             );
           },

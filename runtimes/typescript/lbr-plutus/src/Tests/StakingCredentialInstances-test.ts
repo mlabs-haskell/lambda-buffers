@@ -230,39 +230,36 @@ describe("StakingCredential tests", () => {
     });
   });
 
-  describe("ToData/FromData StakingCredential tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataStakingCredential,
-      LbV1.fromDataStakingCredential,
+  describe("IsPlutusData StakingCredential tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataStakingCredential,
       stakingCredential1,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential1),
+          LbV1.isPlutusDataCredential.toData(credential1),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataStakingCredential,
-      LbV1.fromDataStakingCredential,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataStakingCredential,
       stakingCredential2,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential2),
+          LbV1.isPlutusDataCredential.toData(credential2),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataStakingCredential,
-      LbV1.fromDataStakingCredential,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataStakingCredential,
       stakingCredential3,
       {
         name: "Constr",
         fields: [1n, [
-          LbV1.toDataInteger.toData(69n),
-          LbV1.toDataInteger.toData(420n),
-          LbV1.toDataInteger.toData(-69n),
+          LbV1.isPlutusDataInteger.toData(69n),
+          LbV1.isPlutusDataInteger.toData(420n),
+          LbV1.isPlutusDataInteger.toData(-69n),
         ]],
       },
     );
@@ -272,9 +269,8 @@ describe("StakingCredential tests", () => {
         fc.property(
           fcStakingCredential(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataStakingCredential,
-              LbV1.fromDataStakingCredential,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataStakingCredential,
               data,
             );
           },

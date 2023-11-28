@@ -208,16 +208,14 @@ describe("CurrencySymbol tests", () => {
     });
   });
 
-  describe("ToData/FromData CurrencySymbol tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataCurrencySymbol,
-      LbV1.fromDataCurrencySymbol,
+  describe("IsPlutusData CurrencySymbol tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataCurrencySymbol,
       currencySymbol2,
       { name: "Bytes", fields: currencySymbol2 },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataCurrencySymbol,
-      LbV1.fromDataCurrencySymbol,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataCurrencySymbol,
       currencySymbol1,
       { name: "Bytes", fields: currencySymbol1 },
     );
@@ -227,9 +225,8 @@ describe("CurrencySymbol tests", () => {
         fc.property(
           fcCurrencySymbol(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataCurrencySymbol,
-              LbV1.fromDataCurrencySymbol,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataCurrencySymbol,
               data,
             );
           },
@@ -294,16 +291,14 @@ describe("TokenName tests", () => {
     });
   });
 
-  describe("ToData/FromData TokenName tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataTokenName,
-      LbV1.fromDataTokenName,
+  describe("IsPlutusData TokenName tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataTokenName,
       tokenName2,
       { name: "Bytes", fields: tokenName2 },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataTokenName,
-      LbV1.fromDataTokenName,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataTokenName,
       tokenName1,
       { name: "Bytes", fields: tokenName1 },
     );
@@ -313,9 +308,8 @@ describe("TokenName tests", () => {
         fc.property(
           fcTokenName(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataTokenName,
-              LbV1.fromDataTokenName,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataTokenName,
               data,
             );
           },
@@ -378,28 +372,26 @@ describe("Value tests", () => {
     });
   });
 
-  describe("ToData/FromData Value tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataValue,
-      LbV1.fromDataValue,
+  describe("IsPlutusData Value tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataValue,
       value1,
       {
         name: "Map",
-        fields: [[LbV1.toDataCurrencySymbol.toData(currencySymbol1), {
+        fields: [[LbV1.isPlutusDataCurrencySymbol.toData(currencySymbol1), {
           name: "Map",
           fields: [[
-            LbV1.toDataTokenName.toData(tokenName1),
-            LbV1.toDataInteger.toData(-69n),
+            LbV1.isPlutusDataTokenName.toData(tokenName1),
+            LbV1.isPlutusDataInteger.toData(-69n),
           ]],
-        }], [LbV1.toDataCurrencySymbol.toData(currencySymbol2), {
+        }], [LbV1.isPlutusDataCurrencySymbol.toData(currencySymbol2), {
           name: "Map",
           fields: [],
         }]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataValue,
-      LbV1.fromDataValue,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataValue,
       value2,
       { name: "Map", fields: [] },
     );
@@ -409,9 +401,8 @@ describe("Value tests", () => {
         fc.property(
           fcValue(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataValue,
-              LbV1.fromDataValue,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataValue,
               data,
             );
           },

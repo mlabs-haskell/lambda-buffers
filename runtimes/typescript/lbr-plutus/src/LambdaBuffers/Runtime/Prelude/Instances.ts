@@ -1,12 +1,12 @@
-import { FromDataError } from "../PlutusData.js";
-import type { FromData, ToData } from "../PlutusData.js";
+import { IsPlutusDataError } from "../PlutusData.js";
+import type { IsPlutusData } from "../PlutusData.js";
 
 import type { Bool, Either, Integer, List, Maybe, Pair } from "lbr-prelude";
 
 /**
- * {@link ToData} instance for {@link Bool}
+ * {@link IsPlutusData} instance for {@link Bool}
  */
-export const toDataBool: ToData<Bool> = {
+export const isPlutusDataBool: IsPlutusData<Bool> = {
   toData: (arg) => {
     if (arg) {
       return { name: "Constr", fields: [1n, []] };
@@ -14,12 +14,7 @@ export const toDataBool: ToData<Bool> = {
       return { name: "Constr", fields: [0n, []] };
     }
   },
-};
 
-/**
- * {@link FromData} instance for {@link Bool}
- */
-export const fromDataBool: FromData<Bool> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr": {
@@ -30,42 +25,39 @@ export const fromDataBool: FromData<Bool> = {
         ) {
           return true;
         } else {
-          throw new FromDataError("Malformed Constr but got " + plutusData);
+          throw new IsPlutusDataError("Malformed Constr but got " + plutusData);
         }
       }
       default:
-        throw new FromDataError("Expected Constr but got " + plutusData);
+        throw new IsPlutusDataError("Expected Constr but got " + plutusData);
     }
   },
 };
 
 /**
- * {@link ToData} instance for {@link Integer}
+ * {@link IsPlutusData} instance for {@link Integer}
  */
-export const toDataInteger: ToData<Integer> = {
+export const isPlutusDataInteger: IsPlutusData<Integer> = {
   toData: (arg) => {
     return { name: "Integer", fields: arg };
   },
-};
 
-/**
- * {@link FromData} instance for {@link Integer}
- */
-export const fromDataInteger: FromData<Integer> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Integer":
         return plutusData.fields;
       default:
-        throw new FromDataError("Expected Integer but got " + plutusData);
+        throw new IsPlutusDataError("Expected Integer but got " + plutusData);
     }
   },
 };
 
 /**
- * {@link ToData} instance for {@link Maybe}
+ * {@link IsPlutusData} instance for {@link Maybe}
  */
-export function toDataMaybe<A>(dict: ToData<A>): ToData<Maybe<A>> {
+export function isPlutusDataMaybe<A>(
+  dict: IsPlutusData<A>,
+): IsPlutusData<Maybe<A>> {
   return {
     toData: (arg) => {
       if (arg.name === "Nothing") {
@@ -74,14 +66,7 @@ export function toDataMaybe<A>(dict: ToData<A>): ToData<Maybe<A>> {
         return { name: "Constr", fields: [0n, [dict.toData(arg.fields)]] };
       }
     },
-  };
-}
 
-/**
- * {@link FromData} instance for {@link Maybe}
- */
-export function fromDataMaybe<A>(dict: FromData<A>): FromData<Maybe<A>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Constr":
@@ -89,56 +74,50 @@ export function fromDataMaybe<A>(dict: FromData<A>): FromData<Maybe<A>> {
             return { name: "Nothing" };
           } else if (plutusData.fields[0] == 0n) {
             if (plutusData.fields[1].length !== 1) {
-              throw new FromDataError("Malformed Constr" + plutusData);
+              throw new IsPlutusDataError("Malformed Constr" + plutusData);
             }
             return {
               name: "Just",
               fields: dict.fromData(plutusData.fields[1][0]!),
             };
           } else {
-            throw new FromDataError("Malformed Constr" + plutusData);
+            throw new IsPlutusDataError("Malformed Constr" + plutusData);
           }
         default:
-          throw new FromDataError("Expected Constr but got " + plutusData);
+          throw new IsPlutusDataError("Expected Constr but got " + plutusData);
       }
     },
   };
 }
 
 /**
- * {@link ToData} instance for {@link List}
+ * {@link IsPlutusData} instance for {@link List}
  */
-export function toDataList<A>(dict: ToData<A>): ToData<List<A>> {
+export function isPlutusDataList<A>(
+  dict: IsPlutusData<A>,
+): IsPlutusData<List<A>> {
   return {
     toData: (arg) => {
       return { name: "List", fields: arg.map(dict.toData) };
     },
-  };
-}
-
-/**
- * {@link FromData} instance for {@link List}
- */
-export function fromDataList<A>(dict: FromData<A>): FromData<List<A>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "List":
           return plutusData.fields.map(dict.fromData);
         default:
-          throw new FromDataError("Expected List but got " + plutusData);
+          throw new IsPlutusDataError("Expected List but got " + plutusData);
       }
     },
   };
 }
 
 /**
- * {@link ToData} instance for {@link Either}
+ * {@link IsPlutusData} instance for {@link Either}
  */
-export function toDataEither<A, B>(
-  dictA: ToData<A>,
-  dictB: ToData<B>,
-): ToData<Either<A, B>> {
+export function isPlutusDataEither<A, B>(
+  dictA: IsPlutusData<A>,
+  dictB: IsPlutusData<B>,
+): IsPlutusData<Either<A, B>> {
   return {
     toData: (arg) => {
       switch (arg.name) {
@@ -148,17 +127,7 @@ export function toDataEither<A, B>(
           return { name: "Constr", fields: [1n, [dictB.toData(arg.fields)]] };
       }
     },
-  };
-}
 
-/**
- * {@link FromData} instance for {@link Either}
- */
-export function fromDataEither<A, B>(
-  dictA: FromData<A>,
-  dictB: FromData<B>,
-): FromData<Either<A, B>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Constr":
@@ -177,25 +146,27 @@ export function fromDataEither<A, B>(
               fields: dictB.fromData(plutusData.fields[1][0]!),
             };
           } else {
-            throw new FromDataError("Malformed Constr but got " + plutusData);
+            throw new IsPlutusDataError(
+              "Malformed Constr but got " + plutusData,
+            );
           }
         default:
-          throw new FromDataError("Expected Constr but got " + plutusData);
+          throw new IsPlutusDataError("Expected Constr but got " + plutusData);
       }
     },
   };
 }
 
 /**
- * A {@link ToData} instance for {@link Pair} which encodes elements `A` and
+ * A {@link IsPlutusData} instance for {@link Pair} which encodes elements `A` and
  * `B` as `Constr 0 [A,B]` where we note the `0` "tag".
  *
  * @remarks many encodings of opaque types are encoded with the `0` tag
  */
-export function toDataPairWithTag<A, B>(
-  dictA: ToData<A>,
-  dictB: ToData<B>,
-): ToData<Pair<A, B>> {
+export function isPlutusDataPairWithTag<A, B>(
+  dictA: IsPlutusData<A>,
+  dictB: IsPlutusData<B>,
+): IsPlutusData<Pair<A, B>> {
   return {
     toData: (arg) => {
       return {
@@ -203,17 +174,7 @@ export function toDataPairWithTag<A, B>(
         fields: [0n, [dictA.toData(arg[0]), dictB.toData(arg[1])]],
       };
     },
-  };
-}
 
-/**
- * A {@link FromData} instance for {@link Pair} which is the inverse of {@link toDataPairWithoutTag}
- */
-export function fromDataPairWithTag<A, B>(
-  dictA: FromData<A>,
-  dictB: FromData<B>,
-): FromData<Pair<A, B>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Constr":
@@ -225,23 +186,25 @@ export function fromDataPairWithTag<A, B>(
               dictB.fromData(plutusData.fields[1][1]!),
             ];
           } else {
-            throw new FromDataError("Malformed Constr but got " + plutusData);
+            throw new IsPlutusDataError(
+              "Malformed Constr but got " + plutusData,
+            );
           }
         default:
-          throw new FromDataError("Expected Constr but got " + plutusData);
+          throw new IsPlutusDataError("Expected Constr but got " + plutusData);
       }
     },
   };
 }
 
 /**
- * A {@link ToData} instance for {@link Pair} which encodes elements `A` and
+ * A {@link IsPlutusData} instance for {@link Pair} which encodes elements `A` and
  * `B` as just `[A,B]`.
  */
-export function toDataPairWithoutTag<A, B>(
-  dictA: ToData<A>,
-  dictB: ToData<B>,
-): ToData<Pair<A, B>> {
+export function isPlutusDataPairWithoutTag<A, B>(
+  dictA: IsPlutusData<A>,
+  dictB: IsPlutusData<B>,
+): IsPlutusData<Pair<A, B>> {
   return {
     toData: (arg) => {
       return {
@@ -249,17 +212,6 @@ export function toDataPairWithoutTag<A, B>(
         fields: [dictA.toData(arg[0]), dictB.toData(arg[1])],
       };
     },
-  };
-}
-
-/**
- * A {@link FromData} instance for {@link Pair} which is the inverse of {@link toDataPairWithoutTag}
- */
-export function fromDataPairWithoutTag<A, B>(
-  dictA: FromData<A>,
-  dictB: FromData<B>,
-): FromData<Pair<A, B>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "List":
@@ -273,7 +225,9 @@ export function fromDataPairWithoutTag<A, B>(
         default:
           break;
       }
-      throw new FromDataError(`Expected List of size 2 but got ${plutusData}`);
+      throw new IsPlutusDataError(
+        `Expected List of size 2 but got ${plutusData}`,
+      );
     },
   };
 }

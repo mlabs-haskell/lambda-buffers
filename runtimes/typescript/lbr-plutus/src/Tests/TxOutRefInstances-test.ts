@@ -164,29 +164,27 @@ describe("TxOutRef tests", () => {
     });
   });
 
-  describe("ToData/FromData TxOutRef tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataTxOutRef,
-      LbV1.fromDataTxOutRef,
+  describe("IsPlutusData TxOutRef tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataTxOutRef,
       txOutRef1,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataTxId.toData(txId1),
-          LbV1.toDataInteger.toData(69n),
+          LbV1.isPlutusDataTxId.toData(txId1),
+          LbV1.isPlutusDataInteger.toData(69n),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataTxOutRef,
-      LbV1.fromDataTxOutRef,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataTxOutRef,
       txOutRef2,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataTxId.toData(txId2),
-          LbV1.toDataInteger.toData(420n),
+          LbV1.isPlutusDataTxId.toData(txId2),
+          LbV1.isPlutusDataInteger.toData(420n),
         ]],
       },
     );
@@ -196,9 +194,8 @@ describe("TxOutRef tests", () => {
         fc.property(
           fcTxOutRef(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataTxOutRef,
-              LbV1.fromDataTxOutRef,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataTxOutRef,
               data,
             );
           },

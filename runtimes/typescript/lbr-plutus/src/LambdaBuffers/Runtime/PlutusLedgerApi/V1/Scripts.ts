@@ -1,5 +1,5 @@
 import * as LbPlutusData from "../../PlutusData.js";
-import type { FromData, PlutusData, ToData } from "../../PlutusData.js";
+import type { IsPlutusData, PlutusData } from "../../PlutusData.js";
 import type { Eq, Json, Maybe } from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
 import * as LbBytes from "./Bytes.js";
@@ -15,9 +15,8 @@ export type Redeemer = PlutusData;
 
 export const eqRedeemer: Eq<Redeemer> = LbPlutusData.eqPlutusData;
 export const jsonRedeemer: Json<Redeemer> = LbPlutusData.jsonPlutusData;
-export const toDataRedeemer: ToData<Redeemer> = LbPlutusData.toDataPlutusData;
-export const fromDataRedeemer: FromData<Redeemer> =
-  LbPlutusData.fromDataPlutusData;
+export const isPlutusDataRedeemer: IsPlutusData<Redeemer> =
+  LbPlutusData.isPlutusDataPlutusData;
 
 /**
  * {@link Datum} is wrapper around {@link PlutusData} values that are used as data in transaction outputs.
@@ -28,8 +27,8 @@ export type Datum = PlutusData;
 
 export const eqDatum: Eq<Datum> = LbPlutusData.eqPlutusData;
 export const jsonDatum: Json<Datum> = LbPlutusData.jsonPlutusData;
-export const toDataDatum: ToData<Datum> = LbPlutusData.toDataPlutusData;
-export const fromDataDatum: FromData<Datum> = LbPlutusData.fromDataPlutusData;
+export const isPlutusDataDatum: IsPlutusData<Datum> =
+  LbPlutusData.isPlutusDataPlutusData;
 
 /**
  * {@link DatumHash} represents a hash of a datum. 32 bytes.
@@ -68,10 +67,8 @@ export const jsonDatumHash: Json<DatumHash> = {
     return res.fields;
   },
 };
-export const toDataDatumHash: ToData<DatumHash> = LbBytes
-  .toDataLedgerBytes as ToData<DatumHash>;
-export const fromDataDatumHash: FromData<DatumHash> = LbBytes
-  .fromDataLedgerBytes as FromData<DatumHash>;
+export const isPlutusDataDatumHash: IsPlutusData<DatumHash> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<DatumHash>;
 
 /**
  * {@link RedeemerHash} represents the hash of a redeemer. 32 bytes.
@@ -110,10 +107,10 @@ export const jsonRedeemerHash: Json<RedeemerHash> = {
     return res.fields;
   },
 };
-export const toDataRedeemerHash: ToData<RedeemerHash> = LbBytes
-  .toDataLedgerBytes as ToData<RedeemerHash>;
-export const fromDataRedeemerHash: FromData<RedeemerHash> = LbBytes
-  .fromDataLedgerBytes as FromData<RedeemerHash>;
+export const isPlutusDataRedeemerHash: IsPlutusData<RedeemerHash> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<
+    RedeemerHash
+  >;
 
 /**
  * {@link ScriptHash} is the hash of a script. 28 bytes.
@@ -152,7 +149,5 @@ export const jsonScriptHash: Json<ScriptHash> = {
     return res.fields;
   },
 };
-export const toDataScriptHash: ToData<ScriptHash> = LbBytes
-  .toDataLedgerBytes as ToData<ScriptHash>;
-export const fromDataScriptHash: FromData<ScriptHash> = LbBytes
-  .fromDataLedgerBytes as FromData<ScriptHash>;
+export const isPlutusDataScriptHash: IsPlutusData<ScriptHash> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<ScriptHash>;

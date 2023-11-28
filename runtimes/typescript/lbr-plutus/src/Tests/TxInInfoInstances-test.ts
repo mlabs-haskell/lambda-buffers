@@ -181,29 +181,27 @@ describe("TxInInfo tests", () => {
     });
   });
 
-  describe("ToData/FromData TxInInfo tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataTxInInfo,
-      LbV2.fromDataTxInInfo,
+  describe("IsPlutusData TxInInfo tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataTxInInfo,
       txInInfo1,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataTxOutRef.toData(txOutRef1),
-          LbV2.toDataTxOut.toData(txOut1),
+          LbV1.isPlutusDataTxOutRef.toData(txOutRef1),
+          LbV2.isPlutusDataTxOut.toData(txOut1),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataTxInInfo,
-      LbV2.fromDataTxInInfo,
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataTxInInfo,
       txInInfo2,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataTxOutRef.toData(txOutRef2),
-          LbV2.toDataTxOut.toData(txOut1),
+          LbV1.isPlutusDataTxOutRef.toData(txOutRef2),
+          LbV2.isPlutusDataTxOut.toData(txOut1),
         ]],
       },
     );
@@ -213,9 +211,8 @@ describe("TxInInfo tests", () => {
         fc.property(
           fcTxInInfo(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV2.toDataTxInInfo,
-              LbV2.fromDataTxInInfo,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV2.isPlutusDataTxInInfo,
               data,
             );
           },

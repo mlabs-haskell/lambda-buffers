@@ -227,31 +227,29 @@ describe("Address tests", () => {
     });
   });
 
-  describe("ToData/FromData Address tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataAddress,
-      LbV1.fromDataAddress,
+  describe("IsPlutusData Address tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataAddress,
       address1,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential1),
-          LbV1.toDataMaybe(LbV1.toDataStakingCredential).toData({
+          LbV1.isPlutusDataCredential.toData(credential1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataStakingCredential).toData({
             name: "Just",
             fields: stakingCredential1,
           }),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataAddress,
-      LbV1.fromDataAddress,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataAddress,
       address2,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential1),
-          LbV1.toDataMaybe(LbV1.toDataStakingCredential).toData({
+          LbV1.isPlutusDataCredential.toData(credential1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataStakingCredential).toData({
             name: "Just",
             fields: stakingCredential2,
           }),
@@ -259,30 +257,28 @@ describe("Address tests", () => {
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataAddress,
-      LbV1.fromDataAddress,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataAddress,
       address3,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential1),
-          LbV1.toDataMaybe(LbV1.toDataStakingCredential).toData({
+          LbV1.isPlutusDataCredential.toData(credential1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataStakingCredential).toData({
             name: "Just",
             fields: stakingCredential3,
           }),
         ]],
       },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataAddress,
-      LbV1.fromDataAddress,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataAddress,
       address4,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataCredential.toData(credential1),
-          LbV1.toDataMaybe(LbV1.toDataStakingCredential).toData({
+          LbV1.isPlutusDataCredential.toData(credential1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataStakingCredential).toData({
             name: "Nothing",
           }),
         ]],
@@ -294,9 +290,8 @@ describe("Address tests", () => {
         fc.property(
           fcAddress(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataAddress,
-              LbV1.fromDataAddress,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataAddress,
               data,
             );
           },

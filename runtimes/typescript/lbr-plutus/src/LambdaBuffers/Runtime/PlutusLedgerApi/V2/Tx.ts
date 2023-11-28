@@ -3,8 +3,8 @@ import * as LbScripts from "../V1/Scripts.js";
 import type { Eq, Json, Maybe } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
-import type { FromData, ToData } from "../../PlutusData.js";
-import { FromDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import type { Address } from "../V1/Address.js";
 import * as LbAddress from "../V1/Address.js";
@@ -100,9 +100,9 @@ export const jsonOutputDatum: Json<OutputDatum> = {
 };
 
 /**
- * {@link ToData} instance for {@link OutputDatum}
+ * {@link IsPlutusData} instance for {@link OutputDatum}
  */
-export const toDataOutputDatum: ToData<OutputDatum> = {
+export const isPlutusDataOutputDatum: IsPlutusData<OutputDatum> = {
   toData: (outputDatum) => {
     switch (outputDatum.name) {
       case "NoOutputDatum":
@@ -110,21 +110,20 @@ export const toDataOutputDatum: ToData<OutputDatum> = {
       case "OutputDatumHash":
         return {
           name: "Constr",
-          fields: [1n, [LbScripts.toDataDatumHash.toData(outputDatum.fields)]],
+          fields: [1n, [
+            LbScripts.isPlutusDataDatumHash.toData(outputDatum.fields),
+          ]],
         };
       case "OutputDatum":
         return {
           name: "Constr",
-          fields: [2n, [LbScripts.toDataDatum.toData(outputDatum.fields)]],
+          fields: [2n, [
+            LbScripts.isPlutusDataDatum.toData(outputDatum.fields),
+          ]],
         };
     }
   },
-};
 
-/**
- * {@link FromData} instance for {@link OutputDatum}
- */
-export const fromDataOutputDatum: FromData<OutputDatum> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr":
@@ -135,7 +134,7 @@ export const fromDataOutputDatum: FromData<OutputDatum> = {
         ) {
           return {
             name: "OutputDatumHash",
-            fields: LbScripts.fromDataDatumHash.fromData(
+            fields: LbScripts.isPlutusDataDatumHash.fromData(
               plutusData.fields[1][0]!,
             ),
           };
@@ -144,14 +143,16 @@ export const fromDataOutputDatum: FromData<OutputDatum> = {
         ) {
           return {
             name: "OutputDatum",
-            fields: LbScripts.fromDataDatum.fromData(plutusData.fields[1][0]!),
+            fields: LbScripts.isPlutusDataDatum.fromData(
+              plutusData.fields[1][0]!,
+            ),
           };
         }
         break;
       default:
         break;
     }
-    throw new FromDataError("Unexpected data");
+    throw new IsPlutusDataError("Unexpected data");
   },
 };
 
@@ -237,42 +238,40 @@ export const jsonTxOut: Json<TxOut> = {
 };
 
 /**
- * {@link ToData} instance for {@link TxOut}
+ * {@link IsPlutusData} instance for {@link TxOut}
  */
-export const toDataTxOut: ToData<TxOut> = {
+export const isPlutusDataTxOut: IsPlutusData<TxOut> = {
   toData: (txout) => {
     return {
       name: "Constr",
       fields: [0n, [
-        LbAddress.toDataAddress.toData(txout.txOutAddress),
-        LbValue.toDataValue.toData(txout.txOutValue),
-        toDataOutputDatum.toData(txout.txOutDatum),
-        LbPreludeInstances.toDataMaybe(LbScripts.toDataScriptHash).toData(
-          txout.txOutReferenceScript,
-        ),
+        LbAddress.isPlutusDataAddress.toData(txout.txOutAddress),
+        LbValue.isPlutusDataValue.toData(txout.txOutValue),
+        isPlutusDataOutputDatum.toData(txout.txOutDatum),
+        LbPreludeInstances.isPlutusDataMaybe(LbScripts.isPlutusDataScriptHash)
+          .toData(
+            txout.txOutReferenceScript,
+          ),
       ]],
     };
   },
-};
 
-/**
- * {@link FromData} instance for {@link TxOut}
- */
-export const fromDataTxOut: FromData<TxOut> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr":
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 4) {
           return {
-            txOutAddress: LbAddress.fromDataAddress.fromData(
+            txOutAddress: LbAddress.isPlutusDataAddress.fromData(
               plutusData.fields[1][0]!,
             ),
-            txOutValue: LbValue.fromDataValue.fromData(
+            txOutValue: LbValue.isPlutusDataValue.fromData(
               plutusData.fields[1][1]!,
             ),
-            txOutDatum: fromDataOutputDatum.fromData(plutusData.fields[1][2]!),
-            txOutReferenceScript: LbPreludeInstances.fromDataMaybe(
-              LbScripts.fromDataScriptHash,
+            txOutDatum: isPlutusDataOutputDatum.fromData(
+              plutusData.fields[1][2]!,
+            ),
+            txOutReferenceScript: LbPreludeInstances.isPlutusDataMaybe(
+              LbScripts.isPlutusDataScriptHash,
             ).fromData(plutusData.fields[1][3]!),
           };
         }
@@ -280,6 +279,6 @@ export const fromDataTxOut: FromData<TxOut> = {
       default:
         break;
     }
-    throw new FromDataError("Unexpected data");
+    throw new IsPlutusDataError("Unexpected data");
   },
 };

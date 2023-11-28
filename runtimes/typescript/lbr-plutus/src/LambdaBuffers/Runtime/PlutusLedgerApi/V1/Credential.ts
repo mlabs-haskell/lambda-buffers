@@ -1,5 +1,5 @@
-import { FromDataError } from "../../PlutusData.js";
-import type { FromData, ToData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 import type { Integer } from "lbr-prelude";
 import type { PubKeyHash } from "./Crypto.js";
 import type { ScriptHash } from "./Scripts.js";
@@ -117,46 +117,43 @@ export const jsonStakingCredential: Json<StakingCredential> = {
 };
 
 /**
- * {@link ToData} instance for {@link StakingCredential}
+ * {@link IsPlutusData} instance for {@link StakingCredential}
  */
-export const toDataStakingCredential: ToData<StakingCredential> = {
+export const isPlutusDataStakingCredential: IsPlutusData<StakingCredential> = {
   toData: (stakingCredential) => {
     switch (stakingCredential.name) {
       case "StakingHash":
         return {
           name: "Constr",
-          fields: [0n, [toDataCredential.toData(stakingCredential.fields)]],
+          fields: [0n, [
+            isPlutusDataCredential.toData(stakingCredential.fields),
+          ]],
         };
       case "StakingPtr":
         return {
           name: "Constr",
           fields: [1n, [
-            LbPreludeInstances.toDataInteger.toData(
+            LbPreludeInstances.isPlutusDataInteger.toData(
               stakingCredential.fields[0],
             ),
-            LbPreludeInstances.toDataInteger.toData(
+            LbPreludeInstances.isPlutusDataInteger.toData(
               stakingCredential.fields[1],
             ),
-            LbPreludeInstances.toDataInteger.toData(
+            LbPreludeInstances.isPlutusDataInteger.toData(
               stakingCredential.fields[2],
             ),
           ]],
         };
     }
   },
-};
 
-/**
- * {@link FromData} instance for {@link StakingCredential}
- */
-export const fromDataStakingCredential: FromData<StakingCredential> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr": {
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 1) {
           return {
             name: "StakingHash",
-            fields: fromDataCredential.fromData(plutusData.fields[1][0]!),
+            fields: isPlutusDataCredential.fromData(plutusData.fields[1][0]!),
           };
         } else if (
           plutusData.fields[0] === 1n && plutusData.fields[1].length === 3
@@ -164,13 +161,13 @@ export const fromDataStakingCredential: FromData<StakingCredential> = {
           return {
             name: "StakingPtr",
             fields: [
-              LbPreludeInstances.fromDataInteger.fromData(
+              LbPreludeInstances.isPlutusDataInteger.fromData(
                 plutusData.fields[1][0]!,
               ),
-              LbPreludeInstances.fromDataInteger.fromData(
+              LbPreludeInstances.isPlutusDataInteger.fromData(
                 plutusData.fields[1][1]!,
               ),
-              LbPreludeInstances.fromDataInteger.fromData(
+              LbPreludeInstances.isPlutusDataInteger.fromData(
                 plutusData.fields[1][2]!,
               ),
             ],
@@ -182,7 +179,7 @@ export const fromDataStakingCredential: FromData<StakingCredential> = {
       default:
         break;
     }
-    throw new FromDataError("Unexpected data");
+    throw new IsPlutusDataError("Unexpected data");
   },
 };
 
@@ -260,36 +257,35 @@ export const jsonCredential: Json<Credential> = {
 };
 
 /**
- * {@link ToData} instance for {@link Credential}
+ * {@link IsPlutusData} instance for {@link Credential}
  */
-export const toDataCredential: ToData<Credential> = {
+export const isPlutusDataCredential: IsPlutusData<Credential> = {
   toData: (credential) => {
     switch (credential.name) {
       case "PubKeyCredential":
         return {
           name: "Constr",
-          fields: [0n, [LbCrypto.toDataPubKeyHash.toData(credential.fields)]],
+          fields: [0n, [
+            LbCrypto.isPlutusDataPubKeyHash.toData(credential.fields),
+          ]],
         };
       case "ScriptCredential":
         return {
           name: "Constr",
-          fields: [1n, [LbScript.toDataScriptHash.toData(credential.fields)]],
+          fields: [1n, [
+            LbScript.isPlutusDataScriptHash.toData(credential.fields),
+          ]],
         };
     }
   },
-};
 
-/**
- * {@link FromData} instance for {@link Credential}
- */
-export const fromDataCredential: FromData<Credential> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr": {
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 1) {
           return {
             name: "PubKeyCredential",
-            fields: LbCrypto.fromDataPubKeyHash.fromData(
+            fields: LbCrypto.isPlutusDataPubKeyHash.fromData(
               plutusData.fields[1][0]!,
             ),
           };
@@ -298,7 +294,7 @@ export const fromDataCredential: FromData<Credential> = {
         ) {
           return {
             name: "ScriptCredential",
-            fields: LbScript.fromDataScriptHash.fromData(
+            fields: LbScript.isPlutusDataScriptHash.fromData(
               plutusData.fields[1][0]!,
             ),
           };
@@ -309,6 +305,6 @@ export const fromDataCredential: FromData<Credential> = {
       default:
         break;
     }
-    throw new FromDataError("Unexpected data");
+    throw new IsPlutusDataError("Unexpected data");
   },
 };

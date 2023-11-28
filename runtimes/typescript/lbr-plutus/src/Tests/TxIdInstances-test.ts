@@ -149,12 +149,12 @@ describe("TxId tests", () => {
     });
   });
 
-  describe("ToData/FromData TxId tests", () => {
-    TestUtils.toDataAndFromDataIt(LbV1.toDataTxId, LbV1.fromDataTxId, txId2, {
+  describe("IsPlutusData TxId tests", () => {
+    TestUtils.isPlutusDataIt(LbV1.isPlutusDataTxId, txId2, {
       name: "Constr",
       fields: [0n, [{ name: "Bytes", fields: txId2 }]],
     });
-    TestUtils.toDataAndFromDataIt(LbV1.toDataTxId, LbV1.fromDataTxId, txId1, {
+    TestUtils.isPlutusDataIt(LbV1.isPlutusDataTxId, txId1, {
       name: "Constr",
       fields: [0n, [{ name: "Bytes", fields: txId1 }]],
     });
@@ -164,9 +164,8 @@ describe("TxId tests", () => {
         fc.property(
           fcTxId(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataTxId,
-              LbV1.fromDataTxId,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataTxId,
               data,
             );
           },

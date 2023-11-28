@@ -53,22 +53,19 @@ describe("LedgerBytes tests", () => {
     });
   });
 
-  describe("ToData/FromData LedgerBytes tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLedgerBytes,
-      LbV1.fromDataLedgerBytes,
+  describe("IsPlutusData LedgerBytes tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLedgerBytes,
       Uint8Array.from([0xff, 0x00]),
       { name: "Bytes", fields: Uint8Array.from([0xff, 0x00]) },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLedgerBytes,
-      LbV1.fromDataLedgerBytes,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLedgerBytes,
       Uint8Array.from([0x00]),
       { name: "Bytes", fields: Uint8Array.from([0x00]) },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataLedgerBytes,
-      LbV1.fromDataLedgerBytes,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataLedgerBytes,
       Uint8Array.from([]),
       { name: "Bytes", fields: Uint8Array.from([]) },
     );
@@ -78,9 +75,8 @@ describe("LedgerBytes tests", () => {
         fc.property(
           fc.uint8Array(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataLedgerBytes,
-              LbV1.fromDataLedgerBytes,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataLedgerBytes,
               data,
             );
           },

@@ -180,33 +180,33 @@ describe("TxOut tests", () => {
     });
   });
 
-  describe("ToData/FromData TxOut tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataTxOut,
-      LbV2.fromDataTxOut,
+  describe("IsPlutusData TxOut tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataTxOut,
       txOut1,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataAddress.toData(address1),
-          LbV1.toDataValue.toData(value1),
-          LbV2.toDataOutputDatum.toData(outputDatum1),
-          LbV1.toDataMaybe(LbV1.toDataScriptHash).toData({ name: "Nothing" }),
+          LbV1.isPlutusDataAddress.toData(address1),
+          LbV1.isPlutusDataValue.toData(value1),
+          LbV2.isPlutusDataOutputDatum.toData(outputDatum1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataScriptHash).toData({
+            name: "Nothing",
+          }),
         ]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataTxOut,
-      LbV2.fromDataTxOut,
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataTxOut,
       txOut2,
       {
         name: "Constr",
         fields: [0n, [
-          LbV1.toDataAddress.toData(address1),
-          LbV1.toDataValue.toData(value1),
-          LbV2.toDataOutputDatum.toData(outputDatum1),
-          LbV1.toDataMaybe(LbV1.toDataScriptHash).toData({
+          LbV1.isPlutusDataAddress.toData(address1),
+          LbV1.isPlutusDataValue.toData(value1),
+          LbV2.isPlutusDataOutputDatum.toData(outputDatum1),
+          LbV1.isPlutusDataMaybe(LbV1.isPlutusDataScriptHash).toData({
             name: "Just",
             fields: scriptHash1,
           }),
@@ -219,9 +219,8 @@ describe("TxOut tests", () => {
         fc.property(
           fcTxOut(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV2.toDataTxOut,
-              LbV2.fromDataTxOut,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV2.isPlutusDataTxOut,
               data,
             );
           },

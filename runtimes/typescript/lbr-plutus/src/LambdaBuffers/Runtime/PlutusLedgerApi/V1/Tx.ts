@@ -1,8 +1,6 @@
-// https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Tx.hs
-
 import type { Eq, Integer, Json, Maybe } from "lbr-prelude";
-import type { FromData, ToData } from "../../PlutusData.js";
-import { FromDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
@@ -48,31 +46,24 @@ export const jsonTxId: Json<TxId> = {
 };
 
 /**
- * {@link ToData} instance for {@link TxId}
+ * {@link IsPlutusData} instance for {@link TxId}
  *
  * Note this includes the `0` tag.
  */
-export const toDataTxId: ToData<TxId> = {
+export const isPlutusDataTxId: IsPlutusData<TxId> = {
   toData: (txid) => {
     return {
       name: "Constr",
-      fields: [0n, [LbBytes.toDataLedgerBytes.toData(txid)]],
+      fields: [0n, [LbBytes.isPlutusDataLedgerBytes.toData(txid)]],
     };
   },
-};
 
-/**
- * {@link FromData} instance for {@link TxId}
- *
- * Note this includes the `0` tag.
- */
-export const fromDataTxId: FromData<TxId> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr":
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 1) {
           const res = txIdFromBytes(
-            LbBytes.fromDataLedgerBytes.fromData(plutusData.fields[1][0]!),
+            LbBytes.isPlutusDataLedgerBytes.fromData(plutusData.fields[1][0]!),
           );
           if (res.name === "Nothing") {
             break;
@@ -83,7 +74,7 @@ export const fromDataTxId: FromData<TxId> = {
       default:
         break;
     }
-    throw new FromDataError("Invalid data");
+    throw new IsPlutusDataError("Invalid data");
   },
 };
 
@@ -134,31 +125,25 @@ export const jsonTxOutRef: Json<TxOutRef> = {
 };
 
 /**
- *  {@link ToData} instance for {@link TxOutRef}
+ *  {@link IsPlutusData} instance for {@link TxOutRef}
  */
-export const toDataTxOutRef: ToData<TxOutRef> = {
+export const isPlutusDataTxOutRef: IsPlutusData<TxOutRef> = {
   toData: (txoutref) => {
     return {
       name: "Constr",
       fields: [0n, [
-        toDataTxId.toData(txoutref.txOutRefId),
-        LbPreludeInstances.toDataInteger.toData(txoutref.txOutRefIdx),
+        isPlutusDataTxId.toData(txoutref.txOutRefId),
+        LbPreludeInstances.isPlutusDataInteger.toData(txoutref.txOutRefIdx),
       ]],
     };
   },
-};
-
-/**
- *  {@link FromData} instance for {@link TxOutRef}
- */
-export const fromDataTxOutRef: FromData<TxOutRef> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr":
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 2) {
           return {
-            txOutRefId: fromDataTxId.fromData(plutusData.fields[1][0]!),
-            txOutRefIdx: LbPreludeInstances.fromDataInteger.fromData(
+            txOutRefId: isPlutusDataTxId.fromData(plutusData.fields[1][0]!),
+            txOutRefIdx: LbPreludeInstances.isPlutusDataInteger.fromData(
               plutusData.fields[1][1]!,
             ),
           };
@@ -167,6 +152,6 @@ export const fromDataTxOutRef: FromData<TxOutRef> = {
       default:
         break;
     }
-    throw new FromDataError("Invalid data");
+    throw new IsPlutusDataError("Invalid data");
   },
 };

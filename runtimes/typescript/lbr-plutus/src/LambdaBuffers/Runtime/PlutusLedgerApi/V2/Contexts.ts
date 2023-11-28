@@ -1,7 +1,7 @@
 import type { TxOutRef } from "../V1/Tx.js";
 import * as LbV1Tx from "../V1/Tx.js";
-import type { FromData, ToData } from "../../PlutusData.js";
-import { FromDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
 import type { Eq, Json } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import type { TxOut } from "./Tx.js";
@@ -56,33 +56,28 @@ export const jsonTxInInfo: Json<TxInInfo> = {
 };
 
 /**
- * {@link ToData} instance for {@link TxInInfo}
+ * {@link IsPlutusData} instance for {@link TxInInfo}
  */
-export const toDataTxInInfo: ToData<TxInInfo> = {
+export const isPlutusDataTxInInfo: IsPlutusData<TxInInfo> = {
   toData: (txininfo) => {
     return {
       name: "Constr",
       fields: [0n, [
-        LbV1Tx.toDataTxOutRef.toData(txininfo.txInInfoOutRef),
-        LbV2Tx.toDataTxOut.toData(txininfo.txInInfoResolved),
+        LbV1Tx.isPlutusDataTxOutRef.toData(txininfo.txInInfoOutRef),
+        LbV2Tx.isPlutusDataTxOut.toData(txininfo.txInInfoResolved),
       ]],
     };
   },
-};
 
-/**
- * {@link FromData} instance for {@link TxInInfo}
- */
-export const fromDataTxInInfo: FromData<TxInInfo> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr":
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 2) {
           return {
-            txInInfoOutRef: LbV1Tx.fromDataTxOutRef.fromData(
+            txInInfoOutRef: LbV1Tx.isPlutusDataTxOutRef.fromData(
               plutusData.fields[1][0]!,
             ),
-            txInInfoResolved: LbV2Tx.fromDataTxOut.fromData(
+            txInInfoResolved: LbV2Tx.isPlutusDataTxOut.fromData(
               plutusData.fields[1][1]!,
             ),
           };
@@ -92,6 +87,6 @@ export const fromDataTxInInfo: FromData<TxInInfo> = {
       default:
         break;
     }
-    throw new FromDataError("Invalid data");
+    throw new IsPlutusDataError("Invalid data");
   },
 };

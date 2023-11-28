@@ -1,8 +1,8 @@
 import * as LbPrelude from "lbr-prelude";
 import * as LbPreludeInstances from "./Prelude/Instances.js";
 import type { Bool, Eq, Json, List, Maybe } from "lbr-prelude";
-import { FromDataError } from "./PlutusData.js";
-import type { FromData, PlutusData, ToData } from "./PlutusData.js";
+import { IsPlutusDataError } from "./PlutusData.js";
+import type { IsPlutusData, PlutusData } from "./PlutusData.js";
 
 /**
  * {@link Map | `Map<K,V>`} is an mapping from keys `K` to values `V` where `K` only needs an
@@ -60,54 +60,50 @@ export function jsonMap<K, V>(dictK: Json<K>, dictV: Json<V>): Json<Map<K, V>> {
 }
 
 /**
- * {@link ToData} instance for {@link Map}
+ * {@link IsPlutusData} instance for {@link Map}
+ *
+ * @remarks
+ * The `fromData` copies the Haskell definition which uses {@link fromList} that does
+ * _not_ verify uniqueness of the keys.
  */
-export function toDataMap<K, V>(
-  dictK: ToData<K>,
-  dictV: ToData<V>,
-): ToData<Map<K, V>> {
+export function isPlutusDataMap<K, V>(
+  dictK: IsPlutusData<K>,
+  dictV: IsPlutusData<V>,
+): IsPlutusData<Map<K, V>> {
   return {
     toData: (arg) => {
       return {
         name: "Map",
         fields: arg.map((kv) => {
-          const kvData = LbPreludeInstances.toDataPairWithoutTag(dictK, dictV)
+          const kvData = LbPreludeInstances.isPlutusDataPairWithoutTag(
+            dictK,
+            dictV,
+          )
             .toData(kv);
           if (kvData.name === "List") {
             return kvData.fields as [PlutusData, PlutusData];
           } else {
             throw new Error(
-              "Internal error: toDataPairWithoutTag didn't return a list",
+              "Internal error: isPlutusDataPairWithoutTag didn't return a list",
             );
           }
         }),
       };
     },
-  };
-}
 
-/**
- * {@link FromData} instance for {@link Map}
- *
- * @remarks
- * This copies the Haskell definition which uses {@link fromList} that does
- * _not_ verify uniqueness of the keys.
- */
-export function fromDataMap<K, V>(
-  dictK: FromData<K>,
-  dictV: FromData<V>,
-): FromData<Map<K, V>> {
-  return {
     fromData: (plutusData) => {
       switch (plutusData.name) {
         case "Map":
           return fromList(plutusData.fields.map((kvData) => {
-            const kv = LbPreludeInstances.fromDataPairWithoutTag(dictK, dictV)
+            const kv = LbPreludeInstances.isPlutusDataPairWithoutTag(
+              dictK,
+              dictV,
+            )
               .fromData({ name: "List", fields: kvData });
             return kv;
           }));
         default:
-          throw new FromDataError("Expected Map but got " + plutusData);
+          throw new IsPlutusDataError("Expected Map but got " + plutusData);
       }
     },
   };

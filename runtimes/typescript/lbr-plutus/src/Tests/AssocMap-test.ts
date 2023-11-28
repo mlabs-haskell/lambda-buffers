@@ -106,37 +106,58 @@ describe("AssocMap tests", () => {
     });
   });
 
-  describe("ToData/FromData AssocMap tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbAssocMap.toDataMap(LbV1.toDataInteger, LbV1.toDataInteger),
-      LbAssocMap.fromDataMap(LbV1.fromDataInteger, LbV1.fromDataInteger),
+  describe("IsPlutusData AssocMap tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbAssocMap.isPlutusDataMap(
+        LbV1.isPlutusDataInteger,
+        LbV1.isPlutusDataInteger,
+      ),
       map1,
       { name: "Map", fields: [] },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbAssocMap.toDataMap(LbV1.toDataInteger, LbV1.toDataInteger),
-      LbAssocMap.fromDataMap(LbV1.fromDataInteger, LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbAssocMap.isPlutusDataMap(
+        LbV1.isPlutusDataInteger,
+        LbV1.isPlutusDataInteger,
+      ),
       map2,
       {
         name: "Map",
         fields: [
-          [LbV1.toDataInteger.toData(69n), LbV1.toDataInteger.toData(420n)],
-          [LbV1.toDataInteger.toData(1n), LbV1.toDataInteger.toData(2n)],
+          [
+            LbV1.isPlutusDataInteger.toData(69n),
+            LbV1.isPlutusDataInteger.toData(420n),
+          ],
+          [
+            LbV1.isPlutusDataInteger.toData(1n),
+            LbV1.isPlutusDataInteger.toData(2n),
+          ],
         ],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbAssocMap.toDataMap(LbV1.toDataInteger, LbV1.toDataInteger),
-      LbAssocMap.fromDataMap(LbV1.fromDataInteger, LbV1.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbAssocMap.isPlutusDataMap(
+        LbV1.isPlutusDataInteger,
+        LbV1.isPlutusDataInteger,
+      ),
       map3,
       {
         name: "Map",
         fields: [
-          [LbV1.toDataInteger.toData(-69n), LbV1.toDataInteger.toData(-420n)],
-          [LbV1.toDataInteger.toData(69n), LbV1.toDataInteger.toData(420n)],
-          [LbV1.toDataInteger.toData(1n), LbV1.toDataInteger.toData(2n)],
+          [
+            LbV1.isPlutusDataInteger.toData(-69n),
+            LbV1.isPlutusDataInteger.toData(-420n),
+          ],
+          [
+            LbV1.isPlutusDataInteger.toData(69n),
+            LbV1.isPlutusDataInteger.toData(420n),
+          ],
+          [
+            LbV1.isPlutusDataInteger.toData(1n),
+            LbV1.isPlutusDataInteger.toData(2n),
+          ],
         ],
       },
     );
@@ -146,11 +167,10 @@ describe("AssocMap tests", () => {
         fc.property(
           fcAssocMap(LbPrelude.eqInteger, fc.bigInt(), fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbAssocMap.toDataMap(LbV1.toDataInteger, LbV1.toDataInteger),
-              LbAssocMap.fromDataMap(
-                LbV1.fromDataInteger,
-                LbV1.fromDataInteger,
+            TestUtils.isPlutusDataRoundTrip(
+              LbAssocMap.isPlutusDataMap(
+                LbV1.isPlutusDataInteger,
+                LbV1.isPlutusDataInteger,
               ),
               data,
             );

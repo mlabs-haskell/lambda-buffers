@@ -184,32 +184,29 @@ describe("OutputDatum tests", () => {
     });
   });
 
-  describe("ToData/FromData Credential tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataOutputDatum,
-      LbV2.fromDataOutputDatum,
+  describe("IsPlutusData Credential tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataOutputDatum,
       { name: "NoOutputDatum" },
       { name: "Constr", fields: [0n, []] },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataOutputDatum,
-      LbV2.fromDataOutputDatum,
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataOutputDatum,
       { name: "OutputDatumHash", fields: datumHash1 },
       {
         name: "Constr",
-        fields: [1n, [LbV1.toDataDatumHash.toData(datumHash1)]],
+        fields: [1n, [LbV1.isPlutusDataDatumHash.toData(datumHash1)]],
       },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbV2.toDataOutputDatum,
-      LbV2.fromDataOutputDatum,
+    TestUtils.isPlutusDataIt(
+      LbV2.isPlutusDataOutputDatum,
       { name: "OutputDatum", fields: { name: "Integer", fields: 69n } },
       {
         name: "Constr",
         fields: [2n, [
-          LbPlutusData.toDataPlutusData.toData({
+          LbPlutusData.isPlutusDataPlutusData.toData({
             name: "Integer",
             fields: 69n,
           }),
@@ -222,9 +219,8 @@ describe("OutputDatum tests", () => {
         fc.property(
           fcOutputDatum(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV2.toDataOutputDatum,
-              LbV2.fromDataOutputDatum,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV2.isPlutusDataOutputDatum,
               data,
             );
           },

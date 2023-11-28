@@ -1,5 +1,5 @@
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
-import type { FromData, ToData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 import type { Map } from "../../AssocMap.js";
 import * as AssocMap from "../../AssocMap.js";
 import type { Eq, Integer, Json } from "lbr-prelude";
@@ -53,15 +53,12 @@ export const jsonCurrencySymbol: Json<CurrencySymbol> = {
 };
 
 /**
- * {@link ToData} instance for {@link CurrencySymbol}
+ * {@link IsPlutusData} instance for {@link CurrencySymbol}
  */
-export const toDataCurrencySymbol: ToData<CurrencySymbol> = LbBytes
-  .toDataLedgerBytes as ToData<CurrencySymbol>;
-/**
- * {@link FromData} instance for {@link CurrencySymbol}
- */
-export const fromDataCurrencySymbol: FromData<CurrencySymbol> = LbBytes
-  .fromDataLedgerBytes as FromData<CurrencySymbol>;
+export const isPlutusDataCurrencySymbol: IsPlutusData<CurrencySymbol> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<
+    CurrencySymbol
+  >;
 
 /**
  * {@link TokenName} at most 32 bytes.
@@ -106,15 +103,10 @@ export const jsonTokenName: Json<TokenName> = {
   },
 };
 /**
- * {@link ToData} instance for {@link TokenName}
+ * {@link IsPlutusData} instance for {@link TokenName}
  */
-export const toDataTokenName: ToData<TokenName> = LbBytes
-  .toDataLedgerBytes as ToData<TokenName>;
-/**
- * {@link FromData} instance for {@link TokenName}
- */
-export const fromDataTokenName: FromData<TokenName> = LbBytes
-  .fromDataLedgerBytes as FromData<TokenName>;
+export const isPlutusDataTokenName: IsPlutusData<TokenName> = LbBytes
+  .isPlutusDataLedgerBytes as IsPlutusData<unknown> as IsPlutusData<TokenName>;
 
 /**
  * An asset class identified by a {@link CurrencySymbol} and {@link TokenName}
@@ -156,15 +148,11 @@ export const jsonAssetClass: Json<AssetClass> = {
   },
 };
 /**
- * {@link ToData} instance for {@link AssetClass}
+ * {@link IsPlutusData} instance for {@link AssetClass}
  */
-export const toDataAssetClass: ToData<AssetClass> = LbPreludeInstances
-  .toDataPairWithTag(toDataCurrencySymbol, toDataTokenName);
-/**
- * {@link FromData} instance for {@link AssetClass}
- */
-export const fromDataAssetClass: FromData<AssetClass> = LbPreludeInstances
-  .fromDataPairWithTag(fromDataCurrencySymbol, fromDataTokenName);
+export const isPlutusDataAssetClass: IsPlutusData<AssetClass> =
+  LbPreludeInstances
+    .isPlutusDataPairWithTag(isPlutusDataCurrencySymbol, isPlutusDataTokenName);
 
 /**
  * {@link Value} represents a collection of amounts of different currencies.
@@ -189,19 +177,14 @@ export const jsonValue: Json<Value> = AssocMap.jsonMap(
 );
 
 /**
- * {@link ToData} instance for {@link Value}
+ * {@link IsPlutusData} instance for {@link Value}
  */
-export const toDataValue: ToData<Value> = AssocMap.toDataMap(
-  toDataCurrencySymbol,
-  AssocMap.toDataMap(toDataTokenName, LbPreludeInstances.toDataInteger),
-);
-
-/**
- * {@link FromData} instance for {@link Value}
- */
-export const fromDataValue: FromData<Value> = AssocMap.fromDataMap(
-  fromDataCurrencySymbol,
-  AssocMap.fromDataMap(fromDataTokenName, LbPreludeInstances.fromDataInteger),
+export const isPlutusDataValue: IsPlutusData<Value> = AssocMap.isPlutusDataMap(
+  isPlutusDataCurrencySymbol,
+  AssocMap.isPlutusDataMap(
+    isPlutusDataTokenName,
+    LbPreludeInstances.isPlutusDataInteger,
+  ),
 );
 
 /**

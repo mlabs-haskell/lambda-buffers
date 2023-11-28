@@ -16,25 +16,19 @@ export type PlutusData =
   | { name: "Integer"; fields: Integer };
 
 /**
- * {@link FromDataError} is thrown when `fromData` fails in the type class {@link FromData}
+ * {@link IsPlutusDataError} is thrown when `fromData` fails in the type class {@link IsPlutusData}
  */
-export class FromDataError extends Error {
+export class IsPlutusDataError extends Error {
   constructor(message: string) {
     super(message);
   }
 }
 
 /**
- * {@link ToData} is a type class to translate to {@link PlutusData}
+ * {@link IsPlutusData} is a type class to translate to {@link PlutusData}
  */
-export interface ToData<A> {
+export interface IsPlutusData<A> {
   readonly toData: (arg: Readonly<A>) => PlutusData;
-}
-
-/**
- * {@link FromData} is a type class to translate from {@link PlutusData}
- */
-export interface FromData<A> {
   readonly fromData: (arg: Readonly<PlutusData>) => A;
 }
 
@@ -87,16 +81,10 @@ export const eqPlutusData: Eq<PlutusData> = {
 };
 
 /**
- * {@link ToData} instance for {@link PlutusData}
+ * {@link IsPlutusData} instance for {@link PlutusData}
  */
-export const toDataPlutusData: ToData<PlutusData> = {
+export const isPlutusDataPlutusData: IsPlutusData<PlutusData> = {
   toData: (arg) => arg,
-};
-
-/**
- * {@link FromData} instance for {@link PlutusData}
- */
-export const fromDataPlutusData: FromData<PlutusData> = {
   fromData: (arg) => arg,
 };
 

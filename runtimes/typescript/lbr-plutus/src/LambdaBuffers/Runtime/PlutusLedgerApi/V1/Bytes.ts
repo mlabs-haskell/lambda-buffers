@@ -1,8 +1,8 @@
 import * as LbPrelude from "lbr-prelude";
 import { JsonError } from "lbr-prelude";
-import { FromDataError } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
 import * as LbHex from "../../Hex.js";
-import type { FromData, ToData } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 import type { Bytes, Json } from "lbr-prelude";
 
 // https://github.com/input-output-hk/plutus/blob/1.16.0.0/plutus-ledger-api/src/PlutusLedgerApi/V1/Bytes.hs
@@ -37,24 +37,18 @@ export const jsonLedgerBytes: Json<LedgerBytes> = {
 };
 
 /**
- * {@link ToData} instance for {@link LedgerBytes}
+ * {@link IsPlutusData} instance for {@link LedgerBytes}
  */
-export const toDataLedgerBytes: ToData<LedgerBytes> = {
+export const isPlutusDataLedgerBytes: IsPlutusData<LedgerBytes> = {
   toData: (bytes) => {
     return { name: "Bytes", fields: bytes };
   },
-};
-
-/**
- * {@link FromData} instance for {@link LedgerBytes}
- */
-export const fromDataLedgerBytes: FromData<LedgerBytes> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Bytes":
         return plutusData.fields;
       default:
-        throw new FromDataError("Expected bytes but got " + plutusData);
+        throw new IsPlutusDataError("Expected bytes but got " + plutusData);
     }
   },
 };

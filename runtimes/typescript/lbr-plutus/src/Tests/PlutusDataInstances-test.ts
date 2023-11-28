@@ -280,41 +280,21 @@ describe("PlutusData tests", () => {
       );
     });
   });
-  //
-  //   describe("FromData / ToData PlutusData tests", () => {
-  //     TestUtils.toDataFromDataRoundTripIt(
-  //       LbPlutusData.toDataPlutusData,
-  //       LbPlutusData.fromDataPlutusData,
-  //       { name: "Constr", fields: [0n, []] },
-  //     );
-  //
-  //     TestUtils.toDataFromDataRoundTripIt(
-  //       LbPlutusData.toDataPlutusData,
-  //       LbPlutusData.fromDataPlutusData,
-  //       {
-  //         name: "Map",
-  //         fields: [[{ name: "Integer", fields: 0n }, {
-  //           name: "List",
-  //           fields: [],
-  //         }]],
-  //       },
-  //     );
-  //     TestUtils.toDataFromDataRoundTripIt(
-  //       LbPlutusData.toDataPlutusData,
-  //       LbPlutusData.fromDataPlutusData,
-  //       { name: "List", fields: [{ name: "Integer", fields: 0n }] },
-  //     );
-  //
-  //     TestUtils.toDataFromDataRoundTripIt(
-  //       LbPlutusData.toDataPlutusData,
-  //       LbPlutusData.fromDataPlutusData,
-  //       { name: "Integer", fields: 1n },
-  //     );
-  //
-  //     TestUtils.toDataFromDataRoundTripIt(
-  //       LbPlutusData.toDataPlutusData,
-  //       LbPlutusData.fromDataPlutusData,
-  //       { name: "Bytes", fields: Uint8Array.from([0xff]) },
-  //     );
-  //   });
+
+  describe("IsPlutusData PlutusData tests", () => {
+    it(`IsPlutusData property based tests`, () => {
+      fc.assert(
+        fc.property(
+          fcPlutusData(),
+          (data) => {
+            TestUtils.isPlutusDataRoundTrip(
+              LbPlutusData.isPlutusDataPlutusData,
+              data,
+            );
+          },
+        ),
+        { examples: [] },
+      );
+    });
+  });
 });

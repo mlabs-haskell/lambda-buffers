@@ -141,16 +141,14 @@ describe("ScriptHash tests", () => {
     });
   });
 
-  describe("ToData/FromData ScriptHash tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataScriptHash,
-      LbV1.fromDataScriptHash,
+  describe("IsPlutusData ScriptHash tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataScriptHash,
       scriptHash2,
       { name: "Bytes", fields: scriptHash2 },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataScriptHash,
-      LbV1.fromDataScriptHash,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataScriptHash,
       scriptHash1,
       { name: "Bytes", fields: scriptHash1 },
     );
@@ -160,9 +158,8 @@ describe("ScriptHash tests", () => {
         fc.property(
           fcScriptHash(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataScriptHash,
-              LbV1.fromDataScriptHash,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataScriptHash,
               data,
             );
           },

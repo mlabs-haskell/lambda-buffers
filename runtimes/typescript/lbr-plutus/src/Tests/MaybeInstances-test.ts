@@ -101,20 +101,22 @@ describe("Maybe tests", () => {
     });
   });
 
-  describe("ToData/FromData Maybe tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataMaybe(LbPreludeInstances.toDataInteger),
-      LbPreludeInstances.fromDataMaybe(LbPreludeInstances.fromDataInteger),
+  describe("IsPlutusData Maybe tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataMaybe(
+        LbPreludeInstances.isPlutusDataInteger,
+      ),
       { name: "Nothing" },
       { name: "Constr", fields: [1n, []] },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataMaybe(LbPreludeInstances.toDataInteger),
-      LbPreludeInstances.fromDataMaybe(LbPreludeInstances.fromDataInteger),
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataMaybe(
+        LbPreludeInstances.isPlutusDataInteger,
+      ),
       { name: "Just", fields: 69n },
       {
         name: "Constr",
-        fields: [0n, [LbPreludeInstances.toDataInteger.toData(69n)]],
+        fields: [0n, [LbPreludeInstances.isPlutusDataInteger.toData(69n)]],
       },
     );
 
@@ -123,10 +125,9 @@ describe("Maybe tests", () => {
         fc.property(
           fcMaybe(fc.bigInt()),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbPreludeInstances.toDataMaybe(LbPreludeInstances.toDataInteger),
-              LbPreludeInstances.fromDataMaybe(
-                LbPreludeInstances.fromDataInteger,
+            TestUtils.isPlutusDataRoundTrip(
+              LbPreludeInstances.isPlutusDataMaybe(
+                LbPreludeInstances.isPlutusDataInteger,
               ),
               data,
             );

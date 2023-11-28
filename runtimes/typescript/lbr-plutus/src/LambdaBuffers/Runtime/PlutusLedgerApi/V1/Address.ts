@@ -1,5 +1,5 @@
-import { FromDataError } from "../../PlutusData.js";
-import type { FromData, ToData } from "../../PlutusData.js";
+import { IsPlutusDataError } from "../../PlutusData.js";
+import type { IsPlutusData } from "../../PlutusData.js";
 import type { Eq, Json, Maybe } from "lbr-prelude";
 import * as LbPrelude from "lbr-prelude";
 import * as LbPreludeInstances from "../../Prelude/Instances.js";
@@ -78,36 +78,31 @@ export const jsonAddress: Json<Address> = {
 };
 
 /**
- * {@link ToData} instance for {@link Address}
+ * {@link IsPlutusData} instance for {@link Address}
  */
-export const toDataAddress: ToData<Address> = {
+export const isPlutusDataAddress: IsPlutusData<Address> = {
   toData: (address) => {
     return {
       name: "Constr",
       fields: [0n, [
-        LbCredential.toDataCredential.toData(address.addressCredential),
+        LbCredential.isPlutusDataCredential.toData(address.addressCredential),
         LbPreludeInstances
-          .toDataMaybe(LbCredential.toDataStakingCredential)
+          .isPlutusDataMaybe(LbCredential.isPlutusDataStakingCredential)
           .toData(address.addressStakingCredential),
       ]],
     };
   },
-};
 
-/**
- * {@link FromData} instance for {@link Address}
- */
-export const fromDataAddress: FromData<Address> = {
   fromData: (plutusData) => {
     switch (plutusData.name) {
       case "Constr": {
         if (plutusData.fields[0] === 0n && plutusData.fields[1].length === 2) {
           return {
-            addressCredential: LbCredential.fromDataCredential.fromData(
+            addressCredential: LbCredential.isPlutusDataCredential.fromData(
               plutusData.fields[1][0]!,
             ),
-            addressStakingCredential: LbPreludeInstances.fromDataMaybe(
-              LbCredential.fromDataStakingCredential,
+            addressStakingCredential: LbPreludeInstances.isPlutusDataMaybe(
+              LbCredential.isPlutusDataStakingCredential,
             ).fromData(plutusData.fields[1][1]!),
           };
         } else {
@@ -117,6 +112,6 @@ export const fromDataAddress: FromData<Address> = {
       default:
         break;
     }
-    throw new FromDataError("Unexpected data");
+    throw new IsPlutusDataError("Unexpected data");
   },
 };

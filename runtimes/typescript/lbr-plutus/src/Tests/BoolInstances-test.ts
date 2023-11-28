@@ -37,17 +37,15 @@ describe("Bool tests", () => {
     });
   });
 
-  describe("ToData/FromData Bool tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataBool,
-      LbPreludeInstances.fromDataBool,
+  describe("IsPlutusData Bool tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataBool,
       false,
       { name: "Constr", fields: [0n, []] },
     );
 
-    TestUtils.toDataAndFromDataIt(
-      LbPreludeInstances.toDataBool,
-      LbPreludeInstances.fromDataBool,
+    TestUtils.isPlutusDataIt(
+      LbPreludeInstances.isPlutusDataBool,
       true,
       { name: "Constr", fields: [1n, []] },
     );
@@ -57,9 +55,8 @@ describe("Bool tests", () => {
         fc.property(
           fc.boolean(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbPreludeInstances.toDataBool,
-              LbPreludeInstances.fromDataBool,
+            TestUtils.isPlutusDataRoundTrip(
+              LbPreludeInstances.isPlutusDataBool,
               data,
             );
           },

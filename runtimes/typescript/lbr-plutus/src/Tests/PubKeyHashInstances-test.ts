@@ -141,16 +141,14 @@ describe("PubKeyHash tests", () => {
     });
   });
 
-  describe("ToData/FromData PubKeyHash tests", () => {
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataPubKeyHash,
-      LbV1.fromDataPubKeyHash,
+  describe("IsPlutusData PubKeyHash tests", () => {
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataPubKeyHash,
       pubKeyHash2,
       { name: "Bytes", fields: pubKeyHash2 },
     );
-    TestUtils.toDataAndFromDataIt(
-      LbV1.toDataPubKeyHash,
-      LbV1.fromDataPubKeyHash,
+    TestUtils.isPlutusDataIt(
+      LbV1.isPlutusDataPubKeyHash,
       pubKeyHash1,
       { name: "Bytes", fields: pubKeyHash1 },
     );
@@ -160,9 +158,8 @@ describe("PubKeyHash tests", () => {
         fc.property(
           fcPubKeyHash(),
           (data) => {
-            TestUtils.toDataFromDataRoundTrip(
-              LbV1.toDataPubKeyHash,
-              LbV1.fromDataPubKeyHash,
+            TestUtils.isPlutusDataRoundTrip(
+              LbV1.isPlutusDataPubKeyHash,
               data,
             );
           },

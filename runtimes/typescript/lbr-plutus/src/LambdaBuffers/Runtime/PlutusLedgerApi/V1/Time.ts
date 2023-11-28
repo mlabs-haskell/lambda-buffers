@@ -16,8 +16,7 @@ export type POSIXTime = Integer;
 
 export const eqPOSIXTime = LbPrelude.eqInteger;
 export const jsonPOSIXTime = LbPrelude.jsonInteger;
-export const toDataPOSIXTime = LbPreludeInstances.toDataInteger;
-export const fromDataPOSIXTime = LbPreludeInstances.fromDataInteger;
+export const isPlutusDataPOSIXTime = LbPreludeInstances.isPlutusDataInteger;
 
 /**
  * {@link POSIXTimeRange} is an {@link Interval} of {@link POSIXTime}.
@@ -28,7 +27,6 @@ export type POSIXTimeRange = Interval<POSIXTime>;
 
 export const eqPOSIXTimeRange = LbInterval.eqInterval(eqPOSIXTime);
 export const jsonPOSIXTimeRange = LbInterval.jsonInterval(jsonPOSIXTime);
-export const toDataPOSIXTimeRange = LbInterval.toDataInterval(toDataPOSIXTime);
-export const fromDataPOSIXTimeRange = LbInterval.fromDataInterval(
-  fromDataPOSIXTime,
+export const isPlutusDataPOSIXTimeRange = LbInterval.isPlutusDataInterval(
+  isPlutusDataPOSIXTime,
 );
