@@ -37,6 +37,9 @@ pkgs:
 , # `devShellTools` are extra derivations to append to the `buildInputs` for
   # the shell (see the variable `shell`)
   devShellTools ? [ ]
+, # `testTools` are extra derivations to append to the `buildInputs` for
+  # the tests (see the variable `test`)
+  testTools ? [ ]
 , ...
 }:
 let
@@ -188,6 +191,7 @@ let
           rm -rf $out
           touch $out
         '';
+      buildInputs = node2nixDevelopAttrs.package.buildInputs ++ testTools;
     };
 
 in
