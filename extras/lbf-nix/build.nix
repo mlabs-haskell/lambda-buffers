@@ -2,6 +2,7 @@ _: {
   perSystem = { pkgs, config, ... }:
     let
       lbg-haskell = "${config.packages.lbg-haskell}/bin/lbg-haskell";
+      # lbg-typescript = "${config.packages.lbg-typescript}/bin/lbg-typescript";
       lbg-plutarch = "${config.packages.lbg-plutarch}/bin/lbg-plutarch";
       lbg-purescript = "${config.packages.lbg-purescript}/bin/lbg-purescript";
 

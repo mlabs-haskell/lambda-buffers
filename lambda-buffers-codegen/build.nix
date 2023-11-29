@@ -45,6 +45,9 @@ _:
         lbg-plutarch = pkgs.writeShellScriptBin "lbg-plutarch" ''
           ${config.packages.lbg}/bin/lbg gen-plutarch $@
         '';
+        lbg-typescript = pkgs.writeShellScriptBin "lbg-typescript" ''
+          ${config.packages.lbg}/bin/lbg gen-typescript $@
+        '';
 
         codegen-configs = pkgs.stdenv.mkDerivation {
           name = "codegen-configs";

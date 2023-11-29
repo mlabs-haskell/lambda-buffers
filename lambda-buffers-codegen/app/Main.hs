@@ -6,6 +6,7 @@ import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import LambdaBuffers.Codegen.Cli.GenPlutarch qualified as Plutarch
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
+import LambdaBuffers.Codegen.Cli.GenTypescript qualified as Typescript
 import Options.Applicative (
   InfoMod,
   Parser,
@@ -35,6 +36,7 @@ import Options.Applicative.NonEmpty (some1)
 data Command
   = GenHaskell Haskell.GenOpts
   | GenPurescript Purescript.GenOpts
+  | GenTypescript Typescript.GenOpts
   | GenPlutarch Plutarch.GenOpts
 
 genOptsP :: Parser GenOpts
@@ -102,6 +104,19 @@ purescriptGenOptsP =
       )
     <*> genOptsP
 
+typescriptGenOptsP :: Parser Typescript.GenOpts
+typescriptGenOptsP =
+  Typescript.MkGenOpts
+    <$> many
+      ( strOption
+          ( long "config"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help "Configuration file for the Typescript Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
+          )
+      )
+    <*> genOptsP
+
 plutarchGenOptsP :: Parser Plutarch.GenOpts
 plutarchGenOptsP =
   Plutarch.MkGenOpts
@@ -139,6 +154,12 @@ commandP =
             (mkProgDesc "Purescript")
         )
       <> command
+        "gen-typescript"
+        ( info
+            (GenTypescript <$> (helper *> typescriptGenOptsP))
+            (mkProgDesc "Typescript")
+        )
+      <> command
         "gen-plutarch"
         ( info
             (GenPlutarch <$> (helper *> plutarchGenOptsP))
@@ -155,4 +176,5 @@ main = do
   case cmd of
     GenHaskell opts -> Haskell.gen opts
     GenPurescript opts -> Purescript.gen opts
+    GenTypescript opts -> Typescript.gen opts
     GenPlutarch opts -> Plutarch.gen opts
