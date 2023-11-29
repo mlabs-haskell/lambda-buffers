@@ -31,6 +31,12 @@ pkgs:
   dependencies ? [ ]
 
 , nodejs ? pkgs.nodejs-18_x
+, # `devShellHook` is the shell commands to run _before_  entering the shell
+  # (see the variable `shell`)
+  devShellHook ? ""
+, # `devShellTools` are extra derivations to append to the `buildInputs` for
+  # the shell (see the variable `shell`)
+  devShellTools ? [ ]
 , ...
 }:
 let
@@ -143,7 +149,11 @@ let
           # Note: `node2nix` sets `$NODE_PATH` s.t. it is a single path.
           echo 'Creating a symbolic link from `$NODE_PATH` to `node_modules`...'
           ln -snf "$NODE_PATH" node_modules
+
+          # Run the provided `devShellHook`
+          ${devShellHook}
         '';
+      buildInputs = node2nixDevelopAttrs.shell.buildInputs ++ devShellTools;
     };
 
   # Creates a tarball of `project` using `npm pack` and puts it in the nix
