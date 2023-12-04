@@ -58,7 +58,7 @@ showOneLine :: Doc a -> String
 showOneLine d = (renderShowS . layoutPretty (defaultLayoutOptions {layoutPageWidth = Unbounded}) $ d) ""
 
 prettyContext :: ModuleName SourceInfo -> SourceInfo -> Doc ann
-prettyContext currentModuleName sourceInfo = brackets (pretty sourceInfo) <> brackets ("module" <+> pretty currentModuleName)
+prettyContext currentModuleName sourceInfo = pretty sourceInfo <> ":" <+> brackets ("module" <+> pretty currentModuleName)
 
 data ImportedNotFound
   = MkImportedNotFound

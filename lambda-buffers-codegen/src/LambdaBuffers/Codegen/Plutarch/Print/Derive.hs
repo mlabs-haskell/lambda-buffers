@@ -12,7 +12,6 @@ import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as HsLamVal
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as HsTyDef
-import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImplPlutarch, deriveToPlutusDataImplPlutarch)
 import LambdaBuffers.Codegen.Plutarch.Print.LamVal qualified as PlLamVal
@@ -109,19 +108,20 @@ printDerivePIsData _mn _iTyDefs mkInstanceDoc _ty = do
   let instanceDoc = mkInstanceDoc (align $ vsep [pdataImpl, pfromDataImpl])
   return instanceDoc
 
-lvPlutusDataBuiltinsForPlutusType :: Map LV.ValueName HsSyntax.QValName
-lvPlutusDataBuiltinsForPlutusType =
-  Map.fromList
-    [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
-    , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPlutusType"))
-    , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
-    , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
-    , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
-    , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
-    , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
-    , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
-    , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
-    ]
+lvPlutusDataBuiltinsForPlutusType :: LV.PrintRead HsSyntax.QValName
+lvPlutusDataBuiltinsForPlutusType = LV.MkPrintRead $ \(_ty, refName) ->
+  Map.lookup refName $
+    Map.fromList
+      [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
+      , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPlutusType"))
+      , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
+      , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
+      , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
+      , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
+      , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
+      , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
+      , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
+      ]
 
 printDerivePlutusType :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDerivePlutusType mn iTyDefs _mkInstanceDoc ty = do
@@ -196,19 +196,20 @@ printPlutusTypeInstanceDef ty implDefDoc = do
 printValueDef :: HsSyntax.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = HsSyntax.printHsValName valName <+> equals <+> valDoc
 
-lvPlutusDataBuiltinsForPTryFrom :: Map LV.ValueName HsSyntax.QValName
-lvPlutusDataBuiltinsForPTryFrom =
-  Map.fromList
-    [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
-    , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPTryFrom"))
-    , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
-    , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
-    , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
-    , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
-    , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
-    , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
-    , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
-    ]
+lvPlutusDataBuiltinsForPTryFrom :: LV.PrintRead HsSyntax.QValName
+lvPlutusDataBuiltinsForPTryFrom = LV.MkPrintRead $ \(_ty, refName) ->
+  Map.lookup refName $
+    Map.fromList
+      [ ("toPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "toPlutusData"))
+      , ("fromPlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfromPlutusDataPTryFrom"))
+      , ("casePlutusData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pcasePlutusData"))
+      , ("integerData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "integerData"))
+      , ("constrData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "constrData"))
+      , ("listData", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "listData"))
+      , ("succeedParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "psucceedParse"))
+      , ("failParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pfailParse"))
+      , ("bindParse", (HsSyntax.MkCabalPackageName "lbr-plutarch", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", HsSyntax.MkValueName "pbindParse"))
+      ]
 
 {- | PTryFrom instance implementation.
 

@@ -15,7 +15,7 @@ getLbcFromEnvironment = do
   mayLbc <- lookupEnv lbcVar
   maybe
     ( do
-        logError $ lbcVar <> " environment variable is missing"
+        logError "" $ lbcVar <> " environment variable is missing"
         exitFailure
     )
     return
@@ -26,7 +26,7 @@ getLbgFromEnvironment = do
   mayLbg <- lookupEnv lbgVar
   maybe
     ( do
-        logError $ lbgVar <> " environment variable is missing"
+        logError "" $ lbgVar <> " environment variable is missing"
         exitFailure
     )
     return

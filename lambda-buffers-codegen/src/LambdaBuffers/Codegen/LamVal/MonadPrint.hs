@@ -1,12 +1,10 @@
-module LambdaBuffers.Codegen.LamVal.MonadPrint (MonadPrint, runPrint, freshArg, resolveRef, importValue) where
+module LambdaBuffers.Codegen.LamVal.MonadPrint (MonadPrint, PrintRead (MkPrintRead), runPrint, freshArg, resolveRef, importValue) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (Except, runExcept)
 import Control.Monad.RWS (RWST (runRWST))
 import Control.Monad.RWS.Class (MonadRWS, asks, gets, modify)
-import Data.Map (Map)
-import Data.Map qualified as Map
 import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -17,9 +15,8 @@ import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
 newtype PrintRead qvn = MkPrintRead
-  { builtins :: Map ValueName qvn
+  { builtins :: Ref -> Maybe qvn
   }
-  deriving stock (Show)
 
 data PrintState qvn = MkPrintState
   { currentVar :: Int
@@ -36,9 +33,9 @@ type MonadPrint m qvn = (MonadRWS (PrintRead qvn) () (PrintState qvn) m, MonadEr
 
 type PrintM qvn = RWST (PrintRead qvn) () (PrintState qvn) (Except PrintError)
 
-runPrint :: Ord qvn => Map ValueName qvn -> PrintM qvn (Doc ann) -> Either PrintError (Doc ann, Set qvn)
+runPrint :: Ord qvn => PrintRead qvn -> PrintM qvn (Doc ann) -> Either PrintError (Doc ann, Set qvn)
 runPrint lamValBuiltins printer =
-  let p = runExcept $ runRWST printer (MkPrintRead lamValBuiltins) (MkPrintState 0 mempty)
+  let p = runExcept $ runRWST printer lamValBuiltins (MkPrintState 0 mempty)
    in case p of
         Left err -> Left err
         Right (doc, st, _) -> Right (doc, valueImports st)
@@ -61,8 +58,8 @@ importValue qvn = modify (\(MkPrintState curr imps) -> MkPrintState curr (Set.in
  TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
 -}
 resolveRef :: MonadPrint m qvn => Ref -> m qvn
-resolveRef (_, refName) = do
+resolveRef ref = do
   bs <- asks builtins
-  case Map.lookup refName bs of
-    Nothing -> throwInternalError $ "LamVal builtin mapping for " <> show refName <> " not configured."
+  case bs ref of
+    Nothing -> throwInternalError $ "LamVal builtin mapping for " <> show (snd ref :: ValueName) <> " instantiated with types " <> show (fst ref) <> " not configured."
     Just qvn -> return qvn

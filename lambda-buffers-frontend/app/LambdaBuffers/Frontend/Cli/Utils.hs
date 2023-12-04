@@ -1,5 +1,6 @@
 module LambdaBuffers.Frontend.Cli.Utils (logInfo, logError, logFrontendError, logCompilerError, logCodegenError, toCodegenCliModuleName, checkExists, FileOrDir (..)) where
 
+import Data.Foldable (for_)
 import Data.List (intercalate)
 import Data.Text qualified as Text
 import LambdaBuffers.Frontend (FrontendError)
@@ -8,20 +9,22 @@ import LambdaBuffers.Frontend.Syntax qualified as Frontend
 import System.Directory (doesPathExist)
 import System.Exit (exitFailure)
 
-logInfo :: String -> IO ()
-logInfo msg = putStrLn $ "[lbf][INFO] " <> msg
+logInfo :: FilePath -> String -> IO ()
+logInfo "" msg = putStrLn $ msg <> " [INFO]"
+logInfo fp msg = for_ (lines msg) $ \l -> putStrLn $ fp <> ": " <> l <> " [INFO]"
 
-logError :: String -> IO ()
-logError msg = putStrLn $ "[lbf][ERROR] " <> msg
+logError :: FilePath -> String -> IO ()
+logError "" msg = putStrLn $ msg <> " [ERROR]"
+logError fp msg = for_ (lines msg) $ \l -> putStrLn $ fp <> ": " <> l <> " [ERROR]"
 
 logFrontendError :: FrontendError -> IO ()
-logFrontendError err = putStrLn $ "[lbf][ERROR]" <> show err
+logFrontendError err = putStrLn $ show err <> " [ERROR]"
 
-logCompilerError :: String -> IO ()
-logCompilerError msg = putStrLn $ "[lbf][ERROR][COMPILER]" <> msg
+logCompilerError :: FilePath -> String -> IO ()
+logCompilerError lbcFp msg = putStrLn $ lbcFp <> ":" <> msg <> " [ERROR]"
 
-logCodegenError :: String -> IO ()
-logCodegenError msg = putStrLn $ "[lbf][ERROR][CODEGEN]" <> msg
+logCodegenError :: FilePath -> String -> IO ()
+logCodegenError lbgFp msg = putStrLn $ lbgFp <> ":" <> msg <> " [ERROR]"
 
 -- NOTE(bladyjoker): Consider using the proto to supply requested modules.
 toCodegenCliModuleName :: Frontend.ModuleName () -> String
@@ -35,7 +38,7 @@ checkExists fileOrDir purpose path = do
   if exists
     then return ()
     else do
-      logError $
+      logError "" $
         "The provided "
           <> purpose
           <> " "
