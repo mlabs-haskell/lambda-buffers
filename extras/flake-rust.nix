@@ -1,6 +1,6 @@
 pkgs:
 
-{ crane, src, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ] }:
+{ crane, src, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
 let
   rustWithTools = pkgs.rust-bin.stable.latest.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" "rust-src" ];
@@ -70,6 +70,7 @@ in
 
   checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
     inherit cargoArtifacts;
+    nativeBuildInputs = testTools;
   });
 
   checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // {
