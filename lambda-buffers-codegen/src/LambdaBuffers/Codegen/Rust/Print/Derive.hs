@@ -5,6 +5,7 @@ import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
+import Data.Set qualified as Set
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
@@ -52,7 +53,7 @@ eqTraitMethodName :: R.ValueName
 eqTraitMethodName = R.MkValueName "eq"
 
 eqTraitMethodArgs :: [(R.ValueName, R.QTyName)]
-eqTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self"), (R.MkValueName "other", R.qBuiltin R.MkTyName "&Self")]
+eqTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Self"), (R.MkValueName "other", R.qBuiltin R.MkTyName "Self")]
 
 eqTraitMethodReturns :: R.QTyName
 eqTraitMethodReturns = R.qBuiltin R.MkTyName "bool"
@@ -60,8 +61,8 @@ eqTraitMethodReturns = R.qBuiltin R.MkTyName "bool"
 lvEqBuiltinsBase :: Map LV.ValueName R.QValName
 lvEqBuiltinsBase =
   Map.fromList
-    [ ("eq", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "eq")
-    , ("and", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "and")
+    [ ("eq", R.qLibRef R.MkValueName "lbr-prelude" "lamval" "eq")
+    , ("and", R.qLibRef R.MkValueName "lbr-prelude" "lamval" "and")
     , ("true", R.qBuiltin R.MkValueName "true")
     , ("false", R.qBuiltin R.MkValueName "false")
     ]
@@ -85,14 +86,14 @@ printDeriveEqBase _ _ mkInstance _ = return $ mkInstance mempty
 lvPlutusDataBuiltins :: Map LV.ValueName R.QValName
 lvPlutusDataBuiltins =
   Map.fromList
-    [ ("toPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::PlutusData" "to_plutus_data")
-    , ("fromPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::PlutusData" "from_plutus_data")
+    [ ("toPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::IsPlutusData" "to_plutus_data")
+    , ("fromPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::IsPlutusData" "from_plutus_data")
     , ("casePlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "case_plutus_data")
     , ("integerData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::integer")
-    , ("constrData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::constr")
+    , ("constrData", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "constr")
     , ("listData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::list")
     , ("succeedParse", R.qLibRef R.MkValueName "std" "result" "Result::Ok")
-    , ("failParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "fail_parse")
+    , ("failParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "fail_parse()")
     , ("bindParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "bind_parse")
     ]
 
@@ -100,7 +101,7 @@ toPlutusDataTraitMethodName :: R.ValueName
 toPlutusDataTraitMethodName = R.MkValueName "to_plutus_data"
 
 toPlutusDataTraitMethodArgs :: [(R.ValueName, R.QTyName)]
-toPlutusDataTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self")]
+toPlutusDataTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Self")]
 
 toPlutusDataTraitMethodReturns :: R.QTyName
 toPlutusDataTraitMethodReturns =
@@ -139,6 +140,7 @@ printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
 
 printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
 printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
+  let extraDeps = Set.singleton (R.qLibRef R.MkValueName "serde_json" "" "Value")
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
   (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printValueE toPlutusDataValE)
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
@@ -162,7 +164,7 @@ printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
           )
   return
     ( instanceDoc
-    , impsA <> impsB
+    , impsA <> impsB <> extraDeps
     )
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
@@ -172,7 +174,7 @@ lvJsonBuiltins =
     [ ("toJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "to_json")
     , ("fromJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "from_json")
     , ("jsonObject", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_object")
-    , ("jsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "sum_constructor")
+    , ("jsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_constructor")
     , ("jsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_array")
     , ("caseJsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_constructor")
     , ("caseJsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_array")
@@ -187,11 +189,11 @@ toJsonTraitMethodName :: R.ValueName
 toJsonTraitMethodName = R.MkValueName "to_json"
 
 toJsonTraitMethodArgs :: [(R.ValueName, R.QTyName)]
-toJsonTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "&Self")]
+toJsonTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Self")]
 
 toJsonTraitMethodReturns :: R.QTyName
 toJsonTraitMethodReturns =
-  R.qLibRef R.MkTyName "std" "result" "Result<serde_json::Value, lbr_prelude::error::Error>"
+  R.qLibRef R.MkTyName "serde_json" "" "Value"
 
 fromJsonTraitMethodName :: R.ValueName
 fromJsonTraitMethodName = R.MkValueName "from_json"
@@ -239,15 +241,26 @@ printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
     , impsA <> impsB
     )
 
+{- | Print a trait method implementation
+ To allow using a `LamE` in the body of the method, capturing the arguments,
+ we're adding these
+
+ ```rust
+ fn <fnName>(<arg1>: <tyName1, <arg2>: <tyName2>) -> <returns> {
+  <implBody>(&<arg1>)(&<arg2>)
+ }
+ ```
+-}
 printTraitMethod ::
   R.ValueName -> [(R.ValueName, R.QTyName)] -> R.Qualified R.TyName -> Doc ann -> Doc ann
 printTraitMethod fnName args returns implDoc =
   let argsWithTypes =
-        encloseSep lparen rparen comma $ (\(arg, ty) -> R.printRsValName arg <> colon <+> R.printRsQTyName ty) <$> args
+        encloseSep lparen rparen comma $ (\(arg, ty) -> R.printRsValName arg <> colon <+> "&'a " <> R.printRsQTyName ty) <$> args
       argsLst = hcat $ parens . R.printRsValName . fst <$> args
    in indent 4 $
         "fn"
           <+> R.printRsValName fnName
+            <> "<'a>"
             <> argsWithTypes
           <+> "->"
           <+> R.printRsQTyName returns

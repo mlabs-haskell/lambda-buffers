@@ -49,7 +49,7 @@ text = testCase "Print Text value" $ do
 --   , _ctxModule :: PC.Module -- TODO(bladyjoker): Turn into a `ModuleName` and do a lookup on the CI.
 --   , _ctxTyImports :: Set PC.QTyName
 --   , _ctxOpaqueTyImports :: Set qtn
---   , _ctxClassImports :: Set qcn
+--   , _ctxTraitImports :: Set qcn
 --   , _ctxRuleImports :: Set (PC.InfoLess PC.ModuleName)
 --   , _ctxTyExports :: Set (PC.InfoLess PC.TyName)
 --   , _ctxConfig :: Config qtn qcn
@@ -135,6 +135,6 @@ rsPrintModuleEnv :: MonadPrint m => RsPrint.PrintModuleEnv m ann
 rsPrintModuleEnv =
   RsPrint.PrintModuleEnv
     RsSyntax.printModName
-    RsDerive.rsClassImplPrinters
+    RsDerive.rsTraitImplPrinters
     RsPrint.printTyDef
     ["no_implicit_prelude"]

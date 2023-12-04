@@ -61,16 +61,16 @@ fn impl_struct(
         let key = &field.ident;
         let key_str = key.as_ref().unwrap().to_string();
         quote! {
-            dict.insert(#key_str.to_owned(), self.#key.to_json()?);
+            dict.insert(#key_str.to_owned(), self.#key.to_json());
         }
     });
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+        fn to_json(&self) -> serde_json::Value {
             let mut dict = serde_json::Map::new();
             #(#dict_insert)*
 
-            Ok(serde_json::Value::Object(dict))
+            serde_json::Value::Object(dict)
         }
     };
 
@@ -127,10 +127,10 @@ fn impl_tuple(
     let from_json_indices = to_json_indices.clone();
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-            Ok(serde_json::Value::Array(vec![
-                #(self.#to_json_indices.to_json()?,)*
-            ]))
+        fn to_json(&self) -> serde_json::Value {
+            serde_json::Value::Array(vec![
+                #(self.#to_json_indices.to_json(),)*
+            ])
         }
     };
 
@@ -160,7 +160,7 @@ fn impl_tuple(
 /// The enclosed field must implement the `Json` trait
 fn impl_newtype() -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+        fn to_json(&self) -> serde_json::Value {
             self.0.to_json()
         }
     };
@@ -198,7 +198,7 @@ fn impl_enum(
                 quote! {
                     #ident::#variant_ident( #(#fields),* ) =>
                         lbr_prelude::json::json_constructor(#variant_str, &vec![
-                           #(#fields_2.to_json()?,)*
+                           #(#fields_2.to_json(),)*
                         ]),
                 }
             }
@@ -210,10 +210,10 @@ fn impl_enum(
     });
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-            Ok(match self {
+        fn to_json(&self) -> serde_json::Value {
+            match self {
                 #(#to_json_match_arms)*
-            })
+            }
         }
     };
 

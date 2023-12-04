@@ -14,7 +14,7 @@ fn main() {
         Value::Number(Number::from(15)),
     ]);
 
-    let actual = data.to_json().unwrap();
+    let actual = data.to_json();
 
     assert_eq!(actual, expected);
 }

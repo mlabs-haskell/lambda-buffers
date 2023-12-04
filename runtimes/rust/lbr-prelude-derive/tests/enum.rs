@@ -25,9 +25,9 @@ fn main() {
     );
     let expected2 = json_constructor("Nothing", &Vec::new());
 
-    let actual0 = data0.to_json().unwrap();
-    let actual1 = data1.to_json().unwrap();
-    let actual2 = data2.to_json().unwrap();
+    let actual0 = data0.to_json();
+    let actual1 = data1.to_json();
+    let actual2 = data2.to_json();
 
     assert_eq!(actual0, expected0);
     assert_eq!(actual1, expected1);

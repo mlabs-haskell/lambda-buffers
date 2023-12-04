@@ -12,17 +12,19 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Rust.Print.Syntax (
   TyDefKw (EnumTyDef, StructTyDef, SynonymTyDef),
+  encloseGenerics,
   printCtorName,
   printFieldName,
   printRsQTraitName,
   printRsQTyName,
   printTyArg,
   printTyName,
+  printTyRef,
   printTyVar,
  )
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, align, braces, brackets, colon, comma, encloseSep, equals, group, hardline, langle, parens, punctuate, rangle, semi, sep, vsep, (<+>))
+import Prettyprinter (Doc, align, braces, brackets, colon, comma, equals, group, hardline, parens, punctuate, semi, sep, vsep, (<+>))
 
 {- | Prints the type definition.
 
@@ -151,15 +153,3 @@ printTyAppTopLevel (PC.TyApp f args _) =
   let fDoc = printTyInner f
       argsDoc = printTyInner <$> args
    in group $ fDoc <> encloseGenerics argsDoc
-
-encloseGenerics :: [Doc ann] -> Doc ann
-encloseGenerics args =
-  if null args
-    then mempty
-    else encloseSep langle rangle comma args
-
-printTyRef :: PC.TyRef -> Doc ann
-printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) =
-  let qTyName = R.fromLbForeignRef fr
-   in R.printRsQTyName qTyName

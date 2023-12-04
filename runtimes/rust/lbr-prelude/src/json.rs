@@ -13,7 +13,7 @@ pub mod lamval;
 
 /// Trait that lbf-prelude::json class maps to
 pub trait Json {
-    fn to_json(&self) -> Result<Value, Error>;
+    fn to_json(&self) -> Value;
 
     fn from_json(value: &Value) -> Result<Self, Error>
     where
@@ -23,11 +23,11 @@ pub trait Json {
 //  lbf-prelude::json instance rule implementations
 
 impl Json for BigInt {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         let num = serde_json::Number::from_str(&self.to_string())
-            .map_err(|_| Error::InternalError("Failed to convert BigInt to String".to_owned()))?;
+            .expect("Failed to convert BigInt to json Number");
 
-        Ok(Value::Number(num))
+        Value::Number(num)
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -49,8 +49,8 @@ impl Json for BigInt {
 }
 
 impl Json for bool {
-    fn to_json(&self) -> Result<Value, Error> {
-        Ok(Value::Bool(*self))
+    fn to_json(&self) -> Value {
+        Value::Bool(*self)
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -66,7 +66,7 @@ impl Json for bool {
 }
 
 impl Json for char {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         String::from(*self).to_json()
     }
 
@@ -88,7 +88,7 @@ impl Json for char {
 }
 
 impl Json for Vec<u8> {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         BASE64.encode(self).to_json()
     }
 
@@ -106,8 +106,8 @@ impl Json for Vec<u8> {
 }
 
 impl Json for String {
-    fn to_json(&self) -> Result<Value, Error> {
-        Ok(Value::String(self.to_owned()))
+    fn to_json(&self) -> Value {
+        Value::String(self.to_owned())
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -126,10 +126,10 @@ impl<T> Json for Option<T>
 where
     T: Json,
 {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         match self {
-            Some(val) => Ok(json_constructor("Just", &vec![val.to_json()?])),
-            None => Ok(json_constructor("Nothing", &Vec::with_capacity(0))),
+            Some(val) => json_constructor("Just", vec![val.to_json()]),
+            None => json_constructor("Nothing", Vec::with_capacity(0)),
         }
     }
 
@@ -170,10 +170,10 @@ where
     T: Json,
     E: Json,
 {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         match self {
-            Ok(val) => Ok(json_constructor("Right", &vec![val.to_json()?])),
-            Err(val) => Ok(json_constructor("Left", &vec![val.to_json()?])),
+            Ok(val) => json_constructor("Right", vec![val.to_json()]),
+            Err(val) => json_constructor("Left", vec![val.to_json()]),
         }
     }
 
@@ -213,13 +213,10 @@ impl<T> Json for Vec<T>
 where
     T: Json,
 {
-    fn to_json(&self) -> Result<Value, Error> {
-        let values = self
-            .iter()
-            .map(|val| val.to_json())
-            .collect::<Result<Vec<Value>, Error>>()?;
+    fn to_json(&self) -> Value {
+        let values = self.iter().map(|val| val.to_json()).collect();
 
-        Ok(Value::Array(values))
+        Value::Array(values)
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -241,13 +238,10 @@ impl<T> Json for BTreeSet<T>
 where
     T: Json + Eq + Ord,
 {
-    fn to_json(&self) -> Result<Value, Error> {
-        let values = self
-            .iter()
-            .map(|val| val.to_json())
-            .collect::<Result<Vec<Value>, Error>>()?;
+    fn to_json(&self) -> Value {
+        let values = self.iter().map(|val| val.to_json()).collect();
 
-        Ok(Value::Array(values))
+        Value::Array(values)
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -275,13 +269,13 @@ where
     K: Json + Eq + Ord,
     V: Json,
 {
-    fn to_json(&self) -> Result<Value, Error> {
+    fn to_json(&self) -> Value {
         let values = self
             .iter()
-            .map(|(key, val)| Ok(Value::Array(vec![key.to_json()?, val.to_json()?])))
-            .collect::<Result<Vec<Value>, Error>>()?;
+            .map(|(key, val)| Value::Array(vec![key.to_json(), val.to_json()]))
+            .collect();
 
-        Ok(Value::Array(values))
+        Value::Array(values)
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -305,8 +299,8 @@ where
 }
 
 impl Json for () {
-    fn to_json(&self) -> Result<Value, Error> {
-        Ok(Value::Null)
+    fn to_json(&self) -> Value {
+        Value::Null
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -322,8 +316,8 @@ impl Json for () {
 }
 
 impl Json for Value {
-    fn to_json(&self) -> Result<Value, Error> {
-        Ok(self.clone())
+    fn to_json(&self) -> Value {
+        self.clone()
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -336,8 +330,8 @@ where
     A: Json,
     B: Json,
 {
-    fn to_json(&self) -> Result<Value, Error> {
-        Ok(Value::Array(vec![self.0.to_json()?, self.1.to_json()?]))
+    fn to_json(&self) -> Value {
+        Value::Array(vec![self.0.to_json(), self.1.to_json()])
     }
 
     fn from_json(value: &Value) -> Result<Self, Error> {
@@ -460,10 +454,13 @@ pub fn json_field(name: &str, obj: &serde_json::Map<String, Value>) -> Result<Va
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 ///
 /// LamVal Json builtin
-pub fn json_constructor(ctor_name: &str, ctor_product: &Vec<Value>) -> Value {
+pub fn json_constructor(ctor_name: &str, ctor_product: impl AsRef<Vec<Value>>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("name".to_owned(), Value::String(ctor_name.to_owned()));
-    obj.insert("fields".to_owned(), Value::Array(ctor_product.clone()));
+    obj.insert(
+        "fields".to_owned(),
+        Value::Array(ctor_product.as_ref().clone()),
+    );
 
     Value::Object(obj)
 }

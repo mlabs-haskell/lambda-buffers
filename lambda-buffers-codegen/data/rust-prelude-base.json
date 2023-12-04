@@ -36,9 +36,7 @@
       "String"
     ],
     "Prelude.Char": [
-      "std",
-      "char",
-      "Char"
+      "char"
     ],
     "Prelude.Integer": [
       "num_bigint",

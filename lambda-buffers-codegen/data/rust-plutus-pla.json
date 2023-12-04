@@ -97,12 +97,12 @@
     ],
     "Plutus.V1.RedeemerHash": [
       "plutus-ledger-api",
-      "v1::redeemer",
-      "RedeemerHash"
+      "v1::crypto",
+      "LedgerBytes"
     ],
     "Plutus.V1.ScriptHash": [
       "plutus-ledger-api",
-      "v1::scripts",
+      "v1::script",
       "ScriptHash"
     ],
     "Plutus.V1.TxInInfo": [

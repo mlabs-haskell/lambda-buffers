@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qLibRef, qBuiltin) where
+module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qLibRef, qBuiltin, printTyRef, qualifiedEntity, crateNameToCargoText, encloseGenerics) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -6,7 +6,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), colon, enclose, lparen, rparen)
+import Prettyprinter (Doc, Pretty (pretty), colon, comma, enclose, encloseSep, group, langle, lparen, rangle, rparen)
 
 data Qualified a
   = Qualified'Builtin a
@@ -27,6 +27,10 @@ qualifiedToCrate :: Qualified a -> Maybe CrateName
 qualifiedToCrate (Qualified'Builtin _) = Nothing
 qualifiedToCrate (Qualified'LibRef c _ _) = Just c
 
+qualifiedEntity :: Qualified a -> a
+qualifiedEntity (Qualified'Builtin a) = a
+qualifiedEntity (Qualified'LibRef _ _ a) = a
+
 newtype CrateName = MkCrateName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
 newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
@@ -44,8 +48,13 @@ fromLbModuleName mn = MkModuleName $ Text.intercalate "::" ([Text.replace "-" "_
 crateFromLbModuleName :: PC.ModuleName -> CrateName
 crateFromLbModuleName mn = MkCrateName $ Text.intercalate "_" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
 
+-- | Converts a crate name to how it appears in the Cargo manifest file
+crateNameToCargoText :: CrateName -> Text
+crateNameToCargoText (MkCrateName cpn) = cpn
+
+-- | Converts a crate name to how it appears in the Rust code
 crateNameToText :: CrateName -> Text
-crateNameToText (MkCrateName cpn) = cpn
+crateNameToText (MkCrateName cpn) = Text.replace "-" "_" cpn
 
 fromLbForeignRef :: PC.ForeignRef -> QTyName
 fromLbForeignRef fr =
@@ -121,3 +130,15 @@ printTyName (PC.TyName n _) = pretty n
 
 doubleColon :: Doc ann
 doubleColon = colon <> colon
+
+printTyRef :: PC.TyRef -> Doc ann
+printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
+printTyRef (PC.ForeignI fr) =
+  let qTyName = fromLbForeignRef fr
+   in printRsQTyName qTyName
+
+encloseGenerics :: [Doc ann] -> Doc ann
+encloseGenerics args =
+  if null args
+    then mempty
+    else encloseSep langle rangle comma args
