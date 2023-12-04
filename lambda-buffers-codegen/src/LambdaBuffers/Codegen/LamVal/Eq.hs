@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl) where
+module LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl, deriveNeqImpl) where
 
 import Control.Exception qualified as Exception
 import Data.Map.Ordered qualified as OMap
@@ -95,6 +95,16 @@ eqListHelper lxs rxs tys =
 deriveEqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
 deriveEqImpl mn tydefs = deriveImpl mn tydefs eqSum eqProduct eqRecord
 
+-- | Essentially, takes the 'deriveEqImpl' and sticks a not in front of it.
+deriveNeqImpl :: PC.ModuleName -> PC.TyDefs -> PC.Ty -> Either P.InternalError ValueE
+deriveNeqImpl mn tydefs =
+  deriveImpl
+    mn
+    tydefs
+    (\qsum -> LamE (\l -> LamE (\r -> notE @ (eqSum qsum @ l @ r))))
+    (\qprod -> LamE (\l -> LamE (\r -> notE @ (eqProduct qprod @ l @ r))))
+    (\qrec -> LamE (\l -> LamE (\r -> notE @ (eqRecord qrec @ l @ r))))
+
 -- | Domain value references
 
 -- | `eq :: a -> a -> Bool`
@@ -112,3 +122,7 @@ trueE = RefE ([], "true")
 -- | `and :: Bool -> Bool -> Bool`
 andE :: ValueE
 andE = RefE ([], "and")
+
+-- | `not :: Bool -> Bool`
+notE :: ValueE
+notE = RefE ([], "not")
