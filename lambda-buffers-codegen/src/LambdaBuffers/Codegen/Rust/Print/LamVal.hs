@@ -143,14 +143,17 @@ printFieldE ((_, _), fieldN) recVal = do
    <letCont>
 -}
 printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
-printLetE ((_, tyN), fields) prodVal letCont = do
+printLetE (_, fields) prodVal letCont = do
   letValDoc <- printValueE prodVal
   args <- for fields (const LV.freshArg)
   argDocs <- for args printValueE
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
-  let prodCtorDoc = R.printMkCtor (withInfo tyN)
-  return $ "let" <+> prodCtorDoc <> encloseSep lparen rparen comma argDocs <+> equals <+> letValDoc <> semi <> line <> bodyDoc
+  let letDocs = printLet letValDoc <$> zip argDocs [0 :: Int ..]
+  return $ vsep letDocs <> line <> bodyDoc
+  where
+    printLet :: Doc ann -> (Doc ann, Int) -> Doc ann
+    printLet letValDoc (arg, i) = "let" <+> arg <+> equals <+> letValDoc <> dot <> pretty i <> semi
 
 printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printOtherCase otherCase = do
