@@ -163,6 +163,24 @@ _:
           }} "$@";
         '';
 
+        lbf-plutus-to-typescript = pkgs.writeShellScriptBin "lbf-plutus-to-typescript" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir -p autogen;
+          mkdir -p .work;
+          ${config.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
+            gen = "${config.packages.lbg-typescript}/bin/lbg-typescript";
+            gen-classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+            gen-dir = "autogen";
+            gen-opts = [
+              "--config=${config.packages.codegen-configs}/typescript-prelude-base.json"
+              "--config=${config.packages.codegen-configs}/typescript-plutus.json"
+            ];
+            work-dir = ".work";
+          }} "$@";
+        '';
+
       };
 
 
