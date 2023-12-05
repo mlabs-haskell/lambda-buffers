@@ -141,12 +141,7 @@
       [
         "cardano-transaction-lib",
         "Ctl.Internal.ToData",
-        "ToData"
-      ],
-      [
-        "cardano-transaction-lib",
-        "Ctl.Internal.FromData",
-        "FromData"
+        "IsPlutusData"
       ]
     ]
   }

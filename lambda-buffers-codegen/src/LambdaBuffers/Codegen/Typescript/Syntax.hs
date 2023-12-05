@@ -46,8 +46,11 @@ newtype ValueName = MkValueName Text deriving stock (Eq, Ord, Show, Generic)
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
 
+-- Annoyingly, these must be valid Javascript identifiers which cannot have a
+-- @.@ in them (as is the usual Haskell syntax for importing qualified
+-- modules), so we instead replace the @.@ with a @$@.
 fromLbModuleName :: PC.ModuleName -> ModuleName
-fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
+fromLbModuleName mn = MkModuleName $ Text.intercalate "$" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
 
 pkgNameToText :: PackageName -> Text
 pkgNameToText (MkPackageName pkg) = pkg

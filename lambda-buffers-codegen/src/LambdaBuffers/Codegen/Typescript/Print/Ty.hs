@@ -35,10 +35,7 @@ printTyAbs tyN (PC.TyAbs args body _) = do
 
 For the above examples it prints
 
-Foo'MkFoo a | Foo'MkBar b
-Prelude.Maybe a
-
-TODO(bladyjoker): Revisit empty records and prods.
+TODO(jaredponn) Empty records + document some examples here.
 -}
 printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann)
 printTyBody tyN _ (PC.SumI s) =

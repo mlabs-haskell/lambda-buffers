@@ -1,60 +1,60 @@
 {
   "opaquesConfig": {
     "Prelude.Map": [
-      "ordered-collections",
-      "Data.Map",
+      "lbr-prelude/Map.js",
+      "Prelude",
       "Map"
     ],
     "Prelude.Set": [
-      "ordered-containers",
-      "Data.Set",
+      "lbr-prelude/Set.js",
+      "Prelude",
       "Set"
     ],
     "Prelude.List": [
-      "prelude",
-      "Prim",
-      "Array"
+      "lbr-prelude",
+      "Prelude",
+      "List"
     ],
     "Prelude.Either": [
-      "either",
-      "Data.Either",
+      "lbr-prelude",
+      "Prelude",
       "Either"
     ],
     "Prelude.Maybe": [
-      "maybe",
-      "Data.Maybe",
+      "lbr-prelude",
+      "Prelude",
       "Maybe"
     ],
     "Prelude.Bytes": [
       "lbr-prelude",
-      "LambdaBuffers.Runtime.Prelude",
+      "Prelude",
       "Bytes"
     ],
     "Prelude.Text": [
-      "prelude",
-      "Prim",
+      "lbr-prelude",
+      "Prelude",
       "String"
     ],
     "Prelude.Char": [
-      "strings",
-      "Data.String.CodePoints",
+      "lbr-prelude",
+      "Prelude",
       "CodePoint"
     ],
     "Prelude.Integer": [
-      "js-bigints",
-      "JS.BigInt",
+      "lbr-prelude",
+      "Prelude",
       "BigInt"
     ],
     "Prelude.Bool": [
-      "prelude",
-      "Prim",
+      "lbr-prelude",
+      "Prelude",
       "Boolean"
     ]
   },
   "classesConfig": {
     "Prelude.Eq": [
       [
-        "prelude",
+        "lbr-prelude",
         "Prelude",
         "Eq"
       ]
@@ -62,7 +62,7 @@
     "Prelude.Json": [
       [
         "lbr-prelude",
-        "LambdaBuffers.Runtime.Prelude",
+        "Prelude",
         "Json"
       ]
     ]

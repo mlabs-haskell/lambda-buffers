@@ -275,50 +275,204 @@ printOtherCase otherCase = do
 -- | `caseInt [Tuple (fromInt 1) (\i -> i)] (\i -> i) (fromInt 1)`
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal cases otherCase = do
-  caseValDoc <- printValueE caseIntVal
+  -- The value we are casing on
+  caseOnIntValDoc <- printValueE caseIntVal
+
+  -- The argument for what we are casing on
+  caseOnArg <- LV.freshArg
+  caseOnArgDoc <- printValueE caseOnArg
+
+  -- Compile each of the branches
   casesDocs <-
     for
       cases
       ( \(conditionVal, bodyVal) -> do
           conditionDoc <- printValueE conditionVal
           bodyDoc <- printValueE bodyVal
-          -- tupleDoc <- printTsQValName <$> LV.importValue tuple
-          tupleDoc <- undefined
-          return $ group $ tupleDoc <+> conditionDoc <+> parens bodyDoc
+          return
+            ( conditionDoc
+            , vsep
+                [ lbrace
+                , indent 2 $ "return" <+> bodyDoc
+                , rbrace
+                ]
+            )
+            -- tupleDoc <- printTsQValName <$> LV.importValue tuple
+            -- tupleDoc <- undefined
+            -- return $ group $ tupleDoc <+> conditionDoc <+> parens bodyDoc
       )
-  let casesDoc = lbracket <> align (encloseSep mempty mempty (comma <> space) casesDocs <> rbracket)
-  otherDoc <- printValueE $ LV.LamE otherCase
-  caseIntDoc <- undefined
-  -- caseIntDoc <- printTsQValName <$> LV.importValue caseInt
-  return $ caseIntDoc <+> casesDoc <+> otherDoc <+> caseValDoc
+  -- let casesDoc = lbracket <> align (encloseSep mempty mempty (comma <> space) casesDocs <> rbracket)
+
+  -- TODO optimize this a bit. [DONE: remove comment]
+  -- otherDoc <- fmap (\otherCaseDoc -> "return" <+> parens otherCaseDoc <> parens caseOnArgDoc)
+  --   $ printValueE
+  --   $ LV.LamE otherCase
+  otherDoc <-
+    fmap ("return" <+>) $
+      printValueE $
+        otherCase caseOnArg
+
+  return $
+    parens $
+      parens caseOnArgDoc
+        <+> "=>"
+        <+> vsep
+          [ lbrace
+          , indent 2 $
+              vsep $
+                case casesDocs of
+                  [] ->
+                    [otherDoc]
+                  (num1, body1) : ts ->
+                    [ "if" <+> parens (caseOnArgDoc <+> "===" <+> num1)
+                    , body1
+                    ]
+                      ++ concatMap
+                        ( \(num, body) ->
+                            [ "else" <+> "if" <+> parens (num <+> "===" <+> caseOnArgDoc)
+                            , body
+                            ]
+                        )
+                        ts
+                      ++ [ "else"
+                         , lbrace
+                         , indent 2 otherDoc
+                         , rbrace
+                         ]
+          , rbrace
+          ]
+          <> parens caseOnIntValDoc
 
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
 printListE vals = do
   valDocs <- printValueE `traverse` vals
-  return $ lbracket <> align (encloseSep mempty mempty (comma <> space) valDocs <> rbracket)
+  return $ align (encloseSep lbracket rbracket comma valDocs)
 
 printCaseListE :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE caseListVal cases otherCase = do
-  caseValDoc <- printValueE caseListVal
-  caseDocs <-
+  -- The value we are casing on
+  caseListValDoc <- printValueE caseListVal
+
+  -- The argument for what we are casing on
+  caseOnArg <- LV.freshArg
+  caseOnArgDoc <- printValueE caseOnArg
+
+  -- Compile each of the branches
+  casesDocs <-
     for
       cases
       ( \(listLength, bodyVal) -> do
-          xs <- replicateM listLength LV.freshArg
-          conditionDoc <- printListE xs
-          bodyDoc <- printValueE $ bodyVal xs
-          return $ group $ conditionDoc <+> "->" <+> bodyDoc
+          listVars <- replicateM listLength LV.freshArg
+          listVarsDocs <- for listVars printValueE
+          bodyDoc <- printValueE (bodyVal listVars)
+          return
+            ( pretty listLength
+            , vsep
+                [ lbrace
+                , indent 2 $
+                    vsep $
+                      zipWith
+                        ( \i argDoc ->
+                            "let" <+> argDoc <+> equals <+> caseOnArgDoc <> lbracket <> pretty (show i) <> rbracket <> "!"
+                        )
+                        [0 :: Int ..]
+                        listVarsDocs
+                        ++ ["return" <+> bodyDoc]
+                , rbrace
+                ]
+            )
       )
-  otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+
+  -- TODO: optimize this a bit [DONE: remove this comment]
+  -- Compile the catchall
+  -- otherDoc <- fmap (\otherCaseDoc -> "return" <+> parens otherCaseDoc <> parens caseOnArgDoc)
+  --   $ printValueE
+  --   $ LV.LamE otherCase
+  --
+  otherDoc <-
+    fmap ("return" <+>) $
+      printValueE $
+        otherCase caseOnArg
+
+  -- build the lambda which has the statements
+  return $
+    parens $
+      parens caseOnArgDoc
+        <+> "=>"
+        <+> vsep
+          [ lbrace
+          , indent 2 $
+              vsep $
+                case casesDocs of
+                  [] ->
+                    [otherDoc]
+                  (num1, body1) : ts ->
+                    [ "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num1)
+                    , body1
+                    ]
+                      ++ concatMap
+                        ( \(num, body) ->
+                            [ "else" <+> "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num)
+                            , body
+                            ]
+                        )
+                        ts
+                      ++ [ "else"
+                         , lbrace
+                         , indent 2 otherDoc
+                         , rbrace
+                         ]
+          , rbrace
+          ]
+          <> parens caseListValDoc
+
+-- caseValDoc <- printValueE caseListVal
+-- caseDocs <-
+--   for
+--     cases
+--     ( \(listLength, bodyVal) -> do
+--         xs <- replicateM listLength LV.freshArg
+--         conditionDoc <- printListE xs
+--         bodyDoc <- printValueE $ bodyVal xs
+--         return $ group $ conditionDoc <+> "->" <+> bodyDoc
+--     )
+-- otherDoc <- printOtherCase otherCase
+-- return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals printValueE
   let ctorNDoc = printCtorName (withInfo tyN) (withInfo ctorN)
-  if null prodDocs
-    then return ctorNDoc
-    else return $ ctorNDoc <+> align (hsep prodDocs)
+  case prodDocs of
+    [] ->
+      return $
+        vsep
+          [ lbrace
+          , indent 2 $ "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\''
+          , rbrace
+          ]
+    [singleDoc] ->
+      return $
+        vsep
+          [ lbrace
+          , indent 2 $
+              vsep
+                [ "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\'' <> comma
+                , "fields" <+> colon <+> singleDoc
+                ]
+          , rbrace
+          ]
+    _ ->
+      return $
+        vsep
+          [ lbrace
+          , indent 2 $
+              vsep
+                [ "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\'' <> comma
+                , "fields" <+> colon <+> encloseSep lbracket rbracket comma prodDocs
+                ]
+          , rbrace
+          ]
 
 printRecordE :: MonadPrint m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
 printRecordE ((_, tyN), _) vals = do
@@ -340,8 +494,6 @@ printProductE ((_, tyN), _) vals = do
 printIntE :: MonadPrint m => Int -> m (Doc ann)
 printIntE i =
   return $ pretty i <> "n"
-
--- LV.importValue fromInt >>= (\fromIntDoc -> return $ parens $ fromIntDoc <+> pretty i) . printTsQValName
 
 printRefE :: forall m ann. MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref@(refTys, _) = do
@@ -418,9 +570,7 @@ printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printTupleE l r = do
   lDoc <- printValueE l
   rDoc <- printValueE r
-  -- tupleDoc <- printTsQValName <$> LV.importValue tuple
-  tupleDoc <- undefined
-  return $ parens (tupleDoc <+> parens lDoc <+> parens rDoc)
+  return $ align (encloseSep lbracket rbracket comma [lDoc, rDoc])
 
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . dquotes . pretty

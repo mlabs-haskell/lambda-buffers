@@ -8,6 +8,7 @@
 -}
 module LambdaBuffers.Codegen.Typescript.Print (MonadPrint, printModule) where
 
+import Control.Arrow ((&&&), (***))
 import Control.Lens (view, (^.))
 import Control.Monad.Reader.Class (ask, asks)
 import Control.Monad.State.Class (MonadState (get))
@@ -21,14 +22,14 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Typescript.Print.Derive (printDeriveEq, printDeriveFromPlutusData, printDeriveJson, printDeriveToPlutusData, tsEqClass)
+import LambdaBuffers.Codegen.Typescript.Print.Derive (printDeriveEq, printDeriveIsPlutusData, printDeriveJson, tsEqClass, tsIsPlutusDataClass, tsJsonClass)
 import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (ExportInstanceDecl, printExportInstanceDecl)
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
-import LambdaBuffers.Codegen.Typescript.Print.Names (printModName, printModName', printTyName)
+import LambdaBuffers.Codegen.Typescript.Print.Names (printModName')
 import LambdaBuffers.Codegen.Typescript.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), squotes, vsep, (<+>))
 import Proto.Codegen qualified as P
 
 printModule :: MonadPrint m => m (Doc ann, Set Text)
@@ -38,20 +39,16 @@ printModule = do
   instDocs <- printInstances
   st <- get
   let modDoc =
-        align . vsep $
-          [ printModuleHeader (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
-          , mempty
-          , printImports
-              (ctx ^. Print.ctxTyImports)
-              (ctx ^. Print.ctxOpaqueTyImports)
-              (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
-              (ctx ^. Print.ctxRuleImports)
-              (st ^. Print.stValueImports)
-          , mempty
-          , vsep ((line <>) <$> tyDefDocs)
-          , mempty
-          , vsep ((line <>) <$> instDocs)
-          ]
+        vsep $
+          printImports
+            (ctx ^. Print.ctxTyImports)
+            (ctx ^. Print.ctxOpaqueTyImports)
+            (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
+            (ctx ^. Print.ctxRuleImports)
+            (st ^. Print.stValueImports)
+            : mempty
+            : tyDefDocs
+            ++ instDocs
       pkgDeps =
         collectPackageDeps
           (ctx ^. Print.ctxTyImports)
@@ -69,7 +66,7 @@ tsClassImplPrinters ::
     Ts.QClassName
     ( PC.ModuleName ->
       PC.TyDefs ->
-      (ExportInstanceDecl (Doc ann)) ->
+      ExportInstanceDecl (Doc ann) ->
       PC.Ty ->
       Either P.InternalError (Doc ann, Set Ts.QValName)
     )
@@ -80,15 +77,19 @@ tsClassImplPrinters =
       , printDeriveEq
       )
     ,
-      ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.ToData", Ts.MkClassName "ToData")
-      , printDeriveToPlutusData
+      ( tsIsPlutusDataClass
+      , printDeriveIsPlutusData
       )
-    ,
-      ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.FromData", Ts.MkClassName "FromData")
-      , printDeriveFromPlutusData
-      )
-    ,
-      ( (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LambdaBuffers.Runtime.Prelude", Ts.MkClassName "Json")
+    , -- ,
+      --   ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.ToData", Ts.MkClassName "ToData")
+      --   , printDeriveToPlutusData
+      --   )
+      -- ,
+      --   ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.FromData", Ts.MkClassName "FromData")
+      --   , printDeriveFromPlutusData
+      --   )
+
+      ( tsJsonClass
       , printDeriveJson
       )
     ]
@@ -134,33 +135,27 @@ printTsQClassImpl mn iTyDefs hqcn d =
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc
 
-printModuleHeader :: PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
-printModuleHeader mn exports = "module" <+> printModName mn <+> printExports exports <+> "where"
-
-printExports :: Set (PC.InfoLess PC.TyName) -> Doc ann
-printExports exports = align $ group $ encloseSep lparen rparen (comma <> space) ((`PC.withInfoLess` printTyExportWithCtors) <$> toList exports)
-  where
-    printTyExportWithCtors :: PC.TyName -> Doc ann
-    printTyExportWithCtors tyn = printTyName tyn <> "(..)"
-
 printImports :: Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Doc ann
 printImports lbTyImports tsTyImports classImps ruleImps valImps =
   let groupedLbImports =
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
           `Set.union` ruleImps
-      lbImportDocs = importQualified . printModName' <$> toList groupedLbImports
+      -- We make the hopefully reasonable assumption that for these imports,
+      -- the package name matches the module name..
+      lbImportDocs =
+        importQualified . (id &&& id) . printModName' <$> toList groupedLbImports
 
       groupedTsImports =
-        Set.fromList [mn | (_cbl, mn, _tn) <- toList tsTyImports]
-          `Set.union` Set.fromList [mn | (_, mn, _) <- toList classImps]
-          `Set.union` Set.fromList [mn | (Just (_, mn), _) <- toList valImps]
-      tsImportDocs = (\(Ts.MkModuleName mn) -> importQualified $ pretty mn) <$> toList groupedTsImports
+        Set.fromList [(pkg, mn) | (pkg, mn, _tn) <- toList tsTyImports]
+          `Set.union` Set.fromList [(pkg, mn) | (pkg, mn, _) <- toList classImps]
+          `Set.union` Set.fromList [(pkg, mn) | (Just (pkg, mn), _) <- toList valImps]
+      tsImportDocs = importQualified . ((\(Ts.MkPackageName pkg) -> pretty pkg) *** (\(Ts.MkModuleName mn) -> pretty mn)) <$> toList groupedTsImports
 
       importsDoc = vsep $ lbImportDocs ++ tsImportDocs
    in importsDoc
   where
-    importQualified :: Doc ann -> Doc ann
-    importQualified mnDoc = "import" <+> mnDoc <+> "as" <+> mnDoc
+    importQualified :: (Doc ann, Doc ann) -> Doc ann
+    importQualified (pkg, mn) = "import" <+> "*" <+> "as" <+> mn <+> "from" <+> squotes pkg
 
 {- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
  Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).

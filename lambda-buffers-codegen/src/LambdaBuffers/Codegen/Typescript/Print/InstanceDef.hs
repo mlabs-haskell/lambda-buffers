@@ -2,6 +2,7 @@ module LambdaBuffers.Codegen.Typescript.Print.InstanceDef (
   printExportInstanceDecl,
   printInstanceDict,
   ExportInstanceDecl (..),
+  InstanceDict (..),
 ) where
 
 import Data.Text (Text)
@@ -33,8 +34,7 @@ printExportInstanceDecl tsQClassName ty =
       [] ->
         return $
           ExportConstInstanceDecl $
-            -- "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
-            "export" <+> "const" <+> instanceName <+> ":" <+> surround instanceType langle rangle <> line
+            "export" <+> "const" <+> instanceName <+> ":" <+> instanceType <> line
       _ ->
         return $
           ExportFunctionInstanceDecl $
@@ -85,22 +85,36 @@ printInstanceDecl qcn ty =
 getTyName :: PC.TyName -> Text
 getTyName (PC.TyName tyName _) = tyName
 
-printInstanceDict :: forall ann. Ts.QClassName -> PC.Ty -> Doc ann
+-- | See 'printInstanceDict'
+data InstanceDict
+  = TopLevelInstanceDict
+  | ArgumentInstanceDict
+
+{- | Prints the instance dictionary corresponding to the class name and the
+ given type.
+
+ Note:
+  If the given type is a type variable, we print the variable prefixed with
+  @dict@ e.g. given type variable @$a@, we print @dict$a@. This is because
+  dictionaries for a type variable will be passed as a parameter.
+-}
+printInstanceDict :: forall ann. Ts.QClassName -> PC.Ty -> (InstanceDict, Doc ann)
 printInstanceDict qcn ty =
-  let go :: PC.Ty -> Doc ann
-      go (PC.TyVarI PC.TyVar {PC.varName = varName}) = "dict" <> printVarName varName
+  let go :: PC.Ty -> (InstanceDict, Doc ann)
+      go (PC.TyVarI PC.TyVar {PC.varName = varName}) = (ArgumentInstanceDict, "dict" <> printVarName varName)
       go (PC.TyAppI PC.TyApp {PC.tyFunc = tyFunc}) = go tyFunc
       go (PC.TyRefI tyRef) =
-        mconcat
-          [ printTsUnqualifiedQClassName qcn
-          , pretty $
-              case tyRef of
-                PC.LocalI PC.LocalRef {PC.tyName = tyName} -> getTyName tyName
-                PC.ForeignI PC.ForeignRef {PC.tyName = tyName} ->
-                  -- TODO: this is broken for foreign types with the same name as
-                  -- a type declared in this module.
-                  getTyName tyName
-          ]
+        (,) TopLevelInstanceDict $
+          mconcat
+            [ printTsUnqualifiedQClassName qcn
+            , pretty $
+                case tyRef of
+                  PC.LocalI PC.LocalRef {PC.tyName = tyName} -> getTyName tyName
+                  PC.ForeignI PC.ForeignRef {PC.tyName = tyName} ->
+                    -- TODO: this is broken for foreign types with the same name as
+                    -- a type declared in this module.
+                    getTyName tyName
+            ]
    in go ty
 
 printInstanceType :: Ts.QClassName -> PC.Ty -> Doc ann
@@ -118,7 +132,7 @@ printInstanceType qcn ty =
 -}
 printInstanceContextArg :: Ts.QClassName -> PC.Ty -> Doc ann
 printInstanceContextArg qcn ty =
-  printInstanceDict qcn ty
+  snd (printInstanceDict qcn ty)
     <+> ":"
     <+> printInstanceType qcn ty
 

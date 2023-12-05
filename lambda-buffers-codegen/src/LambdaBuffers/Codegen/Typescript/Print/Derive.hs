@@ -1,16 +1,16 @@
-module LambdaBuffers.Codegen.Typescript.Print.Derive (tsEqClass, printDeriveEq, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson) where
+module LambdaBuffers.Codegen.Typescript.Print.Derive (tsEqClass, tsIsPlutusDataClass, tsJsonClass, printDeriveEq, printDeriveIsPlutusData, printDeriveJson) where
 
 import Control.Lens (view)
-import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl, deriveNeqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
-import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (ExportInstanceDecl (ExportConstInstanceDecl, ExportFunctionInstanceDecl), printInstanceDict)
+import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (ExportInstanceDecl (ExportConstInstanceDecl, ExportFunctionInstanceDecl), InstanceDict (ArgumentInstanceDict, TopLevelInstanceDict), printInstanceDict)
 import LambdaBuffers.Codegen.Typescript.Print.LamVal (Builtin (Builtin, OverloadedBuiltin), printValueE, qualifiedValName)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printTsValName)
+import LambdaBuffers.Codegen.Typescript.Print.Ty qualified as Typescript.Print.Ty
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (
@@ -23,14 +23,18 @@ import Prettyprinter (
   defaultLayoutOptions,
   equals,
   indent,
+  langle,
   layoutPretty,
   lbrace,
+  rangle,
   rbrace,
+  surround,
   vsep,
   (<+>),
  )
 import Proto.Codegen qualified as P
 
+import Data.Text (Text)
 import LambdaBuffers.Compiler.LamTy.Types qualified as LamTy.Types
 import Prettyprinter.Render.Text qualified as PrettyPrinter.Text
 
@@ -43,6 +47,10 @@ lamTy2PCTy = \case
     return $ PC.TyAppI tyApp
   _ -> Nothing
 
+instanceDictIdent :: Ts.QClassName -> PC.Ty -> (InstanceDict, Text)
+instanceDictIdent className ty =
+  PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions <$> printInstanceDict className ty
+
 lvEqBuiltins :: LV.PrintRead Builtin
 lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
   case (refName, tys) of
@@ -50,11 +58,9 @@ lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          ( Ts.normalValName
-              "prelude"
-              "Prelude"
-              -- "eqDict"
-              (PrettyPrinter.Text.renderStrict (layoutPretty defaultLayoutOptions (printInstanceDict tsEqClass ty')))
+          ( case instanceDictIdent tsEqClass ty' of
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "prelude" "Prelude" dict
+              (ArgumentInstanceDict, dict) -> Ts.primValName dict
           )
           0 -- index in the list of substitutions for the type we're overloading on
           ".eq"
@@ -111,19 +117,36 @@ printDeriveEq mn iTyDefs exportInstanceDeclDoc ty = do
   return (instanceDoc, Set.map (view qualifiedValName) $ eqImports <> neqImports)
 
 lvPlutusDataBuiltins :: LV.PrintRead Builtin
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toPlutusData", Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
-      , ("fromPlutusData", Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.FromData" "fromData")
-      , ("casePlutusData", Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData")
-      , ("integerData", Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
-      , ("constrData", Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr")
-      , ("listData", Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
-      , ("succeedParse", Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Just")
-      , ("failParse", Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Nothing")
-      , ("bindParse", Builtin $ Ts.normalValName "prelude" "Prelude" ">>=")
-      ]
+lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
+  case (refName, tys) of
+    ("toPlutusData", [ty]) -> do
+      ty' <- lamTy2PCTy ty
+      return $
+        OverloadedBuiltin
+          ( case instanceDictIdent tsEqClass ty' of
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" dict
+              (ArgumentInstanceDict, dict) -> Ts.primValName dict
+          )
+          0
+          ".toData"
+    ("fromPlutusData", [ty]) -> do
+      ty' <- lamTy2PCTy ty
+      return $
+        OverloadedBuiltin
+          ( case instanceDictIdent tsEqClass ty' of
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.fromData" dict
+              (ArgumentInstanceDict, dict) -> Ts.primValName dict
+          )
+          0
+          ".fromData"
+    ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData"
+    ("integerData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer"
+    ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr"
+    ("listData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List"
+    ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Just"
+    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Nothing"
+    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "prelude" "Prelude" "bindMaybe"
+    _ -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName
 toPlutusDataClassMethodName = Ts.MkValueName "toData"
@@ -131,54 +154,97 @@ toPlutusDataClassMethodName = Ts.MkValueName "toData"
 fromPlutusDataClassMethodName :: Ts.ValueName
 fromPlutusDataClassMethodName = Ts.MkValueName "fromData"
 
-printDeriveToPlutusData :: PC.ModuleName -> PC.TyDefs -> ExportInstanceDecl (Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
-printDeriveToPlutusData mn iTyDefs exportInstanceDeclDoc ty = do
-  valE <- deriveToPlutusDataImpl mn iTyDefs ty
-  (implDoc, imports) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
-  let valueDefDoc = printValueDef toPlutusDataClassMethodName implDoc
-      instanceDoc = case exportInstanceDeclDoc of
-        ExportConstInstanceDecl doc -> doc <+> valueDefDoc
-        ExportFunctionInstanceDecl doc -> doc <+> lbrace <+> valueDefDoc <+> rbrace
+tsIsPlutusDataClass :: Ts.QClassName
+tsIsPlutusDataClass = (Ts.MkPackageName "lbr-plutus", Ts.MkModuleName "LbPlutus", Ts.MkClassName "IsPlutusData")
+
+printDeriveIsPlutusData :: PC.ModuleName -> PC.TyDefs -> ExportInstanceDecl (Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
+printDeriveIsPlutusData mn iTyDefs exportInstanceDeclDoc ty = do
+  toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
+  fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
+
+  (toDataImplDoc, toDataImports) <- LV.runPrint lvPlutusDataBuiltins (printValueE toPlutusDataValE)
+  (fromDataImplDoc, fromDataImports) <- LV.runPrint lvPlutusDataBuiltins (printValueE fromPlutusDataValE)
+
+  let valueDefDoc =
+        align $
+          vsep
+            [ printTsValName toPlutusDataClassMethodName <+> colon <+> align toDataImplDoc <> comma
+            , printTsValName fromPlutusDataClassMethodName <+> colon <+> align fromDataImplDoc <> comma
+            ]
+      instanceDoc =
+        case exportInstanceDeclDoc of
+          ExportConstInstanceDecl doc ->
+            doc
+              <+> equals
+              <+> vsep
+                [ lbrace
+                , indent 2 valueDefDoc
+                , rbrace
+                ]
+          ExportFunctionInstanceDecl doc ->
+            doc
+              <> vsep
+                [ lbrace
+                , indent 2 $
+                    vsep
+                      [ "return" <+> lbrace
+                      , indent 2 valueDefDoc
+                      , rbrace
+                      ]
+                , rbrace
+                ]
   return
     ( instanceDoc
-    , Set.map (view qualifiedValName) imports
+    , Set.map (view qualifiedValName) $ toDataImports <> fromDataImports
     )
 
-printDeriveFromPlutusData :: PC.ModuleName -> PC.TyDefs -> ExportInstanceDecl (Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
-printDeriveFromPlutusData mn iTyDefs exportInstanceDeclDoc ty = do
-  valE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (implDoc, imports) <- LV.runPrint lvPlutusDataBuiltins (printValueE valE)
-  let valueDefDoc = printValueDef fromPlutusDataClassMethodName implDoc
-      instanceDoc = case exportInstanceDeclDoc of
-        ExportConstInstanceDecl doc -> doc <+> valueDefDoc
-        ExportFunctionInstanceDecl doc -> doc <+> lbrace <+> valueDefDoc <+> rbrace
-
-  return
-    ( instanceDoc
-    , Set.map (view qualifiedValName) imports
-    )
-
-printValueDef :: Ts.ValueName -> Doc ann -> Doc ann
-printValueDef valName valDoc = printTsValName valName <+> equals <+> valDoc
+tsJsonClass :: Ts.QClassName
+tsJsonClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "Prelude", Ts.MkClassName "Json")
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
 lvJsonBuiltins :: LV.PrintRead Builtin
-lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toJson", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "toJson")
-      , ("fromJson", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fromJson")
-      , ("jsonObject", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonObject")
-      , ("jsonConstructor", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonConstructor")
-      , ("jsonArray", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonArray")
-      , ("caseJsonConstructor", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonConstructor")
-      , ("caseJsonArray", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonArray")
-      , ("caseJsonObject", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonObject")
-      , ("jsonField", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonField")
-      , ("succeedParse", Builtin $ Ts.normalValName "either" "Data.Either" "Right")
-      , ("failParse", Builtin $ Ts.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fail")
-      , ("bindParse", Builtin $ Ts.normalValName "prelude" "Prelude" ">>=")
-      ]
+lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
+  case (refName, tys) of
+    ("toJson", [ty]) -> do
+      ty' <- lamTy2PCTy ty
+      return $
+        OverloadedBuiltin
+          ( case instanceDictIdent tsEqClass ty' of
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
+              (ArgumentInstanceDict, dict) -> Ts.primValName dict
+          )
+          0
+          ".toJson"
+    ("fromJson", [ty]) -> do
+      ty' <- lamTy2PCTy ty
+      return $
+        OverloadedBuiltin
+          ( case instanceDictIdent tsEqClass ty' of
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
+              (ArgumentInstanceDict, dict) -> Ts.primValName dict
+          )
+          0
+          ".fromJson"
+    ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonObject"
+    ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonConstructor"
+    ("jsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonArray"
+    ("caseJsonConstructor", [ty]) -> do
+      ty' <- lamTy2PCTy ty
+      return $
+        Builtin $
+          Ts.normalValName
+            "lbr-prelude"
+            "Prelude"
+            ( PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions $
+                "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner ty') langle rangle
+            )
+    ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonArray"
+    ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonObject"
+    ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonField"
+    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "Right"
+    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "fail"
+    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" ">>="
+    _ -> Nothing
 
 toJsonClassMethodName :: Ts.ValueName
 toJsonClassMethodName = Ts.MkValueName "toJson"
@@ -196,13 +262,31 @@ printDeriveJson mn iTyDefs exportInstanceDeclDoc ty = do
   let valueDefDoc =
         align $
           vsep
-            [ printValueDef toJsonClassMethodName toJsonImplDoc
-            , printValueDef fromJsonClassMethodName fromJsonImplDoc
+            [ printTsValName toJsonClassMethodName <+> colon <+> align toJsonImplDoc <> comma
+            , printTsValName fromJsonClassMethodName <+> colon <+> align fromJsonImplDoc <> comma
             ]
-      instanceDoc = case exportInstanceDeclDoc of
-        ExportConstInstanceDecl doc -> doc <+> valueDefDoc
-        ExportFunctionInstanceDecl doc -> doc <+> lbrace <+> valueDefDoc <+> rbrace
 
+      instanceDoc = case exportInstanceDeclDoc of
+        ExportConstInstanceDecl doc ->
+          doc
+            <+> equals
+            <+> vsep
+              [ lbrace
+              , indent 2 valueDefDoc
+              , rbrace
+              ]
+        ExportFunctionInstanceDecl doc ->
+          doc
+            <> vsep
+              [ lbrace
+              , indent 2 $
+                  vsep
+                    [ "return" <+> lbrace
+                    , indent 2 valueDefDoc
+                    , rbrace
+                    ]
+              , rbrace
+              ]
   return
     ( instanceDoc
     , Set.map (view qualifiedValName) $ impsA <> impsB
