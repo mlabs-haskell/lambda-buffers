@@ -132,9 +132,8 @@ collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps =
 
       imports =
         Set.fromList [R.crateFromLbModuleName $ withInfo mn | (mn, _tn) <- toList lbTyImports]
-          `Set.union` Set.fromList R.crateFromLbModuleName . withInfo
-          <$> toList ruleImps
-            `Set.union` buildDeps
+          `Set.union` Set.fromList [R.crateFromLbModuleName $ withInfo mn | mn <- toList ruleImps]
+          `Set.union` buildDeps
    in (imports, buildDeps)
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b

@@ -31,14 +31,23 @@ vecMacro = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "") (R.MkVal
 fromU32Trait :: R.QTraitName
 fromU32Trait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<u32>")
 
+fromStrTrait :: R.QTraitName
+fromStrTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<&str>")
+
 cloneTrait :: R.QTraitName
 cloneTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "clone") (R.MkTraitName "Clone")
 
 clone :: Doc ann -> Doc ann
-clone = useTraitMethod cloneTrait "clone"
+clone = useTraitMethod cloneTrait "clone" . borrow
+
+borrow :: Doc ann -> Doc ann
+borrow doc = "&" <> doc
 
 fromU32 :: Doc ann -> Doc ann
 fromU32 = useTraitMethod fromU32Trait "from"
+
+fromStr :: Doc ann -> Doc ann
+fromStr = useTraitMethod fromStrTrait "from"
 
 useTraitMethod :: R.QTraitName -> Text -> Doc ann -> Doc ann
 useTraitMethod trait method d = angles ("_" <+> "as" <+> R.printRsQTraitName trait) <> R.doubleColon <> pretty method <> parens d
@@ -113,13 +122,13 @@ printAppE funVal argVal = do
 
   `FieldE` on a field named `foo` of a record value `x` of type `Foo a b` translates into:
 
-   x.foo
+   &x.foo
 -}
 printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, _), fieldN) recVal = do
   recDoc <- printValueE recVal
   let fnDoc = R.printFieldName (withInfo fieldN)
-  return $ recDoc <> dot <> fnDoc
+  return $ borrow $ recDoc <> dot <> fnDoc
 
 {- | Prints a `let` expression on a `ValueE` of type `Product`.
 
@@ -208,7 +217,7 @@ printRecordE ((_, tyN), _) vals = do
       let fieldNDoc = R.printFieldName (withInfo fieldN)
        in do
             valDoc <- printValueE val
-            return $ group $ fieldNDoc <+> equals <+> valDoc
+            return $ group $ fieldNDoc <> colon <+> clone valDoc
   let ctorDoc = R.printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (lbrace <+> encloseSep mempty mempty (comma <> space) fieldDocs <+> rbrace)
 
@@ -225,7 +234,7 @@ printTupleE l r = do
   return $ parens (lDoc <> comma <+> rDoc)
 
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
-printTextE = return . dquotes . pretty
+printTextE = return . fromStr . dquotes . pretty
 
 printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
@@ -254,7 +263,7 @@ printRefE ref = do
           || builtin == "fromJson" -> do
           lamTyDoc <- printLamTy argTy
           methodDoc <- R.printRsValName . R.qualifiedEntity <$> LV.importValue qvn
-          return $ lamTyDoc <> R.doubleColon <> methodDoc
+          return $ angles lamTyDoc <> R.doubleColon <> methodDoc
       | builtin == "jsonConstructor" -> do
           lamTyDoc <- printLamTy argTy
           methodDoc <- R.printRsQValName <$> LV.importValue qvn

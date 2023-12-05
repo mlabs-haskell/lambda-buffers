@@ -38,12 +38,12 @@ readRustConfig f = do
   unless
     fExists
     ( do
-        logError $ "Provided Rust Codegen configuration file doesn't exists: " <> f
+        logError "" $ "Provided Rust Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
   mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
-      logError $ "Invalid Rust configuration file " <> f
+      logError "" $ "Invalid Rust configuration file " <> f
       exitFailure
     Just cfg -> return cfg

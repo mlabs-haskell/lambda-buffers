@@ -58,9 +58,12 @@ printTyDefKw SynonymTyDef = "pub type"
 debugMacro :: R.QTraitName
 debugMacro = R.qLibRef R.MkTraitName "std" "fmt" "Debug"
 
+cloneMacro :: R.QTraitName
+cloneMacro = R.qLibRef R.MkTraitName "std" "clone" "Clone"
+
 printDeriveDebug :: Doc ann
 printDeriveDebug =
-  "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro))
+  "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro <> comma <+> printRsQTraitName cloneMacro))
 
 {- | Prints the type abstraction.
 
