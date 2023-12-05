@@ -11,10 +11,10 @@ use std::collections::BTreeMap;
 pub fn case_json_array<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
-    dyn Fn(
-            Box<dyn Fn(&Vec<Value>) -> Result<T, Error> + 'a>,
-        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
-        + 'a,
+    dyn 'a
+        + Fn(
+            Box<dyn 'a + Fn(&Vec<Value>) -> Result<T, Error>>,
+        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<T, Error>>,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_array(x0, x1, x2)))
 }
@@ -25,10 +25,10 @@ pub fn case_json_array<'a, T: 'a>(
 pub fn case_json_map<'a, K: 'a, V: 'a>(
     x0: &'a str,
 ) -> Box<
-    dyn Fn(
-            Box<dyn Fn(&(Value, Value)) -> Result<(K, V), Error> + 'a>,
-        ) -> Box<dyn FnOnce(&Value) -> Result<BTreeMap<K, V>, Error> + 'a>
-        + 'a,
+    dyn 'a
+        + Fn(
+            Box<dyn 'a + Fn(&(Value, Value)) -> Result<(K, V), Error>>,
+        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<BTreeMap<K, V>, Error>>,
 >
 where
     K: Ord,
@@ -37,33 +37,35 @@ where
 }
 
 /// Parse a JSON Object and its fields
-///
+//
 /// LamVal Json builtin
 pub fn case_json_object<'a, T: 'a>(
-    x0: &'a str,
-) -> Box<
-    dyn Fn(
-            Box<dyn Fn(&serde_json::Map<String, Value>) -> Result<T, Error> + 'a>,
-        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
-        + 'a,
-> {
-    Box::new(move |x1| Box::new(move |x2| super::case_json_object(x0, x1, x2)))
+    x0: Box<dyn 'a + Fn(&serde_json::Map<String, Value>) -> Result<T, Error>>,
+) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a> {
+    Box::new(move |x1| super::case_json_object(x0, x1))
 }
 
 /// Extract a field from a JSON Object
 ///
 /// LamVal Json builtin
-pub fn json_field<'a>(
+pub fn json_field<'a, T: 'a>(
     x0: &'a str,
-) -> Box<dyn FnOnce(&serde_json::Map<String, Value>) -> Result<Value, Error> + 'a> {
-    Box::new(move |x1| super::json_field(x0, x1))
+) -> Box<
+    dyn 'a
+        + FnOnce(
+            &'a serde_json::Map<String, Value>,
+        ) -> Box<
+            dyn 'a + FnOnce(Box<dyn 'a + Fn(&Value) -> Result<T, Error>>) -> Result<T, Error>,
+        >,
+> {
+    Box::new(move |x1| Box::new(move |x2| super::json_field(x0, x1, x2)))
 }
 
 /// Construct a JSON Value from a sum type.
 /// We always encode sum types into a `{"name": string, "fields": any[]}` format in JSON.
 ///
 /// LamVal Json builtin
-pub fn json_constructor<'a>(x0: &'a str) -> Box<dyn FnOnce(Vec<Value>) -> Value + 'a> {
+pub fn json_constructor<'a>(x0: &'a str) -> Box<dyn 'a + FnOnce(Vec<Value>) -> Value> {
     Box::new(move |x1| super::json_constructor(x0, x1))
 }
 
@@ -74,10 +76,10 @@ pub fn json_constructor<'a>(x0: &'a str) -> Box<dyn FnOnce(Vec<Value>) -> Value 
 pub fn case_json_constructor<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
-    dyn Fn(
+    dyn 'a
+        + Fn(
             Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
-        ) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a>
-        + 'a,
+        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<T, Error>>,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_constructor(x0, x1, x2)))
 }
@@ -90,6 +92,6 @@ pub fn fail_parse<T>(err: &str) -> Result<T, Error> {
 /// Curried Result::and_then function
 pub fn bind_parse<'a, A: 'a, B: 'a>(
     x: Result<A, Error>,
-) -> Box<dyn FnOnce(Box<dyn Fn(&A) -> Result<B, Error>>) -> Result<B, Error> + 'a> {
+) -> Box<dyn 'a + FnOnce(Box<dyn Fn(&A) -> Result<B, Error>>) -> Result<B, Error>> {
     Box::new(move |f| x.and_then(|x1| f(&x1)))
 }

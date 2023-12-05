@@ -410,7 +410,7 @@ where
 /// Construct a JSON Object for a list of key-value pairs
 ///
 /// LamVal Json builtin
-pub fn json_object(kvs: &Vec<(String, Value)>) -> Value {
+pub fn json_object(kvs: Vec<(String, Value)>) -> Value {
     Value::Object(
         kvs.iter()
             .cloned()
@@ -423,7 +423,6 @@ pub fn json_object(kvs: &Vec<(String, Value)>) -> Value {
 ///
 /// LamVal Json builtin
 pub fn case_json_object<T>(
-    parser_name: &str,
     parse_obj: impl FnOnce(&serde_json::Map<String, Value>) -> Result<T, Error>,
     value: &Value,
 ) -> Result<T, Error> {
@@ -432,7 +431,7 @@ pub fn case_json_object<T>(
         _ => Err(Error::UnexpectedJsonType {
             wanted: JsonType::Object,
             got: JsonType::from(value),
-            parser: parser_name.to_owned(),
+            parser: "Prelude.caseJsonObject".to_owned(),
         }),
     }
 }
@@ -440,14 +439,18 @@ pub fn case_json_object<T>(
 /// Extract a field from a JSON Object
 ///
 /// LamVal Json builtin
-pub fn json_field(name: &str, obj: &serde_json::Map<String, Value>) -> Result<Value, Error> {
+pub fn json_field<T>(
+    name: &str,
+    obj: &serde_json::Map<String, Value>,
+    parse_field: impl Fn(&Value) -> Result<T, Error>,
+) -> Result<T, Error> {
     obj.get(name)
-        .cloned()
         .ok_or_else(|| Error::UnexpectedFieldName {
             wanted: name.to_owned(),
             got: obj.keys().cloned().collect(),
             parser: name.to_owned(),
         })
+        .and_then(parse_field)
 }
 
 /// Construct a JSON Value from a sum type.
