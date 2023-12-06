@@ -16,7 +16,7 @@ import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef qualified as TD
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbrace, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbrace, rbracket, rparen, semi, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbracket, rparen, semi, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 caseIntERef :: R.QValName
@@ -234,7 +234,7 @@ printCtorE iTyDefs ((_, tyN), (ctorN, _)) prodVals = do
     else return $ ctorNDoc <> align (encloseSep lparen rparen comma (clone <$> prodDocs))
 
 printRecordE :: MonadPrint m => PC.TyDefs -> LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
-printRecordE iTyDefs ((_, tyN), _) vals = do
+printRecordE iTyDefs (qtyN@(_, tyN), _) vals = do
   fieldDocs <- for vals $
     \((fieldN, _), val) ->
       let fieldNDoc = R.printFieldName (withInfo fieldN)
@@ -242,7 +242,21 @@ printRecordE iTyDefs ((_, tyN), _) vals = do
             valDoc <- printValueE iTyDefs val
             return $ group $ fieldNDoc <> colon <+> clone valDoc
   let ctorDoc = R.printMkCtor (withInfo tyN)
-  return $ ctorDoc <+> align (lbrace <+> encloseSep mempty mempty (comma <> space) fieldDocs <+> rbrace)
+  phantomFields <-
+    case Map.lookup qtyN iTyDefs of
+      Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.RecordI (PC.Record fields _)) _) _) -> do
+        let phantomFields = TD.collectPhantomTyArgs (TD.recFieldTys fields) (toList tyArgs)
+
+        if null phantomFields
+          then return mempty
+          else return $ printPhantomDataField <$> phantomFields
+      _ -> throwInternalError "Expected a RecordE but got something else (TODO(szg251): Print got)"
+
+  return $ ctorDoc <+> align (braces (vsep (punctuate comma (fieldDocs <> phantomFields))))
+
+printPhantomDataField :: PC.TyArg -> Doc ann
+printPhantomDataField tyArg =
+  TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName phantomData
 
 printProductE :: MonadPrint m => PC.TyDefs -> LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE iTyDefs (qtyN@(_, tyN), _) vals = do

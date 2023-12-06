@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyInner, collectPhantomTyArgs, sumCtorTys, phantomDataCtorIdent) where
+module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyInner, collectPhantomTyArgs, sumCtorTys, recFieldTys, phantomDataCtorIdent, phantomFieldIdent) where
 
 import Control.Lens (view)
 import Control.Monad.Reader.Class (asks)
@@ -173,10 +173,14 @@ printPhantomData tyArg =
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
-  "phantom_" <> R.printTyArg tyArg <> colon <+> printPhantomData tyArg
+  phantomFieldIdent tyArg <> colon <+> printPhantomData tyArg
 
 phantomDataCtorIdent :: Doc ann
 phantomDataCtorIdent = "PhantomDataCtor"
+
+phantomFieldIdent :: PC.TyArg -> Doc ann
+phantomFieldIdent tyArg =
+  "phantom_" <> R.printTyArg tyArg
 
 {- | Prints an enum constructor with PhantomData fields
  ```rs
