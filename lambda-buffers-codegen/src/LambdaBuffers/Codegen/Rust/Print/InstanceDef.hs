@@ -4,7 +4,7 @@ import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
 import Data.Set (Set)
 import Data.Set qualified as Set
-import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as RsSyntax
+import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, braces, colon, comma, encloseSep, group, hardline, langle, line, rangle, space, (<+>))
@@ -21,9 +21,9 @@ impl<A: SomeClass, B: SomeClass, C: SomeClass> SomeClass for SomeTy<A, B, C> {
 }
 ```
 -}
-printInstanceDef :: RsSyntax.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
+printInstanceDef :: R.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
 printInstanceDef rsQTraitName ty =
-  let headDoc = RsSyntax.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner ty
+  let headDoc = R.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner ty
       freeVars = collectTyVars ty
    in case freeVars of
         [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
@@ -32,17 +32,21 @@ printInstanceDef rsQTraitName ty =
             <+> headDoc
             <+> braces (hardline <> space <> space <> implDoc)
 
-printInstanceContext :: RsSyntax.QTraitName -> [PC.Ty] -> Doc ann
+printInstanceContext :: R.QTraitName -> [PC.Ty] -> Doc ann
 printInstanceContext rsQTraitName = printInstanceContext' [rsQTraitName]
 
-printInstanceContext' :: [RsSyntax.QTraitName] -> [PC.Ty] -> Doc ann
-printInstanceContext' rsQTraitNames tys = align . group $ encloseSep langle rangle comma ([printTraitBound rsQTraitName ty | ty <- tys, rsQTraitName <- rsQTraitNames])
+defaultTraitBounds :: [R.QTraitName]
+defaultTraitBounds = [R.qLibRef R.MkTraitName "std" "clone" "Clone"]
 
-printTraitBound :: RsSyntax.QTraitName -> PC.Ty -> Doc ann
-printTraitBound qcn ty =
-  let crefDoc = RsSyntax.printRsQTraitName qcn
+printInstanceContext' :: [R.QTraitName] -> [PC.Ty] -> Doc ann
+printInstanceContext' rsQTraitNames tys =
+  align . group $ encloseSep langle rangle comma [printTraitBound (rsQTraitNames <> defaultTraitBounds) ty | ty <- tys]
+
+printTraitBound :: [R.QTraitName] -> PC.Ty -> Doc ann
+printTraitBound qcns ty =
+  let crefDocs = R.printRsQTraitName <$> qcns
       tyDoc = printTyInner ty
-   in tyDoc <> colon <+> crefDoc
+   in tyDoc <> colon <+> encloseSep mempty mempty "+" crefDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]
 collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . toList . collectVars
