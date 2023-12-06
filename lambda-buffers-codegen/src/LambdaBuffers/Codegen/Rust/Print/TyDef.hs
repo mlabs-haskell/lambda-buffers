@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyInner) where
+module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyInner, collectPhantomTyArgs, sumCtorTys, phantomDataCtorIdent) where
 
 import Control.Lens (view)
 import Control.Monad.Reader.Class (asks)
@@ -102,11 +102,11 @@ printTyBody tyN args (PC.OpaqueI si) = do
 printSum :: [PC.TyArg] -> PC.Sum -> Doc ann
 printSum tyArgs (PC.Sum ctors _) = do
   let phantomTyArgs = collectPhantomTyArgs (sumCtorTys ctors) tyArgs
-      phantomCtor = printPhantomDataCtor phantomTyArgs
+      phantomCtor = if null phantomTyArgs then mempty else [printPhantomDataCtor phantomTyArgs]
       ctorDocs = printCtor <$> toList ctors
   if null ctors
     then mempty
-    else align $ braces $ vsep $ punctuate comma (phantomCtor : ctorDocs)
+    else align $ braces $ vsep $ punctuate comma (ctorDocs <> phantomCtor)
 
 printCtor :: PC.Constructor -> Doc ann
 printCtor (PC.Constructor ctorName p@(PC.Product fields _)) =
@@ -175,6 +175,9 @@ printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
   "phantom_" <> R.printTyArg tyArg <> colon <+> printPhantomData tyArg
 
+phantomDataCtorIdent :: Doc ann
+phantomDataCtorIdent = "PhantomDataCtor"
+
 {- | Prints an enum constructor with PhantomData fields
  ```rs
  PhantomDataCtor(PhantomData<A>, PhantomData<B>)
@@ -182,7 +185,7 @@ printPhantomDataField tyArg =
 -}
 printPhantomDataCtor :: [PC.TyArg] -> Doc ann
 printPhantomDataCtor tyArgs =
-  "PhantomDataCtor" <> encloseSep lparen rparen comma (printPhantomData <$> tyArgs)
+  phantomDataCtorIdent <> encloseSep lparen rparen comma (printPhantomData <$> tyArgs)
 
 printTyInner :: PC.Ty -> Doc ann
 printTyInner (PC.TyVarI v) = printTyVar v

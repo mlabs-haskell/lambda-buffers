@@ -73,7 +73,7 @@ printDerivePartialEqBase mn iTyDefs mkInstance ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsBase (printValueE valE) of
+      case LV.runPrint lvEqBuiltinsBase (printValueE iTyDefs valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           for_ imps Print.importValue
@@ -144,9 +144,9 @@ printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -
 printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
   let extraDeps = Set.singleton (R.qLibRef R.MkValueName "serde_json" "" "Value")
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
-  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printValueE toPlutusDataValE)
+  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printValueE iTyDefs toPlutusDataValE)
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printValueE fromPlutusDataValE)
+  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printValueE iTyDefs fromPlutusDataValE)
 
   let instanceDoc =
         mkInstanceDoc
@@ -219,9 +219,9 @@ printDeriveJson mn iTyDefs mkInstanceDoc ty = do
 printDeriveJson' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
 printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE iTyDefs toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE iTyDefs fromJsonValE)
 
   let instanceDoc =
         mkInstanceDoc
