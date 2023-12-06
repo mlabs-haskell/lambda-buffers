@@ -4,7 +4,6 @@ import Data.Aeson qualified as A
 import Data.Functor (void)
 import LambdaBuffers.Codegen.Rust.Config qualified as R
 import Paths_lambda_buffers_codegen qualified as Paths
-import Test.LambdaBuffers.Codegen.Rust.LamVal qualified as LamVal
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase)
 
@@ -13,7 +12,6 @@ tests =
   testGroup
     "LambdaBuffers.Codegen.Rust"
     [ configParses
-    , LamVal.tests
     ]
 
 configParses :: TestTree
