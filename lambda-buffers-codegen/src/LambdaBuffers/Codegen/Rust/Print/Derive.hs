@@ -12,7 +12,7 @@ import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print (MonadPrint)
-import LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE)
+import LambdaBuffers.Codegen.Rust.Print.LamVal (printInstance)
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, braces, colon, comma, encloseSep, hcat, indent, lparen, parens, rparen, space, vsep, (<+>))
@@ -73,7 +73,7 @@ printDerivePartialEqBase mn iTyDefs mkInstance ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsBase (printValueE iTyDefs valE) of
+      case LV.runPrint lvEqBuiltinsBase (printInstance [R.qBuiltin R.MkTyName "Self", R.qBuiltin R.MkTyName "Self"] iTyDefs valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           for_ imps Print.importValue
@@ -144,9 +144,9 @@ printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -
 printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
   let extraDeps = Set.singleton (R.qLibRef R.MkValueName "serde_json" "" "Value")
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
-  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printValueE iTyDefs toPlutusDataValE)
+  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qBuiltin R.MkTyName "Self"] iTyDefs toPlutusDataValE)
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printValueE iTyDefs fromPlutusDataValE)
+  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qLibRef R.MkTyName "plutus-ledger-api" "plutus_data" "PlutusData"] iTyDefs fromPlutusDataValE)
 
   let instanceDoc =
         mkInstanceDoc
@@ -219,9 +219,9 @@ printDeriveJson mn iTyDefs mkInstanceDoc ty = do
 printDeriveJson' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
 printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE iTyDefs toJsonValE)
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printInstance [R.qBuiltin R.MkTyName "Self"] iTyDefs toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE iTyDefs fromJsonValE)
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printInstance [] iTyDefs fromJsonValE)
 
   let instanceDoc =
         mkInstanceDoc

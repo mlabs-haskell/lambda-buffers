@@ -97,7 +97,7 @@ printTyBody tyN args (PC.OpaqueI si) = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwInternalError si ("Should have an Opaque configured for " <> show tyN)
-    Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args))
+    Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args) <> semi)
 
 printSum :: [PC.TyArg] -> PC.Sum -> Doc ann
 printSum tyArgs (PC.Sum ctors _) = do

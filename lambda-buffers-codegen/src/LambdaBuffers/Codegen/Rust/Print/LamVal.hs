@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE) where
+module LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE, printInstance) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -43,6 +43,10 @@ cloneTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "clone") (
 phantomData :: R.QTyName
 phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
 
+{- | Clone a value (converting a type to owned)
+ As in codegen we cannot know whether a type is owned or borrowed, we make sure to have an owned type by making a clone.
+ We must also borrow it first for the same reason (worst case it's a double && which Rust knows how to deal with)
+-}
 clone :: Doc ann -> Doc ann
 clone = useTraitMethod cloneTrait "clone" . borrow
 
@@ -108,9 +112,7 @@ printCaseE iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
 {- | Prints a LamE lambda expression
 
  For greater compatibility, we also wrap the lambda in a `Box` and the arguments must always be
- borrowed references. In case the closue returns another closure, the borrowed reference must have
- the lifetime of `'a`. This is not a bulletproof solution, but it works for our current
- LamVal implementations.
+ borrowed references.
 
  ```rust
  Box::new(move |x0: &_| { <implBodyx> |)
@@ -122,11 +124,8 @@ printLamE iTyDefs lamVal = do
   let body = lamVal arg
   bodyDoc <- printValueE iTyDefs body
   argDoc <- printValueE iTyDefs arg
-  let argTy = case body of
-        LV.LamE _ -> "&'a _"
-        _ -> "&_"
 
-  return $ "std::boxed::Box::new(move" <+> pipe <> argDoc <> colon <+> argTy <> pipe <+> braces (space <> group bodyDoc) <> rparen
+  return $ "std::boxed::Box::new(move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc) <> rparen
 
 printAppE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE iTyDefs funVal argVal = do
@@ -327,3 +326,21 @@ printValueE _ (LV.TextE txt) = printTextE txt
 printValueE iTyDefs (LV.CaseTextE txtVal cases otherCase) = printCaseTextE iTyDefs txtVal cases otherCase
 printValueE iTyDefs (LV.TupleE l r) = printTupleE iTyDefs l r
 printValueE _ (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
+
+-- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+printInstance :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
+printInstance [] iTyDefs lamVal = printValueE iTyDefs lamVal
+printInstance argTys iTyDefs (LV.LamE lamVal) = printInstanceLamE argTys iTyDefs lamVal
+printInstance _ _ _ = throwInternalError "LamE expression expected with predefined argument types"
+
+-- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+printInstanceLamE :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printInstanceLamE [] _ _ = throwInternalError "LamE expression expected with predefined argument types"
+printInstanceLamE (argTy : argTys) iTyDefs lamVal = do
+  arg <- LV.freshArg
+  let body = lamVal arg
+  bodyDoc <- printInstance argTys iTyDefs body
+  argDoc <- printValueE iTyDefs arg
+  let argTy' = "&'a" <+> R.printRsQTyName argTy
+
+  return $ "std::boxed::Box::new(move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc) <> rparen

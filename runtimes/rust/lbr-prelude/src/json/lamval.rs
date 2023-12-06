@@ -13,8 +13,8 @@ pub fn case_json_array<'a, T: 'a>(
 ) -> Box<
     dyn 'a
         + Fn(
-            Box<dyn 'a + Fn(&Vec<Value>) -> Result<T, Error>>,
-        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<T, Error>>,
+            Box<dyn 'a + Fn(&'a Vec<Value>) -> Result<T, Error>>,
+        ) -> Box<dyn 'a + FnOnce(&'a Value) -> Result<T, Error>>,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_array(x0, x1, x2)))
 }
@@ -28,7 +28,7 @@ pub fn case_json_map<'a, K: 'a, V: 'a>(
     dyn 'a
         + Fn(
             Box<dyn 'a + Fn(&(Value, Value)) -> Result<(K, V), Error>>,
-        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<BTreeMap<K, V>, Error>>,
+        ) -> Box<dyn 'a + FnOnce(&'a Value) -> Result<BTreeMap<K, V>, Error>>,
 >
 where
     K: Ord,
@@ -40,8 +40,8 @@ where
 //
 /// LamVal Json builtin
 pub fn case_json_object<'a, T: 'a>(
-    x0: Box<dyn 'a + Fn(&serde_json::Map<String, Value>) -> Result<T, Error>>,
-) -> Box<dyn FnOnce(&Value) -> Result<T, Error> + 'a> {
+    x0: Box<dyn 'a + Fn(&'a serde_json::Map<String, Value>) -> Result<T, Error>>,
+) -> Box<dyn 'a + FnOnce(&'a Value) -> Result<T, Error>> {
     Box::new(move |x1| super::case_json_object(x0, x1))
 }
 
@@ -55,7 +55,7 @@ pub fn json_field<'a, T: 'a>(
         + FnOnce(
             &'a serde_json::Map<String, Value>,
         ) -> Box<
-            dyn 'a + FnOnce(Box<dyn 'a + Fn(&Value) -> Result<T, Error>>) -> Result<T, Error>,
+            dyn 'a + FnOnce(Box<dyn 'a + Fn(&'a Value) -> Result<T, Error>>) -> Result<T, Error>,
         >,
 > {
     Box::new(move |x1| Box::new(move |x2| super::json_field(x0, x1, x2)))
@@ -77,9 +77,12 @@ pub fn case_json_constructor<'a, T: 'a>(
     x0: &'a str,
 ) -> Box<
     dyn 'a
-        + Fn(
-            Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
-        ) -> Box<dyn 'a + FnOnce(&Value) -> Result<T, Error>>,
+        + FnOnce(
+            Vec<(
+                &'a str,
+                Box<dyn 'a + Fn(&'a Vec<Value>) -> Result<T, Error>>,
+            )>,
+        ) -> Box<dyn 'a + FnOnce(&'a Value) -> Result<T, Error>>,
 > {
     Box::new(move |x1| Box::new(move |x2| super::case_json_constructor(x0, x1, x2)))
 }
@@ -92,6 +95,6 @@ pub fn fail_parse<T>(err: &str) -> Result<T, Error> {
 /// Curried Result::and_then function
 pub fn bind_parse<'a, A: 'a, B: 'a>(
     x: Result<A, Error>,
-) -> Box<dyn 'a + FnOnce(Box<dyn Fn(&A) -> Result<B, Error>>) -> Result<B, Error>> {
+) -> Box<dyn 'a + FnOnce(Box<dyn 'a + Fn(&A) -> Result<B, Error>>) -> Result<B, Error>> {
     Box::new(move |f| x.and_then(|x1| f(&x1)))
 }

@@ -356,10 +356,10 @@ pub fn json_array(array: Vec<Value>) -> Value {
 /// Parse a JSON Array and its elements
 ///
 /// LamVal Json builtin
-pub fn case_json_array<T>(
-    parser_name: &str,
-    parse_arr: impl FnOnce(&Vec<Value>) -> Result<T, Error>,
-    value: &Value,
+pub fn case_json_array<'a, T>(
+    parser_name: &'a str,
+    parse_arr: impl FnOnce(&'a Vec<Value>) -> Result<T, Error>,
+    value: &'a Value,
 ) -> Result<T, Error> {
     match value {
         Value::Array(array) => parse_arr(array),
@@ -386,10 +386,10 @@ pub fn json_map(map: Vec<(Value, Value)>) -> Value {
 /// Parse a JSON Array as a dictionary
 ///
 /// LamVal Json builtin
-pub fn case_json_map<K, V>(
-    parser_name: &str,
+pub fn case_json_map<'a, K, V>(
+    parser_name: &'a str,
     parse_elem: impl Fn(&(Value, Value)) -> Result<(K, V), Error>,
-    value: &Value,
+    value: &'a Value,
 ) -> Result<BTreeMap<K, V>, Error>
 where
     K: Ord,
@@ -422,9 +422,9 @@ pub fn json_object(kvs: Vec<(String, Value)>) -> Value {
 /// Parse a JSON Object and its fields
 ///
 /// LamVal Json builtin
-pub fn case_json_object<T>(
-    parse_obj: impl FnOnce(&serde_json::Map<String, Value>) -> Result<T, Error>,
-    value: &Value,
+pub fn case_json_object<'a, T>(
+    parse_obj: impl FnOnce(&'a serde_json::Map<String, Value>) -> Result<T, Error>,
+    value: &'a Value,
 ) -> Result<T, Error> {
     match value {
         Value::Object(obj) => parse_obj(obj),
@@ -439,10 +439,10 @@ pub fn case_json_object<T>(
 /// Extract a field from a JSON Object
 ///
 /// LamVal Json builtin
-pub fn json_field<T>(
-    name: &str,
-    obj: &serde_json::Map<String, Value>,
-    parse_field: impl Fn(&Value) -> Result<T, Error>,
+pub fn json_field<'a, T>(
+    name: &'a str,
+    obj: &'a serde_json::Map<String, Value>,
+    parse_field: impl Fn(&'a Value) -> Result<T, Error>,
 ) -> Result<T, Error> {
     obj.get(name)
         .ok_or_else(|| Error::UnexpectedFieldName {
@@ -474,10 +474,13 @@ pub fn json_constructor(ctor_name: &str, ctor_product: impl AsRef<Vec<Value>>) -
 /// LamVal Json builtin
 pub fn case_json_constructor<'a, T: 'a>(
     parser_name: &'a str,
-    ctor_parsers: Vec<(&'a str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>)>,
-    value: &Value,
+    ctor_parsers: Vec<(
+        &'a str,
+        Box<dyn 'a + Fn(&'a Vec<Value>) -> Result<T, Error>>,
+    )>,
+    value: &'a Value,
 ) -> Result<T, Error> {
-    let ctor_parsers: BTreeMap<&str, Box<dyn Fn(&Vec<Value>) -> Result<T, Error>>> =
+    let ctor_parsers: BTreeMap<&'a str, Box<dyn 'a + Fn(&'a Vec<Value>) -> Result<T, Error>>> =
         BTreeMap::from_iter(ctor_parsers);
 
     match value {
