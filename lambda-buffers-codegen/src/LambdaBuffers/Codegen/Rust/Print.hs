@@ -27,7 +27,7 @@ import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Rust.Print.Syntax (crateNameToCargoText, crateNameToText)
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, brackets, comma, encloseSep, line, semi, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, brackets, line, semi, vsep, (<+>))
 
 data PrintModuleEnv m ann = PrintModuleEnv
   { env'printModuleName :: PC.ModuleName -> Doc ann
@@ -108,7 +108,10 @@ printRsQTraitImpl env mn iTyDefs hqcn d =
 
 printCompilationCfgs :: Pretty a => [a] -> Doc ann
 printCompilationCfgs [] = mempty
-printCompilationCfgs exts = "#!" <> brackets (align (encloseSep mempty mempty comma (pretty <$> exts)))
+printCompilationCfgs cfgs = vsep $ printCfg <$> cfgs
+  where
+    printCfg :: Pretty a => a -> Doc ann
+    printCfg cfg = "#!" <> brackets (pretty cfg)
 
 printImports :: Set R.CrateName -> Doc ann
 printImports crates =

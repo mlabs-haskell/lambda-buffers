@@ -39,4 +39,4 @@ rsPrintModuleEnv =
     RsSyntax.printModName
     RsDerive.rsTraitImplPrinters
     RsPrint.printTyDef
-    ["no_implicit_prelude"]
+    ["no_implicit_prelude", "allow(warnings)"]
