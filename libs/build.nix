@@ -28,6 +28,14 @@
         configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
       };
 
+      lbf-prelude-typescript = config.lbf-nix.lbfTypescript {
+        name = "lbf-prelude";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" ];
+        configs = [ "${config.packages.codegen-configs}/typescript-prelude-base.json" ];
+      };
+
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";
         src = ./lbf-prelude;
