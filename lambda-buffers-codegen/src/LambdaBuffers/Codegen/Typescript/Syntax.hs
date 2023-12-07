@@ -66,4 +66,4 @@ fromLbForeignRef fr =
   )
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
-filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".purs"
+filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".ts"

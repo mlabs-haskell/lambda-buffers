@@ -2,12 +2,12 @@
   "opaquesConfig": {
     "Prelude.Map": [
       "lbr-prelude/Map.js",
-      "Prelude",
+      "PreludeMap",
       "Map"
     ],
     "Prelude.Set": [
       "lbr-prelude/Set.js",
-      "Prelude",
+      "PreludeSet",
       "Set"
     ],
     "Prelude.List": [
@@ -38,12 +38,12 @@
     "Prelude.Char": [
       "lbr-prelude",
       "Prelude",
-      "CodePoint"
+      "Char"
     ],
     "Prelude.Integer": [
       "lbr-prelude",
       "Prelude",
-      "BigInt"
+      "Integer"
     ],
     "Prelude.Bool": [
       "lbr-prelude",

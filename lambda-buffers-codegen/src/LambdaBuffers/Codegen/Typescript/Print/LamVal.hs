@@ -13,19 +13,16 @@ import Control.Monad (replicateM)
 import Control.Monad.Error.Class (MonadError (throwError))
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
+import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printMkCtor, printTsQValName)
-
--- import LambdaBuffers.Codegen.Typescript.Syntax (normalValName)
-
-import Data.Text (Text)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hsep, indent, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hsep, indent, lbrace, lbracket, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 {- | 'Builtin' is the result of a symbol table lookup for things like
@@ -426,19 +423,6 @@ printCaseListE caseListVal cases otherCase = do
           ]
           <> parens caseListValDoc
 
--- caseValDoc <- printValueE caseListVal
--- caseDocs <-
---   for
---     cases
---     ( \(listLength, bodyVal) -> do
---         xs <- replicateM listLength LV.freshArg
---         conditionDoc <- printListE xs
---         bodyDoc <- printValueE $ bodyVal xs
---         return $ group $ conditionDoc <+> "->" <+> bodyDoc
---     )
--- otherDoc <- printOtherCase otherCase
--- return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
-
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals printValueE
@@ -577,19 +561,66 @@ printTextE = return . dquotes . pretty
 
 printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
+  -- The value that we are casing on
   caseValDoc <- printValueE txtVal
-  caseDocs <-
+
+  -- The argument for what we are casing on
+  caseOnArg <- LV.freshArg
+  caseOnArgDoc <- printValueE caseOnArg
+
+  -- Compile the branches
+  casesDocs <-
     for
       cases
       ( \case
           (LV.TextE caseTxt, bodyVal) -> do
             conditionDoc <- printTextE caseTxt
             bodyDoc <- printValueE bodyVal
-            return $ group $ conditionDoc <+> "->" <+> bodyDoc
-          (_wrongCaseVal, _) -> throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
+            return
+              ( conditionDoc
+              , vsep
+                  [ lbrace
+                  , indent 2 $ vsep ["return" <+> bodyDoc]
+                  , rbrace
+                  ]
+              )
+          (_wrongCaseVal, _) ->
+            throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
       )
+
   otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+
+  -- build the lambda which has the statements
+  return $
+    parens $
+      parens caseOnArgDoc
+        <+> "=>"
+        <+> vsep
+          [ lbrace
+          , indent 2 $
+              vsep $
+                case casesDocs of
+                  [] ->
+                    [otherDoc]
+                  (txt1, body1) : ts ->
+                    [ "if" <+> parens (caseOnArgDoc <+> "===" <+> txt1)
+                    , body1
+                    ]
+                      ++ concatMap
+                        ( \(txt, body) ->
+                            [ "else" <+> "if" <+> parens (caseOnArgDoc <+> "===" <+> txt)
+                            , body
+                            ]
+                        )
+                        ts
+                      ++ [ "else"
+                         , lbrace
+                         , indent 2 otherDoc
+                         , rbrace
+                         ]
+          , rbrace
+          ]
+          <> parens caseValDoc
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v
