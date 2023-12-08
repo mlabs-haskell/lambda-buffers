@@ -6,11 +6,11 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
-    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=bladyjoker/runpurstest-fix";
+    ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=49766d535b1fdb58ab4311f718a6f65024772377";
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     plutarch = {
-      url = "github:plutonomicon/plutarch-plutus";
+      url = "github:plutonomicon/plutarch-plutus?ref=seungheonoh/bumpPlutus";
       flake = false;
     };
     crane.url = "github:ipetkov/crane";
