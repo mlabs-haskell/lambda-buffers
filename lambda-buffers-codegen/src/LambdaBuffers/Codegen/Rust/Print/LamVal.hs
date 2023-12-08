@@ -40,6 +40,9 @@ fromStrTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert
 cloneTrait :: R.QTraitName
 cloneTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "clone") (R.MkTraitName "Clone")
 
+boxNew :: R.QValName
+boxNew = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "boxed") (R.MkValueName "Box::new")
+
 phantomData :: R.QTyName
 phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
 
@@ -115,7 +118,7 @@ printCaseE iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
  borrowed references.
 
  ```rust
- Box::new(move |x0: &_| { <implBodyx> |)
+ std::boxed::Box::new(move |x0: &_| { <implBodyx> |)
  ```
 -}
 printLamE :: MonadPrint m => PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
@@ -125,7 +128,7 @@ printLamE iTyDefs lamVal = do
   bodyDoc <- printValueE iTyDefs body
   argDoc <- printValueE iTyDefs arg
 
-  return $ "std::boxed::Box::new(move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc) <> rparen
+  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
 
 printAppE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE iTyDefs funVal argVal = do
@@ -357,4 +360,4 @@ printInstanceLamE (argTy : argTys) iTyDefs lamVal = do
   argDoc <- printValueE iTyDefs arg
   let argTy' = "&'a" <+> R.printRsQTyName argTy
 
-  return $ "std::boxed::Box::new(move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc) <> rparen
+  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))

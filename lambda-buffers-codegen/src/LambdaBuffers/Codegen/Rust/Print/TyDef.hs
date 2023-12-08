@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyInner, collectPhantomTyArgs, sumCtorTys, recFieldTys, phantomDataCtorIdent, phantomFieldIdent) where
+module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyTopLevel, printTyInner, collectPhantomTyArgs, sumCtorTys, recFieldTys, phantomDataCtorIdent, phantomFieldIdent, isRecursive) where
 
 import Control.Lens (view)
 import Control.Monad.Reader.Class (asks)
@@ -6,6 +6,9 @@ import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
 import Data.Map.Ordered (OMap)
 import Data.Map.Ordered qualified as OMap
+import Data.Set (Set)
+import Data.Set qualified as Set
+import Data.Text (Text)
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
@@ -25,6 +28,8 @@ import LambdaBuffers.Codegen.Rust.Print.Syntax (
  )
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
+import LambdaBuffers.ProtoCompat.Indexing (indexTyDefs)
+import LambdaBuffers.ProtoCompat.InfoLess (mkInfoLess)
 import Prettyprinter (Doc, align, angles, braces, brackets, colon, comma, encloseSep, equals, group, hardline, lparen, parens, punctuate, rparen, semi, vsep, (<+>))
 
 {- | Prints the type definition.
@@ -64,6 +69,12 @@ cloneMacro = R.qLibRef R.MkTraitName "std" "clone" "Clone"
 phantomData :: R.QTyName
 phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
 
+box :: R.QTyName
+box = R.qLibRef R.MkTyName "std" "boxed" "Box"
+
+boxed :: Doc ann -> Doc ann
+boxed doc = R.printRsQTyName box <> angles doc
+
 printDeriveDebug :: Doc ann
 printDeriveDebug =
   "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro <> comma <+> printRsQTraitName cloneMacro))
@@ -89,9 +100,9 @@ Foo'MkFoo a | Foo'MkBar b
 Prelude.Maybe a
 -}
 printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
-printTyBody _ tyArgs (PC.SumI s) = return (EnumTyDef, printSum tyArgs s)
-printTyBody _ tyArgs (PC.ProductI p) = return (StructTyDef, printProd tyArgs p)
-printTyBody _ tyArgs (PC.RecordI r) = printRec tyArgs r >>= \recDoc -> return (StructTyDef, recDoc)
+printTyBody parentTyN tyArgs (PC.SumI s) = (EnumTyDef,) <$> printSum parentTyN tyArgs s
+printTyBody parentTyN tyArgs (PC.ProductI p) = (StructTyDef,) <$> printProd parentTyN tyArgs p
+printTyBody parentTyN tyArgs (PC.RecordI r) = printRec parentTyN tyArgs r >>= \recDoc -> return (StructTyDef, recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
@@ -99,46 +110,48 @@ printTyBody tyN args (PC.OpaqueI si) = do
     Nothing -> throwInternalError si ("Should have an Opaque configured for " <> show tyN)
     Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args) <> semi)
 
-printSum :: [PC.TyArg] -> PC.Sum -> Doc ann
-printSum tyArgs (PC.Sum ctors _) = do
+printSum :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Sum -> m (Doc ann)
+printSum parentTyN tyArgs (PC.Sum ctors _) = do
   let phantomTyArgs = collectPhantomTyArgs (sumCtorTys ctors) tyArgs
       phantomCtor = if null phantomTyArgs then mempty else [printPhantomDataCtor phantomTyArgs]
-      ctorDocs = printCtor <$> toList ctors
+  ctorDocs <- traverse (printCtor parentTyN) (toList ctors)
   if null ctors
-    then mempty
-    else align $ braces $ vsep $ punctuate comma (ctorDocs <> phantomCtor)
+    then return mempty
+    else return $ align $ braces $ vsep $ punctuate comma (ctorDocs <> phantomCtor)
 
-printCtor :: PC.Constructor -> Doc ann
-printCtor (PC.Constructor ctorName p@(PC.Product fields _)) =
+printCtor :: MonadPrint m => PC.TyName -> PC.Constructor -> m (Doc ann)
+printCtor parentTyN (PC.Constructor ctorName p@(PC.Product fields _)) = do
   let ctorNDoc = printCtorName ctorName
-      prodDoc = printCtorInner p
-   in case fields of
-        [] -> group ctorNDoc
-        _ -> group $ ctorNDoc <> prodDoc
+  prodDoc <- printCtorInner parentTyN p
+  case fields of
+    [] -> return $ group ctorNDoc
+    _ -> return $ group $ ctorNDoc <> prodDoc
 
-printCtorInner :: PC.Product -> Doc ann
-printCtorInner (PC.Product fields _) = do
+printCtorInner :: MonadPrint m => PC.TyName -> PC.Product -> m (Doc ann)
+printCtorInner parentTyN (PC.Product fields _) = do
+  tyDocs <- for fields (printTyTopLevel parentTyN)
   if null fields
-    then mempty
-    else encloseSep lparen rparen comma (printTyInner <$> fields)
+    then return mempty
+    else return $ encloseSep lparen rparen comma tyDocs
 
-printRec :: MonadPrint m => [PC.TyArg] -> PC.Record -> m (Doc ann)
-printRec tyArgs (PC.Record fields _) = do
+printRec :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Record -> m (Doc ann)
+printRec parentTyN tyArgs (PC.Record fields _) = do
   let phantomTyArgs = collectPhantomTyArgs (recFieldTys fields) tyArgs
       phantomFields = printPhantomDataField <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
     else do
-      fieldDocs <- for (toList fields) printField
+      fieldDocs <- for (toList fields) (printField parentTyN)
       return $ group $ align $ braces $ vsep $ punctuate comma (fieldDocs <> phantomFields)
 
-printProd :: [PC.TyArg] -> PC.Product -> Doc ann
-printProd tyArgs (PC.Product fields _) = do
+printProd :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Product -> m (Doc ann)
+printProd parentTyN tyArgs (PC.Product fields _) = do
+  tyDocs <- for fields (printTyTopLevel parentTyN)
   let phantomTyArgs = collectPhantomTyArgs fields tyArgs
       phantomFields = printPhantomData <$> phantomTyArgs
   if null fields && null phantomTyArgs
-    then semi
-    else encloseSep lparen rparen comma ((printTyInner <$> fields) <> phantomFields) <> semi
+    then return semi
+    else return $ encloseSep lparen rparen comma (tyDocs <> phantomFields) <> semi
 
 -- | Filter out unused type arguments in order to make PhantomData fields for them
 collectPhantomTyArgs :: [PC.Ty] -> [PC.TyArg] -> [PC.TyArg]
@@ -161,10 +174,10 @@ sumCtorTys omap = concatMap go (OMap.assocs omap)
     go :: (PC.InfoLess PC.ConstrName, PC.Constructor) -> [PC.Ty]
     go (_, PC.Constructor _ (PC.Product fields _)) = fields
 
-printField :: MonadPrint m => PC.Field -> m (Doc ann)
-printField (PC.Field fn ty) = do
+printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
+printField parentTyN (PC.Field fn ty) = do
   let fnDoc = printFieldName fn
-  let tyDoc = printTyTopLevel ty
+  tyDoc <- printTyTopLevel parentTyN ty
   return $ fnDoc <> colon <+> tyDoc
 
 printPhantomData :: PC.TyArg -> Doc ann
@@ -191,24 +204,55 @@ printPhantomDataCtor :: [PC.TyArg] -> Doc ann
 printPhantomDataCtor tyArgs =
   phantomDataCtorIdent <> encloseSep lparen rparen comma (printPhantomData <$> tyArgs)
 
+printTyApp :: PC.TyApp -> Doc ann
+printTyApp (PC.TyApp f args _) =
+  let fDoc = printTyInner f
+      argsDoc = printTyInner <$> args
+   in group $ fDoc <> encloseGenerics argsDoc
+
+printTyTopLevel :: MonadPrint m => PC.TyName -> PC.Ty -> m (Doc ann)
+printTyTopLevel parentTyN ty = do
+  ci <- asks (view Print.ctxCompilerInput)
+  let iTyDefs = indexTyDefs ci
+  mn <- asks (view $ Print.ctxModule . #moduleName)
+  let recursive = isRecursive iTyDefs mn parentTyN ty
+  if recursive
+    then return $ boxed (printTyInner ty)
+    else return $ printTyInner ty
+
 printTyInner :: PC.Ty -> Doc ann
 printTyInner (PC.TyVarI v) = printTyVar v
 printTyInner (PC.TyRefI r) = printTyRef r
-printTyInner (PC.TyAppI a) = printTyAppInner a
+printTyInner (PC.TyAppI a) = printTyApp a
 
-printTyAppInner :: PC.TyApp -> Doc ann
-printTyAppInner (PC.TyApp f args _) =
-  let fDoc = printTyInner f
-      argsDoc = printTyInner <$> args
-   in group $ fDoc <> encloseGenerics argsDoc
+{- | Determines whether the field `Ty` of a data structure with name `TyName` is recursive
+ This is done by resolving references, and searching for reoccurances of the parent type name
+-}
+isRecursive :: PC.TyDefs -> PC.ModuleName -> PC.TyName -> PC.Ty -> Bool
+isRecursive iTyDefs mn (PC.TyName parentTyNameT _) = go mempty
+  where
+    go :: Set Text -> PC.Ty -> Bool
+    go _ (PC.TyVarI _) = False
+    go otherTys (PC.TyAppI (PC.TyApp _ tyArgs _)) = any (go otherTys) tyArgs
+    go otherTys (PC.TyRefI ref) = do
+      let (qtyN, tyN) =
+            case ref of
+              PC.LocalI (PC.LocalRef tyN' _) ->
+                let (PC.TyName tyNameT _) = tyN'
+                 in ((mkInfoLess mn, mkInfoLess tyN'), tyNameT)
+              PC.ForeignI (PC.ForeignRef tyN' mn' _) ->
+                let (PC.TyName tyNameT _) = tyN'
+                 in ((mkInfoLess mn', mkInfoLess tyN'), tyNameT)
 
-printTyTopLevel :: PC.Ty -> Doc ann
-printTyTopLevel (PC.TyVarI v) = printTyVar v
-printTyTopLevel (PC.TyRefI r) = printTyRef r
-printTyTopLevel (PC.TyAppI a) = printTyAppTopLevel a
+      let childrenTys =
+            case Map.lookup qtyN iTyDefs of
+              Nothing -> [] -- TODO(szg251): Gracefully failing, but this should be an error instead
+              Just (PC.TyDef _ (PC.TyAbs _ tyBody _) _) ->
+                case tyBody of
+                  PC.OpaqueI _ -> []
+                  PC.SumI (PC.Sum ctors _) -> sumCtorTys ctors
+                  PC.ProductI (PC.Product fields _) -> fields
+                  PC.RecordI (PC.Record fields _) -> recFieldTys fields
 
-printTyAppTopLevel :: PC.TyApp -> Doc ann
-printTyAppTopLevel (PC.TyApp f args _) =
-  let fDoc = printTyInner f
-      argsDoc = printTyInner <$> args
-   in group $ fDoc <> encloseGenerics argsDoc
+      (parentTyNameT == tyN)
+        || (not (Set.member tyN otherTys) && any (go (Set.insert tyN otherTys)) childrenTys)
