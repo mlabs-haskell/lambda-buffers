@@ -2,7 +2,7 @@
   description = "Lambda Buffers";
   inputs = {
     haskell-nix.url = "github:input-output-hk/haskell.nix";
-    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     protobufs-nix.url = "github:mlabs-haskell/protobufs.nix";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
