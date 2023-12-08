@@ -14,7 +14,6 @@ _: {
             pkgs.unification-fd
             pkgs.HUnit
           ]))
-          pkgs.haskell-language-server
 
           pkgs.protobuf
           pkgs.haskellPackages.proto-lens-protoc
