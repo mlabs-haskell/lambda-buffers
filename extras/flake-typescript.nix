@@ -106,20 +106,20 @@ let
                 # we run:
                 # ```
                 # echo "Copying <dependency1> and adding it to npm's cache"
-                # cp <dependency1> "$(pkgPathToNixNodeDepsPath <dependency1>)"
+                # ln -s <dependency1> "$(pkgPathToNixNodeDepsPath <dependency1>)"
                 # npm cache add <dependency1>
                 # echo "Copying <dependency2> and adding it to npm's cache"
-                # cp <dependency2> "$(pkgPathToNixNodeDepsPath <dependency2>)"
+                # ln -s <dependency2> "$(pkgPathToNixNodeDepsPath <dependency2>)"
                 # npm cache add <dependency2>
                 # ...
                 # echo "Copying <dependencyN> and adding it to npm's cache"
-                # cp <dependencyN> "$(pkgPathToNixNodeDepsPath <dependencyN>)"
+                # ln -s <dependencyN> "$(pkgPathToNixNodeDepsPath <dependencyN>)"
                 # npm cache add <dependencyN>
                 # ```
                 ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
                     ''
                         echo "Copying ${pkgPath} and adding it to npm's cache..."
-                        cp ${pkgPath} "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
+                        ln -s ${pkgPath} "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
                         npm cache add --loglevel=verbose "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
                     ''
                         ) dependencies)}
