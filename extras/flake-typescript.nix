@@ -8,11 +8,8 @@ pkgs:
   # for the the extra dependencies (not included in the `package.json`) for
   # `node` to execute. This will _not_ install the "transitive" dependencies.
   # 
-  # Loosely, this will `npm install` each of the tarballs in order so its
-  # important that
-  # 
-  #     - The dependencies are sorted topologically i.e., each tarball should
-  #     _only_ depend on packages before it in the list.
+  # Loosely, this will (in the order given) copy each tarball to a local
+  # directory, call `npm cache` on the tarball, and finally call `npm install`.
   #
   # For example, if one wanted to include `typescript` as a dependency, then
   # one could have
@@ -57,6 +54,13 @@ let
     }:
     pkgs.runCommand (name + "-node2nix") { buildInputs = [ pkgs.node2nix nodejs ]; }
       ''
+        # For some reason, npm likes to call `mkdir $HOME` (which is not
+        # writeable when building derivations on nix), so we change `HOME` to a
+        # writable directory
+        mkdir -p $TMPDIR/home
+        export HOME=$TMPDIR/home
+
+
         mkdir -p "$out"
 
         cd "$out"
@@ -82,9 +86,16 @@ let
         chmod +777 package.json
         chmod +777 package-lock.json
 
-        # `.nix-node-deps/` is the directory to save the tarball
-        # dependencies from `nix`.
-        mkdir .nix-node-deps/
+        mkdir -p $TMPDIR/cache
+        npm config set cache $TMPDIR/cache
+
+        # Create a directory to store the node dependencies provided by nix
+        NIX_NODE_DEPS_PATH=.nix-node-deps/
+        mkdir -p "$NIX_NODE_DEPS_PATH"
+
+        # Helper function to convert a package path to the path in
+        # `NIX_NODE_DEPS_PATH`
+        pkgPathToNixNodeDepsPath( ) { echo "$NIX_NODE_DEPS_PATH/$(basename "$1")"; }
 
         ${ if dependencies == [] then "" else
             ''
@@ -94,18 +105,22 @@ let
                 # Copying all `dependencies` into `.nix-nodes-deps/` i.e.,
                 # we run:
                 # ```
-                # echo "Copying <dependency1>"
-                # cp Copying <dependency1> .nix-node-deps/
-                # echo "Copying <dependency2>"
-                # cp Copying <dependency2> .nix-node-deps/
+                # echo "Copying <dependency1> and adding it to npm's cache"
+                # cp <dependency1> "$(pkgPathToNixNodeDepsPath <dependency1>)"
+                # npm cache add <dependency1>
+                # echo "Copying <dependency2> and adding it to npm's cache"
+                # cp <dependency2> "$(pkgPathToNixNodeDepsPath <dependency2>)"
+                # npm cache add <dependency2>
                 # ...
-                # echo "Copying <dependencyN>"
-                # cp Copying <dependencyN> .nix-node-deps/
+                # echo "Copying <dependencyN> and adding it to npm's cache"
+                # cp <dependencyN> "$(pkgPathToNixNodeDepsPath <dependencyN>)"
+                # npm cache add <dependencyN>
                 # ```
                 ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
                     ''
-                        echo "Copying ${pkgPath}..."
-                        cp "${pkgPath}" .nix-node-deps/
+                        echo "Copying ${pkgPath} and adding it to npm's cache..."
+                        cp ${pkgPath} "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
+                        npm cache add --loglevel=verbose "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
                     ''
                         ) dependencies)}
 
@@ -114,7 +129,7 @@ let
                 # npm install --save --package-lock-only <dependency1> <dependency2>  ... <dependencyN>
                 # ```
                 echo 'Running `npm install`...'
-                HOME=$TMPDIR npm install --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''".nix-node-deps/$(basename "${pkgPath}")"'') dependencies) }
+                npm install --loglevel=verbose --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''$(pkgPathToNixNodeDepsPath "${pkgPath}")'') dependencies) }
             ''
         }
 
