@@ -4,7 +4,7 @@
   options = {
 
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, system, config, ... }: {
+      ({ system, config, ... }: {
         options.settings = {
 
           shell = {
@@ -49,17 +49,17 @@
             shell = {
 
               tools = [
-                pkgs.haskell.packages.ghc924.fourmolu
-                pkgs.haskellPackages.apply-refact
+                inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
                 inputs.pre-commit-hooks.outputs.packages.${system}.nixpkgs-fmt
-                inputs.pre-commit-hooks.outputs.packages.${system}.cabal-fmt
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.shellcheck
-                inputs.pre-commit-hooks.outputs.packages.${system}.hlint
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.typos
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.markdownlint-cli
                 inputs.pre-commit-hooks.outputs.packages.${system}.dhall
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.purty
-                inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
               ];
 
               hook = ''
