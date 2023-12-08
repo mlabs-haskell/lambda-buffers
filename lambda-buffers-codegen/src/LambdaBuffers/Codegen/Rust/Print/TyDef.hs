@@ -162,8 +162,9 @@ collectPhantomTyArgs tys tyArgs = foldr go tyArgs tys
     go (PC.TyAppI (PC.TyApp _ tys' _)) tyArgs' = foldr go tyArgs' tys'
     go (PC.TyRefI _) tyArgs' = tyArgs'
 
+-- | Returns Ty information of all record fields, sorted by field name
 recFieldTys :: OMap (PC.InfoLess PC.FieldName) PC.Field -> [PC.Ty]
-recFieldTys omap = go <$> OMap.assocs omap
+recFieldTys omap = go <$> OMap.toAscList omap
   where
     go :: (PC.InfoLess PC.FieldName, PC.Field) -> PC.Ty
     go (_, PC.Field _ ty) = ty
