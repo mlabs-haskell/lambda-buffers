@@ -15628,6 +15628,10 @@
         "cardano-haskell-packages": "cardano-haskell-packages",
         "crane": "crane",
         "ctl": "ctl",
+        "ctl-nixpkgs": [
+          "ctl",
+          "nixpkgs"
+        ],
         "flake-parts": "flake-parts_2",
         "haskell-nix": "haskell-nix_8",
         "hci-effects": "hci-effects",

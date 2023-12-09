@@ -6,7 +6,11 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     proto-nix.url = "github:mlabs-haskell/proto.nix?ref=bladyjoker/update";
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
+
+    # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=49766d535b1fdb58ab4311f718a6f65024772377";
+    ctl-nixpkgs.follows = "ctl/nixpkgs";
+
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     plutarch = {
