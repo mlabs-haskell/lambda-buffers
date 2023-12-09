@@ -22,7 +22,8 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
-    -Wno-all-missed-specialisations -Wno-missing-kind-signatures
+    -Wno-missed-specialisations -Wno-all-missed-specialisations
+    -Wno-missing-kind-signatures
 
   if !flag(dev)
     ghc-options: -Werror
@@ -95,7 +96,7 @@ library
     , base                        >=4.16
     , containers
     , data-default
-    , freer-simple                <1.2.1.1.0
+    , freer-simple                >=1.2.1.2
     , generic-lens
     , generics-sop
     , lambda-buffers-codegen-pb
