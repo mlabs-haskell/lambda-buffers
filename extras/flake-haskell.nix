@@ -41,8 +41,6 @@ let
           tools = {
             cabal = { };
             haskell-language-server = { };
-            fourmolu = { };
-            apply-refact = { };
             hlint = { };
             cabal-fmt = { };
           };
