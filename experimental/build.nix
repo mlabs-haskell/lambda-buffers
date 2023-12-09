@@ -1,5 +1,5 @@
 _: {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, config, inputs', ... }:
     {
 
       devShells.dev-experimental = pkgs.mkShell {
@@ -9,18 +9,19 @@ _: {
           pkgs.dhall-lsp-server
           pkgs.dhall-json
 
-          (pkgs.haskellPackages.ghcWithPackages (pkgs: [
-            pkgs.text
-            pkgs.unification-fd
-            pkgs.HUnit
+          (pkgs.haskellPackages.ghcWithPackages (hsPkgs: [
+            hsPkgs.text
+            hsPkgs.unification-fd
+            hsPkgs.HUnit
           ]))
 
           pkgs.protobuf
-          pkgs.haskellPackages.proto-lens-protoc
+          pkgs.haskellPackages.haskell-language-server
           pkgs.swiPrologWithGui
         ] ++ config.settings.shell.tools;
 
         shellHook = config.settings.shell.hook;
+        inputsFrom = [ inputs'.proto-nix.devShells.dev-proto-nix ];
       };
 
     };

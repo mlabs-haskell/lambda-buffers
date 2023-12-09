@@ -27,7 +27,6 @@ common common-language
     ghc-options: -Werror
 
   default-extensions:
-    NoStarIsType
     BangPatterns
     BinaryLiterals
     ConstrainedClassMethods
@@ -64,6 +63,7 @@ common common-language
     MultiParamTypeClasses
     NamedFieldPuns
     NamedWildCards
+    NoStarIsType
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings

@@ -1,8 +1,9 @@
 { inputs, ... }: {
   imports = [
     ./extras/pre-commit-hooks-extra.nix
+    inputs.proto-nix.lib.preCommitModule
   ];
-  perSystem = { pkgs, system, config, ... }:
+  perSystem = { config, ... }:
     {
       devShells.dev-pre-commit = config.pre-commit.devShell;
       devShells.default = config.pre-commit.devShell;
@@ -38,8 +39,9 @@
             rustfmt-monorepo.enable = true;
             my-denofmt.enable = true;
             my-denolint.enable = true;
-
-          } // (inputs.protobufs-nix.lib.${system}.preCommitHooks { inherit pkgs; });
+            protolint.enable = true;
+            txtpbfmt.enable = true;
+          };
 
           settings = {
             ormolu.cabalDefaultExtensions = true;

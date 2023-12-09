@@ -183,7 +183,7 @@ printTupleE l r = do
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . dquotes . pretty
 
-printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
   caseValDoc <- printValueE txtVal
   caseDocs <-

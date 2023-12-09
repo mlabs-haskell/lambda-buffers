@@ -87,7 +87,11 @@ printPEqInstanceDef ty implDefDoc = do
               <+> HsInstDef.printInstanceContext PlRefs.pisDataQClassName freeVars
               <+> "=>"
               <+> headDoc
-              <+> "where" <> hardline <> space <> space <> implDefDoc
+              <+> "where"
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
 
 {- | Deriving PIsData.
 
@@ -169,14 +173,14 @@ printPlutusTypeInstanceDef ty implDefDoc = do
             "instance"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
         _ ->
           return $
             "instance"
@@ -184,14 +188,14 @@ printPlutusTypeInstanceDef ty implDefDoc = do
               <+> "=>"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
 
 printValueDef :: HsSyntax.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = HsSyntax.printHsValName valName <+> equals <+> valDoc
@@ -275,14 +279,14 @@ printPTryFromPAsDataInstanceDef ty implDefDoc = do
             "instance"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
         _ ->
           return $
             "instance"
@@ -290,14 +294,14 @@ printPTryFromPAsDataInstanceDef ty implDefDoc = do
               <+> "=>"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
   where
     printContext :: [PC.Ty] -> Doc ann
     printContext tys =
@@ -351,14 +355,14 @@ printPTryFromInstanceDef ty = do
             "instance"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
         _ ->
           return $
             "instance"
@@ -366,14 +370,14 @@ printPTryFromInstanceDef ty = do
               <+> "=>"
               <+> headDoc
               <+> "where"
-                <> hardline
-                <> space
-                <> space
-                <> pinnerDefDoc
-                <> hardline
-                <> space
-                <> space
-                <> implDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> pinnerDefDoc
+              <> hardline
+              <> space
+              <> space
+              <> implDefDoc
   where
     printContext :: [PC.Ty] -> Doc ann
     printContext tys =
