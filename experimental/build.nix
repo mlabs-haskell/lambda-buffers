@@ -6,7 +6,8 @@ _: {
         name = "experimental-env";
         buildInputs = [
           pkgs.dhall
-          pkgs.dhall-lsp-server
+          # TODO(bladyjoker): error: Package ‘dhall-lsp-server-1.1.3’ in /nix/store/p7iz0r8gs6ppkhj83zjmwyd21k8b7v3y-source/pkgs/development/haskell-modules/hackage-packages.nix:84957 is marked as broken, refusing to evaluate.
+          # pkgs.dhall-lsp-server
           pkgs.dhall-json
 
           (pkgs.haskellPackages.ghcWithPackages (hsPkgs: [
