@@ -3,49 +3,50 @@ compiler-nix-name: cardano-haskell-packages:
 { lib, config, pkgs, ... }:
 let
   pkgs' = pkgs;
-  # https://github.com/input-output-hk/haskell.nix/issues/1177
-  nonReinstallablePkgs = [
-    "array"
-    "base"
-    "binary"
-    "bytestring"
-    "Cabal"
-    "containers"
-    "deepseq"
-    "directory"
-    "exceptions"
-    "filepath"
-    "ghc"
-    "ghc-bignum"
-    "ghc-boot"
-    "ghc-boot"
-    "ghc-boot-th"
-    "ghc-compact"
-    "ghc-heap"
-    # "ghci"
-    # "haskeline"
-    "ghcjs-prim"
-    "ghcjs-th"
-    "ghc-prim"
-    "ghc-prim"
-    "hpc"
-    "integer-gmp"
-    "integer-simple"
-    "mtl"
-    "parsec"
-    "pretty"
-    "process"
-    "rts"
-    "stm"
-    "template-haskell"
-    "terminfo"
-    "text"
-    "time"
-    "transformers"
-    "unix"
-    "Win32"
-    "xhtml"
-  ];
+  # # https://github.com/input-output-hk/haskell.nix/issues/1177
+  # nonReinstallablePkgs = [
+  #   "array"
+  #   "base"
+  #   "binary"
+  #   "bytestring"
+  #   "Cabal"
+  #   "containers"
+  #   "deepseq"
+  #   "directory"
+  #   "exceptions"
+  #   "filepath"
+  #   "ghc"
+  #   "ghc-bignum"
+  #   "ghc-boot"
+  #   "ghc-boot"
+  #   "ghc-boot-th"
+  #   "ghc-compact"
+  #   "ghc-heap"
+  #   # "ghci"
+  #   # "haskeline"
+  #   "ghcjs-prim"
+  #   "ghcjs-th"
+  #   "ghc-prim"
+  #   "ghc-prim"
+  #   "hpc"
+  #   "integer-gmp"
+  #   "integer-simple"
+  #   "mtl"
+  #   "parsec"
+  #   "pretty"
+  #   "process"
+  #   "rts"
+  #   "stm"
+  #   "template-haskell"
+  #   "terminfo"
+  #   "text"
+  #   "time"
+  #   "transformers"
+  #   "unix"
+  #   "Win32"
+  #   "xhtml"
+  #   "system-cxx-std-lib" # See https://github.com/input-output-hk/haskell.nix/issues/1939
+  # ];
   brokenLibsModule =
     let
       responseFile = builtins.toFile "response-file" ''
@@ -79,7 +80,7 @@ let
   module = { pkgs, ... }: {
     _file = "lambda-buffers/extras/haskell.nix/plutus.nix:module";
     # FIXME: contentAddressed = true;
-    inherit nonReinstallablePkgs; # Needed for a lot of different things
+    reinstallableLibGhc = false; #inherit nonReinstallablePkgs; # Needed for a lot of different things
     packages = {
       cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf pkgs.secp256k1 ] ];
       cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
@@ -96,8 +97,11 @@ in
         root-keys:
         key-threshold: 0
 
+      index-state: cardano-haskell-packages 2023-05-16T08:53:30Z
+
       allow-newer:
         *:base,
+        *:flat,
         *:containers,
         *:directory,
         *:time,
