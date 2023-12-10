@@ -8,8 +8,8 @@ module LambdaBuffers.Codegen.Typescript.Print.InstanceDef (
 import Data.Text (Text)
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (
+  printLowerTsUnqualifiedQClassName,
   printTsQClassName,
-  printTsUnqualifiedQClassName,
   printVarName,
  )
 import LambdaBuffers.Codegen.Typescript.Print.Ty (printTyInner)
@@ -80,7 +80,7 @@ printInstanceDecl qcn ty =
             -- TODO: this is broken for foreign types with the same name as
             -- a type declared in this module.
             getTyName tyName
-   in printTsUnqualifiedQClassName qcn <> go ty
+   in printLowerTsUnqualifiedQClassName qcn <> go ty
 
 getTyName :: PC.TyName -> Text
 getTyName (PC.TyName tyName _) = tyName
@@ -106,7 +106,7 @@ printInstanceDict qcn ty =
       go (PC.TyRefI tyRef) =
         (,) TopLevelInstanceDict $
           mconcat
-            [ printTsUnqualifiedQClassName qcn
+            [ printLowerTsUnqualifiedQClassName qcn
             , pretty $
                 case tyRef of
                   PC.LocalI PC.LocalRef {PC.tyName = tyName} -> getTyName tyName

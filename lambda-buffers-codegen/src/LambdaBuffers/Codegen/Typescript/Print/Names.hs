@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Typescript.Print.Names (printTsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printTsQValName, printTsClassMethodName, printTsQClassName, printTsValName, printTsUnqualifiedQClassName) where
+module LambdaBuffers.Codegen.Typescript.Print.Names (printTsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printTsQValName, printTsClassMethodName, printTsQClassName, printTsValName, printTsUnqualifiedQClassName, printLowerTsUnqualifiedQClassName) where
 
 import Data.Char qualified as Char
 import Data.Text qualified as Text
@@ -20,6 +20,12 @@ printTsQClassName (_, Ts.MkModuleName pursModName, Ts.MkClassName pursClassName)
 
 printTsUnqualifiedQClassName :: Ts.QClassName -> Doc ann
 printTsUnqualifiedQClassName (_, Ts.MkModuleName _pursModName, Ts.MkClassName pursClassName) = pretty pursClassName
+
+printLowerTsUnqualifiedQClassName :: Ts.QClassName -> Doc ann
+printLowerTsUnqualifiedQClassName (_, Ts.MkModuleName _pursModName, Ts.MkClassName pursClassName) =
+  pretty $ case Text.uncons pursClassName of
+    Nothing -> "TODO(jaredponn): Got an empty Typescript class name"
+    Just (c, cs) -> Text.cons (Char.toLower c) cs
 
 printTsQValName :: Ts.QValName -> Doc ann
 printTsQValName (Just (_, Ts.MkModuleName pursModName), Ts.MkValueName pursValName) = case Text.uncons pursValName of

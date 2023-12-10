@@ -13,7 +13,7 @@ import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printTsQTyName, printTyName, printVarName)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, flatAlt, group, langle, lbrace, lbracket, pipe, rangle, rbrace, rbracket, sep, space, squotes, vcat, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, flatAlt, group, langle, lbrace, lbracket, pipe, rangle, rbrace, rbracket, space, squotes, vcat, vsep, (<+>))
 
 {- | `printTyAbs tyN tyAbs` prints the type abstraction `tyAbs` for a type name `tyN`.
 
@@ -48,7 +48,13 @@ printTyBody tyN args (PC.OpaqueI si) = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwInternalError si ("Internal error: Should have an Opaque configured for " <> show tyN)
-    Just hqtyn -> return (printTsQTyName hqtyn <> if null args then mempty else space <> sep (printVarName . view #argName <$> args))
+    Just hqtyn ->
+      return
+        ( printTsQTyName hqtyn
+            <> if null args
+              then mempty
+              else encloseSep langle rangle comma $ map (printVarName . view #argName) args
+        )
 
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn

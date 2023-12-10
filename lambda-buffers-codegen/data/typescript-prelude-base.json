@@ -33,7 +33,7 @@
     "Prelude.Text": [
       "lbr-prelude",
       "Prelude",
-      "String"
+      "Text"
     ],
     "Prelude.Char": [
       "lbr-prelude",
@@ -48,7 +48,7 @@
     "Prelude.Bool": [
       "lbr-prelude",
       "Prelude",
-      "Boolean"
+      "Bool"
     ]
   },
   "classesConfig": {

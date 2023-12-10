@@ -18,8 +18,6 @@ import Prettyprinter (
   align,
   colon,
   comma,
-  -- line, pretty,
-
   defaultLayoutOptions,
   equals,
   indent,
@@ -59,14 +57,14 @@ lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       return $
         OverloadedBuiltin
           ( case instanceDictIdent tsEqClass ty' of
-              (TopLevelInstanceDict, dict) -> Ts.normalValName "prelude" "Prelude" dict
+              (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
               (ArgumentInstanceDict, dict) -> Ts.primValName dict
           )
           0 -- index in the list of substitutions for the type we're overloading on
           ".eq"
     ("true", _) -> Just $ Builtin $ Ts.primValName "true"
     ("false", _) -> Just $ Builtin $ Ts.primValName "false"
-    ("and", _) -> Just $ Builtin $ Ts.normalValName "prelude" "Prelude" "and"
+    ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "and"
     ("not", _) -> Just $ Builtin $ Ts.primValName "!"
     _ -> Nothing
 
@@ -77,7 +75,7 @@ neqClassMethodName :: Ts.ValueName
 neqClassMethodName = Ts.MkValueName "neq"
 
 tsEqClass :: Ts.QClassName
-tsEqClass = (Ts.MkPackageName "prelude", Ts.MkModuleName "Prelude", Ts.MkClassName "Eq")
+tsEqClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "Prelude", Ts.MkClassName "Eq")
 
 printDeriveEq :: PC.ModuleName -> PC.TyDefs -> ExportInstanceDecl (Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
 printDeriveEq mn iTyDefs exportInstanceDeclDoc ty = do
@@ -145,7 +143,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
     ("listData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List"
     ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Just"
     ("failParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Nothing"
-    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "prelude" "Prelude" "bindMaybe"
+    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "bindMaybe"
     _ -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName

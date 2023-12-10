@@ -40,12 +40,18 @@ printModule = do
   st <- get
   let modDoc =
         vsep $
-          printImports
-            (ctx ^. Print.ctxTyImports)
-            (ctx ^. Print.ctxOpaqueTyImports)
-            (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
-            (ctx ^. Print.ctxRuleImports)
-            (st ^. Print.stValueImports)
+          -- TODO(jaredponn): the `@ts-nocheck` disables all semantic checking from TypeScript
+          -- https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#-ts-nocheck-in-typescript-files
+          -- In the future, how about we properly resolve this to convince
+          -- TypeScript that the generated code is okay....
+          -- To do this, we need to be more explicit about the type information we're dumping
+          "// @ts-nocheck"
+            : printImports
+              (ctx ^. Print.ctxTyImports)
+              (ctx ^. Print.ctxOpaqueTyImports)
+              (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
+              (ctx ^. Print.ctxRuleImports)
+              (st ^. Print.stValueImports)
             : mempty
             : tyDefDocs
             ++ instDocs
@@ -140,10 +146,8 @@ printImports lbTyImports tsTyImports classImps ruleImps valImps =
   let groupedLbImports =
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
           `Set.union` ruleImps
-      -- We make the hopefully reasonable assumption that for these imports,
-      -- the package name matches the module name..
       lbImportDocs =
-        importQualified . (id &&& id) . printModName' <$> toList groupedLbImports
+        importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName') <$> toList groupedLbImports
 
       groupedTsImports =
         Set.fromList [(pkg, mn) | (pkg, mn, _tn) <- toList tsTyImports]

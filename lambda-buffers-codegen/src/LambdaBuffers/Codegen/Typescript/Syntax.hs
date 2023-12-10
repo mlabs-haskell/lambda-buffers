@@ -56,7 +56,8 @@ pkgNameToText :: PackageName -> Text
 pkgNameToText (MkPackageName pkg) = pkg
 
 pkgFromLbModuleName :: PC.ModuleName -> PackageName
-pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
+-- pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
+pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["lb"])
 
 fromLbForeignRef :: PC.ForeignRef -> QTyName
 fromLbForeignRef fr =
@@ -66,4 +67,4 @@ fromLbForeignRef fr =
   )
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
-filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".ts"
+filepathFromModuleName mn = Text.unpack $ Text.intercalate "/" ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".mts"
