@@ -65,7 +65,8 @@ let
 
         cd "$out"
 
-        cp -r ${src}/* .
+        # Copy all files over
+        cp -r ${src}/. .
 
         #########################################################
         # Verify that `package.json` and `package-lock.json` exist
@@ -102,7 +103,7 @@ let
                 # We write the list of `dependencies` as 
                 # `<dependency1>`, `<dependency2>`, ... ,`<dependencyN>`
 
-                # Copying all `dependencies` into `.nix-nodes-deps/` i.e.,
+                # Copying all `dependencies` into `.nix-node-deps/` i.e.,
                 # we run:
                 # ```
                 # echo "Copying <dependency1> and adding it to npm's cache"

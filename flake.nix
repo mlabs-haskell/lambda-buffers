@@ -55,6 +55,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./experimental/build.nix
+        ./experimental/prelude-sample-project-ts/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];

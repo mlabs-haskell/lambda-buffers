@@ -1,0 +1,22 @@
+{
+  "name": "lambda-buffers-prelude-sample-project",
+  "version": "1.0.0",
+  "description": "Sample project for lambda buffers",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npx tsc -b src/",
+    "test": ":"
+  },
+  "author": "Jared Pon",
+  "license": "ISC",
+  "files": [
+    "./dist/**/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

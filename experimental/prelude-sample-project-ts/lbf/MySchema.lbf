@@ -1,0 +1,8 @@
+module MySchema
+
+import Prelude
+-- import Plutus.V1 
+
+sum MyMaybe a = MyJust a Integer a | MyNothing
+
+derive Eq (MyMaybe a)

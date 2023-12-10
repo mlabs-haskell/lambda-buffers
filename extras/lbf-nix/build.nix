@@ -17,9 +17,25 @@ _: {
         lbfPlutarch' = import ./lbf-plutarch.nix pkgs config.packages.lbf lbg-plutarch;
         lbfPlutarch = import ./lbf-plutus-plutarch.nix pkgs config.packages.lbf lbg-plutarch;
         lbfPurescript = import ./lbf-purescript.nix pkgs config.packages.lbf lbg-purescript;
-        lbfTypescript = import ./lbf-typescript.nix pkgs config.packages.lbf lbg-typescript;
         lbfPreludePurescript = import ./lbf-prelude-purescript.nix pkgs config.packages.lbf lbg-purescript;
         lbfPlutusPurescript = import ./lbf-plutus-purescript.nix pkgs config.packages.lbf lbg-purescript;
+        lbfTypescript = opts:
+          (import ./lbf-typescript.nix pkgs config.packages.lbf lbg-typescript opts).tgz;
+
+        lbfPreludeTypescript = opts:
+          (import ./lbf-prelude-typescript.nix
+            pkgs
+            config.packages.lbf
+            lbg-typescript
+            config
+            opts).tgz;
+        lbfPreludeTypescriptSrc = opts:
+          (import ./lbf-prelude-typescript.nix
+            pkgs
+            config.packages.lbf
+            lbg-typescript
+            config
+            opts).src;
       };
 
     };
