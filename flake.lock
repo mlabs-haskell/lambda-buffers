@@ -15488,16 +15488,15 @@
         "protobuf": "protobuf"
       },
       "locked": {
-        "lastModified": 1702130144,
+        "lastModified": 1702232147,
         "narHash": "sha256-6g/wgQULJ5ouq0cmugo5d52oznYvTiB5ulWLYOmo2SI=",
         "owner": "mlabs-haskell",
         "repo": "proto.nix",
-        "rev": "373812295cc6d96bb32fa6c0b2c42620cb832d91",
+        "rev": "1c36d34cec9e0764ff53dbe50193e222d1eae568",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "bladyjoker/update",
         "repo": "proto.nix",
         "type": "github"
       }

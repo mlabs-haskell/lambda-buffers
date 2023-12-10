@@ -20,7 +20,7 @@
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
 
     ## Nix library for Google Protobufs
-    proto-nix.url = "github:mlabs-haskell/proto.nix?ref=bladyjoker/update";
+    proto-nix.url = "github:mlabs-haskell/proto.nix";
 
     # Purescript
 
