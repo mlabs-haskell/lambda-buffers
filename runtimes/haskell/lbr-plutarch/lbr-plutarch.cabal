@@ -102,11 +102,11 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base            >=4.16
-    , hedgehog        >=1.2
+    , hedgehog
     , lbr-plutarch
-    , plutarch        >=1.3
-    , tasty           >=1.4
-    , tasty-hedgehog  >=1.4
+    , plutarch
+    , tasty
+    , tasty-hedgehog
     , tasty-hunit
 
   other-modules:  Test.LambdaBuffers.Runtime.Plutarch

@@ -1,27 +1,56 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+
+    # Haskell
+
+    ## Using haskell.nix to build Haskell projects
+    haskell-nix.url = "github:input-output-hk/haskell.nix";
+
+    # Nix
+
+    ## Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    ## Code quality automation
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
-    proto-nix.url = "github:mlabs-haskell/proto.nix?ref=bladyjoker/update";
+
+    ## Hercules CI effects
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
 
-    # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
+    ## Nix library for Google Protobufs
+    proto-nix.url = "github:mlabs-haskell/proto.nix?ref=bladyjoker/update";
+
+    # Purescript
+
+    ## Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.url = "github:plutonomicon/cardano-transaction-lib?rev=49766d535b1fdb58ab4311f718a6f65024772377";
     ctl-nixpkgs.follows = "ctl/nixpkgs";
 
+    # Rust
+
+    crane.url = "github:ipetkov/crane";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+
+    # Plutus
+
+    ## CHaP is a custom hackage for Plutus development
+    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+    cardano-haskell-packages.flake = false;
+
+    # Some crypto overlays necessary for Plutus
     iohk-nix.url = "github:input-output-hk/iohk-nix";
-    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    ## Foundational Plutus library
+    plutus.url = "github:input-output-hk/plutus";
+
+    # Plutarch eDSL that LB generates to
     plutarch = {
       url = "github:plutonomicon/plutarch-plutus?ref=seungheonoh/bumpPlutus";
       flake = false;
     };
-    crane.url = "github:ipetkov/crane";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
-    cardano-haskell-packages.flake = false;
-    plutus.url = "github:input-output-hk/plutus";
+
   };
 
   outputs = inputs@{ flake-parts, ... }:
