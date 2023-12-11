@@ -39,15 +39,15 @@
     cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
     cardano-haskell-packages.flake = false;
 
-    # Some crypto overlays necessary for Plutus
+    ## Some crypto overlays necessary for Plutus
     iohk-nix.url = "github:input-output-hk/iohk-nix";
 
     ## Foundational Plutus library
     plutus.url = "github:input-output-hk/plutus";
 
-    # Plutarch eDSL that LB generates to
+    ## Plutarch eDSL that LB generates to
     plutarch = {
-      url = "github:plutonomicon/plutarch-plutus?ref=seungheonoh/bumpPlutus";
+      url = "github:plutonomicon/plutarch-plutus";
       flake = false;
     };
 
