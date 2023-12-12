@@ -40,19 +40,15 @@ pkgs:
 , ...
 }:
 let
-  # Derivation for the result of calling the CLI tool `node2nix` with the
-  # provided `src`.
-  #
-  # Notes: 
-  #
-  #   - `node2nix` creates a nix expression in `default.nix` of type 
-  #   `{pkgs, system, nodejs} -> {args, sources, tarball, package,  shell, nodeDependencies }` 
-  node2nixExprs =
-    {
-      # Extra flags passed directly to `node2nix`
-      extraFlags ? [ ]
-    }:
-    pkgs.runCommand (name + "-node2nix") { buildInputs = [ pkgs.node2nix nodejs ]; }
+  packageLockDependencies = import ./typescript/fetch-package-lock.nix pkgs { inherit src; };
+
+  # Derivation for
+  # 1. Caching (via npm cache) all dependencies already existing in the package-lock.json
+  # 2. Caching the extra dependencies provided by nix
+  # 3. Installing the extra dependencies provided by  nix to the package-lock.json
+  # 4. npm install all of the above
+  npmProject =
+    pkgs.runCommand (name + "-npm-project") { buildInputs = [ nodejs pkgs.jq ]; }
       ''
         # For some reason, npm likes to call `mkdir $HOME` (which is not
         # writeable when building derivations on nix), so we change `HOME` to a
@@ -80,23 +76,44 @@ let
         fi
 
         #########################################################
-        # Use `npm` to add the extra tarball dependencies from nix.
+        # Create tarballs of all dependencies already in the lock file
         #########################################################
-
-        # Note `npm` needs to modify these files, so we change the permissions
-        chmod +777 package.json
-        chmod +777 package-lock.json
-
         mkdir -p $TMPDIR/cache
         npm config set cache $TMPDIR/cache
 
-        # Create a directory to store the node dependencies provided by nix
-        NIX_NODE_DEPS_PATH=.nix-node-deps/
-        mkdir -p "$NIX_NODE_DEPS_PATH"
+        # We write the list of `packageLockDependencies` as
+        # `<dependency1>`, `<dependency2>`, ..., `<dependencyN>`
+        # this will create:
+        # ```
+        # echo "Adding <dependency1> to npm's cache"
+        # npm cache add --loglevel-verbose <dependency1>
+        # 
+        # echo "Adding <dependency2> to npm's cache"
+        # npm cache add --loglevel-verbose <dependency2>
+        # 
+        # ...
+        # 
+        # echo "Adding <dependencyN> to npm's cache"
+        # npm cache add --loglevel-verbose <dependencyN>
+        # ```
+        ${
+            builtins.concatStringsSep "\n" (
+                map 
+                (pkg: 
+                    ''
+                        echo "Adding ${pkg.packageResolvedFetched} to npm's cache"
+                        npm cache add --loglevel-verbose ${pkg.packageResolvedFetched}
+                    ''
+                )
+                packageLockDependencies)
+        }
 
-        # Helper function to convert a package path to the path in
-        # `NIX_NODE_DEPS_PATH`
-        pkgPathToNixNodeDepsPath( ) { echo "$NIX_NODE_DEPS_PATH/$(basename "$1")"; }
+        #########################################################
+        # Use `npm` to add the extra tarball dependencies from nix.
+        #########################################################
+        # Note `npm` needs to modify these files, so we change the permissions
+        chmod +777 package.json
+        chmod +777 package-lock.json
 
         ${ if dependencies == [] then "" else
             ''
@@ -106,22 +123,30 @@ let
                 # Copying all `dependencies` into `.nix-node-deps/` i.e.,
                 # we run:
                 # ```
-                # echo "Copying <dependency1> and adding it to npm's cache"
-                # cp <dependency1> "$(pkgPathToNixNodeDepsPath <dependency1>)"
+                # echo "Adding <dependency1> npm's cache"
+                # ln -s <dependency1> .
                 # npm cache add <dependency1>
-                # echo "Copying <dependency2> and adding it to npm's cache"
-                # cp <dependency2> "$(pkgPathToNixNodeDepsPath <dependency2>)"
+                # echo "Adding <dependency2> npm's cache"
+                # ln -s <dependency2> .
                 # npm cache add <dependency2>
                 # ...
-                # echo "Copying <dependencyN> and adding it to npm's cache"
-                # cp <dependencyN> "$(pkgPathToNixNodeDepsPath <dependencyN>)"
+                # echo "Adding <dependency2> npm's cache"
+                # ln -s <dependencyN> .
                 # npm cache add <dependencyN>
                 # ```
+                # TODO(jaredponn): Why are we symlinking the stuff in the local
+                # directory and adding that to the cache? `npm` is a bit weird
+                # when it comes to adding dependencies on the local
+                # filesystem. It only allows relative paths, so by symlinking
+                # everything in the project root, `npm` seems to be able to find
+                # everything even when there are other npm modules which depend
+                # on other local files.
+                # This probably needs more investigation..
                 ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
                     ''
-                        echo "Copying ${pkgPath} and adding it to npm's cache..."
-                        cp ${pkgPath} "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
-                        npm cache add --loglevel=verbose "$(pkgPathToNixNodeDepsPath "${pkgPath}")"
+                        echo "Adding ${pkgPath} to npm's cache..."
+                        ln -s "${pkgPath}" .
+                        npm cache add --loglevel=verbose "$(basename "${pkgPath}")"
                     ''
                         ) dependencies)}
 
@@ -129,63 +154,71 @@ let
                 # ```
                 # npm install --save --package-lock-only <dependency1> <dependency2>  ... <dependencyN>
                 # ```
-                echo 'Running `npm install`...'
-                npm install --loglevel=verbose --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''$(pkgPathToNixNodeDepsPath "${pkgPath}")'') dependencies) }
+                echo 'Running `npm --package-lock-only install` for the tarballs from nix...'
+                npm install --loglevel=verbose --save --package-lock-only ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''"$(basename "${pkgPath}")"'') dependencies) }
             ''
         }
 
         #########################################################
-        # Run `node2nix`
+        # Install all the dependencies
         #########################################################
-        echo 'Running `node2nix`...'
-        node2nix --input package.json --lock package-lock.json ${builtins.concatStringsSep " " extraFlags}
+        echo 'Running `npm install` to create node_modules...'
+        npm install
 
-        # Reset the permissions for  `package.json` and `package-lock.json` to
-        # read only for everyone.
+        #########################################################
+        # Fix the shebangsfomr the installed packages
+        #########################################################
+
+        for PKGJSON in $(find node_modules -name package.json -type f)
+        do
+            PKGDIR=$(dirname "$PKGJSON")
+            for BIN in $(jq '(."bin"//{})[]' -r "$PKGJSON")
+            do
+                patchShebangs "$PKGDIR/$BIN"
+            done
+        done
+
+        # Reset the permissions as they were i.e., read only for everyone
         chmod =444 package.json
         chmod =444 package-lock.json
       '';
 
-  node2nixDevelop = node2nixExprs { extraFlags = [ "--development" ]; };
-  node2nixDevelopAttrs = ((import node2nixDevelop) { inherit nodejs pkgs; inherit (pkgs) system; });
-
   # Build the project (runs `npm run build`), and puts the entire output in the
   # nix store
-  project = node2nixDevelopAttrs.package.override
-    {
-      postInstall =
-        ''
-          npm run --loglevel=verbose build
-        '';
-    };
+  project =
+    npmProject.overrideAttrs (_self: super:
+      {
+        # Append the build command at the end.
+        buildCommand = super.buildCommand + "\n" +
+          ''
+            npm run --loglevel-verbose build
+          '';
+      });
 
-  shell = node2nixDevelopAttrs.shell.override
+
+  shell = npmProject.overrideAttrs (_self: super:
     {
-      shellHook =
-        node2nixDevelopAttrs.shell.shellHook
-        +
+      buildInputs = super.buildInputs ++ devShellTools;
+      shellHook = super.shellHook or "" + "\n" +
         ''
-          # Note: `node2nix` sets `$NODE_PATH` s.t. it is a single path.
+          export NODE_PATH=${npmProject}/node_modules/
           echo 'Creating a symbolic link from `$NODE_PATH` to `node_modules`...'
+
           ln -snf "$NODE_PATH" node_modules
 
-          # Run the provided `devShellHook`
           ${devShellHook}
         '';
-      buildInputs = node2nixDevelopAttrs.shell.buildInputs ++ devShellTools;
-    };
+    });
 
   # Creates a tarball of `project` using `npm pack` and puts it in the nix
   # store.
   npmPack = pkgs.stdenv.mkDerivation {
     buildInputs = [ nodejs ];
-    name = "${node2nixDevelopAttrs.args.name}.tgz";
+    name = "${name}.tgz";
 
-    # A glance at the generated nix expressions in `node2nixDevelop` will
-    # show why the following path is where the package really is.
-    src = "${project}/lib/node_modules/${node2nixDevelopAttrs.args.packageName}";
+    src = project;
     buildPhase = ''
-      cp -r "$src" .
+      cp -r "$src/." .
 
       # Why do we set `HOME=$TMPDIR`? This is because apparently `npm` will
       # attempt to do something like `mkdir $HOME` for which `$HOME` is not
@@ -199,16 +232,17 @@ let
   };
 
   # Run tests with `npm test`.
-  test = node2nixDevelopAttrs.package.override
+  test = npmProject.overrideAttrs (_self: super:
     {
-      postInstall =
+      # Append the build command at the end.
+      buildCommand = super.buildCommand + "\n" +
         ''
           npm --loglevel=verbose test
           rm -rf $out
           touch $out
         '';
-      buildInputs = node2nixDevelopAttrs.package.buildInputs ++ testTools;
-    };
+      buildInputs = super.buildInputs ++ testTools;
+    });
 
 in
 {
@@ -219,7 +253,7 @@ in
   packages = {
     "${name}-typescript" = project;
     "${name}-typescript-tgz" = npmPack;
-    "${name}-typescript-node2nix" = node2nixDevelop;
+    "${name}-typescript-npm-project" = npmProject;
   };
 
   checks = {
