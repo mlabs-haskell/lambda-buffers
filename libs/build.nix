@@ -36,6 +36,14 @@
         configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" ];
       };
 
+      lbf-prelude-rust = config.lbf-nix.lbfRust {
+        name = "lbf-prelude";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" ];
+        configs = [ "${config.packages.codegen-configs}/rust-prelude-base.json" ];
+      };
+
       lbf-plutus = pkgs.stdenv.mkDerivation {
         name = "lbf-plutus";
         src = ./lbf-plutus;

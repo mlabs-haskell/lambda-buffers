@@ -7,18 +7,36 @@ let
   };
   craneLib = crane.lib.${pkgs.system}.overrideToolchain rustWithTools;
 
+  cleanSrc = craneLib.cleanCargoSource (craneLib.path src);
+
   # Library source code with extra dependencies attached
-  fullSrc = pkgs.stdenv.mkDerivation {
-    src = craneLib.cleanCargoSource (craneLib.path src);
-    name = "lbf-rust-build-env";
-    unpackPhase = ''
-      mkdir $out
-      cp -r $src/* $out
-      cd $out
-      ${copyExtraSources}
-      ${copyData}
-    '';
-  };
+  fullSrc =
+    pkgs.stdenv.mkDerivation
+      {
+        src = cleanSrc;
+        name = "${crateName}-build-env";
+        unpackPhase = ''
+          mkdir $out
+          cp -r $src/* $out
+          cd $out
+          ${copyExtraSources}
+          ${copyData}
+        '';
+      };
+
+  vendoredSrc =
+    pkgs.stdenv.mkDerivation
+      {
+        src = cleanSrc;
+        name = "${crateName}-vendored-src";
+        unpackPhase = ''
+          mkdir $out
+          cp -r $src/* $out
+          cd $out
+          sed -i 's/.extras/../g' Cargo.toml
+        '';
+      };
+
   commonArgs = {
     src = fullSrc;
     pname = crateName;
@@ -28,6 +46,7 @@ let
 
   # Extra sources
   extra-sources = pkgs.linkFarm "extra-sources" extraSources;
+
   hasExtraSources = builtins.length extraSources > 0;
   linkExtraSources = pkgs.lib.optionalString hasExtraSources ''
     echo "Linking extra sources"
@@ -67,6 +86,8 @@ in
     doCheck = false;
     doInstallCargoArtifacts = true;
   });
+
+  packages."${crateName}-rust-src" = vendoredSrc;
 
   checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
     inherit cargoArtifacts;

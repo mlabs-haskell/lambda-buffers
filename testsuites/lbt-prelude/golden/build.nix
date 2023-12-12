@@ -17,6 +17,13 @@ _:
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
+
+        lbt-prelude-golden-rust = pkgs.stdenv.mkDerivation {
+          name = "lbt-prelude-golden-data";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
+        };
       };
 
     };

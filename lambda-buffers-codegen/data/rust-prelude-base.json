@@ -39,7 +39,7 @@
       "char"
     ],
     "Prelude.Integer": [
-      "num_bigint",
+      "num-bigint",
       "",
       "BigInt"
     ],

@@ -1,0 +1,10 @@
+[package]
+name = "lbt-prelude"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lbf-prelude-golden-api = { path = ".extras/lbf-prelude-golden-api" }
+lbf-prelude = { path = ".extras/lbf-prelude" }
+serde_json = "1.0.108"
+num-bigint = "0.4.4"
