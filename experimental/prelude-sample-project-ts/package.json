@@ -4,7 +4,7 @@
   "description": "Sample project for lambda buffers",
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
+    ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {

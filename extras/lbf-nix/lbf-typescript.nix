@@ -72,7 +72,7 @@ let
             },
             "devDependencies": {
             },
-            "files": ["./dist/LambdaBuffers/**/*", ".nix-node-deps/*" ],
+            "files": ["./dist/LambdaBuffers/**/*" ],
             "dependencies": {}
           }
         '';
@@ -129,9 +129,7 @@ let
       outputs = [ "out" "buildjson" ];
       buildInputs = [
         pkgs.jq
-        pkgs.nodejs-16_x
-        # TODO(jaredponn): Urgh, we use an older version of node so it
-        # generates version 2 lock files.
+        pkgs.nodejs-18_x
       ];
       buildPhase = ''
         ln -s ${lbfBuilt} autogen;
@@ -181,18 +179,15 @@ let
         export HOME=$TMPDIR/home
         mkdir -p $TMPDIR/cache
 
-        pkgPathToNixNodeDepsPath( ) { echo ".nix-node-deps/$(basename "$1")"; }
-
-        mkdir -p .nix-node-deps/
         ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
             ''
-                echo "Copying ${pkgPath}..."
-                cp "${pkgPath}" "$(pkgPathToNixNodeDepsPath ${pkgPath})"
-                npm cache add "$(pkgPathToNixNodeDepsPath ${pkgPath})"
+                echo "Adding ${pkgPath} to npm's cache..."
+                ln -s ${pkgPath} .
+                npm cache add "$(basename "${pkgPath}")"
             ''
                 ) npmDependencies)}
         
-        npm install --save ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''$(pkgPathToNixNodeDepsPath "${pkgPath}")'') npmDependencies)}
+        npm install --save ${builtins.concatStringsSep " " (builtins.map (pkgPath: ''"$(basename "${pkgPath}")"'') npmDependencies)}
 
         ###########################
         # Creating the tsconfig.json
@@ -214,7 +209,7 @@ let
     # version = version;
     outputs = [ "out" ];
     buildInputs = [
-      pkgs.nodejs-18_x
+      pkgs.nodejs-16_x
       pkgs.typescript
     ];
 

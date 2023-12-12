@@ -27,7 +27,7 @@
       packages = {
         prelude-sample-project-typescript = typescriptFlake.packages.prelude-sample-project-typescript;
         prelude-sample-project-typescript-tgz = typescriptFlake.packages.prelude-sample-project-typescript-tgz;
-        prelude-sample-project-typescript-node2nix = typescriptFlake.packages.prelude-sample-project-typescript-node2nix;
+        prelude-sample-project-typescript-npm-project = typescriptFlake.packages.prelude-sample-project-typescript-npm-project;
       };
 
       devShells = {
