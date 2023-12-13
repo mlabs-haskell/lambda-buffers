@@ -43,6 +43,7 @@ let
             haskell-language-server = { };
             hlint = { };
             cabal-fmt = { };
+            fourmolu = { };
           };
 
           shellHook = lib.mkForce devShellHook;

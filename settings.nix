@@ -50,14 +50,11 @@
 
               tools = [
                 pkgs.haskellPackages.apply-refact
-                pkgs.haskellPackages.fourmolu
 
                 inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
                 inputs.pre-commit-hooks.outputs.packages.${system}.nixpkgs-fmt
 
                 inputs.pre-commit-hooks.outputs.packages.${system}.shellcheck
-
-                inputs.pre-commit-hooks.outputs.packages.${system}.typos
 
                 inputs.pre-commit-hooks.outputs.packages.${system}.markdownlint-cli
                 inputs.pre-commit-hooks.outputs.packages.${system}.dhall
