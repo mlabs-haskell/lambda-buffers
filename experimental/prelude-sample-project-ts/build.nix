@@ -28,6 +28,7 @@
         prelude-sample-project-typescript = typescriptFlake.packages.prelude-sample-project-typescript;
         prelude-sample-project-typescript-tgz = typescriptFlake.packages.prelude-sample-project-typescript-tgz;
         prelude-sample-project-typescript-npm-project = typescriptFlake.packages.prelude-sample-project-typescript-npm-project;
+        prelude-sample-project-typescript-lbf-my-schema = mySchema;
       };
 
       devShells = {

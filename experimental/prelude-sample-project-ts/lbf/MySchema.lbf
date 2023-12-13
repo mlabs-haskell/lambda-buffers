@@ -3,6 +3,10 @@ module MySchema
 import Prelude
 -- import Plutus.V1 
 
-sum MyMaybe a = MyJust a Integer a | MyNothing
+sum Branchy a 
+    = Node Integer (List (Branchy a))
+    | Leaf a
 
-derive Eq (MyMaybe a)
+
+derive Eq (Branchy a)
+derive Json (Branchy a)
