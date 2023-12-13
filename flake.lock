@@ -2021,16 +2021,16 @@
         "plutip": "plutip"
       },
       "locked": {
-        "lastModified": 1702484372,
-        "narHash": "sha256-J6/0FKh+Uvbvx1JCFpxZcGDxUgQKyzgpU0HMTyKu7PU=",
+        "lastModified": 1702379410,
+        "narHash": "sha256-r3HOZG3C0NV8bTYjabqzsFTbSfh1/xiEkLUehSUFtJM=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "2a5ad28407bcf322a046228148d0d8a4b56a1c53",
+        "rev": "1666abab20ca3d40cbf10a92966d548c740a2f42",
         "type": "github"
       },
       "original": {
         "owner": "plutonomicon",
-        "ref": "bladyjoker/fix-plutip",
+        "ref": "dshuiski/purs-0.15-migration",
         "repo": "cardano-transaction-lib",
         "type": "github"
       }
