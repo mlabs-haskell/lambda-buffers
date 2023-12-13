@@ -2021,11 +2021,11 @@
         "plutip": "plutip"
       },
       "locked": {
-        "lastModified": 1702481747,
-        "narHash": "sha256-+9vdLex5ctLk6uFwbuI1YfUpNIgU5RfhfWyRBc1Jndk=",
+        "lastModified": 1702484372,
+        "narHash": "sha256-J6/0FKh+Uvbvx1JCFpxZcGDxUgQKyzgpU0HMTyKu7PU=",
         "owner": "plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "81258b1dc103f9c64960d9acebb05249d5f77b2b",
+        "rev": "2a5ad28407bcf322a046228148d0d8a4b56a1c53",
         "type": "github"
       },
       "original": {
