@@ -93,6 +93,6 @@ data MiniLogTrace fun atom
   | DoneGoal (Term fun atom)
   | CallClause (Clause fun atom) (Term fun atom)
   | DoneClause (Clause fun atom) (Term fun atom)
-  | -- |Can be used by implementations to add their internal tracing.
+  | -- | Can be used by implementations to add their internal tracing.
     InternalTrace String
   deriving stock (Eq, Ord, Show)

@@ -37,7 +37,7 @@ genList = H.list (HR.constant 0 10)
 genSet :: Ord a => H.Gen a -> H.Gen (Set a)
 genSet = H.set (HR.constant 0 10)
 
-genMap :: (Ord k) => H.Gen k -> H.Gen v -> H.Gen (Map k v)
+genMap :: Ord k => H.Gen k -> H.Gen v -> H.Gen (Map k v)
 genMap gk gv =
   Map.fromList <$> do
     keys <- List.nub <$> H.list (HR.constant 0 10) gk

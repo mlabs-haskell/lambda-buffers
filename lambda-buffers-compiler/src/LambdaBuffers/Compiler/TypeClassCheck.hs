@@ -22,7 +22,7 @@ runCheck' ci = case runSuperClassCycleCheck ci of
   Left err -> (Left err, mempty)
   Right _ -> runConstraintsCheck ci
 
--- | Determines if type classes form a hierarchichal relation (no cycles).
+-- | Determines if type classes form a hierarchical relation (no cycles).
 runSuperClassCycleCheck :: PC.CompilerInput -> Either P.Error ()
 runSuperClassCycleCheck ci = case Super.runCheck ci of
   Left errs -> Left $ defMessage & P.tyClassCheckErrors .~ errs

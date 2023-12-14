@@ -58,7 +58,7 @@ pfromPlutusDataPlutusType :: ClosedTerm (PData :--> PAsData a)
 pfromPlutusDataPlutusType = plam punsafeCoerce
 
 -- | Plutarch PTryFrom `fromPlutusData :: PlutusData -> Parser a`
-pfromPlutusDataPTryFrom :: (PTryFrom PData (PAsData a)) => ClosedTerm (PData :--> PAsData a)
+pfromPlutusDataPTryFrom :: PTryFrom PData (PAsData a) => ClosedTerm (PData :--> PAsData a)
 pfromPlutusDataPTryFrom = phoistAcyclic $ plam ptryFromData
   where
     ptryFromData :: forall a s. PTryFrom PData (PAsData a) => Term s PData -> Term s (PAsData a)
