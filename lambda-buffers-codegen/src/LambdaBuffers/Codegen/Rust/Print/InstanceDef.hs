@@ -21,31 +21,31 @@ impl<A: SomeClass, B: SomeClass, C: SomeClass> SomeClass for SomeTy<A, B, C> {
 }
 ```
 -}
-printInstanceDef :: R.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
-printInstanceDef rsQTraitName ty =
-  let headDoc = R.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner ty
+printInstanceDef :: R.PkgMap -> R.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
+printInstanceDef pkgs rsQTraitName ty =
+  let headDoc = R.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner pkgs ty
       freeVars = collectTyVars ty
    in case freeVars of
         [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
         _ -> \implDoc ->
-          "impl" <> printInstanceContext rsQTraitName freeVars
+          "impl" <> printInstanceContext pkgs rsQTraitName freeVars
             <+> headDoc
             <+> braces (hardline <> space <> space <> implDoc)
 
-printInstanceContext :: R.QTraitName -> [PC.Ty] -> Doc ann
-printInstanceContext rsQTraitName = printInstanceContext' [rsQTraitName]
+printInstanceContext :: R.PkgMap -> R.QTraitName -> [PC.Ty] -> Doc ann
+printInstanceContext pkgs rsQTraitName = printInstanceContext' pkgs [rsQTraitName]
 
 defaultTraitBounds :: [R.QTraitName]
 defaultTraitBounds = [R.qLibRef R.MkTraitName "std" "clone" "Clone"]
 
-printInstanceContext' :: [R.QTraitName] -> [PC.Ty] -> Doc ann
-printInstanceContext' rsQTraitNames tys =
-  align . group $ encloseSep langle rangle comma [printTraitBound (rsQTraitNames <> defaultTraitBounds) ty | ty <- tys]
+printInstanceContext' :: R.PkgMap -> [R.QTraitName] -> [PC.Ty] -> Doc ann
+printInstanceContext' pkgs rsQTraitNames tys =
+  align . group $ encloseSep langle rangle comma [printTraitBound pkgs (rsQTraitNames <> defaultTraitBounds) ty | ty <- tys]
 
-printTraitBound :: [R.QTraitName] -> PC.Ty -> Doc ann
-printTraitBound qcns ty =
+printTraitBound :: R.PkgMap -> [R.QTraitName] -> PC.Ty -> Doc ann
+printTraitBound pkgs qcns ty =
   let crefDocs = R.printRsQTraitName <$> qcns
-      tyDoc = printTyInner ty
+      tyDoc = printTyInner pkgs ty
    in tyDoc <> colon <+> encloseSep mempty mempty "+" crefDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]

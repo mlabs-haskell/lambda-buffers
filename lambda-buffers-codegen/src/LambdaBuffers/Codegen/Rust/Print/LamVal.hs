@@ -74,20 +74,20 @@ type MonadPrint m = LV.MonadPrint m R.QValName
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
 
-printCtorCase :: MonadPrint m => PC.TyDefs -> PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
-printCtorCase iTyDefs (_, tyn) ctorCont ctor@(ctorN, fields) = do
+printCtorCase :: MonadPrint m => R.PkgMap -> PC.TyDefs -> PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
+printCtorCase pkgs iTyDefs (_, tyn) ctorCont ctor@(ctorN, fields) = do
   args <- for fields (const LV.freshArg)
-  argDocs <- for args (printValueE iTyDefs)
+  argDocs <- for args (printValueE pkgs iTyDefs)
   let body = ctorCont (ctor, args)
-  bodyDoc <- printValueE iTyDefs body
+  bodyDoc <- printValueE pkgs iTyDefs body
   let ctorNameDoc = R.printQualifiedCtorName (withInfo tyn) . withInfo $ ctorN
   if null argDocs
     then return $ group $ ctorNameDoc <+> "=>" <+> group bodyDoc
     else return $ group $ ctorNameDoc <+> encloseSep lparen rparen comma argDocs <+> "=>" <+> group bodyDoc
 
-printCaseE :: MonadPrint m => PC.TyDefs -> LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
-printCaseE iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
-  caseValDoc <- printValueE iTyDefs caseVal
+printCaseE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
+printCaseE pkgs iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
+  caseValDoc <- printValueE pkgs iTyDefs caseVal
   (tyArgs, fieldTys) <-
     case Map.lookup qtyN iTyDefs of
       Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.SumI (PC.Sum ctors _)) _) _) -> do
@@ -110,7 +110,7 @@ printCaseE iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
     for
       (OMap.assocs sumTy)
       ( \(cn, ty) -> case ty of
-          LT.TyProduct fields _ -> printCtorCase iTyDefs qtyN ctorCont (cn, fields)
+          LT.TyProduct fields _ -> printCtorCase pkgs iTyDefs qtyN ctorCont (cn, fields)
           _ -> throwInternalError "Got a non-product in Sum."
       )
 
@@ -125,19 +125,19 @@ printCaseE iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
  std::boxed::Box::new(move |x0: &_| { <implBodyx> |)
  ```
 -}
-printLamE :: MonadPrint m => PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printLamE iTyDefs lamVal = do
+printLamE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printLamE pkgs iTyDefs lamVal = do
   arg <- LV.freshArg
   let body = lamVal arg
-  bodyDoc <- printValueE iTyDefs body
-  argDoc <- printValueE iTyDefs arg
+  bodyDoc <- printValueE pkgs iTyDefs body
+  argDoc <- printValueE pkgs iTyDefs arg
 
   return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
 
-printAppE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
-printAppE iTyDefs funVal argVal = do
-  funDoc <- printValueE iTyDefs funVal
-  argDoc <- printValueE iTyDefs argVal
+printAppE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
+printAppE pkgs iTyDefs funVal argVal = do
+  funDoc <- printValueE pkgs iTyDefs funVal
+  argDoc <- printValueE pkgs iTyDefs argVal
   return $ funDoc <> group (parens argDoc)
 
 {- | Prints a record field accessor expression on a `ValueE` of type `Field`'.
@@ -151,9 +151,9 @@ printAppE iTyDefs funVal argVal = do
 
    &x.foo
 -}
-printFieldE :: MonadPrint m => PC.TyDefs -> LV.QField -> LV.ValueE -> m (Doc ann)
-printFieldE iTyDefs ((_, _), fieldN) recVal = do
-  recDoc <- printValueE iTyDefs recVal
+printFieldE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QField -> LV.ValueE -> m (Doc ann)
+printFieldE pkgs iTyDefs ((_, _), fieldN) recVal = do
+  recDoc <- printValueE pkgs iTyDefs recVal
   let fnDoc = R.printFieldName (withInfo fieldN)
   return $ borrow $ recDoc <> dot <> fnDoc
 
@@ -169,71 +169,71 @@ printFieldE iTyDefs ((_, _), fieldN) recVal = do
    let MkFoo(x1, x2, x3) = <letVal>;
    <letCont>
 -}
-printLetE :: MonadPrint m => PC.TyDefs -> LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
-printLetE iTyDefs (_, fields) prodVal letCont = do
-  letValDoc <- printValueE iTyDefs prodVal
+printLetE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
+printLetE pkgs iTyDefs (_, fields) prodVal letCont = do
+  letValDoc <- printValueE pkgs iTyDefs prodVal
   args <- for fields (const LV.freshArg)
-  argDocs <- for args (printValueE iTyDefs)
+  argDocs <- for args (printValueE pkgs iTyDefs)
   let bodyVal = letCont args
-  bodyDoc <- printValueE iTyDefs bodyVal
+  bodyDoc <- printValueE pkgs iTyDefs bodyVal
   let letDocs = printLet letValDoc <$> zip argDocs [0 :: Int ..]
   return $ vsep letDocs <> line <> bodyDoc
   where
     printLet :: Doc ann -> (Doc ann, Int) -> Doc ann
     printLet letValDoc (arg, i) = "let" <+> arg <+> equals <+> borrow (letValDoc <> dot <> pretty i) <> semi
 
-printOtherCase :: MonadPrint m => PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printOtherCase iTyDefs otherCase = do
+printOtherCase :: MonadPrint m => R.PkgMap -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printOtherCase pkgs iTyDefs otherCase = do
   arg <- LV.freshArg
-  argDoc <- printValueE iTyDefs arg
-  bodyDoc <- printValueE iTyDefs $ otherCase arg
+  argDoc <- printValueE pkgs iTyDefs arg
+  bodyDoc <- printValueE pkgs iTyDefs $ otherCase arg
   return $ group $ argDoc <+> "=>" <+> bodyDoc
 
 --- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
-printCaseIntE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printCaseIntE iTyDefs caseIntVal cases otherCase = do
+printCaseIntE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseIntE pkgs iTyDefs caseIntVal cases otherCase = do
   caseIntERefDoc <- R.printRsQValName <$> LV.importValue caseIntERef
   _ <- LV.importValue bigInt
-  caseValDoc <- printValueE iTyDefs caseIntVal
+  caseValDoc <- printValueE pkgs iTyDefs caseIntVal
   caseDocs <-
     for
       cases
       ( \(conditionVal, bodyVal) -> do
-          conditionDoc <- printValueE iTyDefs conditionVal
-          bodyDoc <- printValueE iTyDefs bodyVal
+          conditionDoc <- printValueE pkgs iTyDefs conditionVal
+          bodyDoc <- printValueE pkgs iTyDefs bodyVal
           return $ group $ parens (fromU32 conditionDoc <> "," <+> bodyDoc)
       )
-  otherDoc <- printLamE iTyDefs otherCase
+  otherDoc <- printLamE pkgs iTyDefs otherCase
   return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
 
-printListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
-printListE iTyDefs vals = do
-  valDocs <- printValueE iTyDefs `traverse` vals
+printListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
+printListE pkgs iTyDefs vals = do
+  valDocs <- printValueE pkgs iTyDefs `traverse` vals
   return $ brackets (align (encloseSep mempty mempty (comma <> space) valDocs))
 
-printNewListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
-printNewListE iTyDefs vals = do
-  lst <- printListE iTyDefs vals
+printNewListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
+printNewListE pkgs iTyDefs vals = do
+  lst <- printListE pkgs iTyDefs vals
   return $ R.printRsQValName vecMacro <> lst
 
-printCaseListE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printCaseListE iTyDefs caseListVal cases otherCase = do
-  caseValDoc <- printValueE iTyDefs caseListVal
+printCaseListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseListE pkgs iTyDefs caseListVal cases otherCase = do
+  caseValDoc <- printValueE pkgs iTyDefs caseListVal
   vecAsSliceDoc <- R.printRsQValName <$> LV.importValue vecAsSlice
   caseDocs <-
     for
       cases
       ( \(listLength, bodyVal) -> do
           xs <- replicateM listLength LV.freshArg
-          conditionDoc <- printListE iTyDefs xs
-          bodyDoc <- printValueE iTyDefs $ bodyVal xs
+          conditionDoc <- printListE pkgs iTyDefs xs
+          bodyDoc <- printValueE pkgs iTyDefs $ bodyVal xs
           return $ group $ conditionDoc <+> "=>" <+> bodyDoc
       )
-  otherDoc <- printOtherCase iTyDefs otherCase
+  otherDoc <- printOtherCase pkgs iTyDefs otherCase
   return $ "ma" <> align ("tch" <+> vecAsSliceDoc <> parens caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
-printCtorE :: MonadPrint m => PC.TyDefs -> LV.QCtor -> [LV.ValueE] -> m (Doc ann)
-printCtorE iTyDefs (qtyN@(mn', tyN'), (ctorN, _)) prodVals = do
+printCtorE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QCtor -> [LV.ValueE] -> m (Doc ann)
+printCtorE pkgs iTyDefs (qtyN@(mn', tyN'), (ctorN, _)) prodVals = do
   let mn = withInfo mn'
       tyN = withInfo tyN'
 
@@ -248,13 +248,13 @@ printCtorE iTyDefs (qtyN@(mn', tyN'), (ctorN, _)) prodVals = do
   let ctorNDoc = R.printQualifiedCtorName tyN (withInfo ctorN)
       mayBoxedFields = zip prodVals $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
-  prodDocs <- for mayBoxedFields (printMaybeBoxed iTyDefs)
+  prodDocs <- for mayBoxedFields (printMaybeBoxed pkgs iTyDefs)
   if null prodDocs
     then return ctorNDoc
     else return $ ctorNDoc <> align (encloseSep lparen rparen comma prodDocs)
 
-printRecordE :: MonadPrint m => PC.TyDefs -> LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
-printRecordE iTyDefs (qtyN@(mn', tyN'), _) vals = do
+printRecordE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
+printRecordE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
   let mn = withInfo mn'
       tyN = withInfo tyN'
 
@@ -275,7 +275,7 @@ printRecordE iTyDefs (qtyN@(mn', tyN'), _) vals = do
     \(((fieldN, _), val), isBoxed) ->
       let fieldNDoc = R.printFieldName (withInfo fieldN)
        in do
-            valDoc <- printMaybeBoxed iTyDefs (val, isBoxed)
+            valDoc <- printMaybeBoxed pkgs iTyDefs (val, isBoxed)
             return $ group $ fieldNDoc <> colon <+> valDoc
 
   return $ ctorDoc <+> align (braces (line <> vsep (punctuate comma (fieldDocs <> phantomFieldDocs)) <> line))
@@ -284,8 +284,8 @@ printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
   TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName phantomData
 
-printProductE :: MonadPrint m => PC.TyDefs -> LV.QProduct -> [LV.ValueE] -> m (Doc ann)
-printProductE iTyDefs (qtyN@(mn', tyN'), _) vals = do
+printProductE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QProduct -> [LV.ValueE] -> m (Doc ann)
+printProductE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
   let mn = withInfo mn'
       tyN = withInfo tyN'
 
@@ -297,43 +297,43 @@ printProductE iTyDefs (qtyN@(mn', tyN'), _) vals = do
   let phantomFieldDocs = R.printRsQTyName phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
       mayBoxedFields = zip vals $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
-  fieldDocs <- for mayBoxedFields (printMaybeBoxed iTyDefs)
+  fieldDocs <- for mayBoxedFields (printMaybeBoxed pkgs iTyDefs)
 
   return $ ctorDoc <> encloseSep lparen rparen comma (fieldDocs <> phantomFieldDocs)
 
-printMaybeBoxed :: MonadPrint m => PC.TyDefs -> (LV.ValueE, Bool) -> m (Doc ann)
-printMaybeBoxed iTyDefs (val, False) = clone <$> printValueE iTyDefs val
-printMaybeBoxed iTyDefs (val, True) = do
-  valDoc <- clone <$> printValueE iTyDefs val
+printMaybeBoxed :: MonadPrint m => R.PkgMap -> PC.TyDefs -> (LV.ValueE, Bool) -> m (Doc ann)
+printMaybeBoxed pkgs iTyDefs (val, False) = clone <$> printValueE pkgs iTyDefs val
+printMaybeBoxed pkgs iTyDefs (val, True) = do
+  valDoc <- clone <$> printValueE pkgs iTyDefs val
   return $ R.printRsQValName boxNew <> parens valDoc
 
-printTupleE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
-printTupleE iTyDefs l r = do
-  lDoc <- printValueE iTyDefs l
-  rDoc <- printValueE iTyDefs r
+printTupleE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
+printTupleE pkgs iTyDefs l r = do
+  lDoc <- printValueE pkgs iTyDefs l
+  rDoc <- printValueE pkgs iTyDefs r
   return $ parens (lDoc <> comma <+> rDoc)
 
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . fromStr . dquotes . pretty
 
-printCaseTextE :: (MonadPrint m) => PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printCaseTextE iTyDefs txtVal cases otherCase = do
-  caseValDoc <- printValueE iTyDefs txtVal
+printCaseTextE :: (MonadPrint m) => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE pkgs iTyDefs txtVal cases otherCase = do
+  caseValDoc <- printValueE pkgs iTyDefs txtVal
   caseDocs <-
     for
       cases
       ( \case
           (LV.TextE caseTxt, bodyVal) -> do
             conditionDoc <- printTextE caseTxt
-            bodyDoc <- printValueE iTyDefs bodyVal
+            bodyDoc <- printValueE pkgs iTyDefs bodyVal
             return $ group $ conditionDoc <+> "=>" <+> bodyDoc
           (_wrongCaseVal, _) -> throwInternalError "Expected a TextE as the case value but got something else (TODO(bladyjoker): Print got)"
       )
-  otherDoc <- printOtherCase iTyDefs otherCase
+  otherDoc <- printOtherCase pkgs iTyDefs otherCase
   return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
-printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
-printRefE ref = do
+printRefE :: MonadPrint m => R.PkgMap -> LV.Ref -> m (Doc ann)
+printRefE pkgs ref = do
   qvn <- LV.resolveRef ref
   case ref of
     (argTy : _, builtin)
@@ -341,58 +341,58 @@ printRefE ref = do
           || builtin == "fromPlutusData"
           || builtin == "toJson"
           || builtin == "fromJson" -> do
-          lamTyDoc <- printLamTy argTy
+          lamTyDoc <- printLamTy pkgs argTy
           methodDoc <- R.printRsValName . R.qualifiedEntity <$> LV.importValue qvn
           return $ angles lamTyDoc <> R.doubleColon <> methodDoc
       | builtin == "jsonConstructor" -> do
-          lamTyDoc <- printLamTy argTy
+          lamTyDoc <- printLamTy pkgs argTy
           methodDoc <- R.printRsQValName <$> LV.importValue qvn
           return $ methodDoc <> R.doubleColon <> langle <> lamTyDoc <> rangle
     _ -> R.printRsQValName <$> LV.importValue qvn
 
-printLamTy :: MonadPrint m => LT.Ty -> m (Doc ann)
-printLamTy (LT.TyRef tyRef) = return $ R.printTyRef tyRef
-printLamTy (LT.TyVar tyVar) = return $ R.printTyVar tyVar
-printLamTy (LT.TyApp ty gens _) = do
-  tyDoc <- printLamTy ty
-  gensDoc <- for gens printLamTy
+printLamTy :: MonadPrint m => R.PkgMap -> LT.Ty -> m (Doc ann)
+printLamTy pkgs (LT.TyRef tyRef) = return $ R.printTyRef pkgs tyRef
+printLamTy _ (LT.TyVar tyVar) = return $ R.printTyVar tyVar
+printLamTy pkgs (LT.TyApp ty gens _) = do
+  tyDoc <- printLamTy pkgs ty
+  gensDoc <- for gens (printLamTy pkgs)
   return $ tyDoc <> R.encloseGenerics gensDoc
-printLamTy _ = throwInternalError "Unexpected LamTy expression."
+printLamTy _ _ = throwInternalError "Unexpected LamTy expression."
 
-printValueE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> m (Doc ann)
-printValueE _ (LV.VarE v) = return $ pretty v
-printValueE _ (LV.RefE ref) = printRefE ref
-printValueE iTyDefs (LV.LamE lamVal) = printLamE iTyDefs lamVal
-printValueE iTyDefs (LV.AppE funVal argVal) = printAppE iTyDefs funVal argVal
-printValueE iTyDefs (LV.CaseE sumTy caseVal ctorCont) = printCaseE iTyDefs sumTy caseVal ctorCont
-printValueE iTyDefs (LV.CtorE qctor prodVals) = printCtorE iTyDefs qctor prodVals
-printValueE iTyDefs (LV.RecordE qrec vals) = printRecordE iTyDefs qrec vals
-printValueE iTyDefs (LV.FieldE fieldName recVal) = printFieldE iTyDefs fieldName recVal
-printValueE iTyDefs (LV.ProductE qprod vals) = printProductE iTyDefs qprod vals
-printValueE iTyDefs (LV.LetE prodTy prodVal letCont) = printLetE iTyDefs prodTy prodVal letCont
-printValueE _ (LV.IntE i) = return $ pretty i
-printValueE iTyDefs (LV.CaseIntE intVal cases otherCase) = printCaseIntE iTyDefs intVal cases otherCase
-printValueE iTyDefs (LV.ListE vals) = printNewListE iTyDefs vals
-printValueE iTyDefs (LV.CaseListE listVal cases otherCase) = printCaseListE iTyDefs listVal cases otherCase
-printValueE _ (LV.TextE txt) = printTextE txt
-printValueE iTyDefs (LV.CaseTextE txtVal cases otherCase) = printCaseTextE iTyDefs txtVal cases otherCase
-printValueE iTyDefs (LV.TupleE l r) = printTupleE iTyDefs l r
-printValueE _ (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
-
--- | This is a hack, to help Rust figure out types of closures (lambda expressions)
-printInstance :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
-printInstance [] iTyDefs lamVal = printValueE iTyDefs lamVal
-printInstance argTys iTyDefs (LV.LamE lamVal) = printInstanceLamE argTys iTyDefs lamVal
-printInstance _ _ _ = throwInternalError "LamE expression expected with predefined argument types"
+printValueE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
+printValueE _ _ (LV.VarE v) = return $ pretty v
+printValueE pkgs _ (LV.RefE ref) = printRefE pkgs ref
+printValueE pkgs iTyDefs (LV.LamE lamVal) = printLamE pkgs iTyDefs lamVal
+printValueE pkgs iTyDefs (LV.AppE funVal argVal) = printAppE pkgs iTyDefs funVal argVal
+printValueE pkgs iTyDefs (LV.CaseE sumTy caseVal ctorCont) = printCaseE pkgs iTyDefs sumTy caseVal ctorCont
+printValueE pkgs iTyDefs (LV.CtorE qctor prodVals) = printCtorE pkgs iTyDefs qctor prodVals
+printValueE pkgs iTyDefs (LV.RecordE qrec vals) = printRecordE pkgs iTyDefs qrec vals
+printValueE pkgs iTyDefs (LV.FieldE fieldName recVal) = printFieldE pkgs iTyDefs fieldName recVal
+printValueE pkgs iTyDefs (LV.ProductE qprod vals) = printProductE pkgs iTyDefs qprod vals
+printValueE pkgs iTyDefs (LV.LetE prodTy prodVal letCont) = printLetE pkgs iTyDefs prodTy prodVal letCont
+printValueE _ _ (LV.IntE i) = return $ pretty i
+printValueE pkgs iTyDefs (LV.CaseIntE intVal cases otherCase) = printCaseIntE pkgs iTyDefs intVal cases otherCase
+printValueE pkgs iTyDefs (LV.ListE vals) = printNewListE pkgs iTyDefs vals
+printValueE pkgs iTyDefs (LV.CaseListE listVal cases otherCase) = printCaseListE pkgs iTyDefs listVal cases otherCase
+printValueE _ _ (LV.TextE txt) = printTextE txt
+printValueE pkgs iTyDefs (LV.CaseTextE txtVal cases otherCase) = printCaseTextE pkgs iTyDefs txtVal cases otherCase
+printValueE pkgs iTyDefs (LV.TupleE l r) = printTupleE pkgs iTyDefs l r
+printValueE _ _ (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
 
 -- | This is a hack, to help Rust figure out types of closures (lambda expressions)
-printInstanceLamE :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printInstanceLamE [] _ _ = throwInternalError "LamE expression expected with predefined argument types"
-printInstanceLamE (argTy : argTys) iTyDefs lamVal = do
+printInstance :: MonadPrint m => R.PkgMap -> [R.QTyName] -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
+printInstance pkgs [] iTyDefs lamVal = printValueE pkgs iTyDefs lamVal
+printInstance pkgs argTys iTyDefs (LV.LamE lamVal) = printInstanceLamE pkgs argTys iTyDefs lamVal
+printInstance _ _ _ _ = throwInternalError "LamE expression expected with predefined argument types"
+
+-- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+printInstanceLamE :: MonadPrint m => R.PkgMap -> [R.QTyName] -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printInstanceLamE _ [] _ _ = throwInternalError "LamE expression expected with predefined argument types"
+printInstanceLamE pkgs (argTy : argTys) iTyDefs lamVal = do
   arg <- LV.freshArg
   let body = lamVal arg
-  bodyDoc <- printInstance argTys iTyDefs body
-  argDoc <- printValueE iTyDefs arg
+  bodyDoc <- printInstance pkgs argTys iTyDefs body
+  argDoc <- printValueE pkgs iTyDefs arg
   let argTy' = "&'a" <+> R.printRsQTyName argTy
 
   return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))

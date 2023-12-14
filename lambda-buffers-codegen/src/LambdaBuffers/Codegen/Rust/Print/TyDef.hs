@@ -42,9 +42,9 @@ translates to
 data Foo a b = Foo'MkFoo a | Foo'MkBar b
 type Maybe a = Prelude.Maybe a
 -}
-printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
-printTyDef (PC.TyDef tyN tyabs _) = do
-  (kw, generics, absDoc) <- printTyAbs tyN tyabs
+printTyDef :: MonadPrint m => R.PkgMap -> PC.TyDef -> m (Doc ann)
+printTyDef pkgs (PC.TyDef tyN tyabs _) = do
+  (kw, generics, absDoc) <- printTyAbs pkgs tyN tyabs
   if kw /= SynonymTyDef
     then
       return $
@@ -86,10 +86,10 @@ For the above examples it prints
 a b = Foo'MkFoo a | Foo'MkBar b
 a = Prelude.Maybe a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann)
-printTyAbs tyN (PC.TyAbs args body _) = do
+printTyAbs :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann)
+printTyAbs pkgs tyN (PC.TyAbs args body _) = do
   let argsDoc = if OMap.empty == args then mempty else encloseGenerics (printTyArg <$> toList args)
-  (kw, bodyDoc) <- printTyBody tyN (toList args) body
+  (kw, bodyDoc) <- printTyBody pkgs tyN (toList args) body
   return (kw, argsDoc, group $ align bodyDoc)
 
 {- | Prints the type body.
@@ -99,54 +99,54 @@ For the above examples it prints
 Foo'MkFoo a | Foo'MkBar b
 Prelude.Maybe a
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
-printTyBody parentTyN tyArgs (PC.SumI s) = (EnumTyDef,) <$> printSum parentTyN tyArgs s
-printTyBody parentTyN tyArgs (PC.ProductI p) = (StructTyDef,) <$> printProd parentTyN tyArgs p
-printTyBody parentTyN tyArgs (PC.RecordI r) = printRec parentTyN tyArgs r >>= \recDoc -> return (StructTyDef, recDoc)
-printTyBody tyN args (PC.OpaqueI si) = do
+printTyBody :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
+printTyBody pkgs parentTyN tyArgs (PC.SumI s) = (EnumTyDef,) <$> printSum pkgs parentTyN tyArgs s
+printTyBody pkgs parentTyN tyArgs (PC.ProductI p) = (StructTyDef,) <$> printProd pkgs parentTyN tyArgs p
+printTyBody pkgs parentTyN tyArgs (PC.RecordI r) = printRec pkgs parentTyN tyArgs r >>= \recDoc -> return (StructTyDef, recDoc)
+printTyBody _ tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
   case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
     Nothing -> throwInternalError si ("Should have an Opaque configured for " <> show tyN)
     Just hqtyn -> return (SynonymTyDef, printRsQTyName hqtyn <> encloseGenerics (printTyArg <$> args) <> semi)
 
-printSum :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Sum -> m (Doc ann)
-printSum parentTyN tyArgs (PC.Sum ctors _) = do
+printSum :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Sum -> m (Doc ann)
+printSum pkgs parentTyN tyArgs (PC.Sum ctors _) = do
   let phantomTyArgs = collectPhantomTyArgs (sumCtorTys ctors) tyArgs
       phantomCtor = if null phantomTyArgs then mempty else [printPhantomDataCtor phantomTyArgs]
-  ctorDocs <- traverse (printCtor parentTyN) (toList ctors)
+  ctorDocs <- traverse (printCtor pkgs parentTyN) (toList ctors)
   if null ctors
     then return mempty
     else return $ align $ braces $ vsep $ punctuate comma (ctorDocs <> phantomCtor)
 
-printCtor :: MonadPrint m => PC.TyName -> PC.Constructor -> m (Doc ann)
-printCtor parentTyN (PC.Constructor ctorName p@(PC.Product fields _)) = do
+printCtor :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.Constructor -> m (Doc ann)
+printCtor pkgs parentTyN (PC.Constructor ctorName p@(PC.Product fields _)) = do
   let ctorNDoc = printCtorName ctorName
-  prodDoc <- printCtorInner parentTyN p
+  prodDoc <- printCtorInner pkgs parentTyN p
   case fields of
     [] -> return $ group ctorNDoc
     _ -> return $ group $ ctorNDoc <> prodDoc
 
-printCtorInner :: MonadPrint m => PC.TyName -> PC.Product -> m (Doc ann)
-printCtorInner parentTyN (PC.Product fields _) = do
-  tyDocs <- for fields (printTyTopLevel parentTyN)
+printCtorInner :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.Product -> m (Doc ann)
+printCtorInner pkgs parentTyN (PC.Product fields _) = do
+  tyDocs <- for fields (printTyTopLevel pkgs parentTyN)
   if null fields
     then return mempty
     else return $ encloseSep lparen rparen comma tyDocs
 
-printRec :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Record -> m (Doc ann)
-printRec parentTyN tyArgs (PC.Record fields _) = do
+printRec :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Record -> m (Doc ann)
+printRec pkgs parentTyN tyArgs (PC.Record fields _) = do
   let phantomTyArgs = collectPhantomTyArgs (recFieldTys fields) tyArgs
       phantomFields = printPhantomDataField <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
     else do
-      fieldDocs <- for (toList fields) (printField parentTyN)
+      fieldDocs <- for (toList fields) (printField pkgs parentTyN)
       return $ group $ align $ braces $ vsep $ punctuate comma (fieldDocs <> phantomFields)
 
-printProd :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.Product -> m (Doc ann)
-printProd parentTyN tyArgs (PC.Product fields _) = do
-  tyDocs <- for fields (printTyTopLevel parentTyN)
+printProd :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Product -> m (Doc ann)
+printProd pkgs parentTyN tyArgs (PC.Product fields _) = do
+  tyDocs <- for fields (printTyTopLevel pkgs parentTyN)
   let phantomTyArgs = collectPhantomTyArgs fields tyArgs
       phantomFields = printPhantomData <$> phantomTyArgs
   if null fields && null phantomTyArgs
@@ -175,10 +175,10 @@ sumCtorTys omap = concatMap go (OMap.assocs omap)
     go :: (PC.InfoLess PC.ConstrName, PC.Constructor) -> [PC.Ty]
     go (_, PC.Constructor _ (PC.Product fields _)) = fields
 
-printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
-printField parentTyN (PC.Field fn ty) = do
+printField :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.Field -> m (Doc ann)
+printField pkgs parentTyN (PC.Field fn ty) = do
   let fnDoc = printFieldName fn
-  tyDoc <- printTyTopLevel parentTyN ty
+  tyDoc <- printTyTopLevel pkgs parentTyN ty
   return $ fnDoc <> colon <+> tyDoc
 
 printPhantomData :: PC.TyArg -> Doc ann
@@ -205,26 +205,26 @@ printPhantomDataCtor :: [PC.TyArg] -> Doc ann
 printPhantomDataCtor tyArgs =
   phantomDataCtorIdent <> encloseSep lparen rparen comma (printPhantomData <$> tyArgs)
 
-printTyApp :: PC.TyApp -> Doc ann
-printTyApp (PC.TyApp f args _) =
-  let fDoc = printTyInner f
-      argsDoc = printTyInner <$> args
+printTyApp :: R.PkgMap -> PC.TyApp -> Doc ann
+printTyApp pkgs (PC.TyApp f args _) =
+  let fDoc = printTyInner pkgs f
+      argsDoc = printTyInner pkgs <$> args
    in group $ fDoc <> encloseGenerics argsDoc
 
-printTyTopLevel :: MonadPrint m => PC.TyName -> PC.Ty -> m (Doc ann)
-printTyTopLevel parentTyN ty = do
+printTyTopLevel :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.Ty -> m (Doc ann)
+printTyTopLevel pkgs parentTyN ty = do
   ci <- asks (view Print.ctxCompilerInput)
   let iTyDefs = indexTyDefs ci
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let recursive = isRecursive iTyDefs mn parentTyN ty
   if recursive
-    then return $ boxed (printTyInner ty)
-    else return $ printTyInner ty
+    then return $ boxed (printTyInner pkgs ty)
+    else return $ printTyInner pkgs ty
 
-printTyInner :: PC.Ty -> Doc ann
-printTyInner (PC.TyVarI v) = printTyVar v
-printTyInner (PC.TyRefI r) = printTyRef r
-printTyInner (PC.TyAppI a) = printTyApp a
+printTyInner :: R.PkgMap -> PC.Ty -> Doc ann
+printTyInner _ (PC.TyVarI v) = printTyVar v
+printTyInner pkgs (PC.TyRefI r) = printTyRef pkgs r
+printTyInner pkgs (PC.TyAppI a) = printTyApp pkgs a
 
 {- | Determines whether the field `Ty` of a data structure with name `TyName` is recursive
  This is done by resolving references, and searching for reoccurances of the parent type name

@@ -128,6 +128,12 @@ rustGenOptsP =
               <> help "Configuration file for the Rust Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
           )
       )
+    <*> strOption
+      ( long "packages"
+          <> short 'g'
+          <> metavar "FILEPATH"
+          <> help "JSON file containing the package-set and all of its modules (including current package)"
+      )
     <*> genOptsP
 
 mkProgDesc :: forall {a}. String -> InfoMod a
