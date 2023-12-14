@@ -239,9 +239,9 @@ lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
     ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonArray"
     ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonObject"
     ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonField"
-    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "Right"
-    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "fail"
-    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" ">>="
+    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "succeedParse"
+    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "failParse"
+    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "bindParse"
     _ -> Nothing
 
 toJsonClassMethodName :: Ts.ValueName

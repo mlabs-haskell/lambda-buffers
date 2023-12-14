@@ -393,35 +393,36 @@ printCaseListE caseListVal cases otherCase = do
 
   -- build the lambda which has the statements
   return $
-    parens $
-      parens caseOnArgDoc
-        <+> "=>"
-        <+> vsep
-          [ lbrace
-          , indent 2 $
-              vsep $
-                case casesDocs of
-                  [] ->
-                    [otherDoc]
-                  (num1, body1) : ts ->
-                    [ "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num1)
-                    , body1
-                    ]
-                      ++ concatMap
-                        ( \(num, body) ->
-                            [ "else" <+> "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num)
-                            , body
-                            ]
-                        )
-                        ts
-                      ++ [ "else"
-                         , lbrace
-                         , indent 2 otherDoc
-                         , rbrace
-                         ]
-          , rbrace
-          ]
-          <> parens caseListValDoc
+    parens
+      ( parens caseOnArgDoc
+          <+> "=>"
+          <+> vsep
+            [ lbrace
+            , indent 2 $
+                vsep $
+                  case casesDocs of
+                    [] ->
+                      [otherDoc]
+                    (num1, body1) : ts ->
+                      [ "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num1)
+                      , body1
+                      ]
+                        ++ concatMap
+                          ( \(num, body) ->
+                              [ "else" <+> "if" <+> parens (caseOnArgDoc <> ".length" <+> "===" <+> num)
+                              , body
+                              ]
+                          )
+                          ts
+                        ++ [ "else"
+                           , lbrace
+                           , indent 2 otherDoc
+                           , rbrace
+                           ]
+            , rbrace
+            ]
+      )
+      <> parens caseListValDoc
 
 printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
