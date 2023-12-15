@@ -1,10 +1,18 @@
-export * from "./Runtime/Prelude.js";
-export * from "./Runtime/Maybe.js";
-export * from "./Runtime/Either.js";
-export * from "./Runtime/Json.js";
-export * from "./Runtime/Ord.js";
-export * from "./Runtime/Eq.js";
+export type {
+  Bool,
+  Bytes,
+  Char,
+  Eq,
+  Integer,
+  Json,
+  List,
+  Map,
+  Ord,
+  Set,
+  Text,
+} from "prelude";
 
-export function and(l: boolean, r: boolean) {
-  return l && r;
-}
+export * from "./Symbols.js";
+export * from "./Eq.js";
+export * from "./Json.js";
+export * from "./Runtime.js";
