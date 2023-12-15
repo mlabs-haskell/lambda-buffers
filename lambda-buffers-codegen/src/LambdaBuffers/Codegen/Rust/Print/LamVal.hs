@@ -13,6 +13,7 @@ import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef qualified as TD
 import LambdaBuffers.Compiler.LamTy qualified as LT
@@ -20,48 +21,21 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbracket, rparen, semi, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-caseIntERef :: R.QValName
-caseIntERef = R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "case_int"
-
-bigInt :: R.QValName
-bigInt = R.qForeignRef R.MkValueName "num-bigint" [] "BigInt"
-
-vecAsSlice :: R.QValName
-vecAsSlice = R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "case_int"
-
-vecMacro :: R.QValName
-vecMacro = R.qForeignRef R.MkValueName "std" [] "vec!"
-
-fromU32Trait :: R.QTraitName
-fromU32Trait = R.qForeignRef R.MkTraitName "std" ["convert"] "From<u32>"
-
-fromStrTrait :: R.QTraitName
-fromStrTrait = R.qForeignRef R.MkTraitName "std" ["convert"] "From<&str>"
-
-cloneTrait :: R.QTraitName
-cloneTrait = R.qForeignRef R.MkTraitName "std" ["clone"] "Clone"
-
-boxNew :: R.QValName
-boxNew = R.qForeignRef R.MkValueName "std" ["boxed"] "Box::new"
-
-phantomData :: R.QTyName
-phantomData = R.qForeignRef R.MkTyName "std" ["marker"] "PhantomData"
-
 {- | Clone a value (converting a type to owned)
  As in codegen we cannot know whether a type is owned or borrowed, we make sure to have an owned type by making a clone.
  We must also borrow it first for the same reason (worst case it's a double && which Rust knows how to deal with)
 -}
 clone :: Doc ann -> Doc ann
-clone = useTraitMethod cloneTrait "clone" . borrow
+clone = useTraitMethod RR.cloneTrait "clone" . borrow
 
 borrow :: Doc ann -> Doc ann
 borrow doc = "&" <> doc
 
 fromU32 :: Doc ann -> Doc ann
-fromU32 = useTraitMethod fromU32Trait "from"
+fromU32 = useTraitMethod RR.fromU32Trait "from"
 
 fromStr :: Doc ann -> Doc ann
-fromStr = useTraitMethod fromStrTrait "from"
+fromStr = useTraitMethod RR.fromStrTrait "from"
 
 useTraitMethod :: R.QTraitName -> Text -> Doc ann -> Doc ann
 useTraitMethod trait method d = angles ("_" <+> "as" <+> R.printRsQTraitName trait) <> R.doubleColon <> pretty method <> parens d
@@ -132,7 +106,7 @@ printLamE iTyDefs lamVal = do
   bodyDoc <- printValueE iTyDefs body
   argDoc <- printValueE iTyDefs arg
 
-  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
+  return $ R.printRsQValName RR.boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
 
 printAppE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE iTyDefs funVal argVal = do
@@ -192,8 +166,8 @@ printOtherCase iTyDefs otherCase = do
 --- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
 printCaseIntE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE iTyDefs caseIntVal cases otherCase = do
-  caseIntERefDoc <- R.printRsQValName <$> LV.importValue caseIntERef
-  _ <- LV.importValue bigInt
+  caseIntERefDoc <- R.printRsQValName <$> LV.importValue RR.caseIntERef
+  _ <- LV.importValue RR.bigInt
   caseValDoc <- printValueE iTyDefs caseIntVal
   caseDocs <-
     for
@@ -204,7 +178,7 @@ printCaseIntE iTyDefs caseIntVal cases otherCase = do
           return $ group $ parens (fromU32 conditionDoc <> "," <+> bodyDoc)
       )
   otherDoc <- printLamE iTyDefs otherCase
-  return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
+  return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName RR.vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
 
 printListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printListE iTyDefs vals = do
@@ -214,12 +188,12 @@ printListE iTyDefs vals = do
 printNewListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printNewListE iTyDefs vals = do
   lst <- printListE iTyDefs vals
-  return $ R.printRsQValName vecMacro <> lst
+  return $ R.printRsQValName RR.vecMacro <> lst
 
 printCaseListE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE iTyDefs caseListVal cases otherCase = do
   caseValDoc <- printValueE iTyDefs caseListVal
-  vecAsSliceDoc <- R.printRsQValName <$> LV.importValue vecAsSlice
+  vecAsSliceDoc <- R.printRsQValName <$> LV.importValue RR.vecAsSlice
   caseDocs <-
     for
       cases
@@ -282,7 +256,7 @@ printRecordE iTyDefs (qtyN@(mn', tyN'), _) vals = do
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
-  TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName phantomData
+  TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName RR.phantomData
 
 printProductE :: MonadPrint m => PC.TyDefs -> LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE iTyDefs (qtyN@(mn', tyN'), _) vals = do
@@ -294,7 +268,7 @@ printProductE iTyDefs (qtyN@(mn', tyN'), _) vals = do
     case Map.lookup qtyN iTyDefs of
       Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.ProductI (PC.Product fields _)) _) _) -> return (toList tyArgs, fields)
       _ -> throwInternalError "Expected a ProductE but got something else (TODO(szg251): Print got)"
-  let phantomFieldDocs = R.printRsQTyName phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
+  let phantomFieldDocs = R.printRsQTyName RR.phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
       mayBoxedFields = zip vals $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
   fieldDocs <- for mayBoxedFields (printMaybeBoxed iTyDefs)
@@ -305,7 +279,7 @@ printMaybeBoxed :: MonadPrint m => PC.TyDefs -> (LV.ValueE, Bool) -> m (Doc ann)
 printMaybeBoxed iTyDefs (val, False) = clone <$> printValueE iTyDefs val
 printMaybeBoxed iTyDefs (val, True) = do
   valDoc <- clone <$> printValueE iTyDefs val
-  return $ R.printRsQValName boxNew <> parens valDoc
+  return $ R.printRsQValName RR.boxNew <> parens valDoc
 
 printTupleE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printTupleE iTyDefs l r = do
@@ -395,4 +369,4 @@ printInstanceLamE (argTy : argTys) iTyDefs lamVal = do
   argDoc <- printValueE iTyDefs arg
   let argTy' = "&'a" <+> R.printRsQTyName argTy
 
-  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))
+  return $ R.printRsQValName RR.boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))

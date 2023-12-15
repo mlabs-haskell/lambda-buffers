@@ -14,6 +14,7 @@ import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax (
   TyDefKw (EnumTyDef, StructTyDef, SynonymTyDef),
   encloseGenerics,
@@ -60,15 +61,6 @@ printTyDefKw StructTyDef = "pub struct"
 printTyDefKw EnumTyDef = "pub enum"
 printTyDefKw SynonymTyDef = "pub type"
 
-debugMacro :: R.QTraitName
-debugMacro = R.qForeignRef R.MkTraitName "std" ["fmt"] "Debug"
-
-cloneMacro :: R.QTraitName
-cloneMacro = R.qForeignRef R.MkTraitName "std" ["clone"] "Clone"
-
-phantomData :: R.QTyName
-phantomData = R.qForeignRef R.MkTyName "std" ["marker"] "PhantomData"
-
 box :: R.QTyName
 box = R.qForeignRef R.MkTyName "std" ["boxed"] "Box"
 
@@ -77,7 +69,7 @@ boxed doc = R.printRsQTyName box <> angles doc
 
 printDeriveDebug :: Doc ann
 printDeriveDebug =
-  "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro <> comma <+> printRsQTraitName cloneMacro))
+  "#" <> brackets ("derive" <> parens (printRsQTraitName RR.debugTrait <> comma <+> printRsQTraitName RR.cloneTrait))
 
 {- | Prints the type abstraction.
 
@@ -183,7 +175,7 @@ printField parentTyN (PC.Field fn ty) = do
 
 printPhantomData :: PC.TyArg -> Doc ann
 printPhantomData tyArg =
-  R.printRsQTyName phantomData <> angles (R.printTyArg tyArg)
+  R.printRsQTyName RR.phantomData <> angles (R.printTyArg tyArg)
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =

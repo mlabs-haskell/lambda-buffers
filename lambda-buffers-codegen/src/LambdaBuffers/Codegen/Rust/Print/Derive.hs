@@ -13,6 +13,7 @@ import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, derive
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print (MonadPrint)
 import LambdaBuffers.Codegen.Rust.Print.LamVal (printInstance)
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, braces, colon, comma, encloseSep, hcat, indent, lparen, parens, rparen, space, vsep, (<+>))
@@ -31,22 +32,10 @@ rsTraitImplPrinters ::
     )
 rsTraitImplPrinters =
   Map.fromList
-    [
-      ( R.qForeignRef R.MkTraitName "std" ["cmp"] "PartialEq"
-      , printDerivePartialEqBase
-      )
-    ,
-      ( R.qForeignRef R.MkTraitName "std" ["cmp"] "Eq"
-      , printDeriveEqBase
-      )
-    ,
-      ( R.qForeignRef R.MkTraitName "plutus-ledger-api" ["plutus_data"] "IsPlutusData"
-      , printDeriveIsPlutusData
-      )
-    ,
-      ( R.qForeignRef R.MkTraitName "lbr-prelude" ["json"] "Json"
-      , printDeriveJson
-      )
+    [ (RR.partialEqTrait, printDerivePartialEqBase)
+    , (RR.eqTrait, printDeriveEqBase)
+    , (RR.isPlutusDataTrait, printDeriveIsPlutusData)
+    , (RR.jsonTrait, printDeriveJson)
     ]
 eqTraitMethodName :: R.ValueName
 eqTraitMethodName = R.MkValueName "eq"
