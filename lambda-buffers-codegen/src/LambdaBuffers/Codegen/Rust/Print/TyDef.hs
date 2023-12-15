@@ -14,6 +14,7 @@ import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax (
   TyDefKw (EnumTyDef, StructTyDef, SynonymTyDef),
   encloseGenerics,
@@ -39,8 +40,12 @@ opaque Maybe a
 
 translates to
 
-data Foo a b = Foo'MkFoo a | Foo'MkBar b
-type Maybe a = Prelude.Maybe a
+enum Foo<A, B> {
+  MkFoo<A>,
+  MkBar<B>
+}
+
+type Maybe<A> = lbf_prelude::prelude::maybe<a>
 -}
 printTyDef :: MonadPrint m => R.PkgMap -> PC.TyDef -> m (Doc ann)
 printTyDef pkgs (PC.TyDef tyN tyabs _) = do
@@ -54,37 +59,31 @@ printTyDef pkgs (PC.TyDef tyN tyabs _) = do
           <> absDoc
     else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc
 
--- TODO(szg251): should we have a Pub wrapper type?
 printTyDefKw :: TyDefKw -> Doc ann
 printTyDefKw StructTyDef = "pub struct"
 printTyDefKw EnumTyDef = "pub enum"
 printTyDefKw SynonymTyDef = "pub type"
 
-debugMacro :: R.QTraitName
-debugMacro = R.qLibRef R.MkTraitName "std" "fmt" "Debug"
-
-cloneMacro :: R.QTraitName
-cloneMacro = R.qLibRef R.MkTraitName "std" "clone" "Clone"
-
-phantomData :: R.QTyName
-phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
-
 box :: R.QTyName
-box = R.qLibRef R.MkTyName "std" "boxed" "Box"
+box = R.qForeignRef R.MkTyName "std" ["boxed"] "Box"
 
 boxed :: Doc ann -> Doc ann
 boxed doc = R.printRsQTyName box <> angles doc
 
 printDeriveDebug :: Doc ann
 printDeriveDebug =
-  "#" <> brackets ("derive" <> parens (printRsQTraitName debugMacro <> comma <+> printRsQTraitName cloneMacro))
+  "#" <> brackets ("derive" <> parens (printRsQTraitName RR.debugTrait <> comma <+> printRsQTraitName RR.cloneTrait))
 
 {- | Prints the type abstraction.
 
 For the above examples it prints
 
-a b = Foo'MkFoo a | Foo'MkBar b
-a = Prelude.Maybe a
+<A, B> {
+  MkFoo<A>,
+  MkBar<B>
+}
+
+<A> = lbf_prelude::prelude::maybe<a>
 -}
 printTyAbs :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann)
 printTyAbs pkgs tyN (PC.TyAbs args body _) = do
@@ -96,8 +95,12 @@ printTyAbs pkgs tyN (PC.TyAbs args body _) = do
 
 For the above examples it prints
 
-Foo'MkFoo a | Foo'MkBar b
-Prelude.Maybe a
+{
+  MkFoo<A>,
+  MkBar<B>
+}
+
+lbf_prelude::prelude::maybe<a>
 -}
 printTyBody :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
 printTyBody pkgs parentTyN tyArgs (PC.SumI s) = (EnumTyDef,) <$> printSum pkgs parentTyN tyArgs s
@@ -183,7 +186,7 @@ printField pkgs parentTyN (PC.Field fn ty) = do
 
 printPhantomData :: PC.TyArg -> Doc ann
 printPhantomData tyArg =
-  R.printRsQTyName phantomData <> angles (R.printTyArg tyArg)
+  R.printRsQTyName RR.phantomData <> angles (R.printTyArg tyArg)
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
@@ -197,6 +200,14 @@ phantomFieldIdent tyArg =
   "phantom_" <> R.printTyArg tyArg
 
 {- | Prints an enum constructor with PhantomData fields
+ for an LB type
+
+ ```
+ prod Something a b = Integer
+ ```
+
+ it prints
+
  ```rs
  PhantomDataCtor(PhantomData<A>, PhantomData<B>)
  ```

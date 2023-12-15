@@ -152,6 +152,7 @@ library
     LambdaBuffers.Codegen.Rust.Print.InstanceDef
     LambdaBuffers.Codegen.Rust.Print.LamVal
     LambdaBuffers.Codegen.Rust.Print.MonadPrint
+    LambdaBuffers.Codegen.Rust.Print.Refs
     LambdaBuffers.Codegen.Rust.Print.Syntax
     LambdaBuffers.Codegen.Rust.Print.TyDef
 

@@ -4,6 +4,7 @@ import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -36,7 +37,7 @@ printInstanceContext :: R.PkgMap -> R.QTraitName -> [PC.Ty] -> Doc ann
 printInstanceContext pkgs rsQTraitName = printInstanceContext' pkgs [rsQTraitName]
 
 defaultTraitBounds :: [R.QTraitName]
-defaultTraitBounds = [R.qLibRef R.MkTraitName "std" "clone" "Clone"]
+defaultTraitBounds = [RR.cloneTrait]
 
 printInstanceContext' :: R.PkgMap -> [R.QTraitName] -> [PC.Ty] -> Doc ann
 printInstanceContext' pkgs rsQTraitNames tys =

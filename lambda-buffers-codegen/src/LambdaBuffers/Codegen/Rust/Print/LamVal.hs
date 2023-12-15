@@ -13,6 +13,7 @@ import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
+import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef qualified as TD
 import LambdaBuffers.Compiler.LamTy qualified as LT
@@ -20,48 +21,21 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbracket, rparen, semi, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-caseIntERef :: R.QValName
-caseIntERef = R.Qualified'LibRef (R.MkCrateName "lbr-prelude") (R.MkModuleName "lamval") (R.MkValueName "case_int")
-
-bigInt :: R.QValName
-bigInt = R.Qualified'LibRef (R.MkCrateName "num-bigint") (R.MkModuleName "") (R.MkValueName "BigInt")
-
-vecAsSlice :: R.QValName
-vecAsSlice = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "vec") (R.MkValueName "Vec::as_slice")
-
-vecMacro :: R.QValName
-vecMacro = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "") (R.MkValueName "vec!")
-
-fromU32Trait :: R.QTraitName
-fromU32Trait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<u32>")
-
-fromStrTrait :: R.QTraitName
-fromStrTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<&str>")
-
-cloneTrait :: R.QTraitName
-cloneTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "clone") (R.MkTraitName "Clone")
-
-boxNew :: R.QValName
-boxNew = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "boxed") (R.MkValueName "Box::new")
-
-phantomData :: R.QTyName
-phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
-
 {- | Clone a value (converting a type to owned)
  As in codegen we cannot know whether a type is owned or borrowed, we make sure to have an owned type by making a clone.
  We must also borrow it first for the same reason (worst case it's a double && which Rust knows how to deal with)
 -}
 clone :: Doc ann -> Doc ann
-clone = useTraitMethod cloneTrait "clone" . borrow
+clone = useTraitMethod RR.cloneTrait "clone" . borrow
 
 borrow :: Doc ann -> Doc ann
 borrow doc = "&" <> doc
 
 fromU32 :: Doc ann -> Doc ann
-fromU32 = useTraitMethod fromU32Trait "from"
+fromU32 = useTraitMethod RR.fromU32Trait "from"
 
 fromStr :: Doc ann -> Doc ann
-fromStr = useTraitMethod fromStrTrait "from"
+fromStr = useTraitMethod RR.fromStrTrait "from"
 
 useTraitMethod :: R.QTraitName -> Text -> Doc ann -> Doc ann
 useTraitMethod trait method d = angles ("_" <+> "as" <+> R.printRsQTraitName trait) <> R.doubleColon <> pretty method <> parens d
@@ -132,7 +106,7 @@ printLamE pkgs iTyDefs lamVal = do
   bodyDoc <- printValueE pkgs iTyDefs body
   argDoc <- printValueE pkgs iTyDefs arg
 
-  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
+  return $ R.printRsQValName RR.boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> "&_" <> pipe <+> braces (space <> group bodyDoc))
 
 printAppE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE pkgs iTyDefs funVal argVal = do
@@ -189,11 +163,13 @@ printOtherCase pkgs iTyDefs otherCase = do
   bodyDoc <- printValueE pkgs iTyDefs $ otherCase arg
   return $ group $ argDoc <+> "=>" <+> bodyDoc
 
---- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
+--- | Call `case_int` function `lbr_prelude`
+--
+-- `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `lbr_prelude::prelude::case_int(i, vec![(1, x), (2,y)]), Box::new(move |other| z)`
 printCaseIntE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE pkgs iTyDefs caseIntVal cases otherCase = do
-  caseIntERefDoc <- R.printRsQValName <$> LV.importValue caseIntERef
-  _ <- LV.importValue bigInt
+  caseIntERefDoc <- R.printRsQValName <$> LV.importValue RR.caseIntERef
+  _ <- LV.importValue RR.bigInt
   caseValDoc <- printValueE pkgs iTyDefs caseIntVal
   caseDocs <-
     for
@@ -204,22 +180,32 @@ printCaseIntE pkgs iTyDefs caseIntVal cases otherCase = do
           return $ group $ parens (fromU32 conditionDoc <> "," <+> bodyDoc)
       )
   otherDoc <- printLamE pkgs iTyDefs otherCase
-  return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
+  return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName RR.vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
 
+{- | Print a list of values
+ ```
+ [<A>, <B>]
+ ```
+-}
 printListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printListE pkgs iTyDefs vals = do
   valDocs <- printValueE pkgs iTyDefs `traverse` vals
   return $ brackets (align (encloseSep mempty mempty (comma <> space) valDocs))
 
+{- | Print a list (Vector in Rust) construction using vec! macro
+ ```
+ std::vec![<A>, <B>]
+ ```
+-}
 printNewListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printNewListE pkgs iTyDefs vals = do
   lst <- printListE pkgs iTyDefs vals
-  return $ R.printRsQValName vecMacro <> lst
+  return $ R.printRsQValName RR.vecMacro <> lst
 
 printCaseListE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE pkgs iTyDefs caseListVal cases otherCase = do
   caseValDoc <- printValueE pkgs iTyDefs caseListVal
-  vecAsSliceDoc <- R.printRsQValName <$> LV.importValue vecAsSlice
+  vecAsSliceDoc <- R.printRsQValName <$> LV.importValue RR.vecAsSlice
   caseDocs <-
     for
       cases
@@ -271,8 +257,8 @@ printRecordE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
           else printPhantomDataField <$> phantomFields
       mayBoxedFields = zip (sortOn fst vals) $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
-  fieldDocs <- for mayBoxedFields $
-    \(((fieldN, _), val), isBoxed) ->
+  fieldDocs <- for mayBoxedFields
+    $ \(((fieldN, _), val), isBoxed) ->
       let fieldNDoc = R.printFieldName (withInfo fieldN)
        in do
             valDoc <- printMaybeBoxed pkgs iTyDefs (val, isBoxed)
@@ -282,7 +268,7 @@ printRecordE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
-  TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName phantomData
+  TD.phantomFieldIdent tyArg <> colon <+> R.printRsQTyName RR.phantomData
 
 printProductE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
@@ -294,7 +280,7 @@ printProductE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
     case Map.lookup qtyN iTyDefs of
       Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.ProductI (PC.Product fields _)) _) _) -> return (toList tyArgs, fields)
       _ -> throwInternalError "Expected a ProductE but got something else (TODO(szg251): Print got)"
-  let phantomFieldDocs = R.printRsQTyName phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
+  let phantomFieldDocs = R.printRsQTyName RR.phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
       mayBoxedFields = zip vals $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
   fieldDocs <- for mayBoxedFields (printMaybeBoxed pkgs iTyDefs)
@@ -305,7 +291,7 @@ printMaybeBoxed :: MonadPrint m => R.PkgMap -> PC.TyDefs -> (LV.ValueE, Bool) ->
 printMaybeBoxed pkgs iTyDefs (val, False) = clone <$> printValueE pkgs iTyDefs val
 printMaybeBoxed pkgs iTyDefs (val, True) = do
   valDoc <- clone <$> printValueE pkgs iTyDefs val
-  return $ R.printRsQValName boxNew <> parens valDoc
+  return $ R.printRsQValName RR.boxNew <> parens valDoc
 
 printTupleE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
 printTupleE pkgs iTyDefs l r = do
@@ -332,15 +318,32 @@ printCaseTextE pkgs iTyDefs txtVal cases otherCase = do
   otherDoc <- printOtherCase pkgs iTyDefs otherCase
   return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
+{- | Print a reference
+
+ To help Rust type inference, we inject type information for a few references.
+ In case of a `toPlutusData`, `fromPlutusData`, `toJson`, `fromJson` we call the reference as a trait
+ method on the target type:
+ ```rs
+ <TargetType>::to_plutus_data(...)
+ ```
+ In case of `jsonConstructor`, we print the target type in a turbofish syntax:
+ ```rs
+ lbr_prelude::json::json_constructr::<TargetType>::toPlutusData(...)
+ ```
+-}
 printRefE :: MonadPrint m => R.PkgMap -> LV.Ref -> m (Doc ann)
 printRefE pkgs ref = do
   qvn <- LV.resolveRef ref
   case ref of
     (argTy : _, builtin)
-      | builtin == "toPlutusData"
-          || builtin == "fromPlutusData"
-          || builtin == "toJson"
-          || builtin == "fromJson" -> do
+      | builtin
+          == "toPlutusData"
+          || builtin
+          == "fromPlutusData"
+          || builtin
+          == "toJson"
+          || builtin
+          == "fromJson" -> do
           lamTyDoc <- printLamTy pkgs argTy
           methodDoc <- R.printRsValName . R.qualifiedEntity <$> LV.importValue qvn
           return $ angles lamTyDoc <> R.doubleColon <> methodDoc
@@ -395,4 +398,4 @@ printInstanceLamE pkgs (argTy : argTys) iTyDefs lamVal = do
   argDoc <- printValueE pkgs iTyDefs arg
   let argTy' = "&'a" <+> R.printRsQTyName argTy
 
-  return $ R.printRsQValName boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))
+  return $ R.printRsQValName RR.boxNew <> parens ("move" <+> pipe <> argDoc <> colon <+> argTy' <> pipe <+> braces (space <> group bodyDoc))
