@@ -60,7 +60,7 @@ let
           gen = lbg-rust;
           gen-classes = classes;
           gen-dir = "autogen";
-          gen-opts = [ "--packages=${builtins.trace "${packageSet}" packageSet}" ] ++ builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
+          gen-opts = [ "--packages=${packageSet}" ] ++ builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
           work-dir = ".work";
         };
       };
