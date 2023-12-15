@@ -36,7 +36,7 @@ printInstanceContext :: R.QTraitName -> [PC.Ty] -> Doc ann
 printInstanceContext rsQTraitName = printInstanceContext' [rsQTraitName]
 
 defaultTraitBounds :: [R.QTraitName]
-defaultTraitBounds = [R.qLibRef R.MkTraitName "std" "clone" "Clone"]
+defaultTraitBounds = [R.qForeignRef R.MkTraitName "std" ["clone"] "Clone"]
 
 printInstanceContext' :: [R.QTraitName] -> [PC.Ty] -> Doc ann
 printInstanceContext' rsQTraitNames tys =

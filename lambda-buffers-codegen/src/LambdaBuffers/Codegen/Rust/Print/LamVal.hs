@@ -21,31 +21,31 @@ import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, col
 import Proto.Codegen_Fields qualified as P
 
 caseIntERef :: R.QValName
-caseIntERef = R.Qualified'LibRef (R.MkCrateName "lbr-prelude") (R.MkModuleName "lamval") (R.MkValueName "case_int")
+caseIntERef = R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "case_int"
 
 bigInt :: R.QValName
-bigInt = R.Qualified'LibRef (R.MkCrateName "num-bigint") (R.MkModuleName "") (R.MkValueName "BigInt")
+bigInt = R.qForeignRef R.MkValueName "num-bigint" [] "BigInt"
 
 vecAsSlice :: R.QValName
-vecAsSlice = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "vec") (R.MkValueName "Vec::as_slice")
+vecAsSlice = R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "case_int"
 
 vecMacro :: R.QValName
-vecMacro = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "") (R.MkValueName "vec!")
+vecMacro = R.qForeignRef R.MkValueName "std" [] "vec!"
 
 fromU32Trait :: R.QTraitName
-fromU32Trait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<u32>")
+fromU32Trait = R.qForeignRef R.MkTraitName "std" ["convert"] "From<u32>"
 
 fromStrTrait :: R.QTraitName
-fromStrTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "convert") (R.MkTraitName "From<&str>")
+fromStrTrait = R.qForeignRef R.MkTraitName "std" ["convert"] "From<&str>"
 
 cloneTrait :: R.QTraitName
-cloneTrait = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "clone") (R.MkTraitName "Clone")
+cloneTrait = R.qForeignRef R.MkTraitName "std" ["clone"] "Clone"
 
 boxNew :: R.QValName
-boxNew = R.Qualified'LibRef (R.MkCrateName "std") (R.MkModuleName "boxed") (R.MkValueName "Box::new")
+boxNew = R.qForeignRef R.MkValueName "std" ["boxed"] "Box::new"
 
 phantomData :: R.QTyName
-phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
+phantomData = R.qForeignRef R.MkTyName "std" ["marker"] "PhantomData"
 
 {- | Clone a value (converting a type to owned)
  As in codegen we cannot know whether a type is owned or borrowed, we make sure to have an owned type by making a clone.

@@ -32,19 +32,19 @@ rsTraitImplPrinters ::
 rsTraitImplPrinters =
   Map.fromList
     [
-      ( R.qLibRef R.MkTraitName "std" "cmp" "PartialEq"
+      ( R.qForeignRef R.MkTraitName "std" ["cmp"] "PartialEq"
       , printDerivePartialEqBase
       )
     ,
-      ( R.qLibRef R.MkTraitName "std" "cmp" "Eq"
+      ( R.qForeignRef R.MkTraitName "std" ["cmp"] "Eq"
       , printDeriveEqBase
       )
     ,
-      ( R.qLibRef R.MkTraitName "plutus-ledger-api" "plutus_data" "IsPlutusData"
+      ( R.qForeignRef R.MkTraitName "plutus-ledger-api" ["plutus_data"] "IsPlutusData"
       , printDeriveIsPlutusData
       )
     ,
-      ( R.qLibRef R.MkTraitName "lbr-prelude" "json" "Json"
+      ( R.qForeignRef R.MkTraitName "lbr-prelude" ["json"] "Json"
       , printDeriveJson
       )
     ]
@@ -61,11 +61,11 @@ lvEqBuiltinsBase :: LV.PrintRead R.QValName
 lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
   Map.lookup refName $
     Map.fromList
-      [ ("eq", R.qLibRef R.MkValueName "lbr-prelude" "lamval" "eq")
-      , ("and", R.qLibRef R.MkValueName "lbr-prelude" "lamval" "and")
+      [ ("eq", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "eq")
+      , ("and", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "and")
       , ("true", R.qBuiltin R.MkValueName "true")
       , ("false", R.qBuiltin R.MkValueName "false")
-      , ("PhantomData", R.qLibRef R.MkValueName "std" "marker" "PhantomData")
+      , ("PhantomData", R.qForeignRef R.MkValueName "std" ["marker"] "PhantomData")
       ]
 
 printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
@@ -88,15 +88,15 @@ lvPlutusDataBuiltins :: LV.PrintRead R.QValName
 lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
   Map.lookup refName $
     Map.fromList
-      [ ("toPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::IsPlutusData" "to_plutus_data")
-      , ("fromPlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data::IsPlutusData" "from_plutus_data")
-      , ("casePlutusData", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "case_plutus_data")
-      , ("integerData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::integer")
-      , ("constrData", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "constr")
-      , ("listData", R.qLibRef R.MkValueName "plutus-ledger-api" "plutus_data" "PlutusData::list")
-      , ("succeedParse", R.qLibRef R.MkValueName "std" "result" "Result::Ok")
-      , ("failParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "fail_parse()")
-      , ("bindParse", R.qLibRef R.MkValueName "plutus-ledger-api" "lamval" "bind_parse")
+      [ ("toPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "to_plutus_data")
+      , ("fromPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "from_plutus_data")
+      , ("casePlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "case_plutus_data")
+      , ("integerData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::integer")
+      , ("constrData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "constr")
+      , ("listData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::list")
+      , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
+      , ("failParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "fail_parse()")
+      , ("bindParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "bind_parse")
       ]
 
 toPlutusDataTraitMethodName :: R.ValueName
@@ -107,7 +107,7 @@ toPlutusDataTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Sel
 
 toPlutusDataTraitMethodReturns :: R.QTyName
 toPlutusDataTraitMethodReturns =
-  R.qLibRef R.MkTyName "plutus-ledger-api" "plutus_data" "PlutusData"
+  R.qForeignRef R.MkTyName "plutus-ledger-api" ["plutus_data"] "PlutusData"
 
 fromPlutusDataTraitMethodName :: R.ValueName
 fromPlutusDataTraitMethodName = R.MkValueName "from_plutus_data"
@@ -116,20 +116,20 @@ fromPlutusDataTraitMethodArgs :: [(R.ValueName, R.QTyName)]
 fromPlutusDataTraitMethodArgs =
   [
     ( R.MkValueName "plutus_data"
-    , R.qLibRef
+    , R.qForeignRef
         R.MkTyName
         "plutus-ledger-api"
-        "plutus_data"
+        ["plutus_data"]
         "PlutusData"
     )
   ]
 
 fromPlutusDataTraitMethodReturns :: R.QTyName
 fromPlutusDataTraitMethodReturns =
-  R.qLibRef
+  R.qForeignRef
     R.MkTyName
     "std"
-    "result"
+    ["result"]
     "Result<Self, plutus_ledger_api::plutus_data::PlutusDataError>"
 
 printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
@@ -142,11 +142,11 @@ printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
 
 printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
 printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
-  let extraDeps = Set.singleton (R.qLibRef R.MkValueName "serde_json" "" "Value")
+  let extraDeps = Set.singleton (R.qForeignRef R.MkValueName "serde_json" [] "Value")
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
   (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qBuiltin R.MkTyName "Self"] iTyDefs toPlutusDataValE)
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qLibRef R.MkTyName "plutus-ledger-api" "plutus_data" "PlutusData"] iTyDefs fromPlutusDataValE)
+  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qForeignRef R.MkTyName "plutus-ledger-api" ["plutus_data"] "PlutusData"] iTyDefs fromPlutusDataValE)
 
   let instanceDoc =
         mkInstanceDoc
@@ -174,18 +174,18 @@ lvJsonBuiltins :: LV.PrintRead R.QValName
 lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
   Map.lookup refName $
     Map.fromList
-      [ ("toJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "to_json")
-      , ("fromJson", R.qLibRef R.MkValueName "lbr-prelude" "json::Json" "from_json")
-      , ("jsonObject", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_object")
-      , ("jsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_constructor")
-      , ("jsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_array")
-      , ("caseJsonConstructor", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_constructor")
-      , ("caseJsonArray", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_array")
-      , ("caseJsonObject", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "case_json_object")
-      , ("jsonField", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "json_field")
-      , ("succeedParse", R.qLibRef R.MkValueName "std" "result" "Result::Ok")
-      , ("failParse", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "fail_parse")
-      , ("bindParse", R.qLibRef R.MkValueName "lbr-prelude" "json::lamval" "bind_parse")
+      [ ("toJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "to_json")
+      , ("fromJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "from_json")
+      , ("jsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_object")
+      , ("jsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_constructor")
+      , ("jsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_array")
+      , ("caseJsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_constructor")
+      , ("caseJsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_array")
+      , ("caseJsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_object")
+      , ("jsonField", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_field")
+      , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
+      , ("failParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "fail_parse")
+      , ("bindParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "bind_parse")
       ]
 
 toJsonTraitMethodName :: R.ValueName
@@ -196,17 +196,17 @@ toJsonTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Self")]
 
 toJsonTraitMethodReturns :: R.QTyName
 toJsonTraitMethodReturns =
-  R.qLibRef R.MkTyName "serde_json" "" "Value"
+  R.qForeignRef R.MkTyName "serde_json" [] "Value"
 
 fromJsonTraitMethodName :: R.ValueName
 fromJsonTraitMethodName = R.MkValueName "from_json"
 
 fromJsonTraitMethodArgs :: [(R.ValueName, R.QTyName)]
-fromJsonTraitMethodArgs = [(R.MkValueName "value", R.qLibRef R.MkTyName "serde_json" "" "Value")]
+fromJsonTraitMethodArgs = [(R.MkValueName "value", R.qForeignRef R.MkTyName "serde_json" [] "Value")]
 
 fromJsonTraitMethodReturns :: R.QTyName
 fromJsonTraitMethodReturns =
-  R.qLibRef R.MkTyName "std" "result" "Result<Self, lbr_prelude::error::Error>" -- TODO(szg251): This is a hack
+  R.qForeignRef R.MkTyName "std" ["result"] "Result<Self, lbr_prelude::error::Error>" -- TODO(szg251): This is a hack
 
 printDeriveJson :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveJson mn iTyDefs mkInstanceDoc ty = do
@@ -241,7 +241,7 @@ printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
           )
   return
     ( instanceDoc
-    , impsA <> impsB <> Set.singleton (R.qLibRef R.MkValueName "serde_json" "" "Value")
+    , impsA <> impsB <> Set.singleton (R.qForeignRef R.MkValueName "serde_json" [] "Value")
     )
 
 {- | Print a trait method implementation

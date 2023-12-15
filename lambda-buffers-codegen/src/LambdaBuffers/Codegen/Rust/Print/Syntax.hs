@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qLibRef, qBuiltin, printTyRef, qualifiedEntity, crateNameToCargoText, encloseGenerics) where
+module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qForeignRef, qBuiltin, printTyRef, qualifiedEntity, crateNameToCargoText, encloseGenerics) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -10,15 +10,15 @@ import Prettyprinter (Doc, Pretty (pretty), colon, comma, enclose, encloseSep, g
 
 data Qualified a
   = Qualified'Builtin a
-  | Qualified'LibRef CrateName ModuleName a
+  | Qualified'LibRef CrateName [ModuleName] a
   deriving stock (Eq, Ord, Show)
 
 type QValName = Qualified ValueName
 type QTyName = Qualified TyName
 type QTraitName = Qualified TraitName
 
-qLibRef :: (Text -> a) -> Text -> Text -> Text -> Qualified a
-qLibRef mkA cn mn a = Qualified'LibRef (MkCrateName cn) (MkModuleName mn) (mkA a)
+qForeignRef :: (Text -> a) -> Text -> [Text] -> Text -> Qualified a
+qForeignRef mkA cn ms a = Qualified'LibRef (MkCrateName cn) (MkModuleName <$> ms) (mkA a)
 
 qBuiltin :: (Text -> a) -> Text -> Qualified a
 qBuiltin mkA = Qualified'Builtin . mkA
@@ -32,7 +32,7 @@ qualifiedEntity (Qualified'Builtin a) = a
 qualifiedEntity (Qualified'LibRef _ _ a) = a
 
 newtype CrateName = MkCrateName Text deriving stock (Eq, Ord, Show, Generic)
-newtype ModuleName = MkModuleName Text deriving stock (Eq, Ord, Show, Generic)
+newtype ModuleName = MkModuleName {unModuleName :: Text} deriving stock (Eq, Ord, Show, Generic)
 newtype TyName = MkTyName Text deriving stock (Eq, Ord, Show, Generic)
 newtype TraitName = MkTraitName Text deriving stock (Eq, Ord, Show, Generic)
 newtype ValueName = MkValueName Text deriving stock (Eq, Ord, Show, Generic)
@@ -42,8 +42,8 @@ data TyDefKw = StructTyDef | EnumTyDef | SynonymTyDef deriving stock (Eq, Ord, S
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
 
-fromLbModuleName :: PC.ModuleName -> ModuleName
-fromLbModuleName mn = MkModuleName $ Text.intercalate "::" ([Text.replace "-" "_" $ Text.toLower $ p ^. #name | p <- mn ^. #parts])
+fromLbModuleName :: PC.ModuleName -> [ModuleName]
+fromLbModuleName mn = [MkModuleName $ Text.replace "-" "_" $ Text.toLower $ p ^. #name | p <- mn ^. #parts]
 
 crateFromLbModuleName :: PC.ModuleName -> CrateName
 crateFromLbModuleName mn = MkCrateName $ Text.intercalate "_" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
@@ -64,15 +64,18 @@ fromLbForeignRef fr =
     (fromLbTyName $ fr ^. #tyName)
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
-filepathFromModuleName mn = Text.unpack (Text.replace "::" "/" (let MkModuleName txt = fromLbModuleName mn in txt)) <> ".rs"
+filepathFromModuleName mn = Text.unpack (Text.intercalate "/" (unModuleName <$> fromLbModuleName mn)) <> ".rs"
 
 printModName :: PC.ModuleName -> Doc ann
-printModName mn = let MkModuleName hmn = fromLbModuleName mn in pretty hmn
+printModName = printRsModules . fromLbModuleName
+
+printRsModules :: [ModuleName] -> Doc ann
+printRsModules rsMods = pretty $ Text.intercalate "::" $ unModuleName <$> rsMods
 
 printQualified :: (a -> Doc ann) -> Qualified a -> Doc ann
 printQualified p (Qualified'Builtin entity) = p entity
-printQualified p (Qualified'LibRef (MkCrateName crateName) (MkModuleName rsModName) entity) =
-  let modules = if Text.null rsModName then mempty else doubleColon <> pretty rsModName
+printQualified p (Qualified'LibRef (MkCrateName crateName) rsMods entity) =
+  let modules = if null rsMods then mempty else doubleColon <> printRsModules rsMods
    in pretty (Text.replace "-" "_" crateName) <> modules <> doubleColon <> p entity
 
 printRsTyName :: TyName -> Doc ann

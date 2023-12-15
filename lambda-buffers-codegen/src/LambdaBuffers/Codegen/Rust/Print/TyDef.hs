@@ -61,16 +61,16 @@ printTyDefKw EnumTyDef = "pub enum"
 printTyDefKw SynonymTyDef = "pub type"
 
 debugMacro :: R.QTraitName
-debugMacro = R.qLibRef R.MkTraitName "std" "fmt" "Debug"
+debugMacro = R.qForeignRef R.MkTraitName "std" ["fmt"] "Debug"
 
 cloneMacro :: R.QTraitName
-cloneMacro = R.qLibRef R.MkTraitName "std" "clone" "Clone"
+cloneMacro = R.qForeignRef R.MkTraitName "std" ["clone"] "Clone"
 
 phantomData :: R.QTyName
-phantomData = R.qLibRef R.MkTyName "std" "marker" "PhantomData"
+phantomData = R.qForeignRef R.MkTyName "std" ["marker"] "PhantomData"
 
 box :: R.QTyName
-box = R.qLibRef R.MkTyName "std" "boxed" "Box"
+box = R.qForeignRef R.MkTyName "std" ["boxed"] "Box"
 
 boxed :: Doc ann -> Doc ann
 boxed doc = R.printRsQTyName box <> angles doc
