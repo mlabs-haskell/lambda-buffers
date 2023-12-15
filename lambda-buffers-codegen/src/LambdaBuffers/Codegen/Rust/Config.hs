@@ -5,6 +5,7 @@ module LambdaBuffers.Codegen.Rust.Config (Config) where
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import Data.Aeson qualified as A
 import Data.Vector qualified as Vector
+import Debug.Trace (trace)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 
@@ -28,9 +29,14 @@ instance (FromJSON a) => FromJSON (R.Qualified a) where
       "Qualified"
       ( \arr -> do
           case Vector.toList arr of
+            [] -> fail "Cannot parse qualified entity, empty list is invalid"
             [a] -> R.Qualified'Builtin <$> parseJSON a
-            [cn, mn, a] -> R.Qualified'LibRef <$> parseJSON cn <*> parseJSON mn <*> parseJSON a
-            _ -> fail "Invalid Qualified"
+            cn : parts -> do
+              modules <- traverse parseJSON (init (trace (show parts) parts))
+              R.Qualified'LibRef
+                <$> parseJSON cn
+                <*> pure (map R.MkModuleName modules)
+                <*> parseJSON (last parts)
       )
       v
 
