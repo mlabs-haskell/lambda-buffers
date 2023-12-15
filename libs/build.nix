@@ -95,6 +95,18 @@
           "${config.packages.codegen-configs}/plutarch-plutus.json"
         ];
       };
+
+      lbf-plutus-rust = config.lbf-nix.lbfRust {
+        name = "lbf-plutus";
+        src = ./lbf-plutus;
+        imports = { lbf-prelude = ./lbf-prelude; };
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+        configs = [
+          "${config.packages.codegen-configs}/rust-prelude-base.json"
+          "${config.packages.codegen-configs}/rust-plutus-pla.json"
+        ];
+      };
     };
 
     # The following devShells allow one to conveniently play with some of the

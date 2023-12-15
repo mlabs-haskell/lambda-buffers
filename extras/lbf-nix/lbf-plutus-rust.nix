@@ -7,12 +7,11 @@ let
   lbfRustOptsForPlutus = utils.overrideAttrs
     {
       imports = {
-        default = [ ];
-        override = libs: libs ++ [ ../../libs/lbf-prelude ../../libs/lbf-plutus ];
-      };
-      dependencies = {
-        default = [ ];
-        override = deps: deps ++ [ "lbf-prelude-rust" "lbf-plutus-rust" ];
+        default = { };
+        override = libs: libs // {
+          lbf-prelude = ../../libs/lbf-prelude;
+          lbf-plutus = ../../libs/lbf-plutus;
+        };
       };
       classes = {
         default = [ ];
@@ -20,7 +19,7 @@ let
       };
       configs = {
         default = [ ];
-        override = _: [ ../../lambda-buffers-codegen/data/rust-prelude.json ../../lambda-buffers-codegen/data/rust-plutus.json ];
+        override = _: [ ../../lambda-buffers-codegen/data/rust-prelude-base.json ../../lambda-buffers-codegen/data/rust-plutus-pla.json ];
       };
     }
     lbfRustOpts;

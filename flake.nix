@@ -88,6 +88,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
       ];
       debug = true;

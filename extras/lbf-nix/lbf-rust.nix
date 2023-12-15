@@ -84,7 +84,7 @@ let
     text = ''
       num-bigint = "0.4.4"
       serde_json = { version = "1.0.107", features = ["arbitrary_precision"] }
-      plutus-ledger-api = { github = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = ["lbf"] }
+      plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = ["lbf"] }
     '';
   };
 
@@ -123,7 +123,6 @@ let
         mkdir -p $out/src;
         cp -r autogen/* $out/src
         cp Cargo.toml $out/Cargo.toml;
-        cp build.json $out/build.json;
 
         # Generating module files
         chmod -R u+w $out/src
