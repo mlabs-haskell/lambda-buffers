@@ -163,7 +163,9 @@ printOtherCase iTyDefs otherCase = do
   bodyDoc <- printValueE iTyDefs $ otherCase arg
   return $ group $ argDoc <+> "=>" <+> bodyDoc
 
---- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
+--- | Call `case_int` function `lbr_prelude`
+--
+-- `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `lbr_prelude::prelude::case_int(i, vec![(1, x), (2,y)]), Box::new(move |other| z)`
 printCaseIntE :: MonadPrint m => PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE iTyDefs caseIntVal cases otherCase = do
   caseIntERefDoc <- R.printRsQValName <$> LV.importValue RR.caseIntERef
@@ -180,11 +182,21 @@ printCaseIntE iTyDefs caseIntVal cases otherCase = do
   otherDoc <- printLamE iTyDefs otherCase
   return $ group $ caseIntERefDoc <> encloseSep lparen rparen comma [caseValDoc, align (R.printRsQValName RR.vecMacro <> encloseSep lbracket rbracket comma caseDocs), otherDoc]
 
+{- | Print a list of values
+ ```
+ [<A>, <B>]
+ ```
+-}
 printListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printListE iTyDefs vals = do
   valDocs <- printValueE iTyDefs `traverse` vals
   return $ brackets (align (encloseSep mempty mempty (comma <> space) valDocs))
 
+{- | Print a list (Vector in Rust) construction using vec! macro
+ ```
+ std::vec![<A>, <B>]
+ ```
+-}
 printNewListE :: MonadPrint m => PC.TyDefs -> [LV.ValueE] -> m (Doc ann)
 printNewListE iTyDefs vals = do
   lst <- printListE iTyDefs vals
@@ -306,6 +318,19 @@ printCaseTextE iTyDefs txtVal cases otherCase = do
   otherDoc <- printOtherCase iTyDefs otherCase
   return $ "ma" <> align ("tch" <+> caseValDoc <+> braces (line <> vsep (punctuate comma (caseDocs <> [otherDoc]))))
 
+{- | Print a reference
+
+ To help Rust type inference, we inject type information for a few references.
+ In case of a `toPlutusData`, `fromPlutusData`, `toJson`, `fromJson` we call the reference as a trait
+ method on the target type:
+ ```rs
+ <TargetType>::to_plutus_data(...)
+ ```
+ In case of `jsonConstructor`, we print the target type in a turbofish syntax:
+ ```rs
+ lbr_prelude::json::json_constructr::<TargetType>::toPlutusData(...)
+ ```
+-}
 printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
 printRefE ref = do
   qvn <- LV.resolveRef ref

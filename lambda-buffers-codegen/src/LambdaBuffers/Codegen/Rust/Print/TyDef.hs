@@ -40,8 +40,12 @@ opaque Maybe a
 
 translates to
 
-data Foo a b = Foo'MkFoo a | Foo'MkBar b
-type Maybe a = Prelude.Maybe a
+enum Foo<A, B> {
+  MkFoo<A>,
+  MkBar<B>
+}
+
+type Maybe<A> = lbf_prelude::prelude::maybe<a>
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
@@ -55,7 +59,6 @@ printTyDef (PC.TyDef tyN tyabs _) = do
           <> absDoc
     else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc
 
--- TODO(szg251): should we have a Pub wrapper type?
 printTyDefKw :: TyDefKw -> Doc ann
 printTyDefKw StructTyDef = "pub struct"
 printTyDefKw EnumTyDef = "pub enum"
@@ -75,8 +78,12 @@ printDeriveDebug =
 
 For the above examples it prints
 
-a b = Foo'MkFoo a | Foo'MkBar b
-a = Prelude.Maybe a
+<A, B> {
+  MkFoo<A>,
+  MkBar<B>
+}
+
+<A> = lbf_prelude::prelude::maybe<a>
 -}
 printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
@@ -88,8 +95,12 @@ printTyAbs tyN (PC.TyAbs args body _) = do
 
 For the above examples it prints
 
-Foo'MkFoo a | Foo'MkBar b
-Prelude.Maybe a
+{
+  MkFoo<A>,
+  MkBar<B>
+}
+
+lbf_prelude::prelude::maybe<a>
 -}
 printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
 printTyBody parentTyN tyArgs (PC.SumI s) = (EnumTyDef,) <$> printSum parentTyN tyArgs s
@@ -189,6 +200,14 @@ phantomFieldIdent tyArg =
   "phantom_" <> R.printTyArg tyArg
 
 {- | Prints an enum constructor with PhantomData fields
+ for an LB type
+
+ ```
+ prod Something a b = Integer
+ ```
+
+ it prints
+
  ```rs
  PhantomDataCtor(PhantomData<A>, PhantomData<B>)
  ```
