@@ -13,8 +13,8 @@ let
       # Examples: src = ./api
       src
     , # Additional sources that are passed to `lbf` as the `--import-path` flag.
-      # Examples: imports = [ lbf-prelude ]
-      imports ? [ ]
+      # Examples: imports = { lbf-prelude = ./lbf-prelude; }
+      imports ? { }
     , # .lbf files in `src` to compile and codegen.
       # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
       files
@@ -35,16 +35,32 @@ let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
   lbfBuild = opts: with (lbfRustOpts opts);
+    let
+      findModules = root: map
+        (path: builtins.replaceStrings [ "/" ] [ "." ]
+          (pkgs.lib.strings.removePrefix "./" (pkgs.lib.strings.removeSuffix ".lbf"
+            (pkgs.lib.path.removePrefix root path))))
+        (builtins.filter (pkgs.lib.hasSuffix ".lbf")
+          (pkgs.lib.filesystem.listFilesRecursive root));
+      packageSet =
+        pkgs.writeTextFile {
+          name = "lb-packages";
+          text =
+            builtins.toJSON
+              ({ crate = findModules src; } // builtins.mapAttrs (_: findModules) imports);
+        };
+
+    in
     lbf-build.build
       {
         inherit src;
         opts = {
           inherit files;
-          import-paths = imports;
+          import-paths = pkgs.lib.attrsets.attrValues imports;
           gen = lbg-rust;
           gen-classes = classes;
           gen-dir = "autogen";
-          gen-opts = builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
+          gen-opts = [ "--packages=${builtins.trace "${packageSet}" packageSet}" ] ++ builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
           work-dir = ".work";
         };
       };
@@ -62,14 +78,13 @@ let
       '';
     };
 
+  # 
   crateVersions = pkgs.writeTextFile {
     name = "lambda-buffers-crate-versions";
     text = ''
       num-bigint = "0.4.4"
       serde_json = { version = "1.0.107", features = ["arbitrary_precision"] }
       plutus-ledger-api = { github = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = ["lbf"] }
-      lbr-prelude = { path = "../lbr-prelude" }
-      lbr-prelude-derive = { path = "../lbr-prelude-derive" }
     '';
   };
 
@@ -108,6 +123,7 @@ let
         mkdir -p $out/src;
         cp -r autogen/* $out/src
         cp Cargo.toml $out/Cargo.toml;
+        cp build.json $out/build.json;
 
         # Generating module files
         chmod -R u+w $out/src

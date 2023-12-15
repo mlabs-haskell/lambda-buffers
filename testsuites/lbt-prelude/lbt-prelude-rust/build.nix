@@ -11,7 +11,6 @@
           {
             name = "lbf-prelude-golden-api";
             path = config.packages.lbf-prelude-golden-api-rust;
-
           }
           {
             name = "lbf-prelude";

@@ -118,7 +118,6 @@ name = "lbf-prelude"
 version = "0.1.0"
 dependencies = [
  "lbr-prelude",
- "lbr-prelude-derive",
  "num-bigint",
 ]
 
@@ -128,7 +127,6 @@ version = "0.1.0"
 dependencies = [
  "lbf-prelude",
  "lbr-prelude",
- "lbr-prelude-derive",
  "serde_json",
 ]
 

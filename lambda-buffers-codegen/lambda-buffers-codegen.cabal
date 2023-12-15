@@ -104,6 +104,7 @@ library
     , prettyprinter
     , proto-lens
     , text
+    , vector
 
   hs-source-dirs:  src
   exposed-modules:

@@ -1,8 +1,8 @@
 module LambdaBuffers.Codegen.Rust.Print.LamVal (printValueE, printInstance) where
 
 import Control.Lens ((&), (.~))
+import Control.Monad (replicateM)
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Except (replicateM)
 import Data.Foldable (Foldable (toList))
 import Data.List (sortOn)
 import Data.Map qualified as Map
@@ -316,7 +316,7 @@ printTupleE pkgs iTyDefs l r = do
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . fromStr . dquotes . pretty
 
-printCaseTextE :: (MonadPrint m) => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE pkgs iTyDefs txtVal cases otherCase = do
   caseValDoc <- printValueE pkgs iTyDefs txtVal
   caseDocs <-
