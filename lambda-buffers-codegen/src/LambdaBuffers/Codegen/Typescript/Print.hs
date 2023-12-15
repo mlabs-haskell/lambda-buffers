@@ -23,7 +23,7 @@ import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Typescript.Print.Derive (printDeriveEq, printDeriveIsPlutusData, printDeriveJson, tsEqClass, tsIsPlutusDataClass, tsJsonClass)
-import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (ExportInstanceDecl, printExportInstanceDecl)
+import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (printExportInstanceDecl)
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printModName')
 import LambdaBuffers.Codegen.Typescript.Print.TyDef (printTyDef)
@@ -72,7 +72,7 @@ tsClassImplPrinters ::
     Ts.QClassName
     ( PC.ModuleName ->
       PC.TyDefs ->
-      ExportInstanceDecl (Doc ann) ->
+      (Doc ann -> Doc ann) ->
       PC.Ty ->
       Either P.InternalError (Doc ann, Set Ts.QValName)
     )

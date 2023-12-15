@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Typescript.Print.Names (printTsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printTsQValName, printTsClassMethodName, printTsQClassName, printTsValName, printTsUnqualifiedQClassName, printLowerTsUnqualifiedQClassName) where
+module LambdaBuffers.Codegen.Typescript.Print.Names (printTsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printModName', printTsQValName, printTsClassMethodName, printTsQClassName, printTsValName, printTsUnqualifiedQClassName, printLowerTsUnqualifiedQClassName, printTsQTyNameKey) where
 
 import Data.Char qualified as Char
 import Data.Text qualified as Text
@@ -14,6 +14,10 @@ printModName mn = let Ts.MkModuleName pmn = Ts.fromLbModuleName mn in pretty pmn
 
 printTsQTyName :: Ts.QTyName -> Doc ann
 printTsQTyName (_, Ts.MkModuleName pursModName, Ts.MkTyName pursTyName) = pretty pursModName <> dot <> pretty pursTyName
+
+-- | Prints the unique symbol associated with each type
+printTsQTyNameKey :: Ts.QTyName -> Doc ann
+printTsQTyNameKey (_, Ts.MkModuleName pursModName, Ts.MkTyName pursTyName) = pretty pursModName <> dot <> pretty pursTyName
 
 printTsQClassName :: Ts.QClassName -> Doc ann
 printTsQClassName (_, Ts.MkModuleName pursModName, Ts.MkClassName pursClassName) = pretty pursModName <> dot <> pretty pursClassName

@@ -10,10 +10,10 @@ import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
-import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printTsQTyName, printTyName, printVarName)
+import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printTsQTyName, printTsQTyNameKey, printTyName, printVarName)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, flatAlt, group, langle, lbrace, lbracket, pipe, rangle, rbrace, rbracket, space, squotes, vcat, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, encloseSep, equals, flatAlt, group, langle, lbrace, lbracket, parens, pipe, rangle, rbrace, rbracket, space, squotes, vcat, vsep, (<+>))
 
 {- | `printTyAbs tyN tyAbs` prints the type abstraction `tyAbs` for a type name `tyN`.
 
@@ -22,39 +22,57 @@ Loosely, this will print things like
 \$a $b = { name: 'MkFoo',  fields: $a } | { name: 'MkBar', fields: $b }
 \$a = Prelude.Maybe $a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc ann)
+printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
   let argsDoc =
         if OMap.empty == args
           then mempty
           else encloseSep langle rangle comma (printTyArg <$> toList args)
-  bodyDoc <- printTyBody tyN (toList args) body
-  return (group $ argsDoc <+> align (equals <+> bodyDoc))
+  (bodyDoc, symbolDoc) <- printTyBody tyN (toList args) body
+  return (group $ argsDoc <+> align (equals <+> bodyDoc), symbolDoc)
 
-{- | Prints the type body.
+{- | Prints the type body AND the symbol (unique runtime evidence) of the type.
 
 For the above examples it prints
 
 TODO(jaredponn) Empty records + document some examples here.
+
+Q. What is the symbol (unique runtime evidence) of the type
+We print something like:
+```
+export const TyName: unique symbol = Symbol('TyName');
+```
+Why? This is to play nicely with LambdaBuffer's module system
+and type classes.
+
+Note: opaque types are _assumed_ to have such unique symbols
+already defined.
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann)
-printTyBody tyN _ (PC.SumI s) =
-  -- Data type def
-  printSum tyN s
-printTyBody _tyN _ (PC.ProductI p) = return (printProd p)
-printTyBody tyN _ (PC.RecordI r) = printRec tyN r >>= \recDoc -> return recDoc
-printTyBody tyN args (PC.OpaqueI si) = do
-  opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
-  mn <- asks (view $ Print.ctxModule . #moduleName)
-  case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
-    Nothing -> throwInternalError si ("Internal error: Should have an Opaque configured for " <> show tyN)
-    Just hqtyn ->
-      return
-        ( printTsQTyName hqtyn
-            <> if null args
-              then mempty
-              else encloseSep langle rangle comma $ map (printVarName . view #argName) args
-        )
+printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
+printTyBody tyN args tyBody =
+  let
+    -- E.g.
+    -- : unique symbol = Symbol('TyName')
+    newSymbolDoc = colon <+> "unique" <+> "symbol" <+> equals <+> "Symbol" <> parens (squotes $ printTyName tyN)
+   in
+    case tyBody of
+      PC.SumI s -> (,newSymbolDoc) <$> printSum tyN s
+      PC.ProductI p -> return (printProd p, newSymbolDoc)
+      PC.RecordI r -> printRec tyN r >>= \recDoc -> return (recDoc, newSymbolDoc)
+      PC.OpaqueI si -> do
+        opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
+        mn <- asks (view $ Print.ctxModule . #moduleName)
+        case Map.lookup (PC.mkInfoLess mn, PC.mkInfoLess tyN) opqs of
+          Nothing -> throwInternalError si ("Internal error: Should have an Opaque configured for " <> show tyN)
+          Just hqtyn ->
+            return
+              ( printTsQTyName hqtyn
+                  <> if null args
+                    then mempty
+                    else encloseSep langle rangle comma $ map (printVarName . view #argName) args
+              , -- Note: we assume that the unique symbol exists for the opaque type
+                colon <+> "unique" <+> "symbol" <+> equals <+> printTsQTyNameKey hqtyn
+              )
 
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn

@@ -4,7 +4,7 @@ import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printTyName)
 import LambdaBuffers.Codegen.Typescript.Print.Ty (printTyAbs)
 import LambdaBuffers.ProtoCompat.Types qualified as PC
-import Prettyprinter (Doc, group, (<+>))
+import Prettyprinter (Doc, group, vsep, (<+>))
 
 {- | Prints the LambdaBuffers type definition into a Typescript type definition.
 
@@ -24,8 +24,12 @@ TODO
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
 printTyDef (PC.TyDef tyN tyabs _) = do
-  absDoc <- printTyAbs tyN tyabs
-  return $ group $ "export" <+> tyDefDecl <+> printTyName tyN <> absDoc
+  (absDoc, symbolDoc) <- printTyAbs tyN tyabs
+  return $
+    vsep
+      [ group $ "export" <+> tyDefDecl <+> printTyName tyN <> absDoc
+      , group $ "export" <+> "const" <+> printTyName tyN <+> symbolDoc
+      ]
 
 tyDefDecl :: Doc ann
 tyDefDecl = "type"
