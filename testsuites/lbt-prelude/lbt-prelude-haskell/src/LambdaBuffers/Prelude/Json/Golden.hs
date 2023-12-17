@@ -32,7 +32,7 @@ writeGoldens goldenDir title goldens = do
     return jsonFp
 
 -- | `fromToGoldenTest goldenDir title goldens`
-fromToGoldenTest :: forall {a}. (Json a) => FilePath -> TestName -> [a] -> IO TestTree
+fromToGoldenTest :: forall {a}. Json a => FilePath -> TestName -> [a] -> IO TestTree
 fromToGoldenTest goldenDir title goldens =
   do
     goldens' <- findGoldens goldenDir title

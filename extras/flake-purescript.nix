@@ -24,9 +24,9 @@ let
           main = "Test.Main";
           browserRuntime = false;
         };
-
-        "purescript:${projectName}:docs" = purs.buildPursDocs { };
-        "purescript:${projectName}:docs-search" = purs.buildSearchablePursDocs { };
+        # FIX(https://github.com/Plutonomicon/cardano-transaction-lib/issues/1578)
+        # "purescript:${projectName}:docs" = purs.buildPursDocs { };
+        # "purescript:${projectName}:docs-search" = purs.buildSearchablePursDocs { };
       };
 
       checks = {

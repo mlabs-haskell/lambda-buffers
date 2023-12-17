@@ -316,7 +316,7 @@ unify (constraint@(Constraint (l, r)) : xs) = case l of
            in (sub :) <$> unify (sub `substituteIn` xs)
     _ -> unify $ Constraint (r, l) : xs
   where
-    nope :: forall eff a. (Member (Error InferErr) eff) => Constraint -> Eff eff a
+    nope :: forall eff a. Member (Error InferErr) eff => Constraint -> Eff eff a
     nope = throwError . InferUnifyTermErr
 
     appearsErr :: forall eff a. Member (Error InferErr) eff => Atom -> Kind -> Eff eff a

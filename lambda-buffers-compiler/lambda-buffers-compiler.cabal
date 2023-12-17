@@ -22,13 +22,13 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
-    -Wno-all-missed-specialisations -Wno-missing-kind-signatures
+    -Wno-missed-specialisations -Wno-all-missed-specialisations
+    -Wno-missing-kind-signatures
 
   if !flag(dev)
     ghc-options: -Werror
 
   default-extensions:
-    NoStarIsType
     BangPatterns
     BinaryLiterals
     ConstrainedClassMethods
@@ -65,6 +65,7 @@ common common-language
     MultiParamTypeClasses
     NamedFieldPuns
     NamedWildCards
+    NoStarIsType
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings
@@ -93,21 +94,21 @@ library
   import:          common-language
   build-depends:
     , base                        >=4.16
-    , containers                  >=0.6.5.1
-    , data-default                >=0.7
-    , freer-simple                >=1.2
-    , generic-lens                >=2.2
-    , generics-sop                >=0.5
-    , lambda-buffers-codegen-pb   >=0.1
-    , lambda-buffers-compiler-pb  >=0.1.0.0
-    , lambda-buffers-lang-pb      >=0.1
-    , lens                        >=5.2
-    , mtl                         >=2.2
-    , ordered-containers          >=0.2
-    , parsec                      >=3.1
-    , prettyprinter               >=1.7
-    , proto-lens                  >=0.7
-    , text                        >=1.2
+    , containers
+    , data-default
+    , freer-simple                >=1.2.1.2
+    , generic-lens
+    , generics-sop
+    , lambda-buffers-codegen-pb
+    , lambda-buffers-compiler-pb
+    , lambda-buffers-lang-pb
+    , lens
+    , mtl
+    , ordered-containers
+    , parsec
+    , prettyprinter
+    , proto-lens
+    , text
     , unification-fd
 
   exposed-modules:
@@ -153,13 +154,13 @@ executable lbc
   main-is:        Main.hs
   build-depends:
     , base                        >=4.16
-    , bytestring                  >=0.11
+    , bytestring
     , lambda-buffers-compiler
-    , lambda-buffers-compiler-pb  >=0.1.0.0
-    , lens                        >=5.2
-    , optparse-applicative        >=0.17
-    , proto-lens                  >=0.7
-    , text                        >=1.2
+    , lambda-buffers-compiler-pb
+    , lens
+    , optparse-applicative
+    , proto-lens
+    , text
 
   hs-source-dirs: app
   other-modules:  LambdaBuffers.Compiler.Cli.Compile
@@ -171,21 +172,21 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base                        >=4.16
-    , containers                  >=0.6
-    , data-default                >=0.7
-    , filepath                    >=1.4
-    , hedgehog                    >=1.2
+    , containers
+    , data-default
+    , filepath
+    , hedgehog
     , lambda-buffers-compiler
-    , lambda-buffers-compiler-pb  >=0.1
-    , lambda-buffers-lang-pb      >=0.1
-    , lens                        >=5.2
-    , nonempty-containers         >=0.3
-    , ordered-containers          >=0.2
-    , proto-lens                  >=0.7
-    , tasty                       >=1.4
-    , tasty-hedgehog              >=1.4
-    , tasty-hunit                 >=0.10
-    , text                        >=1.2
+    , lambda-buffers-compiler-pb
+    , lambda-buffers-lang-pb
+    , lens
+    , nonempty-containers
+    , ordered-containers
+    , proto-lens
+    , tasty
+    , tasty-hedgehog
+    , tasty-hunit
+    , text
 
   other-modules:
     Paths_lambda_buffers_compiler

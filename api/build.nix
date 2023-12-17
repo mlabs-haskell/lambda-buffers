@@ -1,56 +1,41 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, system, config, ... }:
+  perSystem = { pkgs, system, config, inputs', ... }:
     let
-      pbnix-lib = inputs.protobufs-nix.lib.${system};
+      proto-nix = inputs.proto-nix.lib.${system};
     in
     rec {
 
       devShells.dev-api = pkgs.mkShell {
         name = "protos-env";
-        buildInputs = [
-          pkgs.protobuf
-          pkgs.haskellPackages.proto-lens-protoc
-          pkgs.protoc-gen-doc
-        ] ++ config.settings.shell.tools;
-
+        inputsFrom = [ inputs'.proto-nix.devShells.dev-proto-nix ];
         shellHook = config.settings.shell.hook;
       };
 
       packages = {
-        lambda-buffers-lang-hs-pb = pbnix-lib.haskellProto {
-          inherit pkgs;
+        lambda-buffers-lang-hs-pb = proto-nix.haskellProto {
           src = ./.;
-          proto = "lang.proto";
+          protos = [ "lang.proto" ];
           cabalPackageName = "lambda-buffers-lang-pb";
         };
 
-        lambda-buffers-compiler-hs-pb = pbnix-lib.haskellProto {
-          inherit pkgs;
+        lambda-buffers-compiler-hs-pb = proto-nix.haskellProto {
           src = ./.;
-          proto = "compiler.proto";
+          protos = [ "compiler.proto" ];
           cabalBuildDepends = [ packages.lambda-buffers-lang-hs-pb ];
           cabalPackageName = "lambda-buffers-compiler-pb";
         };
 
-        lambda-buffers-codegen-hs-pb = pbnix-lib.haskellProto {
-          inherit pkgs;
+        lambda-buffers-codegen-hs-pb = proto-nix.haskellProto {
           src = ./.;
-          proto = "codegen.proto";
+          protos = [ "codegen.proto" ];
           cabalBuildDepends = [ packages.lambda-buffers-lang-hs-pb ];
           cabalPackageName = "lambda-buffers-codegen-pb";
         };
 
-        lambda-buffers-api-docs = pkgs.stdenv.mkDerivation {
+        lambda-buffers-api-docs = proto-nix.docProto {
           src = ./.;
-          name = "lambdabuffers-api-docs";
-          buildInputs = [
-            pkgs.protobuf
-          ];
-          buildPhase = ''
-            mkdir $out;
-            protoc --plugin=${pkgs.protoc-gen-doc}/bin/protoc-gen-doc lang.proto compiler.proto codegen.proto --doc_out=$out --doc_opt=markdown,api.md;
-          '';
+          protos = [ "lang.proto" "compiler.proto" "codegen.proto" ];
         };
       };
     };

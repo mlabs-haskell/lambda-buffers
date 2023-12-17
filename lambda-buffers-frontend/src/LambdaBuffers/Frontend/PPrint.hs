@@ -21,32 +21,32 @@ instance (Ord info, Pretty info) => Pretty (Module info) where
     let sortedImports = sort imports
      in "module"
           <+> pretty mn
-            <> ( if null sortedImports
-                  then ""
-                  else
-                    line
-                      <> line
-                      <> intercalate line (pretty <$> sortedImports)
-               )
-            <> ( if null stmnts
-                  then ""
-                  else
-                    line
-                      <> line
-                      <> intercalate (line <> line) (pretty <$> stmnts)
-               )
+          <> ( if null sortedImports
+                then ""
+                else
+                  line
+                    <> line
+                    <> intercalate line (pretty <$> sortedImports)
+             )
+          <> ( if null stmnts
+                then ""
+                else
+                  line
+                    <> line
+                    <> intercalate (line <> line) (pretty <$> stmnts)
+             )
 
 instance Pretty info => Pretty (Import info) where
   pretty (Import isQ imn mayNames mayAl _info) =
     "import"
       <> (if isQ then space <> "qualified" else "")
       <+> pretty imn
-        <> case mayAl of
-          Nothing -> ""
-          Just al -> space <> "as" <+> pretty al
-        <> case mayNames of
-          Nothing -> ""
-          Just names -> space <> encloseSep lparen rparen comma (pretty <$> names)
+      <> case mayAl of
+        Nothing -> ""
+        Just al -> space <> "as" <+> pretty al
+      <> case mayNames of
+        Nothing -> ""
+        Just names -> space <> encloseSep lparen rparen comma (pretty <$> names)
 
 instance Pretty info => Pretty (Statement info) where
   pretty (StTyDef td) = pretty td

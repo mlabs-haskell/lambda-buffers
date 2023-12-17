@@ -27,7 +27,7 @@ message SourcePosition {
 
 /* Type term
 
-A type term that ocurrs in bodies of type definitions (message TyDef):
+A type term that occurs in bodies of type definitions (message TyDef):
 
 ```lbf
 sum Maybe a = Just a | Nothing
@@ -146,7 +146,7 @@ message TyName {
 
 /* Module name */
 message ModuleName {
-  // Parts of the module name denoting a hierarchichal namespace.
+  // Parts of the module name denoting a hierarchical namespace.
   repeated ModuleNamePart parts = 1;
   // Source information.
   SourceInfo source_info = 2;
