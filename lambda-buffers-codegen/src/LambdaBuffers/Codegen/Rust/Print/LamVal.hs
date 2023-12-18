@@ -21,12 +21,8 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbracket, rparen, semi, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-{- | Clone a value (converting a type to owned)
- As in codegen we cannot know whether a type is owned or borrowed, we make sure to have an owned type by making a clone.
- We must also borrow it first for the same reason (worst case it's a double && which Rust knows how to deal with)
--}
-clone :: Doc ann -> Doc ann
-clone = useTraitMethod RR.cloneTrait "clone" . borrow
+toOwned :: Doc ann -> Doc ann
+toOwned = useTraitMethod RR.toOwnedTrait "to_owned"
 
 borrow :: Doc ann -> Doc ann
 borrow doc = "&" <> doc
@@ -290,9 +286,9 @@ printProductE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
   return $ ctorDoc <> encloseSep lparen rparen comma (fieldDocs <> phantomFieldDocs)
 
 printMaybeBoxed :: MonadPrint m => R.PkgMap -> PC.TyDefs -> (LV.ValueE, Bool) -> m (Doc ann)
-printMaybeBoxed pkgs iTyDefs (val, False) = clone <$> printValueE pkgs iTyDefs val
+printMaybeBoxed pkgs iTyDefs (val, False) = toOwned <$> printValueE pkgs iTyDefs val
 printMaybeBoxed pkgs iTyDefs (val, True) = do
-  valDoc <- clone <$> printValueE pkgs iTyDefs val
+  valDoc <- toOwned <$> printValueE pkgs iTyDefs val
   return $ R.printRsQValName RR.boxNew <> parens valDoc
 
 printTupleE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.ValueE -> LV.ValueE -> m (Doc ann)
