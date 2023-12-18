@@ -40,7 +40,6 @@
     ],
     "Prelude.Integer": [
       "num-bigint",
-      "",
       "BigInt"
     ],
     "Prelude.Bool": [

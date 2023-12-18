@@ -1,4 +1,20 @@
-module LambdaBuffers.Codegen.Rust.Print.Refs where
+module LambdaBuffers.Codegen.Rust.Print.Refs (
+  caseIntERef,
+  bigInt,
+  vecAsSlice,
+  vecMacro,
+  boxNew,
+  phantomData,
+  debugTrait,
+  fromU32Trait,
+  fromStrTrait,
+  cloneTrait,
+  partialEqTrait,
+  eqTrait,
+  isPlutusDataTrait,
+  jsonTrait,
+)
+where
 
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 
@@ -9,7 +25,7 @@ bigInt :: R.QValName
 bigInt = R.qForeignRef R.MkValueName "num-bigint" [] "BigInt"
 
 vecAsSlice :: R.QValName
-vecAsSlice = R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "case_int"
+vecAsSlice = R.qForeignRef R.MkValueName "std" ["vec", "Vec"] "as_slice"
 
 vecMacro :: R.QValName
 vecMacro = R.qForeignRef R.MkValueName "std" [] "vec!"
