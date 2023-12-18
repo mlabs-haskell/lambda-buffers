@@ -252,8 +252,8 @@ printTraitMethod fnName args returns implDoc =
    in indent 4 $
         "fn"
           <+> R.printRsValName fnName
-            <> "<'a>"
-            <> argsWithTypes
+          <> "<'a>"
+          <> argsWithTypes
           <+> "->"
           <+> R.printRsQTyName returns
           <+> braces (space <> implDoc <> argsLst)

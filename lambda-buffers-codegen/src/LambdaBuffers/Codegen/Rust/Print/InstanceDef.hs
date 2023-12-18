@@ -29,7 +29,8 @@ printInstanceDef rsQTraitName ty =
    in case freeVars of
         [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
         _ -> \implDoc ->
-          "impl" <> printInstanceContext rsQTraitName freeVars
+          "impl"
+            <> printInstanceContext rsQTraitName freeVars
             <+> headDoc
             <+> braces (hardline <> space <> space <> implDoc)
 

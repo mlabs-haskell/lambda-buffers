@@ -23,7 +23,7 @@ instance FromJSON R.ModuleName
 instance ToJSON R.CrateName
 instance FromJSON R.CrateName
 
-instance (FromJSON a) => FromJSON (R.Qualified a) where
+instance FromJSON a => FromJSON (R.Qualified a) where
   parseJSON v = do
     A.withArray
       "Qualified"
@@ -40,6 +40,6 @@ instance (FromJSON a) => FromJSON (R.Qualified a) where
       )
       v
 
-instance (ToJSON a) => ToJSON (R.Qualified a) where
+instance ToJSON a => ToJSON (R.Qualified a) where
   toJSON (R.Qualified'LibRef cn mn a) = A.Array $ Vector.fromList [toJSON cn, toJSON mn, toJSON a]
   toJSON (R.Qualified'Builtin a) = A.Array $ Vector.fromList [toJSON a]
