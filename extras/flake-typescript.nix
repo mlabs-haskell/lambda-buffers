@@ -7,7 +7,7 @@ pkgs:
   # ```
   # for the the extra dependencies (not included in the `package.json`) for
   # `node` to execute. This will _not_ install the "transitive" dependencies.
-  # 
+  #
   # Loosely, this will (in the order given) copy each tarball to a local
   # directory, call `npm cache` on the tarball, and finally call `npm install`.
   #
@@ -43,10 +43,10 @@ let
   # Derivation for the result of calling the CLI tool `node2nix` with the
   # provided `src`.
   #
-  # Notes: 
+  # Notes:
   #
-  #   - `node2nix` creates a nix expression in `default.nix` of type 
-  #   `{pkgs, system, nodejs} -> {args, sources, tarball, package,  shell, nodeDependencies }` 
+  #   - `node2nix` creates a nix expression in `default.nix` of type
+  #   `{pkgs, system, nodejs} -> {args, sources, tarball, package,  shell, nodeDependencies }`
   node2nixExprs =
     {
       # Extra flags passed directly to `node2nix`
@@ -99,7 +99,7 @@ let
 
         ${ if dependencies == [] then "" else
             ''
-                # We write the list of `dependencies` as 
+                # We write the list of `dependencies` as
                 # `<dependency1>`, `<dependency2>`, ... ,`<dependencyN>`
 
                 # Copying all `dependencies` into `.nix-nodes-deps/` i.e.,
@@ -116,7 +116,7 @@ let
                 # cp <dependencyN> "$(pkgPathToNixNodeDepsPath <dependencyN>)"
                 # npm cache add <dependencyN>
                 # ```
-                ${builtins.concatStringsSep "\n" (builtins.map (pkgPath: 
+                ${builtins.concatStringsSep "\n" (builtins.map (pkgPath:
                     ''
                         echo "Copying ${pkgPath} and adding it to npm's cache..."
                         cp ${pkgPath} "$(pkgPathToNixNodeDepsPath "${pkgPath}")"

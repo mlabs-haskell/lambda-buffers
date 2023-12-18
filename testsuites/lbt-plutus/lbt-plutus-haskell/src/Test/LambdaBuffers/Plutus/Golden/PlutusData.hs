@@ -8,7 +8,7 @@ import Test.LambdaBuffers.Plutus.Golden.Utils qualified as Utils
 import Test.Tasty (TestName, TestTree)
 import Test.Tasty.HUnit (assertEqual, assertFailure)
 
-writeGoldens :: (PlutusTx.ToData a) => FilePath -> TestName -> [a] -> IO [FilePath]
+writeGoldens :: PlutusTx.ToData a => FilePath -> TestName -> [a] -> IO [FilePath]
 writeGoldens goldenDir title goldens = Utils.writeGoldens goldenDir title ".pd.json" (PlutusTx.toData <$> goldens)
 
 -- | `fromToGoldenTest goldenDir title goldens`

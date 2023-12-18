@@ -21,7 +21,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, ... }: {
+      ({ pkgs, system, config, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -32,7 +32,22 @@
         config = {
           lbf-nix = {
             # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
-            purescriptFlake = import ./flake-purescript.nix pkgs;
+
+            purescriptFlake =
+              let
+                pkgs' = import inputs.ctl-nixpkgs {
+                  inherit system;
+                  inherit (inputs.haskell-nix) config;
+                  overlays = [
+                    inputs.haskell-nix.overlay
+                    inputs.iohk-nix.overlays.crypto
+                    inputs.ctl.overlays.purescript
+                    inputs.ctl.overlays.spago
+                  ];
+                };
+              in
+              import ./flake-purescript.nix pkgs'; # TODO(bladyjoker): If we use recent nixpkgs we get: `error: nodejs_14 has been removed as it is EOL`. That's why we use CTL's old nixpkgs.
+
             rustFlake = import ./flake-rust.nix pkgs;
             haskellData = import ./haskell-data.nix pkgs;
             haskellFlake = import ./flake-haskell.nix pkgs;
