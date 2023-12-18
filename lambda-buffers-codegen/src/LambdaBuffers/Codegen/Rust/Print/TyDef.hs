@@ -3,12 +3,13 @@ module LambdaBuffers.Codegen.Rust.Print.TyDef (printTyDef, printTyTopLevel, prin
 import Control.Lens (view)
 import Control.Monad.Reader.Class (asks)
 import Data.Foldable (Foldable (toList))
+import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Map.Ordered (OMap)
 import Data.Map.Ordered qualified as OMap
+import Data.Maybe (fromMaybe)
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.Text (Text)
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
@@ -115,7 +116,10 @@ printTyBody _ tyN args (PC.OpaqueI si) = do
 
 printSum :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Sum -> m (Doc ann)
 printSum pkgs parentTyN tyArgs (PC.Sum ctors _) = do
-  let phantomTyArgs = collectPhantomTyArgs (sumCtorTys ctors) tyArgs
+  ci <- asks (view Print.ctxCompilerInput)
+  let iTyDefs = indexTyDefs ci
+  mn <- asks (view $ Print.ctxModule . #moduleName)
+  let phantomTyArgs = collectPhantomTyArgs iTyDefs mn parentTyN (sumCtorTys ctors) tyArgs
       phantomCtor = if null phantomTyArgs then mempty else [printPhantomDataCtor phantomTyArgs]
   ctorDocs <- traverse (printCtor pkgs parentTyN) (toList ctors)
   if null ctors
@@ -139,7 +143,10 @@ printCtorInner pkgs parentTyN (PC.Product fields _) = do
 
 printRec :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Record -> m (Doc ann)
 printRec pkgs parentTyN tyArgs (PC.Record fields _) = do
-  let phantomTyArgs = collectPhantomTyArgs (recFieldTys fields) tyArgs
+  ci <- asks (view Print.ctxCompilerInput)
+  let iTyDefs = indexTyDefs ci
+  mn <- asks (view $ Print.ctxModule . #moduleName)
+  let phantomTyArgs = collectPhantomTyArgs iTyDefs mn parentTyN (recFieldTys fields) tyArgs
       phantomFields = printPhantomDataField <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
@@ -149,21 +156,55 @@ printRec pkgs parentTyN tyArgs (PC.Record fields _) = do
 
 printProd :: MonadPrint m => R.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.Product -> m (Doc ann)
 printProd pkgs parentTyN tyArgs (PC.Product fields _) = do
+  ci <- asks (view Print.ctxCompilerInput)
+  let iTyDefs = indexTyDefs ci
+  mn <- asks (view $ Print.ctxModule . #moduleName)
   tyDocs <- for fields (printTyTopLevel pkgs parentTyN)
-  let phantomTyArgs = collectPhantomTyArgs fields tyArgs
+  let phantomTyArgs = collectPhantomTyArgs iTyDefs mn parentTyN fields tyArgs
       phantomFields = printPhantomData <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
     else return $ encloseSep lparen rparen comma (tyDocs <> phantomFields) <> semi
 
--- | Filter out unused type arguments in order to make PhantomData fields for them
-collectPhantomTyArgs :: [PC.Ty] -> [PC.TyArg] -> [PC.TyArg]
-collectPhantomTyArgs tys tyArgs = foldr go tyArgs tys
+{- | Filter out unused type arguments in order to make PhantomData fields for them
+This is done in a recursive manner: if we encounter a type application, we resolve the type from TyDefs, and substitute
+all type variable with the arguments from the parent types type abstraction. We're also keeping track of all
+the type names already seen to avoid infinite recursions.
+-}
+collectPhantomTyArgs :: PC.TyDefs -> PC.ModuleName -> PC.TyName -> [PC.Ty] -> [PC.TyArg] -> [PC.TyArg]
+collectPhantomTyArgs iTyDefs ownMn parentTyN tys tyArgs = foldr (go (Set.singleton (PC.mkInfoLess parentTyN))) tyArgs tys
   where
-    go :: PC.Ty -> [PC.TyArg] -> [PC.TyArg]
-    go (PC.TyVarI (PC.TyVar (PC.VarName varName _))) tyArgs' = filter (\(PC.TyArg (PC.VarName varName' _) _ _) -> varName /= varName') tyArgs'
-    go (PC.TyAppI (PC.TyApp _ tys' _)) tyArgs' = foldr go tyArgs' tys'
-    go (PC.TyRefI _) tyArgs' = tyArgs'
+    go :: Set (PC.InfoLess PC.TyName) -> PC.Ty -> [PC.TyArg] -> [PC.TyArg]
+    go _ (PC.TyVarI (PC.TyVar (PC.VarName varName _))) tyArgs' = filter (\(PC.TyArg (PC.VarName varName' _) _ _) -> varName /= varName') tyArgs'
+    go seenTys (PC.TyAppI (PC.TyApp tyFunc tys' _)) tyArgs' =
+      case tyFunc of
+        PC.TyRefI ref ->
+          let qtyN@(_, tyN) =
+                case ref of
+                  PC.LocalI (PC.LocalRef tyN' _) -> (mkInfoLess ownMn, mkInfoLess tyN')
+                  PC.ForeignI (PC.ForeignRef tyN' mn _) -> (mkInfoLess mn, mkInfoLess tyN')
+
+              resolvedChildrenTys =
+                case Map.lookup qtyN iTyDefs of
+                  Nothing -> [] -- TODO(szg251): Gracefully failing, but this should be an error instead
+                  Just (PC.TyDef _ (PC.TyAbs omap tyBody _) _) ->
+                    let tyAbsArgs = fst <$> OMap.assocs omap
+                        resolvedArgs = Map.fromList $ zip tyAbsArgs tys'
+                        tyBodyTys = case tyBody of
+                          PC.OpaqueI _ -> []
+                          PC.SumI (PC.Sum ctors _) -> sumCtorTys ctors
+                          PC.ProductI (PC.Product fields _) -> fields
+                          PC.RecordI (PC.Record fields _) -> recFieldTys fields
+                     in resolveTyVar resolvedArgs <$> tyBodyTys
+           in if Set.member tyN seenTys
+                then tyArgs'
+                else foldr (go (Set.insert tyN seenTys)) tyArgs' resolvedChildrenTys
+        _ -> tyArgs'
+    go _ (PC.TyRefI _) tyArgs' = tyArgs'
+
+    resolveTyVar :: Map (PC.InfoLess PC.VarName) PC.Ty -> PC.Ty -> PC.Ty
+    resolveTyVar resolvedArgs ty@(PC.TyVarI (PC.TyVar varName)) = fromMaybe ty $ Map.lookup (PC.mkInfoLess varName) resolvedArgs -- TODO(szg251): Should this be an error too? Guess so..
+    resolveTyVar _ ty = ty
 
 -- | Returns Ty information of all record fields, sorted by field name
 recFieldTys :: OMap (PC.InfoLess PC.FieldName) PC.Field -> [PC.Ty]
@@ -241,30 +282,30 @@ printTyInner pkgs (PC.TyAppI a) = printTyApp pkgs a
  This is done by resolving references, and searching for reoccurances of the parent type name
 -}
 isRecursive :: PC.TyDefs -> PC.ModuleName -> PC.TyName -> PC.Ty -> Bool
-isRecursive iTyDefs mn (PC.TyName parentTyNameT _) = go mempty
+isRecursive iTyDefs ownMn parentTyName = go mempty
   where
-    go :: Set Text -> PC.Ty -> Bool
+    go :: Set (PC.InfoLess PC.TyName) -> PC.Ty -> Bool
     go _ (PC.TyVarI _) = False
-    go otherTys (PC.TyAppI (PC.TyApp _ tyArgs _)) = any (go otherTys) tyArgs
+    go otherTys (PC.TyAppI (PC.TyApp tyFunc tyArgs _)) = any (go otherTys) $ tyFunc : tyArgs
     go otherTys (PC.TyRefI ref) = do
-      let (qtyN, tyN) =
+      let qtyN@(_, tyN) =
             case ref of
-              PC.LocalI (PC.LocalRef tyN' _) ->
-                let (PC.TyName tyNameT _) = tyN'
-                 in ((mkInfoLess mn, mkInfoLess tyN'), tyNameT)
-              PC.ForeignI (PC.ForeignRef tyN' mn' _) ->
-                let (PC.TyName tyNameT _) = tyN'
-                 in ((mkInfoLess mn', mkInfoLess tyN'), tyNameT)
+              PC.LocalI (PC.LocalRef tyN' _) -> (mkInfoLess ownMn, mkInfoLess tyN')
+              PC.ForeignI (PC.ForeignRef tyN' mn _) -> (mkInfoLess mn, mkInfoLess tyN')
 
-      let childrenTys =
-            case Map.lookup qtyN iTyDefs of
-              Nothing -> [] -- TODO(szg251): Gracefully failing, but this should be an error instead
-              Just (PC.TyDef _ (PC.TyAbs _ tyBody _) _) ->
-                case tyBody of
-                  PC.OpaqueI _ -> []
-                  PC.SumI (PC.Sum ctors _) -> sumCtorTys ctors
-                  PC.ProductI (PC.Product fields _) -> fields
-                  PC.RecordI (PC.Record fields _) -> recFieldTys fields
+      let childrenTys = findChildren iTyDefs qtyN
 
-      (parentTyNameT == tyN)
+      (PC.mkInfoLess parentTyName == tyN)
         || (not (Set.member tyN otherTys) && any (go (Set.insert tyN otherTys)) childrenTys)
+
+-- | Resolve a qualified type name and return all it's children types
+findChildren :: PC.TyDefs -> PC.QTyName -> [PC.Ty]
+findChildren iTyDefs qtyN =
+  case Map.lookup qtyN iTyDefs of
+    Nothing -> [] -- TODO(szg251): Gracefully failing, but this should be an error instead
+    Just (PC.TyDef _ (PC.TyAbs _ tyBody _) _) ->
+      case tyBody of
+        PC.OpaqueI _ -> []
+        PC.SumI (PC.Sum ctors _) -> sumCtorTys ctors
+        PC.ProductI (PC.Product fields _) -> fields
+        PC.RecordI (PC.Record fields _) -> recFieldTys fields

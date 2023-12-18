@@ -60,7 +60,9 @@ printCtorCase pkgs iTyDefs (_, tyn) ctorCont ctor@(ctorN, fields) = do
     else return $ group $ ctorNameDoc <+> encloseSep lparen rparen comma argDocs <+> "=>" <+> group bodyDoc
 
 printCaseE :: MonadPrint m => R.PkgMap -> PC.TyDefs -> LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
-printCaseE pkgs iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
+printCaseE pkgs iTyDefs (qtyN@(mn', tyN'), sumTy) caseVal ctorCont = do
+  let mn = withInfo mn'
+      tyN = withInfo tyN'
   caseValDoc <- printValueE pkgs iTyDefs caseVal
   (tyArgs, fieldTys) <-
     case Map.lookup qtyN iTyDefs of
@@ -68,13 +70,13 @@ printCaseE pkgs iTyDefs (qtyN@(_, tyN), sumTy) caseVal ctorCont = do
         return (toList tyArgs, TD.sumCtorTys ctors)
       _ -> throwInternalError "Expected a SumE but got something else (TODO(szg251): Print got)"
 
-  let phantomFields = TD.collectPhantomTyArgs fieldTys tyArgs
+  let phantomFields = TD.collectPhantomTyArgs iTyDefs mn tyN fieldTys tyArgs
       phantomCaseDoc =
         if null phantomFields
           then mempty
           else
             let phantomCtor =
-                  R.printTyName (withInfo tyN)
+                  R.printTyName tyN
                     <> R.doubleColon
                     <> TD.phantomDataCtorIdent
                     <> encloseSep lparen rparen comma ("_" <$ phantomFields)
@@ -250,15 +252,15 @@ printRecordE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
       Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.RecordI (PC.Record fields _)) _) _) -> return (toList tyArgs, TD.recFieldTys fields)
       _ -> throwInternalError "Expected a RecordE but got something else (TODO(szg251): Print got)"
 
-  let phantomFields = TD.collectPhantomTyArgs fieldTys tyArgs
+  let phantomFields = TD.collectPhantomTyArgs iTyDefs mn tyN fieldTys tyArgs
       phantomFieldDocs =
         if null phantomFields
           then mempty
           else printPhantomDataField <$> phantomFields
       mayBoxedFields = zip (sortOn fst vals) $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
-  fieldDocs <- for mayBoxedFields
-    $ \(((fieldN, _), val), isBoxed) ->
+  fieldDocs <- for mayBoxedFields $
+    \(((fieldN, _), val), isBoxed) ->
       let fieldNDoc = R.printFieldName (withInfo fieldN)
        in do
             valDoc <- printMaybeBoxed pkgs iTyDefs (val, isBoxed)
@@ -280,7 +282,7 @@ printProductE pkgs iTyDefs (qtyN@(mn', tyN'), _) vals = do
     case Map.lookup qtyN iTyDefs of
       Just (PC.TyDef _ (PC.TyAbs tyArgs (PC.ProductI (PC.Product fields _)) _) _) -> return (toList tyArgs, fields)
       _ -> throwInternalError "Expected a ProductE but got something else (TODO(szg251): Print got)"
-  let phantomFieldDocs = R.printRsQTyName RR.phantomData <$ TD.collectPhantomTyArgs fieldTys tyArgs
+  let phantomFieldDocs = R.printRsQTyName RR.phantomData <$ TD.collectPhantomTyArgs iTyDefs mn tyN fieldTys tyArgs
       mayBoxedFields = zip vals $ TD.isRecursive iTyDefs mn tyN <$> fieldTys
 
   fieldDocs <- for mayBoxedFields (printMaybeBoxed pkgs iTyDefs)
@@ -339,11 +341,11 @@ printRefE pkgs ref = do
       | builtin
           == "toPlutusData"
           || builtin
-          == "fromPlutusData"
+            == "fromPlutusData"
           || builtin
-          == "toJson"
+            == "toJson"
           || builtin
-          == "fromJson" -> do
+            == "fromJson" -> do
           lamTyDoc <- printLamTy pkgs argTy
           methodDoc <- R.printRsValName . R.qualifiedEntity <$> LV.importValue qvn
           return $ angles lamTyDoc <> R.doubleColon <> methodDoc
