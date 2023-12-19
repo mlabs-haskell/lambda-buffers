@@ -159,6 +159,7 @@ version = "0.1.0"
 dependencies = [
  "lbf-prelude",
  "lbf-prelude-golden-api",
+ "lbr-prelude",
  "num-bigint",
  "serde_json",
 ]
