@@ -39,7 +39,8 @@
             config.packages.lbr-prelude-typescript-tgz
           ];
         # projectTarballHash = pkgs.lib.fakeHash;
-        projectTarballHash = "sha256-Yx7ROZtxPdwS9a+fHRf9gx0cHCXwPdfA8LUrTr4wJCU=";
+        # projectTarballHash = "sha256-Yx7ROZtxPdwS9a+fHRf9gx0cHCXwPdfA8LUrTr4wJCU=";
+        projectTarballHash = "sha256-LEPQS3J+7UZ+m4jOzV4Y2wQDybLhyTYg9E+dL6FpxRo=";
       };
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {

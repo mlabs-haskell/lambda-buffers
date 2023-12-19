@@ -28,6 +28,10 @@ pkgs:
 
   npmDependencies ?  [ ]
 
+, 
+    # The script to build the project i.e., `npm run ${npmBuildScript}` is
+    # executed.
+    npmBuildScript ? "build"
 , nodejs ? pkgs.nodejs-18_x
 , # `devShellHook` is the shell commands to run _before_  entering the shell
   # (see the variable `shell`)
@@ -44,14 +48,45 @@ let
   npmLocalDependencies = 
     pkgs.callPackage (import ./typescript/npm-local-dependencies.nix) {} { inherit name npmDependencies; };
 
-  # See: https://github.com/NixOS/nixpkgs/tree/master/pkgs/build-support/node/build-npm-package
-  # for helpful documentation
-  npmPackage = pkgs.buildNpmPackage {
-    inherit name src npmDepsHash;
+  fetchedPackageLock = 
+    pkgs.callPackage (import ./typescript/fetch-package-lock.nix) {} 
+        { inherit src ; };
 
-    postPatch = 
+  npmPackage = pkgs.stdenv.mkDerivation {
+    inherit name src npmDepsHash;
+    buildInputs = [ nodejs ];
+
+    configurePhase = 
         ''
+            runHook preConfigure
+
+            export HOME=$(mktemp -d)
+            export NPM_CONFIG_OFFLINE=true
+            export NPM_CONFIG_LOGLEVEL=verbose
+
+            ${builtins.concatStringsSep "\n"
+                (builtins.map
+                    (dep:
+                        if dep.packageResolvedFetched == null then "" else
+                        ''
+                            echo 'Adding `${dep.packageResolvedFetched}` to npm's cache'
+                            npm cache add "${dep.packageResolvedFetched}"
+                        ''
+                    )
+                    fetchedPackageLock
+                )
+            }
+
             ${npmLocalDependencies.npmLocalDependenciesLinkCommand}
+
+            npm install
+            
+            runHook postConfigure
+        '';
+
+    buildPhase = 
+        ''
+            npm run ${npmBuildScript}
         '';
   };
 
@@ -76,10 +111,9 @@ let
 
   # Creates a tarball of `project` using `npm pack` and puts it in the nix
   # store.
-  npmPack =  npmPackage.overrideAttrs (_self: super:
+  npmPack =  npmPackage.overrideAttrs (_self: _super:
     {
         name = "${name}.tgz";
-        makeCacheWritable = true;
         installPhase =
           ''
             tgzFile=$(npm --log-level=verbose pack | tail -n 1)
@@ -95,6 +129,10 @@ let
       postBuild =
         ''
             npm --log-level=verbose test
+        '';
+      installPhase =
+        ''
+            touch $out
         '';
       buildInputs = super.buildInputs ++ testTools;
     });

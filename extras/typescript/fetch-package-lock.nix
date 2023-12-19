@@ -1,5 +1,5 @@
 # Given a `package-lock.json`, grabs all packages as tarballs.
-{ fetchurl, runCommand}:
+{ fetchurl, runCommand }:
 { src ? ./.
 , packageLock ? "${src}/package-lock.json"
 , ...
@@ -34,65 +34,69 @@ let
   # The type should be 
   # [ { packageLocation : string, packageDescriptor: set, packageResolvedFetched  } ]
   dependencies =
-    builtins.filter (x: x != null)
-    (
-    builtins.map
-      (packageLocation:
-        {
-          packageLocation = packageLocation;
-          packageDescriptor = packagesAttrs.packageLocation;
-          packageResolvedFetched =
-            # TODO(jaredponn): I can't find a specification for the exact
-            # format that they output but we try to generalize the examples in
-            # [1]... at least we try to accept a hopefully reasonable superset
-            # of what they output.
-            # TODO(jaredponn): Urgh, we should really do things case insensitive
-            let resolvedStr = packagesAttrs."${packageLocation}".resolved;
-                # See here for the regex we steal:
-                # https://datatracker.ietf.org/doc/html/rfc3986
-                # In particular, see Appendix B: https://datatracker.ietf.org/doc/html/rfc3986#appendix-B
-                uriMatches = builtins.match ''^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?'' resolvedStr;
+      (
+        builtins.map
+          (packageLocation:
+            {
+              packageLocation = packageLocation;
+              packageDescriptor = packagesAttrs.packageLocation;
+              packageResolvedFetched =
+                # TODO(jaredponn): I can't find a specification for the exact
+                # format that they output but we try to generalize the examples in
+                # [1]... at least we try to accept a hopefully reasonable superset
+                # of what they output.
+                # TODO(jaredponn): Urgh, we should really do things case insensitive
+                let
+                  resolvedStr = packagesAttrs."${packageLocation}".resolved;
+                  # See here for the regex we steal:
+                  # https://datatracker.ietf.org/doc/html/rfc3986
+                  # In particular, see Appendix B: https://datatracker.ietf.org/doc/html/rfc3986#appendix-B
+                  uriMatches = builtins.match ''^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?'' resolvedStr;
 
-            in if elemAt 1 uriMatches == "http" 
-                then fetchurl {
-                  url = resolvedStr;
-                  hash = packagesAttrs."${packageLocation}".integrity;
-                  };
+                in
+                if builtins.elemAt uriMatches 1 == "https"
+                then
+                  fetchurl
+                    {
+                      url = resolvedStr;
+                      hash = packagesAttrs."${packageLocation}".integrity;
+                    }
                 else 
-                    if elemAt 1 uriMatches == "file"
-                        then 
-                            # We skip files and assume they'll be provided
-                            # separately.. 
-                            # Fun fact: this is broken on `buildNpmPackages`
-                            null
+                  if builtins.elemAt uriMatches  1 == "file"
+                  then
+                  # We skip files and assume they'll be provided
+                  # separately.. 
+                  # Fun fact: this is broken on `buildNpmPackages`
+                    null
 
-                        else 
-                            in if gitUrlList == "git+ssh"
-                                then 
-                                    let gitUrl = 
-                                        builtins.concatStringsSep ""
-                                        (
-                                        builtins.filter (x: x != null)
-                                        [ (builtins.elemAt 0 uriMatches)
-                                          (builtins.elemAt 1 uriMatches )
-                                          (builtins.elemAt 2 uriMatches )
-                                          (builtins.elemAt 4 uriMatches )
-                                          (builtins.elemAt 5 uriMatches )
-                                        ]
-                                        )
-                                    in runCommand gitUrl {
-                                        src = builtins.fetchGit { url = gitUrl; rev = builtins.elemAt 8 uriMatches; };
-                                    };
-                                    ''
-                                        cp -r ${src}/. $out
-                                    '';
+                  else
+                    if builtins.elemAt uriMatches  1 == "git+ssh"
+              then
+              let gitUrl =
+              builtins.concatStringsSep ""
+              (
+              builtins.filter (x: x != null)
+              [ (builtins.elemAt uriMatches 0 )
+              (builtins.elemAt uriMatches 2 )
+              (builtins.elemAt uriMatches 4 )
+              (builtins.elemAt uriMatches 5 )
+              ]
+              );
+              in runCommand gitUrl {
+                src = builtins.fetchGit 
+                        { url = gitUrl;
+                        rev = builtins.elemAt uriMatches 8 ;
+                        };
+            }
+              ''
+                cp -r ${src}/. $out
+              ''
 
 
-                                else builtins.throw "Error: please report a bug -- unsupported `resolved` field in package-lock.json of `${resolvedStr}`";
-        }
-      )
-      )
-      (builtins.attrNames packagesAttrs);
+            else builtins.throw "Error: please report a bug. Unsupported `resolved` field in package-lock.json of `${resolvedStr}`";
+  }
+  )
+  (builtins.attrNames packagesAttrs));
 
-in
-dependencies 
+  in
+  dependencies 

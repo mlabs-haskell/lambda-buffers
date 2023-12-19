@@ -251,14 +251,15 @@ printExportInstanceDecl tsQClassName ty = do
                   , indent 2 $
                       vsep
                         [ lbrace
-                        , "return" <+> 
-                            indent 2 
-                            (vsep
-                                [ lbrace
-                                , bodyDoc
-                                , rbrace
-                                ]
-                                )
+                        , "return"
+                            <+> indent
+                              2
+                              ( vsep
+                                  [ lbrace
+                                  , bodyDoc
+                                  , rbrace
+                                  ]
+                              )
                         , rbrace
                         ]
                   ]
