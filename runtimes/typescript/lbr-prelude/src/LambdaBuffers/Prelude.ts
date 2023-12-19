@@ -7,6 +7,8 @@ export type {
   Json,
   List,
   Map,
+  Maybe,
+  Either,
   Ord,
   Set,
   Text,

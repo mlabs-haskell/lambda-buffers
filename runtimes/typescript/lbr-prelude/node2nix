@@ -1,0 +1,8 @@
+#! /nix/store/q451rv6f5py72srl7mfafi6lxpa75zlf-system-path/bin/bash -e
+PATH=${PATH:+':'$PATH':'}
+PATH=${PATH/':''/nix/store/1xg3krnm1rwifagjzwgsbp0mb9ycla28-nix-2.18.1/bin'':'/':'}
+PATH='/nix/store/1xg3krnm1rwifagjzwgsbp0mb9ycla28-nix-2.18.1/bin'$PATH
+PATH=${PATH#':'}
+PATH=${PATH%':'}
+export PATH
+exec -a "$0" "/nix/store/1g3gqgma9cp2rn0rqb299fpxgdbx130n-node2nix-1.11.0/bin/.node2nix-wrapped"  "$@" 

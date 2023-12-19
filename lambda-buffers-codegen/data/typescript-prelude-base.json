@@ -1,52 +1,52 @@
 {
   "opaquesConfig": {
     "Prelude.Map": [
-      "lbr-prelude/Map.js",
+      "prelude/Map.js",
       "PreludeMap",
       "Map"
     ],
     "Prelude.Set": [
-      "lbr-prelude/Set.js",
+      "prelude/Set.js",
       "PreludeSet",
       "Set"
     ],
     "Prelude.List": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "List"
     ],
     "Prelude.Either": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Either"
     ],
     "Prelude.Maybe": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Maybe"
     ],
     "Prelude.Bytes": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Bytes"
     ],
     "Prelude.Text": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Text"
     ],
     "Prelude.Char": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Char"
     ],
     "Prelude.Integer": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Integer"
     ],
     "Prelude.Bool": [
-      "lbr-prelude",
+      "prelude",
       "Prelude",
       "Bool"
     ]

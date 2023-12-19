@@ -38,6 +38,8 @@
           [
             config.packages.lbr-prelude-typescript-tgz
           ];
+        # projectTarballHash = pkgs.lib.fakeHash;
+        projectTarballHash = "sha256-Yx7ROZtxPdwS9a+fHRf9gx0cHCXwPdfA8LUrTr4wJCU=";
       };
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {

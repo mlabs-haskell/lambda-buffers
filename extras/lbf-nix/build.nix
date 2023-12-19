@@ -19,23 +19,22 @@ _: {
         lbfPurescript = import ./lbf-purescript.nix pkgs config.packages.lbf lbg-purescript;
         lbfPreludePurescript = import ./lbf-prelude-purescript.nix pkgs config.packages.lbf lbg-purescript;
         lbfPlutusPurescript = import ./lbf-plutus-purescript.nix pkgs config.packages.lbf lbg-purescript;
-        lbfTypescript = opts:
-          (import ./lbf-typescript.nix pkgs config.packages.lbf lbg-typescript opts).tgz;
+        lbfTypescript = opts: import ./lbf-typescript.nix pkgs config.packages.lbf lbg-typescript opts;
 
         lbfPreludeTypescript = opts:
-          (import ./lbf-prelude-typescript.nix
+          import ./lbf-prelude-typescript.nix
             pkgs
             config.packages.lbf
             lbg-typescript
             config
-            opts).tgz;
-        lbfPreludeTypescriptSrc = opts:
-          (import ./lbf-prelude-typescript.nix
-            pkgs
-            config.packages.lbf
-            lbg-typescript
-            config
-            opts).src;
+            opts;
+        # lbfPreludeTypescriptSrc = opts:
+        #   (import ./lbf-prelude-typescript.nix
+        #     pkgs
+        #     config.packages.lbf
+        #     lbg-typescript
+        #     config
+        #     opts).src;
       };
 
     };
