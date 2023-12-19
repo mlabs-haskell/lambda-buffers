@@ -53,17 +53,20 @@ printTyDef pkgs (PC.TyDef tyN tyabs _) = do
   (kw, generics, absDoc) <- printTyAbs pkgs tyN tyabs
   if kw /= SynonymTyDef
     then
-      return $
-        printDeriveDebug
-          <> hardline
-          <> group (printTyDefKw kw <+> printTyName tyN <> generics)
-          <> absDoc
+      return
+        $ printDeriveDebug
+        <> hardline
+        <> group (printTyDefKw kw <+> printTyName tyN <> generics)
+        <> absDoc
     else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc
 
 printTyDefKw :: TyDefKw -> Doc ann
-printTyDefKw StructTyDef = "pub struct"
-printTyDefKw EnumTyDef = "pub enum"
-printTyDefKw SynonymTyDef = "pub type"
+printTyDefKw StructTyDef = pub "struct"
+printTyDefKw EnumTyDef = pub "enum"
+printTyDefKw SynonymTyDef = pub "type"
+
+pub :: Doc ann -> Doc ann
+pub doc = "pub" <+> doc
 
 box :: R.QTyName
 box = R.qForeignRef R.MkTyName "std" ["boxed"] "Box"
@@ -164,7 +167,7 @@ printProd pkgs parentTyN tyArgs (PC.Product fields _) = do
       phantomFields = printPhantomData <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
-    else return $ encloseSep lparen rparen comma (tyDocs <> phantomFields) <> semi
+    else return $ encloseSep lparen rparen comma (pub <$> (tyDocs <> phantomFields)) <> semi
 
 {- | Filter out unused type arguments in order to make PhantomData fields for them
 This is done in a recursive manner: if we encounter a type application, we resolve the type from TyDefs, and substitute
@@ -223,7 +226,7 @@ printField :: MonadPrint m => R.PkgMap -> PC.TyName -> PC.Field -> m (Doc ann)
 printField pkgs parentTyN (PC.Field fn ty) = do
   let fnDoc = printFieldName fn
   tyDoc <- printTyTopLevel pkgs parentTyN ty
-  return $ fnDoc <> colon <+> tyDoc
+  return $ pub fnDoc <> colon <+> tyDoc
 
 printPhantomData :: PC.TyArg -> Doc ann
 printPhantomData tyArg =
