@@ -29,6 +29,8 @@ impl From<&Value> for JsonType {
 /// Error type representing Json conversion errors
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Malformed JSON string, unable to parse")]
+    MalformedJson,
     #[error("{parser:?} > Expected a JSON type: {wanted:?}, but got a JSON type: {got:?}")]
     UnexpectedJsonType {
         got: JsonType,
