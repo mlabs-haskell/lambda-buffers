@@ -20,7 +20,7 @@ fn main() {
         ("age".to_owned(), Value::Number(Number::from(89))),
     ]));
 
-    let actual = data.to_json().unwrap();
+    let actual = data.to_json();
 
     assert_eq!(actual, expected);
 }

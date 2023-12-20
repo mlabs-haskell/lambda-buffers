@@ -1,0 +1,72 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "std",
+      "collections",
+      "BTreeMap"
+    ],
+    "Prelude.Set": [
+      "std",
+      "collections",
+      "BTreeSet"
+    ],
+    "Prelude.List": [
+      "std",
+      "vec",
+      "Vec"
+    ],
+    "Prelude.Either": [
+      "std",
+      "result",
+      "Result"
+    ],
+    "Prelude.Maybe": [
+      "std",
+      "option",
+      "Option"
+    ],
+    "Prelude.Bytes": [
+      "std",
+      "vec",
+      "Vec<u8>"
+    ],
+    "Prelude.Text": [
+      "std",
+      "string",
+      "String"
+    ],
+    "Prelude.Char": [
+      "char"
+    ],
+    "Prelude.Integer": [
+      "num_bigint",
+      "BigInt"
+    ],
+    "Prelude.Bool": [
+      "std",
+      "primitive",
+      "bool"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "std",
+        "cmp",
+        "PartialEq"
+      ],
+      [
+        "std",
+        "cmp",
+        "Eq"
+      ]
+    ],
+    "Prelude.Json": [
+      [
+        "lbr-prelude",
+        "json",
+        "Json"
+      ]
+    ]
+  }
+}

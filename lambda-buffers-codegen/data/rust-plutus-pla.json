@@ -1,0 +1,185 @@
+{
+  "opaquesConfig": {
+    "Plutus.V1.PlutusData": [
+      "plutus-ledger-api",
+      "plutus_data",
+      "PlutusData"
+    ],
+    "Plutus.V1.Address": [
+      "plutus-ledger-api",
+      "v1",
+      "address",
+      "Address"
+    ],
+    "Plutus.V1.Credential": [
+      "plutus-ledger-api",
+      "v1",
+      "address",
+      "Credential"
+    ],
+    "Plutus.V1.StakingCredential": [
+      "plutus-ledger-api",
+      "v1",
+      "address",
+      "StakingCredential"
+    ],
+    "Plutus.V1.PubKeyHash": [
+      "plutus-ledger-api",
+      "v1",
+      "crypto",
+      "Ed25519PubKeyHash"
+    ],
+    "Plutus.V1.Bytes": [
+      "plutus-ledger-api",
+      "v1",
+      "crypto",
+      "LedgerBytes"
+    ],
+    "Plutus.V1.Interval": [
+      "plutus-ledger-api",
+      "v1",
+      "interval",
+      "Interval"
+    ],
+    "Plutus.V1.Extended": [
+      "plutus-ledger-api",
+      "v1",
+      "interval",
+      "Extended"
+    ],
+    "Plutus.V1.LowerBound": [
+      "plutus-ledger-api",
+      "v1",
+      "interval",
+      "LowerBound"
+    ],
+    "Plutus.V1.UpperBound": [
+      "plutus-ledger-api",
+      "v1",
+      "interval",
+      "UpperBound"
+    ],
+    "Plutus.V1.POSIXTime": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "POSIXTime"
+    ],
+    "Plutus.V1.POSIXTimeRange": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "POSIXTimeRange"
+    ],
+    "Plutus.V1.Value": [
+      "plutus-ledger-api",
+      "v1",
+      "value",
+      "Value"
+    ],
+    "Plutus.V1.CurrencySymbol": [
+      "plutus-ledger-api",
+      "v1",
+      "value",
+      "CurrencySymbol"
+    ],
+    "Plutus.V1.AssetClass": [
+      "plutus-ledger-api",
+      "v1",
+      "value",
+      "AssetClass"
+    ],
+    "Plutus.V1.TokenName": [
+      "plutus-ledger-api",
+      "v1",
+      "value",
+      "TokenName"
+    ],
+    "Plutus.V1.Redeemer": [
+      "plutus-ledger-api",
+      "v1",
+      "redeemer",
+      "Redeemer"
+    ],
+    "Plutus.V1.Datum": [
+      "plutus-ledger-api",
+      "v1",
+      "datum",
+      "Datum"
+    ],
+    "Plutus.V1.DatumHash": [
+      "plutus-ledger-api",
+      "v1",
+      "datum",
+      "DatumHash"
+    ],
+    "Plutus.V1.RedeemerHash": [
+      "plutus-ledger-api",
+      "v1",
+      "redeemer",
+      "RedeemerHash"
+    ],
+    "Plutus.V1.ScriptHash": [
+      "plutus-ledger-api",
+      "v1",
+      "script",
+      "ScriptHash"
+    ],
+    "Plutus.V1.TxInInfo": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "TxInInfo"
+    ],
+    "Plutus.V1.TxId": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "TransactionHash"
+    ],
+    "Plutus.V1.TxOut": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "TransactionOutput"
+    ],
+    "Plutus.V1.TxOutRef": [
+      "plutus-ledger-api",
+      "v1",
+      "transaction",
+      "TransactionInput"
+    ],
+    "Plutus.V1.Map": [
+      "std",
+      "collections",
+      "BTreeMap"
+    ],
+    "Plutus.V2.TxInInfo": [
+      "plutus-ledger-api",
+      "v2",
+      "transaction",
+      "TxInInfo"
+    ],
+    "Plutus.V2.OutputDatum": [
+      "plutus-ledger-api",
+      "v2",
+      "datum",
+      "OutputDatum"
+    ],
+    "Plutus.V2.TxOut": [
+      "plutus-ledger-api",
+      "v2",
+      "transaction",
+      "TransactionOutput"
+    ]
+  },
+  "classesConfig": {
+    "Plutus.V1.PlutusData": [
+      [
+        "plutus-ledger-api",
+        "plutus_data",
+        "IsPlutusData"
+      ]
+    ]
+  }
+}
