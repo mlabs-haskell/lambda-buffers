@@ -55,7 +55,6 @@ lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
       , ("and", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "and")
       , ("true", R.qBuiltin R.MkValueName "true")
       , ("false", R.qBuiltin R.MkValueName "false")
-      , ("PhantomData", R.qForeignRef R.MkValueName "std" ["marker"] "PhantomData")
       ]
 
 printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
