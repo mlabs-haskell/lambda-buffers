@@ -6,5 +6,9 @@ edition = "2021"
 [dependencies]
 lbf-plutus-rust-golden-api = { path = ".extras/lbf-plutus-rust-golden-api" }
 lbf-prelude = { path = ".extras/lbf-prelude" }
+lbr-prelude = { path = ".extras/lbr-prelude" }
 serde_json = "1.0.108"
 num-bigint = "0.4.4"
+plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = [
+  "lbf",
+], rev = "3faa5644813888117ad0697c9131bce138cfbd3e" }
