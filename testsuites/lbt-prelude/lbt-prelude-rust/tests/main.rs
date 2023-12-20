@@ -33,7 +33,6 @@ mod json_tests {
         golden_data: Vec<T>,
     ) {
         let goldens = find_goldens(golden_dir, title, ext, golden_data.len());
-        println!("{:?}", goldens);
         if goldens.is_empty() {
             panic!(
                 "Expected to find some goldens {}{}. Did you forget to (re)generate goldens? {}",
