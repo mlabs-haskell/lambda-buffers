@@ -33,11 +33,15 @@ pub fn assert_goldens<T>(
             title, ext, golden_dir
         );
     }
-    golden_data.iter().enumerate().for_each(|(ix, golden)| {
-        let (fp, text) = goldens.get(&ix).expect(&format!(
-            "Golden value index not in goldens {} {}",
-            title, ix
-        ));
-        assert_golden(golden, ix, fp, text);
-    });
+    golden_data
+        .iter()
+        .take(goldens.len())
+        .enumerate()
+        .for_each(|(ix, golden)| {
+            let (fp, text) = goldens.get(&ix).expect(&format!(
+                "Golden value index not in goldens {} {}",
+                title, ix
+            ));
+            assert_golden(golden, ix, fp, text);
+        });
 }

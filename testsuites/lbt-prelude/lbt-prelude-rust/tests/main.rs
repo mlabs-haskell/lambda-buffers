@@ -39,13 +39,17 @@ mod json_tests {
                 title, ext, golden_dir
             );
         }
-        golden_data.iter().enumerate().for_each(|(ix, golden)| {
-            let (fp, text) = goldens.get(&ix).expect(&format!(
-                "Golden value index not in goldens {} {}",
-                title, ix
-            ));
-            assert_golden(golden, ix, fp, text);
-        });
+        golden_data
+            .iter()
+            .take(goldens.len())
+            .enumerate()
+            .for_each(|(ix, golden)| {
+                let (fp, text) = goldens.get(&ix).expect(&format!(
+                    "Golden value index not in goldens {} {}",
+                    title, ix
+                ));
+                assert_golden(golden, ix, fp, text);
+            });
     }
     fn from_to_golden_test<T: Json + std::fmt::Debug + Eq>(title: &str, goldens: Vec<T>) {
         let golden_dir = "data/lbt-prelude-golden-data";
