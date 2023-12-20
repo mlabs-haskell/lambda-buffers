@@ -11,4 +11,4 @@ serde_json = "1.0.108"
 num-bigint = "0.4.4"
 plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = [
   "lbf",
-], rev = "3faa5644813888117ad0697c9131bce138cfbd3e" }
+], rev = "c9e09c867decdcb6e405b1231dad447436c820c5" }

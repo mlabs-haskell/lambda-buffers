@@ -259,7 +259,7 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "plutus-ledger-api"
 version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/plutus-ledger-api-rust?rev=3faa5644813888117ad0697c9131bce138cfbd3e#3faa5644813888117ad0697c9131bce138cfbd3e"
+source = "git+https://github.com/mlabs-haskell/plutus-ledger-api-rust?rev=c9e09c867decdcb6e405b1231dad447436c820c5#c9e09c867decdcb6e405b1231dad447436c820c5"
 dependencies = [
  "data-encoding",
  "lbr-prelude 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=fc9ce0635e3a0adc4ecc35e371c7034167b19f7a)",
