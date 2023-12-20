@@ -49,8 +49,8 @@ eqTraitMethodReturns = R.qBuiltin R.MkTyName "bool"
 
 lvEqBuiltinsBase :: LV.PrintRead R.QValName
 lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName
-    $ Map.fromList
+  Map.lookup refName $
+    Map.fromList
       [ ("eq", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "eq")
       , ("and", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "and")
       , ("true", R.qBuiltin R.MkValueName "true")
@@ -66,17 +66,17 @@ printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           for_ imps Print.importValue
-          return
-            $ mkInstance
-            $ printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
+          return $
+            mkInstance $
+              printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
 
 printDeriveEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
 printDeriveEqBase _ _ _ mkInstance _ = return $ mkInstance mempty
 
 lvPlutusDataBuiltins :: LV.PrintRead R.QValName
 lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName
-    $ Map.fromList
+  Map.lookup refName $
+    Map.fromList
       [ ("toPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "to_plutus_data")
       , ("fromPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "from_plutus_data")
       , ("casePlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "case_plutus_data")
@@ -139,8 +139,8 @@ printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty = do
 
   let instanceDoc =
         mkInstanceDoc
-          ( align
-              $ vsep
+          ( align $
+              vsep
                 [ printTraitMethod
                     toPlutusDataTraitMethodName
                     toPlutusDataTraitMethodArgs
@@ -161,8 +161,8 @@ printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty = do
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
 lvJsonBuiltins :: LV.PrintRead R.QValName
 lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName
-    $ Map.fromList
+  Map.lookup refName $
+    Map.fromList
       [ ("toJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "to_json")
       , ("fromJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "from_json")
       , ("jsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_object")
@@ -214,8 +214,8 @@ printDeriveJson' mn pkgs iTyDefs mkInstanceDoc ty = do
 
   let instanceDoc =
         mkInstanceDoc
-          ( align
-              $ vsep
+          ( align $
+              vsep
                 [ printTraitMethod
                     toJsonTraitMethodName
                     toJsonTraitMethodArgs
@@ -249,11 +249,11 @@ printTraitMethod fnName args returns implDoc =
   let argsWithTypes =
         encloseSep lparen rparen comma $ (\(arg, ty) -> R.printRsValName arg <> colon <+> "&'a " <> R.printRsQTyName ty) <$> args
       argsLst = hcat $ parens . R.printRsValName . fst <$> args
-   in indent 4
-        $ "fn"
-        <+> R.printRsValName fnName
-        <> "<'a>"
-        <> argsWithTypes
-        <+> "->"
-        <+> R.printRsQTyName returns
-        <+> braces (space <> implDoc <> argsLst)
+   in indent 4 $
+        "fn"
+          <+> R.printRsValName fnName
+          <> "<'a>"
+          <> argsWithTypes
+          <+> "->"
+          <+> R.printRsQTyName returns
+          <+> braces (space <> implDoc <> argsLst)
