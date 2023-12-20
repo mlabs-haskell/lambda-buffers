@@ -193,9 +193,9 @@ mod plutus_data_tests {
             ".pd.json",
             |golden, _index, _fp, text| {
                 let pd = PlutusData::from_json_string(text).unwrap();
-                // let res = T::from_plutus_data(&pd).unwrap();
+                let res = T::from_plutus_data(&pd).unwrap();
 
-                // assert_eq!(golden, &res);
+                assert_eq!(golden, &res);
                 assert_eq!(golden.to_plutus_data().to_json_string(), text);
             },
             goldens,
