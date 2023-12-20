@@ -18,6 +18,7 @@
     cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
     cardano-haskell-packages.flake = false;
     plutus.url = "github:input-output-hk/plutus";
+    prelude-typescript.url = "github:mlabs-haskell/prelude-typescript";
   };
 
   outputs = inputs@{ flake-parts, ... }:

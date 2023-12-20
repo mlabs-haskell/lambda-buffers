@@ -1,6 +1,6 @@
 { ... }:
 {
-  perSystem = { config, ... }:
+  perSystem = { inputs', config, ... }:
     let
       typescriptFlake =
         config.lbf-nix.typescriptFlake {
@@ -9,11 +9,19 @@
 
           devShellTools = config.settings.shell.tools;
           devShellHook = config.settings.shell.hook;
-          npmDepsHash  = "sha256-ribFu4BD7CcPXM68sFjQar4qB2ZDHddCnHNXTR4DJhk=";
+
+          npmDependencies = [ inputs'.prelude-typescript.packages.tgz ];
         };
     in
     {
-      inherit (typescriptFlake) packages checks devShells;
+      packages = {
+        lbr-prelude-typescript = typescriptFlake.packages.lbr-prelude-typescript;
+        lbr-prelude-typescript-tgz = typescriptFlake.packages.lbr-prelude-typescript-tgz;
+        lbr-prelude-typescript-nix-npm-folder-dependencies = typescriptFlake.packages.lbr-prelude-typescript-nix-npm-folder-dependencies;
+        lbr-prelude-typescript-node2nix = typescriptFlake.packages.lbr-prelude-typescript-node2nix;
+      };
+
+      inherit (typescriptFlake) checks devShells;
     };
 
 }

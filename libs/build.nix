@@ -2,7 +2,7 @@
 # TODO(bladyjoker): Make packages that actually try and compile.
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }: {
+  perSystem = { pkgs, inputs', config, ... }: {
 
     packages = {
       lbf-prelude = pkgs.stdenv.mkDerivation {
@@ -28,7 +28,7 @@
         configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
       };
 
-      lbf-prelude-typescript = config.lbf-nix.lbfTypescript {
+      lbf-prelude-typescript = (config.lbf-nix.lbfTypescript {
         name = "prelude-lb";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
@@ -37,11 +37,10 @@
         npmDependencies =
           [
             config.packages.lbr-prelude-typescript-tgz
+            inputs'.prelude-typescript.packages.tgz
           ];
-        # projectTarballHash = pkgs.lib.fakeHash;
-        # projectTarballHash = "sha256-Yx7ROZtxPdwS9a+fHRf9gx0cHCXwPdfA8LUrTr4wJCU=";
-        projectTarballHash = "sha256-LEPQS3J+7UZ+m4jOzV4Y2wQDybLhyTYg9E+dL6FpxRo=";
-      };
+        # });
+      }).packages.prelude-lb-typescript-tgz;
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";

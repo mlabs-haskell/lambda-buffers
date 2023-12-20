@@ -11,43 +11,43 @@
       "Set"
     ],
     "Prelude.List": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "List"
     ],
     "Prelude.Either": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Either"
     ],
     "Prelude.Maybe": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Maybe"
     ],
     "Prelude.Bytes": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Bytes"
     ],
     "Prelude.Text": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Text"
     ],
     "Prelude.Char": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Char"
     ],
     "Prelude.Integer": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Integer"
     ],
     "Prelude.Bool": [
-      "prelude",
-      "Prelude",
+      "lbr-prelude",
+      "LbrPrelude",
       "Bool"
     ]
   },
@@ -55,14 +55,14 @@
     "Prelude.Eq": [
       [
         "lbr-prelude",
-        "Prelude",
+        "LbrPrelude",
         "Eq"
       ]
     ],
     "Prelude.Json": [
       [
         "lbr-prelude",
-        "Prelude",
+        "LbrPrelude",
         "Json"
       ]
     ]

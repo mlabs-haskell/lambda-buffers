@@ -1,5 +1,5 @@
 _: {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, config, inputs', ... }:
     let
       lbg-haskell = "${config.packages.lbg-haskell}/bin/lbg-haskell";
       lbg-typescript = "${config.packages.lbg-typescript}/bin/lbg-typescript";
@@ -27,6 +27,7 @@ _: {
             config.packages.lbf
             lbg-typescript
             config
+            inputs'
             opts;
         # lbfPreludeTypescriptSrc = opts:
         #   (import ./lbf-prelude-typescript.nix

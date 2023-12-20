@@ -18,13 +18,11 @@
   },
   "author": "Jared Pon",
   "license": "ISC",
-  "devDependencies": {
-    "typescript": "^5.2.2"
-  },
   "files": [
     "./dist/LambdaBuffers/**/*"
   ],
   "dependencies": {
-    "prelude": "https://github.com/mlabs-haskell/prelude-typescript/releases/download/v1.0.1/prelude-1.0.1.tgz"
+    "prelude": "file:nix-tarballs/prelude-1.0.1.tgz",
+    "typescript": "^5.3.3"
   }
 }

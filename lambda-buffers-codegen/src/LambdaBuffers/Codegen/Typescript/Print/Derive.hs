@@ -63,7 +63,7 @@ lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
           ".eq"
     ("true", _) -> Just $ Builtin $ Ts.primValName "true"
     ("false", _) -> Just $ Builtin $ Ts.primValName "false"
-    ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "and"
+    ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "and"
     ("not", _) -> Just $ Builtin $ Ts.primValName "!"
     _ -> Nothing
 
@@ -74,7 +74,7 @@ neqClassMethodName :: Ts.ValueName
 neqClassMethodName = Ts.MkValueName "neq"
 
 tsEqClass :: Ts.QClassName
-tsEqClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "Prelude", Ts.MkClassName "Eq")
+tsEqClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LbrPrelude", Ts.MkClassName "Eq")
 
 printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
 printDeriveEq mn iTyDefs mkExportInstanceDeclDoc ty = do
@@ -111,7 +111,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsEqClass ty')
+          (Ts.primValName $ instanceDictIdent tsJsonClass ty')
           -- ( case instanceDictIdent tsEqClass ty' of
           --     (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.fromData" dict
           --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
@@ -124,7 +124,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
     ("listData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List"
     ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Just"
     ("failParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Nothing"
-    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "bindMaybe"
+    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindMaybe"
     _ -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName
@@ -156,7 +156,7 @@ printDeriveIsPlutusData mn iTyDefs mkExportInstanceDeclDoc ty = do
     )
 
 tsJsonClass :: Ts.QClassName
-tsJsonClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "Prelude", Ts.MkClassName "Json")
+tsJsonClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LbrPrelude", Ts.MkClassName "Json")
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
 lvJsonBuiltins :: LV.PrintRead Builtin
@@ -166,7 +166,7 @@ lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsEqClass ty')
+          (Ts.primValName $ instanceDictIdent tsJsonClass ty')
           -- ( case instanceDictIdent tsEqClass ty' of
           --     (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
           --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
@@ -177,32 +177,32 @@ lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName (instanceDictIdent tsEqClass ty'))
+          (Ts.primValName (instanceDictIdent tsJsonClass ty'))
           -- ( case instanceDictIdent tsEqClass ty' of
           --     (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
           --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
           -- )
           0
           ".fromJson"
-    ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonObject"
-    ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonConstructor"
-    ("jsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonArray"
+    ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonObject"
+    ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonConstructor"
+    ("jsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonArray"
     ("caseJsonConstructor", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         Builtin $
           Ts.normalValName
             "lbr-prelude"
-            "Prelude"
+            "LbrPrelude"
             ( PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions $
                 "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner ty') langle rangle
             )
-    ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonArray"
-    ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "caseJsonObject"
-    ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "jsonField"
-    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "succeedParse"
-    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "failParse"
-    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "Prelude" "bindParse"
+    ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonArray"
+    ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonObject"
+    ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonField"
+    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "succeedParse"
+    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "failParse"
+    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindParse"
     _ -> Nothing
 
 toJsonClassMethodName :: Ts.ValueName

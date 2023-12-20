@@ -20,5 +20,8 @@
     "@types/node": "^20.8.10",
     "fast-check": "^3.14.0",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "lbr-prelude": "file:nix-npm-folder-dependencies/jmakpnkl38zxv39f5q6wcz57bfqfylbf-lbr-prelude.tgz"
   }
 }
