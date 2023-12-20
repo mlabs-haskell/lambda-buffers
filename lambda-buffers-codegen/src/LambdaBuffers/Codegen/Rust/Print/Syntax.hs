@@ -129,10 +129,10 @@ printFieldName (PC.FieldName n _) = pretty . toSnakeCase $ n
 
 toSnakeCase :: Text -> Text
 toSnakeCase = Text.concatMap f
-  where f c
-          | Char.isUpper c = "_" <> Text.toLower (Text.singleton c)
-          | otherwise = Text.singleton c
-
+  where
+    f c
+      | Char.isUpper c = "_" <> Text.toLower (Text.singleton c)
+      | otherwise = Text.singleton c
 
 printVarName :: PC.VarName -> Doc ann
 printVarName (PC.VarName n _) = pretty n

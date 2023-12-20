@@ -53,11 +53,11 @@ printTyDef pkgs (PC.TyDef tyN tyabs _) = do
   (kw, generics, absDoc) <- printTyAbs pkgs tyN tyabs
   if kw /= SynonymTyDef
     then
-      return
-        $ printDeriveDebug
-        <> hardline
-        <> group (printTyDefKw kw <+> printTyName tyN <> generics)
-        <> absDoc
+      return $
+        printDeriveDebug
+          <> hardline
+          <> group (printTyDefKw kw <+> printTyName tyN <> generics)
+          <> absDoc
     else return $ group $ printTyDefKw kw <+> printTyName tyN <> generics <+> equals <+> absDoc
 
 printTyDefKw :: TyDefKw -> Doc ann
