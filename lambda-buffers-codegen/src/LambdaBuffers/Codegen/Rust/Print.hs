@@ -122,8 +122,8 @@ printImports crates =
 
 {- | `collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps` collects all the package dependencies.
 
- Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass), so the imports inside the modules
- is different from the crate list in `build.js`. These are returned as a tuple as `(imports, buildDeps)`
+ Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemas), so the imports inside the modules
+ is different from the crate list in `build.json`. These are returned as a tuple as `(imports, buildDeps)`
 -}
 collectPackageDeps :: Set PC.QTyName -> Set R.QTyName -> Set R.QTraitName -> Set (PC.InfoLess PC.ModuleName) -> Set R.QValName -> (Set R.CrateName, Set R.CrateName)
 collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps =

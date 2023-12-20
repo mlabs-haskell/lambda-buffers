@@ -378,13 +378,13 @@ printValueE iTyDefs (LV.CaseTextE txtVal cases otherCase) = printCaseTextE iTyDe
 printValueE iTyDefs (LV.TupleE l r) = printTupleE iTyDefs l r
 printValueE _ (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
 
--- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+-- | HACK(szg251): This is a hack, to help Rust figure out types of closures (lambda expressions)
 printInstance :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
 printInstance [] iTyDefs lamVal = printValueE iTyDefs lamVal
 printInstance argTys iTyDefs (LV.LamE lamVal) = printInstanceLamE argTys iTyDefs lamVal
 printInstance _ _ _ = throwInternalError "LamE expression expected with predefined argument types"
 
--- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+-- | HACK(szg251): This is a hack, to help Rust figure out types of closures (lambda expressions)
 printInstanceLamE :: MonadPrint m => [R.QTyName] -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printInstanceLamE [] _ _ = throwInternalError "LamE expression expected with predefined argument types"
 printInstanceLamE (argTy : argTys) iTyDefs lamVal = do
