@@ -318,13 +318,14 @@ printCaseTextE pkgs iTyDefs txtVal cases otherCase = do
 
 {- | Print a reference
 
+ HACK(szg251)
  To help Rust type inference, we inject type information for a few references.
- In case of a `toPlutusData`, `fromPlutusData`, `toJson`, `fromJson` we call the reference as a trait
- method on the target type:
+ In case of trait methods and associated functions, such as `toPlutusData`, `fromPlutusData`,
+ `toJson`, `fromJson` we call the reference as a trait method on the target type:
  ```rs
  <TargetType>::to_plutus_data(...)
  ```
- In case of `jsonConstructor`, we print the target type in a turbofish syntax:
+ In case of functions with a generic argument, such as `jsonConstructor`, we print the target type in a turbofish syntax:
  ```rs
  lbr_prelude::json::json_constructr::<TargetType>::toPlutusData(...)
  ```
