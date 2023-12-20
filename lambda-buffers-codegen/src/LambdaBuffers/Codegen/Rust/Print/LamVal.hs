@@ -318,13 +318,14 @@ printCaseTextE pkgs iTyDefs txtVal cases otherCase = do
 
 {- | Print a reference
 
+ HACK(szg251)
  To help Rust type inference, we inject type information for a few references.
- In case of a `toPlutusData`, `fromPlutusData`, `toJson`, `fromJson` we call the reference as a trait
- method on the target type:
+ In case of trait methods and associated functions, such as `toPlutusData`, `fromPlutusData`,
+ `toJson`, `fromJson` we call the reference as a trait method on the target type:
  ```rs
  <TargetType>::to_plutus_data(...)
  ```
- In case of `jsonConstructor`, we print the target type in a turbofish syntax:
+ In case of functions with a generic argument, such as `jsonConstructor`, we print the target type in a turbofish syntax:
  ```rs
  lbr_prelude::json::json_constructr::<TargetType>::toPlutusData(...)
  ```
@@ -380,13 +381,13 @@ printValueE pkgs iTyDefs (LV.CaseTextE txtVal cases otherCase) = printCaseTextE 
 printValueE pkgs iTyDefs (LV.TupleE l r) = printTupleE pkgs iTyDefs l r
 printValueE _ _ (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
 
--- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+-- | HACK(szg251): This is a hack, to help Rust figure out types of closures (lambda expressions)
 printInstance :: MonadPrint m => R.PkgMap -> [R.QTyName] -> PC.TyDefs -> LV.ValueE -> m (Doc ann)
 printInstance pkgs [] iTyDefs lamVal = printValueE pkgs iTyDefs lamVal
 printInstance pkgs argTys iTyDefs (LV.LamE lamVal) = printInstanceLamE pkgs argTys iTyDefs lamVal
 printInstance _ _ _ _ = throwInternalError "LamE expression expected with predefined argument types"
 
--- | This is a hack, to help Rust figure out types of closures (lambda expressions)
+-- | HACK(szg251): This is a hack, to help Rust figure out types of closures (lambda expressions)
 printInstanceLamE :: MonadPrint m => R.PkgMap -> [R.QTyName] -> PC.TyDefs -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printInstanceLamE _ [] _ _ = throwInternalError "LamE expression expected with predefined argument types"
 printInstanceLamE pkgs (argTy : argTys) iTyDefs lamVal = do

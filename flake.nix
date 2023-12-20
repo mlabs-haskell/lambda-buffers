@@ -25,7 +25,7 @@
     # Purescript
 
     ## Cardano transaction library (leveraging CTL's Purescript Nix machinery)
-    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=dshuiski/purs-0.15-migration";
+    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=develop";
     ctl-nixpkgs.follows = "ctl/nixpkgs";
 
     # Rust
