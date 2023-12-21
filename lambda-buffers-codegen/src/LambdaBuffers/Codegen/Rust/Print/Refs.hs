@@ -13,6 +13,7 @@ module LambdaBuffers.Codegen.Rust.Print.Refs (
   eqTrait,
   isPlutusDataTrait,
   jsonTrait,
+  toOwnedTrait,
 )
 where
 
@@ -59,3 +60,6 @@ isPlutusDataTrait = R.qForeignRef R.MkTraitName "plutus-ledger-api" ["plutus_dat
 
 jsonTrait :: R.QTraitName
 jsonTrait = R.qForeignRef R.MkTraitName "lbr-prelude" ["json"] "Json"
+
+toOwnedTrait :: R.QTraitName
+toOwnedTrait = R.qForeignRef R.MkTraitName "std" ["borrow"] "ToOwned"

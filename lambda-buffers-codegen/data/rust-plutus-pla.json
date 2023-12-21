@@ -39,7 +39,7 @@
       "plutus-ledger-api",
       "v1",
       "interval",
-      "Interval"
+      "PlutusInterval"
     ],
     "Plutus.V1.Extended": [
       "plutus-ledger-api",

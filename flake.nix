@@ -82,11 +82,13 @@
         ./testsuites/lbt-prelude/golden/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix
+        ./testsuites/lbt-prelude/lbt-prelude-rust/build.nix
         ./testsuites/lbt-plutus/api/build.nix
         ./testsuites/lbt-plutus/golden/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
       ];
       debug = true;

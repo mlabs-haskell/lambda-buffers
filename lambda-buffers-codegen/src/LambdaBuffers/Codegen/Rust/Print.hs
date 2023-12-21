@@ -35,20 +35,21 @@ data PrintModuleEnv m ann = PrintModuleEnv
       Map
         R.QTraitName
         ( PC.ModuleName ->
+          R.PkgMap ->
           PC.TyDefs ->
           (Doc ann -> Doc ann) ->
           PC.Ty ->
           m (Doc ann)
         )
-  , env'printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
+  , env'printTyDef :: MonadPrint m => R.PkgMap -> PC.TyDef -> m (Doc ann)
   , env'compilationCfgs :: [Text]
   }
 
-printModule :: MonadPrint m => PrintModuleEnv m ann -> m (Doc ann, Set Text)
-printModule env = do
+printModule :: MonadPrint m => PrintModuleEnv m ann -> R.PkgMap -> m (Doc ann, Set Text)
+printModule env pkgs = do
   ctx <- ask
-  tyDefDocs <- for (toList $ ctx ^. Print.ctxModule . #typeDefs) (env'printTyDef env)
-  instDocs <- printInstances env
+  tyDefDocs <- for (toList $ ctx ^. Print.ctxModule . #typeDefs) (env'printTyDef env pkgs)
+  instDocs <- printInstances env pkgs
   st <- get
   let modDoc =
         align . vsep $
@@ -59,31 +60,32 @@ printModule env = do
           , mempty
           , vsep ((line <>) <$> instDocs)
           ]
-      (imports, crateDeps) =
+      imports =
         collectPackageDeps
+          pkgs
           (ctx ^. Print.ctxTyImports)
           (ctx ^. Print.ctxOpaqueTyImports <> st ^. Print.stTypeImports)
           (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
           (ctx ^. Print.ctxRuleImports)
           (st ^. Print.stValueImports)
 
-  return (modDoc, Set.map crateNameToCargoText crateDeps)
+  return (modDoc, Set.map crateNameToCargoText imports)
 
-printInstances :: MonadPrint m => PrintModuleEnv m ann -> m [Doc ann]
-printInstances env = do
+printInstances :: MonadPrint m => PrintModuleEnv m ann -> R.PkgMap -> m [Doc ann]
+printInstances env pkgs = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
   let iTyDefs = PC.indexTyDefs ci
   foldrM
     ( \d instDocs -> do
-        instDocs' <- printDerive env iTyDefs d
+        instDocs' <- printDerive env pkgs iTyDefs d
         return $ instDocs' <> instDocs
     )
     mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PrintModuleEnv m ann -> PC.TyDefs -> PC.Derive -> m [Doc ann]
-printDerive env iTyDefs d = do
+printDerive :: MonadPrint m => PrintModuleEnv m ann -> R.PkgMap -> PC.TyDefs -> PC.Derive -> m [Doc ann]
+printDerive env pkgs iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
@@ -94,17 +96,17 @@ printDerive env iTyDefs d = do
         hsqcns
         ( \hsqcn -> do
             Print.importClass hsqcn
-            printRsQTraitImpl env mn iTyDefs hsqcn d
+            printRsQTraitImpl env mn pkgs iTyDefs hsqcn d
         )
 
-printRsQTraitImpl :: MonadPrint m => PrintModuleEnv m ann -> PC.ModuleName -> PC.TyDefs -> R.QTraitName -> PC.Derive -> m (Doc ann)
-printRsQTraitImpl env mn iTyDefs hqcn d =
+printRsQTraitImpl :: MonadPrint m => PrintModuleEnv m ann -> PC.ModuleName -> R.PkgMap -> PC.TyDefs -> R.QTraitName -> PC.Derive -> m (Doc ann)
+printRsQTraitImpl env mn pkgs iTyDefs hqcn d =
   case Map.lookup hqcn (env'implementationPrinter env) of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Rust trait " <> show hqcn) -- TODO(bladyjoker): Fix hqcn printing
     Just implPrinter -> do
       let ty = d ^. #constraint . #argument
-          mkInstanceDoc = printInstanceDef hqcn ty
-      implPrinter mn iTyDefs mkInstanceDoc ty
+          mkInstanceDoc = printInstanceDef pkgs hqcn ty
+      implPrinter mn pkgs iTyDefs mkInstanceDoc ty
 
 printCompilationCfgs :: Pretty a => [a] -> Doc ann
 printCompilationCfgs [] = mempty
@@ -120,24 +122,18 @@ printImports crates =
     externCrate :: R.CrateName -> Doc ann
     externCrate crateName = "extern crate" <+> pretty (crateNameToText crateName) <> semi
 
-{- | `collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps` collects all the package dependencies.
-
- Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemas), so the imports inside the modules
- is different from the crate list in `build.json`. These are returned as a tuple as `(imports, buildDeps)`
--}
-collectPackageDeps :: Set PC.QTyName -> Set R.QTyName -> Set R.QTraitName -> Set (PC.InfoLess PC.ModuleName) -> Set R.QValName -> (Set R.CrateName, Set R.CrateName)
-collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps =
-  let buildDeps =
-        Set.singleton (R.MkCrateName "std")
-          `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList rsTyImports)
-          `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList traitImps)
-          `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList valImps)
-
-      imports =
-        Set.fromList [R.crateFromLbModuleName $ withInfo mn | (mn, _tn) <- toList lbTyImports]
-          `Set.union` Set.fromList [R.crateFromLbModuleName $ withInfo mn | mn <- toList ruleImps]
-          `Set.union` buildDeps
-   in (imports, buildDeps)
+-- | `collectPackageDeps lbTyImports rsTyImports traitImps ruleImps valImps` collects all the package dependencies.
+collectPackageDeps :: R.PkgMap -> Set PC.QTyName -> Set R.QTyName -> Set R.QTraitName -> Set (PC.InfoLess PC.ModuleName) -> Set R.QValName -> Set R.CrateName
+collectPackageDeps packages lbTyImports rsTyImports traitImps ruleImps valImps =
+  Set.filter
+    (/= R.MkCrateName "crate")
+    ( Set.singleton (R.MkCrateName "std")
+        `Set.union` Set.fromList [R.crateFromLbModuleName packages $ withInfo mn | (mn, _tn) <- toList lbTyImports]
+        `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList rsTyImports)
+        `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList traitImps)
+        `Set.union` Set.fromList [R.crateFromLbModuleName packages $ withInfo mn | mn <- toList ruleImps]
+        `Set.union` Set.fromList (mapMaybe R.qualifiedToCrate $ toList valImps)
+    )
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id

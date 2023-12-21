@@ -1,7 +1,10 @@
-module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qForeignRef, qBuiltin, printTyRef, qualifiedEntity, crateNameToCargoText, encloseGenerics) where
+module LambdaBuffers.Codegen.Rust.Print.Syntax (printRsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printRsQValName, printRsTraitMethodName, printRsQTraitName, printRsValName, QTyName, QTraitName, QValName, Qualified (..), CrateName (..), ModuleName (..), TyName (..), TraitName (..), ValueName (..), fromLbModuleName, crateFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), crateNameToText, printQualifiedCtorName, printTyVar, printTyArg, doubleColon, printRsTyName, qualifiedToCrate, qForeignRef, qBuiltin, printTyRef, qualifiedEntity, crateNameToCargoText, encloseGenerics, PkgMap) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
+import Data.Map (Map)
+import Data.Map qualified as Map
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
@@ -16,6 +19,8 @@ data Qualified a
 type QValName = Qualified ValueName
 type QTyName = Qualified TyName
 type QTraitName = Qualified TraitName
+
+type PkgMap = Map (PC.InfoLess PC.ModuleName) CrateName
 
 qForeignRef :: (Text -> a) -> Text -> [Text] -> Text -> Qualified a
 qForeignRef mkA cn ms a = Qualified'LibRef (MkCrateName cn) (MkModuleName <$> ms) (mkA a)
@@ -45,8 +50,10 @@ fromLbTyName tn = MkTyName $ tn ^. #name
 fromLbModuleName :: PC.ModuleName -> [ModuleName]
 fromLbModuleName mn = [MkModuleName $ Text.replace "-" "_" $ Text.toLower $ p ^. #name | p <- mn ^. #parts]
 
-crateFromLbModuleName :: PC.ModuleName -> CrateName
-crateFromLbModuleName mn = MkCrateName $ Text.intercalate "_" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
+crateFromLbModuleName :: PkgMap -> PC.ModuleName -> CrateName
+crateFromLbModuleName pkgs mn =
+  let defCrateName = MkCrateName $ Text.intercalate "_" ("lbf" : [Text.toLower $ p ^. #name | p <- mn ^. #parts])
+   in fromMaybe defCrateName (Map.lookup (PC.mkInfoLess mn) pkgs)
 
 -- | Converts a crate name to how it appears in the Cargo manifest file
 crateNameToCargoText :: CrateName -> Text
@@ -56,12 +63,13 @@ crateNameToCargoText (MkCrateName cpn) = cpn
 crateNameToText :: CrateName -> Text
 crateNameToText (MkCrateName cpn) = Text.replace "-" "_" cpn
 
-fromLbForeignRef :: PC.ForeignRef -> QTyName
-fromLbForeignRef fr =
-  Qualified'LibRef
-    (crateFromLbModuleName $ fr ^. #moduleName)
-    (fromLbModuleName $ fr ^. #moduleName)
-    (fromLbTyName $ fr ^. #tyName)
+fromLbForeignRef :: PkgMap -> PC.ForeignRef -> QTyName
+fromLbForeignRef pkgs fr =
+  let mn = fr ^. #moduleName
+   in Qualified'LibRef
+        (crateFromLbModuleName pkgs mn)
+        (fromLbModuleName mn)
+        (fromLbTyName $ fr ^. #tyName)
 
 filepathFromModuleName :: PC.ModuleName -> FilePath
 filepathFromModuleName mn = Text.unpack (Text.intercalate "/" (unModuleName <$> fromLbModuleName mn)) <> ".rs"
@@ -134,10 +142,10 @@ printTyName (PC.TyName n _) = pretty n
 doubleColon :: Doc ann
 doubleColon = colon <> colon
 
-printTyRef :: PC.TyRef -> Doc ann
-printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) =
-  let qTyName = fromLbForeignRef fr
+printTyRef :: PkgMap -> PC.TyRef -> Doc ann
+printTyRef _ (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
+printTyRef pkgs (PC.ForeignI fr) =
+  let qTyName = fromLbForeignRef pkgs fr
    in printRsQTyName qTyName
 
 encloseGenerics :: [Doc ann] -> Doc ann

@@ -21,10 +21,10 @@ import Proto.Codegen qualified as P
 {- | `runPrint cfg inp mod` prints a LambdaBuffers checked module `mod`, given its entire compilation closure in `inp` and Rust configuration file in `cfg`.
   It either errors with an API error message or succeeds with a module filepath, code and package dependencies.
 -}
-runPrint :: RsConfig.Config -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text, Set Text)
-runPrint cfg ci m = case runCheck cfg ci m of
+runPrint :: RsConfig.Config -> RsSyntax.PkgMap -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text, Set Text)
+runPrint cfg pkgs ci m = case runCheck cfg ci m of
   Left err -> Left err
-  Right ctx -> case Print.runPrint ctx (RsPrint.printModule rsPrintModuleEnv) of
+  Right ctx -> case Print.runPrint ctx (RsPrint.printModule rsPrintModuleEnv pkgs) of
     Left err -> Left err
     Right (modDoc, deps) ->
       Right

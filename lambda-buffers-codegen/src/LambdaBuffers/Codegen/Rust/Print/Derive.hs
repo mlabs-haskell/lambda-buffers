@@ -25,6 +25,7 @@ rsTraitImplPrinters ::
   Map
     R.QTraitName
     ( PC.ModuleName ->
+      R.PkgMap ->
       PC.TyDefs ->
       (Doc ann -> Doc ann) ->
       PC.Ty ->
@@ -56,12 +57,12 @@ lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
       , ("false", R.qBuiltin R.MkValueName "false")
       ]
 
-printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDerivePartialEqBase mn iTyDefs mkInstance ty = do
+printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsBase (printInstance [R.qBuiltin R.MkTyName "Self", R.qBuiltin R.MkTyName "Self"] iTyDefs valE) of
+      case LV.runPrint lvEqBuiltinsBase (printInstance pkgs [R.qBuiltin R.MkTyName "Self", R.qBuiltin R.MkTyName "Self"] iTyDefs valE) of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Rust failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           for_ imps Print.importValue
@@ -69,8 +70,8 @@ printDerivePartialEqBase mn iTyDefs mkInstance ty = do
             mkInstance $
               printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
 
-printDeriveEqBase :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveEqBase _ _ mkInstance _ = return $ mkInstance mempty
+printDeriveEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveEqBase _ _ _ mkInstance _ = return $ mkInstance mempty
 
 lvPlutusDataBuiltins :: LV.PrintRead R.QValName
 lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
@@ -120,21 +121,21 @@ fromPlutusDataTraitMethodReturns =
     ["result"]
     "Result<Self, plutus_ledger_api::plutus_data::PlutusDataError>"
 
-printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
-  case printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty of
+printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveIsPlutusData mn pkgs iTyDefs mkInstanceDoc ty = do
+  case printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.IsPlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (plutusDataInstDefDoc, imps) -> do
       for_ imps Print.importValue
       return plutusDataInstDefDoc
 
-printDeriveIsPlutusData' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
-printDeriveIsPlutusData' mn iTyDefs mkInstanceDoc ty = do
+printDeriveIsPlutusData' :: PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
+printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty = do
   let extraDeps = Set.singleton (R.qForeignRef R.MkValueName "serde_json" [] "Value")
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
-  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qBuiltin R.MkTyName "Self"] iTyDefs toPlutusDataValE)
+  (toPlutusDataImplDoc, impsA) <- LV.runPrint lvPlutusDataBuiltins (printInstance pkgs [R.qBuiltin R.MkTyName "Self"] iTyDefs toPlutusDataValE)
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
-  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printInstance [R.qForeignRef R.MkTyName "plutus-ledger-api" ["plutus_data"] "PlutusData"] iTyDefs fromPlutusDataValE)
+  (fromPlutusDataImplDoc, impsB) <- LV.runPrint lvPlutusDataBuiltins (printInstance pkgs [R.qForeignRef R.MkTyName "plutus-ledger-api" ["plutus_data"] "PlutusData"] iTyDefs fromPlutusDataValE)
 
   let instanceDoc =
         mkInstanceDoc
@@ -196,20 +197,20 @@ fromJsonTraitMethodReturns :: R.QTyName
 fromJsonTraitMethodReturns =
   R.qForeignRef R.MkTyName "std" ["result"] "Result<Self, lbr_prelude::error::Error>" -- TODO(szg251): This is a hack
 
-printDeriveJson :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveJson mn iTyDefs mkInstanceDoc ty = do
-  case printDeriveJson' mn iTyDefs mkInstanceDoc ty of
+printDeriveJson :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveJson mn pkgs iTyDefs mkInstanceDoc ty = do
+  case printDeriveJson' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Json LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (jsonInstDefDoc, imps) -> do
       for_ imps Print.importValue
       return jsonInstDefDoc
 
-printDeriveJson' :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
-printDeriveJson' mn iTyDefs mkInstanceDoc ty = do
+printDeriveJson' :: PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set R.QValName)
+printDeriveJson' mn pkgs iTyDefs mkInstanceDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printInstance [R.qBuiltin R.MkTyName "Self"] iTyDefs toJsonValE)
+  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printInstance pkgs [R.qBuiltin R.MkTyName "Self"] iTyDefs toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printInstance [] iTyDefs fromJsonValE)
+  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printInstance pkgs [] iTyDefs fromJsonValE)
 
   let instanceDoc =
         mkInstanceDoc
