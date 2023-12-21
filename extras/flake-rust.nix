@@ -1,8 +1,8 @@
 pkgs:
 
-{ crane, src, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
+{ crane, src, crateName, rustVersion ? "latest", extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
 let
-  rustWithTools = pkgs.rust-bin.stable.latest.default.override {
+  rustWithTools = pkgs.rust-bin.stable.${rustVersion}.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" "rust-src" ];
   };
   craneLib = crane.lib.${pkgs.system}.overrideToolchain rustWithTools;
