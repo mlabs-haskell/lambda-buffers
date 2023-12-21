@@ -157,10 +157,10 @@ dependencies = [
 [[package]]
 name = "lbr-prelude"
 version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=59d3fb6422fef707c66fb83c2bd29327371d9bd3#59d3fb6422fef707c66fb83c2bd29327371d9bd3"
+source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=e6a162ecc0bd05be0b45370b0754555487c8c52a#e6a162ecc0bd05be0b45370b0754555487c8c52a"
 dependencies = [
  "data-encoding",
- "lbr-prelude-derive 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=59d3fb6422fef707c66fb83c2bd29327371d9bd3)",
+ "lbr-prelude-derive 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=e6a162ecc0bd05be0b45370b0754555487c8c52a)",
  "num-bigint",
  "proptest",
  "serde",
@@ -181,7 +181,7 @@ dependencies = [
 [[package]]
 name = "lbr-prelude-derive"
 version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=59d3fb6422fef707c66fb83c2bd29327371d9bd3#59d3fb6422fef707c66fb83c2bd29327371d9bd3"
+source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=e6a162ecc0bd05be0b45370b0754555487c8c52a#e6a162ecc0bd05be0b45370b0754555487c8c52a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -195,6 +195,7 @@ version = "0.1.0"
 dependencies = [
  "lbf-plutus-rust-golden-api",
  "lbf-prelude",
+ "lbr-prelude 0.1.0",
  "num-bigint",
  "plutus-ledger-api",
  "serde_json",
@@ -258,10 +259,10 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "plutus-ledger-api"
 version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/plutus-ledger-api-rust?rev=fb93fa590908580eb40368369bf6614d42ce9a95#fb93fa590908580eb40368369bf6614d42ce9a95"
+source = "git+https://github.com/mlabs-haskell/plutus-ledger-api-rust?rev=4460f2ff8af7993a24209ebe28df5ef9b3b3b397#4460f2ff8af7993a24209ebe28df5ef9b3b3b397"
 dependencies = [
  "data-encoding",
- "lbr-prelude 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=59d3fb6422fef707c66fb83c2bd29327371d9bd3)",
+ "lbr-prelude 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=e6a162ecc0bd05be0b45370b0754555487c8c52a)",
  "num-bigint",
  "proptest",
  "serde_json",

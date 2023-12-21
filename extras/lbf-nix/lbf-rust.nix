@@ -86,7 +86,7 @@ let
     text = ''
       num-bigint = "0.4.4"
       serde_json = { version = "1.0.107", features = ["arbitrary_precision"] }
-      plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = [ "lbf", ], rev = "fb93fa590908580eb40368369bf6614d42ce9a95" }
+      plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = [ "lbf", ], ref = "szg251/fix-lbf", rev = "4460f2ff8af7993a24209ebe28df5ef9b3b3b397" }
     '';
   };
 

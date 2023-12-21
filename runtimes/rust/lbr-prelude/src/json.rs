@@ -18,6 +18,19 @@ pub trait Json {
     fn from_json(value: &Value) -> Result<Self, Error>
     where
         Self: Sized;
+
+    fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
+
+    fn from_json_string(string: &str) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Value::from_str(string)
+            .map_err(|_| Error::MalformedJson)
+            .and_then(|value| Self::from_json(&value))
+    }
 }
 
 //  lbf-prelude::json instance rule implementations

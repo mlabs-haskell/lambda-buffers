@@ -335,14 +335,10 @@ printRefE pkgs ref = do
   qvn <- LV.resolveRef ref
   case ref of
     (argTy : _, builtin)
-      | builtin
-          == "toPlutusData"
-          || builtin
-            == "fromPlutusData"
-          || builtin
-            == "toJson"
-          || builtin
-            == "fromJson" -> do
+      | builtin == "toPlutusData"
+          || builtin == "fromPlutusData"
+          || builtin == "toJson"
+          || builtin == "fromJson" -> do
           lamTyDoc <- printLamTy pkgs argTy
           methodDoc <- R.printRsValName . R.qualifiedEntity <$> LV.importValue qvn
           return $ angles lamTyDoc <> R.doubleColon <> methodDoc
