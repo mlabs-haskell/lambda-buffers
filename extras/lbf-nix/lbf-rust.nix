@@ -20,14 +20,14 @@ let
       files
       # Classes for which to generate implementations for (default lbf-prelude classes).
     , classes ? [ ]
-    , # Dependencies to include in the Cabal's `build-depends` stanza.
+    , # Dependencies to include in the Cargo's `dependencies` section.
       # examples: dependencies = [ "lbf-prelude" ]
       dependencies ? [ ]
     , configs ? [ ]
-    , # Name of the package and also the name of the Cabal package.
+    , # Name of the package and also the name of the Cargo crate.
       # Examples: name = "lbf-myproject"
       name
-    , # Version of the package and also the version of the Cabal package.
+    , # Version of the package and also the version of the Cargo crate.
       # Examples: version = "0.1.0.0"
       version ? "0.1.0"
     }: { inherit src imports files classes dependencies configs name version; };
@@ -67,7 +67,7 @@ let
 
   cargoTemplate = opts: with (lbfRustOpts opts);
     pkgs.writeTextFile {
-      name = "lambda-buffers-cabal-template";
+      name = "lambda-buffers-cargo-template";
       text = ''
         [package]
         name = "${name}"
@@ -78,7 +78,9 @@ let
       '';
     };
 
-  # 
+  # This is a lookup table of default crate versions used by lamba-buffers modules
+  # Based on the contents of `build.json` a subset of these will be attached to the
+  # Cargo.toml file
   crateVersions = pkgs.writeTextFile {
     name = "lambda-buffers-crate-versions";
     text = ''
@@ -108,6 +110,10 @@ let
         DEPS=$(echo ${builtins.concatStringsSep " " dependencies} $(cat build.json | jq -r ".[]" | sort -u));
         echo "Gathered Cargo deps $DEPS";
         cat ${cargoTemplate opts} > Cargo.toml;
+        # Using the lookup table `crateVersions`, filling in the library version.
+        # If no version is found, we default to a local path dependency, pointing to
+        # a sibling directory (directory in extra-sources or .extras)
+        # e.g.: for `lbr-prelude` we print `lbr-prelude = { path = "../lbr-prelude" }
         for DEP in $DEPS; do
           if [ $DEP != "std" ]; then
             echo "$(cat ${crateVersions} | grep "$DEP" || echo "$DEP = { path = \"../$DEP\" }")" >> Cargo.toml
@@ -128,6 +134,10 @@ let
         chmod -R u+w $out/src
         pushd $out/src
 
+        # Collecting modules of the library and attaching a module declaration
+        # to parent modules. Any directory in the path must also
+        # be considered as a module (e.g. for `foo/bar/baz.rs` we have to create
+        # `lib.rs`, `foo.rs`and `foo/bar.rs`)
         MODS=$(find . -type f -name "*.rs")
         MODS+=" "
         MODS+=$(find . -type d)
