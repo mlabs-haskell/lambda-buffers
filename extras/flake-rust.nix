@@ -1,16 +1,16 @@
 pkgs:
 
-{ crane, src, crateName, extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
+{ crane, src, crateName, rustVersion ? "latest", extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
 let
-  rustWithTools = pkgs.rust-bin.stable.latest.default.override {
+  rustWithTools = pkgs.rust-bin.stable.${rustVersion}.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" "rust-src" ];
   };
   craneLib = crane.lib.${pkgs.system}.overrideToolchain rustWithTools;
 
   cleanSrc = craneLib.cleanCargoSource (craneLib.path src);
 
-  # Library source code with extra dependencies attached
-  fullSrc =
+  # Library source code with extra dependencies copied
+  buildEnv =
     pkgs.stdenv.mkDerivation
       {
         src = cleanSrc;
@@ -24,6 +24,9 @@ let
         '';
       };
 
+  # Library source code, intended to be in extra-sources (inside the `.extras` directory)
+  # The main difference is that dependencies are not copied, to `.extras`
+  # but they are referenced from the parent directory (`../`).
   vendoredSrc =
     pkgs.stdenv.mkDerivation
       {
@@ -38,7 +41,7 @@ let
       };
 
   commonArgs = {
-    src = fullSrc;
+    src = buildEnv;
     pname = crateName;
     strictDeps = true;
   };
@@ -88,6 +91,8 @@ in
   });
 
   packages."${crateName}-rust-src" = vendoredSrc;
+
+  packages."${crateName}-rust-build-env" = buildEnv;
 
   checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
     inherit cargoArtifacts;
