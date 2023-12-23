@@ -2,7 +2,7 @@ _:
 {
   perSystem = { pkgs, config, ... }:
     {
-      devShells.dev-lbt-prelude-golden = config.devShells.dev-pre-commit;
+      devShells.dev-lbt-prelude-golden = config.devShells.default;
 
       packages = {
         lbt-prelude-golden-haskell = config.lbf-nix.haskellData {

@@ -44,7 +44,6 @@ let
             hlint = { };
             cabal-fmt = { };
             fourmolu = { };
-            weeder = { };
           };
 
           shellHook = lib.mkForce devShellHook;
