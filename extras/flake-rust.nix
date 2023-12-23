@@ -84,22 +84,26 @@ in
     '';
   };
 
-  packages."${crateName}-rust" = craneLib.buildPackage (commonArgs // {
-    inherit cargoArtifacts;
-    doCheck = false;
-    doInstallCargoArtifacts = true;
-  });
+  packages = {
+    "${crateName}-rust" = craneLib.buildPackage (commonArgs // {
+      inherit cargoArtifacts;
+      doCheck = false;
+      doInstallCargoArtifacts = true;
+    });
 
-  packages."${crateName}-rust-src" = vendoredSrc;
+    "${crateName}-rust-src" = vendoredSrc;
 
-  packages."${crateName}-rust-build-env" = buildEnv;
+    "${crateName}-rust-build-env" = buildEnv;
+  };
 
-  checks."${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
-    inherit cargoArtifacts;
-    nativeBuildInputs = testTools;
-  });
+  checks = {
+    "${crateName}-rust-test" = craneLib.cargoNextest (commonArgs // {
+      inherit cargoArtifacts;
+      nativeBuildInputs = testTools;
+    });
 
-  checks."${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // {
-    inherit cargoArtifacts;
-  });
+    "${crateName}-rust-clippy" = craneLib.cargoClippy (commonArgs // {
+      inherit cargoArtifacts;
+    });
+  };
 }

@@ -3,30 +3,31 @@
     ./extras/pre-commit-hooks-extra.nix
     inputs.proto-nix.lib.preCommitModule
   ];
-  perSystem = { config, ... }:
+  perSystem = { config, pkgs, ... }:
     {
-      devShells.dev-pre-commit = config.pre-commit.devShell;
-      devShells.default = config.pre-commit.devShell;
+      devShells.default = pkgs.mkShell {
+        name = "dev-default";
+        buildInputs = config.settings.shell.tools;
+        shellHook = config.settings.shell.hook;
+      };
 
       pre-commit = {
         settings = {
           excludes = [
+            ".*spago-packages.nix$"
             "lambda-buffers-codegen/data/goldens/.*"
             "lambda-buffers-codegen/data/lamval-cases/.*"
             "experimental/archive/.*"
             "experimental/ctl-env/autogen/.*"
             "experimental/plutustx-env/autogen/.*"
-            "experimental/ctl-env/spago-packages.nix"
             "lambda-buffers-frontend/data/goldens/good/work-dir/.*"
-            "docs/compiler-api.md"
             "lambda-buffers-testsuite/lbt-prelude/goldens/.*"
-            "runtimes/purescript/lbr-prelude/spago-packages.nix"
-            ".*/spago-packages.nix$"
           ];
 
           hooks = {
             nixpkgs-fmt.enable = true;
             deadnix.enable = true;
+            statix.enable = true;
             cabal-fmt.enable = true;
             fourmolu.enable = true;
             shellcheck.enable = true;
@@ -45,6 +46,7 @@
 
           settings = {
             ormolu.cabalDefaultExtensions = true;
+            statix.ignore = [ "**spago-packages.nix" ];
           };
         };
       };

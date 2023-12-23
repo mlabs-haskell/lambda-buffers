@@ -36,7 +36,7 @@ let
         };
       };
 
-      devShell = purs.devShell;
+      inherit (purs) devShell;
     };
 in
 mkFlake pursProjOpts.projectName (pkgs.purescriptProject pursProjOpts)
