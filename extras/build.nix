@@ -7,15 +7,17 @@
   };
 
   # Makes it available in the system agnostic `lib` argument.
-  config._module.args.lib = config.flake.lib // {
-    inherit (config) lbf-nix;
+  config = {
+    _module.args.lib = config.flake.lib // {
+      inherit (config) lbf-nix;
+    };
+
+    # Sets the above set option to system ones.
+    lbf-nix = lib.genAttrs config.systems (system: (config.perSystem system).lbf-nix);
+
+    # Makes `lib.x86_64-linux.xyz` available
+    flake.lib = config.lbf-nix;
   };
-
-  # Sets the above set option to system ones.
-  config.lbf-nix = lib.genAttrs config.systems (system: (config.perSystem system).lbf-nix);
-
-  # Makes `lib.x86_64-linux.xyz` available
-  config.flake.lib = config.lbf-nix;
 
   options = {
 
@@ -30,6 +32,12 @@
 
         # Sets a per system `lbf-nix` option.
         config = {
+          devShells.dev-nix = pkgs.mkShell {
+            name = "dev-nix";
+            shellHook = config.settings.shell.hook;
+            buildInputs = config.settings.shell.tools;
+          };
+
           lbf-nix = {
             # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
 

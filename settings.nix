@@ -49,8 +49,10 @@
             shell = {
 
               tools = [
+
                 pkgs.haskellPackages.apply-refact
 
+                pkgs.nil
                 inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
                 inputs.pre-commit-hooks.outputs.packages.${system}.nixpkgs-fmt
 

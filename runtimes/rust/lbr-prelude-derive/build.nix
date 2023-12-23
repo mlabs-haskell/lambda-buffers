@@ -4,7 +4,7 @@
       rustFlake =
         config.lbf-nix.rustFlake {
           src = ./.;
-          crane = inputs.crane;
+          inherit (inputs) crane;
           crateName = "lbr-prelude-derive";
           extraSources = [
             {
