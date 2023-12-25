@@ -23,7 +23,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, system, config, ... }: {
+      ({ pkgs, config, pkgsForCtl, pkgsForHaskellNix, pkgsForRust, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -41,25 +41,12 @@
           lbf-nix = {
             # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
 
-            purescriptFlake =
-              let
-                pkgs' = import inputs.ctl-nixpkgs {
-                  inherit system;
-                  inherit (inputs.haskell-nix) config;
-                  overlays = [
-                    inputs.haskell-nix.overlay
-                    inputs.iohk-nix.overlays.crypto
-                    inputs.ctl.overlays.purescript
-                    inputs.ctl.overlays.spago
-                  ];
-                };
-              in
-              import ./flake-purescript.nix pkgs'; # TODO(bladyjoker): If we use recent nixpkgs we get: `error: nodejs_14 has been removed as it is EOL`. That's why we use CTL's old nixpkgs.
+            purescriptFlake = import ./flake-purescript.nix pkgsForCtl;
 
-            rustFlake = import ./flake-rust.nix pkgs;
+            rustFlake = import ./flake-rust.nix pkgsForRust;
             haskellData = import ./haskell-data.nix pkgs;
-            haskellFlake = import ./flake-haskell.nix pkgs;
-            haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgs;
+            haskellFlake = import ./flake-haskell.nix pkgsForHaskellNix;
+            haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgsForHaskellNix;
             typescriptFlake = import ./flake-typescript.nix pkgs;
           };
 

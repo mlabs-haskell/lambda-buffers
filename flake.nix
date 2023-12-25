@@ -1,7 +1,7 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs";
 
     # Haskell
 
@@ -26,7 +26,6 @@
 
     ## Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=develop";
-    ctl-nixpkgs.follows = "ctl/nixpkgs";
 
     # Rust
 
