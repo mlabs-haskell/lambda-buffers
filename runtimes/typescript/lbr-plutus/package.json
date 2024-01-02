@@ -4,7 +4,8 @@
   "description": "LambdaBuffers Plutus runtime",
   "type": "module",
   "exports": {
-    ".": "./dist/LambdaBuffers/Plutus.js",
+    "./V1.js": "./dist/LambdaBuffers/V1.js",
+    "./V2.js": "./dist/LambdaBuffers/V2.js",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -22,6 +23,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "lbr-prelude": "file:nix-npm-folder-dependencies/jmakpnkl38zxv39f5q6wcz57bfqfylbf-lbr-prelude.tgz"
+    "lbr-prelude": "file:nix-tarballs/lbr-prelude-1.0.0.tgz",
+    "plutus-ledger-api": "file:nix-tarballs/plutus-ledger-api-1.0.0.tgz",
+    "prelude": "file:nix-tarballs/prelude-1.0.1.tgz"
   }
 }
