@@ -36,6 +36,23 @@ export interface JsonInstances {
 Json[Symbols.Text] = Prelude.jsonText;
 
 export interface JsonInstances {
+  [Symbols.Maybe]: <A>(
+    dictA: Prelude.Json<A>,
+  ) => Prelude.Json<Prelude.Maybe<A>>;
+}
+
+Json[Symbols.Maybe] = Prelude.jsonMaybe;
+
+export interface JsonInstances {
+  [Symbols.Either]: <K, V>(
+    dictK: Prelude.Json<K>,
+    dictV: Prelude.Json<V>,
+  ) => Prelude.Json<Prelude.Either<K, V>>;
+}
+
+Json[Symbols.Either] = Prelude.jsonEither;
+
+export interface JsonInstances {
   [Symbols.Map]: <K, V>(
     dictOrd: Prelude.Ord<K>,
     dictK: Prelude.Json<K>,

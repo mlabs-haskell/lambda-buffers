@@ -37,6 +37,23 @@ export interface EqInstances {
 Eq[Symbols.Text] = Prelude.eqText;
 
 export interface EqInstances {
+  [Symbols.Maybe]: <A>(
+    dictA: Prelude.Eq<A>,
+  ) => Prelude.Eq<Prelude.Maybe<A>>;
+}
+
+Eq[Symbols.Maybe] = Prelude.eqMaybe;
+
+export interface EqInstances {
+  [Symbols.Either]: <L, R>(
+    dictL: Prelude.Eq<L>,
+    dictR: Prelude.Eq<R>,
+  ) => Prelude.Eq<Prelude.Either<L, R>>;
+}
+
+Eq[Symbols.Either] = Prelude.eqEither;
+
+export interface EqInstances {
   [Symbols.Map]: <K, V>(
     dictK: Prelude.Eq<K>,
     dictV: Prelude.Eq<V>,
