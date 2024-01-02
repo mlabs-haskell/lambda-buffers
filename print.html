@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Lambda Buffers documentation</title>
-        <meta name="robots" content="noindex" />
+        <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
         
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,7 +32,7 @@
         <!-- Custom theme stylesheets -->
 
     </head>
-    <body>
+    <body class="sidebar-visible no-js">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -62,24 +62,29 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('no-js')
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
+            var body = document.querySelector('body');
             var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -89,15 +94,37 @@
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
                                 <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -162,7 +189,7 @@ competitors if your project requires:</p>
 <p><em>Parameterized Data Types</em> (aka. type functions): Unlike ProtoBuffers or
 JSON Schema, LambdaBuffers allows users to define algebraic data types which
 take type variable arguments. If your project's domain is most accurately
-represented by parameterized data types, LamdaBuffers may be a good choice
+represented by parameterized data types, LambdaBuffers may be a good choice
 for your needs.</p>
 </li>
 <li>
@@ -185,7 +212,7 @@ for typeclasses) to reduce the amount of boilerplate required to
 productively make use of the generated types. While LambdaBuffers is still a
 work-in-progress, we expect that, upon completion, an extensive test suite
 will provide a high degree of assurance that the instances/methods generated
-by the LamdaBuffers code generator behave identically.</p>
+by the LambdaBuffers code generator behave identically.</p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
@@ -326,19 +353,19 @@ $ ghc autogen/LambdaBuffers/Document.hs
 [1 of 1] Compiling LambdaBuffers.Document ( autogen/LambdaBuffers/Document.hs, autogen/LambdaBuffers/Document.o )
 </code></pre>
 <h2 id="sum-types"><a class="header" href="#sum-types">Sum types</a></h2>
-<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LamdaBuffers schema using the <code>sum</code> keyword.</p>
+<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LambdaBuffers schema using the <code>sum</code> keyword.</p>
 <p>As we can see, nothing too surprising here, all the <code>sum</code> types become <code>data</code>
 in Haskell.</p>
 <p>The only thing to notice is that the type name was prepended with <code>'</code> (single
 quote) to the defined constructor names as to make sure they are unique.</p>
 <h2 id="product-types"><a class="header" href="#product-types">Product types</a></h2>
 <p>The type <code>RichDocument</code> have been declared as a product type in the
-LamdaBuffers schema using the <code>prod</code> keyword.</p>
+LambdaBuffers schema using the <code>prod</code> keyword.</p>
 <p>They become Haskell <code>newtype</code> if they have a single type in their body, otherwise they are <code>data</code>.</p>
 <p>Note that the constructor has the same name as the type.</p>
 <h2 id="record-types"><a class="header" href="#record-types">Record types</a></h2>
 <p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the
-LamdaBuffers schema using the <code>record</code> keyword.</p>
+LambdaBuffers schema using the <code>record</code> keyword.</p>
 <p>Like with product types, they become Haskell <code>newtype</code> if they have a single
 type in their body, otherwise they are <code>data</code>.</p>
 <p>Also like with product types, the constructor has the same name as the type.</p>
@@ -451,19 +478,19 @@ instance Data.Show.Show RichDocument where
   show = Data.Show.Generic.genericShow
 </code></pre>
 <h2 id="sum-types-1"><a class="header" href="#sum-types-1">Sum types</a></h2>
-<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LamdaBuffers schema using the <code>sum</code> keyword.</p>
+<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LambdaBuffers schema using the <code>sum</code> keyword.</p>
 <p>As we can see, nothing too surprising here, all the <code>sum</code> types become <code>data</code>
 in Purescript.</p>
 <p>The only thing to notice is that the type name was prepended with <code>'</code> (single
 quote) to the defined constructor names as to make sure they are unique.</p>
 <h2 id="product-types-1"><a class="header" href="#product-types-1">Product types</a></h2>
 <p>The type <code>RichDocument</code> have been declared as a product type in the
-LamdaBuffers schema using the <code>prod</code> keyword.</p>
+LambdaBuffers schema using the <code>prod</code> keyword.</p>
 <p>They become Purescript <code>newtype</code> if they have a single type in their body, otherwise they are <code>data</code>.</p>
 <p>Note that the constructor has the same name as the type.</p>
 <h2 id="record-types-1"><a class="header" href="#record-types-1">Record types</a></h2>
 <p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the
-LamdaBuffers schema using the <code>record</code> keyword.</p>
+LambdaBuffers schema using the <code>record</code> keyword.</p>
 <p>They always become Purescript <code>newtype</code>, and wrapped within is a Purescript
 record type with the fields named exactly like they are named in the
 LambdaBuffers source module.</p>
@@ -1259,7 +1286,7 @@ etc.</p>
 <h3 id="modulename"><a class="header" href="#modulename">ModuleName</a></h3>
 <p>Module name</p>
 <div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
-<tr><td>parts</td><td><a href="api.html#lambdabuffers-ModuleNamePart">ModuleNamePart</a></td><td>repeated</td><td>Parts of the module name denoting a hierarchichal namespace.</td></tr>
+<tr><td>parts</td><td><a href="api.html#lambdabuffers-ModuleNamePart">ModuleNamePart</a></td><td>repeated</td><td>Parts of the module name denoting a hierarchical namespace.</td></tr>
 <tr><td>source_info</td><td><a href="api.html#lambdabuffers-SourceInfo">SourceInfo</a></td><td></td><td>Source information.</td></tr>
 </tbody></table>
 </div>
@@ -1358,7 +1385,7 @@ represents a sum of products.</p>
 <p><a name="lambdabuffers-Ty"></a></p>
 <h3 id="ty"><a class="header" href="#ty">Ty</a></h3>
 <p>Type term</p>
-<p>A type term that ocurrs in bodies of type definitions (message TyDef):</p>
+<p>A type term that occurs in bodies of type definitions (message TyDef):</p>
 <pre><code class="language-lbf">sum Maybe a = Just a | Nothing
 
 sum Either a b = Left a | Right b
