@@ -101,6 +101,24 @@
           "${config.packages.codegen-configs}/plutarch-plutus.json"
         ];
       };
+
+      lbf-plutus-typescript = (config.lbf-nix.lbfTypescript {
+        name = "plutus-lb";
+        src = ./lbf-plutus;
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        imports = [ ./lbf-prelude ];
+        classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+        configs = [
+          "${config.packages.codegen-configs}/typescript-prelude-base.json"
+          "${config.packages.codegen-configs}/typescript-plutus.json"
+        ];
+        npmDependencies =
+          [
+            config.packages.lbr-plutus-typescript-tgz
+            inputs'.plutus-ledger-api-typescript.packages.tgz
+          ];
+        # });
+      }).packages.plutus-lb-typescript-tgz;
     };
 
     # The following devShells allow one to conveniently play with some of the

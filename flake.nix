@@ -19,6 +19,7 @@
     cardano-haskell-packages.flake = false;
     plutus.url = "github:input-output-hk/plutus";
     prelude-typescript.url = "github:mlabs-haskell/prelude-typescript";
+    plutus-ledger-api-typescript.url = "github:mlabs-haskell/plutus-ledger-api-typescript";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -57,6 +58,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./experimental/build.nix
         ./experimental/prelude-sample-project-ts/build.nix
+        ./experimental/plutus-sample-project-ts/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];

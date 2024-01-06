@@ -7,12 +7,14 @@ import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Typescript (runPrint)
 import LambdaBuffers.Codegen.Typescript.Config qualified as H
+import LambdaBuffers.Codegen.Typescript.Syntax qualified as Typescript.Syntax
 import Paths_lambda_buffers_codegen qualified as Paths
 import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
 
 data GenOpts = MkGenOpts
   { _config :: [FilePath]
+  , _packages :: FilePath
   , _common :: Gen.GenOpts
   }
 
@@ -47,3 +49,19 @@ readTypescriptConfig f = do
       logError "" $ "Invalid Typescript configuration file " <> f
       exitFailure
     Just cfg -> return cfg
+
+readPackages :: FilePath -> IO Typescript.Syntax.PkgMap
+readPackages f = do
+  fExists <- doesFileExist f
+  unless
+    fExists
+    ( do
+        logError "" $ "Provided JSON mapping (with schema { [key: string] : string[] }) from LambdaBuffers module names to package names does not exist: " <> f
+        exitFailure
+    )
+  mayPkgs <- decodeFileStrict' f
+  case mayPkgs of
+    Nothing -> do
+      logError "" $ "Invalid JSON mapping from module names to package names " <> f
+      exitFailure
+    Just pkgs -> trace (show pkgs) (R.mkPkgMap pkgs)
