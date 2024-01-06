@@ -2,7 +2,7 @@ module LambdaBuffers.Codegen.Cli.GenTypescript (GenOpts (..), gen) where
 
 import Control.Lens (makeLenses, (^.))
 import Control.Monad (unless)
-import Data.Aeson (decodeFileStrict)
+import Data.Aeson (decodeFileStrict')
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Typescript (runPrint)
@@ -30,9 +30,11 @@ gen opts = do
       cfgs <- traverse readTypescriptConfig fps
       return (mconcat cfgs)
 
+  pkgs <- readPackages $ opts ^. packages
+
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg pkgs ci <$> (ci ^. #modules))
 
 readTypescriptConfig :: FilePath -> IO H.Config
 readTypescriptConfig f = do
@@ -43,7 +45,7 @@ readTypescriptConfig f = do
         logError "" $ "Provided Typescript Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
-  mayCfg <- decodeFileStrict f
+  mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
       logError "" $ "Invalid Typescript configuration file " <> f
@@ -56,7 +58,7 @@ readPackages f = do
   unless
     fExists
     ( do
-        logError "" $ "Provided JSON mapping (with schema { [key: string] : string[] }) from LambdaBuffers module names to package names does not exist: " <> f
+        logError "" $ "Provided JSON mapping (with schema `{ [key: string] : string[] }`) from LambdaBuffers module names to package names does not exist: " <> f
         exitFailure
     )
   mayPkgs <- decodeFileStrict' f
@@ -64,4 +66,4 @@ readPackages f = do
     Nothing -> do
       logError "" $ "Invalid JSON mapping from module names to package names " <> f
       exitFailure
-    Just pkgs -> trace (show pkgs) (R.mkPkgMap pkgs)
+    Just pkgs -> Typescript.Syntax.mkPkgMap pkgs

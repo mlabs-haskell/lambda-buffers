@@ -8,7 +8,7 @@
 -}
 module LambdaBuffers.Codegen.Typescript.Print (MonadPrint, printModule) where
 
-import Control.Arrow ((&&&), (***))
+import Control.Arrow ((***))
 import Control.Lens (view, (^.))
 import Control.Monad.Reader.Class (ask, asks)
 import Control.Monad.State.Class (MonadState (get))
@@ -18,6 +18,7 @@ import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
+import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
@@ -25,19 +26,20 @@ import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.Codegen.Typescript.Print.Derive (printDeriveEq, printDeriveIsPlutusData, printDeriveJson, tsEqClass, tsIsPlutusDataClass, tsJsonClass)
 import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (printExportInstanceDecl)
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
-import LambdaBuffers.Codegen.Typescript.Print.Names (printModName')
+import LambdaBuffers.Codegen.Typescript.Print.Names (printModName, printModName')
 import LambdaBuffers.Codegen.Typescript.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), squotes, vsep, (<+>))
 import Proto.Codegen qualified as P
 
-printModule :: MonadPrint m => m (Doc ann, Set Text)
-printModule = do
+printModule :: MonadPrint m => Ts.PkgMap -> m (Doc ann, Set Text)
+printModule pkgMap = do
   ctx <- ask
   tyDefDocs <- printTyDefs (ctx ^. Print.ctxModule)
   instDocs <- printInstances
   st <- get
+
   let modDoc =
         vsep $
           -- TODO(jaredponn): the `@ts-nocheck` disables all semantic checking from TypeScript
@@ -45,15 +47,20 @@ printModule = do
           -- In the future, how about we properly resolve this to convince
           -- TypeScript that the generated code is okay....
           -- To do this, we need to be more explicit about the type information we're dumping
-          "// @ts-nocheck"
-            : printImports
+
+          [ "// @ts-nocheck"
+          , printSelfImport (ctx ^. Print.ctxModule . #moduleName)
+          , printImports
+              (ctx ^. Print.ctxModule . #moduleName)
+              pkgMap
               (ctx ^. Print.ctxTyImports)
               (ctx ^. Print.ctxOpaqueTyImports)
               (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
               (ctx ^. Print.ctxRuleImports)
               (st ^. Print.stValueImports)
-            : mempty
-            : tyDefDocs
+          , mempty
+          ]
+            ++ tyDefDocs
             ++ instDocs
       pkgDeps =
         collectPackageDeps
@@ -141,18 +148,76 @@ printTsQClassImpl mn iTyDefs hqcn d =
           for_ (toList valImps) Print.importValue
           return instanceDefsDoc
 
-printImports :: Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Doc ann
-printImports lbTyImports tsTyImports classImps ruleImps valImps =
+lbTsExt :: Doc ann
+lbTsExt = ".mjs"
+
+printSelfImport :: PC.ModuleName -> Doc ann
+printSelfImport modName = case PC.parts modName of
+  [] -> "TODO(jaredponn): Invalid empty module name"
+  allParts ->
+    "import"
+      <+> "*"
+      <+> "as"
+      <+> printModName modName
+      <+> "from"
+      <+> squotes ("./" <> pretty (last allParts ^. #name) <> lbTsExt)
+
+printImports ::
+  PC.ModuleName ->
+  Ts.PkgMap ->
+  Set PC.QTyName ->
+  Set Ts.QTyName ->
+  Set Ts.QClassName ->
+  Set (PC.InfoLess PC.ModuleName) ->
+  Set Ts.QValName ->
+  Doc ann
+printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valImps =
   let groupedLbImports =
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
           `Set.union` ruleImps
       lbImportDocs =
-        importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName') <$> toList groupedLbImports
+        -- importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName')
+        -- importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName')
+        importQualified
+          . ( \mn ->
+                -- ( mn `PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName))
+                ( case Map.lookup mn pkgMap of
+                    Nothing ->
+                      PC.withInfoLess
+                        mn
+                        ( \mn' ->
+                            -- Given @A/B/C/D@ and @A/B/E/F/G@, this would get
+                            -- @(D, E/F/G)@
+                            let getUncommonSuffix :: Eq a => [a] -> [a] -> ([a], [a])
+                                getUncommonSuffix (l : ls) (r : rs)
+                                  | l == r = getUncommonSuffix ls rs
+                                  | otherwise = (l : ls, r : rs)
+                                getUncommonSuffix l r = (l, r)
+
+                                (selfUncommonSuffix, mnUncommonSuffix) = getUncommonSuffix (selfModName ^. #parts) (mn' ^. #parts)
+                             in "./"
+                                  <>
+                                  -- Move back to the first uncommon
+                                  -- directory, then put the uncommon suffix.
+                                  pretty
+                                    ( Text.intercalate "/" $
+                                        drop 1 (map (const "..") selfUncommonSuffix)
+                                          ++ map (view #name) mnUncommonSuffix
+                                    )
+                                  <> lbTsExt
+                        )
+                    Just pkgName -> pretty (Ts.pkgNameToText pkgName)
+                , printModName' mn
+                )
+            )
+          <$> toList groupedLbImports
 
       groupedTsImports =
-        Set.fromList [(pkg, mn) | (pkg, mn, _tn) <- toList tsTyImports]
+        -- TODO(jaredponn): resolve this awkward maybe situation for the PackageName
+        Set.fromList [(pkg, mn) | (Just pkg, mn, _tn) <- toList tsTyImports]
           `Set.union` Set.fromList [(pkg, mn) | (pkg, mn, _) <- toList classImps]
           `Set.union` Set.fromList [(pkg, mn) | (Just (pkg, mn), _) <- toList valImps]
+
       tsImportDocs = importQualified . ((\(Ts.MkPackageName pkg) -> pretty pkg) *** (\(Ts.MkModuleName mn) -> pretty mn)) <$> toList groupedTsImports
 
       importsDoc = vsep $ lbImportDocs ++ tsImportDocs
@@ -167,7 +232,7 @@ printImports lbTyImports tsTyImports classImps ruleImps valImps =
 collectPackageDeps :: Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Set Text
 collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
   let deps =
-        Set.fromList [Ts.pkgNameToText pkgName | (pkgName, _, _) <- toList hsTyImports]
+        Set.fromList [Ts.pkgNameToText pkgName | (Just pkgName, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (pkgName, _, _) <- toList classImps]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (Just (pkgName, _), _) <- toList valImps]
    in deps
