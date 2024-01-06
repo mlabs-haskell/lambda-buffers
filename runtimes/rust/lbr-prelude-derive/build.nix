@@ -4,12 +4,12 @@
       rustFlake =
         config.lbf-nix.rustFlake {
           src = ./.;
-          crane = inputs.crane;
+          inherit (inputs) crane;
           crateName = "lbr-prelude-derive";
           extraSources = [
             {
               name = "lbr-prelude";
-              path = ../lbr-prelude;
+              path = config.packages.lbr-prelude-rust-src;
             }
           ];
           devShellHook = config.settings.shell.hook;

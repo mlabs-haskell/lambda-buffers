@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module LambdaBuffers.ProtoCompat.IsCompat.Lang (
-  ) where
+
+) where
 
 import Control.Lens ((&), (.~), (^.))
 import Control.Monad.Except (MonadError (throwError))

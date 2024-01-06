@@ -2,7 +2,7 @@ _:
 {
   perSystem = { pkgs, config, ... }:
     {
-      devShells.dev-lbt-prelude-golden = config.devShells.dev-pre-commit;
+      devShells.dev-lbt-prelude-golden = config.devShells.default;
 
       packages = {
         lbt-prelude-golden-haskell = config.lbf-nix.haskellData {
@@ -12,6 +12,13 @@ _:
         };
 
         lbt-prelude-golden-purescript = pkgs.stdenv.mkDerivation {
+          name = "lbt-prelude-golden-data";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
+        };
+
+        lbt-prelude-golden-rust = pkgs.stdenv.mkDerivation {
           name = "lbt-prelude-golden-data";
           src = ./.;
           phases = "installPhase";

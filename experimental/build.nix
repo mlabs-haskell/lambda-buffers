@@ -1,27 +1,28 @@
 _: {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, config, inputs', ... }:
     {
 
       devShells.dev-experimental = pkgs.mkShell {
         name = "experimental-env";
         buildInputs = [
           pkgs.dhall
-          pkgs.dhall-lsp-server
+          # TODO(bladyjoker): error: Package ‘dhall-lsp-server-1.1.3’ in /nix/store/p7iz0r8gs6ppkhj83zjmwyd21k8b7v3y-source/pkgs/development/haskell-modules/hackage-packages.nix:84957 is marked as broken, refusing to evaluate.
+          # pkgs.dhall-lsp-server
           pkgs.dhall-json
 
-          (pkgs.haskellPackages.ghcWithPackages (pkgs: [
-            pkgs.text
-            pkgs.unification-fd
-            pkgs.HUnit
+          (pkgs.haskellPackages.ghcWithPackages (hsPkgs: [
+            hsPkgs.text
+            hsPkgs.unification-fd
+            hsPkgs.HUnit
           ]))
-          pkgs.haskell-language-server
 
           pkgs.protobuf
-          pkgs.haskellPackages.proto-lens-protoc
+          pkgs.haskellPackages.haskell-language-server
           pkgs.swiPrologWithGui
         ] ++ config.settings.shell.tools;
 
         shellHook = config.settings.shell.hook;
+        inputsFrom = [ inputs'.proto-nix.devShells.dev-proto-nix ];
       };
 
     };

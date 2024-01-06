@@ -4,8 +4,8 @@
   ];
   perSystem = { pkgs, ... }:
     let
-      rustfmt = pkgs.rust-bin.stable.latest.rustfmt;
-      deno = pkgs.deno;
+      inherit (pkgs.rust-bin.stable.latest) rustfmt;
+      inherit (pkgs) deno;
     in
     {
       pre-commit.settings.hooks = {

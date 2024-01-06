@@ -7,7 +7,7 @@ pkgs:
   # ```
   # for the the extra dependencies (not included in the `package.json`) for
   # `node` to execute. This will _not_ install the "transitive" dependencies.
-  # 
+  #
   # Loosely, this will (in the order given) copy each tarball to a local
   # directory, call `npm cache` on the tarball, and finally call `npm install`.
   #

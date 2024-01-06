@@ -1,0 +1,14 @@
+[package]
+name = "lbt-prelude"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust", features = [
+  "lbf",
+], rev = "d66d39c949f59e543c91ee36377c93422d8e9d75" }
+lbf-plutus-rust-golden-api = { path = ".extras/lbf-plutus-rust-golden-api" }
+lbf-prelude = { path = ".extras/lbf-prelude" }
+lbr-prelude = { path = ".extras/lbr-prelude" }
+serde_json = "1.0.108"
+num-bigint = "0.4.4"

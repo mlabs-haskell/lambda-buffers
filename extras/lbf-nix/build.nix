@@ -5,6 +5,7 @@ _: {
       lbg-typescript = "${config.packages.lbg-typescript}/bin/lbg-typescript";
       lbg-plutarch = "${config.packages.lbg-plutarch}/bin/lbg-plutarch";
       lbg-purescript = "${config.packages.lbg-purescript}/bin/lbg-purescript";
+      lbg-rust = "${config.packages.lbg-rust}/bin/lbg-rust";
 
     in
     {
@@ -36,6 +37,9 @@ _: {
         #     lbg-typescript
         #     config
         #     opts).src;
+        lbfRust = import ./lbf-rust.nix pkgs config.packages.lbf lbg-rust;
+        lbfPreludeRust = import ./lbf-prelude-rust.nix pkgs config.packages.lbf lbg-rust;
+        lbfPlutusRust = import ./lbf-plutus-rust.nix pkgs config.packages.lbf lbg-rust;
       };
 
     };

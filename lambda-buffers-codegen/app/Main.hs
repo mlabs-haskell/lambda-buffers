@@ -6,6 +6,7 @@ import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import LambdaBuffers.Codegen.Cli.GenPlutarch qualified as Plutarch
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
+import LambdaBuffers.Codegen.Cli.GenRust qualified as Rust
 import LambdaBuffers.Codegen.Cli.GenTypescript qualified as Typescript
 import Options.Applicative (
   InfoMod,
@@ -38,6 +39,7 @@ data Command
   | GenPurescript Purescript.GenOpts
   | GenTypescript Typescript.GenOpts
   | GenPlutarch Plutarch.GenOpts
+  | GenRust Rust.GenOpts
 
 genOptsP :: Parser GenOpts
 genOptsP =
@@ -136,6 +138,25 @@ plutarchGenOptsP =
       )
     <*> genOptsP
 
+rustGenOptsP :: Parser Rust.GenOpts
+rustGenOptsP =
+  Rust.MkGenOpts
+    <$> many
+      ( strOption
+          ( long "config"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help "Configuration file for the Rust Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
+          )
+      )
+    <*> strOption
+      ( long "packages"
+          <> short 'g'
+          <> metavar "FILEPATH"
+          <> help "JSON file containing the package-set and all of its modules (including current package)"
+      )
+    <*> genOptsP
+
 mkProgDesc :: forall {a}. String -> InfoMod a
 mkProgDesc backend =
   progDesc $
@@ -171,6 +192,12 @@ commandP =
             (GenPlutarch <$> (helper *> plutarchGenOptsP))
             (mkProgDesc "Plutarch")
         )
+      <> command
+        "gen-rust"
+        ( info
+            (GenRust <$> (helper *> rustGenOptsP))
+            (mkProgDesc "Rust")
+        )
 
 parserInfo :: ParserInfo Command
 parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
@@ -184,3 +211,4 @@ main = do
     GenPurescript opts -> Purescript.gen opts
     GenTypescript opts -> Typescript.gen opts
     GenPlutarch opts -> Plutarch.gen opts
+    GenRust opts -> Rust.gen opts

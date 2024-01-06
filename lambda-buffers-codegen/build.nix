@@ -48,6 +48,9 @@ _:
         lbg-typescript = pkgs.writeShellScriptBin "lbg-typescript" ''
           ${config.packages.lbg}/bin/lbg gen-typescript $@
         '';
+        lbg-rust = pkgs.writeShellScriptBin "lbg-rust" ''
+          ${config.packages.lbg}/bin/lbg gen-rust $@
+        '';
 
         codegen-configs = pkgs.stdenv.mkDerivation {
           name = "codegen-configs";

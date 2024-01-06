@@ -123,7 +123,7 @@ instance Data.Show.Show RichDocument where
 
 ## Sum types
 
-The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LamdaBuffers schema using the `sum` keyword.
+The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LambdaBuffers schema using the `sum` keyword.
 
 As we can see, nothing too surprising here, all the `sum` types become `data`
 in Purescript.
@@ -134,7 +134,7 @@ quote) to the defined constructor names as to make sure they are unique.
 ## Product types
 
 The type `RichDocument` have been declared as a product type in the
-LamdaBuffers schema using the `prod` keyword.
+LambdaBuffers schema using the `prod` keyword.
 
 They become Purescript `newtype` if they have a single type in their body, otherwise they are `data`.
 
@@ -143,7 +143,7 @@ Note that the constructor has the same name as the type.
 ## Record types
 
 The types `Document` and `Chapter` have been declared as record types in the
-LamdaBuffers schema using the `record` keyword.
+LambdaBuffers schema using the `record` keyword.
 
 They always become Purescript `newtype`, and wrapped within is a Purescript
 record type with the fields named exactly like they are named in the

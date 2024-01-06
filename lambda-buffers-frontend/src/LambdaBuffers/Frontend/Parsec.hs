@@ -121,7 +121,7 @@ junk = void (many (spaces1 <|> comment))
 keyword :: Stream s m Char => String -> Parser s m ()
 keyword k = void $ string k *> notFollowedBy alphaNum
 
-runParser :: (Stream s IO Char) => Parser s IO a -> SourceName -> s -> IO (Either ParseError a)
+runParser :: Stream s IO Char => Parser s IO a -> SourceName -> s -> IO (Either ParseError a)
 runParser p = runParserT (junk *> p <* eof) ()
 
 -- * Lexical elements
