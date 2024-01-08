@@ -4,7 +4,7 @@ _: {
       devShells.dev-docs = pkgs.mkShell {
         name = "docs-env";
         packages = [ pkgs.mdbook ];
-        shellHook = config.pre-commit.installationScript;
+        shellHook = config.settings.shell.hook;
       };
 
       packages.lambda-buffers-book = pkgs.stdenv.mkDerivation {

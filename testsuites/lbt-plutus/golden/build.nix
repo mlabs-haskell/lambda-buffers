@@ -15,6 +15,13 @@ _:
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
+
+        lbt-plutus-golden-rust = pkgs.stdenv.mkDerivation {
+          name = "lbt-plutus-golden-data";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
+        };
       };
 
     };

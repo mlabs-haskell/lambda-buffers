@@ -175,7 +175,7 @@ testLamValInterpretation =
   let
     interpret =
       LamVal.runPrint
-        (Map.singleton "fooRef" (HsSyntax.MkCabalPackageName "foo-pkg", HsSyntax.MkModuleName "Foo", HsSyntax.MkValueName "fooRef"))
+        (LamVal.MkPrintRead $ \(_ty, refName) -> Map.lookup refName $ Map.singleton "fooRef" (HsSyntax.MkCabalPackageName "foo-pkg", HsSyntax.MkModuleName "Foo", HsSyntax.MkValueName "fooRef"))
         . PlLamVal.printValueE
     tcs :: [TestTree]
     tcs =

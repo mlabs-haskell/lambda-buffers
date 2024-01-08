@@ -316,18 +316,19 @@ printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
     pmatchRefDoc
       <+> xsDoc
       <+> parens
-        ( backslash <> xsMatchedDoc
+        ( backslash
+            <> xsMatchedDoc
             <+> "->"
             <+> "case"
             <+> xsMatchedDoc
             <+> "of"
-              <> align
-                ( hardline
-                    <> vsep
-                      [ pnilRefDoc <+> "->" <+> otherOrCaseDoc
-                      , pconsRefDoc <+> headArgDoc <+> tailArgDoc <+> "->" <+> restDoc
-                      ]
-                )
+            <> align
+              ( hardline
+                  <> vsep
+                    [ pnilRefDoc <+> "->" <+> otherOrCaseDoc
+                    , pconsRefDoc <+> headArgDoc <+> tailArgDoc <+> "->" <+> restDoc
+                    ]
+              )
         )
 
 {- | `printIntE i` prints an integer literal expression.
@@ -401,7 +402,7 @@ translates to Plutarch
 pif ((#==) (x) (pconstant "a")) <A> (pif ((#==) (x) (pconstant "b")) <B> <C>)
 ```
 -}
-printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE caseTxtVal [] otherCase = printValueE (otherCase caseTxtVal) -- TODO(bladyjoker): Why is this a function and not just a ValueE?
 printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
   pifRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pifRef

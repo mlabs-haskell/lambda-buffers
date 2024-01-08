@@ -20,12 +20,12 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 
     let (to_json_impl, from_json_impl) = match &ast.data {
         syn::Data::Struct(data_struct) => match &data_struct.fields {
-            syn::Fields::Named(fields_named) => impl_struct(fields_named),
+            syn::Fields::Named(fields_named) => impl_struct(ident, fields_named),
             syn::Fields::Unnamed(fields_unnamed) => {
                 if fields_unnamed.unnamed.len() == 1 {
                     impl_newtype()
                 } else {
-                    impl_tuple(fields_unnamed)
+                    impl_tuple(ident, fields_unnamed)
                 }
             }
             syn::Fields::Unit => unimplemented!("Units are unsupported"),
@@ -50,8 +50,10 @@ pub fn derive_json_fn(input: TokenStream) -> TokenStream {
 /// Derive `Json` implementations for a struct type
 /// All fields must implement the `Json` trait
 fn impl_struct(
+    ident: &syn::Ident,
     fields_named: &syn::FieldsNamed,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let ident_str = ident.to_string();
     let named = &fields_named.named;
 
     // Insert keys and values of the JSON object into a dict
@@ -59,16 +61,16 @@ fn impl_struct(
         let key = &field.ident;
         let key_str = key.as_ref().unwrap().to_string();
         quote! {
-            dict.insert(#key_str.to_owned(), self.#key.to_json()?);
+            dict.insert(#key_str.to_owned(), self.#key.to_json());
         }
     });
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+        fn to_json(&self) -> serde_json::Value {
             let mut dict = serde_json::Map::new();
             #(#dict_insert)*
 
-            Ok(serde_json::Value::Object(dict))
+            serde_json::Value::Object(dict)
         }
     };
 
@@ -82,8 +84,8 @@ fn impl_struct(
                 .ok_or(lbr_prelude::error::Error::UnexpectedFieldName {
                     wanted: #key_str.to_owned(),
                     got: dict.keys().cloned().collect(),
+                    parser: #ident_str.to_owned(),
                 })
-                .cloned()
                 .and_then(lbr_prelude::json::Json::from_json)?;
         }
     });
@@ -91,7 +93,7 @@ fn impl_struct(
     let keys = named.iter().map(|field| &field.ident);
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             match value {
                 serde_json::Value::Object(dict) => {
                     #(#dict_get)*
@@ -102,7 +104,8 @@ fn impl_struct(
                 }
                 _ => Err(lbr_prelude::error::Error::UnexpectedJsonType {
                     wanted: lbr_prelude::error::JsonType::Object,
-                    got: lbr_prelude::error::JsonType::from(&value),
+                    got: lbr_prelude::error::JsonType::from(value),
+                    parser: #ident_str.to_owned(),
                 }),
             }
         }
@@ -114,31 +117,35 @@ fn impl_struct(
 /// Derive `Json` implementations for a tuple struct type
 /// All fields must implement the `Json` trait
 fn impl_tuple(
+    ident: &syn::Ident,
     fields_unnamed: &syn::FieldsUnnamed,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let ident_str = ident.to_string();
+
     let arity = fields_unnamed.unnamed.len();
     let to_json_indices = (0..arity).map(syn::Index::from);
     let from_json_indices = to_json_indices.clone();
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-            Ok(serde_json::Value::Array(vec![
-                #(self.#to_json_indices.to_json()?,)*
-            ]))
+        fn to_json(&self) -> serde_json::Value {
+            serde_json::Value::Array(vec![
+                #(self.#to_json_indices.to_json(),)*
+            ])
         }
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
                 if vec.len() == #arity {
                     Ok(Self(
-                        #(Json::from_json(vec[#from_json_indices].clone())?,)*
+                        #(Json::from_json(&vec[#from_json_indices])?,)*
                     ))
                 } else {
                     Err(lbr_prelude::error::Error::UnexpectedArrayLength {
                         wanted: #arity,
                         got: vec.len(),
+                    parser: #ident_str.to_owned(),
                     })
                 }
             })
@@ -153,13 +160,13 @@ fn impl_tuple(
 /// The enclosed field must implement the `Json` trait
 fn impl_newtype() -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
+        fn to_json(&self) -> serde_json::Value {
             self.0.to_json()
         }
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
             Ok(Self(lbr_prelude::json::Json::from_json(value)?))
         }
     };
@@ -173,6 +180,7 @@ fn impl_enum(
     ident: &syn::Ident,
     variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let ident_str = ident.to_string();
     // Arms of the pattern match over the variants of the original data
     let to_json_match_arms = variants.iter().map(|variant| {
         let variant_ident = &variant.ident;
@@ -189,23 +197,23 @@ fn impl_enum(
 
                 quote! {
                     #ident::#variant_ident( #(#fields),* ) =>
-                        lbr_prelude::json::sum_constructor(#variant_str, vec![
-                           #(#fields_2.to_json()?,)*
+                        lbr_prelude::json::json_constructor(#variant_str, &vec![
+                           #(#fields_2.to_json(),)*
                         ]),
                 }
             }
             syn::Fields::Unit => quote! {
                 #ident::#variant_ident =>
-                    lbr_prelude::json::sum_constructor(#variant_str, Vec::with_capacity(0)),
+                    lbr_prelude::json::json_constructor(#variant_str, &Vec::with_capacity(0)),
             },
         }
     });
 
     let to_json_impl = quote! {
-        fn to_json(&self) -> Result<serde_json::Value, lbr_prelude::error::Error> {
-            Ok(match self {
+        fn to_json(&self) -> serde_json::Value {
+            match self {
                 #(#to_json_match_arms)*
-            })
+            }
         }
     };
 
@@ -224,50 +232,48 @@ fn impl_enum(
                 let fields = (0..arity).map(syn::Index::from);
 
                 quote! {
-                    (#variant_str, ctor_fields) => {
-                        if ctor_fields.len() == #arity {
-                            Ok(#ident::#variant_ident(
-                                #(Json::from_json(ctor_fields[#fields].clone())?),*
-                            ))
-                        } else {
-                            Err(lbr_prelude::error::Error::UnexpectedArrayLength {
-                                wanted: #arity,
-                                got: ctor_fields.len(),
-                            })
-                        }
-                    }
+                    (
+                        #variant_str,
+                        Box::new(|ctor_fields| {
+                            if ctor_fields.len() == #arity {
+                                Ok(#ident::#variant_ident(
+                                    #(Json::from_json(&ctor_fields[#fields])?),*
+                                ))
+                            } else {
+                                Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                                    wanted: #arity,
+                                    got: ctor_fields.len(),
+                                    parser: #ident_str.to_owned(),
+                                })
+                            }
+                        })
+                    )
                 }
             }
 
             syn::Fields::Unit => quote! {
-                (#variant_str, ctor_fields) => match &ctor_fields[..] {
-                    [] => Ok(#ident::#variant),
-                    _ => Err(lbr_prelude::error::Error::UnexpectedArrayLength {
-                        wanted: 0,
-                        got: ctor_fields.len(),
-                    }),
-                }
+                (
+                    #variant_str,
+                    Box::new(|ctor_fields| match &ctor_fields[..] {
+                        [] => Ok(#ident::#variant),
+                        _ => Err(lbr_prelude::error::Error::UnexpectedArrayLength {
+                            wanted: 0,
+                            got: ctor_fields.len(),
+                            parser: #ident_str.to_owned(),
+                        })
+                    })
+                )
+
             },
         }
     });
 
-    let variant_names = variants
-        .iter()
-        .map(|variant| variant.ident.to_string())
-        .collect::<Vec<_>>()
-        .join(", ");
-
-    let error_msg = format!("constructor names ({})", variant_names);
-
     let from_json_impl = quote! {
-        fn from_json(value: serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
-            lbr_prelude::json::sum_parser(&value).and_then(|obj| match obj {
-                #(#from_json_match_arms)*
-                _ => Err(lbr_prelude::error::Error::UnexpectedJsonInvariant {
-                    wanted: #error_msg.to_owned(),
-                    got: "unknown constructor name".to_owned(),
-                }),
-            })
+        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+            lbr_prelude::json::case_json_constructor(#ident_str, vec![
+                #(#from_json_match_arms),*
+            ],
+            value)
         }
     };
 

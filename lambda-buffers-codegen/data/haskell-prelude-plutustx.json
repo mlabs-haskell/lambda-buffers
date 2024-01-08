@@ -1,0 +1,75 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "plutus-tx",
+      "PlutusTx.AssocMap",
+      "Map"
+    ],
+    "Prelude.Set": [
+      "containers",
+      "Data.Set",
+      "Set"
+    ],
+    "Prelude.List": [
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "List"
+    ],
+    "Prelude.Either": [
+      "plutus-tx",
+      "PlutusTx.Either",
+      "Either"
+    ],
+    "Prelude.Maybe": [
+      "plutus-tx",
+      "PlutusTx.Maybe",
+      "Maybe"
+    ],
+    "Prelude.Bytes": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinByteString"
+    ],
+    "Prelude.Text": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinString"
+    ],
+    "Prelude.Char": [
+      "base",
+      "Prelude",
+      "Char"
+    ],
+    "Prelude.Integer": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "Integer"
+    ],
+    "Prelude.Bool": [
+      "plutus-tx",
+      "PlutusTx.Bool",
+      "Bool"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "plutus-tx",
+        "PlutusTx.Eq",
+        "Eq"
+      ],
+      [
+        "base",
+        "Prelude",
+        "Eq"
+      ]
+    ],
+    "Prelude.Json": [
+      [
+        "lbr-prelude",
+        "LambdaBuffers.Runtime.Prelude",
+        "Json"
+      ]
+    ]
+  }
+}

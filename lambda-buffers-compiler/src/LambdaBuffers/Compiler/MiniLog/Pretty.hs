@@ -1,8 +1,9 @@
 module LambdaBuffers.Compiler.MiniLog.Pretty (toPrologModule) where
 
 import Data.Char (toLower)
-import Data.List (sort)
+import Data.List (sortBy)
 import Data.List qualified as List
+import Data.Ord (Down (Down), comparing)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Compiler.MiniLog (Clause (MkClause, clauseHead), Term (Atom, Struct, Var))
@@ -28,7 +29,7 @@ prettyModule moduleName clauses =
   )
 
 prettyClauses :: (Show f, Show a, Ord f, Ord a) => [Clause f a] -> Doc ann
-prettyClauses = encloseSep mempty mempty (hardline <> hardline) . fmap prettyClause . reverse . sort
+prettyClauses = encloseSep mempty mempty (hardline <> hardline) . fmap prettyClause . sortBy (comparing Data.Ord.Down)
 
 prettyModuleName :: Text -> Doc ann
 prettyModuleName = prettyAtom

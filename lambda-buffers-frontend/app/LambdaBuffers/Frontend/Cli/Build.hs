@@ -65,7 +65,7 @@ build opts = do
       mods <-
         either
           ( \e -> do
-              logError $ "Failed building Proto API modules: " <> show e
+              logError "" $ "Failed building Proto API modules: " <> show e
               exitFailure
           )
           return
@@ -75,9 +75,9 @@ build opts = do
         ( \tempDir -> do
             workDir <- getWorkDir opts tempDir
             _compRes <- callCompiler opts workDir (defMessage & Compiler.modules .~ mods)
-            logInfo "Compilation OK"
+            logInfo "" "Compilation OK"
             _cdgRes <- callCodegen opts workDir (Frontend.fres'requested res) (defMessage & Codegen.modules .~ mods)
-            logInfo "Codegen OK"
+            logInfo "" "Codegen OK"
         )
 
 getWorkDir :: BuildOpts -> FilePath -> IO FilePath
@@ -87,7 +87,7 @@ getWorkDir opts tempDir = do
   unless
     exists
     ( do
-        logError $ "Provided working directory " <> workDir <> " doesn't exist (did you forget to create it first?)"
+        logError "" $ "Provided working directory " <> workDir <> " doesn't exist (did you forget to create it first?)"
         exitFailure
     )
   return workDir
@@ -112,7 +112,7 @@ callCompiler opts workDir compInp = do
     then return $ compOut ^. Compiler.result
     else do
       let serrs = CompilerErrors.showErrors (compOut ^. Compiler.error)
-      for_ serrs logCompilerError
+      for_ serrs (logCompilerError lbcFp)
       exitFailure
 
 writeCompilerInput :: FilePath -> Compiler.Input -> IO ()
@@ -122,7 +122,7 @@ writeCompilerInput fp compInp = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage compInp)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage compInp)
     _ -> do
-      logError $ "Unknown Compiler Input format (wanted .pb or .textproto) " <> ext
+      logError fp $ "Unknown Compiler Input format (wanted .pb or .textproto) " <> ext
       exitFailure
 
 readCompilerOutput :: FilePath -> IO Compiler.Output
@@ -133,30 +133,30 @@ readCompilerOutput fp = do
       content <- BS.readFile fp
       case Pb.decodeMessage content of
         Left err -> do
-          logError $ "Failed decoding the Compiler Output\n" <> err
+          logError fp $ "Failed decoding the Compiler Output\n" <> err
           exitFailure
         Right res -> return res
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError $ "Unknown Compiler Output format (wanted .pb or .textproto) " <> ext
+      logError fp $ "Unknown Compiler Output format (wanted .pb or .textproto) " <> ext
       exitFailure
 
 call :: Bool -> FilePath -> [String] -> IO ()
 call dbg cliFp cliArgs = do
-  when dbg $ logInfo $ "Calling: " <> showCommandForUser cliFp cliArgs
+  when dbg $ logInfo "" $ "Calling: " <> showCommandForUser cliFp cliArgs
   (exitCode, stdOut, stdErr) <- readProcessWithExitCode cliFp cliArgs ""
   case exitCode of
     (ExitFailure _) -> do
-      logError $ "Error from:" <> showCommandForUser cliFp cliArgs
-      logError stdErr
-      logError stdOut
+      logError cliFp stdErr
+      logError cliFp stdOut
+      logError "" $ "Error from:" <> showCommandForUser cliFp cliArgs
       exitFailure
     _ -> do
-      when dbg $ logInfo stdOut
-      when dbg $ logInfo stdErr
-      logInfo $ "Success from: " <> showCommandForUser cliFp cliArgs
+      when (dbg && stdOut /= "") $ logInfo cliFp stdOut
+      when (dbg && stdErr /= "") $ logInfo cliFp stdErr
+      logInfo "" $ "Success from: " <> showCommandForUser cliFp cliArgs
       return ()
 
 callCodegen :: BuildOpts -> FilePath -> [Frontend.ModuleName ()] -> Codegen.Input -> IO Codegen.Result
@@ -184,7 +184,7 @@ callCodegen opts workDir requestedModules compInp = do
     then return $ compOut ^. Codegen.result
     else do
       let serrs = CodegenErrors.showErrors (compOut ^. Codegen.error)
-      for_ serrs logCodegenError
+      for_ serrs (logCodegenError lbgFp)
       exitFailure
 
 writeCodegenInput :: FilePath -> Codegen.Input -> IO ()
@@ -194,7 +194,7 @@ writeCodegenInput fp compInp = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage compInp)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage compInp)
     _ -> do
-      logError $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
+      logError fp $ "Unknown Codegen Input format (wanted .pb or .textproto) " <> ext
       exitFailure
 
 readCodegenOutput :: FilePath -> IO Codegen.Output
@@ -205,12 +205,12 @@ readCodegenOutput fp = do
       content <- BS.readFile fp
       case Pb.decodeMessage content of
         Left err -> do
-          logError $ "Failed decoding the Codegen Output\n" <> err
+          logError fp $ "Failed decoding the Codegen Output\n" <> err
           exitFailure
         Right res -> return res
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
+      logError fp $ "Unknown Codegen Output format (wanted .pb or .textproto) " <> ext
       exitFailure

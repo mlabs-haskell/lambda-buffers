@@ -21,7 +21,7 @@ gen :: GenOpts -> IO ()
 gen opts = do
   cfg <- case opts ^. config of
     [] -> do
-      logError "No Plutarch configuration file given"
+      logError "" "No Plutarch configuration file given"
       exitFailure
     fps -> do
       cfgs <- traverse readPlutarchConfig fps
@@ -37,12 +37,12 @@ readPlutarchConfig f = do
   unless
     fExists
     ( do
-        logError $ "Provided Plutarch Codegen configuration file doesn't exists: " <> f
+        logError "" $ "Provided Plutarch Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
   mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
-      logError $ "Invalid Plutarch configuration file " <> f
+      logError "" $ "Invalid Plutarch configuration file " <> f
       exitFailure
     Just cfg -> return cfg

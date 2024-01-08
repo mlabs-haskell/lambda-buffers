@@ -15,7 +15,7 @@ mod tests {
         where
             T: Json + PartialEq,
         {
-            T::from_json(val.to_json()?)
+            T::from_json(&val.to_json())
         }
 
         proptest! {
@@ -93,6 +93,45 @@ mod tests {
             fn test_complicated(val in arb_complicated()) {
                 assert_eq!(val, from_to_json(&val)?);
             }
+        }
+    }
+
+    mod lamval_builtins {
+        use lbr_prelude::json::lamval;
+        use lbr_prelude::json::{self, Json};
+        use serde_json::Value;
+
+        #[test]
+        fn test_json_array() {
+            let result = json::json_array(vec![
+                Value::String("a".to_owned()),
+                Value::String("b".to_owned()),
+                Value::String("c".to_owned()),
+            ]);
+            let expected = Value::Array(vec![
+                Value::String("a".to_owned()),
+                Value::String("b".to_owned()),
+                Value::String("c".to_owned()),
+            ]);
+            assert_eq!(result, expected);
+        }
+
+        #[test]
+        fn test_case_json_array() {
+            let x0 = "Test";
+            let x1 = Box::new(|vals: &Vec<Value>| vals.iter().map(String::from_json).collect());
+            let x2 = Value::Array(vec![
+                Value::String("a".to_owned()),
+                Value::String("b".to_owned()),
+                Value::String("c".to_owned()),
+            ]);
+
+            let result: Vec<String> = json::case_json_array(&x0, x1.clone(), &x2).unwrap();
+            let lamval_result: Vec<String> = lamval::case_json_array(&x0)(x1)(&x2).unwrap();
+            let expected = vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+
+            assert_eq!(result, expected);
+            assert_eq!(lamval_result, expected);
         }
     }
 }

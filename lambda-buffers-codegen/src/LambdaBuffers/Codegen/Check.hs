@@ -176,15 +176,15 @@ checkTy (PC.TyAppI ta) = checkTy (ta ^. #tyFunc) >> for_ (ta ^. #tyArgs) checkTy
 checkTy _ = return ()
 
 -- TODO(bladyjoker): This is where you should lookup instance implementation and report if an instance implementation is missing.
-checkInstanceClause :: (MonadCheck qtn qcn m) => PC.InstanceClause -> m ()
+checkInstanceClause :: MonadCheck qtn qcn m => PC.InstanceClause -> m ()
 checkInstanceClause ic = do
   checkConstraint $ ic ^. #head
   for_ (ic ^. #constraints) checkConstraint
 
-checkDerive :: (MonadCheck qtn qcn m) => PC.Derive -> m ()
+checkDerive :: MonadCheck qtn qcn m => PC.Derive -> m ()
 checkDerive drv = checkConstraint $ drv ^. #constraint
 
-checkConstraint :: (MonadCheck qtn qcn m) => PC.Constraint -> m ()
+checkConstraint :: MonadCheck qtn qcn m => PC.Constraint -> m ()
 checkConstraint c = do
   checkTy $ c ^. #argument
 

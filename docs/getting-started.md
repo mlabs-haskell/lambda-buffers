@@ -69,4 +69,4 @@ shellcheck...........................................(no files to check)Skipped
 typos....................................................................Passed
 ```
 
-To run all the code quality tooling specified in the [pre-commit-check config file](../pre-commit.nix)
+To run all the code quality tooling specified in the [pre-commit-check config file](https://github.com/mlabs-haskell/lambda-buffers/blob/main/pre-commit.nix)

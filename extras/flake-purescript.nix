@@ -24,16 +24,19 @@ let
           main = "Test.Main";
           browserRuntime = false;
         };
-
-        "purescript:${projectName}:docs" = purs.buildPursDocs { };
-        "purescript:${projectName}:docs-search" = purs.buildSearchablePursDocs { };
+        # FIX(https://github.com/Plutonomicon/cardano-transaction-lib/issues/1578)
+        # "purescript:${projectName}:docs" = purs.buildPursDocs { };
+        # "purescript:${projectName}:docs-search" = purs.buildSearchablePursDocs { };
       };
 
       checks = {
-        "purescript:${projectName}:check" = purs.runPursTest { testMain = "Test.Main"; };
+        "purescript:${projectName}:check-nodejs" = purs.runPursTest {
+          testMain = "Test.Main";
+          buildInputs = if pursProjOpts ? "shell" then if pursProjOpts.shell ? "packages" then pursProjOpts.shell.packages else [ ] else [ ];
+        };
       };
 
-      devShell = purs.devShell;
+      inherit (purs) devShell;
     };
 in
 mkFlake pursProjOpts.projectName (pkgs.purescriptProject pursProjOpts)

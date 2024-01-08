@@ -38,12 +38,12 @@ readPurescriptConfig f = do
   unless
     fExists
     ( do
-        logError $ "Provided Purescript Codegen configuration file doesn't exists: " <> f
+        logError "" $ "Provided Purescript Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
   mayCfg <- decodeFileStrict f
   case mayCfg of
     Nothing -> do
-      logError $ "Invalid Purescript configuration file " <> f
+      logError "" $ "Invalid Purescript configuration file " <> f
       exitFailure
     Just cfg -> return cfg

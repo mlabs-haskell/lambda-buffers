@@ -22,7 +22,6 @@ common common-language
     ghc-options: -Werror
 
   default-extensions:
-    NoStarIsType
     BangPatterns
     BinaryLiterals
     ConstrainedClassMethods
@@ -59,6 +58,7 @@ common common-language
     MultiParamTypeClasses
     NamedFieldPuns
     NamedWildCards
+    NoStarIsType
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings
@@ -87,19 +87,21 @@ library
   import:          common-language
   build-depends:
     , aeson
+    , attoparsec-aeson
     , base               >=4.16
     , base64-bytestring
-    , bytestring         >=0.11
-    , containers         >=0.6
-    , hedgehog           >=1.2
-    , text               >=1.2
-    , vector             >=0.12
+    , bytestring
+    , containers
+    , hedgehog
+    , text
+    , vector
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Runtime.Prelude
     LambdaBuffers.Runtime.Prelude.Generators.Correct
     LambdaBuffers.Runtime.Prelude.Json
+    LambdaBuffers.Runtime.Prelude.LamVal
 
 test-suite tests
   import:         common-language
@@ -108,9 +110,9 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base            >=4.16
-    , hedgehog        >=1.2
+    , hedgehog
     , lbr-prelude
-    , tasty           >=1.4
-    , tasty-hedgehog  >=1.4
+    , tasty
+    , tasty-hedgehog
 
   other-modules:  Test.LambdaBuffers.Runtime.Prelude.Json

@@ -29,7 +29,7 @@ import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, line, lparen, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, comma, encloseSep, group, hsep, line, lparen, rparen, space, vsep, (<+>))
 
 data PrintModuleEnv m ann = PrintModuleEnv
   { env'printModuleName :: PC.ModuleName -> Doc ann
@@ -44,6 +44,7 @@ data PrintModuleEnv m ann = PrintModuleEnv
         )
   , env'printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
   , env'languageExtensions :: [Text]
+  , env'ghcOptions :: [Text]
   }
 
 printModule :: MonadPrint m => PrintModuleEnv m ann -> m (Doc ann, Set Text)
@@ -55,6 +56,7 @@ printModule env = do
   let modDoc =
         align . vsep $
           [ printLanguageExtensions (env'languageExtensions env)
+          , printGhcOptions (env'ghcOptions env)
           , printModuleHeader env (ctx ^. Print.ctxModule . #moduleName) (ctx ^. Print.ctxTyExports)
           , mempty
           , printImports
@@ -118,6 +120,10 @@ printHsQClassImpl env mn iTyDefs hqcn d =
 printLanguageExtensions :: Pretty a => [a] -> Doc ann
 printLanguageExtensions [] = mempty
 printLanguageExtensions exts = "{-# LANGUAGE" <+> align (encloseSep mempty mempty comma (pretty <$> exts)) <+> "#-}"
+
+printGhcOptions :: Pretty a => [a] -> Doc ann
+printGhcOptions [] = mempty
+printGhcOptions opts = "{-# OPTIONS_GHC" <+> align (hsep (pretty <$> opts)) <+> "#-}"
 
 printModuleHeader :: PrintModuleEnv m ann -> PC.ModuleName -> Set (PC.InfoLess PC.TyName) -> Doc ann
 printModuleHeader env mn exports = "module" <+> env'printModuleName env mn <+> printExports exports <+> "where"

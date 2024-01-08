@@ -58,7 +58,7 @@ showOneLine :: Doc a -> String
 showOneLine d = (renderShowS . layoutPretty (defaultLayoutOptions {layoutPageWidth = Unbounded}) $ d) ""
 
 prettyContext :: ModuleName SourceInfo -> SourceInfo -> Doc ann
-prettyContext currentModuleName sourceInfo = brackets (pretty sourceInfo) <> brackets ("module" <+> pretty currentModuleName)
+prettyContext currentModuleName sourceInfo = pretty sourceInfo <> ":" <+> brackets ("module" <+> pretty currentModuleName)
 
 data ImportedNotFound
   = MkImportedNotFound
@@ -83,11 +83,11 @@ prettyImportedNotFound (MkImportedNotFound cMn impMn n@(Name _ info) (tyNs, clNs
     <+> pretty n
     <+> "not found in module"
     <+> pretty impMn
-      <> ( ", did you mean one of the types:"
-            <+> (align . group . sep $ (pretty <$> toList tyNs))
-              <> ". Or did you mean one of the classes:"
-            <+> (align . group . sep $ (pretty <$> toList clNs))
-         )
+    <> ( ", did you mean one of the types:"
+          <+> (align . group . sep $ (pretty <$> toList tyNs))
+          <> ". Or did you mean one of the classes:"
+          <+> (align . group . sep $ (pretty <$> toList clNs))
+       )
 
 data TyDefNameConflict
   = MkTyDefNameConflict
@@ -219,7 +219,8 @@ tyRefNotFoundErr mn tr s = TyRefNotFound $ MkTyRefNotFound mn tr s
 prettyTyRefNotFound :: forall {ann}. TyRefNotFound -> Doc ann
 prettyTyRefNotFound (MkTyRefNotFound cMn tyR@(TyRef _ _ info) scope) =
   prettyContext cMn info
-    <+> "Type " <> pretty tyR
+    <+> "Type "
+    <> pretty tyR
     <+> "not found in the module's scope"
     <+> (align . group . sep . fmap prettyTySym . Map.keys $ scope)
 
@@ -235,6 +236,7 @@ classRefNotFoundErr mn cr s = ClassRefNotFound $ MkClassRefNotFound mn cr s
 prettyClassRefNotFound :: forall {ann}. ClassRefNotFound -> Doc ann
 prettyClassRefNotFound (MkClassRefNotFound cMn clR@(ClassRef _ _ info) scope) =
   prettyContext cMn info
-    <+> "Class " <> pretty clR
+    <+> "Class "
+    <> pretty clR
     <+> "not found in the module's scope"
     <+> (align . group . sep . fmap prettyClassSym . Map.keys $ scope)

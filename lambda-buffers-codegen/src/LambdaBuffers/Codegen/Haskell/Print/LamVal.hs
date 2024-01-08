@@ -1,8 +1,8 @@
 module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE) where
 
 import Control.Lens ((&), (.~))
+import Control.Monad (replicateM)
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Except (replicateM)
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
@@ -107,8 +107,14 @@ printOtherCase otherCase = do
   bodyDoc <- printValueE $ otherCase arg
   return $ group $ argDoc <+> "->" <+> bodyDoc
 
+-- HACK(bladyjoker): This is an utter hack due to PlutusTx needing this to use the PlutusTx.Eq instances.
+caseIntERef :: HsSyntax.QValName
+caseIntERef = (HsSyntax.MkCabalPackageName "lbr-plutus", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutus.LamVal", HsSyntax.MkValueName "caseIntE")
+
+--- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal cases otherCase = do
+  caseIntERefDoc <- HsSyntax.printHsQValName <$> LV.importValue caseIntERef
   caseValDoc <- printValueE caseIntVal
   caseDocs <-
     for
@@ -116,10 +122,10 @@ printCaseIntE caseIntVal cases otherCase = do
       ( \(conditionVal, bodyVal) -> do
           conditionDoc <- printValueE conditionVal
           bodyDoc <- printValueE bodyVal
-          return $ group $ conditionDoc <+> "->" <+> bodyDoc
+          return $ group $ parens (conditionDoc <+> "," <+> bodyDoc)
       )
-  otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
+  otherDoc <- printLamE otherCase
+  return $ group $ caseIntERefDoc <+> align (caseValDoc <+> align (encloseSep lbracket rbracket comma caseDocs) <+> otherDoc)
 
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
 printListE vals = do
@@ -175,7 +181,7 @@ printTupleE l r = do
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . dquotes . pretty
 
-printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
   caseValDoc <- printValueE txtVal
   caseDocs <-
