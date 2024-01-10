@@ -1,6 +1,18 @@
 pkgs:
 
-{ crane, src, crateName, rustVersion ? "latest", extraSources ? [ ], extraSourcesDir ? ".extras", data ? [ ], dataDir ? "data", devShellHook ? "", devShellTools ? [ ], testTools ? [ ] }:
+{ crane
+, src
+, crateName
+, rustVersion ? "latest"
+, nativeBuildInputs ? [ ]
+, extraSources ? [ ]
+, extraSourcesDir ? ".extras"
+, data ? [ ]
+, dataDir ? "data"
+, devShellHook ? ""
+, devShellTools ? [ ]
+, testTools ? [ ]
+}:
 let
   rustWithTools = pkgs.rust-bin.stable.${rustVersion}.default.override {
     extensions = [ "rustfmt" "rust-analyzer" "clippy" "rust-src" ];
@@ -41,6 +53,7 @@ let
       };
 
   commonArgs = {
+    inherit nativeBuildInputs;
     src = buildEnv;
     pname = crateName;
     strictDeps = true;
