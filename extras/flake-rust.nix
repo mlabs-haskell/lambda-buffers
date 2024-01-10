@@ -89,6 +89,7 @@ let
 in
 {
   devShells."dev-${crateName}-rust" = craneLib.devShell {
+    buildInputs = nativeBuildInputs;
     packages = devShellTools;
     shellHook = ''
       ${linkExtraSources}
