@@ -36,9 +36,9 @@ let
         '';
       };
 
-  # Library source code, intended to be in extra-sources (inside the `.extras` directory)
-  # The main difference is that dependencies are not copied, to `.extras`
-  # but they are referenced from the parent directory (`../`).
+  # Library source code, intended to be in extraSourcesDir
+  # Dependencies of this crate are not copied, to the extra sources directory
+  # but they are referenced from the parent directory (parent crate's extra sources).
   vendoredSrc =
     pkgs.stdenv.mkDerivation
       {
@@ -48,7 +48,7 @@ let
           mkdir $out
           cp -r $src/* $out
           cd $out
-          sed -i 's/.extras/../g' Cargo.toml
+          sed -i 's/${pkgs.lib.escapeRegex extraSourcesDir}/../g' Cargo.toml
         '';
       };
 
