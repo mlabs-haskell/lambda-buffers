@@ -22,7 +22,7 @@
     "./dist/LambdaBuffers/**/*"
   ],
   "dependencies": {
-    "prelude": "file:nix-tarballs/prelude-1.0.1.tgz",
+    "prelude": "file:extra-dependencies/prelude-1.0.1.tgz",
     "typescript": "^5.3.3"
   }
 }
