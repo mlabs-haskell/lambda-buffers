@@ -1,12 +1,12 @@
-{ ... }:
+{ inputs, ... }:
 {
-  perSystem = { inputs', config, ... }:
+  perSystem = { inputs', config, system, ... }:
     let
       typescriptFlake =
-        config.lbf-nix.typescriptFlake {
+        inputs.flake-lang.lib.${system}.typescriptFlake {
           name = "lbr-plutus";
           src = ./.;
-          npmDependencies = [
+          npmExtraDependencies = [
             inputs'.plutus-ledger-api-typescript.packages.tgz
             inputs'.prelude-typescript.packages.tgz
             config.packages."lbr-prelude-typescript-tgz"
@@ -19,10 +19,11 @@
     in
     {
       packages = {
-        lbr-plutus-typescript = typescriptFlake.packages.lbr-plutus-typescript;
-        lbr-plutus-typescript-tgz = typescriptFlake.packages.lbr-plutus-typescript-tgz;
-        lbr-plutus-typescript-nix-npm-folder-dependencies = typescriptFlake.packages.lbr-plutus-typescript-nix-npm-folder-dependencies;
-        lbr-plutus-typescript-node2nix = typescriptFlake.packages.lbr-plutus-typescript-node2nix;
+        inherit (typescriptFlake.packages)
+          lbr-plutus-typescript
+          lbr-plutus-typescript-tgz
+          lbr-plutus-typescript-nix-npm-folder-dependencies
+          lbr-plutus-typescript-node2nix;
       };
 
       inherit (typescriptFlake) checks devShells;

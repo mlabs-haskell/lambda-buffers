@@ -23,8 +23,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "lbr-prelude": "file:nix-tarballs/lbr-prelude-1.0.0.tgz",
-    "plutus-ledger-api": "file:nix-tarballs/plutus-ledger-api-1.0.0.tgz",
-    "prelude": "file:nix-tarballs/prelude-1.0.1.tgz"
+    "lbr-prelude": "file:extra-dependencies/lbr-prelude-1.0.0.tgz",
+    "plutus-ledger-api": "file:extra-dependencies/plutus-ledger-api-1.0.0.tgz",
+    "prelude": "file:extra-dependencies/prelude-1.0.1.tgz"
   }
 }
