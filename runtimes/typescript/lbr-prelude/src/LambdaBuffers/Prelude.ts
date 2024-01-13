@@ -1,4 +1,4 @@
-export type {
+export {
   Bool,
   Bytes,
   Char,
@@ -9,9 +9,7 @@ export type {
   Maybe,
   Set,
   Text,
-} from "prelude";
-
-export * from "./Symbols.js";
+} from "./Symbols.js";
 export { Eq } from "./Eq.js";
 export type { EqInstances } from "./Eq.js";
 export { Json } from "./Json.js";

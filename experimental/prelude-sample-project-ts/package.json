@@ -20,6 +20,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "lbf-prelude": "file:extra-dependencies/lbf-prelude-1.0.0.tgz",
     "lbr-prelude": "file:extra-dependencies/lbr-prelude-1.0.0.tgz",
     "myschema-lb": "file:extra-dependencies/myschema-lb-1.0.0.tgz",
     "prelude": "file:extra-dependencies/prelude-1.0.1.tgz"
