@@ -118,13 +118,13 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
           -- )
           0
           ".fromData"
-    ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData"
-    ("integerData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer"
-    ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr"
-    ("listData", _) -> Just $ Builtin $ Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List"
-    ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Just"
-    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "maybe" "Data.Maybe" "Nothing"
-    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindMaybe"
+    ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "casePlutusData"
+    ("integerData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "integerData"
+    ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "constrData"
+    ("listData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "listData"
+    ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
+    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse"
+    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude/Runtime.js" "LbrPlutusRuntime" "bindParse"
     _ -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName
