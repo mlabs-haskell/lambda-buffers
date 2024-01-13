@@ -29,7 +29,7 @@
       };
 
       lbf-prelude-typescript = (config.lbf-nix.lbfTypescript {
-        name = "prelude-lb";
+        name = "lbf-prelude";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" ];
@@ -38,7 +38,7 @@
           [
             config.packages.lbr-prelude-typescript-tgz
           ];
-      }).packages.prelude-lb-typescript-tgz;
+      }).packages.lbf-prelude-typescript-tgz;
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";

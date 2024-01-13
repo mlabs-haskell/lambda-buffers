@@ -9,7 +9,8 @@
 module LambdaBuffers.Codegen.Typescript.Print (MonadPrint, printModule) where
 
 import Control.Arrow ((***))
-import Control.Lens (view, (^.))
+import Control.Lens (view, (^.), (^..))
+import Control.Lens qualified as Lens
 import Control.Monad.Reader.Class (ask, asks)
 import Control.Monad.State.Class (MonadState (get))
 import Data.Foldable (Foldable (toList), foldrM, for_)
@@ -206,7 +207,19 @@ printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valIm
                                     )
                                   <> lbTsExt
                         )
-                    Just pkgName -> pretty (Ts.pkgNameToText pkgName)
+                    Just pkgName ->
+                      -- Print something like
+                      -- @
+                      -- pkg-name/LambdaBuffers/path/to/module/name.mjs
+                      -- @
+                      -- Why do we include @LambdaBuffers@ there? See
+                      -- "LambdaBuffers.Codegen.Typescript.Syntax.filepathFromModuleName"
+                      pretty (Ts.pkgNameToText pkgName)
+                        <> "/"
+                        <> "LambdaBuffers"
+                        <> "/"
+                        <> PC.withInfoLess mn (\mn' -> pretty $ Text.intercalate "/" (mn' ^.. #parts . Lens.traversed . #name))
+                        <> lbTsExt
                 , printModName' mn
                 )
             )

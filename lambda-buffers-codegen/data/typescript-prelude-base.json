@@ -1,13 +1,13 @@
 {
   "opaquesConfig": {
     "Prelude.Map": [
-      "prelude/Map.js",
-      "PreludeMap",
+      "lbr-prelude",
+      "LbrPrelude",
       "Map"
     ],
     "Prelude.Set": [
-      "prelude/Set.js",
-      "PreludeSet",
+      "lbr-prelude",
+      "LbrPrelude",
       "Set"
     ],
     "Prelude.List": [

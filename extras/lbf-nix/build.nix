@@ -30,10 +30,11 @@
 
         lbfPreludeTypescript = opts:
           import ./lbf-prelude-typescript.nix
-            pkgs
-            config.packages.lbf
-            lbg-typescript
-            config
+            {
+              inherit pkgs lbg-typescript config;
+              inherit (config.packages) lbf;
+              inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
+            }
             opts;
         lbfRust = import ./lbf-rust.nix pkgs config.packages.lbf lbg-rust;
         lbfPreludeRust = import ./lbf-prelude-rust.nix pkgs config.packages.lbf lbg-rust;

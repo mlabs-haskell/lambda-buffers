@@ -1,15 +1,15 @@
-// export type {
-//   Bool,
-//   Bytes,
-//   Char,
-//   Either,
-//   Integer,
-//   List,
-//   Map,
-//   Maybe,
-//   Set,
-//   Text,
-// } from "prelude";
+export type {
+  Bool,
+  Bytes,
+  Char,
+  Either,
+  Integer,
+  List,
+  Map,
+  Maybe,
+  Set,
+  Text,
+} from "prelude";
 
 export * from "./Symbols.js";
 export { Eq } from "./Eq.js";
