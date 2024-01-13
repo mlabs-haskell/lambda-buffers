@@ -8,7 +8,6 @@
           src = ./.;
           npmExtraDependencies = [
             inputs'.plutus-ledger-api-typescript.packages.tgz
-            inputs'.prelude-typescript.packages.tgz
             config.packages."lbr-prelude-typescript-tgz"
           ];
 

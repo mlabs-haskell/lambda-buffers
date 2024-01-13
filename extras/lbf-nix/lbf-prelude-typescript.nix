@@ -4,7 +4,7 @@
 # TODO(jaredponn): instead of passing everything in, how about we just "go all
 # the way" using flake-parts and make all these scripts their own flake-parts
 # module?
-pkgs: lbf: lbg-typescript: config: inputs': lbfTypeScriptOpts:
+pkgs: lbf: lbg-typescript: config: lbfTypeScriptOpts:
 let
   utils = import ./utils.nix pkgs;
 
@@ -12,14 +12,13 @@ let
   lbfTypeScriptOptsForPrelude = utils.overrideAttrs
     {
       imports = {
-        default = [ ];
-        override = libs: libs ++ [ ../../libs/lbf-prelude ];
+        default = { };
+        override = libs: libs // { lbf-prelude = ../../libs/lbf-prelude; };
       };
       npmDependencies = {
         default = [ ];
         override = deps: deps ++
           [
-            inputs'.prelude-typescript.packages.tgz
             config.packages.lbr-prelude-typescript-tgz
           ];
       };

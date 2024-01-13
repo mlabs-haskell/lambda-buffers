@@ -2,7 +2,7 @@
 # TODO(bladyjoker): Make packages that actually try and compile.
 { inputs, ... }:
 {
-  perSystem = { pkgs, inputs', config, ... }: {
+  perSystem = { pkgs, config, ... }: {
 
     packages = {
       lbf-prelude = pkgs.stdenv.mkDerivation {
@@ -34,12 +34,10 @@
         files = [ "Prelude.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" ];
         configs = [ "${config.packages.codegen-configs}/typescript-prelude-base.json" ];
-        npmDependencies =
+        npmExtraDependencies =
           [
             config.packages.lbr-prelude-typescript-tgz
-            inputs'.prelude-typescript.packages.tgz
           ];
-        # });
       }).packages.prelude-lb-typescript-tgz;
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
@@ -114,18 +112,16 @@
         name = "plutus-lb";
         src = ./lbf-plutus;
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
-        imports = [ ./lbf-prelude ];
+        imports = { lbf-prelude = ./lbf-prelude; };
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         configs = [
           "${config.packages.codegen-configs}/typescript-prelude-base.json"
           "${config.packages.codegen-configs}/typescript-plutus.json"
         ];
-        npmDependencies =
+        npmExtraDependencies =
           [
-            config.packages.lbr-plutus-typescript-tgz
-            inputs'.plutus-ledger-api-typescript.packages.tgz
+            config.packages.lbr-prelude-typescript-tgz
           ];
-        # });
       }).packages.plutus-lb-typescript-tgz;
 
       lbf-plutus-rust = config.lbf-nix.lbfRust {
