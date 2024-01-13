@@ -3,6 +3,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
 
+    # flake-lang.nix
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix/jared/add-overlay-to-flake-typescript";
+
     # Haskell
 
     ## Using haskell.nix to build Haskell projects
