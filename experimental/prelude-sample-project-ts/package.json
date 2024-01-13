@@ -20,9 +20,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "lbr-prelude": "file:nix-tarballs/lbr-prelude-1.0.0.tgz",
-    "myschema-lb": "file:nix-tarballs/myschema-lb-1.0.0.tgz",
-    "prelude": "file:nix-tarballs/prelude-1.0.1.tgz",
-    "prelude-lb": "file:nix-tarballs/prelude-lb-1.0.0.tgz"
+    "lbr-prelude": "file:extra-dependencies/lbr-prelude-1.0.0.tgz",
+    "myschema-lb": "file:extra-dependencies/myschema-lb-1.0.0.tgz",
+    "prelude": "file:extra-dependencies/prelude-1.0.1.tgz"
   }
 }
