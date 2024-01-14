@@ -25,7 +25,6 @@
     "lbr-plutus": "file:extra-dependencies/lbr-plutus-1.0.0.tgz",
     "lbr-prelude": "file:extra-dependencies/lbr-prelude-1.0.0.tgz",
     "myschema-lb": "file:extra-dependencies/myschema-lb-1.0.0.tgz",
-    "plutus-lb": "file:extra-dependencies/plutus-lb-1.0.0.tgz",
     "plutus-ledger-api": "file:extra-dependencies/plutus-ledger-api-1.0.0.tgz",
     "prelude": "file:extra-dependencies/prelude-1.0.1.tgz"
   }
