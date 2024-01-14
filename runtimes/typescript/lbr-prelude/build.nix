@@ -15,11 +15,10 @@
     in
     {
       packages = {
-        inherit (typescriptFlake.packages) 
-            lbr-prelude-typescript 
-            lbr-prelude-typescript-tgz 
-            lbr-prelude-typescript-nix-npm-folder-dependencies 
-            lbr-prelude-typescript-node2nix;
+        inherit (typescriptFlake.packages)
+          lbr-prelude-typescript
+          lbr-prelude-typescript-tgz
+          lbr-prelude-typescript-node2nix;
       };
 
       inherit (typescriptFlake) checks devShells;

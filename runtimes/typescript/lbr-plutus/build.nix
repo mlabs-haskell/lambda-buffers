@@ -21,7 +21,6 @@
         inherit (typescriptFlake.packages)
           lbr-plutus-typescript
           lbr-plutus-typescript-tgz
-          lbr-plutus-typescript-nix-npm-folder-dependencies
           lbr-plutus-typescript-node2nix;
       };
 
