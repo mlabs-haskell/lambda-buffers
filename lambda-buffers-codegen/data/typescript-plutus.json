@@ -28,7 +28,7 @@
     "Plutus.V1.Bytes": [
       "lbr-plutus/V1.js",
       "LbrPlutusV1",
-      "ByteArray"
+      "LedgerBytes"
     ],
     "Plutus.V1.Interval": [
       "lbr-plutus/V1.js",
@@ -93,7 +93,7 @@
     "Plutus.V1.DatumHash": [
       "lbr-plutus/V1.js",
       "LbrPlutusV1",
-      "DataHash"
+      "DatumHash"
     ],
     "Plutus.V1.RedeemerHash": [
       "lbr-plutus/V1.js",
@@ -108,12 +108,12 @@
     "Plutus.V1.TxId": [
       "lbr-plutus/V1.js",
       "LbrPlutusV1",
-      "TransactionHash"
+      "TxId"
     ],
     "Plutus.V1.TxOutRef": [
       "lbr-plutus/V1.js",
       "LbrPlutusV1",
-      "TransactionInput"
+      "TxOutRef"
     ],
     "Plutus.V1.Map": [
       "lbr-plutus/V1.js",
@@ -123,7 +123,7 @@
     "Plutus.V2.TxOut": [
       "lbr-plutus/V2.js",
       "LbrPlutusV2",
-      "TxInInfo"
+      "TxOut"
     ],
     "Plutus.V2.TxInInfo": [
       "lbr-plutus/V2.js",

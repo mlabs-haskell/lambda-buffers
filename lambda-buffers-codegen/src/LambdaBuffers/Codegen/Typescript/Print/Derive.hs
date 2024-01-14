@@ -124,7 +124,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
     ("listData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "listData"
     ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
     ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse"
-    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude/Runtime.js" "LbrPlutusRuntime" "bindParse"
+    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "bindParse"
     _ -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName
@@ -134,7 +134,7 @@ fromPlutusDataClassMethodName :: Ts.ValueName
 fromPlutusDataClassMethodName = Ts.MkValueName "fromData"
 
 tsIsPlutusDataClass :: Ts.QClassName
-tsIsPlutusDataClass = (Ts.MkPackageName "lbr-plutus", Ts.MkModuleName "LbPlutus", Ts.MkClassName "IsPlutusData")
+tsIsPlutusDataClass = (Ts.MkPackageName "lbr-plutus/PlutusData.js", Ts.MkModuleName "LbrPlutusPD", Ts.MkClassName "IsPlutusData")
 
 printDeriveIsPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
 printDeriveIsPlutusData mn iTyDefs mkExportInstanceDeclDoc ty = do

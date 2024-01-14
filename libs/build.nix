@@ -109,7 +109,7 @@
       };
 
       lbf-plutus-typescript = (config.lbf-nix.lbfTypescript {
-        name = "plutus-lb";
+        name = "lbf-plutus";
         src = ./lbf-plutus;
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
         imports = { lbf-prelude = ./lbf-prelude; };
@@ -120,9 +120,10 @@
         ];
         npmExtraDependencies =
           [
-            config.packages.lbr-prelude-typescript-tgz
+            config.packages.lbf-prelude-typescript
+            config.packages.lbr-plutus-typescript-tgz
           ];
-      }).packages.plutus-lb-typescript-tgz;
+      }).packages.lbf-plutus-typescript-tgz;
 
       lbf-plutus-rust = config.lbf-nix.lbfRust {
         name = "lbf-plutus";

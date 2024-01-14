@@ -310,35 +310,38 @@ printCaseIntE caseIntVal cases otherCase = do
         otherCase caseOnArg
 
   return $
+    -- TODO(jaredponn): Do we need this outermost 'parens'?
     parens $
-      parens caseOnArgDoc
-        <+> "=>"
-        <+> vsep
-          [ lbrace
-          , indent 2 $
-              vsep $
-                case casesDocs of
-                  [] ->
-                    [otherDoc]
-                  (num1, body1) : ts ->
-                    [ "if" <+> parens (caseOnArgDoc <+> "===" <+> num1)
-                    , body1
-                    ]
-                      ++ concatMap
-                        ( \(num, body) ->
-                            [ "else" <+> "if" <+> parens (num <+> "===" <+> caseOnArgDoc)
-                            , body
-                            ]
-                        )
-                        ts
-                      ++ [ "else"
-                         , lbrace
-                         , indent 2 otherDoc
-                         , rbrace
-                         ]
-          , rbrace
-          ]
-          <> parens caseOnIntValDoc
+      parens
+        ( parens caseOnArgDoc
+            <+> "=>"
+            <+> vsep
+              [ lbrace
+              , indent 2 $
+                  vsep $
+                    case casesDocs of
+                      [] ->
+                        [otherDoc]
+                      (num1, body1) : ts ->
+                        [ "if" <+> parens (caseOnArgDoc <+> "===" <+> num1)
+                        , body1
+                        ]
+                          ++ concatMap
+                            ( \(num, body) ->
+                                [ "else" <+> "if" <+> parens (num <+> "===" <+> caseOnArgDoc)
+                                , body
+                                ]
+                            )
+                            ts
+                          ++ [ "else"
+                             , lbrace
+                             , indent 2 otherDoc
+                             , rbrace
+                             ]
+              , rbrace
+              ]
+        )
+        <> parens caseOnIntValDoc
 
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
 printListE vals = do
@@ -560,7 +563,7 @@ printTupleE l r = do
 printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
 printTextE = return . dquotes . pretty
 
-printCaseTextE :: (MonadPrint m) => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
   -- The value that we are casing on
   caseValDoc <- printValueE txtVal
@@ -621,7 +624,7 @@ printCaseTextE txtVal cases otherCase = do
                          ]
           , rbrace
           ]
-          <> parens caseValDoc
+        <> parens caseValDoc
 
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v

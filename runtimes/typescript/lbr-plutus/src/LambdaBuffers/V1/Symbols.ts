@@ -1,3 +1,7 @@
+import * as PlutusLedgerApiV1 from "plutus-ledger-api/V1.js";
+import * as PlutusLedgerApiAssocMap from "plutus-ledger-api/AssocMap.js";
+import * as PlutusLedgerApiPlutusData from "plutus-ledger-api/PlutusData.js";
+
 export const Address: unique symbol = Symbol("Address");
 export const LedgerBytes: unique symbol = Symbol("LedgerBytes");
 export const StakingCredential: unique symbol = Symbol("StakingCredential");
@@ -20,3 +24,30 @@ export const CurrencySymbol: unique symbol = Symbol("CurrencySymbol");
 export const TokenName: unique symbol = Symbol("TokenName");
 export const AssetClass: unique symbol = Symbol("AssetClass");
 export const Value: unique symbol = Symbol("Value");
+export const PlutusData: unique symbol = Symbol("PlutusData");
+export const Map: unique symbol = Symbol("Map");
+
+export type Address = PlutusLedgerApiV1.Address;
+export type LedgerBytes = PlutusLedgerApiV1.LedgerBytes;
+export type StakingCredential = PlutusLedgerApiV1.StakingCredential;
+export type Credential = PlutusLedgerApiV1.Credential;
+export type PubKeyHash = PlutusLedgerApiV1.PubKeyHash;
+export type Interval<A> = PlutusLedgerApiV1.Interval<A>;
+export type Extended<A> = PlutusLedgerApiV1.Extended<A>;
+export type LowerBound<A> = PlutusLedgerApiV1.LowerBound<A>;
+export type UpperBound<A> = PlutusLedgerApiV1.UpperBound<A>;
+export type Redeemer = PlutusLedgerApiV1.Redeemer;
+export type Datum = PlutusLedgerApiV1.Datum;
+export type DatumHash = PlutusLedgerApiV1.DatumHash;
+export type RedeemerHash = PlutusLedgerApiV1.RedeemerHash;
+export type ScriptHash = PlutusLedgerApiV1.ScriptHash;
+export type POSIXTime = PlutusLedgerApiV1.POSIXTime;
+export type POSIXTimeRange = PlutusLedgerApiV1.POSIXTimeRange;
+export type TxId = PlutusLedgerApiV1.TxId;
+export type TxOutRef = PlutusLedgerApiV1.TxOutRef;
+export type CurrencySymbol = PlutusLedgerApiV1.CurrencySymbol;
+export type TokenName = PlutusLedgerApiV1.TokenName;
+export type AssetClass = PlutusLedgerApiV1.AssetClass;
+export type Value = PlutusLedgerApiV1.Value;
+export type PlutusData = PlutusLedgerApiPlutusData.PlutusData;
+export type Map<K, V> = PlutusLedgerApiAssocMap.Map<K, V>;
