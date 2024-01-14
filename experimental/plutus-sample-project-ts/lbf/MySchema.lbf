@@ -1,0 +1,10 @@
+module MySchema
+
+import Plutus.V1 
+
+sum Branchy a 
+    = Node PlutusData (Extended (Branchy a))
+    | Leaf a
+
+
+derive PlutusData (Branchy a)
