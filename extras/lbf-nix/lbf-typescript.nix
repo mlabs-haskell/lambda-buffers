@@ -256,9 +256,9 @@ let
     (typescriptFlake {
       inherit (lbfTypescriptOpts) name npmExtraDependencies;
       src = lbTypescriptSrc;
-    }).extend (tsSelf: tsSuper: {
-      __typescriptFlake__ = tsSuper.__typescriptFlake__ // {
-        srcWithNode2nix = tsSuper.__typescriptFlake__.srcWithNode2nix.overrideAttrs
+    }).extend (_self: super: {
+      __typescriptFlake__ = super.__typescriptFlake__.extend (tsSelf: tsSuper: {
+        srcWithNode2nix = tsSuper.srcWithNode2nix.overrideAttrs
           (_self: _super:
             {
               # Beef up the postConfigure so we add the extra
@@ -270,11 +270,11 @@ let
                       --loglevel verbose \
                       --offline \
                       --package-lock-only \
-                      --save ./${tsSelf.__typescriptFlake__.npmExtraDependenciesFolder}/* 
+                      --save ./${tsSelf.npmExtraDependenciesFolder}/* 
                 '';
             }
           );
-      };
+      });
     });
 
   # in lbTypescriptSrc
