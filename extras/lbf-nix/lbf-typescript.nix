@@ -265,7 +265,7 @@ let
               # dependencies to the `package.json` / `package-lock.json`
               postConfigure =
                 ''
-                  export HOME=(mktemp -d)
+                  export HOME=$(mktemp -d)
                   npm install \
                       --loglevel verbose \
                       --offline \
