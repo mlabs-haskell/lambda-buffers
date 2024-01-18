@@ -7,7 +7,7 @@ let
         then overrides.${name}.override val
         else val
       )
-      ((builtins.mapAttrs (name: val: if attrs?${name} then attrs.${name} else val.default) overrides) // attrs);
+      ((builtins.mapAttrs (name: val: attrs.${name} or val.default) overrides) // attrs);
   # Makes a shell flag
   # Example: `mkFlag "foo" "bar" = "--foo='bar'"`
   mkFlag = key: value: "--${key}=${pkgs.lib.escapeShellArg "${value}"}";

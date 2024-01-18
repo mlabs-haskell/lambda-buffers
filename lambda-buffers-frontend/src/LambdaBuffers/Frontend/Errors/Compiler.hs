@@ -134,7 +134,7 @@ protoParseErrors' (Compiler.ProtoParseError'MultipleImportError' err) = do
         <+> prettyModuleName' importedMn
         <+> "was defined in module"
         <+> prettyModuleName' mn
-          <> dot
+        <> dot
         <+> "This generally means the Frontend sent a malformed request to the Compiler"
     )
 -- TODO(bladyjoker): Add module name information at least.
@@ -147,7 +147,7 @@ protoParseErrors' (Compiler.ProtoParseError'OneOfNotSetError' err) =
         <+> "and field "
         <+> squotes (pretty (err ^. Compiler.fieldName))
         <+> "was not set"
-          <> dot
+        <> dot
         <+> "This generally means the Frontend sent a malformed request to the Compiler"
     )
   ]
@@ -159,7 +159,7 @@ protoParseErrors' (Compiler.ProtoParseError'UnknownEnumError' err) =
         <+> squotes (pretty (err ^. Compiler.enumName))
         <+> "was processed with an unknown `tag` number"
         <+> pretty (err ^. Compiler.gotTag)
-          <> dot
+        <> dot
         <+> "This generally means the Frontend sent a malformed request to the Compiler"
     )
   ]
@@ -210,7 +210,7 @@ kindCheckErrors' (Compiler.KindCheckError'UnificationError' err) =
         <+> prettyModuleName' (err ^. Compiler.moduleName)
         <+> "in a type definition for"
         <+> prettyName' (err ^. (Compiler.tyDef . Lang.tyName))
-          <> dot
+        <> dot
         <+> "Tried to unify kind"
         <+> prettyKind (err ^. Compiler.tyKindLhs)
         <+> "with kind"
@@ -225,7 +225,7 @@ kindCheckErrors' (Compiler.KindCheckError'CyclicKindError' err) =
         <+> prettyModuleName' (err ^. Compiler.moduleName)
         <+> "in a type definition for"
         <+> prettyName' (err ^. (Compiler.tyDef . Lang.tyName))
-          <> dot
+        <> dot
     )
   ]
 kindCheckErrors' (Compiler.KindCheckError'InconsistentTypeError' err) =
@@ -236,7 +236,7 @@ kindCheckErrors' (Compiler.KindCheckError'InconsistentTypeError' err) =
         <+> prettyModuleName' (err ^. Compiler.moduleName)
         <+> "in a type definition for"
         <+> prettyName' (err ^. (Compiler.tyDef . Lang.tyName))
-          <> dot
+        <> dot
         <+> "Expected kind"
         <+> prettyKind (err ^. Compiler.expectedKind)
         <+> "but got kind"
@@ -279,7 +279,7 @@ classCheckErrors' (Compiler.TyClassCheckError'SuperclassCycleErr err) =
         <+> prettyModuleName' (err ^. Compiler.moduleName)
         <+> "in a class definition for"
         <+> prettyName' (err ^. Compiler.className)
-          <> dot
+        <> dot
         <+> "The cycle consists of"
         <+> encloseSep "" "" "->" (prettyClassRef <$> err ^. Compiler.cycledClassRefs)
     )
@@ -303,7 +303,7 @@ classCheckErrors' (Compiler.TyClassCheckError'DeriveOpaqueErr err) =
         <+> prettyConstraint (err ^. Compiler.subConstraint)
         <+> "in module"
         <+> prettyModuleName' (err ^. Compiler.moduleName)
-          <> dot
+        <> dot
         <+> "`derive` statements can be applied only to 'transparent' types (ie. `sum`/`record`/`product`), use 'instance' statement instead to declare a rule on an `opaque` type'"
     )
   ]
@@ -327,9 +327,9 @@ classCheckErrors' (Compiler.TyClassCheckError'OverlappingRulesErr err) =
         <+> prettyConstraint (err ^. Compiler.subConstraint)
         <+> "in module"
         <+> prettyModuleName' (err ^. Compiler.moduleName)
-          <> dot
+        <> dot
         <+> "The overlapping rules found are"
-          <> line
+        <> line
         <+> vsep
           [ prettyConstraint (qhead ^. Compiler.head) <+> "defined in module" <+> prettyModuleName' (qhead ^. Compiler.moduleName)
           | qhead <- err ^. Compiler.overlaps

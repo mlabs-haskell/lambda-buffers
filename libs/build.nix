@@ -36,6 +36,14 @@
         configs = [ "${config.packages.codegen-configs}/plutarch-prelude.json" ];
       };
 
+      lbf-prelude-rust = config.lbf-nix.lbfRust {
+        name = "lbf-prelude";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" ];
+        configs = [ "${config.packages.codegen-configs}/rust-prelude-base.json" ];
+      };
+
       lbf-plutus = pkgs.stdenv.mkDerivation {
         name = "lbf-plutus";
         src = ./lbf-plutus;
@@ -85,6 +93,18 @@
         configs = [
           "${config.packages.codegen-configs}/plutarch-prelude.json"
           "${config.packages.codegen-configs}/plutarch-plutus.json"
+        ];
+      };
+
+      lbf-plutus-rust = config.lbf-nix.lbfRust {
+        name = "lbf-plutus";
+        src = ./lbf-plutus;
+        imports = { lbf-prelude = ./lbf-prelude; };
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+        configs = [
+          "${config.packages.codegen-configs}/rust-prelude-base.json"
+          "${config.packages.codegen-configs}/rust-plutus-pla.json"
         ];
       };
     };

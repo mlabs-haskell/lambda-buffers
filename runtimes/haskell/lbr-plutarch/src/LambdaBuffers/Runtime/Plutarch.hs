@@ -231,11 +231,11 @@ instance (PTryFrom PData (PAsData a), PTryFrom PData (PAsData b)) => PTryFrom PD
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PMaybe a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PMaybe a) where
   type PTryFromExcess PData (PMaybe a) = Const ()
   ptryFrom' = ptryFromPAsData
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (PMaybe a)) where
   type PTryFromExcess PData (PAsData (PMaybe a)) = Const ()
   ptryFrom' pd f =
     f
@@ -267,7 +267,7 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) whe
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PFoo a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PFoo a) where
   type PTryFromExcess PData (PFoo a) = Const ()
   ptryFrom' = ptryFromPAsData
 
@@ -319,7 +319,7 @@ instance PTryFrom PData (PAsData Plutarch.Api.V1.Scripts.PDatumHash) where
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PInterval a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.PInterval a)) where
   type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PInterval a)) = Const ()
   ptryFrom' pd f =
     f
@@ -344,11 +344,11 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PInterval a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (Plutarch.Api.V1.PInterval a) where
   type PTryFromExcess PData (Plutarch.Api.V1.PInterval a) = Const ()
   ptryFrom' = ptryFromPAsData
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PLowerBound a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.PLowerBound a)) where
   type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PLowerBound a)) = Const ()
   ptryFrom' pd f =
     f
@@ -373,11 +373,11 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PLowerBound a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (Plutarch.Api.V1.PLowerBound a) where
   type PTryFromExcess PData (Plutarch.Api.V1.PLowerBound a) = Const ()
   ptryFrom' = ptryFromPAsData
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PUpperBound a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.PUpperBound a)) where
   type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PUpperBound a)) = Const ()
   ptryFrom' pd f =
     f
@@ -402,11 +402,11 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PUpperBound a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (Plutarch.Api.V1.PUpperBound a) where
   type PTryFromExcess PData (Plutarch.Api.V1.PUpperBound a) = Const ()
   ptryFrom' = ptryFromPAsData
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V1.PExtended a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.PExtended a)) where
   type PTryFromExcess PData (PAsData (Plutarch.Api.V1.PExtended a)) = Const ()
   ptryFrom' pd f =
     f
@@ -443,7 +443,7 @@ instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (Plutarch.Api.V
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (Plutarch.Api.V1.PExtended a) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (Plutarch.Api.V1.PExtended a) where
   type PTryFromExcess PData (Plutarch.Api.V1.PExtended a) = Const ()
   ptryFrom' = ptryFromPAsData
 
@@ -594,7 +594,7 @@ instance PTryFrom PData (PAsData PBool) where
       , ()
       )
 
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PFoo a)) where
+instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (PFoo a)) where
   type PTryFromExcess PData (PAsData (PFoo a)) = Const ()
   ptryFrom' pd f =
     f

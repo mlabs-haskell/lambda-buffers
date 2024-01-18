@@ -60,7 +60,7 @@ genValue =
       , genMap (return PlutusV1.adaSymbol) (genMap (return PlutusV1.adaToken) genAmount)
       ]
 
-genMap :: (Eq k) => H.Gen k -> H.Gen v -> H.Gen (PlutusTx.Map k v)
+genMap :: Eq k => H.Gen k -> H.Gen v -> H.Gen (PlutusTx.Map k v)
 genMap gk gv =
   PlutusTx.fromList <$> do
     keys <- List.nub <$> H.list defRange gk

@@ -21,6 +21,7 @@ _:
           config.packages.lbg
           config.packages.lbg-haskell
           config.packages.lbg-purescript
+          config.packages.lbg-rust
         ] ++ config.settings.shell.tools;
         devShellHook = config.settings.shell.hook;
       };
@@ -40,6 +41,8 @@ _:
             config.packages.lbf-plutus-to-haskell
             config.packages.lbf-prelude-to-purescript
             config.packages.lbf-plutus-to-purescript
+            config.packages.lbf-prelude-to-rust
+            config.packages.lbf-plutus-to-rust
           ];
         };
       };
@@ -143,6 +146,39 @@ _:
             gen-opts = [
               "--config=${config.packages.codegen-configs}/purescript-prelude-base.json"
               "--config=${config.packages.codegen-configs}/purescript-plutus-ctl.json"
+            ];
+            work-dir = ".work";
+          }} "$@";
+        '';
+
+        lbf-prelude-to-rust = pkgs.writeShellScriptBin "lbf-prelude-to-rust" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir -p autogen;
+          mkdir -p .work;
+          ${config.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude ];
+            gen = "${config.packages.lbg-rust}/bin/lbg-rust";
+            gen-classes = ["Prelude.Eq" "Prelude.Json"];
+            gen-dir = "autogen";
+            gen-opts = ["--config=${config.packages.codegen-configs}/rust-prelude-base.json"];
+            work-dir = ".work";
+          }} "$@";
+        '';
+
+        lbf-plutus-to-rust = pkgs.writeShellScriptBin "lbf-plutus-to-rust" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir -p autogen;
+          mkdir -p .work;
+          ${config.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
+            gen = "${config.packages.lbg-rust}/bin/lbg-rust";
+            gen-classes = ["Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+            gen-dir = "autogen";
+            gen-opts = [
+              "--config=${config.packages.codegen-configs}/rust-prelude-base.json"
+              "--config=${config.packages.codegen-configs}/rust-plutus-pla.json"
             ];
             work-dir = ".work";
           }} "$@";

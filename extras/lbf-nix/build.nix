@@ -4,6 +4,7 @@ _: {
       lbg-haskell = "${config.packages.lbg-haskell}/bin/lbg-haskell";
       lbg-plutarch = "${config.packages.lbg-plutarch}/bin/lbg-plutarch";
       lbg-purescript = "${config.packages.lbg-purescript}/bin/lbg-purescript";
+      lbg-rust = "${config.packages.lbg-rust}/bin/lbg-rust";
 
     in
     {
@@ -18,6 +19,9 @@ _: {
         lbfPurescript = import ./lbf-purescript.nix pkgs config.packages.lbf lbg-purescript;
         lbfPreludePurescript = import ./lbf-prelude-purescript.nix pkgs config.packages.lbf lbg-purescript;
         lbfPlutusPurescript = import ./lbf-plutus-purescript.nix pkgs config.packages.lbf lbg-purescript;
+        lbfRust = import ./lbf-rust.nix pkgs config.packages.lbf lbg-rust;
+        lbfPreludeRust = import ./lbf-prelude-rust.nix pkgs config.packages.lbf lbg-rust;
+        lbfPlutusRust = import ./lbf-plutus-rust.nix pkgs config.packages.lbf lbg-rust;
       };
 
     };

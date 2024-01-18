@@ -164,7 +164,7 @@ let additions =
           , "tuples"
           ]
         , repo = "https://github.com/mlabs-haskell/purescript-bignumber"
-        , version = "705923edd892a3397b90d28ce7db9a7181dcd599"
+        , version = "760d11b41ece31b8cdd3c53349c5c2fd48d3ff89"
         }
       , js-bigints =
         { dependencies = [ "integers", "maybe", "prelude" ]

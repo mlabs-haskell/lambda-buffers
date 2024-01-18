@@ -4,7 +4,7 @@
   options = {
 
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, system, config, ... }: {
+      ({ system, config, pkgs, ... }: {
         options.settings = {
 
           shell = {
@@ -42,24 +42,26 @@
           settings = {
 
             haskell = {
-              index-state = "2022-12-01T00:00:00Z";
-              compiler-nix-name = "ghc925";
+              index-state = "2023-11-26T21:52:49Z";
+              compiler-nix-name = "ghc963";
             };
 
             shell = {
 
               tools = [
-                pkgs.haskell.packages.ghc924.fourmolu
+
                 pkgs.haskellPackages.apply-refact
+
+                pkgs.nil
+                inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
                 inputs.pre-commit-hooks.outputs.packages.${system}.nixpkgs-fmt
-                inputs.pre-commit-hooks.outputs.packages.${system}.cabal-fmt
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.shellcheck
-                inputs.pre-commit-hooks.outputs.packages.${system}.hlint
-                inputs.pre-commit-hooks.outputs.packages.${system}.typos
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.markdownlint-cli
                 inputs.pre-commit-hooks.outputs.packages.${system}.dhall
+
                 inputs.pre-commit-hooks.outputs.packages.${system}.purty
-                inputs.pre-commit-hooks.outputs.packages.${system}.deadnix
               ];
 
               hook = ''

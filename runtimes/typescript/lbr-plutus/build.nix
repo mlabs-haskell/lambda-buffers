@@ -1,4 +1,4 @@
-{ ... }:
+_:
 {
   perSystem = { config, ... }:
     let
@@ -15,17 +15,15 @@
     {
 
       packages = {
-        lbr-plutus-typescript = typescriptFlake.packages.lbr-plutus-typescript;
-        lbr-plutus-typescript-tgz = typescriptFlake.packages.lbr-plutus-typescript-tgz;
-        lbr-plutus-typescript-node2nix = typescriptFlake.packages.lbr-plutus-typescript-node2nix;
+        inherit (typescriptFlake.packages) lbr-plutus-typescript lbr-plutus-typescript-tgz lbr-plutus-typescript-node2nix;
       };
 
       devShells = {
-        lbr-plutus-typescript = typescriptFlake.devShells.lbr-plutus-typescript;
+        inherit (typescriptFlake.devShells) lbr-plutus-typescript;
       };
 
       checks = {
-        lbr-plutus-typescript-test = typescriptFlake.checks.lbr-plutus-typescript-test;
+        inherit (typescriptFlake.checks) lbr-plutus-typescript-test;
       };
 
       # TODO(jaredponn): for some reason, writing the more terse `inherit`

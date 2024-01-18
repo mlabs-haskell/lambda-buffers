@@ -1,7 +1,8 @@
 module LambdaBuffers.Frontend.Monad (FrontendT, FrontState (..), FrontRead (..), FrontendResult (..), throwE') where
 
-import Control.Monad.Except (ExceptT, MonadTrans (lift))
+import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Strict (MonadIO, StateT)
+import Control.Monad.Trans (MonadTrans (lift))
 import Control.Monad.Trans.Except (throwE)
 import Control.Monad.Trans.Reader (ReaderT)
 import Data.Map (Map)
