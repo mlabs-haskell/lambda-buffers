@@ -27,7 +27,6 @@
             inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
           }
           opts;
-
         lbfPreludeTypescript = opts:
           import ./lbf-prelude-typescript.nix
             {
@@ -36,7 +35,6 @@
               inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
             }
             opts;
-
         lbfPlutusTypescript = opts:
           import ./lbf-plutus-typescript.nix
             {
@@ -45,7 +43,6 @@
               inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
             }
             opts;
-
         lbfRust = import ./lbf-rust.nix pkgs config.packages.lbf lbg-rust;
         lbfPreludeRust = import ./lbf-prelude-rust.nix pkgs config.packages.lbf lbg-rust;
         lbfPlutusRust = import ./lbf-plutus-rust.nix pkgs config.packages.lbf lbg-rust;

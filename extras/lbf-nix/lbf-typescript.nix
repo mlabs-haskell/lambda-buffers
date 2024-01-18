@@ -27,7 +27,7 @@ lbfTypescriptOpts@{
 , # npmExtraDependencies are tarballs from `npm pack` of the dependencies required
   npmExtraDependencies ? [ ]
   # , # npmDevDependencies are tarballs from `npm pack` of the develoepr dependencies for building the project
-  #   # TODO: actually use this
+  #   # TODO(jaredponn): actually use this
   #   npmDevDependencies ? [ ]
 , configs ? [ ]
 , # Name of the package and also the name of the Cabal package.
@@ -162,11 +162,11 @@ let
             "module": "node16", 
             "moduleResolution": "node16",
             "rootDir": "./src",
-            "declaration": true, 
-            "declarationMap": true, 
+            "declaration": true,
+            "declarationMap": true,
             "sourceMap": true,
             "outDir": "./dist",
-            "verbatimModuleSyntax": true, 
+            "verbatimModuleSyntax": true,
             "forceConsistentCasingInFileNames": true,
 
             /* Type Checking */
@@ -223,8 +223,10 @@ let
 
           # Note(jaredponn):
           # What is going on here? We create a JQ filter which 
-          # - For every `LambdaBuffers/Module/Generated.mts`, 
+          # - For every `LambdaBuffers/Module/Generated.mts`,
           # - Add `exports."./LambdaBuffers/Module/Generated.mts": "./dist/LambdaBuffers/Module/Generated.mts"` to `package.json`
+
+          # `.` is the identity jq filter
           echo "." > jq_filter.jq
           find autogen/ -type f -iname '*.mts' \
             | xargs -I % sh -c 'echo "$0" | sed -E "s#^autogen/(.*)\.mts\$#\1.mjs#"' % \
@@ -270,13 +272,11 @@ let
                       --loglevel verbose \
                       --offline \
                       --package-lock-only \
-                      --save ./${tsSelf.npmExtraDependenciesFolder}/* 
+                      --save ./${tsSelf.npmExtraDependenciesFolder}/*
                 '';
             }
           );
       });
     });
-
-  # in lbTypescriptSrc
 in
-lbTypescriptFlake 
+lbTypescriptFlake
