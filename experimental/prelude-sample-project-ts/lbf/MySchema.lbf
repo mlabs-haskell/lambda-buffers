@@ -1,9 +1,8 @@
 module MySchema
 
 import Prelude
--- import Plutus.V1 
 
-sum Branchy a 
+sum Branchy a
     = Node Integer (List (Branchy a))
     | Leaf a
 

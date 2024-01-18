@@ -4,7 +4,7 @@ import * as LbrPrelude from  "lbr-prelude"
 import * as MySchema from  "myschema-lb/LambdaBuffers/MySchema.mjs"
 
 let a : MySchema.Branchy<Prelude.Bool> = { name: 'Node', fields :[420n, [ {name: 'Leaf', fields: true }, {name: 'Leaf', fields: false } ] ] }
-let b : MySchema.Branchy<Prelude.Bool> = { name 'Leaf', fields : false}
+let b : MySchema.Branchy<Prelude.Bool> = { name: 'Leaf', fields : false}
 
 a
 
@@ -22,7 +22,7 @@ console.log("toJson(a)")
 console.log(
     PreludeJson.stringify(
         LbrPrelude.Json[MySchema.Branchy](LbrPrelude.Json[LbrPrelude.Bool])
-            .toJson(a) 
+            .toJson(a)
         )
 )
 
@@ -31,7 +31,7 @@ console.log(
     JSON.stringify(
         LbrPrelude.Json[MySchema.Branchy](LbrPrelude.Json[LbrPrelude.Bool]).fromJson(
             LbrPrelude.Json[MySchema.Branchy](LbrPrelude.Json[LbrPrelude.Bool])
-                .toJson(a) 
+                .toJson(a)
             )
         , (_key,value) => { if (typeof value === 'bigint') return (value.toString()); else return value }
     )
