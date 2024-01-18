@@ -100,7 +100,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsEqClass ty')
+          (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
           -- ( case instanceDictIdent tsEqClass ty' of
           --     (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" dict
           --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
@@ -111,7 +111,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsJsonClass ty')
+          (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
           -- ( case instanceDictIdent tsEqClass ty' of
           --     (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.fromData" dict
           --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
@@ -123,7 +123,7 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
     ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "constrData"
     ("listData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "listData"
     ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
-    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse"
+    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse('PlutusData parse failed')" -- TODO(jaredponn): bit of a hack to call the function @failParse@
     ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "bindParse"
     _ -> Nothing
 

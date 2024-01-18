@@ -4,6 +4,10 @@ import * as Prelude from "prelude";
 // deno-lint-ignore no-empty-interface
 export interface EqInstances {}
 
+// Reexport Eq from Prelude
+export type Eq<A> = Prelude.Eq<A>;
+
+// Runtime dictionary for _all_ Eq instances
 export const Eq: EqInstances = {} as EqInstances;
 
 export interface EqInstances {

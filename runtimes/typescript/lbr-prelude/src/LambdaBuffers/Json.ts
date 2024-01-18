@@ -3,6 +3,9 @@ import * as Prelude from "prelude";
 
 // deno-lint-ignore no-empty-interface
 export interface JsonInstances {}
+
+// Reexport Json from Prelude
+export type Json<A> = Prelude.Json<A>;
 export const Json: JsonInstances = {} as JsonInstances;
 
 export interface JsonInstances {

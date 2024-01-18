@@ -6,6 +6,9 @@ import * as PlutusLedgerApiPreludeInstances from "plutus-ledger-api/Prelude/Inst
 // deno-lint-ignore no-empty-interface
 export interface IsPlutusDataInstances {}
 
+// Reexport IsPlutusData
+export type IsPlutusData<A> = PlutusLedgerApiPlutusData.IsPlutusData<A>;
+
 export const IsPlutusData: IsPlutusDataInstances = {} as IsPlutusDataInstances;
 
 // Bool
