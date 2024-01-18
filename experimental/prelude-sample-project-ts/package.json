@@ -1,7 +1,7 @@
 {
   "name": "lambda-buffers-prelude-sample-project",
   "version": "1.0.0",
-  "description": "Sample project for lambda buffers",
+  "description": "Sample project for LambdaBuffers",
   "type": "module",
   "exports": {
     ".": "./dist/index.mjs",

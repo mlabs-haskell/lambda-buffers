@@ -4,6 +4,7 @@ import * as LbrPrelude from  "lbr-prelude"
 import * as Prelude from  "prelude"
 import * as MySchema from  "myschema-lb/LambdaBuffers/MySchema.mjs"
 
+// Quickly patch this s.t. `JSON.stringify` can actually print things
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
