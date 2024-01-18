@@ -39,7 +39,9 @@ lamTy2PCTy = \case
   LamTy.Types.TyVar var -> return $ PC.TyVarI var
   LamTy.Types.TyApp _f _args (Just tyApp) -> do
     return $ PC.TyAppI tyApp
-  _ -> Nothing
+  _ ->
+    -- Note(jaredponn): hopefully this never happens...
+    Nothing
 
 instanceDictIdent :: Ts.QClassName -> PC.Ty -> Text
 instanceDictIdent className ty =
@@ -54,11 +56,6 @@ lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       return $
         OverloadedBuiltin
           (Ts.primValName $ instanceDictIdent tsEqClass ty')
-          -- ( case instanceDictIdent tsEqClass ty' of
-          --     -- (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
-          --     (TopLevelInstanceDict, dict) -> Ts.primValName dict
-          --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
-          -- )
           0 -- index in the list of substitutions for the type we're overloading on
           ".eq"
     ("true", _) -> Just $ Builtin $ Ts.primValName "true"
@@ -101,22 +98,14 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       return $
         OverloadedBuiltin
           (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
-          -- ( case instanceDictIdent tsEqClass ty' of
-          --     (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" dict
-          --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
-          -- )
-          0
+          0 -- index in the list of substitutions for the type we're overloading on
           ".toData"
     ("fromPlutusData", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
           (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
-          -- ( case instanceDictIdent tsEqClass ty' of
-          --     (TopLevelInstanceDict, dict) -> Ts.normalValName "cardano-transaction-lib" "Ctl.Internal.fromData" dict
-          --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
-          -- )
-          0
+          0 -- index in the list of substitutions for the type we're overloading on
           ".fromData"
     ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "casePlutusData"
     ("integerData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "integerData"
@@ -167,22 +156,14 @@ lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
       return $
         OverloadedBuiltin
           (Ts.primValName $ instanceDictIdent tsJsonClass ty')
-          -- ( case instanceDictIdent tsEqClass ty' of
-          --     (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
-          --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
-          -- )
-          0
+          0 -- index in the list of substitutions for the type we're overloading on
           ".toJson"
     ("fromJson", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
           (Ts.primValName (instanceDictIdent tsJsonClass ty'))
-          -- ( case instanceDictIdent tsEqClass ty' of
-          --     (TopLevelInstanceDict, dict) -> Ts.normalValName "lbr-prelude" "Prelude" dict
-          --     (ArgumentInstanceDict, dict) -> Ts.primValName dict
-          -- )
-          0
+          0 -- index in the list of substitutions for the type we're overloading on
           ".fromJson"
     ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonObject"
     ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonConstructor"

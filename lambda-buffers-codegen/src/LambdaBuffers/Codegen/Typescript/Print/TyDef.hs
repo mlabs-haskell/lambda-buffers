@@ -16,10 +16,30 @@ record RecFoo a = { bar : Text, baz : a}
 record RecBar a = { bar : a}
 ```
 
-translates to
+translates to something like the following:
 
-```purescript
-TODO
+```ts
+export type SumFoo<$a, $b> =
+    | { name: 'Baz'
+      , fields: [Text, $a]
+      }
+    | { name: 'Bar'
+      , fields: [Integer, $b]
+      }
+export const SumFoo: unique symbol = Symbol('SumFoo');
+
+export type ProdFoo<$a> = [Text, $a]
+export const ProdFoo: unique symbol = Symbol('ProdFoo');
+
+// Note products with exactly one projection don't have a list around it
+export type ProdBar<$a> = $a
+export const ProdBar: unique symbol = Symbol('ProdBar')
+
+export type RecFoo<$a> = { bar : Text, baz : $a }
+export const RecFoo: unique symbol = Symbol('RecFoo');
+
+export type RecBar<$a> = { bar : $a }
+export const RecBar: unique symbol = Symbol('RecBar');
 ```
 -}
 printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)

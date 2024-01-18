@@ -33,9 +33,15 @@ printTyAbs tyN (PC.TyAbs args body _) = do
 
 {- | Prints the type body AND the symbol (unique runtime evidence) of the type.
 
-For the above examples it prints
+   For example, this will print things like
 
-TODO(jaredponn) Empty records + document some examples here.
+    @
+        : unique symbol = Symbol('TyName')
+    @
+    and
+    @
+        { name: 'MkFoo',  fields: $a } | { name: 'MkBar', fields: $b }
+    @
 
 Q. What is the symbol (unique runtime evidence) of the type
 We print something like:
@@ -84,7 +90,7 @@ printSum tyN (PC.Sum ctors _) = do
     group $
       if null ctors
         then mempty
-        else align $ vsep $ map (pipe <+>) ctorDocs -- TODO(bladyjoker): Make it align on the ConstrName.
+        else align $ vsep $ map (pipe <+>) ctorDocs
 
 -- | The name of the field which specifies a type constructor
 ctorNameFieldName :: Doc ann

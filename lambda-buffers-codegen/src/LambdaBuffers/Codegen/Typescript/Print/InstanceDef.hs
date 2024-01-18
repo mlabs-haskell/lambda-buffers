@@ -10,7 +10,8 @@ module LambdaBuffers.Codegen.Typescript.Print.InstanceDef (
 import Control.Lens qualified as Lens
 import Control.Lens.TH qualified as Lens.TH
 import Data.Default (Default (def))
-import Data.Text (Text)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (
@@ -22,8 +23,6 @@ import LambdaBuffers.Codegen.Typescript.Print.Names (
 import LambdaBuffers.Codegen.Typescript.Print.Ty (printTyInner)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
-
--- import Data.Text qualified as Text
 import Prettyprinter (
   Doc,
   align,
@@ -64,44 +63,21 @@ data InstanceDict a
 
 $(Lens.TH.makeLenses ''InstanceDict)
 
-{- | Prints the name of the instance defn. e.g., given instance `Prelude.Eq
- Integer`,  this prints `eqInteger`.
-
- TODO(jaredponn): legacy remove this.
--}
-
--- printInstanceDecl :: forall ann. Ts.QClassName -> PC.Ty -> Doc ann
--- printInstanceDecl qcn ty =
---   -- See 4.3.2 of the Haskell report
---   -- https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-630004.1
---   -- for the form we assume the instance declarations to be in i.e., the
---   -- "leftmost" type determines the instance.
---   --
---   -- TODO: when the leftmost type is a type variable, there is at most one
---   -- instance that unambiguous instance that may be applied, so we simply
---   -- print out the type class name (in lower case).
---   let go :: PC.Ty -> Doc ann
---       go (PC.TyVarI _) = mempty
---       go (PC.TyAppI PC.TyApp {PC.tyFunc = tyFunc}) = go tyFunc
---       go (PC.TyRefI tyRef) = pretty $
---         case tyRef of
---           PC.LocalI PC.LocalRef {PC.tyName = tyName} -> getTyName tyName
---           PC.ForeignI PC.ForeignRef {PC.tyName = tyName} ->
---             -- TODO: this is broken for foreign types with the same name as
---             -- a type declared in this module.
---             getTyName tyName
---    in printTsQClassName qcn <> go ty
-
-getTyName :: PC.TyName -> Text
-getTyName (PC.TyName tyName _) = tyName
-
 {- | Prints the instance dictionary corresponding to the class name and the
  given type.
 
- Note:
-  If the given type is a type variable, we print the variable prefixed with
-  @dict@ e.g. given type variable @$a@, we print @dict$a@. This is because
-  dictionaries for a type variable will be passed as a parameter.
+ There's two cases:
+    - The type is a variable, say @$a@, so print something like @dict$a@ since
+      this will be a dictionary which is "passed as a parameter".
+
+    - The type is not a variable, so the leftmost "tip" should be a type
+      constructor [see WARNING below], say @TyConstr@, so print something like
+      @ClassModule.ClassName[TypeModule.TyConstr]@ i.e., we refer to the
+      dictionary at the toplevel.
+
+  WARNING: This assumes that all variables are "simple type variables" as
+  given in 4.3.2 of
+  https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-630004.1
 -}
 printInstanceDict :: forall ann. Ts.QClassName -> PC.Ty -> InstanceDict (Doc ann)
 printInstanceDict qcn ty =
@@ -112,14 +88,10 @@ printInstanceDict qcn ty =
       go (PC.TyRefI tyRef) =
         let qClassNameDoc = printTsQClassName qcn
             tyRefDoc = case tyRef of
-              PC.LocalI PC.LocalRef {PC.tyName = tyName} -> pretty $ getTyName tyName
+              PC.LocalI PC.LocalRef {PC.tyName = tyName} -> pretty $ Lens.view #name tyName
               PC.ForeignI foreignRef ->
                 printTsQTyNameKey (Ts.fromLbForeignRef foreignRef)
-         in -- PC.ForeignI PC.ForeignRef {PC.tyName = tyName} ->
-            --   -- TODO: this is broken for foreign types with the same name as
-            --   -- a type declared in this module.
-            --   getTyName tyName
-            TopLevelInstanceDict
+         in TopLevelInstanceDict
               (mconcat [qClassNameDoc, brackets tyRefDoc])
               qClassNameDoc
               tyRefDoc
@@ -154,35 +126,24 @@ printInstanceContext hsQClassName tys =
     encloseSep langle rangle comma (map printTyInner tys)
       <> encloseSep lparen rparen comma (printInstanceContextArg hsQClassName <$> tys)
 
--- printFieldName :: PC.TyName -> PC.FieldName -> Maybe (Doc ann)
--- printFieldName tyN (PC.FieldName n _) = do
---   prefix <- case Text.uncons (tyN ^. #name) of
---     Nothing -> Nothing
---     Just (h, t) -> return $ Text.cons (Char.toLower h) t
---   return $ pretty prefix <> squote <> pretty n
-
--- TODO: we need to check that all the variables are "simple type variables"
--- See 4.3.2 https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-630004.1
-
 collectInstanceDeclTypeVars :: PC.Ty -> [PC.Ty]
-collectInstanceDeclTypeVars (PC.TyAppI (PC.TyApp _ args _)) = args
-collectInstanceDeclTypeVars _ = mempty
+collectInstanceDeclTypeVars = collectTyVars
 
--- collectTyVars :: PC.Ty -> [PC.VarName]
--- collectTyVars = fmap (`PC.withInfoLess` id) . toList . collectVars
+collectTyVars :: PC.Ty -> [PC.Ty]
+collectTyVars = Set.toList . collectVars
 
--- collectVars :: PC.Ty -> Set (PC.InfoLess PC.VarName)
--- collectVars = collectVars' mempty
---
--- collectVars' :: Set (PC.InfoLess PC.VarName) -> PC.Ty -> Set (PC.InfoLess PC.VarName)
--- collectVars' collected (PC.TyVarI tv) = Set.insert (PC.mkInfoLess . view #varName $ tv) collected
--- collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (Set.unions . fmap collectVars $ args)
--- collectVars' collected _ = collected
+collectVars :: PC.Ty -> Set PC.Ty
+collectVars = collectVars' mempty
 
+collectVars' :: Set PC.Ty -> PC.Ty -> Set PC.Ty
+collectVars' collected ty@(PC.TyVarI _tv) = Set.insert ty collected
+collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (Set.unions . fmap collectVars $ args)
+collectVars' collected _ = collected
+
+-- See the INVARIANT note below
 printExportInstanceDecl :: MonadPrint m => Ts.QClassName -> PC.Ty -> m (Doc ann -> Doc ann)
 printExportInstanceDecl tsQClassName ty = do
   let
-    -- instanceName = printInstanceDecl tsQClassName ty
     instanceType = printInstanceType tsQClassName ty
 
     lhsInstanceDecl = printInstanceDict tsQClassName ty
@@ -193,7 +154,8 @@ printExportInstanceDecl tsQClassName ty = do
     TopLevelInstanceDict dictDoc classDoc tyDoc ->
       return (dictDoc, classDoc, tyDoc)
     _ ->
-      -- TODO(jaredponn): get the source info right..
+      -- TODO(jaredponn): the 'def' is the default source info, but we really
+      -- should put the proper source information in here.
       throwInternalError def "TODO(jaredponn): Invalid type class instance for TypeScript backend"
 
   return $ \bodyDoc ->
@@ -205,9 +167,10 @@ printExportInstanceDecl tsQClassName ty = do
         -- ```
         -- interface EqInstances {};
         -- export const Eq : EqInstances = {} as EqInstances;
+        -- export type Eq = ...
         -- ```
         -- So, by declaration merging [1], we can extend the
-        -- variable @Eq@ with new instances with something like
+        -- value @Eq@ with new instances with something like
         -- ```
         -- declare module "./Eq.js" {
         --     export interface EqInstances {
@@ -216,6 +179,9 @@ printExportInstanceDecl tsQClassName ty = do
         -- }
         -- where `Bool` is a unique symbol for the type `Bool`
         -- ```
+        --
+        -- This is exactly what is being printed.
+        --
         --
         -- References
         --  [1]: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
@@ -269,21 +235,3 @@ printExportInstanceDecl tsQClassName ty = do
         [ declarationMergingInstance
         , dictDeclDoc
         ]
-
-{-
-case instanceDeclTypeVars of
-  [] ->
-    return $
-      ExportConstInstanceDecl $
-        "export" <+> "const" <+> instanceName <+> ":" <+> instanceType <> line
-  _ ->
-    return $
-      ExportFunctionInstanceDecl $
-        "export"
-          <+> "function"
-          <+> instanceName
-            <> printInstanceContext tsQClassName instanceDeclTypeVars
-          <+> ":"
-          <+> instanceType
-            <> line
--}

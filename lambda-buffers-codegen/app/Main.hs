@@ -121,7 +121,7 @@ typescriptGenOptsP =
       ( long "packages"
           <> short 'g'
           <> metavar "FILEPATH"
-          <> help "JSON file containing the package-set and all of its modules (including current package)"
+          <> help "JSON file containing the package-set and all of its modules (including current package) with schema `{ [index : PackageName]: ModuleName[] }`."
       )
     <*> genOptsP
 

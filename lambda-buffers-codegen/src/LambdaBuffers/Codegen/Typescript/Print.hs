@@ -47,7 +47,18 @@ printModule pkgMap = do
           -- https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#-ts-nocheck-in-typescript-files
           -- In the future, how about we properly resolve this to convince
           -- TypeScript that the generated code is okay....
-          -- To do this, we need to be more explicit about the type information we're dumping
+          --
+          -- Known problems include:
+          --    - Generated code like:
+          --      @
+          --        (x) => { if (x.name == 'case1') { ... } else if (x.name == 'case2') { .. }  }
+          --      @
+          --      fails exhaustiveness checks since Typescript "generalizes"
+          --      @x@ to be _any_ type instead of the specific sumtype it is
+          --      instantiated with.
+          --
+          --      But really, it is fine since we will only call the lambda
+          --      with the right type.
 
           [ "// @ts-nocheck"
           , printSelfImport (ctx ^. Print.ctxModule . #moduleName)
@@ -94,15 +105,7 @@ tsClassImplPrinters =
       ( tsIsPlutusDataClass
       , printDeriveIsPlutusData
       )
-    , -- ,
-      --   ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.ToData", Ts.MkClassName "ToData")
-      --   , printDeriveToPlutusData
-      --   )
-      -- ,
-      --   ( (Ts.MkPackageName "cardano-transaction-lib", Ts.MkModuleName "Ctl.Internal.FromData", Ts.MkClassName "FromData")
-      --   , printDeriveFromPlutusData
-      --   )
-
+    ,
       ( tsJsonClass
       , printDeriveJson
       )
@@ -177,11 +180,8 @@ printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valIm
         Set.fromList [mn | (mn, _tn) <- toList lbTyImports]
           `Set.union` ruleImps
       lbImportDocs =
-        -- importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName')
-        -- importQualified . ((`PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName)) &&& printModName')
         importQualified
           . ( \mn ->
-                -- ( mn `PC.withInfoLess` (pretty . Ts.pkgNameToText . Ts.pkgFromLbModuleName))
                 ( case Map.lookup mn pkgMap of
                     Nothing ->
                       PC.withInfoLess
@@ -226,7 +226,8 @@ printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valIm
           <$> toList groupedLbImports
 
       groupedTsImports =
-        -- TODO(jaredponn): resolve this awkward maybe situation for the PackageName
+        -- TODO(jaredponn): resolve this awkward maybe situation for the
+        -- PackageName. We really should never have the Nothing case...
         Set.fromList [(pkg, mn) | (Just pkg, mn, _tn) <- toList tsTyImports]
           `Set.union` Set.fromList [(pkg, mn) | (pkg, mn, _) <- toList classImps]
           `Set.union` Set.fromList [(pkg, mn) | (Just (pkg, mn), _) <- toList valImps]

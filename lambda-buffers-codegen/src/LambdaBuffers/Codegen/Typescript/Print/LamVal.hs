@@ -46,6 +46,9 @@ data Builtin
       -- > ([TyVar "b", TyRef Int], "myclass")
       --
       -- so the '_instanceTyIx' would be 1 in this case.
+      --
+      -- Note(jaredponn): having a unique '_instanceTyIx' immediately implies
+      -- that this only supports single parameter type classes.
       , _dotMethodName :: Text
       -- ^ the method name of the dictionary prefixed with a dot.
       }
@@ -64,15 +67,6 @@ throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Code
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
-
--- tuple :: Ts.QValName
--- tuple = normalValName "tuple" "Data.Tuple" "Tuple"
-
--- caseInt :: Ts.QValName
--- caseInt = normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseInt"
-
--- fromInt :: Ts.QValName
--- fromInt = normalValName "js-bigints" "JS.BigInt" "fromInt"
 
 printCaseE :: forall m ann. MonadPrint m => (PC.QTyName, LV.Sum) -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
 printCaseE (qtyN, sumTy) caseVal ctorCont = do
@@ -119,9 +113,12 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
                     vsep
                       ( case argDocs of
                           [] -> []
-                          -- if there's a unique element in the fields,
+                          -- If there's a unique element in the fields,
                           -- recall that it's not wrapped in a tuple
                           -- list.
+                          -- See
+                          -- 'LambdaBuffers.Codegen.Typescript.Print.Ty.printProd'
+                          -- for details.
                           [singleField] -> ["let" <+> singleField <+> equals <+> caseOnArgDoc <> ".fields"]
                           _ ->
                             zipWith
@@ -154,7 +151,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
   return $
     -- Loosely, we
     --  1. create a lambda; then
-    --  2. do the case expression as @if else blah blah blah@
+    --  2. do the case expression as @if ... else if ... else if ... blah blah blah@
     parens
       ( parens caseOnArgDoc
           <+> "=>"
@@ -168,23 +165,30 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
       )
       <> parens caseValDoc
 
-{- |
- Remark:
-  Chains of nested abstractions are uncurried.
--}
 printLamE :: forall ann m. MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
-  let resolveChain :: LV.ValueE -> m ([LV.ValueE], LV.ValueE)
-      resolveChain = \case
+  -- Something like
+  -- @
+  --    f a b c d
+  -- @
+  -- becomes
+  -- @
+  --    f(a,b,c,d)
+  -- @
+  -- which follows the intuition from most imperative languages i.e., the idea
+  -- of returning repeated function closures is a silly e.g. @f(a)(b)(c)(d)@ is
+  -- silly.
+  let uncurrySpine :: LV.ValueE -> m ([LV.ValueE], LV.ValueE)
+      uncurrySpine = \case
         LV.LamE f -> do
           arg <- LV.freshArg
           let body = f arg
-          result <- resolveChain body
+          result <- uncurrySpine body
 
           return $ first (arg :) result
         t -> return ([], t)
 
-  (args, body) <- resolveChain $ LV.LamE lamVal
+  (args, body) <- uncurrySpine $ LV.LamE lamVal
 
   argsDoc <- for args printValueE
   bodyDoc <- printValueE body
@@ -197,15 +201,15 @@ printLamE lamVal = do
         , rbrace
         ]
 
--- | Left associative chains of apps are uncurried
 printAppE :: forall m ann. MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
-  let resolveChain :: LV.ValueE -> m (LV.ValueE, [LV.ValueE])
-      resolveChain = \case
-        LV.AppE l r -> second (r :) <$> resolveChain l
+  -- Again, like 'printLamE', we uncurry the spine of applications.
+  let uncurrySpine :: LV.ValueE -> m (LV.ValueE, [LV.ValueE])
+      uncurrySpine = \case
+        LV.AppE l r -> second (r :) <$> uncurrySpine l
         t -> return (t, [])
 
-  (f, args) <- second reverse <$> resolveChain (LV.AppE funVal argVal)
+  (f, args) <- second reverse <$> uncurrySpine (LV.AppE funVal argVal)
 
   fDoc <- printValueE f
   argsDoc <- for args printValueE
@@ -231,7 +235,7 @@ printLetE ((_, _tyN), fields) prodVal letCont = do
   argDocs <- for args printValueE
   let bodyVal = letCont args
   bodyDoc <- printValueE bodyVal
-  -- let prodCtorDoc = printMkCtor (withInfo tyN)
+
   return $
     parens
       ( parens letRHSDoc
@@ -242,9 +246,12 @@ printLetE ((_, _tyN), fields) prodVal letCont = do
                 vsep
                   ( case argDocs of
                       [] -> []
-                      -- if there's a unique element in the fields,
+                      -- If there's a unique element in the fields,
                       -- recall that it's not wrapped in a tuple
                       -- list.
+                      -- See
+                      -- 'LambdaBuffers.Codegen.Typescript.Print.Ty.printProd'
+                      -- for details.
                       [singleField] -> ["let" <+> singleField <+> equals <+> letRHSDoc <> ".fields"]
                       _ ->
                         zipWith
@@ -260,8 +267,6 @@ printLetE ((_, _tyN), fields) prodVal letCont = do
       )
       <> parens letValDoc
 
--- "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <+> "in" <+> bodyDoc
-
 printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printOtherCase otherCase = do
   arg <- LV.freshArg
@@ -269,7 +274,6 @@ printOtherCase otherCase = do
   bodyDoc <- printValueE $ otherCase arg
   return $ group $ argDoc <+> "->" <+> bodyDoc
 
--- | `caseInt [Tuple (fromInt 1) (\i -> i)] (\i -> i) (fromInt 1)`
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal cases otherCase = do
   -- The value we are casing on
@@ -294,16 +298,8 @@ printCaseIntE caseIntVal cases otherCase = do
                 , rbrace
                 ]
             )
-            -- tupleDoc <- printTsQValName <$> LV.importValue tuple
-            -- tupleDoc <- undefined
-            -- return $ group $ tupleDoc <+> conditionDoc <+> parens bodyDoc
       )
-  -- let casesDoc = lbracket <> align (encloseSep mempty mempty (comma <> space) casesDocs <> rbracket)
 
-  -- TODO optimize this a bit. [DONE: remove comment]
-  -- otherDoc <- fmap (\otherCaseDoc -> "return" <+> parens otherCaseDoc <> parens caseOnArgDoc)
-  --   $ printValueE
-  --   $ LV.LamE otherCase
   otherDoc <-
     fmap ("return" <+>) $
       printValueE $
@@ -383,18 +379,12 @@ printCaseListE caseListVal cases otherCase = do
             )
       )
 
-  -- TODO: optimize this a bit [DONE: remove this comment]
-  -- Compile the catchall
-  -- otherDoc <- fmap (\otherCaseDoc -> "return" <+> parens otherCaseDoc <> parens caseOnArgDoc)
-  --   $ printValueE
-  --   $ LV.LamE otherCase
-  --
   otherDoc <-
     fmap ("return" <+>) $
       printValueE $
         otherCase caseOnArg
 
-  -- build the lambda which has the statements
+  -- Build the lambda which has the statements
   return $
     parens
       ( parens caseOnArgDoc
@@ -506,14 +496,27 @@ printRefE ref@(refTys, _) = do
       --  following inductive sense:
       --
       --      - Types of the form @MyType@ simply have instance dictionary as
+      --      say
       --      > dictCMyType
       --
       --      - Types of the form @MyType a1 .. aN@ where a1,..,aN are types
-      --      have instance dictionary as
+      --      have instance dictionary as say
       --      > dictCMyType(dictCa1, ... , dictCaN)
       --      where we may inductively assume that each a1,..,aN have
       --      instance dictionary dictCa1,..,dictCaN
-
+      --
+      -- WARNING(jaredponn): this makes the assumption that _all_ instances are
+      -- Haskell2010 type classes i.e., every instance is of the form
+      --
+      -- > instance C (T u1 .. uk)
+      --
+      -- where u1,..,uk are _simple_ type variables and distinct, and @T@ is a type
+      -- constructor.
+      --
+      -- See 4.3.2 of https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-750004.3
+      --
+      -- In particular, this will silently generate invalid code if the
+      -- instance is not valid Haskell2010.
       let
         -- type directed translation_s_
         tdts :: [LT.Ty] -> m (Doc ann)

@@ -58,7 +58,7 @@ readPackages f = do
   unless
     fExists
     ( do
-        logError "" $ "Provided JSON mapping (with schema `{ [key: string] : string[] }`) from LambdaBuffers module names to package names does not exist: " <> f
+        logError "" $ "Provided JSON mapping (with schema `{ [key: PackageName] : ModuleName[] }`) from LambdaBuffers module names to package names does not exist: " <> f
         exitFailure
     )
   mayPkgs <- decodeFileStrict' f
