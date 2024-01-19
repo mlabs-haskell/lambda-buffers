@@ -36,7 +36,7 @@ console.log(LbrPlutusPd.IsPlutusData[MySchema.Branchy](LbrPlutusPd.IsPlutusData[
 
 // Printing the branchy
 console.log(`The Node constructor`);
-let branchy : MySchema.Branchy<LbrPlutusV1.Credential> = { name: 'Node', fields : [leafpd, { name: "Finite", fields: leaf} ]  }
+let branchy : MySchema.Branchy<LbrPlutusV1.Credential> = { name: 'Node', fields : [leafpd, { name: "Finite", fields: leaf} ] }
 let branchypd : LbrPlutusV1.PlutusData = LbrPlutusPd.IsPlutusData[MySchema.Branchy](LbrPlutusPd.IsPlutusData[LbrPlutusV1.Credential]).toData(branchy)
 
 console.log("toData:");
@@ -48,3 +48,9 @@ console.log(`Prelude.Json: ${Prelude.stringify(LbrPrelude.Json[LbrPlutusV1.Plutu
 
 console.log("fromData:");
 console.log(LbrPlutusPd.IsPlutusData[MySchema.Branchy](LbrPlutusPd.IsPlutusData[LbrPlutusV1.Credential]).fromData(branchypd));
+
+// Printing the Eq
+console.log(`branchy is branchy: ${LbrPrelude.Eq[MySchema.Branchy](LbrPrelude.Eq[LbrPlutusV1.Credential]).eq(branchy,branchy)}`);
+console.log(`branchy is not branchy: ${LbrPrelude.Eq[MySchema.Branchy](LbrPrelude.Eq[LbrPlutusV1.Credential]).neq(branchy,branchy)}`);
+console.log(`branchy is leaf: ${LbrPrelude.Eq[MySchema.Branchy](LbrPrelude.Eq[LbrPlutusV1.Credential]).eq(branchy,leaf)}`);
+console.log(`branchy is not leaf: ${LbrPrelude.Eq[MySchema.Branchy](LbrPrelude.Eq[LbrPlutusV1.Credential]).neq(branchy,leaf)}`);
