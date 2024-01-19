@@ -95,7 +95,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
-        ./experimental/prelude-sample-project-ts/build.nix
+        ./docs/typescript-prelude/build.nix
         ./experimental/plutus-sample-project-ts/build.nix
       ];
       debug = true;
