@@ -2,7 +2,7 @@ import * as LbrPlutusV1 from  "lbr-plutus/V1.js"
 import * as LbrPlutusPd from  "lbr-plutus/PlutusData.js"
 import * as LbrPrelude from  "lbr-prelude"
 import * as Prelude from  "prelude"
-import * as MySchema from  "myschema-lb/LambdaBuffers/MySchema.mjs"
+import * as MySchema from  "lbf-plutus-sample-project/LambdaBuffers/MySchema.mjs"
 
 // Quickly patch this s.t. `JSON.stringify` can actually print things
 (BigInt.prototype as any).toJSON = function () {
