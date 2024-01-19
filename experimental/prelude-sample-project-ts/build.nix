@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  imports = [ ./lbf/build.nix ];
+  imports = [ ./api/lbf/build.nix ];
 
   perSystem = { config, system, ... }:
     let
