@@ -96,7 +96,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
         ./docs/typescript-prelude/build.nix
-        ./experimental/plutus-sample-project-ts/build.nix
+        ./docs/typescript-plutus/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];
