@@ -37,6 +37,48 @@ lbfTypescriptOpts@{
   # Examples: version = "0.1.0.0"
   version ? "1.0.0"
 
+, # `tsconfig.json` for TypeScript. Note that the typechecking options do
+  # nothing as TypeScript's semantic checking is disabled.
+  tsConfigJson ? pkgs.writeTextFile {
+    name = "lambda-buffers-tsconfig-json-template";
+    text =
+      ''
+        {
+          "compilerOptions": {
+            "target": "es2020", 
+            "module": "node16", 
+            "moduleResolution": "node16",
+            "rootDir": "./src",
+            "declaration": true,
+            "declarationMap": true,
+            "sourceMap": true,
+            "outDir": "./dist",
+            "verbatimModuleSyntax": true,
+            "forceConsistentCasingInFileNames": true,
+
+            /* Type Checking */
+            "strict": true,
+            "noImplicitAny": true,
+            "strictNullChecks": true,
+            "strictFunctionTypes": true,
+            "strictBindCallApply": true,
+            "strictPropertyInitialization": true,
+            "noImplicitThis": true,
+            "useUnknownInCatchVariables": true,
+            "alwaysStrict": true,
+            "exactOptionalPropertyTypes": true,
+            "noUncheckedIndexedAccess": true,
+            "noImplicitOverride": true,
+            "noPropertyAccessFromIndexSignature": true,
+            "noImplicitReturns": true,
+            "noFallthroughCasesInSwitch": true,
+            "noUnusedLocals": true, 
+            "noUnusedParameters": true,
+          }
+        }
+      '';
+  }
+
 }:
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
@@ -151,46 +193,6 @@ let
         '';
     };
 
-  # TODO(jaredponn): allow this to be passed in as a parameter
-  tsConfigJson = pkgs.writeTextFile {
-    name = "lambda-buffers-tsconfig-json-template";
-    text =
-      ''
-        {
-          "compilerOptions": {
-            "target": "es2020", 
-            "module": "node16", 
-            "moduleResolution": "node16",
-            "rootDir": "./src",
-            "declaration": true,
-            "declarationMap": true,
-            "sourceMap": true,
-            "outDir": "./dist",
-            "verbatimModuleSyntax": true,
-            "forceConsistentCasingInFileNames": true,
-
-            /* Type Checking */
-            "strict": true,
-            "noImplicitAny": true,
-            "strictNullChecks": true,
-            "strictFunctionTypes": true,
-            "strictBindCallApply": true,
-            "strictPropertyInitialization": true,
-            "noImplicitThis": true,
-            "useUnknownInCatchVariables": true,
-            "alwaysStrict": true,
-            "exactOptionalPropertyTypes": true,
-            "noUncheckedIndexedAccess": true,
-            "noImplicitOverride": true,
-            "noPropertyAccessFromIndexSignature": true,
-            "noImplicitReturns": true,
-            "noFallthroughCasesInSwitch": true,
-            "noUnusedLocals": true, 
-            "noUnusedParameters": true,
-          }
-        }
-      '';
-  };
 
   # `lbTypescriptSrc` is the Typescript generated code from LambdaBuffers
   # Notes:
