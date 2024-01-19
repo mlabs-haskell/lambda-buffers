@@ -28,7 +28,7 @@
             name = "denofmt";
             description = "Format Typescript code.";
             entry = "${deno}/bin/deno fmt";
-            files = "(\\.ts$)|(^tsconfig?(-base)\\.json$)";
+            files = "(\\.m?ts$)|(^tsconfig?(-base)\\.json$)";
           };
 
         my-denolint =
@@ -36,7 +36,7 @@
             name = "denolint";
             description = "Lint Typescript code.";
             entry = "${deno}/bin/deno lint";
-            files = "\\.ts$";
+            files = "\\.m?ts$";
           };
 
       };
