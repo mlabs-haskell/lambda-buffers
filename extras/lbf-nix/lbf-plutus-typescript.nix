@@ -15,8 +15,8 @@ let
       imports = {
         default = { };
         override = libs: libs // {
-          lbf-prelude = ../../libs/lbf-prelude;
-          lbf-plutus = ../../libs/lbf-plutus;
+          lbf-prelude = "${config.packages.lbf-prelude}";
+          lbf-plutus = "${config.packages.lbf-plutus}";
         };
       };
       npmExtraDependencies = {
@@ -31,7 +31,10 @@ let
       };
       configs = {
         default = [ ];
-        override = _: [ ../../lambda-buffers-codegen/data/typescript-prelude-base.json ../../lambda-buffers-codegen/data/typescript-plutus.json ];
+        override = _: [
+          "${config.packages.codegen-configs}/typescript-prelude-base.json"
+          "${config.packages.codegen-configs}/typescript-plutus.json"
+        ];
       };
     }
     lbfTypescriptOpts;

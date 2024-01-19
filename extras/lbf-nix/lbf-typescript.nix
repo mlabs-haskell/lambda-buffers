@@ -17,7 +17,7 @@ lbfTypescriptOpts@{
   # Examples: src = ./api
   src
 , # Additional sources that are passed to `lbf` as the `--import-path` flag
-  # Examples: imports = { "lbf-prelude" = ./lbf-prelude; "my-package-name" = ./path/to/my-package-name; }
+  # Examples: imports = { "lbf-prelude" = "./lbf-prelude"; "my-package-name" = "./path/to/my-package-name"; }
   imports ? { }
 , # .lbf files in `src` to compile and codegen.
   # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
@@ -41,12 +41,12 @@ lbfTypescriptOpts@{
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  # TODO(jaredponn): this was stolen from the Rust side. This should be made a
-  # common function.
+  # TODO(jaredponn): this was (essentially) stolen from the Rust side. This
+  # should be made a common function.
   findModules = root: builtins.map
     (path: builtins.replaceStrings [ "/" ] [ "." ]
       (pkgs.lib.strings.removePrefix "./" (pkgs.lib.strings.removeSuffix ".lbf"
-        (pkgs.lib.path.removePrefix root path))))
+        (pkgs.lib.strings.removePrefix root path))))
     (builtins.filter (pkgs.lib.hasSuffix ".lbf")
       (pkgs.lib.filesystem.listFilesRecursive root));
 

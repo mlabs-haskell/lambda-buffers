@@ -18,7 +18,7 @@ let
     {
       imports = {
         default = { };
-        override = libs: libs // { lbf-prelude = ../../libs/lbf-prelude; };
+        override = libs: libs // { lbf-prelude = "${config.packages.lbf-prelude}"; };
       };
       npmExtraDependencies = {
         default = [ ];
@@ -33,7 +33,9 @@ let
       };
       configs = {
         default = [ ];
-        override = cfgs: cfgs ++ [ ../../lambda-buffers-codegen/data/typescript-prelude-base.json ];
+        override = cfgs: cfgs ++ [
+          "${config.packages.codegen-configs}/typescript-prelude-base.json"
+        ];
       };
     }
     lbfTypeScriptOpts;
