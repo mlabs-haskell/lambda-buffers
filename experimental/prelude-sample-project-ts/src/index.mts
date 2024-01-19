@@ -1,7 +1,7 @@
 import * as Prelude from  "prelude"
 import * as PreludeJson from  "prelude/Json.js"
 import * as LbrPrelude from  "lbr-prelude"
-import * as MySchema from  "myschema-lb/LambdaBuffers/MySchema.mjs"
+import * as MySchema from  "lbf-prelude-sample-project/LambdaBuffers/MySchema.mjs"
 
 let a : MySchema.Branchy<Prelude.Bool> = { name: 'Node', fields :[420n, [ {name: 'Leaf', fields: true }, {name: 'Leaf', fields: false } ] ] }
 let b : MySchema.Branchy<Prelude.Bool> = { name: 'Leaf', fields : false}
