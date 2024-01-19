@@ -85,19 +85,14 @@ let
 
   # TODO(jaredponn): this was (essentially) stolen from the Rust side. This
   # should be made a common function.
-  findModules = root: builtins.map
-    (path: builtins.replaceStrings [ "/" ] [ "." ]
-      (pkgs.lib.strings.removePrefix "./" (pkgs.lib.strings.removeSuffix ".lbf"
-        (pkgs.lib.strings.removePrefix root path))))
-    (builtins.filter (pkgs.lib.hasSuffix ".lbf")
-      (pkgs.lib.filesystem.listFilesRecursive root));
+  lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
 
   packageSet =
     pkgs.writeTextFile {
       name = "lb-typescript-packages";
       text =
         builtins.toJSON
-          (builtins.mapAttrs (_name: findModules) imports);
+          (builtins.mapAttrs (_name: lbfListModules) imports);
     };
 
   lbfBuilt = with lbfTypescriptOpts;
