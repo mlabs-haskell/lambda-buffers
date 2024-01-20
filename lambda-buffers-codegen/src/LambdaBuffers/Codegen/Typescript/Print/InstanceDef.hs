@@ -79,8 +79,8 @@ $(Lens.TH.makeLenses ''InstanceDict)
   given in 4.3.2 of
   https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-630004.1
 -}
-printInstanceDict :: forall ann. Ts.QClassName -> PC.Ty -> InstanceDict (Doc ann)
-printInstanceDict qcn ty =
+printInstanceDict :: forall ann. Ts.PkgMap -> Ts.QClassName -> PC.Ty -> InstanceDict (Doc ann)
+printInstanceDict pkgMap qcn ty =
   let go :: PC.Ty -> InstanceDict (Doc ann)
       go (PC.TyVarI PC.TyVar {PC.varName = varName}) =
         ArgumentInstanceDict $ "dict" <> printVarName varName
@@ -90,7 +90,7 @@ printInstanceDict qcn ty =
             tyRefDoc = case tyRef of
               PC.LocalI PC.LocalRef {PC.tyName = tyName} -> pretty $ Lens.view #name tyName
               PC.ForeignI foreignRef ->
-                printTsQTyNameKey (Ts.fromLbForeignRef foreignRef)
+                printTsQTyNameKey (Ts.fromLbForeignRef pkgMap foreignRef)
          in TopLevelInstanceDict
               (mconcat [qClassNameDoc, brackets tyRefDoc])
               qClassNameDoc
@@ -99,10 +99,10 @@ printInstanceDict qcn ty =
 
 -- Prints e.g.
 -- Eq<$a>
-printInstanceType :: Ts.QClassName -> PC.Ty -> Doc ann
-printInstanceType qcn ty =
+printInstanceType :: Ts.PkgMap -> Ts.QClassName -> PC.Ty -> Doc ann
+printInstanceType pkgMap qcn ty =
   let crefDoc = printTsQClassName qcn
-      tyDoc = printTyInner ty
+      tyDoc = printTyInner pkgMap ty
    in crefDoc <> surround tyDoc langle rangle
 
 {- | Prints an instance context argument e.g.
@@ -112,19 +112,19 @@ printInstanceType qcn ty =
 
  dict$a : Eq<$a>
 -}
-printInstanceContextArg :: Ts.QClassName -> PC.Ty -> Doc ann
-printInstanceContextArg qcn ty =
-  Lens.view dict (printInstanceDict qcn ty)
+printInstanceContextArg :: Ts.PkgMap -> Ts.QClassName -> PC.Ty -> Doc ann
+printInstanceContextArg pkgMap qcn ty =
+  Lens.view dict (printInstanceDict pkgMap qcn ty)
     <+> ":"
-    <+> printInstanceType qcn ty
+    <+> printInstanceType pkgMap qcn ty
 
 -- Prints e.g.
 -- > <$a,$b>(dict$a : Eq<$a>, dict$b : Eq<$b>)
-printInstanceContext :: Ts.QClassName -> [PC.Ty] -> Doc ann
-printInstanceContext hsQClassName tys =
+printInstanceContext :: Ts.PkgMap -> Ts.QClassName -> [PC.Ty] -> Doc ann
+printInstanceContext pkgMap hsQClassName tys =
   align . group $
-    encloseSep langle rangle comma (map printTyInner tys)
-      <> encloseSep lparen rparen comma (printInstanceContextArg hsQClassName <$> tys)
+    encloseSep langle rangle comma (map (printTyInner pkgMap) tys)
+      <> encloseSep lparen rparen comma (printInstanceContextArg pkgMap hsQClassName <$> tys)
 
 collectInstanceDeclTypeVars :: PC.Ty -> [PC.Ty]
 collectInstanceDeclTypeVars = collectTyVars
@@ -141,12 +141,12 @@ collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (
 collectVars' collected _ = collected
 
 -- See the INVARIANT note below
-printExportInstanceDecl :: MonadPrint m => Ts.QClassName -> PC.Ty -> m (Doc ann -> Doc ann)
-printExportInstanceDecl tsQClassName ty = do
+printExportInstanceDecl :: MonadPrint m => Ts.PkgMap -> Ts.QClassName -> PC.Ty -> m (Doc ann -> Doc ann)
+printExportInstanceDecl pkgMap tsQClassName ty = do
   let
-    instanceType = printInstanceType tsQClassName ty
+    instanceType = printInstanceType pkgMap tsQClassName ty
 
-    lhsInstanceDecl = printInstanceDict tsQClassName ty
+    lhsInstanceDecl = printInstanceDict pkgMap tsQClassName ty
 
     instanceDeclTypeVars = collectInstanceDeclTypeVars ty
 
@@ -192,7 +192,8 @@ printExportInstanceDecl tsQClassName ty = do
           , lbrace
           , indent 2 $
               vsep
-                [ "export" <+> "interface" <+> (printTsUnqualifiedQClassName tsQClassName <> "Instances")
+                [ -- TODO(jaredponn): typeclasses probably aren't supported..
+                  "export" <+> "interface" <+> (printTsUnqualifiedQClassName tsQClassName <> "Instances")
                 , lbrace
                 , indent 2 $
                     vsep
@@ -200,7 +201,7 @@ printExportInstanceDecl tsQClassName ty = do
                           <+> colon
                           <+> case instanceDeclTypeVars of
                             [] -> instanceType
-                            _ -> printInstanceContext tsQClassName instanceDeclTypeVars <+> "=>" <+> instanceType
+                            _ -> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> "=>" <+> instanceType
                       ]
                 , rbrace
                 ]
@@ -213,7 +214,7 @@ printExportInstanceDecl tsQClassName ty = do
               [] -> dictDoc <+> equals <+> bodyDoc
               _ ->
                 vsep
-                  [ dictDoc <+> equals <+> "function" <> printInstanceContext tsQClassName instanceDeclTypeVars <+> colon <+> instanceType
+                  [ dictDoc <+> equals <+> "function" <> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> colon <+> instanceType
                   , indent 2 $
                       vsep
                         [ lbrace

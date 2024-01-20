@@ -22,13 +22,13 @@ Loosely, this will print things like
 \$a $b = { name: 'MkFoo',  fields: $a } | { name: 'MkBar', fields: $b }
 \$a = Prelude.Maybe $a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
-printTyAbs tyN (PC.TyAbs args body _) = do
+printTyAbs :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
+printTyAbs pkgMap tyN (PC.TyAbs args body _) = do
   let argsDoc =
         if OMap.empty == args
           then mempty
           else encloseSep langle rangle comma (printTyArg <$> toList args)
-  (bodyDoc, symbolDoc) <- printTyBody tyN (toList args) body
+  (bodyDoc, symbolDoc) <- printTyBody pkgMap tyN (toList args) body
   return (group $ argsDoc <+> align (equals <+> bodyDoc), symbolDoc)
 
 {- | Prints the type body AND the symbol (unique runtime evidence) of the type.
@@ -54,17 +54,17 @@ and type classes.
 Note: opaque types are _assumed_ to have such unique symbols
 already defined.
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
-printTyBody tyN args tyBody =
+printTyBody :: MonadPrint m => Ts.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
+printTyBody pkgMap tyN args tyBody =
   let
     -- E.g.
     -- : unique symbol = Symbol('TyName')
     newSymbolDoc = colon <+> "unique" <+> "symbol" <+> equals <+> "Symbol" <> parens (squotes $ printTyName tyN)
    in
     case tyBody of
-      PC.SumI s -> (,newSymbolDoc) <$> printSum tyN s
-      PC.ProductI p -> return (printProd p, newSymbolDoc)
-      PC.RecordI r -> printRec tyN r >>= \recDoc -> return (recDoc, newSymbolDoc)
+      PC.SumI s -> (,newSymbolDoc) <$> printSum pkgMap tyN s
+      PC.ProductI p -> return (printProd pkgMap p, newSymbolDoc)
+      PC.RecordI r -> printRec pkgMap tyN r >>= \recDoc -> return (recDoc, newSymbolDoc)
       PC.OpaqueI si -> do
         opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
         mn <- asks (view $ Print.ctxModule . #moduleName)
@@ -83,9 +83,9 @@ printTyBody tyN args tyBody =
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn
 
-printSum :: MonadPrint m => PC.TyName -> PC.Sum -> m (Doc ann)
-printSum tyN (PC.Sum ctors _) = do
-  let ctorDocs = printCtor tyN <$> toList ctors
+printSum :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Sum -> m (Doc ann)
+printSum pkgMap tyN (PC.Sum ctors _) = do
+  let ctorDocs = printCtor pkgMap tyN <$> toList ctors
   return $
     group $
       if null ctors
@@ -107,8 +107,8 @@ fieldsFieldName = "fields"
  2. Product is size one i.e., `Branch ty` ===> print  `{ name : 'Branch' , fields : ty }`
  3. Otherwise, product has size > 1 i.e., `Branch ty1 ... tyN` ===> print  `{ name : 'Branch', fields : [ty1, ..., tyN] }`
 -}
-printCtor :: PC.TyName -> PC.Constructor -> Doc ann
-printCtor tyN (PC.Constructor ctorName prod) =
+printCtor :: Ts.PkgMap -> PC.TyName -> PC.Constructor -> Doc ann
+printCtor pkgMap tyN (PC.Constructor ctorName prod) =
   let ctorNDoc = printCtorName tyN ctorName
    in group $
         align $
@@ -118,7 +118,7 @@ printCtor tyN (PC.Constructor ctorName prod) =
               ++ ( case prod of
                     PC.Product fields _
                       | null fields -> []
-                      | otherwise -> [comma <+> fieldsFieldName <+> colon <+> printProd prod]
+                      | otherwise -> [comma <+> fieldsFieldName <+> colon <+> printProd pkgMap prod]
                  )
               ++
               -- Note [flatAlt rbrace]
@@ -139,9 +139,9 @@ printCtor tyN (PC.Constructor ctorName prod) =
               [flatAlt rbrace (space <> rbrace)]
 
 -- | Just prints out the same record as given in the .lbf file
-printRec :: MonadPrint m => PC.TyName -> PC.Record -> m (Doc ann)
-printRec tyN (PC.Record fields _) = do
-  fieldsDoc <- for (toList fields) $ printField tyN
+printRec :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Record -> m (Doc ann)
+printRec pkgMap tyN (PC.Record fields _) = do
+  fieldsDoc <- for (toList fields) $ printField pkgMap tyN
   return $ group $ align $ case fieldsDoc of
     [] -> lbrace <+> rbrace
     f : fs ->
@@ -160,48 +160,48 @@ printRec tyN (PC.Record fields _) = do
  3. Otherwise, the product is greater than one ===> print a fixed length list
  with all of the types in order e.g. [$a,$b]
 -}
-printProd :: PC.Product -> Doc ann
-printProd (PC.Product fields _) = align $ case fields of
-  [ty] -> printTyInner ty
+printProd :: Ts.PkgMap -> PC.Product -> Doc ann
+printProd pkgMap (PC.Product fields _) = align $ case fields of
+  [ty] -> printTyInner pkgMap ty
   -- TODO(jaredponn): put spaces after the comma. Similar to Note [flatAlt
   -- rbrace]
-  _ -> encloseSep lbracket rbracket comma $ map printTyInner fields
+  _ -> encloseSep lbracket rbracket comma $ map (printTyInner pkgMap) fields
 
-printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
-printField tyN f@(PC.Field fn ty) = do
+printField :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Field -> m (Doc ann)
+printField pkgMap tyN f@(PC.Field fn ty) = do
   fnDoc <-
     maybe
       (throwInternalError (fn ^. #sourceInfo) ("Failed printing `FieldName` for field\n" <> show (tyN, f)))
       return
       $ printFieldName tyN fn
-  let tyDoc = printTyTopLevel ty
+  let tyDoc = printTyTopLevel pkgMap ty
   return $ fnDoc <+> colon <+> tyDoc
 
-printTyInner :: PC.Ty -> Doc ann
-printTyInner (PC.TyVarI v) = printTyVar v
-printTyInner (PC.TyRefI r) = printTyRef r
-printTyInner (PC.TyAppI a) = printTyAppInner a
+printTyInner :: Ts.PkgMap -> PC.Ty -> Doc ann
+printTyInner _pkgMap (PC.TyVarI v) = printTyVar v
+printTyInner pkgMap (PC.TyRefI r) = printTyRef pkgMap r
+printTyInner pkgMap (PC.TyAppI a) = printTyAppInner pkgMap a
 
-printTyAppInner :: PC.TyApp -> Doc ann
-printTyAppInner (PC.TyApp f args _) =
-  let fDoc = printTyInner f
-      argsDoc = printTyInner <$> args
+printTyAppInner :: Ts.PkgMap -> PC.TyApp -> Doc ann
+printTyAppInner pkgMap (PC.TyApp f args _) =
+  let fDoc = printTyInner pkgMap f
+      argsDoc = printTyInner pkgMap <$> args
    in group $ fDoc <> align (encloseSep langle rangle comma argsDoc)
 
-printTyTopLevel :: PC.Ty -> Doc ann
-printTyTopLevel (PC.TyVarI v) = printTyVar v
-printTyTopLevel (PC.TyRefI r) = printTyRef r
-printTyTopLevel (PC.TyAppI a) = printTyAppTopLevel a
+printTyTopLevel :: Ts.PkgMap -> PC.Ty -> Doc ann
+printTyTopLevel _pkgMap (PC.TyVarI v) = printTyVar v
+printTyTopLevel pkgMap (PC.TyRefI r) = printTyRef pkgMap r
+printTyTopLevel pkgMap (PC.TyAppI a) = printTyAppTopLevel pkgMap a
 
-printTyAppTopLevel :: PC.TyApp -> Doc ann
-printTyAppTopLevel (PC.TyApp f args _) =
-  let fDoc = printTyInner f
-      argsDoc = printTyInner <$> args
+printTyAppTopLevel :: Ts.PkgMap -> PC.TyApp -> Doc ann
+printTyAppTopLevel pkgMap (PC.TyApp f args _) =
+  let fDoc = printTyInner pkgMap f
+      argsDoc = printTyInner pkgMap <$> args
    in group $ fDoc <> align (encloseSep langle rangle comma argsDoc)
 
-printTyRef :: PC.TyRef -> Doc ann
-printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) = let (_, Ts.MkModuleName hmn, Ts.MkTyName htn) = Ts.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn
+printTyRef :: Ts.PkgMap -> PC.TyRef -> Doc ann
+printTyRef _ (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
+printTyRef pkgMap (PC.ForeignI fr) = let (_, Ts.MkModuleName hmn, Ts.MkTyName htn) = Ts.fromLbForeignRef pkgMap fr in pretty hmn <> dot <> pretty htn
 
 printTyVar :: PC.TyVar -> Doc ann
 printTyVar (PC.TyVar vn) = printVarName vn

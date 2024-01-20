@@ -20,6 +20,7 @@ module LambdaBuffers.Codegen.Typescript.Syntax (
 ) where
 
 import Control.Lens ((^.))
+import Control.Lens qualified as Lens
 import Control.Monad qualified as Monad
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -29,7 +30,13 @@ import GHC.Generics (Generic)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.ProtoCompat qualified as PC
 
-type QTyName = (Maybe PackageName, ModuleName, TyName) -- Note(jaredponn): the @Maybe PackageName@ should never have 'Nothing.'
+{- | Note(jaredponn): the @Maybe PackageName@ should never have 'Nothing' in
+the use cases here.. I suppose strictly speaking, in TS, types like @number@
+are unqualified; but with the way the runtimes are set up, this never
+happens.
+-}
+type QTyName = (Maybe PackageName, ModuleName, TyName)
+
 type QClassName = (PackageName, ModuleName, ClassName)
 type QValName = (Maybe (PackageName, ModuleName), ValueName)
 
@@ -84,9 +91,9 @@ fromLbModuleName mn = MkModuleName $ Text.intercalate "$" ("LambdaBuffers" : [p 
 pkgNameToText :: PackageName -> Text
 pkgNameToText (MkPackageName pkg) = pkg
 
-fromLbForeignRef :: PC.ForeignRef -> QTyName
-fromLbForeignRef fr =
-  ( Nothing
+fromLbForeignRef :: PkgMap -> PC.ForeignRef -> QTyName
+fromLbForeignRef pkgMap fr =
+  ( Map.lookup (fr ^. #moduleName . Lens.to PC.mkInfoLess) pkgMap
   , fromLbModuleName $ fr ^. #moduleName
   , fromLbTyName $ fr ^. #tyName
   )

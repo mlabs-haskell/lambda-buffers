@@ -43,19 +43,19 @@ lamTy2PCTy = \case
     -- Note(jaredponn): hopefully this never happens...
     Nothing
 
-instanceDictIdent :: Ts.QClassName -> PC.Ty -> Text
-instanceDictIdent className ty =
+instanceDictIdent :: Ts.PkgMap -> Ts.QClassName -> PC.Ty -> Text
+instanceDictIdent pkgMap className ty =
   Lens.view (dict . Lens.to (PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions)) $
-    printInstanceDict className ty
+    printInstanceDict pkgMap className ty
 
-lvEqBuiltins :: LV.PrintRead Builtin
-lvEqBuiltins = LV.MkPrintRead $ \(tys, refName) ->
+lvEqBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
+lvEqBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
   case (refName, tys) of
     ("eq", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsEqClass ty')
+          (Ts.primValName $ instanceDictIdent pkgMap tsEqClass ty')
           0 -- index in the list of substitutions for the type we're overloading on
           ".eq"
     ("true", _) -> Just $ Builtin $ Ts.primValName "true"
@@ -73,12 +73,12 @@ neqClassMethodName = Ts.MkValueName "neq"
 tsEqClass :: Ts.QClassName
 tsEqClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LbrPrelude", Ts.MkClassName "Eq")
 
-printDeriveEq :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
-printDeriveEq mn iTyDefs mkExportInstanceDeclDoc ty = do
+printDeriveEq :: Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
+printDeriveEq pkgMap mn iTyDefs mkExportInstanceDeclDoc ty = do
   eqValE <- deriveEqImpl mn iTyDefs ty
   neqValE <- deriveNeqImpl mn iTyDefs ty
-  (eqImplDoc, eqImports) <- LV.runPrint lvEqBuiltins (printValueE eqValE)
-  (neqImplDoc, neqImports) <- LV.runPrint lvEqBuiltins (printValueE neqValE)
+  (eqImplDoc, eqImports) <- LV.runPrint (lvEqBuiltins pkgMap) (printValueE eqValE)
+  (neqImplDoc, neqImports) <- LV.runPrint (lvEqBuiltins pkgMap) (printValueE neqValE)
   let eqValueDefDoc =
         align $
           vsep
@@ -90,21 +90,21 @@ printDeriveEq mn iTyDefs mkExportInstanceDeclDoc ty = do
     , Set.map (Lens.view qualifiedValName) $ eqImports <> neqImports
     )
 
-lvPlutusDataBuiltins :: LV.PrintRead Builtin
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(tys, refName) ->
+lvPlutusDataBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
+lvPlutusDataBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
   case (refName, tys) of
     ("toPlutusData", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
+          (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
           0 -- index in the list of substitutions for the type we're overloading on
           ".toData"
     ("fromPlutusData", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsIsPlutusDataClass ty')
+          (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
           0 -- index in the list of substitutions for the type we're overloading on
           ".fromData"
     ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "casePlutusData"
@@ -125,13 +125,13 @@ fromPlutusDataClassMethodName = Ts.MkValueName "fromData"
 tsIsPlutusDataClass :: Ts.QClassName
 tsIsPlutusDataClass = (Ts.MkPackageName "lbr-plutus/PlutusData.js", Ts.MkModuleName "LbrPlutusPD", Ts.MkClassName "IsPlutusData")
 
-printDeriveIsPlutusData :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
-printDeriveIsPlutusData mn iTyDefs mkExportInstanceDeclDoc ty = do
+printDeriveIsPlutusData :: Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
+printDeriveIsPlutusData pkgMap mn iTyDefs mkExportInstanceDeclDoc ty = do
   toPlutusDataValE <- deriveToPlutusDataImpl mn iTyDefs ty
   fromPlutusDataValE <- deriveFromPlutusDataImpl mn iTyDefs ty
 
-  (toDataImplDoc, toDataImports) <- LV.runPrint lvPlutusDataBuiltins (printValueE toPlutusDataValE)
-  (fromDataImplDoc, fromDataImports) <- LV.runPrint lvPlutusDataBuiltins (printValueE fromPlutusDataValE)
+  (toDataImplDoc, toDataImports) <- LV.runPrint (lvPlutusDataBuiltins pkgMap) (printValueE toPlutusDataValE)
+  (fromDataImplDoc, fromDataImports) <- LV.runPrint (lvPlutusDataBuiltins pkgMap) (printValueE fromPlutusDataValE)
 
   let valueDefDoc =
         align $
@@ -148,21 +148,21 @@ tsJsonClass :: Ts.QClassName
 tsJsonClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LbrPrelude", Ts.MkClassName "Json")
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
-lvJsonBuiltins :: LV.PrintRead Builtin
-lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
+lvJsonBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
+lvJsonBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
   case (refName, tys) of
     ("toJson", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent tsJsonClass ty')
+          (Ts.primValName $ instanceDictIdent pkgMap tsJsonClass ty')
           0 -- index in the list of substitutions for the type we're overloading on
           ".toJson"
     ("fromJson", [ty]) -> do
       ty' <- lamTy2PCTy ty
       return $
         OverloadedBuiltin
-          (Ts.primValName (instanceDictIdent tsJsonClass ty'))
+          (Ts.primValName (instanceDictIdent pkgMap tsJsonClass ty'))
           0 -- index in the list of substitutions for the type we're overloading on
           ".fromJson"
     ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonObject"
@@ -176,7 +176,7 @@ lvJsonBuiltins = LV.MkPrintRead $ \(tys, refName) ->
             "lbr-prelude"
             "LbrPrelude"
             ( PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions $
-                "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner ty') langle rangle
+                "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner pkgMap ty') langle rangle
             )
     ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonArray"
     ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonObject"
@@ -192,12 +192,12 @@ toJsonClassMethodName = Ts.MkValueName "toJson"
 fromJsonClassMethodName :: Ts.ValueName
 fromJsonClassMethodName = Ts.MkValueName "fromJson"
 
-printDeriveJson :: PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
-printDeriveJson mn iTyDefs mkExportInstanceDeclDoc ty = do
+printDeriveJson :: Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> Either P.InternalError (Doc ann, Set Ts.QValName)
+printDeriveJson pkgMap mn iTyDefs mkExportInstanceDeclDoc ty = do
   toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-  (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
+  (toJsonImplDoc, impsA) <- LV.runPrint (lvJsonBuiltins pkgMap) (printValueE toJsonValE)
   fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-  (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
+  (fromJsonImplDoc, impsB) <- LV.runPrint (lvJsonBuiltins pkgMap) (printValueE fromJsonValE)
 
   let valueDefDoc =
         align $

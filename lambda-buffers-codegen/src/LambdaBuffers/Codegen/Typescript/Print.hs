@@ -37,8 +37,8 @@ import Proto.Codegen qualified as P
 printModule :: MonadPrint m => Ts.PkgMap -> m (Doc ann, Set Text)
 printModule pkgMap = do
   ctx <- ask
-  tyDefDocs <- printTyDefs (ctx ^. Print.ctxModule)
-  instDocs <- printInstances
+  tyDefDocs <- printTyDefs pkgMap (ctx ^. Print.ctxModule)
+  instDocs <- printInstances pkgMap
   st <- get
 
   let modDoc =
@@ -84,10 +84,11 @@ printModule pkgMap = do
           (st ^. Print.stValueImports)
   return (modDoc, pkgDeps)
 
-printTyDefs :: MonadPrint m => PC.Module -> m [Doc ann]
-printTyDefs m = for (toList $ m ^. #typeDefs) printTyDef
+printTyDefs :: MonadPrint m => Ts.PkgMap -> PC.Module -> m [Doc ann]
+printTyDefs pkgMap m = for (toList $ m ^. #typeDefs) $ printTyDef pkgMap
 
 tsClassImplPrinters ::
+  Ts.PkgMap ->
   Map
     Ts.QClassName
     ( PC.ModuleName ->
@@ -96,37 +97,37 @@ tsClassImplPrinters ::
       PC.Ty ->
       Either P.InternalError (Doc ann, Set Ts.QValName)
     )
-tsClassImplPrinters =
+tsClassImplPrinters pkgMap =
   Map.fromList
     [
       ( tsEqClass
-      , printDeriveEq
+      , printDeriveEq pkgMap
       )
     ,
       ( tsIsPlutusDataClass
-      , printDeriveIsPlutusData
+      , printDeriveIsPlutusData pkgMap
       )
     ,
       ( tsJsonClass
-      , printDeriveJson
+      , printDeriveJson pkgMap
       )
     ]
 
-printInstances :: MonadPrint m => m [Doc ann]
-printInstances = do
+printInstances :: MonadPrint m => Ts.PkgMap -> m [Doc ann]
+printInstances pkgMap = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
   let iTyDefs = PC.indexTyDefs ci
   foldrM
     ( \d instDocs -> do
-        instDocs' <- printDerive iTyDefs d
+        instDocs' <- printDerive pkgMap iTyDefs d
         return $ instDocs' <> instDocs
     )
     mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => PC.TyDefs -> PC.Derive -> m [Doc ann]
-printDerive iTyDefs d = do
+printDerive :: MonadPrint m => Ts.PkgMap -> PC.TyDefs -> PC.Derive -> m [Doc ann]
+printDerive pkgMap iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
   classes <- asks (view $ Print.ctxConfig . C.cfgClasses)
@@ -137,16 +138,16 @@ printDerive iTyDefs d = do
         pqcns
         ( \pqcn -> do
             Print.importClass pqcn
-            printTsQClassImpl mn iTyDefs pqcn d
+            printTsQClassImpl pkgMap mn iTyDefs pqcn d
         )
 
-printTsQClassImpl :: MonadPrint m => PC.ModuleName -> PC.TyDefs -> Ts.QClassName -> PC.Derive -> m (Doc ann)
-printTsQClassImpl mn iTyDefs hqcn d =
-  case Map.lookup hqcn tsClassImplPrinters of
+printTsQClassImpl :: MonadPrint m => Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> Ts.QClassName -> PC.Derive -> m (Doc ann)
+printTsQClassImpl pkgMap mn iTyDefs hqcn d =
+  case Map.lookup hqcn (tsClassImplPrinters pkgMap) of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Typescript type class " <> show hqcn)
     Just implPrinter -> do
       let ty = d ^. #constraint . #argument
-      mkInstanceDoc <- printExportInstanceDecl hqcn ty
+      mkInstanceDoc <- printExportInstanceDecl pkgMap hqcn ty
       case implPrinter mn iTyDefs mkInstanceDoc ty of
         Left err -> throwInternalError (d ^. #constraint . #sourceInfo) ("Failed printing the implementation for " <> (show hqcn <> "\nGot error: " <> show err))
         Right (instanceDefsDoc, valImps) -> do
@@ -241,13 +242,13 @@ printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valIm
     importQualified :: (Doc ann, Doc ann) -> Doc ann
     importQualified (pkg, mn) = "import" <+> "*" <+> "as" <+> mn <+> "from" <+> squotes pkg
 
-{- | `collectPackageDeps pkgMap lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+{- | `collectPackageDeps pkgMap lbTyImports tsTyImports classImps ruleImps valImps` collects all the package dependencies.
  Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemas).
 -}
 collectPackageDeps :: Ts.PkgMap -> Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Set Text
-collectPackageDeps pkgMap lbTyImports hsTyImports classImps ruleImps valImps =
+collectPackageDeps pkgMap lbTyImports tsTyImports classImps ruleImps valImps =
   let deps =
-        Set.fromList [Ts.pkgNameToText pkgName | (Just pkgName, _, _) <- toList hsTyImports]
+        Set.fromList [Ts.pkgNameToText pkgName | (Just pkgName, _, _) <- toList tsTyImports]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (pkgName, _, _) <- toList classImps]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (Just (pkgName, _), _) <- toList valImps]
           `Set.union` Set.fromList
