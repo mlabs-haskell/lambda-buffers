@@ -26,9 +26,11 @@ lbfTypescriptOpts@{
 , classes ? [ ]
 , # npmExtraDependencies are tarballs from `npm pack` of the dependencies required
   npmExtraDependencies ? [ ]
-  # , # npmDevDependencies are tarballs from `npm pack` of the develoepr dependencies for building the project
-  #   # TODO(jaredponn): actually use this
-  #   npmDevDependencies ? [ ]
+  # , # npmExtraDevDependencies are tarballs from `npm pack` of the developer dependencies for building the project
+  #   # TODO(jaredponn): actually use this later? For now, it seems okay that
+  #   # we only have project dependencies. This will need updates in
+  #   # [flake-lang.nix](https://github.com/mlabs-haskell/flake-lang.nix) as well.
+  #   npmExtraDevDependencies ? [ ]
 , configs ? [ ]
 , # Name of the package and also the name of the Cabal package.
   # Examples: name = "lbf-myproject"
@@ -83,8 +85,6 @@ lbfTypescriptOpts@{
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  # TODO(jaredponn): this was (essentially) stolen from the Rust side. This
-  # should be made a common function.
   lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
 
   packageSet =
@@ -143,6 +143,7 @@ let
   # TODO(jaredponn): urgh, this was manually copy pastad in by hand.. automate
   # this more nicely later... there's a huge pain point with how this needs to
   # hit the network to create the package-lock.json...
+  # Perhaps this should be included in the `npmExtraDependencies` field?
   packageJsonLockTemplate = with lbfTypescriptOpts;
     pkgs.writeTextFile {
       name = "lambda-buffers-package-lock-template";
@@ -205,7 +206,6 @@ let
       buildPhase =
         ''
           export HOME=$(mktemp -d)
-          # TODO(jaredponn): remove these symlinks
           ln -s ${lbfBuilt} autogen;
           ln -s ${lbfBuilt.workdir} .work-dir;
           ln -s ${lbfBuilt.buildjson} build.json;
