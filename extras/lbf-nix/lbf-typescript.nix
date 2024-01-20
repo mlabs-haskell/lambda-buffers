@@ -32,11 +32,11 @@ lbfTypescriptOpts@{
   #   # [flake-lang.nix](https://github.com/mlabs-haskell/flake-lang.nix) as well.
   #   npmExtraDevDependencies ? [ ]
 , configs ? [ ]
-, # Name of the package and also the name of the Cabal package.
+, # Name of the package
   # Examples: name = "lbf-myproject"
   name
-, # Version of the package and also the version of the Cabal package.
-  # Examples: version = "0.1.0.0"
+, # Version of the package
+  # Examples: version = "1.0.0"
   version ? "1.0.0"
 
 , # `tsconfig.json` for TypeScript. Note that the typechecking options do
@@ -206,9 +206,9 @@ let
       buildPhase =
         ''
           export HOME=$(mktemp -d)
-          ln -s ${lbfBuilt} autogen;
-          ln -s ${lbfBuilt.workdir} .work-dir;
-          ln -s ${lbfBuilt.buildjson} build.json;
+          ln -s ${pkgs.lib.escapeShellArg lbfBuilt} autogen;
+          ln -s ${pkgs.lib.escapeShellArg lbfBuilt.workdir} .work-dir;
+          ln -s ${pkgs.lib.escapeShellArg lbfBuilt.buildjson} build.json;
 
           ###########################
           # Creating the packages json files
@@ -229,9 +229,9 @@ let
             | xargs -I % sh -c 'echo "$0" | sed -E "s#^autogen/(.*)\.mts\$#\1.mjs#"' % \
             | xargs -I % sh -c 'echo "| .\"exports\".\"./$0\"=\"./dist/$0\"" >> jq_filter.jq' %
 
-          cat ${packageJsonTemplate} | jq -f jq_filter.jq > package.json
-          cat ${packageJsonLockTemplate} > package-lock.json
-          cat ${tsConfigJson} > tsconfig.json
+          cat ${pkgs.lib.escapeShellArg packageJsonTemplate} | jq -f jq_filter.jq > package.json
+          cat ${pkgs.lib.escapeShellArg packageJsonLockTemplate} > package-lock.json
+          cat ${pkgs.lib.escapeShellArg tsConfigJson} > tsconfig.json
 
         '';
 
@@ -269,7 +269,7 @@ let
                       --loglevel verbose \
                       --offline \
                       --package-lock-only \
-                      --save ./${tsSelf.npmExtraDependenciesFolder}/*
+                      --save ./${pkgs.lib.escapeShellArg tsSelf.npmExtraDependenciesFolder}/*
                 '';
             }
           );
