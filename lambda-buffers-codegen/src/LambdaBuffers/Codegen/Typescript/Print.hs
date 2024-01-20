@@ -76,6 +76,7 @@ printModule pkgMap = do
             ++ instDocs
       pkgDeps =
         collectPackageDeps
+          pkgMap
           (ctx ^. Print.ctxTyImports)
           (ctx ^. Print.ctxOpaqueTyImports)
           (ctx ^. Print.ctxClassImports <> st ^. Print.stClassImports)
@@ -240,13 +241,21 @@ printImports selfModName pkgMap lbTyImports tsTyImports classImps ruleImps valIm
     importQualified :: (Doc ann, Doc ann) -> Doc ann
     importQualified (pkg, mn) = "import" <+> "*" <+> "as" <+> mn <+> "from" <+> squotes pkg
 
-{- | `collectPackageDeps lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
- Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemass).
+{- | `collectPackageDeps pkgMap lbTyImports hsTyImports classImps ruleImps valImps` collects all the package dependencies.
+ Note that LB `lbTyImports` and `ruleImps` are wired by the user (as the user decides on the package name for their schemas).
 -}
-collectPackageDeps :: Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Set Text
-collectPackageDeps _lbTyImports hsTyImports classImps _ruleImps valImps =
+collectPackageDeps :: Ts.PkgMap -> Set PC.QTyName -> Set Ts.QTyName -> Set Ts.QClassName -> Set (PC.InfoLess PC.ModuleName) -> Set Ts.QValName -> Set Text
+collectPackageDeps pkgMap lbTyImports hsTyImports classImps ruleImps valImps =
   let deps =
         Set.fromList [Ts.pkgNameToText pkgName | (Just pkgName, _, _) <- toList hsTyImports]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (pkgName, _, _) <- toList classImps]
           `Set.union` Set.fromList [Ts.pkgNameToText pkgName | (Just (pkgName, _), _) <- toList valImps]
+          `Set.union` Set.fromList
+            ( toList (Set.map fst lbTyImports `Set.union` ruleImps) >>= \moduleName ->
+                case Map.lookup moduleName pkgMap of
+                  Just pkgName -> return $ Ts.pkgNameToText pkgName
+                  -- If there is no module, then we assume that the qualified
+                  -- identifier is a builtin and hence requires no dependencies
+                  Nothing -> []
+            )
    in deps
