@@ -1,7 +1,9 @@
-{ lib }:
-# root is the absolute path to the directory with .lbf files. 
-# Example
-# ~~~~~~
+# Provides a nix function which recursively lists all lbf modules in a
+# directory.
+# 
+# Type: { lib : attr } -> path -> [string]
+# 
+# Example:
 # ```nix
 # let 
 #   lbfListModules = pkgs.callPackage (import ./lbf-list-modules.nix) {};
@@ -21,31 +23,30 @@
 # └── MySchema.lbf
 # ```
 
+{ lib }:
+# root is the absolute path to the directory with .lbf files. 
 root:
-# INVARIANT:
-#   - dir == dotPrefix except dotPrefix doesn't contain the prefix root, and
-#   dotPrefix has all `/`s replaced with a singular `.`
-#   - `dotPrefix` always contains the dot at the end if it needs to be there
 let
+  # Given `<name>.lbf`, this returns `<name>` returning `null` otherwise.
+  # Type: matchLbfFile :: string -> string | null
   matchLbfFile = name:
     let matches = builtins.match ''(.*)\.lbf$'' name;
     in if matches == null
     then null
     else builtins.elemAt matches 0;
 
-  go = dir: dotPrefix:
+  go = dir:
     builtins.concatLists
       (lib.mapAttrsToList
         (name: value:
           if value == "directory"
-          then go "${dir}/${name}" "${dotPrefix}${name}."
-
+          then builtins.map (suffix: "${name}.${suffix}") (go "${dir}/${name}")
           else if value == "regular"
           then
           # Is this an lbf file?
             let lbfFileMatch = matchLbfFile name;
             in if lbfFileMatch != null
-            then [ "${dotPrefix}${lbfFileMatch}" ]
+            then [ lbfFileMatch ]
             else [ ]
           else
             builtins.trace ''warning: `${name}` has file type `${value}` which is not a regular file nor directory''
@@ -54,4 +55,4 @@ let
         (builtins.readDir dir)
       );
 in
-go root ""
+go root
