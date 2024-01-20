@@ -9774,11 +9774,11 @@
         "rust-overlay": "rust-overlay_11"
       },
       "locked": {
-        "lastModified": 1705549926,
-        "narHash": "sha256-4PtwvUZkwMYx+eRLYIf10LNKnW67T4b2k9yt5j9k/go=",
+        "lastModified": 1705739485,
+        "narHash": "sha256-N/SL6SfYS96homWoYVfxCTc6aLAeGL/EIYlqh8/SGRM=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "9d9346431d10dd9990bde4cb118c4396760097f1",
+        "rev": "1e790a7a4aa9f1cfc6605e4c7049f6698ce7e7ff",
         "type": "github"
       },
       "original": {
