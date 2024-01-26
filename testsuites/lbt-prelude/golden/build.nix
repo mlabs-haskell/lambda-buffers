@@ -24,6 +24,13 @@ _:
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
+
+        lbt-prelude-golden-typescript = pkgs.stdenv.mkDerivation {
+          name = "lbt-prelude-golden-data";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = ''ln -s "$src" "$out"'';
+        };
       };
 
     };
