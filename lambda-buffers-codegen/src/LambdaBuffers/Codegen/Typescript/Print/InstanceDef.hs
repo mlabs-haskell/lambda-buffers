@@ -211,7 +211,7 @@ printExportInstanceDecl pkgMap tsQClassName ty = do
       dictDeclDoc =
         vsep
           [ case instanceDeclTypeVars of
-              [] -> dictDoc <+> equals <+> bodyDoc
+              [] -> dictDoc <+> equals <+> vsep [lbrace, indent 2 bodyDoc, rbrace]
               _ ->
                 vsep
                   [ dictDoc <+> equals <+> "function" <> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> colon <+> instanceType

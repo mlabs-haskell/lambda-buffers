@@ -18,11 +18,11 @@ import Data.Text qualified as Text
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
-import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printMkCtor, printTsQValName)
+import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printTsQValName)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
-import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hsep, indent, lbrace, lbracket, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
+import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, indent, lbrace, lbracket, lparen, parens, rbrace, rbracket, rparen, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
 {- | 'Builtin' is the result of a symbol table lookup for things like
@@ -252,11 +252,26 @@ printLetE ((_, _tyN), fields) prodVal letCont = do
                       -- See
                       -- 'LambdaBuffers.Codegen.Typescript.Print.Ty.printProd'
                       -- for details.
-                      [singleField] -> ["let" <+> singleField <+> equals <+> letRHSDoc <> ".fields"]
+                      [singleField] ->
+                        [ "let" <+> singleField <+> equals <+> letRHSDoc
+                        -- WARN(jaredponn): recall that products are "raw
+                        -- tuples", so it's wrong to access `.field`
+                        -- <> ".fields"
+                        ]
                       _ ->
                         zipWith
                           ( \i argDoc ->
-                              "let" <+> argDoc <+> equals <+> letRHSDoc <> ".fields" <> lbracket <> pretty (show i) <> rbracket
+                              "let"
+                                <+> argDoc
+                                <+> equals
+                                <+> letRHSDoc
+                                <>
+                                -- WARN(jaredponn): see above warning about
+                                -- these raw tuples.
+                                -- ".fields" <>
+                                lbracket
+                                <> pretty (show i)
+                                <> rbracket
                           )
                           [0 :: Int ..]
                           argDocs
@@ -460,15 +475,45 @@ printRecordE ((_, tyN), _) vals = do
       Just fieldNDoc -> do
         valDoc <- printValueE val
         return $ group $ fieldNDoc <+> colon <+> valDoc
-  let ctorDoc = printMkCtor (withInfo tyN)
-  return $ ctorDoc <+> align (lbrace <+> encloseSep mempty mempty (comma <> space) fieldDocs <+> rbrace)
+  -- Note(jaredponn): Again, we have no need for the constructor name because
+  -- languages like Haskell have:
+  -- @
+  -- MyRecord { field1 = a, field2 = b }
+  -- @
+  -- whereas in TS we remove the constructor altogether i.e., we just have
+  -- @
+  -- { field1 = a, field2 = b }
+  -- @
+  -- so the following is unnecessary:
+  -- > let ctorDoc = printMkCtor (withInfo tyN)
+  return $ align (encloseSep lbrace rbrace comma fieldDocs)
 
 printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
-printProductE ((_, tyN), _) vals = do
+printProductE ((_, _tyN), _) vals = do
+  -- If there's a unique element in the fields,
+  -- recall that it's not wrapped in a tuple
+  -- list.
+  -- See
+  -- 'LambdaBuffers.Codegen.Typescript.Print.Ty.printProd'
+  -- for details.
   fieldDocs <- for vals printValueE
-  let ctorDoc = printMkCtor (withInfo tyN)
-  return $ ctorDoc <+> align (hsep fieldDocs)
+  -- Note(jaredponn): normally, we'd have to write down the constructor name
+  -- e.g.
+  -- @MyProd a b c@
+  -- but we recall that TS products are literally anonymous tuples, so this
+  -- would be just
+  -- @[a,b,c]@
+  --
+  -- In other words, the following makes no sense at all:
+  -- @
+  -- let ctorDoc = printMkCtor (withInfo tyN)
+  -- return $ ctorDoc <+> align (hsep fieldDocs)
+  -- @
+  case fieldDocs of
+    [f] -> return f
+    fs -> return (encloseSep lbracket rbracket comma fs)
 
+-- We only use bigints and they are suffixed by a @n@
 printIntE :: MonadPrint m => Int -> m (Doc ann)
 printIntE i =
   return $ pretty i <> "n"
