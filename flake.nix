@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix/jared/add-data-to-typescript-flake";
 
     # Haskell
 
@@ -88,6 +88,7 @@
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-rust/build.nix
+        ./testsuites/lbt-prelude/lbt-prelude-typescript/build.nix
         ./testsuites/lbt-plutus/api/build.nix
         ./testsuites/lbt-plutus/golden/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
