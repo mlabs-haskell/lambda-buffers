@@ -1,0 +1,32 @@
+{
+  "name": "lambda-buffers-prelude-sample-project",
+  "version": "1.0.0",
+  "description": "Sample project for LambdaBuffers",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npx tsc -b src/",
+    "test": ":"
+  },
+  "author": "Jared Pon",
+  "license": "ISC",
+  "files": [
+    "./dist/**/*",
+    "./.extra-dependencies/**/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "lbf-plutus": "file:.extra-dependencies/lbf-plutus-1.0.0.tgz",
+    "lbf-plutus-sample-project": "file:.extra-dependencies/lbf-plutus-sample-project-1.0.0.tgz",
+    "lbf-prelude": "file:.extra-dependencies/lbf-prelude-1.0.0.tgz",
+    "lbr-plutus": "file:.extra-dependencies/lbr-plutus-1.0.0.tgz",
+    "lbr-prelude": "file:.extra-dependencies/lbr-prelude-1.0.0.tgz",
+    "plutus-ledger-api": "file:.extra-dependencies/plutus-ledger-api-1.0.0.tgz",
+    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz"
+  }
+}

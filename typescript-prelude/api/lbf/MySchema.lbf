@@ -1,0 +1,11 @@
+module MySchema
+
+import Prelude
+
+sum Branchy a
+    = Node Integer (List (Branchy a))
+    | Leaf a
+
+
+derive Eq (Branchy a)
+derive Json (Branchy a)
