@@ -8,7 +8,6 @@ import * as Prelude from "prelude";
 import * as PreludeJson from "prelude/Json.js";
 
 import * as LbfFoo from "lbf-prelude-golden-api/LambdaBuffers/Foo.mjs";
-// import * as LbfFooBar from "lbf-prelude-golden-api/LambdaBuffers/Foo/Bar.mjs"
 import * as LbfDays from "lbf-prelude-golden-api/LambdaBuffers/Days.mjs";
 
 import * as LbrPrelude from "lbr-prelude";

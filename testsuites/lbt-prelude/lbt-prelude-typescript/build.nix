@@ -24,7 +24,7 @@
     in
     {
       packages = {
-        inherit (tsFlake.packages) lbt-prelude-typescript lbt-prelude-typescript-tgz;
+        inherit (tsFlake.packages) lbt-prelude-typescript-tgz;
       };
 
       inherit (tsFlake) devShells checks;
