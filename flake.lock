@@ -50671,11 +50671,11 @@
         "prelude-typescript": "prelude-typescript"
       },
       "locked": {
-        "lastModified": 1706350635,
-        "narHash": "sha256-Qj10aTFNOK7bdrXbu0z21VP6O/8gan5/xBSA2swQqnA=",
+        "lastModified": 1706357011,
+        "narHash": "sha256-ToP5ZLDmcCxXzu1lDKKgs3T7wEWu0fyJsWgXe0sGVn4=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "0feca474bd7985bedee1d6fd53bd38c139dc432a",
+        "rev": "82013e0c94c312bacf4879daebacdf446b186249",
         "type": "github"
       },
       "original": {
