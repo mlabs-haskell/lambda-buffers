@@ -1,0 +1,13 @@
+module MySchema
+
+import Plutus.V1
+import Prelude (Eq, Json)
+
+sum Branchy a
+    = Node PlutusData (Extended (Branchy a))
+    | Leaf a
+
+
+derive Json (Branchy a)
+derive Eq (Branchy a)
+derive PlutusData (Branchy a)

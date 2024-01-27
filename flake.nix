@@ -3,6 +3,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
 
+    # flake-lang.nix
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+
     # Haskell
 
     ## Using haskell.nix to build Haskell projects
@@ -50,6 +53,9 @@
       flake = false;
     };
 
+    # Typescript runtime
+    prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
+    plutus-ledger-api-typescript.url = "github:mlabs-haskell/plutus-ledger-api-typescript";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -89,6 +95,8 @@
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
+        ./docs/typescript-prelude/build.nix
+        ./docs/typescript-plutus/build.nix
       ];
       debug = true;
       systems = [ "x86_64-linux" "x86_64-darwin" ];

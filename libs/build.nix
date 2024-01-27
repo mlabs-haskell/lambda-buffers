@@ -28,6 +28,18 @@
         configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
       };
 
+      lbf-prelude-typescript = (config.lbf-nix.lbfTypescript {
+        name = "lbf-prelude";
+        src = ./lbf-prelude;
+        files = [ "Prelude.lbf" ];
+        classes = [ "Prelude.Eq" "Prelude.Json" ];
+        configs = [ "${config.packages.codegen-configs}/typescript-prelude-base.json" ];
+        npmExtraDependencies =
+          [
+            config.packages.lbr-prelude-typescript-tgz
+          ];
+      }).packages.lbf-prelude-typescript-tgz;
+
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";
         src = ./lbf-prelude;
@@ -95,6 +107,23 @@
           "${config.packages.codegen-configs}/plutarch-plutus.json"
         ];
       };
+
+      lbf-plutus-typescript = (config.lbf-nix.lbfTypescript {
+        name = "lbf-plutus";
+        src = ./lbf-plutus;
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        imports = { lbf-prelude = ./lbf-prelude; };
+        classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+        configs = [
+          "${config.packages.codegen-configs}/typescript-prelude-base.json"
+          "${config.packages.codegen-configs}/typescript-plutus.json"
+        ];
+        npmExtraDependencies =
+          [
+            config.packages.lbf-prelude-typescript
+            config.packages.lbr-plutus-typescript-tgz
+          ];
+      }).packages.lbf-plutus-typescript-tgz;
 
       lbf-plutus-rust = config.lbf-nix.lbfRust {
         name = "lbf-plutus";

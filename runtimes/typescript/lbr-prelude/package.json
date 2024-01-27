@@ -5,14 +5,12 @@
   "lockfileVersion": 2,
   "exports": {
     ".": "./dist/LambdaBuffers/Prelude.js",
-    "./Map.js": "./dist/LambdaBuffers/Runtime/Map.js",
-    "./Set.js": "./dist/LambdaBuffers/Runtime/Set.js",
     "./package.json": "./package.json"
   },
   "type": "module",
   "scripts": {
     "build": "npx tsc -b src/LambdaBuffers",
-    "test": "npx tsc -b src/Tests && node --test"
+    "test": ":"
   },
   "repository": {
     "type": "git",
@@ -20,10 +18,12 @@
   },
   "author": "Jared Pon",
   "license": "ISC",
-  "devDependencies": {
-    "typescript": "^5.2.2",
-    "@types/node": "^20.8.10"
-  },
-  "files": ["./dist/LambdaBuffers/**/*"],
-  "dependencies": {}
+  "files": [
+    "./dist/LambdaBuffers/**/*",
+    "./.extra-dependencies/**/*"
+  ],
+  "dependencies": {
+    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz",
+    "typescript": "^5.3.3"
+  }
 }

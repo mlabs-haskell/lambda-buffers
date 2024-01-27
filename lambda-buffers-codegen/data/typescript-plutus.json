@@ -1,0 +1,148 @@
+{
+  "opaquesConfig": {
+    "Plutus.V1.PlutusData": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "PlutusData"
+    ],
+    "Plutus.V1.Address": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Address"
+    ],
+    "Plutus.V1.Credential": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Credential"
+    ],
+    "Plutus.V1.StakingCredential": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "StakingCredential"
+    ],
+    "Plutus.V1.PubKeyHash": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "PubKeyHash"
+    ],
+    "Plutus.V1.Bytes": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "LedgerBytes"
+    ],
+    "Plutus.V1.Interval": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Interval"
+    ],
+    "Plutus.V1.Extended": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Extended"
+    ],
+    "Plutus.V1.LowerBound": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "LowerBound"
+    ],
+    "Plutus.V1.UpperBound": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "UpperBound"
+    ],
+    "Plutus.V1.POSIXTime": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "POSIXTime"
+    ],
+    "Plutus.V1.POSIXTimeRange": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "POSIXTimeRange"
+    ],
+    "Plutus.V1.Value": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Value"
+    ],
+    "Plutus.V1.CurrencySymbol": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "CurrencySymbol"
+    ],
+    "Plutus.V1.AssetClass": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "AssetClass"
+    ],
+    "Plutus.V1.TokenName": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TokenName"
+    ],
+    "Plutus.V1.Redeemer": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Redeemer"
+    ],
+    "Plutus.V1.Datum": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Datum"
+    ],
+    "Plutus.V1.DatumHash": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "DatumHash"
+    ],
+    "Plutus.V1.RedeemerHash": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "RedeemerHash"
+    ],
+    "Plutus.V1.ScriptHash": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "ScriptHash"
+    ],
+    "Plutus.V1.TxId": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TxId"
+    ],
+    "Plutus.V1.TxOutRef": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TxOutRef"
+    ],
+    "Plutus.V1.Map": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "Map"
+    ],
+    "Plutus.V2.TxOut": [
+      "lbr-plutus/V2.js",
+      "LbrPlutusV2",
+      "TxOut"
+    ],
+    "Plutus.V2.TxInInfo": [
+      "lbr-plutus/V2.js",
+      "LbrPlutusV2",
+      "TxInInfo"
+    ],
+    "Plutus.V2.OutputDatum": [
+      "lbr-plutus/V2.js",
+      "LbrPlutusV2",
+      "OutputDatum"
+    ]
+  },
+  "classesConfig": {
+    "Plutus.V1.PlutusData": [
+      [
+        "lbr-plutus/PlutusData.js",
+        "LbrPlutusPD",
+        "IsPlutusData"
+      ]
+    ]
+  }
+}

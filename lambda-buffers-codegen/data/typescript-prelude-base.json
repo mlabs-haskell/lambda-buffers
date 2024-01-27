@@ -1,0 +1,70 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Map"
+    ],
+    "Prelude.Set": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Set"
+    ],
+    "Prelude.List": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "List"
+    ],
+    "Prelude.Either": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Either"
+    ],
+    "Prelude.Maybe": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Maybe"
+    ],
+    "Prelude.Bytes": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Bytes"
+    ],
+    "Prelude.Text": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Text"
+    ],
+    "Prelude.Char": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Char"
+    ],
+    "Prelude.Integer": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Integer"
+    ],
+    "Prelude.Bool": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Bool"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "lbr-prelude",
+        "LbrPrelude",
+        "Eq"
+      ]
+    ],
+    "Prelude.Json": [
+      [
+        "lbr-prelude",
+        "LbrPrelude",
+        "Json"
+      ]
+    ]
+  }
+}

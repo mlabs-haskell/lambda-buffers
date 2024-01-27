@@ -47,7 +47,6 @@
             haskellData = import ./haskell-data.nix pkgs;
             haskellFlake = import ./flake-haskell.nix pkgsForHaskellNix;
             haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgsForHaskellNix;
-            typescriptFlake = import ./flake-typescript.nix pkgs;
           };
 
           # Makes it available in the per system `lib` argument.
