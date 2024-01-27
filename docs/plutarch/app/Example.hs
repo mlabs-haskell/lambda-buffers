@@ -18,9 +18,8 @@ import Plutarch.Api.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenNam
 import Plutarch.Api.V1.Time (PPOSIXTime (PPOSIXTime))
 import Plutarch.ByteString (PByteString)
 import Plutarch.Evaluate (evalScript)
-import Plutarch.Extra.TermCont (pletC, pmatchC)
 import Plutarch.Maybe qualified as Scott
-import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PBuiltinList, PEq ((#==)), PIsData, pconstant, pdata, pfind, pfromData, pif, pshow, ptrace, (#&&))
+import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PBuiltinList, PEq ((#==)), PIsData, pconstant, pdata, pfind, pfromData, pif, pletC, pmatchC, pshow, ptrace, (#&&))
 
 userRef :: Text -> Term s (Ref User)
 userRef userName = userRef' (pfromData $ name userName)
