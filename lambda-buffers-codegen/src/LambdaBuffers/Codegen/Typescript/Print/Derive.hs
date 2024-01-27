@@ -40,7 +40,7 @@ lamTy2PCTy = \case
   LamTy.Types.TyApp _f _args (Just tyApp) -> do
     return $ PC.TyAppI tyApp
   _ ->
-    -- Note(jaredponn): hopefully this never happens...
+    -- NOTE(jaredponn): hopefully this never happens...
     Nothing
 
 instanceDictIdent :: Ts.PkgMap -> Ts.QClassName -> PC.Ty -> Text
