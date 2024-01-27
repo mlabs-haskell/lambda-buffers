@@ -17,7 +17,8 @@
   "author": "Jared Pon",
   "license": "ISC",
   "files": [
-    "./dist/LambdaBuffers/**/*"
+    "./dist/LambdaBuffers/**/*",
+    "./.extra-dependencies/**/*"
   ],
   "devDependencies": {
     "@types/node": "^20.8.10",
@@ -25,8 +26,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "lbr-prelude": "file:extra-dependencies/lbr-prelude-1.0.0.tgz",
-    "plutus-ledger-api": "file:extra-dependencies/plutus-ledger-api-1.0.0.tgz",
-    "prelude": "file:extra-dependencies/prelude-1.0.1.tgz"
+    "lbr-prelude": "file:.extra-dependencies/lbr-prelude-1.0.0.tgz",
+    "plutus-ledger-api": "file:.extra-dependencies/plutus-ledger-api-1.0.0.tgz",
+    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz"
   }
 }

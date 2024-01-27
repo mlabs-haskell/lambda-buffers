@@ -133,7 +133,7 @@ let
             },
             "devDependencies": {
             },
-            "files": ["./dist/LambdaBuffers/**/*" ],
+            "files": ["./dist/LambdaBuffers/**/*",  "./.extra-dependencies/**/*"],
             "dependencies": {
             }
           }

@@ -1,5 +1,5 @@
 import * as Prelude from "prelude";
-export { jsonArray, jsonConstructor, jsonField, jsonObject } from "prelude";
+export { jsonArray, jsonConstructor, jsonObject } from "prelude";
 
 export function and(l: boolean, r: boolean) {
   return l && r;
@@ -32,8 +32,8 @@ export function caseJsonConstructor<A>(
 
 export function caseJsonArray<A>(
   title: string,
-  parseElem: (arg: Prelude.Value) => A,
-): (value: Readonly<Prelude.Value>) => A[] {
+  parseElem: (arg: Prelude.Value[]) => A,
+): (value: Readonly<Prelude.Value>) => A {
   return (value) => {
     return Prelude.caseJsonArray(title, parseElem, value);
   };
@@ -45,4 +45,12 @@ export function caseJsonObject<A>(
   return (value) => {
     return Prelude.caseJsonObject(f, value);
   };
+}
+
+export function jsonField<A>(
+  name: string,
+  value: Prelude.Value,
+  f: (val: Prelude.Value) => A,
+): A {
+  return Prelude.jsonField(name, f, value);
 }
