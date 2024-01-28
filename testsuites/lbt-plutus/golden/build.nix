@@ -22,6 +22,14 @@ _:
           phases = "installPhase";
           installPhase = "ln -s $src $out";
         };
+
+        lbt-plutus-golden-typescript = pkgs.stdenv.mkDerivation {
+          name = "lbt-plutus-golden-data";
+          src = ./.;
+          phases = "installPhase";
+          installPhase = ''ln -s "$src" "$out"'';
+        };
+
       };
 
     };

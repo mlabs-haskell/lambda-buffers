@@ -247,6 +247,29 @@ declare module "../PlutusData.js" {
 PlutusData.IsPlutusData[Symbols.UpperBound] =
   PlutusLedgerApiV1.isPlutusDataUpperBound;
 
+// Closure
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.Closure]: Prelude.Eq<PlutusLedgerApiV1.Closure>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.Closure]: Prelude.Json<PlutusLedgerApiV1.Closure>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.Closure] = Prelude.eqBool;
+LbrPrelude.Json[Symbols.Closure] = Prelude.jsonBool;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.Closure]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV1.Closure
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.Closure] = PlutusLedgerApiV1.isPlutusDataBool;
+
 // Redeemer
 declare module "lbr-prelude" {
   export interface EqInstances {
