@@ -49,34 +49,33 @@ export async function fromToGoldenTest<A>(
   }
 
   for (const [filepath, index] of foundGoldens) {
-    const contents = await Fs.readFile(filepath, { encoding: "utf8" });
+    await it(`${index} at ${filepath}`, async () => {
+      const contents = await Fs.readFile(filepath, { encoding: "utf8" });
 
-    try {
-      const fromToJson = PreludeJson.stringify(
-        jsonDict.toJson(
-          jsonDict.fromJson(
-            PreludeJson.parseJson(contents),
+      try {
+        const fromToJson = PreludeJson.stringify(
+          jsonDict.toJson(
+            jsonDict.fromJson(
+              PreludeJson.parseJson(contents),
+            ),
           ),
-        ),
-      );
+        );
 
-      // TODO(jaredponn). This fails on the _first_ test instead of
-      // accumulating all of them.. Perhaps we want to accumulate all of
-      // them by e.g. wrapping this with `it`.
-      if (contents !== fromToJson) {
+        if (contents !== fromToJson) {
+          assert.fail(
+            `Golden test failed for ${index}. Expected:\n\`${contents}\`\nbut got\n\`${fromToJson}\``,
+          );
+        }
+      } catch (err) {
         assert.fail(
-          `Golden test failed for ${index}. Expected:\n\`${contents}\`\nbut got\n\`${fromToJson}\``,
+          `Golden test failed for ${index} since an error was thrown: \`${err}\`.`,
         );
       }
-    } catch (err) {
-      assert.fail(
-        `Golden test failed for ${index} since an error was thrown: \`${err}\`.`,
-      );
-    }
+    });
   }
 }
 
-describe("JSON tests", () => {
+describe("JSON tests (toJson . fromJson)", () => {
   const goldenDir = `data/lbt-prelude-golden-data`;
   it(`Foo.A from to golden tests`, async () => {
     await fromToGoldenTest(

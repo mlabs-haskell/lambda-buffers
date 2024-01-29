@@ -4,11 +4,14 @@ import * as Fs from "node:fs/promises";
 import * as Path from "node:path";
 
 // WARNING(jaredponn): {@link findGoldens} and  {@link fromToGoldenTest} are
-// essentially duplicated code (well minor generalizations) of the same testing functions in
+// essentially duplicated code (well minor generalizations) of the same testing
+// functions in the lbt-prelude testsuite.
 
 /**
 /* @param goldenDir: directory for the golden files
 /* @param regexFileFilter: see {@link RegExpFileFilter}.
+ *
+/* @returns Tuple of [path to golden file, the resulting "regexFileFilter"ed file]
  */
 export async function findGoldens(
   goldenDir: string,
@@ -61,6 +64,13 @@ export class RegExpFileFilter {
   }
 }
 
+/**
+ * Runs golden tests in the provided `goldenDir` which satisfy the
+ * `regexFileFilter` where the test passes if `assertGolden` does not throw an
+ * exception. Note that `goldens` is essentially unused and is only used to
+ * warn if the number of the TS representation of equivalent HS generated tests
+ * match.
+ */
 export async function fromToGoldenTest<A>(
   goldenDir: string,
   regexFileFilter: RegExpFileFilter,
@@ -78,26 +88,31 @@ export async function fromToGoldenTest<A>(
 
   if (foundGoldens.length !== goldens.length) {
     const errMsg =
-      `lbt-plutus-typescript: warning: expected to find ${goldens.length} golden files for ${regexFileFilter} in ${goldenDir}, but got ${foundGoldens.length}. Forgot to (re)generate the goldens? Or there is a mismatch between the TS goldens and generated Haskell goldens`;
+      `lbt-plutus-typescript: warning: expected to find ${goldens.length} golden files for ${regexFileFilter} in ${goldenDir}, but got ${foundGoldens.length}. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens`;
     console.warn(errMsg); // TODO(jaredponn): apparently there is a mismatch between the TS goldens
-    // and the HS goldens.. The HS script apparently only likes outputting 10
-    // golden tests when there are clearly more for things like e.g.
-    // PlutusData.
+    // and the HS goldens.. The HS script apparently only likes outputting at most 10
+    // golden tests when there are clearly more tests (e.g.
+    // PlutusData has many more tests than just 10)
     // One day, add this back in the future:
     // ```
     // assert.fail(errMsg)
     // ```
+    // Note this doesn't actually effect the correctness of the tests.
   }
 
   for (const [filepath, index] of foundGoldens) {
-    const contents = await Fs.readFile(filepath, { encoding: "utf8" });
-
-    it(`${index}: at ${filepath}`, () => {
+    await it(`${index} at ${filepath}`, async () => {
+      const contents = await Fs.readFile(filepath, { encoding: "utf8" });
       assertGolden(index, contents);
     });
   }
 }
 
+/**
+ * @returns a function which throws an exception if
+ * `serialise(to(from(deserialise(contents)))) != contents` (or any of
+ * `serialise`, `to`, `from`, `deserialise` throws an exception)
+ */
 export function mkFromToAssertGolden<A, B>(
   deserialise: (contents: string) => A,
   from: (a: A) => B,

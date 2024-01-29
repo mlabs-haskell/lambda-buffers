@@ -14,7 +14,8 @@
   "author": "Jared Pon",
   "license": "ISC",
   "files": [
-    "./dist/**/*"
+    "./dist/**/*",
+    "./.extra-dependencies/**/*"
   ],
   "devDependencies": {
     "@types/node": "^20.11.7",
