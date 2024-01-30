@@ -40,7 +40,7 @@ let
     # FIXME: contentAddressed = true;
     reinstallableLibGhc = false; # See https://github.com/input-output-hk/haskell.nix/issues/1939
     packages = {
-      cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf pkgs.secp256k1 ] ];
+      cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf pkgs.secp256k1 pkgs.libblst ] ];
       cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
     };
   };
