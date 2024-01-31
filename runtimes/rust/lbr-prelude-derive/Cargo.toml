@@ -2,6 +2,10 @@
 name = "lbr-prelude-derive"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+homepage = "https://mlabs-haskell.github.io/lambda-buffers/"
+description = "Derive macros for the lambda-buffers Json trait"
+repository = "https://github.com/mlabs-haskell/lambda-buffers"
 
 [lib]
 proc-macro = true

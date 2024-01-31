@@ -2,8 +2,10 @@
 name = "lbr-prelude"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "Apache-2.0"
+homepage = "https://mlabs-haskell.github.io/lambda-buffers/"
+description = "Basic data types and utilities for lambda-buffers"
+repository = "https://github.com/mlabs-haskell/lambda-buffers"
 
 [dependencies]
 data-encoding = "2.4.0"
