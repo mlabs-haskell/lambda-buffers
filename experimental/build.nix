@@ -19,7 +19,7 @@ _: {
           pkgs.protobuf
           pkgs.haskellPackages.haskell-language-server
         ]
-        ++ (if pkgs.system == "x86_64-linux" then [ pkgs.swiPrologWithGui ] else [ ])
+        ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.swiPrologWithGui ])
         ++ config.settings.shell.tools;
 
         shellHook = config.settings.shell.hook;
