@@ -18,8 +18,9 @@ _: {
 
           pkgs.protobuf
           pkgs.haskellPackages.haskell-language-server
-          pkgs.swiPrologWithGui
-        ] ++ config.settings.shell.tools;
+        ]
+        ++ (if pkgs.system == "x86_64-linux" then [ pkgs.swiPrologWithGui ] else [ ])
+        ++ config.settings.shell.tools;
 
         shellHook = config.settings.shell.hook;
         inputsFrom = [ inputs'.proto-nix.devShells.dev-proto-nix ];
