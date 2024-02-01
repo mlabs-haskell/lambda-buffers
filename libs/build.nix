@@ -28,7 +28,7 @@
         configs = [ "${config.packages.codegen-configs}/purescript-prelude-base.json" ];
       };
 
-      lbf-prelude-typescript = (config.lbf-nix.lbfTypescript {
+      lbf-prelude-typescript = config.lbf-nix.lbfTypescript {
         name = "lbf-prelude";
         src = ./lbf-prelude;
         files = [ "Prelude.lbf" ];
@@ -38,7 +38,7 @@
           [
             config.packages.lbr-prelude-typescript-tgz
           ];
-      }).packages.lbf-prelude-typescript-tgz;
+      };
 
       lbf-prelude-plutarch = config.lbf-nix.lbfPlutarch' {
         name = "lbf-prelude-plutarch";
@@ -108,7 +108,7 @@
         ];
       };
 
-      lbf-plutus-typescript = (config.lbf-nix.lbfTypescript {
+      lbf-plutus-typescript = config.lbf-nix.lbfTypescript {
         name = "lbf-plutus";
         src = ./lbf-plutus;
         files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
@@ -123,7 +123,7 @@
             config.packages.lbf-prelude-typescript
             config.packages.lbr-plutus-typescript-tgz
           ];
-      }).packages.lbf-plutus-typescript-tgz;
+      };
 
       lbf-plutus-rust = config.lbf-nix.lbfRust {
         name = "lbf-plutus";

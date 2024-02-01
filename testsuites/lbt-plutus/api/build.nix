@@ -26,12 +26,11 @@ _: {
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
 
-        lbf-plutus-golden-api-typescript = (config.lbf-nix.lbfPlutusTypescript {
+        lbf-plutus-golden-api-typescript = config.lbf-nix.lbfPlutusTypescript {
           name = "lbf-plutus-golden-api";
           src = ./.;
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
-        }).packages.lbf-plutus-golden-api-typescript-tgz
-        ;
+        };
 
       };
     };
