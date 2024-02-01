@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://mlabs-haskell.github.io/lambda-buffers/"
-description = "Basic data types and utilities for lambda-buffers"
+description = "LambdaBuffers runtime library for the Prelude schema."
 repository = "https://github.com/mlabs-haskell/lambda-buffers"
 
 [dependencies]
