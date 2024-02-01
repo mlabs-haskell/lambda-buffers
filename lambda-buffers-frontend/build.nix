@@ -195,7 +195,9 @@ _:
             gen = "${config.packages.lbg-rust}/bin/lbg-rust";
             gen-classes = ["Prelude.Eq" "Prelude.Json"];
             gen-dir = "autogen";
-            gen-opts = ["--config=${config.packages.codegen-configs}/rust-prelude-base.json"];
+            gen-opts = [
+              "--packages lb-pkgs.json"
+              "--config=${config.packages.codegen-configs}/rust-prelude-base.json"];
             work-dir = ".work";
           }} "$@";
         '';
@@ -211,6 +213,7 @@ _:
             gen-classes = ["Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
             gen-dir = "autogen";
             gen-opts = [
+              "--packages lb-pkgs.json"
               "--config=${config.packages.codegen-configs}/rust-prelude-base.json"
               "--config=${config.packages.codegen-configs}/rust-plutus-pla.json"
             ];
