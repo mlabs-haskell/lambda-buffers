@@ -2,10 +2,10 @@
   imports = [
     inputs.pre-commit-hooks.flakeModule # Adds perSystem.pre-commit options
   ];
-  perSystem = { pkgs, ... }:
+  perSystem = { pkgsForRust, ... }:
     let
-      inherit (pkgs.rust-bin.stable.latest) rustfmt;
-      inherit (pkgs) deno;
+      inherit (pkgsForRust.rust-bin.stable.latest) rustfmt;
+      inherit (pkgsForRust) deno;
     in
     {
       pre-commit.settings.hooks = {

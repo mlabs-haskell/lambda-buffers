@@ -42,7 +42,7 @@
           settings = {
 
             haskell = {
-              index-state = "2023-11-26T21:52:49Z";
+              index-state = "2024-01-16T11:00:00Z";
               compiler-nix-name = "ghc963";
             };
 
