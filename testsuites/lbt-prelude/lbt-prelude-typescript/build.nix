@@ -1,26 +1,28 @@
 { inputs, ... }:
 {
-  imports = [ ./api/lbf/build.nix ];
-
   perSystem = { config, system, ... }:
     let
       tsFlake =
         inputs.flake-lang.lib.${system}.typescriptFlake {
-          name = "prelude-sample-project";
+          name = "lbt-prelude";
           src = ./.;
           npmExtraDependencies = [
-            config.packages.lbf-prelude-sample-project-typescript
+            config.packages.lbf-prelude-golden-api-typescript
           ];
 
           devShellTools = config.settings.shell.tools;
           devShellHook = config.settings.shell.hook;
+
+          data =
+            [
+              {
+                name = "lbt-prelude-golden-data";
+                path = config.packages.lbt-prelude-golden-typescript;
+              }
+            ];
         };
     in
     {
-      packages = {
-        inherit (tsFlake.packages) prelude-sample-project-typescript prelude-sample-project-typescript-tgz;
-      };
-
       inherit (tsFlake) devShells checks;
     };
 }

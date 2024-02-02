@@ -10,7 +10,7 @@
           src = ./.;
 
           npmExtraDependencies = [
-            config.packages.lbf-plutus-sample-project-typescript-tgz
+            config.packages.lbf-plutus-sample-project-typescript
           ];
 
           devShellTools = config.settings.shell.tools;

@@ -1,5 +1,6 @@
 import * as PlutusData from "../PlutusData.js";
 import * as PlutusLedgerApiPlutusData from "plutus-ledger-api/PlutusData.js";
+import * as PlutusLedgerApiAssocMap from "plutus-ledger-api/AssocMap.js";
 import * as PlutusLedgerApiV1 from "plutus-ledger-api/V1.js";
 import * as LbrPrelude from "lbr-prelude";
 import * as Prelude from "prelude";
@@ -246,6 +247,29 @@ declare module "../PlutusData.js" {
 }
 PlutusData.IsPlutusData[Symbols.UpperBound] =
   PlutusLedgerApiV1.isPlutusDataUpperBound;
+
+// Closure
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.Closure]: Prelude.Eq<PlutusLedgerApiV1.Closure>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.Closure]: Prelude.Json<PlutusLedgerApiV1.Closure>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.Closure] = Prelude.eqBool;
+LbrPrelude.Json[Symbols.Closure] = Prelude.jsonBool;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.Closure]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV1.Closure
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.Closure] = PlutusLedgerApiV1.isPlutusDataBool;
 
 // Redeemer
 declare module "lbr-prelude" {
@@ -579,3 +603,35 @@ declare module "../PlutusData.js" {
 }
 PlutusData.IsPlutusData[Symbols.PlutusData] =
   PlutusLedgerApiPlutusData.isPlutusDataPlutusData;
+
+// Map
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.Map]: <K, V>(
+      dictK: Prelude.Eq<K>,
+      dictV: Prelude.Eq<V>,
+    ) => Prelude.Eq<PlutusLedgerApiAssocMap.Map<K, V>>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.Map]: <K, V>(
+      dictK: Prelude.Json<K>,
+      dictV: Prelude.Json<V>,
+    ) => Prelude.Json<PlutusLedgerApiAssocMap.Map<K, V>>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.Map] = PlutusLedgerApiAssocMap.eqMap;
+LbrPrelude.Json[Symbols.Map] = PlutusLedgerApiAssocMap.jsonMap;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.Map]: <K, V>(
+      dictK: PlutusLedgerApiPlutusData.IsPlutusData<K>,
+      dictV: PlutusLedgerApiPlutusData.IsPlutusData<V>,
+    ) => PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiAssocMap.Map<K, V>
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.Map] = PlutusLedgerApiAssocMap.isPlutusDataMap;
