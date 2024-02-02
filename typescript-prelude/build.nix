@@ -9,7 +9,7 @@
           name = "prelude-sample-project";
           src = ./.;
           npmExtraDependencies = [
-            config.packages.lbf-prelude-sample-project-typescript-tgz
+            config.packages.lbf-prelude-sample-project-typescript
           ];
 
           devShellTools = config.settings.shell.tools;
