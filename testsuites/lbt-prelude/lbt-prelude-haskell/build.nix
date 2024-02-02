@@ -1,8 +1,8 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { config, ... }:
+  perSystem = { config, system, ... }:
     let
-      hsFlake = config.lbf-nix.haskellFlake {
+      hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
         src = ./.;
 
         name = "lbt-prelude-haskell";
