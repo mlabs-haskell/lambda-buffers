@@ -14390,16 +14390,17 @@
         "rust-overlay": "rust-overlay_11"
       },
       "locked": {
-        "lastModified": 1706522261,
-        "narHash": "sha256-TwCKd7yCn1CUNSazYGnJYaPf4NVqERUrX+U1OqgX3X4=",
+        "lastModified": 1706876917,
+        "narHash": "sha256-6mzyOnpcACak6rcXaht649+C3gw3kKeB4WZN9DRNpMI=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "1a1bba5c907b46ec56694dcbe06e2c9f14b5e18f",
+        "rev": "613bd29cbd1c4961fad98d9b4644d6f506fd6950",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
+        "rev": "613bd29cbd1c4961fad98d9b4644d6f506fd6950",
         "type": "github"
       }
     },
