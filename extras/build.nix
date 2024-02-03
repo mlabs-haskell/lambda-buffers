@@ -23,7 +23,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, pkgsForRust, ... }: {
+      ({ pkgs, config, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -36,11 +36,6 @@
             name = "dev-nix";
             shellHook = config.settings.shell.hook;
             buildInputs = config.settings.shell.tools;
-          };
-
-          lbf-nix = {
-            # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
-            rustFlake = import ./flake-rust.nix pkgsForRust;
           };
 
           # Makes it available in the per system `lib` argument.

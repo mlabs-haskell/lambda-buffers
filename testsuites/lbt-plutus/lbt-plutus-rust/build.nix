@@ -1,33 +1,18 @@
 { inputs, ... }: {
-  perSystem = { config, ... }:
+  perSystem = { config, system, ... }:
 
     let
-      rustFlake = config.lbf-nix.rustFlake {
+      rustFlake = inputs.flake-lang.lib.${system}.rustFlake {
         src = ./.;
         inherit (inputs) crane;
         crateName = "lbt-plutus";
 
         extraSources = [
-          {
-            name = "lbf-plutus-rust-golden-api";
-            path = config.packages.lbf-plutus-golden-api-rust;
-          }
-          {
-            name = "lbf-prelude";
-            path = config.packages.lbf-prelude-rust;
-          }
-          {
-            name = "lbf-plutus";
-            path = config.packages.lbf-plutus-rust;
-          }
-          {
-            name = "lbr-prelude";
-            path = config.packages.lbr-prelude-rust-src;
-          }
-          {
-            name = "lbr-prelude-derive";
-            path = config.packages.lbr-prelude-derive-rust-src;
-          }
+          config.packages.lbf-plutus-golden-api-rust
+          config.packages.lbf-prelude-rust
+          config.packages.lbf-plutus-rust
+          config.packages.lbr-prelude-rust-src
+          config.packages.lbr-prelude-derive-rust-src
         ];
         data = [
           {
