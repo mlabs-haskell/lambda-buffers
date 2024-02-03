@@ -23,7 +23,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, pkgsForCtl, pkgsForRust, ... }: {
+      ({ pkgs, config, pkgsForRust, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -40,9 +40,6 @@
 
           lbf-nix = {
             # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
-
-            purescriptFlake = import ./flake-purescript.nix pkgsForCtl;
-
             rustFlake = import ./flake-rust.nix pkgsForRust;
           };
 
