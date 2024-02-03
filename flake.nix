@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=bladyjoker/migrate-haskellFlake";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
     # Nix
 
