@@ -5,6 +5,7 @@
 - [LambdaBuffers to Haskell](haskell.md)
 - [LambdaBuffers to Purescript](purescript.md)
 - [LambdaBuffers for Plutarch](plutarch.md)
+- [LambdaBuffers for Rust](rust.md)
 - [Design](design.md)
 - [API](api.md)
 - [LambdaBuffers Frontend (.lbf) syntax](syntax.md)
