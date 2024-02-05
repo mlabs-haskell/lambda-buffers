@@ -84,8 +84,8 @@ let
   # Note: lbr-prelude and and plutus prelude versions are pinned here, but can be overridden with `extraVersions`
   versionTable =
     {
-      num-bigint = "0.4.4";
-      serde_json = { version = "1.0.107"; features = [ "arbitrary_precision" ]; };
+      num-bigint = "~0.4";
+      serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
       plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust"; features = [ "lbf" ]; rev = "d66d39c949f59e543c91ee36377c93422d8e9d75"; };
     };
 
