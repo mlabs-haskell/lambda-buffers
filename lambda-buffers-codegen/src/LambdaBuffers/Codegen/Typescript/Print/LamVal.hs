@@ -450,8 +450,8 @@ printCtorE ((_, tyN), (ctorN, _)) prodVals = do
           [ lbrace
           , indent 2 $
               vsep
-                [ "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\'' <> comma
-                , "fields" <+> colon <+> singleDoc
+                [ "fields" <+> colon <+> singleDoc <> comma
+                , "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\''
                 ]
           , rbrace
           ]
@@ -461,8 +461,8 @@ printCtorE ((_, tyN), (ctorN, _)) prodVals = do
           [ lbrace
           , indent 2 $
               vsep
-                [ "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\'' <> comma
-                , "fields" <+> colon <+> encloseSep lbracket rbracket comma prodDocs
+                [ "fields" <+> colon <+> encloseSep lbracket rbracket comma prodDocs <> comma
+                , "name" <+> colon <+> pretty '\'' <> ctorNDoc <> pretty '\''
                 ]
           , rbrace
           ]

@@ -54,3 +54,5 @@ export interface IsPlutusDataInstances {
     dictA: PlutusLedgerApiPlutusData.IsPlutusData<A>,
   ) => PlutusLedgerApiPlutusData.IsPlutusData<Prelude.List<A>>;
 }
+IsPlutusData[LbrPrelude.List] =
+  PlutusLedgerApiPreludeInstances.isPlutusDataList;

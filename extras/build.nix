@@ -23,7 +23,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, pkgsForCtl, pkgsForHaskellNix, pkgsForRust, ... }: {
+      ({ pkgs, config, pkgsForCtl, pkgsForHaskellNix, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -43,7 +43,6 @@
 
             purescriptFlake = import ./flake-purescript.nix pkgsForCtl;
 
-            rustFlake = import ./flake-rust.nix pkgsForRust;
             haskellData = import ./haskell-data.nix pkgs;
             haskellFlake = import ./flake-haskell.nix pkgsForHaskellNix;
             haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgsForHaskellNix;

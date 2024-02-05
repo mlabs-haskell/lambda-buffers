@@ -20,6 +20,11 @@ _: {
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
 
+        lbf-prelude-golden-api-typescript = config.lbf-nix.lbfPreludeTypescript {
+          name = "lbf-prelude-golden-api";
+          src = ./.;
+          files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
+        };
       };
     };
 }

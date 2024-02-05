@@ -2,7 +2,7 @@ _:
 {
   perSystem = { config, ... }:
     let
-      tsFlake =
+      lbf-prelude-sample-project-typescript =
         config.lbf-nix.lbfPreludeTypescript {
           name = "lbf-prelude-sample-project";
           src = ./.;
@@ -11,7 +11,7 @@ _:
     in
     {
       packages = {
-        inherit (tsFlake.packages) lbf-prelude-sample-project-typescript lbf-prelude-sample-project-typescript-tgz;
+        inherit lbf-prelude-sample-project-typescript;
       };
     };
 }
