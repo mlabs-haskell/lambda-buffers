@@ -62,10 +62,10 @@ autogen/LambdaBuffers/Document.hs
 autogen/build.json
 ```
 
-As we can see the `autogen` directory has been created that contains the generated Haskell modules.
-Note the `autogen/build.json` file as it contains all the necessary Hackage dependencies the generated module needs in order to be properly compiled by GHC.
+As we can see the `autogen` directory has been created that contains the generated Rust modules.
+Note the `autogen/build.json` file as it contains all the necessary Cargo dependencies the generated module needs in order to be properly compiled by Rust.
 
-The outputted Haskell module in `autogen/document.rs`:
+The outputted Rust module in `autogen/document.rs`:
 
 ```rust
 #![no_implicit_prelude]
