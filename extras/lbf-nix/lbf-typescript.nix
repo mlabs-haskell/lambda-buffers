@@ -276,4 +276,4 @@ let
       });
     });
 in
-lbTypescriptFlake
+lbTypescriptFlake.packages."${name}-typescript-tgz"

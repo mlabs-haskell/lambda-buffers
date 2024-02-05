@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix/613bd29cbd1c4961fad98d9b4644d6f506fd6950";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
     # Haskell
 
@@ -88,10 +88,12 @@
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-rust/build.nix
+        ./testsuites/lbt-prelude/lbt-prelude-typescript/build.nix
         ./testsuites/lbt-plutus/api/build.nix
         ./testsuites/lbt-plutus/golden/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-typescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
