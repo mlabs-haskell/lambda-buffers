@@ -1,39 +1,28 @@
 { inputs, ... }: {
-  perSystem = { config, ... }:
+  perSystem = { config, system, ... }:
 
     let
-      rustFlake = config.lbf-nix.rustFlake {
-        src = ./.;
-        inherit (inputs) crane;
-        crateName = "lbt-prelude";
+      rustFlake =
+        inputs.flake-lang.lib.${system}.rustFlake {
+          src = ./.;
+          inherit (inputs) crane;
+          crateName = "lbt-prelude";
 
-        extraSources = [
-          {
-            name = "lbf-prelude-golden-api";
-            path = config.packages.lbf-prelude-golden-api-rust;
-          }
-          {
-            name = "lbf-prelude";
-            path = config.packages.lbf-prelude-rust;
-          }
-          {
-            name = "lbr-prelude";
-            path = config.packages.lbr-prelude-rust-src;
-          }
-          {
-            name = "lbr-prelude-derive";
-            path = config.packages.lbr-prelude-derive-rust-src;
-          }
-        ];
-        data = [
-          {
-            name = "lbt-prelude-golden-data";
-            path = config.packages.lbt-prelude-golden-rust;
-          }
-        ];
-        devShellHook = config.settings.shell.hook;
+          extraSources = [
+            config.packages.lbf-prelude-golden-api-rust
+            config.packages.lbf-prelude-rust
+            config.packages.lbr-prelude-rust-src
+            config.packages.lbr-prelude-derive-rust-src
+          ];
+          data = [
+            {
+              name = "lbt-prelude-golden-data";
+              path = config.packages.lbt-prelude-golden-rust;
+            }
+          ];
+          devShellHook = config.settings.shell.hook;
 
-      };
+        };
     in
     {
 
