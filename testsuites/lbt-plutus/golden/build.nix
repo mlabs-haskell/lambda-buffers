@@ -1,6 +1,6 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, system, ... }:
     let
       goldenData = pkgs.stdenv.mkDerivation {
         name = "lbt-plutus-golden-data";
@@ -14,7 +14,7 @@ _:
     in
     {
       packages = {
-        lbt-plutus-golden-haskell = config.lbf-nix.haskellData {
+        lbt-plutus-golden-haskell = inputs.flake-lang.lib.${system}.haskellData {
           srcs = [ ./. ];
           cabalDataPatterns = [ "**/*.json" ];
           cabalPackageName = "lbt-plutus-golden-data";

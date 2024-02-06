@@ -1,9 +1,9 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, config, system, ... }:
 
     let
-      pursFlake = config.lbf-nix.purescriptFlake {
+      pursFlake = inputs.flake-lang.lib.${system}.purescriptFlake {
         inherit pkgs;
         src = ./.;
         projectName = "lbr-plutus";
