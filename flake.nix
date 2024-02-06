@@ -3,40 +3,31 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
 
-    # flake-lang.nix
+    # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
-    # Nix
-
-    ## Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
+    # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
 
-    ## Code quality automation
+    # Code quality automation
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
 
-    ## Hercules CI effects
+    # Hercules CI effects
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
 
-    ## Nix library for Google Protobufs
+    # Nix library for Google Protobufs
     proto-nix.url = "github:mlabs-haskell/proto.nix";
 
-    # Purescript
-
-    ## Cardano transaction library (leveraging CTL's Purescript Nix machinery)
+    # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=develop";
 
-    # Rust
-
+    # TODO(bladyjoker): Remove once flake-lang.nix fixes this
     crane.url = "github:ipetkov/crane";
-    rust-overlay.url = "github:oxalica/rust-overlay";
 
-    ## Plutarch eDSL that LB generates to
-    plutarch.follows = "flake-lang/plutarch";
+    # Plutarch eDSL (LB Codegen target)
+    plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
-    iohk-nix.follows = "flake-lang/iohk-nix";
-    haskell-nix.follows = "flake-lang/haskell-nix";
-
-    # Typescript runtime
+    # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript.url = "github:mlabs-haskell/plutus-ledger-api-typescript";
   };
