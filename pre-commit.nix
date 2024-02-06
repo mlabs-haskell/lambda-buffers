@@ -1,7 +1,7 @@
 { inputs, ... }: {
   imports = [
-    ./extras/pre-commit-hooks-extra.nix
     inputs.proto-nix.lib.preCommitModule
+    inputs.flake-lang.flakeModule.rustMonorepoPreCommit
   ];
   perSystem = { config, pkgs, ... }:
     {
@@ -37,8 +37,14 @@
             dhall-format.enable = true;
             purty.enable = true;
             rustfmt-monorepo.enable = true;
-            my-denofmt.enable = true;
-            my-denolint.enable = true;
+            denofmt = {
+              enable = true;
+              # Note(jaredponn): We follow the default files this formats, except
+              # we exclude markdown files. See  
+              #   [1] https://docs.deno.com/runtime/manual/tools/formatter
+              files = ''^.*\.(js|ts|jsx|tsx|json|jsonc)$'';
+            };
+            denolint.enable = true;
             protolint.enable = true;
             txtpbfmt.enable = true;
           };

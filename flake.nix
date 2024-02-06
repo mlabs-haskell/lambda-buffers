@@ -44,7 +44,6 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        ./pkgs.nix
         ./settings.nix
         ./pre-commit.nix
         ./hercules-ci.nix
