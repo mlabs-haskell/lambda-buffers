@@ -2,7 +2,7 @@
 # TODO(bladyjoker): Make packages that actually try and compile.
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }: {
+  perSystem = { pkgs, config, system, ... }: {
 
     packages = {
       lbf-prelude = pkgs.stdenv.mkDerivation {
@@ -152,7 +152,7 @@
         #   - the CLI application (`lbf-prelude-to-haskell`) to compile `.lbf`
         #   schemas
         let
-          hsFlake = config.lbf-nix.haskellFlake {
+          hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
             src = config.packages.lbf-prelude-haskell;
 
             name = "dev-prelude-haskell";
@@ -188,7 +188,7 @@
         # Note:
         # This is mostly duplicated code from `dev-prelude-haskell`
         let
-          hsFlake = config.lbf-nix.haskellPlutusFlake {
+          hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
             src = config.packages.lbf-plutus-haskell;
 
             name = "dev-plutustx";
@@ -221,7 +221,7 @@
 
       dev-plutarch =
         let
-          hsFlake = config.lbf-nix.haskellPlutusFlake {
+          hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
             src = config.packages.lbf-plutus-plutarch;
 
             name = "dev-plutarch";

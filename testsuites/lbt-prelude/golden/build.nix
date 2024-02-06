@@ -1,7 +1,6 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { pkgs, config, ... }:
-
+  perSystem = { pkgs, config, system, ... }:
     let
       goldenData = pkgs.stdenv.mkDerivation {
         name = "lbt-prelude-golden-data";
@@ -16,7 +15,7 @@ _:
       devShells.dev-lbt-prelude-golden = config.devShells.default;
 
       packages = {
-        lbt-prelude-golden-haskell = config.lbf-nix.haskellData {
+        lbt-prelude-golden-haskell = inputs.flake-lang.lib.${system}.haskellData {
           srcs = [ ./. ];
           cabalDataPatterns = [ "**/*.json" ];
           cabalPackageName = "lbt-prelude-golden-data";

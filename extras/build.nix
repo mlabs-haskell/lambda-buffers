@@ -1,4 +1,4 @@
-{ config, inputs, flake-parts-lib, lib, ... }: {
+{ config, flake-parts-lib, lib, ... }: {
 
   # Makes a system agnostic option (dunno why I needed this).
   options.lbf-nix = lib.mkOption {
@@ -23,7 +23,7 @@
 
     # Makes a per system `lbf-nix` option.
     perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, pkgsForCtl, pkgsForHaskellNix, ... }: {
+      ({ pkgs, config, ... }: {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -36,16 +36,6 @@
             name = "dev-nix";
             shellHook = config.settings.shell.hook;
             buildInputs = config.settings.shell.tools;
-          };
-
-          lbf-nix = {
-            # NOTE(bladyjoker): If you need to add a function the export externally and use internally via config.lbf-nix, add it here.
-
-            purescriptFlake = import ./flake-purescript.nix pkgsForCtl;
-
-            haskellData = import ./haskell-data.nix pkgs;
-            haskellFlake = import ./flake-haskell.nix pkgsForHaskellNix;
-            haskellPlutusFlake = import ./flake-haskell-plutus.nix inputs.cardano-haskell-packages pkgsForHaskellNix;
           };
 
           # Makes it available in the per system `lib` argument.

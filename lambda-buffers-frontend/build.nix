@@ -1,8 +1,8 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { config, pkgs, ... }:
+  perSystem = { config, pkgs, system, ... }:
     let
-      hsFlake = config.lbf-nix.haskellFlake {
+      hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
         src = ./.;
 
         name = "lambda-buffers-frontend";

@@ -1,7 +1,7 @@
 { inputs, ... }: {
   imports = [
-    ./extras/pre-commit-hooks-extra.nix
     inputs.proto-nix.lib.preCommitModule
+    inputs.flake-lang.flakeModules.rustMonorepoPreCommit
   ];
   perSystem = { config, pkgs, ... }:
     {
@@ -37,8 +37,14 @@
             dhall-format.enable = true;
             purty.enable = true;
             rustfmt-monorepo.enable = true;
-            my-denofmt.enable = true;
-            my-denolint.enable = true;
+            denofmt = {
+              enable = true;
+              files = "(\\.ts$)|(^tsconfig?(-base)\\.json$)";
+            };
+            denolint = {
+              enable = true;
+              files = "\\.m?ts$";
+            };
             protolint.enable = true;
             txtpbfmt.enable = true;
           };

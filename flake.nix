@@ -6,11 +6,6 @@
     # flake-lang.nix
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
-    # Haskell
-
-    ## Using haskell.nix to build Haskell projects
-    haskell-nix.url = "github:input-output-hk/haskell.nix";
-
     # Nix
 
     ## Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
@@ -35,23 +30,11 @@
     crane.url = "github:ipetkov/crane";
     rust-overlay.url = "github:oxalica/rust-overlay";
 
-    # Plutus
-
-    ## CHaP is a custom hackage for Plutus development
-    cardano-haskell-packages.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
-    cardano-haskell-packages.flake = false;
-
-    ## Some crypto overlays necessary for Plutus
-    iohk-nix.url = "github:input-output-hk/iohk-nix";
-
-    ## Foundational Plutus library
-    plutus.url = "github:input-output-hk/plutus";
-
     ## Plutarch eDSL that LB generates to
-    plutarch = {
-      url = "github:plutonomicon/plutarch-plutus";
-      flake = false;
-    };
+    plutarch.follows = "flake-lang/plutarch";
+
+    iohk-nix.follows = "flake-lang/iohk-nix";
+    haskell-nix.follows = "flake-lang/haskell-nix";
 
     # Typescript runtime
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
@@ -61,7 +44,6 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        ./pkgs.nix
         ./settings.nix
         ./pre-commit.nix
         ./hercules-ci.nix

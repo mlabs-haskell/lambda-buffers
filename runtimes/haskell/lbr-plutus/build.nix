@@ -1,8 +1,8 @@
-_:
+{ inputs, ... }:
 {
-  perSystem = { config, pkgs, ... }:
+  perSystem = { config, pkgs, system, ... }:
     let
-      hsFlake = config.lbf-nix.haskellPlutusFlake {
+      hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
         src = ./.;
 
         name = "lbr-plutus";
