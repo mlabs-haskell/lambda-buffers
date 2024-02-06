@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Command line interface - Lambda Buffers documentation</title>
+        <title>LambdaBuffers for Rust - Lambda Buffers documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="plutarch.html"><strong aria-hidden="true">5.</strong> LambdaBuffers for Plutarch</a></li><li class="chapter-item expanded "><a href="rust.html"><strong aria-hidden="true">6.</strong> LambdaBuffers for Rust</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">7.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">8.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">9.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">10.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">11.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html" class="active"><strong aria-hidden="true">12.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">13.</strong> Comparison matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">3.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">4.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="plutarch.html"><strong aria-hidden="true">5.</strong> LambdaBuffers for Plutarch</a></li><li class="chapter-item expanded "><a href="rust.html" class="active"><strong aria-hidden="true">6.</strong> LambdaBuffers for Rust</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">7.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">8.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">9.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">10.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">11.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">12.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">13.</strong> Comparison matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -173,30 +173,115 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="lambdabuffers-command-line-interface"><a class="header" href="#lambdabuffers-command-line-interface">LambdaBuffers Command Line Interface</a></h1>
-<p>LambdaBuffers consists of three runtime command line interface components:</p>
-<ul>
-<li><a href="lambda-buffers-frontend-cli">lambda-buffers-frontend-cli</a></li>
-<li><a href="lambda-buffers-compiler-cli">lambda-buffers-compiler-cli</a></li>
-<li><a href="todo-link">lambda-buffers-codegen-cli</a></li>
-</ul>
-<p>The <em>Frontend</em> CLI orchestrates work between the user and the <em>Compiler</em> and
-<em>Codegen</em> components.</p>
-<p>It's desirable to have both the <em>Compiler</em> CLI and the <em>Codegen</em> CLI subject to
-a strict API with a specified set of flags to enable CLI implementation from
-various sources. This would be especially helpful with <em>Codegen</em> modules that
-bring about support for new targets, opaque types and typeclasses.</p>
-<!-- TODO(bladyjoker): Complete this chapter -->
+                        <h1 id="lambdabuffers-to-rust"><a class="header" href="#lambdabuffers-to-rust">LambdaBuffers to Rust</a></h1>
+<p>Let's take a look at how LambdaBuffers modules map into Rust modules and how
+LambdaBuffers type definitions map into Rust type definitions.</p>
+<p>We'll use the <code>lbf-prelude-to-rust</code> CLI tool which is just a convenient wrapper over
+the raw <code>lbf</code> CLI. We can get this tool by either loading the LambdaBuffers Nix
+environment that comes packaged with all the CLI tools:</p>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf&lt;tab&gt;
+lbf                        lbf-plutus-to-purescript   lbf-prelude-to-haskell     lbf-prelude-to-rust
+lbf-plutus-to-haskell      lbf-plutus-to-rust         lbf-prelude-to-purescript  
+</code></pre>
+<p>Or we can simply just refer directly to the <code>lbf-prelude-to-rust</code> CLI by <code>nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-rust</code>.</p>
+<p>In this chapter, we're going to use the latter option.</p>
+<p>Let's now use <code>lbf-prelude-to-rust</code> to process the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/docs/examples/Document.lbf">Document.lbf</a> schema.</p>
+<pre><code class="language-purescript">module Document
+
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
+
+-- Author
+sum Author = Ivan | Jovan | Savo
+
+-- Reviewer
+sum Reviewer = Bob | Alice
+
+-- Document
+record Document a = {
+  author : Author,
+  reviewers : Set Reviewer,
+  content : Chapter a
+ }
+
+-- Chapter
+record Chapter a = {
+  content : a,
+  subChapters : List (Chapter a)
+ }
+
+-- Some actual content
+sum RichContent = Image Bytes | Gif Bytes | Text Text
+
+-- Rich document
+prod RichDocument = (Document RichContent)
+</code></pre>
+<pre><code class="language-shell">$ nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-rust -- Document.lbf
+$ find autogen/
+autogen/
+autogen/LambdaBuffers
+autogen/LambdaBuffers/Document.hs
+autogen/build.json
+</code></pre>
+<p>As we can see the <code>autogen</code> directory has been created that contains the generated Rust modules.
+Note the <code>autogen/build.json</code> file as it contains all the necessary Cargo dependencies the generated module needs in order to be properly compiled by Rust.</p>
+<p>The outputted Rust module in <code>autogen/document.rs</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_implicit_prelude]
+#![allow(warnings)]
+<span class="boring">fn main() {
+</span>extern crate lbf_prelude;
+extern crate std;
+
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub enum Author{Ivan, Jovan, Savo}
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub struct Chapter&lt;A&gt;{pub content: A,
+                     pub sub_chapters: std::boxed::Box&lt;lbf_prelude::prelude::List&lt;Chapter&lt;A&gt;&gt;&gt;}
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub struct Document&lt;A&gt;{pub author: Author,
+                      pub reviewers: lbf_prelude::prelude::Set&lt;Reviewer&gt;,
+                      pub content: Chapter&lt;A&gt;}
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub enum Reviewer{Bob, Alice}
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub enum RichContent{Image(lbf_prelude::prelude::Bytes),
+                    Gif(lbf_prelude::prelude::Bytes),
+                    Text(lbf_prelude::prelude::Text)}
+
+#[derive(std::fmt::Debug, std::clone::Clone)]
+pub struct RichDocument(pub Document&lt;RichContent&gt;);
+
+<span class="boring">}</span></code></pre></pre>
+<h2 id="sum-types"><a class="header" href="#sum-types">Sum types</a></h2>
+<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LambdaBuffers schema using the <code>sum</code> keyword.</p>
+<p>As we can see, nothing too surprising here, all the <code>sum</code> types become <code>enum</code>
+in Rust.</p>
+<h2 id="product-types"><a class="header" href="#product-types">Product types</a></h2>
+<p>The type <code>RichDocument</code> have been declared as a product type in the
+LambdaBuffers schema using the <code>prod</code> keyword.</p>
+<p>They become Rust tuple <code>struct</code> (or named tuple)</p>
+<h2 id="record-types"><a class="header" href="#record-types">Record types</a></h2>
+<p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the
+LambdaBuffers schema using the <code>record</code> keyword.</p>
+<p>Like with product types, they become Rust <code>struct</code> with named fields.</p>
+<p>All types and their fields are public, allowing to manipulate them without accessors.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="codegen.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="plutarch.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="comparison-matrix.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="design.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -206,11 +291,11 @@ bring about support for new targets, opaque types and typeclasses.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="codegen.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="plutarch.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="comparison-matrix.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="design.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
