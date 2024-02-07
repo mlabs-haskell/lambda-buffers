@@ -100,7 +100,7 @@ let
 
       installPhase = ''
         mkdir -p $out;
-        cp -r autogen $out
+        cp -rL autogen $out
         cp ${name}.cabal $out/${name}.cabal;
         find $out;
 
