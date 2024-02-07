@@ -23389,16 +23389,15 @@
         "prelude-typescript": "prelude-typescript"
       },
       "locked": {
-        "lastModified": 1707260645,
+        "lastModified": 1707267831,
         "narHash": "sha256-Lj+SPllIjDiMzpDHFze/dMKb/HIpZtYkqxSL0lfXdks=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "eb68b14014ec0b1bf3fa12ac04f79c8625169924",
+        "rev": "5e8ef63a46a3e4f02bf8c3753ec469e659bc3688",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "jared/add-follows-to-flake-nix",
         "repo": "plutus-ledger-api-typescript",
         "type": "github"
       }
