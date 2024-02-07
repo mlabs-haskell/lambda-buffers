@@ -86,7 +86,7 @@ let
     {
       num-bigint = "~0.4";
       serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
-      plutus-ledger-api = { git = "https://github.com/mlabs-haskell/plutus-ledger-api-rust"; features = [ "lbf" ]; rev = "d66d39c949f59e543c91ee36377c93422d8e9d75"; };
+      plutus-ledger-api = { version = "^0.1.0"; features = [ "lbf" ]; };
     };
 
   crateVersions = opts: with (lbfRustOpts opts);
