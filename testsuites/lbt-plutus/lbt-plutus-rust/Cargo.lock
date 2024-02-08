@@ -127,7 +127,7 @@ version = "0.1.0"
 dependencies = [
  "lbf-plutus",
  "lbf-prelude",
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
  "plutus-ledger-api",
  "serde_json",
@@ -137,7 +137,7 @@ dependencies = [
 name = "lbf-prelude"
 version = "0.1.0"
 dependencies = [
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
 ]
 
@@ -146,22 +146,7 @@ name = "lbr-prelude"
 version = "0.1.0"
 dependencies = [
  "data-encoding",
- "lbr-prelude-derive 0.1.0",
- "num-bigint",
- "proptest",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "lbr-prelude"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70b334b1177e5a3305d18a7f4c559092178e6fea3e47932438969d256711cc45"
-dependencies = [
- "data-encoding",
- "lbr-prelude-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lbr-prelude-derive",
  "num-bigint",
  "proptest",
  "serde",
@@ -172,18 +157,6 @@ dependencies = [
 [[package]]
 name = "lbr-prelude-derive"
 version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
- "trybuild",
-]
-
-[[package]]
-name = "lbr-prelude-derive"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3265146216a6d6879697e8e540f2b5d4f55fb866393483d8b26fab2edab7957"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -197,7 +170,7 @@ version = "0.1.0"
 dependencies = [
  "lbf-plutus-rust-golden-api",
  "lbf-prelude",
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
  "plutus-ledger-api",
  "serde_json",
@@ -269,7 +242,7 @@ name = "plutus-ledger-api"
 version = "0.1.0"
 dependencies = [
  "data-encoding",
- "lbr-prelude 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lbr-prelude",
  "linked-hash-map",
  "num-bigint",
  "num-traits",
