@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=jared/add-follows-to-nix-flake";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -19,7 +19,7 @@
     proto-nix.url = "github:mlabs-haskell/proto.nix";
 
     # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
-    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=develop";
+    ctl.follows = "flake-lang/ctl";
 
     # TODO(bladyjoker): Remove once flake-lang.nix fixes this
     crane.url = "github:ipetkov/crane";
