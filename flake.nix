@@ -1,19 +1,19 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.follows = "flake-lang/nixpkgs";
 
     # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.follows = "flake-lang/flake-parts";
 
     # Code quality automation
-    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    pre-commit-hooks.follows = "flake-lang/pre-commit-hooks";
 
     # Hercules CI effects
-    hci-effects.url = "github:hercules-ci/hercules-ci-effects";
+    hci-effects.follows = "flake-lang/hci-effects";
 
     # Nix library for Google Protobufs
     proto-nix.url = "github:mlabs-haskell/proto.nix";
@@ -22,10 +22,10 @@
     ctl.follows = "flake-lang/ctl";
 
     # TODO(bladyjoker): Remove once flake-lang.nix fixes this
-    crane.url = "github:ipetkov/crane";
+    crane.follows = "flake-lang/crane";
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus";
+    plutarch.follows = "flake-lang/plutarch";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
@@ -38,7 +38,6 @@
     plutus-ledger-api-rust = {
       url = "github:mlabs-haskell/plutus-ledger-api-rust";
       inputs.nixpkgs.follows = "nixpkgs";
-
     };
   };
 
