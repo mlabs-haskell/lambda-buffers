@@ -19,7 +19,7 @@
     proto-nix.url = "github:mlabs-haskell/proto.nix";
 
     # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
-    ctl.url = "github:plutonomicon/cardano-transaction-lib?ref=develop";
+    ctl.follows = "flake-lang/ctl";
 
     # TODO(bladyjoker): Remove once flake-lang.nix fixes this
     crane.url = "github:ipetkov/crane";
@@ -29,7 +29,10 @@
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
-    plutus-ledger-api-typescript.url = "github:mlabs-haskell/plutus-ledger-api-typescript";
+    plutus-ledger-api-typescript = {
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript";
+      inputs.flake-lang.follows = "flake-lang";
+    };
 
     # Rust runtime
     plutus-ledger-api-rust = {
