@@ -2263,16 +2263,15 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1707358100,
+        "lastModified": 1707380339,
         "narHash": "sha256-FKDO0A4u2E8mDN44fxwaeQNNhhvNKkn0izUJlEOwFwI=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "fc7e43fff3cf05da3edb1f89ddc8ba00c84bdee7",
+        "rev": "f1bcbf783377d69b79b6bab57715b34382586b6e",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "jared/add-follows-to-nix-flake",
         "repo": "flake-lang.nix",
         "type": "github"
       }
