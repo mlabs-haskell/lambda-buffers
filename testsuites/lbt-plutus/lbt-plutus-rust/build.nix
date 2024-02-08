@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  perSystem = { config, system, ... }:
+  perSystem = { config, inputs', system, ... }:
 
     let
       rustFlake =
@@ -9,6 +9,7 @@
           crateName = "lbt-plutus";
 
           extraSources = [
+            inputs'.plutus-ledger-api-rust.packages.plutus-ledger-api-rust-src
             config.packages.lbf-plutus-golden-api-rust
             config.packages.lbf-prelude-rust
             config.packages.lbf-plutus-rust

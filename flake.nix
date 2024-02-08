@@ -30,6 +30,13 @@
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript.url = "github:mlabs-haskell/plutus-ledger-api-typescript";
+
+    # Rust runtime
+    plutus-ledger-api-rust = {
+      url = "github:mlabs-haskell/plutus-ledger-api-rust?ref=szg251/flake-lang";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+    };
   };
 
   outputs = inputs@{ flake-parts, ... }:

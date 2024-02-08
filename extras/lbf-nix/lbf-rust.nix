@@ -86,7 +86,7 @@ let
     {
       num-bigint = "~0.4";
       serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
-      plutus-ledger-api = { version = "^0.1.0"; features = [ "lbf" ]; };
+      plutus-ledger-api = { path = "../plutus-ledger-api-0.1.0"; features = [ "lbf" ]; };
     };
 
   crateVersions = opts: with (lbfRustOpts opts);
