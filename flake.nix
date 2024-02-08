@@ -16,7 +16,11 @@
     hci-effects.follows = "flake-lang/hci-effects";
 
     # Nix library for Google Protobufs
-    proto-nix.url = "github:mlabs-haskell/proto.nix";
+    proto-nix = {
+      url = "github:mlabs-haskell/proto.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.haskell-nix.follows = "flake-lang/haskell-nix";
+    };
 
     # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.follows = "flake-lang/ctl";
