@@ -127,7 +127,7 @@ version = "0.1.0"
 dependencies = [
  "lbf-plutus",
  "lbf-prelude",
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
  "plutus-ledger-api",
  "serde_json",
@@ -137,7 +137,7 @@ dependencies = [
 name = "lbf-prelude"
 version = "0.1.0"
 dependencies = [
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
 ]
 
@@ -146,21 +146,7 @@ name = "lbr-prelude"
 version = "0.1.0"
 dependencies = [
  "data-encoding",
- "lbr-prelude-derive 0.1.0",
- "num-bigint",
- "proptest",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "lbr-prelude"
-version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6#7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6"
-dependencies = [
- "data-encoding",
- "lbr-prelude-derive 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6)",
+ "lbr-prelude-derive",
  "num-bigint",
  "proptest",
  "serde",
@@ -179,23 +165,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "lbr-prelude-derive"
-version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6#7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
- "trybuild",
-]
-
-[[package]]
-name = "lbt-prelude"
+name = "lbt-plutus"
 version = "0.1.0"
 dependencies = [
  "lbf-plutus-rust-golden-api",
  "lbf-prelude",
- "lbr-prelude 0.1.0",
+ "lbr-prelude",
  "num-bigint",
  "plutus-ledger-api",
  "serde_json",
@@ -212,6 +187,12 @@ name = "libm"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
+
+[[package]]
+name = "linked-hash-map"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
 name = "linux-raw-sys"
@@ -259,11 +240,12 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "plutus-ledger-api"
 version = "0.1.0"
-source = "git+https://github.com/mlabs-haskell/plutus-ledger-api-rust?rev=d66d39c949f59e543c91ee36377c93422d8e9d75#d66d39c949f59e543c91ee36377c93422d8e9d75"
 dependencies = [
  "data-encoding",
- "lbr-prelude 0.1.0 (git+https://github.com/mlabs-haskell/lambda-buffers.git?rev=7adcef1ea98dbfe9b3c4c527db3c499e078cb4d6)",
+ "lbr-prelude",
+ "linked-hash-map",
  "num-bigint",
+ "num-traits",
  "proptest",
  "serde_json",
  "thiserror",

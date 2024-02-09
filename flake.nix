@@ -33,6 +33,13 @@
       url = "github:mlabs-haskell/plutus-ledger-api-typescript";
       inputs.flake-lang.follows = "flake-lang";
     };
+
+    # Rust runtime
+    plutus-ledger-api-rust = {
+      url = "github:mlabs-haskell/plutus-ledger-api-rust";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+    };
   };
 
   outputs = inputs@{ flake-parts, ... }:
