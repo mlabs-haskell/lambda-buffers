@@ -27870,16 +27870,15 @@
         "pre-commit-hooks": "pre-commit-hooks_8"
       },
       "locked": {
-        "lastModified": 1707400430,
+        "lastModified": 1707474355,
         "narHash": "sha256-KFxkxHt7f8iNvCOEWbFM1DNLCeNK3mfiaCbhqPQlbIU=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-rust",
-        "rev": "9b5d44e0b5d3835fe1d86775efe8827836adda9e",
+        "rev": "6c431e25798983b983aa4dad47a64740b5188de5",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "szg251/flake-lang",
         "repo": "plutus-ledger-api-rust",
         "type": "github"
       }
