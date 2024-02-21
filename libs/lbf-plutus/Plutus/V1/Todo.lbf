@@ -1,7 +1,7 @@
 module Plutus.V1.Todo
 
-import Plutus
-import Prelude
+import Plutus.V1 (PlutusData)
+import Prelude (Eq, Json)
 
 -- PlutusLedgerApi.V1.DCert
 opaque DCert
@@ -17,15 +17,6 @@ opaque ScriptPurpose
 instance PlutusData ScriptPurpose
 instance Eq ScriptPurpose
 
-opaque TxInInfo
-instance PlutusData TxInInfo
-instance Eq TxInInfo
-
 opaque TxInfo
 instance PlutusData TxInfo
 instance Eq TxInfo
-
--- PlutusLedgerApi.V1.Tx
-opaque TxOut
-instance PlutusData TxOut
-instance Eq TxOut

@@ -150,6 +150,31 @@
       "PlutusTx.AssocMap",
       "Map"
     ],
+    "Plutus.V1.Todo.DCert": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V1.DCert",
+      "DCert"
+    ],
+    "Plutus.V1.Todo.ScriptContext": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V1.Contexts",
+      "ScriptContext"
+    ],
+    "Plutus.V1.Todo.ScriptPurpose": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V1.Contexts",
+      "ScriptPurpose"
+    ],
+    "Plutus.V1.Todo.TxInInfo": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V1.Contexts",
+      "TxInInfo"
+    ],
+    "Plutus.V1.Todo.TxInfo": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V1.Contexts",
+      "TxInfo"
+    ],
     "Plutus.V2.TxInInfo": [
       "plutus-ledger-api",
       "PlutusLedgerApi.V2.Contexts",
@@ -164,6 +189,16 @@
       "plutus-ledger-api",
       "PlutusLedgerApi.V2.Tx",
       "TxOut"
+    ],
+    "Plutus.V2.Todo.ScriptContext": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V2.Contexts",
+      "ScriptContext"
+    ],
+    "Plutus.V2.Todo.TxInfo": [
+      "plutus-ledger-api",
+      "PlutusLedgerApi.V2.Contexts",
+      "TxInfo"
     ]
   },
   "classesConfig": {

@@ -1,7 +1,7 @@
 module Plutus.V2.Todo
 
-import Prelude (Eq)
-import Plutus (PlutusData)
+import Prelude (Eq, Json)
+import Plutus.V1 (PlutusData)
 
 -- PlutusLedgerApi.V2.Contexts
 opaque TxInfo
