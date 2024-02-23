@@ -333,54 +333,54 @@ instance Json PlutusV2.TxOut where
       )
 
 instance Json PlutusV1.DCert where
-  toJson (PlutusV1.DCertDelegRegKey stakingCredential) = jsonConstructor "DCertDelegRegKey" [toJson stakingCredential]
-  toJson (PlutusV1.DCertDelegDeRegKey stakingCredential) = jsonConstructor "DCertDelegDeRegKey" [toJson stakingCredential]
-  toJson (PlutusV1.DCertDelegDelegate delegator delegatee) = jsonConstructor "DCertDelegDelegate" [toJson delegator, toJson delegatee]
-  toJson (PlutusV1.DCertPoolRegister poolId poolVfr) = jsonConstructor "DCertPoolRegister" [toJson poolId, toJson poolVfr]
-  toJson (PlutusV1.DCertPoolRetire pubKeyHash integer) = jsonConstructor "DCertPoolRetire" [toJson pubKeyHash, toJson integer]
-  toJson PlutusV1.DCertGenesis = jsonConstructor "DCertGenesis" []
-  toJson PlutusV1.DCertMir = jsonConstructor "DCertMir" []
+  toJson (PlutusV1.DCertDelegRegKey stakingCredential) = jsonConstructor "DelegRegKey" [toJson stakingCredential]
+  toJson (PlutusV1.DCertDelegDeRegKey stakingCredential) = jsonConstructor "DelegDeRegKey" [toJson stakingCredential]
+  toJson (PlutusV1.DCertDelegDelegate delegator delegatee) = jsonConstructor "DelegDelegate" [toJson delegator, toJson delegatee]
+  toJson (PlutusV1.DCertPoolRegister poolId poolVfr) = jsonConstructor "PoolRegister" [toJson poolId, toJson poolVfr]
+  toJson (PlutusV1.DCertPoolRetire pubKeyHash integer) = jsonConstructor "PoolRetire" [toJson pubKeyHash, toJson integer]
+  toJson PlutusV1.DCertGenesis = jsonConstructor "Genesis" []
+  toJson PlutusV1.DCertMir = jsonConstructor "Mir" []
   fromJson =
     caseJsonConstructor
       "Plutus.V1.DCert"
       [
-        ( "DCertDelegRegKey"
+        ( "DelegRegKey"
         , \case
             [stakingCrendential] -> PlutusV1.DCertDelegRegKey <$> fromJson stakingCrendential
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "DCertDelegDeRegKey"
+        ( "DelegDeRegKey"
         , \case
             [stakingCrendential] -> PlutusV1.DCertDelegDeRegKey <$> fromJson stakingCrendential
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "DCertDelegDelegate"
+        ( "DelegDelegate"
         , \case
             [delegator, delegatee] -> PlutusV1.DCertDelegDelegate <$> fromJson delegator <*> fromJson delegatee
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "DCertPoolRegister"
+        ( "PoolRegister"
         , \case
             [poolId, poolVfr] -> PlutusV1.DCertPoolRegister <$> fromJson poolId <*> fromJson poolVfr
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "DCertPoolRetire"
+        ( "PoolRetire"
         , \case
             [pubKeyHash, integer] -> PlutusV1.DCertPoolRetire <$> fromJson pubKeyHash <*> fromJson integer
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "DCertGenesis"
+        ( "Genesis"
         , \case
             [] -> pure PlutusV1.DCertGenesis
             invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
         )
       ,
-        ( "DCertMir"
+        ( "Mir"
         , \case
             [] -> pure PlutusV1.DCertMir
             invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
