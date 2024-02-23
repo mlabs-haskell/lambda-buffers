@@ -3,7 +3,7 @@ pkgs: lbf: lbg-rust: lbfRustOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfRust = import ./lbf-rust.nix pkgs lbf lbg-rust;
+  lbfRust = import ./lbf-prelude-rust.nix pkgs lbf lbg-rust;
   lbfRustOptsForPlutus = utils.overrideAttrs
     {
       imports = {
