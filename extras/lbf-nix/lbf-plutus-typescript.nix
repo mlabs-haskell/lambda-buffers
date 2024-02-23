@@ -9,7 +9,7 @@ lbfTypescriptOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfTypescript = import ./lbf-prelude-typescript.nix { inherit pkgs lbf lbg-typescript typescriptFlake; };
+  lbfTypescript = import ./lbf-prelude-typescript.nix { inherit pkgs lbf lbg-typescript config typescriptFlake; };
   lbfTypescriptOptsForPlutus = utils.overrideAttrs
     {
       imports = {
