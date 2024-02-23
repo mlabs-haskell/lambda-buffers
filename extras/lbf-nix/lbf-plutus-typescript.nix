@@ -9,13 +9,12 @@ lbfTypescriptOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfTypescript = import ./lbf-typescript.nix { inherit pkgs lbf lbg-typescript typescriptFlake; };
+  lbfTypescript = import ./lbf-prelude-typescript.nix { inherit pkgs lbf lbg-typescript typescriptFlake; };
   lbfTypescriptOptsForPlutus = utils.overrideAttrs
     {
       imports = {
         default = { };
         override = libs: libs // {
-          lbf-prelude = "${config.packages.lbf-prelude}";
           lbf-plutus = "${config.packages.lbf-plutus}";
         };
       };
@@ -27,14 +26,11 @@ let
       };
       classes = {
         default = [ ];
-        override = cls: cls ++ [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
+        override = cls: cls ++ [ "Plutus.V1.PlutusData" ];
       };
       configs = {
         default = [ ];
-        override = _: [
-          "${config.packages.codegen-configs}/typescript-prelude-base.json"
-          "${config.packages.codegen-configs}/typescript-plutus.json"
-        ];
+        override = cfgs: cfgs ++ [ "${config.packages.codegen-configs}/typescript-plutus.json" ];
       };
     }
     lbfTypescriptOpts;

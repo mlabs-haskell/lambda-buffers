@@ -9,17 +9,16 @@ let
       imports = {
         default = { };
         override = libs: libs // {
-          lbf-prelude = ../../libs/lbf-prelude;
           lbf-plutus = ../../libs/lbf-plutus;
         };
       };
       classes = {
         default = [ ];
-        override = cls: cls ++ [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
+        override = cls: cls ++ [ "Plutus.V1.PlutusData" ];
       };
       configs = {
         default = [ ];
-        override = _: [ ../../lambda-buffers-codegen/data/rust-prelude-base.json ../../lambda-buffers-codegen/data/rust-plutus-pla.json ];
+        override = cfgs: cfgs ++ [ ../../lambda-buffers-codegen/data/rust-plutus-pla.json ];
       };
     }
     lbfRustOpts;
