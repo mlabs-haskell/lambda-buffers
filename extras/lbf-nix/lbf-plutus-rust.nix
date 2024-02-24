@@ -19,7 +19,7 @@ let
       };
       configs = {
         default = [ ];
-        override = _: [ ../../lambda-buffers-codegen/data/rust-prelude-base.json ../../lambda-buffers-codegen/data/rust-plutus-pla.json ];
+        override = cfgs: cfgs ++ [ ../../lambda-buffers-codegen/data/rust-prelude-base.json ../../lambda-buffers-codegen/data/rust-plutus-pla.json ];
       };
     }
     lbfRustOpts;

@@ -31,7 +31,7 @@ let
       };
       configs = {
         default = [ ];
-        override = _: [
+        override = cfgs: cfgs ++ [
           "${config.packages.codegen-configs}/typescript-prelude-base.json"
           "${config.packages.codegen-configs}/typescript-plutus.json"
         ];
