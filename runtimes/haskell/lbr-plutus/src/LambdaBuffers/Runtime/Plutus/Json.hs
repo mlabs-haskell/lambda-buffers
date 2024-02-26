@@ -423,35 +423,35 @@ instance Json PlutusV1.ScriptPurpose where
 
 instance Json PlutusV1.TxInfo where
   toJson
-    (PlutusV1.TxInfo txInfoInputs txInfoOutputs txInfoFee txInfoMint txInfoDCert txInfoWdrl txInfoValidRange txInfoSignatories txInfoData txInfoId) =
+    (PlutusV1.TxInfo inputs outputs fee mint dCert wdrl validRange signatories datums txId) =
       object
-        [ "tx_info_inputs" .= toJson txInfoInputs
-        , "tx_info_outputs" .= toJson txInfoOutputs
-        , "tx_info_fee" .= toJson txInfoFee
-        , "tx_info_mint" .= toJson txInfoMint
-        , "tx_info_d_cert" .= toJson txInfoDCert
-        , "tx_info_wdrl" .= toJson txInfoWdrl
-        , "tx_info_valid_range" .= toJson txInfoValidRange
-        , "tx_info_signatories" .= toJson txInfoSignatories
-        , "tx_info_data" .= toJson txInfoData
-        , "tx_info_id" .= toJson txInfoId
+        [ "inputs" .= toJson inputs
+        , "outputs" .= toJson outputs
+        , "fee" .= toJson fee
+        , "mint" .= toJson mint
+        , "d_cert" .= toJson dCert
+        , "wdrl" .= toJson wdrl
+        , "valid_range" .= toJson validRange
+        , "signatories" .= toJson signatories
+        , "datums" .= toJson datums
+        , "id" .= toJson txId
         ]
 
   fromJson =
     withObject
       "Plutus.V1.TxInfo"
       ( \obj -> do
-          txInfoInputs <- obj .: "tx_info_inputs"
-          txInfoOutputs <- obj .: "tx_info_inputs"
-          txInfoFee <- obj .: "tx_info_inputs"
-          txInfoMint <- obj .: "tx_info_inputs"
-          txInfoDCert <- obj .: "tx_info_inputs"
-          txInfoWdrl <- obj .: "tx_info_inputs"
-          txInfoValidRange <- obj .: "tx_info_inputs"
-          txInfoSignatories <- obj .: "tx_info_inputs"
-          txInfoData <- obj .: "tx_info_inputs"
-          txInfoId <- obj .: "tx_info_inputs"
-          return $ PlutusV1.TxInfo txInfoInputs txInfoOutputs txInfoFee txInfoMint txInfoDCert txInfoWdrl txInfoValidRange txInfoSignatories txInfoData txInfoId
+          inputs <- obj .: "inputs"
+          outputs <- obj .: "outputs"
+          fee <- obj .: "fee"
+          mint <- obj .: "mint"
+          dCert <- obj .: "d_cert"
+          wdrl <- obj .: "wdrl"
+          validRange <- obj .: "valid_range"
+          signatories <- obj .: "signatories"
+          datums <- obj .: "datums"
+          txId <- obj .: "id"
+          return $ PlutusV1.TxInfo inputs outputs fee mint dCert wdrl validRange signatories datums txId
       )
 
 instance Json PlutusV1.ScriptContext where
@@ -467,52 +467,40 @@ instance Json PlutusV1.ScriptContext where
 
 instance Json PlutusV2.TxInfo where
   toJson
-    (PlutusV2.TxInfo txInfoInputs txInfoReferenceInputs txInfoOutputs txInfoFee txInfoMint txInfoDCert txInfoWdrl txInfoValidRange txInfoSignatories txInfoRedeemers txInfoData txInfoId) =
+    (PlutusV2.TxInfo inputs referenceInputs outputs fee mint dCert wdrl validRange signatories redeemers datums txId) =
       object
-        [ "tx_info_inputs" .= toJson txInfoInputs
-        , "tx_info_reference_inputs" .= toJson txInfoReferenceInputs
-        , "tx_info_outputs" .= toJson txInfoOutputs
-        , "tx_info_fee" .= toJson txInfoFee
-        , "tx_info_mint" .= toJson txInfoMint
-        , "tx_info_d_cert" .= toJson txInfoDCert
-        , "tx_info_wdrl" .= toJson txInfoWdrl
-        , "tx_info_valid_range" .= toJson txInfoValidRange
-        , "tx_info_signatories" .= toJson txInfoSignatories
-        , "tx_info_redeemers" .= toJson txInfoRedeemers
-        , "tx_info_data" .= toJson txInfoData
-        , "tx_info_id" .= toJson txInfoId
+        [ "inputs" .= toJson inputs
+        , "reference_inputs" .= toJson referenceInputs
+        , "outputs" .= toJson outputs
+        , "fee" .= toJson fee
+        , "mint" .= toJson mint
+        , "d_cert" .= toJson dCert
+        , "wdrl" .= toJson wdrl
+        , "valid_range" .= toJson validRange
+        , "signatories" .= toJson signatories
+        , "redeemers" .= toJson redeemers
+        , "datums" .= toJson datums
+        , "id" .= toJson txId
         ]
 
   fromJson =
     withObject
       "Plutus.V2.TxInfo"
       ( \obj -> do
-          txInfoInputs <- obj .: "tx_info_inputs"
-          txInfoReferenceInputs <- obj .: "tx_info_reference_inputs"
-          txInfoOutputs <- obj .: "tx_info_inputs"
-          txInfoFee <- obj .: "tx_info_inputs"
-          txInfoMint <- obj .: "tx_info_inputs"
-          txInfoDCert <- obj .: "tx_info_inputs"
-          txInfoWdrl <- obj .: "tx_info_inputs"
-          txInfoValidRange <- obj .: "tx_info_inputs"
-          txInfoSignatories <- obj .: "tx_info_inputs"
-          txInfoRedeemers <- obj .: "tx_info_redeemers"
-          txInfoData <- obj .: "tx_info_inputs"
-          txInfoId <- obj .: "tx_info_inputs"
+          inputs <- obj .: "inputs"
+          referenceInputs <- obj .: "reference_inputs"
+          outputs <- obj .: "outputs"
+          fee <- obj .: "fee"
+          mint <- obj .: "mint"
+          dCert <- obj .: "d_cert"
+          wdrl <- obj .: "wdrl"
+          validRange <- obj .: "valid_range"
+          signatories <- obj .: "signatories"
+          redeemers <- obj .: "redeemers"
+          datums <- obj .: "datums"
+          txId <- obj .: "id"
           return $
-            PlutusV2.TxInfo
-              txInfoInputs
-              txInfoReferenceInputs
-              txInfoOutputs
-              txInfoFee
-              txInfoMint
-              txInfoDCert
-              txInfoWdrl
-              txInfoValidRange
-              txInfoSignatories
-              txInfoRedeemers
-              txInfoData
-              txInfoId
+            PlutusV2.TxInfo inputs referenceInputs outputs fee mint dCert wdrl validRange signatories redeemers datums txId
       )
 
 instance Json PlutusV2.ScriptContext where
