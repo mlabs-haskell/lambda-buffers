@@ -176,8 +176,9 @@
                         <h1 id="catalyst-milestone-3-testing-and-documentation"><a class="header" href="#catalyst-milestone-3-testing-and-documentation">Catalyst milestone 3: Testing and documentation</a></h1>
 <h2 id="outputs"><a class="header" href="#outputs">Outputs</a></h2>
 <ul>
-<li><input disabled="" type="checkbox" checked=""/>
-<p>A test suite checking for correct mapping from schema data types to PlutusData encodings against a known-good corpus of such mappings (golden tests).</p>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A test suite checking for correct mapping from schema data types to PlutusData encodings against a known-good corpus of such mappings (golden tests).</p>
 <ul>
 <li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus">lbt-plutus</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">Purescript</a> backends. They leverage both golden unit testing approach and randomized property based testing to assert the essential properties of the LambdaBuffers Plutus package:
 <ul>
@@ -196,16 +197,18 @@
 </li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox" checked=""/>
-<p>A test suite checking for roundtrip compatibility between codegened target environments.</p>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A test suite checking for roundtrip compatibility between codegened target environments.</p>
 <ul>
 <li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus">lbt-plutus</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">Purescript</a> backends.</li>
 <li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude">lbt-prelude</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript">Purescript</a> backends.</li>
 <li>Both include golden unit tests that provide assurances that these backends implement the LambdaBuffers packages in a mutually compatible manner.</li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox" checked=""/>
-<p>A modular and contract-based test suite architecture streamlining codegen testing compliance for any of the supported typeclasses.</p>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A modular and contract-based test suite architecture streamlining codegen testing compliance for any of the supported typeclasses.</p>
 <ul>
 <li>A testing strategy was devised and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites">implemented</a> where each supported backend must implement the <code>lbt</code> (ie. a LambdaBuffers test suite) for the corresponding LambdaBuffers package. A package is a collection of LambdaBuffers schemas and their associated runtime libraries.</li>
 <li>LambdaBuffers Prelude
@@ -231,8 +234,9 @@
 </li>
 </ul>
 </li>
-<li><input disabled="" type="checkbox" checked=""/>
-<p>A document mapping the schema data types and typeclasses to their corresponding code-generated variants in the target environments.</p>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A document mapping the schema data types and typeclasses to their corresponding code-generated variants in the target environments.</p>
 <ul>
 <li><a href="https://mlabs-haskell.github.io/lambda-buffers/haskell.html">LambdaBuffers to Haskell</a> documentation.</li>
 <li><a href="https://mlabs-haskell.github.io/lambda-buffers/purescript.html">LambdaBuffers to Purescript</a> documentation.</li>
@@ -246,8 +250,8 @@ The test suites are passing for the Haskell+PlutusTx codegen module.
 <ul>
 <li>CI targets:
 <ul>
-<li>checks.x86_64-linux.&quot;check-lbt-prelude-haskell:test:tests&quot;</li>
-<li>checks.x86_64-linux.&quot;check-lbt-plutus-haskell:test:tests&quot;</li>
+<li>checks.x86_64-linux."check-lbt-prelude-haskell:test:tests"</li>
+<li>checks.x86_64-linux."check-lbt-plutus-haskell:test:tests"</li>
 </ul>
 </li>
 </ul>
@@ -257,8 +261,8 @@ The test suites are passing for the Purescript+CTL codegen module.
 <ul>
 <li>CI targets:
 <ul>
-<li>checks.x86_64-linux.&quot;purescript:lbt-plutus:check&quot;</li>
-<li>checks.x86_64-linux.&quot;purescript:lbt-prelude:check&quot;</li>
+<li>checks.x86_64-linux."purescript:lbt-plutus:check"</li>
+<li>checks.x86_64-linux."purescript:lbt-prelude:check"</li>
 </ul>
 </li>
 </ul>
@@ -346,7 +350,7 @@ sum Foo = Bar Integer | Baz Text
 
 deriving Json Foo
 </code></pre>
-<p>In Haskell and Purescript values of <code>Foo</code> would be <code>Bar 1</code> and <code>Baz &quot;baz&quot;</code>, and their respective JSON mappings would be <code>{&quot;constructor&quot; : &quot;Bar&quot;, &quot;product&quot; : [1]}</code> and <code>{&quot;constructor&quot; : &quot;Baz&quot;, &quot;product&quot; : [&quot;baz&quot;]}</code>.</p>
+<p>In Haskell and Purescript values of <code>Foo</code> would be <code>Bar 1</code> and <code>Baz "baz"</code>, and their respective JSON mappings would be <code>{"constructor" : "Bar", "product" : [1]}</code> and <code>{"constructor" : "Baz", "product" : ["baz"]}</code>.</p>
 <h3 id="testing-encoding-typeclasses-from--to-goldens"><a class="header" href="#testing-encoding-typeclasses-from--to-goldens">Testing encoding typeclasses: <code>from . to</code> goldens</a></h3>
 <p>For each typeclass, we maintain a set of <code>golden' files of known good/bad that lift into the target language with</code>from<code>and write it back with</code>to` into a separate file. Then we provide an assertion that these files are semantically 'equal' (for example JSON spaces don't matter and such).</p>
 <p>Example test:</p>
