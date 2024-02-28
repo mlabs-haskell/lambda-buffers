@@ -30,7 +30,7 @@ impl From<&Value> for JsonType {
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Malformed JSON string, unable to parse")]
-    MalformedJson,
+    MalformedJson { source: serde_json::Error },
     #[error("{parser:?} > Expected a JSON type: {wanted:?}, but got a JSON type: {got:?}")]
     UnexpectedJsonType {
         got: JsonType,

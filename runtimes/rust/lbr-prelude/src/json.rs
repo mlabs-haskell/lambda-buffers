@@ -28,7 +28,7 @@ pub trait Json {
         Self: Sized,
     {
         Value::from_str(string)
-            .map_err(|_| Error::MalformedJson)
+            .map_err(|err| Error::MalformedJson { source: err })
             .and_then(|value| Self::from_json(&value))
     }
 }
