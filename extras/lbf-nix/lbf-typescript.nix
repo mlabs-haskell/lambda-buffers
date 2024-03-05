@@ -8,6 +8,9 @@
 , lbg-typescript
   # Function to create typescript flakes
 , typescriptFlake
+  # Function to create a JSON file which maps package names to lists of
+  # LambdaBuffers names
+, lbf-list-modules-typescript
 }:
 
 
@@ -85,15 +88,20 @@ lbfTypescriptOpts@{
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
+  # lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
 
-  packageSet =
-    pkgs.writeTextFile {
-      name = "lb-typescript-packages";
-      text =
-        builtins.toJSON
-          (builtins.mapAttrs (_name: lbfListModules) imports);
-    };
+  # packageSet =
+  #   pkgs.writeTextFile {
+  #     name = "lb-typescript-packages";
+  #     text =
+  #       builtins.toJSON
+  #         (builtins.mapAttrs (_name: lbfListModules) imports);
+  #   };
+  packageSet = pkgs.runCommand "lb-typescript-packages" { buildInputs = [ lbf-list-modules-typescript ]; }
+    ''
+      1>"$out" lbf-list-modules-typescript \
+          ${pkgs.lib.escapeShellArgs ( pkgs.lib.mapAttrsToList (name: value: "${name}=${value}") imports) }
+    '';
 
   lbfBuilt = with lbfTypescriptOpts;
     lbf-build.build

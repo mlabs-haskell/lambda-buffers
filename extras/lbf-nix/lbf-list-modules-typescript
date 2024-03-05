@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+
+const fs = require('node:fs/promises')
+const process = require('node:process')
+
+const help =`Usage: lbf-list-modules-typescript <package-name>=<directory>...
+
+Description:
+    Given a sequence of \`pkg-name1=dir1\`, ..., \`pkg-nameN=dirN\`, outputs
+    a JSON object on stdout of the form
+    \`\`\`
+    {
+        "pkg-name1": lbfs1,
+        ...
+        "pkg-nameN": lbfsN
+    }
+    \`\`\`
+    where for every \`i\`, each \`lbfi\` is a list of all paths ending with \`*.lbf\` in \`diri\`
+    except the \`*.lbf\` suffix is removed and all \`/\`s are replaced with \`.\`.
+
+    When there are no arguments, this returns the empty JSON object.
+
+Examples:
+    Suppose there is a directory as follows.
+        |-A.lbf
+        \`-Directory
+           |-B.lbf
+           \`-C.lbf
+    Then, \`lbf-list-modules-typescript .\` returns
+    \`\`\`
+    A
+    Directory.B
+    Directory.C
+    \`\`\``
+
+async function main() {
+    const argv = process.argv.slice(2);
+
+    const result = { }
+
+    for (const pkgDir of argv) {
+        const pkgDirMatches = pkgDir.match(/^(?<pkgName>[^=]*)=(?<dir>[^=]+)$/)
+        if (pkgDirMatches === null)
+            throw new Error("CLI argument not of the form \`<pkg-name>=<directory>\`\n" + help)
+
+        const { pkgName, dir } = pkgDirMatches.groups
+        const listings = await fs.readdir(dir, { recursive: true })
+
+        const filtered = []
+        for (const listing of listings) {
+            const listingMatch = listing.match(/^(?<moduleName>.*)\.lbf$/)
+            if (listingMatch === null)
+                continue
+            const { moduleName } = listingMatch.groups
+            filtered.push(moduleName.replace(/\//g, '.'))
+        }
+
+        if (result[pkgName] !== undefined)
+            console.error(`lbf-list-modules-typescript: warning: package name ${pkgName} is defined multiple times. Overwriting the first definition.`)
+
+        result[pkgName] = filtered
+    }
+
+    process.stdout.write(JSON.stringify(result));
+}
+
+main()

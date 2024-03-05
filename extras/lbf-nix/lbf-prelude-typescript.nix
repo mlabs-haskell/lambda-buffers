@@ -9,11 +9,12 @@
 , lbg-typescript
 , config
 , typescriptFlake
+, lbf-list-modules-typescript
 }: lbfTypeScriptOpts:
 let
   utils = import ./utils.nix pkgs;
 
-  lbfTs = import ./lbf-typescript.nix { inherit pkgs lbf lbg-typescript typescriptFlake; };
+  lbfTs = import ./lbf-typescript.nix { inherit pkgs lbf lbg-typescript typescriptFlake lbf-list-modules-typescript; };
   lbfTypeScriptOptsForPrelude = utils.overrideAttrs
     {
       imports = {
