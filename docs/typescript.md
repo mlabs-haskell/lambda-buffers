@@ -1,9 +1,8 @@
 # LambdaBuffers to Typescript
-This chapter will walk through a translation from a LambdaBuffers' module into
-    a Typescript module which includes the translation of types.
+This chapter will walk through a translation from a LambdaBuffers' module into a Typescript module.
 
 To demonstrate this, we will use the `lbf-prelude-to-typescript` CLI tool which is just a convenient wrapper over the raw `lbf` CLI.
-To this end, we may enter a development shell which provides many other Lambda Buffers CLI tools as follows.
+To this end, we may enter a development shell which provides this tool along with many other Lambda Buffers CLI tools with the following command.
 
 ```shell
 $ nix develop github:mlabs-haskell/lambda-buffers#lb
@@ -71,7 +70,7 @@ autogen/build.json
 The generated `autogen` directory created contains the generated TypeScript modules.
 
 Note that `lbf-list-modules-typescript` is needed to create a JSON object which maps package names (for NPM) to Lambda Buffers' modules.
-Thus, in this example one should have a `package.json` file which associates the key `"name"` with the string value `"lbf-document"`.
+Thus, in this example, one should have a `package.json` file which associates the key `"name"` with the string value `"lbf-document"`.
 
 The `autogen/build.json` file can be ignored.
 
@@ -149,7 +148,7 @@ where the `...` denotes iterated `SomeTypei` for some `i`, then
 ## Sum types
 The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LambdaBuffers schema using the `sum` keyword.
 
-In general, sum types are mapped to a [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types) in TypeScript and follows the additional following rules.
+In general, sum types are mapped to a [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types) in TypeScript and with the additional following rules.
 Given a LambdaBuffers' sum type as follows
 
 ```purescript
@@ -159,9 +158,7 @@ sum MySum
     | BranchN BranchNType1 ... BranchNTypeMN
 ```
 
-where the `...` denotes either an iterated `Branchi` for some `i`, or an
-iterated `BranchiTypej` for some `i` and `j`, then each branch, say `Branchi` is translated as
-follows.
+where the `...` denotes either an iterated `Branchi` for some `i`, or an iterated `BranchiTypej` for some `i` and `j`, then each branch, say `Branchi` is translated as follows.
 
 - If `Branchi` has no fields i.e., `| Branchi`, then the corresponding TypeScript type's union member is
 
@@ -177,8 +174,7 @@ follows.
     }
   ```
 
-  where `<Product translation of BranchiType1 ... BranchiTypeMi>` denotes the
-  right hand side of the [product translation](#product-types) of `prod FieldsProduct = BranchiType1 ... BranchiTypeMi`.
+  where `<Product translation of BranchiType1 ... BranchiTypeMi>` denotes the right hand side of the [product translation](#product-types) of `prod FieldsProduct = BranchiType1 ... BranchiTypeMi`.
 
   So, for example, given `| Branchi BranchiType1`,  the corresponding TypeScript type is as follows
 
@@ -197,8 +193,7 @@ follows.
   ```
 
 ## Record types
-The types `Document` and `Chapter` have been declared as record types in the
-LambdaBuffers schema using the `record` keyword.
+The types `Document` and `Chapter` have been declared as record types in the LambdaBuffers schema using the `record` keyword.
 
 Record types are mapped to [object types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#object-types) in TypeScript.
 Given a LambdaBuffers' record type as follows
@@ -218,7 +213,7 @@ TypeScript has no builtin implementation of type classes. As such, LambdaBuffers
 A complete usage example can be found in the [TypeScript Prelude sample project](./typescript-prelude/src/index.mts).
 
 A type class in TypeScript is an object type which defines a set of methods.
-For example, the `Eq` type class in Haskell defines `==` (equality) and `/=` (inequality) as follows.
+For example, the `Eq` type class in Haskell defines the set of methods `==` (equality) and `/=` (inequality) as follows.
 
 ```haskell
 class Eq a where
@@ -226,7 +221,7 @@ class Eq a where
     (/=) :: a -> a -> Bool
 ```
 
-Thus, the [`Eq` class](https://github.com/mlabs-haskell/prelude-typescript/blob/main/src/Lib/Eq.ts) in TypeScript is:
+The corresponding [`Eq` class](https://github.com/mlabs-haskell/prelude-typescript/blob/main/src/Lib/Eq.ts) in TypeScript is:
 
 ```ts
 export interface Eq<A> {
@@ -302,9 +297,7 @@ This loosely follows the original translation given in the paper [How to make ad
 
 ## Limitations
 
-- Only Haskell 2010 typeclasses are supported for the TypeScript code
-  generator. So, the following schemas will probably generate incorrect
-  code.
+- Only Haskell 2010 typeclasses are supported for the TypeScript code generator. So, the following schemas will probably generate incorrect code.
 
   ```purescript
   derive Eq a => Eq (MyPair a a)
