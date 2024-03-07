@@ -22,15 +22,18 @@ Description:
 
 Examples:
     Suppose there is a directory as follows.
+    \`\`\`
+        .
         |-A.lbf
         \`-Directory
            |-B.lbf
            \`-C.lbf
-    Then, \`lbf-list-modules-typescript .\` returns
     \`\`\`
-    A
-    Directory.B
-    Directory.C
+    Then, \`lbf-list-modules-typescript my-package=.\` returns
+    \`\`\`
+    {
+        "my-package": [ "A", "Directory.B", "Directory.C" ]
+    }
     \`\`\``
 
 async function main() {
