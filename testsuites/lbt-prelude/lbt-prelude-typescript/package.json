@@ -1,5 +1,5 @@
 {
-  "name": "lbf-prelude-typescript",
+  "name": "lbt-prelude-typescript",
   "version": "1.0.0",
   "description": "Test suite project for LambdaBuffers",
   "type": "module",
@@ -18,13 +18,12 @@
     "./.extra-dependencies/**/*"
   ],
   "devDependencies": {
-    "@types/node": "^20.11.7",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "lbf-prelude": "file:.extra-dependencies/lbf-prelude-1.0.0.tgz",
-    "lbf-prelude-golden-api": "file:.extra-dependencies/lbf-prelude-golden-api-1.0.0.tgz",
-    "lbr-prelude": "file:.extra-dependencies/lbr-prelude-1.0.0.tgz",
-    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz"
+    "lbf-prelude": "file:.extra-dependencies/lbf-prelude",
+    "lbf-prelude-golden-api": "file:.extra-dependencies/lbf-prelude-golden-api",
+    "lbr-prelude": "file:.extra-dependencies/lbr-prelude",
+    "prelude": "file:.extra-dependencies/prelude"
   }
 }

@@ -132,6 +132,7 @@ let
               "test": ":"
             },
             "devDependencies": {
+                "typescript": "^5.3.3"
             },
             "files": ["./dist/LambdaBuffers/**/*",  "./.extra-dependencies/**/*"],
             "dependencies": {
@@ -260,6 +261,7 @@ let
         srcWithNode2nix = tsSuper.srcWithNode2nix.overrideAttrs
           (_self: _super:
             {
+              NODE_ENV = "production";
               # Beef up the postConfigure so we add the extra
               # dependencies to the `package.json` / `package-lock.json`
               postConfigure =
@@ -273,7 +275,29 @@ let
                 '';
             }
           );
+
+        mkNpmExtraDependenciesCmd = pkgs.writeShellApplication {
+          name = tsSuper.mkNpmExtraDependenciesCmd.name;
+          runtimeInputs = [ pkgs.jq tsSuper.mkNpmExtraDependenciesCmd ];
+          text = ''
+            ${tsSuper.mkNpmExtraDependenciesCmd.name}
+
+            TMP=$(mktemp)
+            # NOTE(jaredponn): this is awkward. We delete all the
+            # devDependencies of all of the current package's dependencies
+            # because
+            #   - `node2nix` will try to invoke `npm` on them, in which
+            #      case, it'll try to download them
+            #   - BUT! `node2nix` didn't fetch the dependency, so it'll
+            #     error.
+            # So as a cheap work around, we remove all `devDependencies`
+            # which was all just TypeScript, @types/node, etc -- none of
+            # this matters for LB after we've compiled it.
+            find ${pkgs.lib.escapeShellArg tsSelf.npmExtraDependenciesFolder} -name "package.json" \
+                -exec sh -c 'jq "del(.devDependencies)" "$1" > "$2" && cat "$2" > "$1"' remove-dev-dependencies '{}' "$TMP" \;
+          '';
+        };
       });
     });
 in
-lbTypescriptFlake.packages."${name}-typescript-tgz"
+lbTypescriptFlake.packages."${name}-typescript-lib"

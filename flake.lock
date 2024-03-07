@@ -6386,15 +6386,16 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1708954293,
-        "narHash": "sha256-nTK+QP3j6Q1ZDUrUXcEW91jh7+1nSPsibZNKqY/bkqY=",
+        "lastModified": 1709801989,
+        "narHash": "sha256-wT/WZbvdiMZXGqp2PhnM4oDrxnA9AUTc/KKkcqKrmQc=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "c03a156798238e67823fed7e8f5e7539ed8bceb7",
+        "rev": "27bee11d0b3ff6946d62a9d42e68e3ccc23fcfd3",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "jared/ts-tgz-to-folder",
         "repo": "flake-lang.nix",
         "type": "github"
       }
@@ -28141,15 +28142,16 @@
         "prelude-typescript": "prelude-typescript_2"
       },
       "locked": {
-        "lastModified": 1709366613,
-        "narHash": "sha256-Cl3Gt5N0G+wniPT/BI5n8uDXS0Di2OZ2jakR9whMMkE=",
+        "lastModified": 1709805152,
+        "narHash": "sha256-KGWASRbIwdOovvsVAE2I74vec4Y4o3sQRh6xqrihgIc=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "38038ff008b89c718a19a8b9a18b7eb4dc7358af",
+        "rev": "453c7dcfac5318e6abd9e85cf9278c481dcca2a1",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "jared/update-flake-lang",
         "repo": "plutus-ledger-api-typescript",
         "type": "github"
       }
@@ -28784,15 +28786,16 @@
         "pre-commit-hooks-nix": "pre-commit-hooks-nix_13"
       },
       "locked": {
-        "lastModified": 1709168728,
-        "narHash": "sha256-PZKW7VchYV+J5Z0+VAjN8469M4++UvWYQmCPVzYcr08=",
+        "lastModified": 1709797052,
+        "narHash": "sha256-qqD+zG+2r1PN6iq5Rm1i6uDhCZ3clRIKg+OILs8MgrU=",
         "owner": "mlabs-haskell",
         "repo": "prelude-typescript",
-        "rev": "ff809e8427f7528d4e22a0e23ed031c93199102e",
+        "rev": "bee89d2150b6fc507657fd7c7f26a78a7bd6c137",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "jared/update-flake-lang",
         "repo": "prelude-typescript",
         "type": "github"
       }
