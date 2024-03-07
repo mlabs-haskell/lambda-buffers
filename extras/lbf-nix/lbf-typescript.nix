@@ -261,7 +261,6 @@ let
         srcWithNode2nix = tsSuper.srcWithNode2nix.overrideAttrs
           (_self: _super:
             {
-              NODE_ENV = "production";
               # Beef up the postConfigure so we add the extra
               # dependencies to the `package.json` / `package-lock.json`
               postConfigure =
