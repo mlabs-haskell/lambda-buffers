@@ -67,14 +67,14 @@ autogen/LambdaBuffers/Document.mts
 autogen/build.json
 ```
 
-The generated `autogen` directory created contains the generated TypeScript modules.
+The generated `autogen` directory created contains the generated Typescript modules.
 
 Note that `lbf-list-modules-typescript` is needed to create a JSON object which maps package names (for NPM) to Lambda Buffers' modules.
 Thus, in this example, one should have a `package.json` file which associates the key `"name"` with the string value `"lbf-document"`.
 
 The `autogen/build.json` file can be ignored.
 
-The file `autogen/LambdaBuffers/Document.mts` contains the outputted TypeScript module:
+The file `autogen/LambdaBuffers/Document.mts` contains the outputted Typescript module:
 
 ```ts
 // @ts-nocheck
@@ -113,7 +113,7 @@ export const RichDocument : unique symbol = Symbol('RichDocument')
 ## Product types
 The type `RichDocument` have been declared as a product type in the LambdaBuffers schema using the `prod` keyword.
 
-In general, product types are mapped to [tuple types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types) in TypeScript most of the time. The exception is if there is only one element in the tuple in which case the type is translated to a type alias.
+In general, product types are mapped to [tuple types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types) in Typescript most of the time. The exception is if there is only one element in the tuple in which case the type is translated to a type alias.
 
 More precisely, given a LambdaBuffers' product type as follows
 
@@ -123,13 +123,13 @@ prod MyProduct = SomeType1 ... SomeTypeN
 
 where the `...` denotes iterated `SomeTypei` for some `i`, then
 
-- If `N = 0` so `prod MyProduct =`, then we map this to the TypeScript type
+- If `N = 0` so `prod MyProduct =`, then we map this to the Typescript type
 
   ```ts
   export type MyProduct = []
   ```
 
-- If `N = 1` so `prod MyProduct = SomeType1`, then we map this to the TypeScript type
+- If `N = 1` so `prod MyProduct = SomeType1`, then we map this to the Typescript type
 
   ```ts
   export type MyProduct = SomeType1
@@ -137,7 +137,7 @@ where the `...` denotes iterated `SomeTypei` for some `i`, then
 
   i.e., `MyProduct` simply aliases `SomeType1`
 
-- If `N >= 2` so `prod MyProduct = SomeType1 ... SomeTypeN`, then we map this to the TypeScript type
+- If `N >= 2` so `prod MyProduct = SomeType1 ... SomeTypeN`, then we map this to the Typescript type
 
   ```ts
   export type MyProduct = [SomeType1, ..., SomeTypeN]
@@ -148,7 +148,7 @@ where the `...` denotes iterated `SomeTypei` for some `i`, then
 ## Sum types
 The types `Author`, `Reviewer`, and `RichContent` have been declared as sum types in the LambdaBuffers schema using the `sum` keyword.
 
-In general, sum types are mapped to a [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types) in TypeScript and with the additional following rules.
+In general, sum types are mapped to a [union type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types) in Typescript and with the additional following rules.
 Given a LambdaBuffers' sum type as follows
 
 ```purescript
@@ -160,13 +160,13 @@ sum MySum
 
 where the `...` denotes either an iterated `Branchi` for some `i`, or an iterated `BranchiTypej` for some `i` and `j`, then each branch, say `Branchi` is translated as follows.
 
-- If `Branchi` has no fields i.e., `| Branchi`, then the corresponding TypeScript type's union member is
+- If `Branchi` has no fields i.e., `| Branchi`, then the corresponding Typescript type's union member is
 
   ```ts
   | { name: 'Branchi' }
   ```
 
-- If `Branchi` has one or more fields i.e., `| Branchi BranchiType1 ... BranchiTypeMi`, then the corresponding TypeScript type's union member is
+- If `Branchi` has one or more fields i.e., `| Branchi BranchiType1 ... BranchiTypeMi`, then the corresponding Typescript type's union member is
 
   ```ts
   | { name: 'Branchi' 
@@ -176,7 +176,7 @@ where the `...` denotes either an iterated `Branchi` for some `i`, or an iterate
 
   where `<Product translation of BranchiType1 ... BranchiTypeMi>` denotes the right hand side of the [product translation](#product-types) of `prod FieldsProduct = BranchiType1 ... BranchiTypeMi`.
 
-  So, for example, given `| Branchi BranchiType1`,  the corresponding TypeScript type is as follows
+  So, for example, given `| Branchi BranchiType1`,  the corresponding Typescript type is as follows
 
   ```ts
   | { name: 'Branchi'
@@ -195,24 +195,41 @@ where the `...` denotes either an iterated `Branchi` for some `i`, or an iterate
 ## Record types
 The types `Document` and `Chapter` have been declared as record types in the LambdaBuffers schema using the `record` keyword.
 
-Record types are mapped to [object types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#object-types) in TypeScript.
+Record types are mapped to [object types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#object-types) in Typescript.
 Given a LambdaBuffers' record type as follows
 
 ```purescript
 record MyRecord = { field1: SomeType1, ..., fieldN: SomeTypeN }
 ```
 
-where `...` denotes iterated `fieldi: SomeTypei` for some `i`, the corresponding TypeScript type is
+where `...` denotes iterated `fieldi: SomeTypei` for some `i`, the corresponding Typescript type is
 
 ```ts
 type MyRecord = { field1: SomeType1, ..., fieldN, SomeTypeN }
 ```
 
-## Type classes
-TypeScript has no builtin implementation of type classes. As such, LambdaBuffers rolled its own type classes.
-A complete usage example can be found in the [TypeScript Prelude sample project](./typescript-prelude/src/index.mts).
+## Type classes quickstart
 
-A type class in TypeScript is an object type which defines a set of methods.
+Typescript has no builtin implementation of type classes. As such, LambdaBuffers rolled its own type classes.
+A complete usage example can be found in the [Typescript Prelude sample project](./typescript-prelude/src/index.mts), but assuming the packaging is setup correctly, the interface to use a typeclass is as follows
+
+```ts
+import * as LbrPrelude from "lbr-prelude";
+
+// In Haskell, this is `10 == 11`
+LbrPrelude.Eq[LbrPrelude.Integer].eq(10n, 11n) // false
+
+// In Haskell, this is `Just 3 == Nothing`
+LbrPrelude.Eq[LbrPrelude.Maybe](LbrPrelude.Eq[LbrPrelude.Integer])
+    .eq( { name: 'Just', fields: 3 }
+       , { name: 'Nothing' }) // false
+```
+
+In particular, we access a global variable `LbrPrelude.Eq` which contains the type class instances, and pick out a particular instance with the type's name like `LbrPrelude.Integer`. Note that the `LbrPrelude.Maybe` instance requires knowledge of the `Eq` instance of the `LbrPrelude.Integer`, so we must pass that in as a function argument.
+
+## Type classes in detail
+
+A type class in Typescript is an object type which defines a set of methods.
 For example, the `Eq` type class in Haskell defines the set of methods `==` (equality) and `/=` (inequality) as follows.
 
 ```haskell
@@ -221,7 +238,7 @@ class Eq a where
     (/=) :: a -> a -> Bool
 ```
 
-The corresponding [`Eq` class](https://github.com/mlabs-haskell/prelude-typescript/blob/main/src/Lib/Eq.ts) in TypeScript is:
+The corresponding [`Eq` class](https://github.com/mlabs-haskell/prelude-typescript/blob/main/src/Lib/Eq.ts) in Typescript is:
 
 ```ts
 export interface Eq<A> {
@@ -230,7 +247,7 @@ export interface Eq<A> {
 }
 ```
 
-Each type class in TypeScript must have an associated global variable which maps unique representations of its instance types to the corresponding object of the type class implementation.
+Each type class in Typescript must have an associated global variable which maps unique representations of its instance types to the corresponding object of the type class implementation.
 For example, the `Eq` type class has the [global variable](https://github.com/mlabs-haskell/lambda-buffers/blob/main/runtimes/typescript/lbr-prelude/src/LambdaBuffers/Eq.ts#L11) defined in the [lbr-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/main/runtimes/typescript/lbr-prelude) library defined as follows
 
 ```ts
@@ -276,7 +293,7 @@ instance (Eq a, Eq b) => Eq (MyPair a b) where
     MyPair a1 a2 != MyPair b1 b2 = a1 != b1 || a2 != b2
 ```
 
-The corresponding TypeScript type definition and instance would be defined as follows
+The corresponding Typescript type definition and instance would be defined as follows
 
 ```ts
 export type MyPair<a, b> = [a, b]
@@ -297,7 +314,7 @@ This loosely follows the original translation given in the paper [How to make ad
 
 ## Limitations
 
-- Only Haskell 2010 typeclasses are supported for the TypeScript code generator. So, the following schemas will probably generate incorrect code.
+- Only Haskell 2010 typeclasses are supported for the Typescript code generator. So, the following schemas will probably generate incorrect code.
 
   ```purescript
   derive Eq (MyPair a a)
