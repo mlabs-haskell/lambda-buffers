@@ -300,5 +300,5 @@ This loosely follows the original translation given in the paper [How to make ad
 - Only Haskell 2010 typeclasses are supported for the TypeScript code generator. So, the following schemas will probably generate incorrect code.
 
   ```purescript
-  derive Eq a => Eq (MyPair a a)
+  derive Eq (MyPair a a)
   ```
