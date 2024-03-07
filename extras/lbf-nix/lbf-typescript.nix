@@ -88,15 +88,6 @@ lbfTypescriptOpts@{
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  # lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
-
-  # packageSet =
-  #   pkgs.writeTextFile {
-  #     name = "lb-typescript-packages";
-  #     text =
-  #       builtins.toJSON
-  #         (builtins.mapAttrs (_name: lbfListModules) imports);
-  #   };
   packageSet = pkgs.runCommand "lb-typescript-packages" { buildInputs = [ lbf-list-modules-typescript ]; }
     ''
       1>"$out" lbf-list-modules-typescript \
