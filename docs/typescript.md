@@ -58,8 +58,8 @@ We generate the corresponding Typescript code with the following commands.
 
 ```shell
 $ nix develop github:mlabs-haskell/lambda-buffers#lb
-$ lbf-list-modules-typescript lbf-document=. > packages.json 
-$ lbf-prelude-to-typescript --gen-opt="--packages packages.json" Document.lbf
+$ lbf-list-modules-typescript lbf-document=. > lb-pkgs.json 
+$ lbf-prelude-to-typescript --gen-opt="--packages lb-pkgs.json" Document.lbf
 $ find autogen/
 autogen/
 autogen/LambdaBuffers
