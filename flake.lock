@@ -6386,11 +6386,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1709801989,
-        "narHash": "sha256-wT/WZbvdiMZXGqp2PhnM4oDrxnA9AUTc/KKkcqKrmQc=",
+        "lastModified": 1709806284,
+        "narHash": "sha256-canTbj4Vw57SUIAm0Tn7/ZDEANrT5nNGELeXD/tkSco=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "27bee11d0b3ff6946d62a9d42e68e3ccc23fcfd3",
+        "rev": "cd11e72e2a488e93ec941d70b7e674b2a1cf2da0",
         "type": "github"
       },
       "original": {
@@ -28142,11 +28142,11 @@
         "prelude-typescript": "prelude-typescript_2"
       },
       "locked": {
-        "lastModified": 1709805152,
-        "narHash": "sha256-KGWASRbIwdOovvsVAE2I74vec4Y4o3sQRh6xqrihgIc=",
+        "lastModified": 1709807430,
+        "narHash": "sha256-HIyyJ8z3ZT7iTNwHCqP7c+bQ1wYQyaKkBtVdLhe5/tk=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "453c7dcfac5318e6abd9e85cf9278c481dcca2a1",
+        "rev": "be879c4029ccc9164a37b8c54c67ce5ed52b2b0e",
         "type": "github"
       },
       "original": {
@@ -28786,11 +28786,11 @@
         "pre-commit-hooks-nix": "pre-commit-hooks-nix_13"
       },
       "locked": {
-        "lastModified": 1709797052,
-        "narHash": "sha256-qqD+zG+2r1PN6iq5Rm1i6uDhCZ3clRIKg+OILs8MgrU=",
+        "lastModified": 1709807367,
+        "narHash": "sha256-9xG4Z5tckSN4UEL8735x+wIsaYfRVoqJiXkOB2MFGu0=",
         "owner": "mlabs-haskell",
         "repo": "prelude-typescript",
-        "rev": "bee89d2150b6fc507657fd7c7f26a78a7bd6c137",
+        "rev": "6b733d799986936436f89186398142e09374ec93",
         "type": "github"
       },
       "original": {
