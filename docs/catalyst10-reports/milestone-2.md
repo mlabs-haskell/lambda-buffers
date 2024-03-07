@@ -1,6 +1,6 @@
-# Catalyst milestone 2: Javascript support
+# Catalyst milestone 2: Javascript/Typescript support
 
-While the milestone technically requires Javascript support, we implemented [Typescript](https://www.typescriptlang.org/) support which is a [typed superset of Javascript](https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html#a-typed-superset-of-javascript). This was done to better interpolate with existing Javascript libraries on Cardano (which were actually implemented in Typescript) such as [lucid](https://github.com/spacebudz/lucid), [cardano-js-sdk](https://github.com/input-output-hk/cardano-js-sdk), [cardano-serialization-lib](https://www.npmjs.com/package/@emurgo/cardano-serialization-lib-nodejs), etc.
+While the milestone technically requires Javascript support, we implemented [Typescript](https://www.typescriptlang.org/) support which is a [typed superset of Javascript](https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html#a-typed-superset-of-javascript). This was done to better interpolate with existing Javascript/Typescript libraries on Cardano such as [lucid](https://github.com/spacebudz/lucid), [cardano-js-sdk](https://github.com/input-output-hk/cardano-js-sdk), [cardano-serialization-lib](https://www.npmjs.com/package/@emurgo/cardano-serialization-lib-nodejs), etc. With Typescript support, we get Javascript support for free as the compilation from Typescript to Javascript is a well established practise.
 
 ## Outputs
 
