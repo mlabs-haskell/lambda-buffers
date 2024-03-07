@@ -2180,7 +2180,7 @@ field         -&gt; fieldname ':' prod
 <h4 id="class-definition"><a class="header" href="#class-definition">Class definition</a></h4>
 <p>A class definition introduces a new class.</p>
 <pre><code class="language-text">classdef       -&gt; 'class' [ constraintexps '&lt;=' ] classname { varname }
-constraintexp  -&gt; classref { varname }
+constraintexp  -&gt; longclassname { varname }
                 | '(' constraintexps ')'
 constraintexps -&gt; [ constraintexp { ',' constraintexp } ]
 </code></pre>
@@ -2188,7 +2188,7 @@ constraintexps -&gt; [ constraintexp { ',' constraintexp } ]
 <h4 id="instance-clause"><a class="header" href="#instance-clause">Instance clause</a></h4>
 <p>An instance clause specifies a type is an instance of a class.</p>
 <pre><code class="language-text">instanceclause -&gt; 'instance'  constraint [ ':-' constraintexps ]
-constraint     -&gt; classref { typeexp }
+constraint     -&gt; longclassname { typeexp }
 </code></pre>
 <p>Instance clauses do not instruct the code generator to generate code, but instead instructs the compiler (semantic checking) that the target language environment provides type class implementations for the given type (provided that the given <code>constraintexps</code> also have implementations).</p>
 <h4 id="derive-clause"><a class="header" href="#derive-clause">Derive clause</a></h4>
@@ -2227,12 +2227,12 @@ field         -&gt; fieldname ':' prod
 opaquetypedef -&gt; 'opaque' typename { varname }
 
 classdef       -&gt; 'class' [ constraintexps '&lt;=' ] classname { varname }
-constraintexp  -&gt; classref { varname }
+constraintexp  -&gt; longclassname { varname }
                 | '(' constraintexps ')'
 constraintexps -&gt; [ constraintexp { ',' constraintexp } ]
 
 instanceclause -&gt; 'instance'  constraint [ ':-' constraintexps ]
-constraint     -&gt; classref { typeexp }
+constraint     -&gt; longclassname { typeexp }
 
 deriveclause -&gt; 'derive' constraint
 </code></pre>
