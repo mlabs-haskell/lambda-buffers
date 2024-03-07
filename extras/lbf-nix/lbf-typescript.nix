@@ -277,7 +277,7 @@ let
           );
 
         mkNpmExtraDependenciesCmd = pkgs.writeShellApplication {
-          name = tsSuper.mkNpmExtraDependenciesCmd.name;
+          inherit (tsSuper.mkNpmExtraDependenciesCmd) name;
           runtimeInputs = [ pkgs.jq tsSuper.mkNpmExtraDependenciesCmd ];
           text = ''
             ${tsSuper.mkNpmExtraDependenciesCmd.name}
