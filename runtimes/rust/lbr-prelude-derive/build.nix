@@ -4,7 +4,6 @@
       rustFlake =
         inputs.flake-lang.lib.${system}.rustFlake {
           src = ./.;
-          inherit (inputs) crane;
           crateName = "lbr-prelude-derive";
           extraSources = [
             config.packages.lbr-prelude-rust-src

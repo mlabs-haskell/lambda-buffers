@@ -25,9 +25,6 @@
     # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
     ctl.follows = "flake-lang/ctl";
 
-    # TODO(bladyjoker): Remove once flake-lang.nix fixes this
-    crane.follows = "flake-lang/crane";
-
     # Plutarch eDSL (LB Codegen target)
     plutarch.follows = "flake-lang/plutarch";
 
