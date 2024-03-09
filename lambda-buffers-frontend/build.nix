@@ -43,6 +43,9 @@
             config.packages.lbf-plutus-to-purescript
             config.packages.lbf-prelude-to-rust
             config.packages.lbf-plutus-to-rust
+            config.packages.lbf-list-modules-typescript
+            config.packages.lbf-prelude-to-typescript
+            config.packages.lbf-plutus-to-typescript
           ];
         };
       };
