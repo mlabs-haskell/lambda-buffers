@@ -181,7 +181,7 @@ A class definition introduces a new class.
 
 ```text
 classdef       -> 'class' [ constraintexps '<=' ] classname { varname }
-constraintexp  -> classref { varname }
+constraintexp  -> longclassname { varname }
                 | '(' constraintexps ')'
 constraintexps -> [ constraintexp { ',' constraintexp } ]
 ```
@@ -194,7 +194,7 @@ An instance clause specifies a type is an instance of a class.
 
 ```text
 instanceclause -> 'instance'  constraint [ ':-' constraintexps ]
-constraint     -> classref { typeexp }
+constraint     -> longclassname { typeexp }
 ```
 
 Instance clauses do not instruct the code generator to generate code, but instead instructs the compiler (semantic checking) that the target language environment provides type class implementations for the given type (provided that the given `constraintexps` also have implementations).
@@ -243,12 +243,12 @@ field         -> fieldname ':' prod
 opaquetypedef -> 'opaque' typename { varname }
 
 classdef       -> 'class' [ constraintexps '<=' ] classname { varname }
-constraintexp  -> classref { varname }
+constraintexp  -> longclassname { varname }
                 | '(' constraintexps ')'
 constraintexps -> [ constraintexp { ',' constraintexp } ]
 
 instanceclause -> 'instance'  constraint [ ':-' constraintexps ]
-constraint     -> classref { typeexp }
+constraint     -> longclassname { typeexp }
 
 deriveclause -> 'derive' constraint
 ```
