@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=jared/ts-tgz-to-folder";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -27,7 +27,7 @@
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript?ref=jared/update-flake-lang";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript";
       inputs.flake-lang.follows = "flake-lang";
     };
 
