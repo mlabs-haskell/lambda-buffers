@@ -318,4 +318,6 @@ This loosely follows the original translation given in the paper [How to make ad
 
   ```purescript
   derive Eq (MyPair a a)
+  derive Eq (MyMaybe (MyMaybe Integer))
+  derive Eq (MyMaybe Integer)
   ```
