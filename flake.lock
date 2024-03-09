@@ -6386,11 +6386,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1708572724,
-        "narHash": "sha256-usUnCj/jVDdQuNzvjti1VLWp0YOmttpTbUesD3uRA48=",
+        "lastModified": 1709976415,
+        "narHash": "sha256-frWiKdgNM3cDApsEgh0OkTaEgM7hdQt64MlfqmHxD+g=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "5bb4fdf556a2f2f23717c654c186f13f28b9c277",
+        "rev": "f4b0fc29aab0b548c2dcc31fcdafc7cbe5868b59",
         "type": "github"
       },
       "original": {
@@ -7010,11 +7010,11 @@
         "nixpkgs-lib": "nixpkgs-lib_2"
       },
       "locked": {
-        "lastModified": 1706830856,
-        "narHash": "sha256-a0NYyp+h9hlb7ddVz4LUn1vT/PLwqfrWYcHMvFB1xYg=",
+        "lastModified": 1709336216,
+        "narHash": "sha256-Dt/wOWeW6Sqm11Yh+2+t0dfEWxoMxGBvv3JpIocFl9E=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "b253292d9c0a5ead9bc98c4e9a26c6312e27d69f",
+        "rev": "f7b3c975cf067e56e7cda6cb098ebe3fb4d74ca2",
         "type": "github"
       },
       "original": {
@@ -12448,11 +12448,11 @@
         "nixpkgs": "nixpkgs_124"
       },
       "locked": {
-        "lastModified": 1704029560,
-        "narHash": "sha256-a4Iu7x1OP+uSYpqadOu8VCPY+MPF3+f6KIi+MAxlgyw=",
+        "lastModified": 1708547820,
+        "narHash": "sha256-xU/KC1PWqq5zL9dQ9wYhcdgxAwdeF/dJCLPH3PNZEBg=",
         "owner": "hercules-ci",
         "repo": "hercules-ci-effects",
-        "rev": "d5cbf433a6ae9cae05400189a8dbc6412a03ba16",
+        "rev": "0ca27bd58e4d5be3135a4bef66b582e57abe8f4a",
         "type": "github"
       },
       "original": {
@@ -23388,11 +23388,11 @@
     "nixpkgs-lib_2": {
       "locked": {
         "dir": "lib",
-        "lastModified": 1706550542,
-        "narHash": "sha256-UcsnCG6wx++23yeER4Hg18CXWbgNpqNXcHIo5/1Y+hc=",
+        "lastModified": 1709237383,
+        "narHash": "sha256-cy6ArO4k5qTx+l5o+0mL9f5fa86tYUX3ozE1S+Txlds=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "97b17f32362e475016f942bbdfda4a4a72a8a652",
+        "rev": "1536926ef5621b09bba54035ae2bb6d806d72ac8",
         "type": "github"
       },
       "original": {
@@ -25379,11 +25379,11 @@
     },
     "nixpkgs_125": {
       "locked": {
-        "lastModified": 1708407374,
-        "narHash": "sha256-EECzarm+uqnNDCwaGg/ppXCO11qibZ1iigORShkkDf0=",
+        "lastModified": 1709101946,
+        "narHash": "sha256-TsySgcWm/GlbYdL3AEva49ceeI2BdPQ7muwfYNr1fwo=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "f33dd27a47ebdf11dc8a5eb05e7c8fbdaf89e73f",
+        "rev": "d53c2037394da6fe98decca417fc8fda64bf2443",
         "type": "github"
       },
       "original": {
@@ -25867,11 +25867,11 @@
     },
     "nixpkgs_35": {
       "locked": {
-        "lastModified": 1708864980,
-        "narHash": "sha256-d5s5xBN0rtTQwVwgm2cvyptHaFQZGrXnnCn/na853nc=",
+        "lastModified": 1709470011,
+        "narHash": "sha256-J21wSrFg5U2B1sRzsG+Uthn7aIE91/dBW5MJrQ4J+eg=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3a6f583ce593c1960e7149ab4f8af055a400bb41",
+        "rev": "c49282e5a7c4df5035940acef59e39ce82257787",
         "type": "github"
       },
       "original": {
@@ -28141,11 +28141,11 @@
         "prelude-typescript": "prelude-typescript_2"
       },
       "locked": {
-        "lastModified": 1708551424,
-        "narHash": "sha256-OettWCFYJYfpSLeUFUHqWo+DD5Hj9uWojHRnPGyg3Mw=",
+        "lastModified": 1709976751,
+        "narHash": "sha256-UazLkZZRSQBqQW/8p5cPhfivDOSYsNMw84niTRm616o=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "3c78696686c9da55d145a6328204bf7a74cc39de",
+        "rev": "609e447fcf440c3f35fd078f37f0877840c926b8",
         "type": "github"
       },
       "original": {
@@ -28784,11 +28784,11 @@
         "pre-commit-hooks-nix": "pre-commit-hooks-nix_13"
       },
       "locked": {
-        "lastModified": 1708480775,
-        "narHash": "sha256-usIv/dOqHWIwj+7gIz2vOkwe6hX54iwjAJjl1tnx23A=",
+        "lastModified": 1709976585,
+        "narHash": "sha256-Ix1+p1qlS8d6E9/ozZMDG3rC2aCQD13nP1YWhU8NQBs=",
         "owner": "mlabs-haskell",
         "repo": "prelude-typescript",
-        "rev": "f4967283b5019f7d5233e686dfb52a50fb2d6090",
+        "rev": "edd6e7cdf9290f6918d9b3020f24a7469aa18a2e",
         "type": "github"
       },
       "original": {
