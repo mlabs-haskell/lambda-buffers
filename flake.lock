@@ -28832,11 +28832,11 @@
         "protobuf": "protobuf_2"
       },
       "locked": {
-        "lastModified": 1707813559,
-        "narHash": "sha256-yCqELLHGiik6NmQnHnVZ0VKiQLDX3/xvyKvdDAnu96g=",
+        "lastModified": 1709893723,
+        "narHash": "sha256-go4YkFlLAFQTIsguQZ9KbfFvSs/r6C/Xqm2emvZMXAU=",
         "owner": "mlabs-haskell",
         "repo": "proto.nix",
-        "rev": "a7f0045f9011070240a25c5c6cbc50d04b46d882",
+        "rev": "97f1b388e5da185ff1a48af1bc9217b8786d3db8",
         "type": "github"
       },
       "original": {
