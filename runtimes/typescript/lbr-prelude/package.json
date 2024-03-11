@@ -23,7 +23,9 @@
     "./.extra-dependencies/**/*"
   ],
   "dependencies": {
-    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz",
+    "prelude": "file:.extra-dependencies/prelude"
+  },
+  "devDependencies": {
     "typescript": "^5.3.3"
   }
 }

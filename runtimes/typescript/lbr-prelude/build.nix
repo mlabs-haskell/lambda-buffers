@@ -10,13 +10,14 @@
           devShellTools = config.settings.shell.tools;
           devShellHook = config.settings.shell.hook;
 
-          npmExtraDependencies = [ inputs'.prelude-typescript.packages.tgz ];
+          npmExtraDependencies = [ inputs'.prelude-typescript.packages.lib ];
         };
     in
     {
       packages = {
         inherit (typescriptFlake.packages)
           lbr-prelude-typescript
+          lbr-prelude-typescript-lib
           lbr-prelude-typescript-tgz
           lbr-prelude-typescript-node2nix;
       };

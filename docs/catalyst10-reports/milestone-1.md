@@ -27,7 +27,7 @@
 - [x] LambdaBuffers schemas that are based on the LambdaBuffers Prelude module can be used in Rust projects to specify application types.
   - Test libraries for Prelude demonstrate how Rust code for LambdaBuffers Prelude is generated to Rust and used in a library: [testsuites/lbt-prelude/lbt-prelude-rust](https://github.com/mlabs-haskell/lambda-buffers/tree/c83cdf9b881a95b8607821027c3551ecd56c9447/testsuites/lbt-prelude/lbt-prelude-rust)
 - [x] LambdaBuffers schemas that are based on the LambdaBuffers Plutus module can be used in Rust projects to specify application types.
-  - Test libraries for Prelude demonstrate how Rust code for LambdaBuffers Plutus is generated to Rust and used in a library: [testsuites/lbt-plutus/lbt-plutus-rust](https://github.com/mlabs-haskell/lambda-buffers/tree/c83cdf9b881a95b8607821027c3551ecd56c9447/testsuites/lbt-plutus/lbt-plutus-rust)
+  - Test libraries for Plutus demonstrate how Rust code for LambdaBuffers Plutus is generated to Rust and used in a library: [testsuites/lbt-plutus/lbt-plutus-rust](https://github.com/mlabs-haskell/lambda-buffers/tree/c83cdf9b881a95b8607821027c3551ecd56c9447/testsuites/lbt-plutus/lbt-plutus-rust)
 - [x] The documentation and devops tooling is available to facilitate easy adoption.
   - Similarly to other languages supported by LambdaBuffers, a Rust flake is implemented. The testing libraries also serve as an example, to understand how to use these Nix utilities:
     [testsuites/lbt-plutus/lbt-plutus-rust/build.nix](https://github.com/mlabs-haskell/lambda-buffers/tree/c83cdf9b881a95b8607821027c3551ecd56c9447/testsuites/lbt-plutus/lbt-plutus-rust/build.nix)

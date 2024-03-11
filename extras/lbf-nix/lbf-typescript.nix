@@ -8,6 +8,9 @@
 , lbg-typescript
   # Function to create typescript flakes
 , typescriptFlake
+  # Function to create a JSON file which maps package names to lists of
+  # LambdaBuffers names
+, lbf-list-modules-typescript
 }:
 
 
@@ -85,15 +88,11 @@ lbfTypescriptOpts@{
 let
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  lbfListModules = pkgs.callPackage ./lbf-list-modules.nix { };
-
-  packageSet =
-    pkgs.writeTextFile {
-      name = "lb-typescript-packages";
-      text =
-        builtins.toJSON
-          (builtins.mapAttrs (_name: lbfListModules) imports);
-    };
+  packageSet = pkgs.runCommand "lb-typescript-packages" { buildInputs = [ lbf-list-modules-typescript ]; }
+    ''
+      1>"$out" lbf-list-modules-typescript \
+          ${pkgs.lib.escapeShellArgs ( pkgs.lib.mapAttrsToList (name: value: "${name}=${value}") imports) }
+    '';
 
   lbfBuilt = with lbfTypescriptOpts;
     lbf-build.build
@@ -132,6 +131,7 @@ let
               "test": ":"
             },
             "devDependencies": {
+                "typescript": "^5.3.3"
             },
             "files": ["./dist/LambdaBuffers/**/*",  "./.extra-dependencies/**/*"],
             "dependencies": {
@@ -273,7 +273,29 @@ let
                 '';
             }
           );
+
+        mkNpmExtraDependenciesCmd = pkgs.writeShellApplication {
+          inherit (tsSuper.mkNpmExtraDependenciesCmd) name;
+          runtimeInputs = [ pkgs.jq tsSuper.mkNpmExtraDependenciesCmd ];
+          text = ''
+            ${tsSuper.mkNpmExtraDependenciesCmd.name}
+
+            TMP=$(mktemp)
+            # NOTE(jaredponn): this is awkward. We delete all the
+            # devDependencies of all of the current package's dependencies
+            # because
+            #   - `node2nix` will try to invoke `npm` on them, in which
+            #      case, it'll try to download them
+            #   - BUT! `node2nix` didn't fetch the dependency, so it'll
+            #     error.
+            # So as a cheap work around, we remove all `devDependencies`
+            # which was all just TypeScript, @types/node, etc -- none of
+            # this matters for LB after we've compiled it.
+            find ${pkgs.lib.escapeShellArg tsSelf.npmExtraDependenciesFolder} -name "package.json" \
+                -exec sh -c 'jq "del(.devDependencies)" "$1" > "$2" && cat "$2" > "$1"' remove-dev-dependencies '{}' "$TMP" \;
+          '';
+        };
       });
     });
 in
-lbTypescriptFlake.packages."${name}-typescript-tgz"
+lbTypescriptFlake.packages."${name}-typescript-lib"

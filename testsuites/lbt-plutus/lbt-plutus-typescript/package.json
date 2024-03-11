@@ -22,12 +22,12 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "lbf-plutus": "file:.extra-dependencies/lbf-plutus-1.0.0.tgz",
-    "lbf-plutus-golden-api": "file:.extra-dependencies/lbf-plutus-golden-api-1.0.0.tgz",
-    "lbf-prelude": "file:.extra-dependencies/lbf-prelude-1.0.0.tgz",
-    "lbr-plutus": "file:.extra-dependencies/lbr-plutus-1.0.0.tgz",
-    "lbr-prelude": "file:.extra-dependencies/lbr-prelude-1.0.0.tgz",
-    "plutus-ledger-api": "file:.extra-dependencies/plutus-ledger-api-1.0.0.tgz",
-    "prelude": "file:.extra-dependencies/prelude-1.0.1.tgz"
+    "lbf-plutus": "file:.extra-dependencies/lbf-plutus",
+    "lbf-plutus-golden-api": "file:.extra-dependencies/lbf-plutus-golden-api",
+    "lbf-prelude": "file:.extra-dependencies/lbf-prelude",
+    "lbr-plutus": "file:.extra-dependencies/lbr-plutus",
+    "lbr-prelude": "file:.extra-dependencies/lbr-prelude",
+    "plutus-ledger-api": "file:.extra-dependencies/plutus-ledger-api",
+    "prelude": "file:.extra-dependencies/prelude"
   }
 }
