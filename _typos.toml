@@ -13,4 +13,4 @@ extend-glob = ["*.png"]
 check-file = false
 
 [files]
-extend-exclude = ["spago-packages.nix"]
+extend-exclude = ["spago-packages.nix", "fourmolu.yaml"]
