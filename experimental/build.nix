@@ -1,7 +1,28 @@
 _: {
   perSystem = { pkgs, config, inputs', ... }:
+    let
+      hpkgs = pkgs.haskellPackages.override {
+        overrides = hself: hsuper: {
+          # Can add/override packages here
+          logict_0_8_0_0 =
+            pkgs.haskell.lib.overrideCabal hsuper.logict {
+              version = "0.8.0.0";
+              sha256 = "sha256-/pJt8pW8Q995Qkc2DnoKDf3HeLzphviq26mP5SIo+1Y=";
+            };
+          unification-fd = # pkgs.haskell.lib.unmarkBroken hsuper.unification-fd;
+            pkgs.haskell.lib.overrideCabal hsuper.unification-fd (_: {
+              libraryHaskellDepends = [
+                hsuper.base
+                hsuper.containers
+                hself.logict_0_8_0_0
+                hsuper.mtl
+              ];
+              broken = false;
+            });
+        };
+      };
+    in
     {
-
       devShells.dev-experimental = pkgs.mkShell {
         name = "experimental-env";
         buildInputs = [
@@ -10,14 +31,14 @@ _: {
           # pkgs.dhall-lsp-server
           pkgs.dhall-json
 
-          (pkgs.haskellPackages.ghcWithPackages (hsPkgs: [
+          (hpkgs.ghcWithPackages (hsPkgs: [
             hsPkgs.text
             hsPkgs.unification-fd
             hsPkgs.HUnit
           ]))
 
           pkgs.protobuf
-          pkgs.haskellPackages.haskell-language-server
+          hpkgs.haskell-language-server
         ]
         ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.swiPrologWithGui ])
         ++ config.settings.shell.tools;
