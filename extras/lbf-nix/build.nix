@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+{ lib, inputs, ... }: {
   perSystem = { pkgs, config, system, ... }:
     let
       lbg-haskell = "${config.packages.lbg-haskell}/bin/lbg-haskell";
@@ -23,7 +23,7 @@
         lbfTypescript = opts: import ./lbf-typescript.nix
           {
             inherit pkgs lbg-typescript;
-            inherit (config.packages) lbf;
+            inherit (config.packages) lbf-list-modules-typescript lbf;
             inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
           }
           opts;
@@ -31,7 +31,7 @@
           import ./lbf-prelude-typescript.nix
             {
               inherit pkgs lbg-typescript config;
-              inherit (config.packages) lbf;
+              inherit (config.packages) lbf-list-modules-typescript lbf;
               inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
             }
             opts;
@@ -39,13 +39,26 @@
           import ./lbf-plutus-typescript.nix
             {
               inherit pkgs lbg-typescript config;
-              inherit (config.packages) lbf;
+              inherit (config.packages) lbf-list-modules-typescript lbf;
               inherit (inputs.flake-lang.lib.${system}) typescriptFlake;
             }
             opts;
         lbfRust = import ./lbf-rust.nix pkgs config.packages.lbf lbg-rust;
         lbfPreludeRust = import ./lbf-prelude-rust.nix pkgs config.packages.lbf lbg-rust;
         lbfPlutusRust = import ./lbf-plutus-rust.nix pkgs config.packages.lbf lbg-rust;
+      };
+
+      packages = {
+        lbf-list-modules-typescript = pkgs.stdenv.mkDerivation {
+          name = "lbf-list-modules-typescript";
+          buildInputs = [ pkgs.nodejs ];
+          dontUnpack = true;
+          src = ./lbf-list-modules-typescript;
+          installPhase = ''
+            mkdir -p "$out/bin"
+            cp "$src" "$out/bin/lbf-list-modules-typescript"
+          '';
+        };
       };
 
     };

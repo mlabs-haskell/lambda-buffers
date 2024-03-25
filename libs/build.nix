@@ -36,7 +36,7 @@
         configs = [ "${config.packages.codegen-configs}/typescript-prelude-base.json" ];
         npmExtraDependencies =
           [
-            config.packages.lbr-prelude-typescript-tgz
+            config.packages.lbr-prelude-typescript-lib
           ];
       };
 
@@ -121,7 +121,7 @@
         npmExtraDependencies =
           [
             config.packages.lbf-prelude-typescript
-            config.packages.lbr-plutus-typescript-tgz
+            config.packages.lbr-plutus-typescript-lib
           ];
       };
 

@@ -89,7 +89,10 @@ printSum pkgMap tyN (PC.Sum ctors _) = do
   return $
     group $
       if null ctors
-        then mempty
+        then -- TODO(jaredponn): is this what we want? The empty sum
+        -- corresponds to the `never` type in the sense that there are no
+        -- values which satisfy this type
+          "never"
         else align $ vsep $ map (pipe <+>) ctorDocs
 
 -- | The name of the field which specifies a type constructor
