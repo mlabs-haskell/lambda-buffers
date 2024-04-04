@@ -1,0 +1,470 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>LambdaBuffers to Typescript - Lambda Buffers documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="using-lambdabuffers.html"><strong aria-hidden="true">2.</strong> Using LambdaBuffers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">2.1.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">2.2.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="plutarch.html"><strong aria-hidden="true">2.3.</strong> LambdaBuffers to Plutarch</a></li><li class="chapter-item expanded "><a href="rust.html"><strong aria-hidden="true">2.4.</strong> LambdaBuffers to Rust</a></li><li class="chapter-item expanded "><a href="typescript.html" class="active"><strong aria-hidden="true">2.5.</strong> LambdaBuffers to Typescript</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">3.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">4.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">5.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">6.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">7.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">8.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">9.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">10.</strong> Comparison matrix</a></li><li class="chapter-item expanded "><a href="catalyst-reports.html"><strong aria-hidden="true">11.</strong> Catalyst reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst09-reports/index.html"><strong aria-hidden="true">11.1.</strong> Catalyst 9 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-1.html"><strong aria-hidden="true">11.1.1.</strong> Milestone 1: Research</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-2.html"><strong aria-hidden="true">11.1.2.</strong> Milestone 2: End to end proof of concept</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-3.html"><strong aria-hidden="true">11.1.3.</strong> Milestone 3: Testing and documentation</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-3.html"><strong aria-hidden="true">11.1.4.</strong> Milestone 4: Project adoption</a></li></ol></li><li class="chapter-item expanded "><a href="catalyst10-reports/index.html"><strong aria-hidden="true">11.2.</strong> Catalyst 10 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-1.html"><strong aria-hidden="true">11.2.1.</strong> Milestone 1: Rust support</a></li><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-2.html"><strong aria-hidden="true">11.2.2.</strong> Milestone 2: Javascript/Typescript support</a></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Lambda Buffers documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="lambdabuffers-to-typescript"><a class="header" href="#lambdabuffers-to-typescript">LambdaBuffers to Typescript</a></h1>
+<p>This chapter will walk through a translation from a LambdaBuffers' module into a Typescript module.</p>
+<p>To demonstrate this, we will use the <code>lbf-prelude-to-typescript</code> CLI tool which is just a convenient wrapper over the raw <code>lbf</code> CLI.
+To this end, we may enter a development shell which provides this tool along with many other Lambda Buffers CLI tools with the following command.</p>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf&lt;tab&gt;
+lbf                          lbf-plutus-to-haskell        lbf-plutus-to-rust           lbf-prelude-to-haskell       lbf-prelude-to-rust
+lbf-list-modules-typescript  lbf-plutus-to-purescript     lbf-plutus-to-typescript     lbf-prelude-to-purescript    lbf-prelude-to-typescript
+
+</code></pre>
+<p>Or, we may directly refer to the <code>lbf-prelude-to-typescript</code> CLI with the following command.</p>
+<pre><code class="language-shell">nix run github:mlabs-haskell/lambda-buffers#lbf-prelude-to-typescript
+</code></pre>
+<p>In this chapter, we will use the former option.</p>
+<p>Consider the <a href="./examples/Document.lbf">Document.lbf</a> schema which we may recall is as follows.</p>
+<pre><code class="language-purescript">module Document
+
+-- Importing types
+import Prelude (Text, List, Set, Bytes)
+
+-- Author
+sum Author = Ivan | Jovan | Savo
+
+-- Reviewer
+sum Reviewer = Bob | Alice
+
+-- Document
+record Document a = {
+  author : Author,
+  reviewers : Set Reviewer,
+  content : Chapter a
+ }
+
+-- Chapter
+record Chapter a = {
+  content : a,
+  subChapters : List (Chapter a)
+ }
+
+-- Some actual content
+sum RichContent = Image Bytes | Gif Bytes | Text Text
+
+-- Rich document
+prod RichDocument = (Document RichContent)
+</code></pre>
+<p>We generate the corresponding Typescript code with the following commands.</p>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf-list-modules-typescript lbf-document=. &gt; lb-pkgs.json 
+$ lbf-prelude-to-typescript --gen-opt="--packages lb-pkgs.json" Document.lbf
+$ find autogen/
+autogen/
+autogen/LambdaBuffers
+autogen/LambdaBuffers/Document.mts
+autogen/build.json
+</code></pre>
+<p>The generated <code>autogen</code> directory created contains the generated Typescript modules.</p>
+<p>Note that <code>lbf-list-modules-typescript</code> is needed to create a JSON object which maps package names (for NPM) to Lambda Buffers' modules.
+Thus, in this example, one should have a <code>package.json</code> file which associates the key <code>"name"</code> with the string value <code>"lbf-document"</code>.</p>
+<p>The <code>autogen/build.json</code> file can be ignored.</p>
+<p>The file <code>autogen/LambdaBuffers/Document.mts</code> contains the outputted Typescript module:</p>
+<pre><code class="language-ts">// @ts-nocheck
+import * as LambdaBuffers$Document from './Document.mjs'
+import * as LambdaBuffers$Prelude from './Prelude.mjs'
+
+export type Author = | { name : 'Ivan' }
+                     | { name : 'Jovan' }
+                     | { name : 'Savo' }
+export const Author : unique symbol = Symbol('Author')
+export type Chapter&lt;$a&gt; = { content : $a
+                          , subChapters : LambdaBuffers$Prelude.List&lt;Chapter&lt;$a&gt;&gt;
+                          }
+export const Chapter : unique symbol = Symbol('Chapter')
+export type Document&lt;$a&gt; = { author : Author
+                           , reviewers : LambdaBuffers$Prelude.Set&lt;Reviewer&gt;
+                           , content : Chapter&lt;$a&gt;
+                           }
+export const Document : unique symbol = Symbol('Document')
+export type Reviewer = | { name : 'Bob' } | { name : 'Alice' }
+export const Reviewer : unique symbol = Symbol('Reviewer')
+export type RichContent = | { name : 'Image'
+                            , fields : LambdaBuffers$Prelude.Bytes
+                            }
+                          | { name : 'Gif'
+                            , fields : LambdaBuffers$Prelude.Bytes
+                            }
+                          | { name : 'Text'
+                            , fields : LambdaBuffers$Prelude.Text
+                            }
+export const RichContent : unique symbol = Symbol('RichContent')
+export type RichDocument = Document&lt;RichContent&gt;
+export const RichDocument : unique symbol = Symbol('RichDocument')
+</code></pre>
+<h2 id="product-types"><a class="header" href="#product-types">Product types</a></h2>
+<p>The type <code>RichDocument</code> have been declared as a product type in the LambdaBuffers schema using the <code>prod</code> keyword.</p>
+<p>In general, product types are mapped to <a href="https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types">tuple types</a> in Typescript most of the time. The exception is if there is only one element in the tuple in which case the type is translated to a type alias.</p>
+<p>More precisely, given a LambdaBuffers' product type as follows</p>
+<pre><code class="language-purescript">prod MyProduct = SomeType1 ... SomeTypeN
+</code></pre>
+<p>where the <code>...</code> denotes iterated <code>SomeTypei</code> for some <code>i</code>, then</p>
+<ul>
+<li>
+<p>If <code>N = 0</code> so <code>prod MyProduct =</code>, then we map this to the Typescript type</p>
+<pre><code class="language-ts">export type MyProduct = []
+</code></pre>
+</li>
+<li>
+<p>If <code>N = 1</code> so <code>prod MyProduct = SomeType1</code>, then we map this to the Typescript type</p>
+<pre><code class="language-ts">export type MyProduct = SomeType1
+</code></pre>
+<p>i.e., <code>MyProduct</code> simply aliases <code>SomeType1</code></p>
+</li>
+<li>
+<p>If <code>N &gt;= 2</code> so <code>prod MyProduct = SomeType1 ... SomeTypeN</code>, then we map this to the Typescript type</p>
+<pre><code class="language-ts">export type MyProduct = [SomeType1, ..., SomeTypeN]
+</code></pre>
+<p>i.e., <code>MyProduct</code> is a tuple with a fixed number of elements with known types.</p>
+</li>
+</ul>
+<h2 id="sum-types"><a class="header" href="#sum-types">Sum types</a></h2>
+<p>The types <code>Author</code>, <code>Reviewer</code>, and <code>RichContent</code> have been declared as sum types in the LambdaBuffers schema using the <code>sum</code> keyword.</p>
+<p>In general, sum types are mapped to a <a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types">union type</a> in Typescript and with the additional following rules.
+Given a LambdaBuffers' sum type as follows</p>
+<pre><code class="language-purescript">sum MySum
+    = Branch1 Branch1Type1 ... Branch1TypeM1
+    | ...
+    | BranchN BranchNType1 ... BranchNTypeMN
+</code></pre>
+<p>where the <code>...</code> denotes either an iterated <code>Branchi</code> for some <code>i</code>, or an iterated <code>BranchiTypej</code> for some <code>i</code> and <code>j</code>, then each branch, say <code>Branchi</code> is translated as follows.</p>
+<ul>
+<li>
+<p>If <code>Branchi</code> has no fields i.e., <code>| Branchi</code>, then the corresponding Typescript type's union member is</p>
+<pre><code class="language-ts">| { name: 'Branchi' }
+</code></pre>
+</li>
+<li>
+<p>If <code>Branchi</code> has one or more fields i.e., <code>| Branchi BranchiType1 ... BranchiTypeMi</code>, then the corresponding Typescript type's union member is</p>
+<pre><code class="language-ts">| { name: 'Branchi' 
+  , fields: &lt;Product translation of BranchiType1 ... BranchiTypeMi&gt;
+  }
+</code></pre>
+<p>where <code>&lt;Product translation of BranchiType1 ... BranchiTypeMi&gt;</code> denotes the right hand side of the <a href="#product-types">product translation</a> of <code>prod FieldsProduct = BranchiType1 ... BranchiTypeMi</code>.</p>
+<p>So, for example, given <code>| Branchi BranchiType1</code>,  the corresponding Typescript type is as follows</p>
+<pre><code class="language-ts">| { name: 'Branchi'
+  , fields: BranchiType1
+  }
+</code></pre>
+<p>And given <code>| Branchi BranchiType1 BranchiType2</code>, the corresponding Typescript type is as follows.</p>
+<pre><code class="language-ts">| { name: 'Branchi'
+  , fields: [BranchiType1, BranchiType2]
+  }
+</code></pre>
+</li>
+</ul>
+<h2 id="record-types"><a class="header" href="#record-types">Record types</a></h2>
+<p>The types <code>Document</code> and <code>Chapter</code> have been declared as record types in the LambdaBuffers schema using the <code>record</code> keyword.</p>
+<p>Record types are mapped to <a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#object-types">object types</a> in Typescript.
+Given a LambdaBuffers' record type as follows</p>
+<pre><code class="language-purescript">record MyRecord = { field1: SomeType1, ..., fieldN: SomeTypeN }
+</code></pre>
+<p>where <code>...</code> denotes iterated <code>fieldi: SomeTypei</code> for some <code>i</code>, the corresponding Typescript type is</p>
+<pre><code class="language-ts">type MyRecord = { field1: SomeType1, ..., fieldN, SomeTypeN }
+</code></pre>
+<h2 id="type-classes-quickstart"><a class="header" href="#type-classes-quickstart">Type classes quickstart</a></h2>
+<p>Typescript has no builtin implementation of type classes. As such, LambdaBuffers rolled its own type classes.
+A complete usage example can be found in the <a href="./typescript-prelude/src/index.mts">Typescript Prelude sample project</a>, but assuming the packaging is setup correctly, the interface to use a typeclass is as follows</p>
+<pre><code class="language-ts">import * as LbrPrelude from "lbr-prelude";
+
+// In Haskell, this is `10 == 11`
+LbrPrelude.Eq[LbrPrelude.Integer].eq(10n, 11n) // false
+
+// In Haskell, this is `Just 3 == Nothing`
+LbrPrelude.Eq[LbrPrelude.Maybe](LbrPrelude.Eq[LbrPrelude.Integer])
+    .eq( { name: 'Just', fields: 3 }
+       , { name: 'Nothing' }) // false
+</code></pre>
+<p>In particular, we access a global variable <code>LbrPrelude.Eq</code> which contains the type class instances, and pick out a particular instance with the type's name like <code>LbrPrelude.Integer</code>. Note that the <code>LbrPrelude.Maybe</code> instance requires knowledge of the <code>Eq</code> instance of the <code>LbrPrelude.Integer</code>, so we must pass that in as a function argument.</p>
+<h2 id="type-classes-in-detail"><a class="header" href="#type-classes-in-detail">Type classes in detail</a></h2>
+<p>A type class in Typescript is an object type which defines a set of methods.
+For example, the <code>Eq</code> type class in Haskell defines the set of methods <code>==</code> (equality) and <code>/=</code> (inequality) as follows.</p>
+<pre><code class="language-haskell">class Eq a where
+    (==) :: a -&gt; a -&gt; Bool
+    (/=) :: a -&gt; a -&gt; Bool
+</code></pre>
+<p>The corresponding <a href="https://github.com/mlabs-haskell/prelude-typescript/blob/main/src/Lib/Eq.ts"><code>Eq</code> class</a> in Typescript is:</p>
+<pre><code class="language-ts">export interface Eq&lt;A&gt; {
+  readonly eq: (l: Readonly&lt;A&gt;, r: Readonly&lt;A&gt;) =&gt; boolean;
+  readonly neq: (l: Readonly&lt;A&gt;, r: Readonly&lt;A&gt;) =&gt; boolean;
+}
+</code></pre>
+<p>Each type class in Typescript must have an associated global variable which maps unique representations of its instance types to the corresponding object of the type class implementation.
+For example, the <code>Eq</code> type class has the <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/main/runtimes/typescript/lbr-prelude/src/LambdaBuffers/Eq.ts#L11">global variable</a> defined in the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/runtimes/typescript/lbr-prelude">lbr-prelude</a> library defined as follows</p>
+<pre><code class="language-ts">export const Eq: EqInstances = { } as EqInstances
+</code></pre>
+<p>where <code>EqInstances</code> is an interface type that is initially empty but will be extended with instances of types later.</p>
+<pre><code class="language-ts">export interface EqInstances { }
+</code></pre>
+<p>Finally, the following invariant is maintained in the code generator:</p>
+<ul>
+<li>Every type <code>T</code> has an associated unique <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol">symbol</a> also called <code>T</code>.</li>
+</ul>
+<p>So, the type <code>Integer</code> has</p>
+<pre><code class="language-ts">export type Integer = bigint
+export const Integer: unique symbol = Symbol('Integer')
+</code></pre>
+<p>and implementing its <code>Eq</code> instance amounts to the following code.</p>
+<pre><code class="language-ts">export interface EqInstances {
+    [Integer]: Eq&lt;Integer&gt;
+}
+Eq[Integer] = { eq: (l,r) =&gt; l === r
+              , neq: (l,r) =&gt; l !== r
+              }
+</code></pre>
+<p>For types defined in the LambdaBuffers schema, this chunk of code will be automatically generated provided there is an appropriate <code>derive</code> construct.</p>
+<h3 id="type-instances-with-constraints"><a class="header" href="#type-instances-with-constraints">Type instances with constraints</a></h3>
+<p>Recall in Haskell that the <code>Eq</code> instance for a tuple may be defined as follows</p>
+<pre><code class="language-haskell">instance (Eq a, Eq b) =&gt; Eq (MyPair a b) where
+    MyPair a1 a2 == MyPair b1 b2 = a1 == b1 &amp;&amp; a2 == b2
+    MyPair a1 a2 != MyPair b1 b2 = a1 != b1 || a2 != b2
+</code></pre>
+<p>The corresponding Typescript type definition and instance would be defined as follows</p>
+<pre><code class="language-ts">export type MyPair&lt;a, b&gt; = [a, b]
+export const MyPair: unique symbol = Symbol('MyPair')
+
+export interface EqInstances {
+    [MyPair]: &lt;A,B&gt;(a : Eq&lt;A&gt;, b : Eq&lt;B&gt;) =&gt; Eq&lt;MyPair&lt;A,B&gt;&gt;
+}
+Eq[MyPair] = (dictA, dictB) =&gt; { return { eq: (a,b) =&gt; dictA.eq(a[0], b[0]) &amp;&amp; dictB.eq(a[1], b[1])
+                                        , neq: (a,b) =&gt; dictA.neq(a[0], b[0]) || dictB.neq(a[1], b[1])
+                                        } 
+                               }
+</code></pre>
+<p>Note that the constraints <code>(Eq a, Eq b) =&gt;</code> become arguments <code>dictA</code> and <code>dictB</code> that are used to construct the <code>Eq</code> instance for <code>MyPair</code>.</p>
+<p>This loosely follows the original translation given in the paper <a href="https://dl.acm.org/doi/10.1145/75277.75283">How to make ad-hoc polymorphism less ad hoc</a> with some minor modifications.</p>
+<h2 id="limitations"><a class="header" href="#limitations">Limitations</a></h2>
+<ul>
+<li>
+<p>Only Haskell 2010 typeclasses are supported for the Typescript code generator. So, the following schemas will probably generate incorrect code.</p>
+<pre><code class="language-purescript">derive Eq (MyPair a a)
+derive Eq (MyMaybe (MyMaybe Integer))
+derive Eq (MyMaybe Integer)
+</code></pre>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="rust.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="getting-started.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="rust.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="getting-started.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
