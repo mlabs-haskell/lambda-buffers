@@ -9,6 +9,7 @@
   - [LambdaBuffers to Purescript](purescript.md)
   - [LambdaBuffers to Plutarch](plutarch.md)
   - [LambdaBuffers to Rust](rust.md)
+  - [LambdaBuffers to Typescript](typescript.md)
 
 # Reference Guide
 
@@ -28,3 +29,4 @@
     - [Milestone 4: Project adoption](catalyst09-reports/milestone-3.md)
   - [Catalyst 10 reports](catalyst10-reports/README.md)
     - [Milestone 1: Rust support](catalyst10-reports/milestone-1.md)
+    - [Milestone 2: Javascript/Typescript support](catalyst10-reports/milestone-2.md)
