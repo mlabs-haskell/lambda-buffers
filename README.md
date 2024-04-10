@@ -66,3 +66,5 @@ Contributors:
 - [Magnus Viernickel](https://github.com/MangoIV)
 - [Rajdeep Chase Maity](https://github.com/TotallyNotChase)
 - [Ramiro Garay](https://github.com/rmgaray)
+- [Jared Pon](https://github.com/jaredponn)
+- [Gergely Szabo](https://github.com/szg251)
