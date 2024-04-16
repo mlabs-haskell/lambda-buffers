@@ -38998,11 +38998,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1713266360,
-        "narHash": "sha256-bCtaKMmzIEnRZEks/H6GEOCKWLv0oXJuiulYDiQqLX8=",
+        "lastModified": 1713273726,
+        "narHash": "sha256-XU1cqXWTZhMDGZNdCvEdtE4BRenLTrcyr9xzMfwLfl0=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-rust",
-        "rev": "9929f8e88fe97d653a2eca08dc0a0bbb5e0d2d2a",
+        "rev": "84b0b59242be85f3118049787103c5ee70080d46",
         "type": "github"
       },
       "original": {
