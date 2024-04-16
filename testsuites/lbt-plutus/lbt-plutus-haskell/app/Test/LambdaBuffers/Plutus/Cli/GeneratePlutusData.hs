@@ -38,10 +38,16 @@ generatePlutusData opts = do
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxOutRef" $ take n Golden.txOutRefGoldens
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.Map" $ take n Golden.mapGoldens
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxInInfo" $ take n Golden.txInInfoGoldensV1
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.DCert" $ take n Golden.dCertGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.ScriptPurpose" $ take n Golden.scriptPurposeGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxInfo" $ take n Golden.txInfoGoldensV1
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.ScriptContext" $ take n Golden.scriptContextGoldensV1
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.TxOut" $ take n Golden.txOutGoldensV1
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxInInfo" $ take n Golden.txInInfoGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.OutputDatum" $ take n Golden.outDatumGoldens
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldensV2
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxInfo" $ take n Golden.txInfoGoldensV2
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.ScriptContext" $ take n Golden.scriptContextGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "Days.Day" $ take n Golden.dayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.WorkDay" $ take n Golden.workDayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.FreeDay" $ take n Golden.freeDayGoldens

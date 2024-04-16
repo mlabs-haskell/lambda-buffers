@@ -26,6 +26,8 @@ module Test.LambdaBuffers.Plutus.Golden (
   txIdGoldens,
   txOutRefGoldens,
   outDatumGoldens,
+  txInfoGoldensV2,
+  scriptContextGoldensV2,
   txOutGoldensV2,
   txInInfoGoldensV2,
   plutusDataGoldens',
@@ -37,6 +39,10 @@ module Test.LambdaBuffers.Plutus.Golden (
   bGoldens,
   aGoldens,
   txOutGoldensV1,
+  dCertGoldens,
+  scriptPurposeGoldens,
+  txInfoGoldensV1,
+  scriptContextGoldensV1,
   txInInfoGoldensV1,
   fIntGoldens,
   gIntGoldens,
@@ -53,7 +59,7 @@ import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated),
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
-import PlutusTx.AssocMap qualified as PlutusV1
+import PlutusTx.AssocMap qualified as AssocMap
 
 -- | Plutus.V1
 plutusDataGoldens :: [PlutusV1.Data]
@@ -161,17 +167,17 @@ valueGoldens =
     [ PlutusV1.Value <$> mapGoldens
     ]
 
-mapGoldens :: [PlutusV1.Map PlutusV1.CurrencySymbol (PlutusV1.Map PlutusV1.TokenName Integer)]
+mapGoldens :: [AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)]
 mapGoldens =
-  [ PlutusV1.fromList []
-  , PlutusV1.fromList
-      [ (PlutusV1.adaSymbol, PlutusV1.fromList [(PlutusV1.adaToken, 1337)])
+  [ AssocMap.fromList []
+  , AssocMap.fromList
+      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
       ]
-  , PlutusV1.fromList
-      [ (PlutusV1.adaSymbol, PlutusV1.fromList [(PlutusV1.adaToken, 1337)])
+  , AssocMap.fromList
+      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
       ,
         ( PlutusV1.CurrencySymbol blake2b_224Hash
-        , PlutusV1.fromList
+        , AssocMap.fromList
             [ (PlutusV1.TokenName $ PlutusV1.toBuiltin B.empty, 1337)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 16], 16)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 32], 32)
@@ -206,6 +212,45 @@ txOutGoldensV1 =
   mconcat
     [PlutusV1.TxOut <$> addressGoldens <*> valueGoldens <*> (Nothing : (Just <$> datumHashGoldens))]
 
+dCertGoldens :: [PlutusV1.DCert]
+dCertGoldens =
+  mconcat
+    [ pure PlutusV1.DCertMir
+    , pure PlutusV1.DCertGenesis
+    , PlutusV1.DCertPoolRetire <$> pubKeyHashGoldens <*> pure 1337
+    , PlutusV1.DCertDelegRegKey <$> stakingCredentialGoldens
+    , PlutusV1.DCertPoolRegister <$> pubKeyHashGoldens <*> pubKeyHashGoldens
+    , PlutusV1.DCertDelegDeRegKey <$> stakingCredentialGoldens
+    , PlutusV1.DCertDelegDelegate <$> stakingCredentialGoldens <*> pubKeyHashGoldens
+    ]
+
+scriptPurposeGoldens :: [PlutusV1.ScriptPurpose]
+scriptPurposeGoldens =
+  mconcat
+    [ PlutusV1.Minting <$> currencySymbolGoldens
+    , PlutusV1.Spending <$> txOutRefGoldens
+    , PlutusV1.Rewarding <$> stakingCredentialGoldens
+    , PlutusV1.Certifying <$> dCertGoldens
+    ]
+
+txInfoGoldensV1 :: [PlutusV1.TxInfo]
+txInfoGoldensV1 =
+  PlutusV1.TxInfo txInInfoGoldensV1 txOutGoldensV1
+    <$> valueGoldens
+    <*> valueGoldens
+    <*> pure dCertGoldens
+    <*> pure (map (,1234) stakingCredentialGoldens)
+    <*> posixTimeRangeGoldens
+    <*> pure pubKeyHashGoldens
+    <*> pure (zip datumHashGoldens datumGoldens)
+    <*> txIdGoldens
+
+scriptContextGoldensV1 :: [PlutusV1.ScriptContext]
+scriptContextGoldensV1 =
+  PlutusV1.ScriptContext
+    <$> txInfoGoldensV1
+    <*> scriptPurposeGoldens
+
 -- | Plutus.V2
 txInInfoGoldensV2 :: [PlutusV2.TxInInfo]
 txInInfoGoldensV2 = mconcat [PlutusV2.TxInInfo <$> txOutRefGoldens <*> txOutGoldensV2]
@@ -223,6 +268,25 @@ outDatumGoldens =
     , PlutusV2.OutputDatumHash <$> datumHashGoldens
     , PlutusV2.OutputDatum <$> datumGoldens
     ]
+
+txInfoGoldensV2 :: [PlutusV2.TxInfo]
+txInfoGoldensV2 =
+  PlutusV2.TxInfo txInInfoGoldensV2 txInInfoGoldensV2 txOutGoldensV2
+    <$> valueGoldens
+    <*> valueGoldens
+    <*> pure dCertGoldens
+    <*> pure (AssocMap.fromList (map (,1234) stakingCredentialGoldens))
+    <*> posixTimeRangeGoldens
+    <*> pure pubKeyHashGoldens
+    <*> pure (AssocMap.fromList (zip scriptPurposeGoldens redeemerGoldens))
+    <*> pure (AssocMap.fromList (zip datumHashGoldens datumGoldens))
+    <*> txIdGoldens
+
+scriptContextGoldensV2 :: [PlutusV2.ScriptContext]
+scriptContextGoldensV2 =
+  PlutusV2.ScriptContext
+    <$> txInfoGoldensV2
+    <*> scriptPurposeGoldens
 
 -- | Foo.Bar
 fooSumGoldens :: a -> b -> c -> [FooSum a b c]
