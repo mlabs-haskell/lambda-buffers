@@ -33,7 +33,7 @@
 
     # Rust runtime
     plutus-ledger-api-rust = {
-      url = "github:mlabs-haskell/plutus-ledger-api-rust?ref=szg251/fix";
+      url = "github:mlabs-haskell/plutus-ledger-api-rust";
       inputs.nixpkgs.follows = "nixpkgs";
 
     };

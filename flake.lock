@@ -38998,16 +38998,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1713273726,
-        "narHash": "sha256-XU1cqXWTZhMDGZNdCvEdtE4BRenLTrcyr9xzMfwLfl0=",
+        "lastModified": 1713274216,
+        "narHash": "sha256-QTwuagujiYiZ94tgtaLa5xBGDsw71NvrlKjNbeF149I=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-rust",
-        "rev": "84b0b59242be85f3118049787103c5ee70080d46",
+        "rev": "60ee5bdb577c7cf97d9eddf435b04b2c33901f2f",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "szg251/fix",
         "repo": "plutus-ledger-api-rust",
         "type": "github"
       }
