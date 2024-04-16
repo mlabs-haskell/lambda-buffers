@@ -165,6 +165,29 @@ mod json_tests {
     }
 
     #[test]
+    fn dcert_v1_from_to_golden_test() {
+        from_to_golden_test("PlutusV1.DCert", goldens::dcert_goldens())
+    }
+
+    #[test]
+    fn script_purpose_v1_from_to_golden_test() {
+        from_to_golden_test("PlutusV1.ScriptPurpose", goldens::script_purpose_goldens())
+    }
+
+    #[test]
+    fn tx_info_v1_from_to_golden_test() {
+        from_to_golden_test("PlutusV1.TxInfo", goldens::tx_info_goldens_v1())
+    }
+
+    #[test]
+    fn script_context_v1_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV1.ScriptContext",
+            goldens::script_context_goldens_v1(),
+        )
+    }
+
+    #[test]
     fn tx_in_info_v2_from_to_golden_test() {
         from_to_golden_test("PlutusV2.TxInInfo", goldens::tx_in_info_goldens_v2())
     }
@@ -177,6 +200,19 @@ mod json_tests {
     #[test]
     fn tx_out_v2_from_to_golden_test() {
         from_to_golden_test("PlutusV2.TxOut", goldens::tx_out_goldens_v2())
+    }
+
+    #[test]
+    fn tx_info_v2_from_to_golden_test() {
+        from_to_golden_test("PlutusV2.TxInfo", goldens::tx_info_goldens_v2())
+    }
+
+    #[test]
+    fn script_context_v2_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV2.ScriptContext",
+            goldens::script_context_goldens_v2(),
+        )
     }
 }
 
@@ -404,6 +440,29 @@ mod plutus_data_tests {
         }
 
         #[test]
+        fn dcert_v1_from_to_golden_test() {
+            from_to_golden_test("PlutusV1.DCert", goldens::dcert_goldens())
+        }
+
+        #[test]
+        fn script_purpose_v1_from_to_golden_test() {
+            from_to_golden_test("PlutusV1.ScriptPurpose", goldens::script_purpose_goldens())
+        }
+
+        #[test]
+        fn tx_info_v1_from_to_golden_test() {
+            from_to_golden_test("PlutusV1.TxInfo", goldens::tx_info_goldens_v1())
+        }
+
+        #[test]
+        fn script_context_v1_from_to_golden_test() {
+            from_to_golden_test(
+                "PlutusV1.ScriptContext",
+                goldens::script_context_goldens_v1(),
+            )
+        }
+
+        #[test]
         fn tx_in_info_v2_from_to_golden_test() {
             from_to_golden_test("PlutusV2.TxInInfo", goldens::tx_in_info_goldens_v2())
         }
@@ -416,6 +475,19 @@ mod plutus_data_tests {
         #[test]
         fn tx_out_v2_from_to_golden_test() {
             from_to_golden_test("PlutusV2.TxOut", goldens::tx_out_goldens_v2())
+        }
+
+        #[test]
+        fn tx_info_v2_from_to_golden_test() {
+            from_to_golden_test("PlutusV2.TxInfo", goldens::tx_info_goldens_v2())
+        }
+
+        #[test]
+        fn script_context_v2_from_to_golden_test() {
+            from_to_golden_test(
+                "PlutusV2.ScriptContext",
+                goldens::script_context_goldens_v2(),
+            )
         }
     }
 

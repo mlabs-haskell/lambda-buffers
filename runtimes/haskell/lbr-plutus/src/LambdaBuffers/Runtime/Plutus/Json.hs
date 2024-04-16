@@ -455,13 +455,13 @@ instance Json PlutusV1.TxInfo where
       )
 
 instance Json PlutusV1.ScriptContext where
-  toJson (PlutusV1.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "script_purpose" .= toJson scriptPurpose]
+  toJson (PlutusV1.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "purpose" .= toJson scriptPurpose]
   fromJson =
     withObject
       "Plutus.V1.ScriptContext"
       ( \obj -> do
           txInfo <- obj .: "tx_info"
-          scriptPurpose <- obj .: "script_purpose"
+          scriptPurpose <- obj .: "purpose"
           return $ PlutusV1.ScriptContext txInfo scriptPurpose
       )
 
@@ -504,13 +504,13 @@ instance Json PlutusV2.TxInfo where
       )
 
 instance Json PlutusV2.ScriptContext where
-  toJson (PlutusV2.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "script_purpose" .= toJson scriptPurpose]
+  toJson (PlutusV2.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "purpose" .= toJson scriptPurpose]
   fromJson =
     withObject
       "Plutus.V2.ScriptContext"
       ( \obj -> do
           txInfo <- obj .: "tx_info"
-          scriptPurpose <- obj .: "script_purpose"
+          scriptPurpose <- obj .: "purpose"
           return $ PlutusV2.ScriptContext txInfo scriptPurpose
       )
 

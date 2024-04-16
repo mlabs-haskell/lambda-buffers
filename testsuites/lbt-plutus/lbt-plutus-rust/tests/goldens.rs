@@ -6,17 +6,20 @@ use plutus_ledger_api::plutus_data::PlutusData;
 use plutus_ledger_api::v1::address::{
     Address, CertificateIndex, ChainPointer, Credential, Slot, StakingCredential, TransactionIndex,
 };
-use plutus_ledger_api::v1::crypto::{Ed25519PubKeyHash, LedgerBytes};
+use plutus_ledger_api::v1::crypto::{Ed25519PubKeyHash, LedgerBytes, PaymentPubKeyHash};
 use plutus_ledger_api::v1::datum::{Datum, DatumHash};
 use plutus_ledger_api::v1::interval::{Extended, LowerBound, PlutusInterval, UpperBound};
 use plutus_ledger_api::v1::redeemer::{Redeemer, RedeemerHash};
 use plutus_ledger_api::v1::script::{MintingPolicyHash, ScriptHash, ValidatorHash};
 use plutus_ledger_api::v1::transaction::{
-    POSIXTime, TransactionHash, TransactionInput, TransactionOutput, TxInInfo,
+    POSIXTime, ScriptContext, TransactionHash, TransactionInfo, TransactionInput,
+    TransactionOutput, TxInInfo,
 };
 use plutus_ledger_api::v1::value::{AssetClass, CurrencySymbol, TokenName, Value};
+use plutus_ledger_api::v2::assoc_map::AssocMap;
 use plutus_ledger_api::v2::datum::OutputDatum;
 use plutus_ledger_api::v2::transaction::{
+    DCert, ScriptContext as ScriptContextV2, ScriptPurpose, TransactionInfo as TransactionInfoV2,
     TransactionOutput as TransactionOutputV2, TxInInfo as TxInInfoV2,
 };
 use std::collections::BTreeMap;
@@ -336,6 +339,128 @@ pub fn tx_out_goldens_v1() -> Vec<TransactionOutput> {
         .collect()
 }
 
+pub fn dcert_goldens() -> Vec<DCert> {
+    [
+        vec![DCert::Mir],
+        vec![DCert::Genesis],
+        pubkeyhash_goldens()
+            .into_iter()
+            .map(|pkh| DCert::PoolRetire(PaymentPubKeyHash(pkh), BigInt::from(1337)))
+            .collect(),
+        staking_credential_goldens()
+            .into_iter()
+            .map(|staking_cred| DCert::DelegRegKey(staking_cred))
+            .collect(),
+        pubkeyhash_goldens()
+            .iter()
+            .flat_map(|pkh1| {
+                pubkeyhash_goldens()
+                    .into_iter()
+                    .map(|pkh2| {
+                        DCert::PoolRegister(
+                            PaymentPubKeyHash(pkh1.clone()),
+                            PaymentPubKeyHash(pkh2),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect(),
+        staking_credential_goldens()
+            .into_iter()
+            .map(|staking_cred| DCert::DelegDeRegKey(staking_cred))
+            .collect(),
+        staking_credential_goldens()
+            .iter()
+            .flat_map(|staking_cred| {
+                pubkeyhash_goldens()
+                    .into_iter()
+                    .map(|pkh| DCert::DelegDelegate(staking_cred.clone(), PaymentPubKeyHash(pkh)))
+                    .collect::<Vec<_>>()
+            })
+            .collect(),
+    ]
+    .concat()
+}
+
+pub fn script_purpose_goldens() -> Vec<ScriptPurpose> {
+    [
+        currency_symbol_goldens()
+            .into_iter()
+            .map(|cur_sym| ScriptPurpose::Minting(cur_sym))
+            .collect::<Vec<_>>(),
+        tx_out_ref_goldens()
+            .into_iter()
+            .map(|tx_out_ref| ScriptPurpose::Spending(tx_out_ref))
+            .collect::<Vec<_>>(),
+        staking_credential_goldens()
+            .into_iter()
+            .map(|staking_cred| ScriptPurpose::Rewarding(staking_cred))
+            .collect::<Vec<_>>(),
+        dcert_goldens()
+            .into_iter()
+            .map(|dcert| ScriptPurpose::Certifying(dcert))
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn tx_info_goldens_v1() -> Vec<TransactionInfo> {
+    value_goldens()
+        .iter()
+        .flat_map(|fee| {
+            value_goldens()
+                .iter()
+                .flat_map(|mint| {
+                    posix_time_range_goldens()
+                        .iter()
+                        .flat_map(|valid_range| {
+                            tx_id_goldens()
+                                .into_iter()
+                                .map(|tx_id| TransactionInfo {
+                                    inputs: tx_in_info_goldens_v1(),
+                                    outputs: tx_out_goldens_v1(),
+                                    fee: fee.clone(),
+                                    mint: mint.clone(),
+                                    d_cert: dcert_goldens(),
+                                    wdrl: staking_credential_goldens()
+                                        .into_iter()
+                                        .map(|staking_cred| (staking_cred, BigInt::from(1234)))
+                                        .collect(),
+                                    valid_range: valid_range.clone(),
+                                    signatories: pubkeyhash_goldens()
+                                        .into_iter()
+                                        .map(|pkh| PaymentPubKeyHash(pkh))
+                                        .collect(),
+                                    datums: datum_hash_goldens()
+                                        .into_iter()
+                                        .zip(datum_goldens().into_iter())
+                                        .collect(),
+                                    id: tx_id,
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+pub fn script_context_goldens_v1() -> Vec<ScriptContext> {
+    tx_info_goldens_v1()
+        .iter()
+        .flat_map(|tx_info| {
+            script_purpose_goldens()
+                .into_iter()
+                .map(|purpose| ScriptContext {
+                    purpose,
+                    tx_info: tx_info.clone(),
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
 pub fn tx_in_info_goldens_v2() -> Vec<TxInInfoV2> {
     tx_out_ref_goldens()
         .iter()
@@ -389,6 +514,74 @@ pub fn out_datum_goldens() -> Vec<OutputDatum> {
             .collect(),
     ]
     .concat()
+}
+
+pub fn tx_info_goldens_v2() -> Vec<TransactionInfoV2> {
+    value_goldens()
+        .iter()
+        .flat_map(|fee| {
+            value_goldens()
+                .iter()
+                .flat_map(|mint| {
+                    posix_time_range_goldens()
+                        .iter()
+                        .flat_map(|valid_range| {
+                            tx_id_goldens()
+                                .into_iter()
+                                .map(|tx_id| TransactionInfoV2 {
+                                    inputs: tx_in_info_goldens_v2(),
+                                    reference_inputs: tx_in_info_goldens_v2(),
+                                    outputs: tx_out_goldens_v2(),
+                                    fee: fee.clone(),
+                                    mint: mint.clone(),
+                                    d_cert: dcert_goldens(),
+                                    wdrl: AssocMap::from(
+                                        staking_credential_goldens()
+                                            .into_iter()
+                                            .map(|staking_cred| (staking_cred, BigInt::from(1234)))
+                                            .collect::<Vec<_>>(),
+                                    ),
+                                    valid_range: valid_range.clone(),
+                                    signatories: pubkeyhash_goldens()
+                                        .into_iter()
+                                        .map(|pkh| PaymentPubKeyHash(pkh))
+                                        .collect(),
+                                    redeemers: AssocMap::from(
+                                        script_purpose_goldens()
+                                            .into_iter()
+                                            .zip(redeemer_goldens().into_iter())
+                                            .collect::<Vec<_>>(),
+                                    ),
+                                    datums: AssocMap::from(
+                                        datum_hash_goldens()
+                                            .into_iter()
+                                            .zip(datum_goldens().into_iter())
+                                            .collect::<Vec<_>>(),
+                                    ),
+                                    id: tx_id,
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+pub fn script_context_goldens_v2() -> Vec<ScriptContextV2> {
+    tx_info_goldens_v2()
+        .iter()
+        .flat_map(|tx_info| {
+            script_purpose_goldens()
+                .into_iter()
+                .map(|purpose| ScriptContextV2 {
+                    purpose,
+                    tx_info: tx_info.clone(),
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
 }
 
 pub fn foo_sum_goldens<A: Clone, B: Clone, C>(x: A, y: B, z: C) -> Vec<FooSum<A, B, C>> {
