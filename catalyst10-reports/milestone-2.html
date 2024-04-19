@@ -188,86 +188,130 @@ A LambdaBuffers code generation module that outputs type constructors and derive
 <p><input disabled="" type="checkbox" checked=""/>
 A Javascript library that implements the LambdaBuffers Prelude runtime.
 This module would include standardised JSON encoding and equality
-implementations for all declared type class instances in the schema.
-- A standalone Prelude library for Typescript was implemented together with
-its runtime for LambdaBuffers. These can be found here:
-- <a href="https://github.com/mlabs-haskell/prelude-typescript">prelude-typescript</a>
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/343a1a900f42dcf5b1c1a7e330eafb07c280908b/runtimes/typescript/lbr-prelude">runtimes/typescript/lbr-prelude</a></p>
+implementations for all declared type class instances in the schema.</p>
+<ul>
+<li>A standalone Prelude library for Typescript was implemented together with its runtime for LambdaBuffers. These can be found here:
+<ul>
+<li><a href="https://github.com/mlabs-haskell/prelude-typescript">prelude-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/343a1a900f42dcf5b1c1a7e330eafb07c280908b/runtimes/typescript/lbr-prelude">runtimes/typescript/lbr-prelude</a></li>
+</ul>
+</li>
+</ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A Javascript test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Prelude golden data set of JSON files and perform correct implementation derivation.
-- A test suite ensuring that the manually implemented and automatically generated implementations can be found here: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a>.</p>
+A Javascript test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Prelude golden data set of JSON files and perform correct implementation derivation.</p>
+<ul>
+<li>A test suite ensuring that the manually implemented and automatically generated implementations can be found here: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a>.</li>
+</ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A Javascript library that implements the LambdaBuffers Plutus runtime. This module would include standardised PlutusData encoding implementations for all declared type class instances in the Plutus schema.
-- A standalone Plutus library for Typescript was implemented together with
-its runtime for LambdaBuffers. These can be found here:</p>
-<pre><code>    - [plutus-ledger-api-typescript](https://github.com/mlabs-haskell/plutus-ledger-api-typescript)
-
-    - [runtimes/typescript/lbr-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/dc5ee6797d1230661d6bb3dfa658eddeadd7cb60/runtimes/typescript/lbr-plutus)
-</code></pre>
+A Javascript library that implements the LambdaBuffers Plutus runtime. This module would include standardised PlutusData encoding implementations for all declared type class instances in the Plutus schema.</p>
+<ul>
+<li>A standalone Plutus library for Typescript was implemented together with its runtime for LambdaBuffers. These can be found here:
+<ul>
+<li><a href="https://github.com/mlabs-haskell/plutus-ledger-api-typescript">plutus-ledger-api-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/dc5ee6797d1230661d6bb3dfa658eddeadd7cb60/runtimes/typescript/lbr-plutus">runtimes/typescript/lbr-plutus</a></li>
+</ul>
+</li>
+</ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A Javascript test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Plutus golden data set of PlutusData encoded files and perform correct implementation derivation.
-- A test suite ensuring that the manually implemented and automatically generated implementations can be found here: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbf-plutus/lbf-plutus-typescript</a></p>
+A Javascript test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Plutus golden data set of PlutusData encoded files and perform correct implementation derivation.</p>
+<ul>
+<li>A test suite ensuring that the manually implemented and automatically generated implementations can be found here: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbt-plutus/lbt-plutus-typescript</a></li>
+</ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-Nix devops modules (Nix API) for streamlining the LambdaBuffers code generation pipeline to Javascript.
-- New flake modules were implemented to easily generate NPM packages from LambdaBuffers
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-typescript.nix">lbf-typescript</a>
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-prelude-typescript.nix">lbf-prelude-typescript</a>
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-plutus-typescript.nix">lbf-plutus-typescript</a></p>
+Nix devops modules (Nix API) for streamlining the LambdaBuffers code generation pipeline to Javascript.</p>
+<ul>
+<li>New flake modules were implemented to easily generate NPM packages from LambdaBuffers
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-typescript.nix">lbf-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-prelude-typescript.nix">lbf-prelude-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-plutus-typescript.nix">lbf-plutus-typescript</a></li>
+</ul>
+</li>
+</ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-Documentation on LambdaBuffers usage patterns for Javascript.
-- <a href="https://mlabs-haskell.github.io/lambda-buffers/typescript.html">A new page was created for the TypeScript use case</a></p>
+Documentation on LambdaBuffers usage patterns for Javascript.</p>
+<ul>
+<li><a href="https://mlabs-haskell.github.io/lambda-buffers/typescript.html">A new page was created for the TypeScript use case</a></li>
+</ul>
 </li>
 </ul>
 <h2 id="acceptance-criteria"><a class="header" href="#acceptance-criteria">Acceptance Criteria</a></h2>
 <ul>
 <li><input disabled="" type="checkbox" checked=""/>
 LambdaBuffers schemas that are based on the LambdaBuffers Prelude module can be used in Javascript projects to specify application types.
-- Test libraries for Prelude demonstrate how TypeScript code for the LambdaBuffers Prelude is generated to TypeScript and used in a library: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a>
-- Moreover, there is a <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/1d806a1710aab625ea520c596a72338c5bde578d/docs/typescript-prelude">docs/typescript-prelude</a> sample project which also demonstrates this.</li>
+<ul>
+<li>Test libraries for Prelude demonstrate how TypeScript code for the LambdaBuffers Prelude is generated to TypeScript and used in a library: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a></li>
+<li>Moreover, there is a <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/1d806a1710aab625ea520c596a72338c5bde578d/docs/typescript-prelude">docs/typescript-prelude</a> sample project which also demonstrates this.</li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 LambdaBuffers schemas that are based on the LambdaBuffers Plutus module can be used in Javascript projects to specify application types.
-- Test libraries for Plutus demonstrate how TypeScript code for the LambdaBuffers Prelude is generated to TypeScript and used in a library: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbt-plutus/lbt-plutus-typescript</a>
-- Moreover, there is a <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/1d806a1710aab625ea520c596a72338c5bde578d/docs/typescript-plutus">docs/typescript-plutus</a> sample project which also demonstrates this.</li>
+<ul>
+<li>Test libraries for Plutus demonstrate how TypeScript code for the LambdaBuffers Prelude is generated to TypeScript and used in a library: <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbt-plutus/lbt-plutus-typescript</a></li>
+<li>Moreover, there is a <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/1d806a1710aab625ea520c596a72338c5bde578d/docs/typescript-plutus">docs/typescript-plutus</a> sample project which also demonstrates this.</li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The documentation and devops tooling is available to facilitate easy adoption.
-- Similarly to other languages supported by LambdaBuffers, a <a href="https://github.com/mlabs-haskell/flake-lang.nix/tree/5bb4fdf556a2f2f23717c654c186f13f28b9c277/flake-lang/typescript">TypeScript flake</a> is implemented along with its documentation.
-The testing libraries also serve as an example, to understand how to use these Nix utilities:
+<ul>
+<li>Similarly to other languages supported by LambdaBuffers, a <a href="https://github.com/mlabs-haskell/flake-lang.nix/tree/5bb4fdf556a2f2f23717c654c186f13f28b9c277/flake-lang/typescript">TypeScript flake</a> is implemented along with its documentation.
+The testing libraries also serve as an example to understand how to use the Nix utilities:
 <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/4c6304cf3a3a0c08bbb46e94532a293fdea513e9/testsuites/lbt-plutus/lbt-plutus-typescript/build.nix">testsuites/lbt-plutus/lbt-plutus-typescript/build.nix</a>.</li>
+</ul>
+</li>
 </ul>
 <h2 id="evidence-of-milestone-completion"><a class="header" href="#evidence-of-milestone-completion">Evidence of Milestone Completion</a></h2>
 <ul>
 <li><input disabled="" type="checkbox" checked=""/>
 The completed and reviewed LambdaBuffers Prelude runtime library is available for the Javascript programming language.
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/343a1a900f42dcf5b1c1a7e330eafb07c280908b/runtimes/typescript/lbr-prelude">runtimes/typescript/lbr-prelude</a>
-- <a href="https://github.com/mlabs-haskell/prelude-typescript">prelude-typescript</a></li>
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/343a1a900f42dcf5b1c1a7e330eafb07c280908b/runtimes/typescript/lbr-prelude">runtimes/typescript/lbr-prelude</a></li>
+<li><a href="https://github.com/mlabs-haskell/prelude-typescript">prelude-typescript</a></li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The completed and reviewed LambdaBuffers Plutus runtime library is available for the Javascript programming language.
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/dc5ee6797d1230661d6bb3dfa658eddeadd7cb60/runtimes/typescript/lbr-plutus">runtimes/typescript/lbr-plutus</a>
-- <a href="https://github.com/mlabs-haskell/plutus-ledger-api-typescript">plutus-ledger-api-typescript</a></li>
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/dc5ee6797d1230661d6bb3dfa658eddeadd7cb60/runtimes/typescript/lbr-plutus">runtimes/typescript/lbr-plutus</a></li>
+<li><a href="https://github.com/mlabs-haskell/plutus-ledger-api-typescript">plutus-ledger-api-typescript</a></li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The completed and reviewed LambdaBuffers Prelude test suite is available and is passing in CI for the Javascript programming language.
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a></li>
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-prelude/lbt-prelude-typescript">testsuites/lbt-prelude/lbt-prelude-typescript</a></li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The completed and reviewed LambdaBuffers Plutus test suite is available and is passing in CI for the Javascript programming language.
-- <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbf-plutus/lbt-plutus-typescript</a></li>
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/50bfbc4a182275d42be978b5a251530bab84f4aa/testsuites/lbt-plutus/lbt-plutus-typescript">testsuites/lbf-plutus/lbt-plutus-typescript</a></li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The completed and reviewed Nix API for LambdaBuffers Javascript support is available.
--  <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-typescript.nix">lbf-typescript</a>
--  <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-prelude-typescript.nix">lbf-prelude-typescript</a>
--  <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-plutus-typescript.nix">lbf-plutus-typescript</a></li>
+<ul>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-typescript.nix">lbf-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-prelude-typescript.nix">lbf-prelude-typescript</a></li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/blob/f59bdb78d06fa677567d053eddb3d1fe46250fd8/extras/lbf-nix/lbf-plutus-typescript.nix">lbf-plutus-typescript</a></li>
+</ul>
+</li>
 <li><input disabled="" type="checkbox" checked=""/>
 The  completed and reviewed LambdaBuffers for Javascript documentation is available.
-- <a href="google.com">TypeScript documentation</a> TODO(jaredponn) put the commit here just before this when this is reviewed</li>
+<ul>
+<li><a href="https://mlabs-haskell.github.io/lambda-buffers/typescript.html">TypeScript documentation</a> at <a href="https://github.com/mlabs-haskell/lambda-buffers/blob/ecb7e0d115aafd5238ee4a24d340d55a440741ac/docs/typescript.md">docs/typescript.md</a></li>
+</ul>
+</li>
 </ul>
 <h2 id="demo-files"><a class="header" href="#demo-files">Demo files</a></h2>
 <ul>
