@@ -93,7 +93,7 @@ fn impl_struct(
     let keys = named.iter().map(|field| &field.ident);
 
     let from_json_impl = quote! {
-        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> std::result::Result<Self, lbr_prelude::error::Error> {
             match value {
                 serde_json::Value::Object(dict) => {
                     #(#dict_get)*
@@ -135,7 +135,7 @@ fn impl_tuple(
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> std::result::Result<Self, lbr_prelude::error::Error> {
             Vec::from_json(value).and_then(|vec: Vec<serde_json::Value>| {
                 if vec.len() == #arity {
                     Ok(Self(
@@ -166,7 +166,7 @@ fn impl_newtype() -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     };
 
     let from_json_impl = quote! {
-        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> std::result::Result<Self, lbr_prelude::error::Error> {
             Ok(Self(lbr_prelude::json::Json::from_json(value)?))
         }
     };
@@ -269,7 +269,7 @@ fn impl_enum(
     });
 
     let from_json_impl = quote! {
-        fn from_json(value: &serde_json::Value) -> Result<Self, lbr_prelude::error::Error> {
+        fn from_json(value: &serde_json::Value) -> std::result::Result<Self, lbr_prelude::error::Error> {
             lbr_prelude::json::case_json_constructor(#ident_str, vec![
                 #(#from_json_match_arms),*
             ],
