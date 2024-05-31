@@ -10,6 +10,13 @@ and proposes alternative Milestone 4 outputs to better foster adoption of Lambda
 
 This section describes limitations with Aiken.
 
+All testing / observations with Aiken were done with the following version.
+
+```bash
+$ aiken --version
+aiken v1.0.28-alpha+c9a1519
+```
+
 ### Aiken has no type class support
 
 A key feature of LambdaBuffers is to provide both types and type class instances.
@@ -172,9 +179,9 @@ would be translated to
 
 i.e., records are lists of all record components[^recordsSpecialCases].
 
-[^recordsSpecialCases]: Singleton records are encoded as just the single element.
+[^recordsSpecialCases]: There are some special cases for the encoding in LambdaBuffers. For example, singleton records are encoded as just the single element.
 
-If LambdaBuffers compiled `MyRecord` to a [record in Aiken](https://aiken-lang.org/language-tour/custom-types) as follows
+If LambdaBuffers compiled `MyRecord` to a [record in Aiken](https://aiken-lang.org/language-tour/custom-types) as follows.
 
 ```rust
 type MyRecord {
@@ -183,7 +190,7 @@ type MyRecord {
 }
 ```
 
-we know that Aiken will internally represent this as the following `Data` type
+Then, one can observe that Aiken will internally represent this as the following `Data` type
 
 ```purescript
 Constr 0 [a, b]
@@ -476,8 +483,9 @@ $ aiken build
 where the error message makes it clear that it only expects the source of dependencies to be from either GitHub, GitLab, or BitBucket.
 
 As such, it's unclear how to augment the local set of packages with a LambdaBuffers package, as the Nix tools would provide a local package.
-Indeed, it's most likely possible to trick Aiken into thinking that a LambdaBuffers package is already installed,
+Indeed, it's possible to trick Aiken into thinking that a LambdaBuffers package is already installed by preparing Aiken's build directory with the dependencies already included,
 but this delves into implementation specific details of Aiken that may break between releases.
+An example of this technique is [here](https://github.com/mlabs-haskell/uplc-benchmark/blob/master/nix/aiken/lib.nix#L83).
 
 ## Alternative milestone 4 outputs
 
