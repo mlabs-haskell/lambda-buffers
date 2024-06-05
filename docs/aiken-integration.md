@@ -70,11 +70,37 @@ This makes it impossible to pass instance dictionaries via Aiken's builtin types
 Alternatively, one could try to sidestep Aiken's builtin types by creating a type which is a Church encoded tuple
 (i.e., implementing a tuple type via function types),
 but doing so requires higher ranked types which again Aiken does not support.
-Moreover, it appears that Aiken does not provide any "back doors" to the type system (e.g. TypeScript's `any` type) to trick the type system that using a Church encoded tuple and with its projections are well typed.
+Moreover, it appears that Aiken does not provide any "back doors" to the type system (e.g. TypeScript's `any` type) to trick the type system that using a Church encoded tuple and its projections are well typed.
 
 It's clear now that having an explicit type for an instance dictionary is not feasible in Aiken,
-so owing to the fact that an instance dictionary is a product type of functions, one can replace all instance dictionaries as an argument with multiple arguments with each method, and replace the functions to create an instance dictionary with multiple functions to create each method in the type class.
-This is indeed possible in Aiken, and to demonstrate this technique, consider the following translation.
+so owing to the fact that an instance dictionary is a product type of functions, one can achieve type classes via dictionary passing by replacing all instance dictionaries as multiple arguments of each method in the type class, and replace the function to create an instance dictionary with multiple functions to create each method in the type class.
+This is indeed possible in Aiken, and to demonstrate this technique, consider the following Haskell code (which loosely models code generated from LambdaBuffers)
+
+```haskell
+class Eq a where
+    eq :: a -> a -> Bool
+
+class PlutusData a where
+    toData :: a -> Data
+    fromData :: Data -> a
+
+data MyOption a = MyJust a | MyNothing
+
+instance Eq a => Eq (MyOption a) where
+    eq (MyJust s) (MyJust t) = s == t
+    eq MyNothing  MyNothing  = True
+    eq _          _          = False
+
+instance PlutusData a => PlutusData (MyOption a) where
+    toData (MyJust s) = Constr 0 [toData s]
+    toData MyNothing  = Constr 1 []
+
+    fromData (Constr 0 [s]) = MyJust (fromData s)
+    fromData (Constr 1 [])  = MyNothing
+    fromData _              = error "bad parse"
+```
+
+A translation to type class free code in Aiken is as follows.
 
 ```rust
 use aiken/builtin as builtin
@@ -342,27 +368,33 @@ Ideally, one would want to change how Aiken encodes its data types internally so
 Thus, we lose all benefits of LambdaBuffers' efficient encoding when working with Aiken's mechanisms to define types because LambdaBuffers is forced to take an extra step to translate to Aiken's inefficient encoding.
 As such, Aiken's opinionated way of encoding its data is at odds with LambdaBuffers.
 
-To resolve the mismatch in the encoding of data between the two, one could alternatively sidestep all of Aiken's methods for defining types and instead use Aiken's opaque types to alias `Data` and provide ones own constructors / record accesses as follows
+To resolve the mismatch in the encoding of data between the two, one could alternatively sidestep all of Aiken's methods for defining types and instead use Aiken's opaque types to alias `Data` and provide ones own constructors / record accesses as follows.
 
 ```rust
 use aiken/builtin as builtin
 
 pub opaque type MyRecord { data: Data }
 
-pub fn myRecord(a: Int) -> MyRecord {
-    MyRecord{ data : builtin.list_data([builtin.i_data(a)]) }
+// Constructor for `MyRecord`
+pub fn myRecord(a: Int, b: Int) -> MyRecord {
+    MyRecord{ data : builtin.list_data([builtin.i_data(a), builtin.i_data(b)]) }
 }
 
+// Projection for the field `a` of `MyRecord`
 pub fn myRecord_a(value : MyRecord) -> Int {
     builtin.un_i_data(builtin.head_list(builtin.un_list_data(value)))
 }
 
-// Example program:
+// Projection for the field `b` of `MyRecord`
+pub fn myRecord_b(value : MyRecord) -> Int {
+    builtin.un_i_data(builtin.head_list(builtin.tail_list(builtin.un_list_data(value))))
+}
+
 validator {
     pub fn hello_world(_redeemer: Data, _scriptContext: Data) {
-        let theRecord = myRecord(69)
+        let theRecord = myRecord(69, -69)
 
-        myRecord_a(theRecord) == 420
+        myRecord_a(theRecord) == 420 && myRecord_b(theRecord) == -420
     }
 }
 ```
@@ -381,47 +413,93 @@ Interested readers may inspect the compiled UPLC to verify that the data encodin
           [
             (lam
               i_2
-              (lam
-                i_3
+              [
                 (lam
-                  i_4
-                  (force
-                    [
-                      [
+                  i_3
+                  (lam
+                    i_4
+                    (lam
+                      i_5
+                      (force
                         [
-                          i_2
                           [
                             [
-                              (builtin equalsInteger)
+                              i_3
                               [
-                                (builtin unIData)
+                                (lam
+                                  i_6
+                                  (force
+                                    [
+                                      [
+                                        [
+                                          i_3
+                                          [
+                                            [
+                                              (builtin equalsInteger)
+                                              [
+                                                (builtin unIData)
+                                                [
+                                                  i_1
+                                                  [ (builtin unListData) i_6 ]
+                                                ]
+                                              ]
+                                            ]
+                                            (con integer 420)
+                                          ]
+                                        ]
+                                        (delay
+                                          [
+                                            [
+                                              (builtin equalsInteger)
+                                              [
+                                                (builtin unIData)
+                                                [
+                                                  i_1
+                                                  [
+                                                    i_0
+                                                    [ (builtin unListData) i_6 ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                            (con integer -420)
+                                          ]
+                                        )
+                                      ]
+                                      (delay (con bool False))
+                                    ]
+                                  )
+                                )
                                 [
-                                  i_0
+                                  (builtin listData)
                                   [
-                                    [ i_1 (con data (I 69)) ]
-                                    (con (list data) [])
+                                    [ i_2 (con data (I 69)) ]
+                                    [
+                                      [ i_2 (con data (I -69)) ]
+                                      (con (list data) [])
+                                    ]
                                   ]
                                 ]
                               ]
                             ]
-                            (con integer 420)
+                            (delay (con unit ()))
                           ]
+                          (delay [ (error ) (force (error )) ])
                         ]
-                        (delay (con unit ()))
-                      ]
-                      (delay [ (error ) (force (error )) ])
-                    ]
+                      )
+                    )
                   )
                 )
-              )
+                (force (builtin ifThenElse))
+              ]
             )
-            (force (builtin ifThenElse))
+            (force (builtin mkCons))
           ]
         )
-        (force (builtin mkCons))
+        (force (builtin headList))
       ]
     )
-    (force (builtin headList))
+    (force (builtin tailList))
   ]
 )
 ```
@@ -482,10 +560,30 @@ $ aiken build
 
 where the error message makes it clear that it only expects the source of dependencies to be from either GitHub, GitLab, or BitBucket.
 
-As such, it's unclear how to augment the local set of packages with a LambdaBuffers package, as the Nix tools would provide a local package.
-Indeed, it's possible to trick Aiken into thinking that a LambdaBuffers package is already installed by preparing Aiken's build directory with the dependencies already included,
+As such, it's unclear how to augment the local set of packages with a LambdaBuffers package.
+Indeed, it's possible to trick Aiken into thinking that a LambdaBuffers package is already installed by preparing Aiken's build directory with the dependencies copied in ahead of time,
 but this delves into implementation specific details of Aiken that may break between releases.
 An example of this technique is [here](https://github.com/mlabs-haskell/uplc-benchmark/blob/master/nix/aiken/lib.nix#L83).
+
+## Summary of Aiken limitations
+
+This section summarizes the Aiken limitations and incompatibilities with LambdaBuffers.
+
+1. Aiken has no type classes, but LambdaBuffers requires type classes. As such, LambdaBuffers support for Aiken would require its own implementation of type classes.
+   Unfortunately, implementing type classes is awkward in Aiken because composite data types in Aiken cannot store functions.
+   It can be argued that this awkwardness creates a poor user experience for an Aiken developer, but this can be mitigated by the fact that the only type classes LambdaBuffers generates are relatively simplistic.
+
+2. Aiken's PlutusData representation of its data types is different from LambdaBuffers' representation of PlutusData.
+   This means that we have a choice of either:
+
+   * Translating LambdaBuffers types to Aiken's builtin composite types which would lead to inefficient code in the already constrained onchain code environment since this would be "massaging" PlutusData representations when we would really want Aiken to use LambdaBuffers PlutusData encoding directly.
+
+   * Translating LambdaBuffers types to a opaque type alias in Aiken which would then require us to generate supporting functions for constructors and destructors which would make Aiken's major language features obsolete, and so have a poor user experience.
+
+   To put this more explicitly, we either have inefficient code with a nice user experience for an Aiken developer, or efficient code with an awful user experience for an Aiken developer.
+
+3. Creating local package sets in Aiken is unclear, but creating such local package sets is a principle feature of LambdaBuffers.
+   Indeed, there are tricks one can do to work around this, but this depends on internal implementation details of Aiken that may break between releases.
 
 ## Alternative milestone 4 outputs
 
