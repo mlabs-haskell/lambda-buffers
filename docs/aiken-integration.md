@@ -654,7 +654,7 @@ This section summarizes the Aiken limitations and incompatibilities with Lambda 
 
    To put this more explicitly, we either have inefficient code with a somewhat nice user experience for an Aiken developer, or efficient code with an awful user experience for an Aiken developer.
 
-3. Creating local package sets in Aiken is unclear, but creating such local package sets is a principle feature of Lambda Buffers.
+3. Creating local package sets in Aiken is unclear, but creating such local package sets is a principal feature of Lambda Buffers.
    Indeed, there are tricks one can do to work around this, but this depends on internal implementation details of Aiken that may break between releases.
 
 All in all, at the moment it's clear that while it may be possible to integrate Aiken with Lambda Buffers, such integration would have
