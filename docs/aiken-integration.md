@@ -40,7 +40,7 @@ type EqDict<a> {
 }
 ```
 
-would produce an error like
+would produce an error as follows.
 
 ```bash
 $ aiken build
@@ -405,7 +405,9 @@ Ideally, one would want to change how Aiken encodes its data types internally so
 Thus, we lose all benefits of Lambda Buffers' efficient encoding when working with Aiken's mechanisms to define types because Lambda Buffers is forced to take an extra step to translate to Aiken's inefficient encoding.
 As such, Aiken's opinionated way of encoding its data is at odds with Lambda Buffers.
 
-To resolve the mismatch in the encoding of data between the two, one could alternatively sidestep all of Aiken's methods for defining types and instead use Aiken's opaque types to alias `Data` and provide ones own constructors / record accesses as follows.
+To resolve the mismatch in the encoding of data between the two,
+one could alternatively sidestep all of Aiken's methods for defining types
+and instead use Aiken's opaque types to alias `Data` and provide ones own constructors / record accesses as follows.
 
 ```rust
 use aiken/builtin as builtin
@@ -546,7 +548,7 @@ Note that this would most likely offer a poor user experience as this would esse
 In either case,
 to mediate the Data serialization / deserialization mismatch of Aiken and Lambda Buffers,
 it puts a bulkier mental overhead on the Aiken developer.
-As in the previous section, an Aiken developer would expect to write a validator as follows.
+For example, as in the previous section, an Aiken developer would expect to write a validator as follows.
 
 ```rust
 pub type MyRecord {a : Int, b : Int }
@@ -666,7 +668,7 @@ Moreover, Aiken is still in an alpha release and is rapidly changing, so the eff
 Thus, given these challenges, it's clear that it would be unwise to undertake the Aiken implementation currently,
 and it would be wiser to revisit this later and focus on matters of pressing importance today to better foster adoption of Lambda Buffers.
 
-Lambda Buffers has fortunately seen industry use in other projects such as [DeNS](https://github.com/mlabs-haskell/DeNS/tree/main), OrcFax, etc.,
+Lambda Buffers has fortunately seen industry use in other projects such as [DeNS](https://github.com/mlabs-haskell/DeNS/tree/main), [TripHut DAO](https://github.com/yaadlabs/DAO-Off-Chain), etc.,
 and there's been feedback to improve the existing facilities in Lambda Buffers which would aid in fostering the adoption of Lambda Buffers in the greater Cardano community.
 Some of these issues include the following.
 
