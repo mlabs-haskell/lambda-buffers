@@ -21,6 +21,7 @@
 - [Codegen](codegen.md)
 - [Command line interface](command-line-interface.md)
 - [Comparison matrix](comparison-matrix.md)
+- [Aiken Research Document](aiken-integration.md)
 - [Catalyst reports](catalyst-reports.md)
   - [Catalyst 9 reports](catalyst09-reports/README.md)
     - [Milestone 1: Research](catalyst09-reports/milestone-1.md)
@@ -30,3 +31,4 @@
   - [Catalyst 10 reports](catalyst10-reports/README.md)
     - [Milestone 1: Rust support](catalyst10-reports/milestone-1.md)
     - [Milestone 2: Javascript/Typescript support](catalyst10-reports/milestone-2.md)
+    - [Milestone 3: Aiken integration research and development](catalyst10-reports/milestone-3.md)
