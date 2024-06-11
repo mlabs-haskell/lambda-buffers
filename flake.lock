@@ -40105,11 +40105,11 @@
         "protobuf": "protobuf_3"
       },
       "locked": {
-        "lastModified": 1710265757,
-        "narHash": "sha256-tNngRHjXUuzyd8RU7sE56cIBZEsB3ycxcCs09On4D68=",
+        "lastModified": 1718116351,
+        "narHash": "sha256-23uFW4mvZM5G6ju65K8JgA1bMGNJViEubmTH5tlw63s=",
         "owner": "mlabs-haskell",
         "repo": "proto.nix",
-        "rev": "f109ff5d9b5046b9ecf75dcf5a4d8d50731c5322",
+        "rev": "800396f7ede436845c48746243475ad0c23f176c",
         "type": "github"
       },
       "original": {
