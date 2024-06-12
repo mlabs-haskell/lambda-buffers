@@ -121,6 +121,24 @@
           }} "$@";
         '';
 
+        lbf-plutus-to-plutustx = pkgs.writeShellScriptBin "lbf-plutus-to-plutustx" ''
+          export LB_COMPILER=${config.packages.lbc}/bin/lbc;
+          mkdir autogen;
+          mkdir .work;
+          ${config.lbf-nix.lbfBuild.buildCall {
+            files = [];
+            import-paths = [ config.packages.lbf-prelude config.packages.lbf-plutus ];
+            gen = "${config.packages.lbg-plutustx}/bin/lbg-plutustx";
+            gen-classes = ["Prelude.Eq" "Plutus.V1.PlutusData" ];
+            gen-dir = "autogen";
+            gen-opts = [
+              "--config=${config.packages.codegen-configs}/plutustx-prelude.json"
+              "--config=${config.packages.codegen-configs}/plutustx-plutus.json"
+            ];
+            work-dir = ".work";
+          }} "$@";
+        '';
+
         lbf-prelude-to-purescript = pkgs.writeShellScriptBin "lbf-prelude-to-purescript" ''
           export LB_COMPILER=${config.packages.lbc}/bin/lbc;
           mkdir -p autogen;
