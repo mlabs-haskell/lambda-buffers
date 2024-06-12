@@ -115,6 +115,7 @@ library
     LambdaBuffers.Codegen.Haskell.Backend
     LambdaBuffers.Codegen.Haskell.Backend.Native
     LambdaBuffers.Codegen.Haskell.Backend.Native.Derive
+    LambdaBuffers.Codegen.Haskell.Backend.Native.LamVal
     LambdaBuffers.Codegen.Haskell.Backend.Plutarch
     LambdaBuffers.Codegen.Haskell.Backend.Plutarch.Derive
     LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal

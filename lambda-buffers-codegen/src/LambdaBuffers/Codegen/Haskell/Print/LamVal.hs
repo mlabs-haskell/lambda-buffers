@@ -1,8 +1,9 @@
-module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE, printValueEWith, printLamE) where
+module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE, printLamE, printOtherCase, HaskellLamValContext (..), HaskellLamValMonad) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad (replicateM)
 import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.RWS.Class (MonadReader (ask))
 import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Text qualified as Text
@@ -15,15 +16,19 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, comma, dquotes, encloseSep, equals, group, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-throwInternalError :: MonadPrint m => String -> m a
-throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Haskell.Print.LamVal] " <> Text.pack msg
+newtype HaskellLamValContext = HaskellLamValContext
+  { ctx'printCaseIntE :: forall m ann. HaskellLamValMonad m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+  }
 
-type MonadPrint m = LV.MonadPrint m HsSyntax.QValName
+type HaskellLamValMonad m = LV.MonadPrint m HsSyntax.QValName HaskellLamValContext
+
+throwInternalError :: HaskellLamValMonad m => String -> m a
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Haskell.Print.LamVal] " <> Text.pack msg
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
 
-printCtorCase :: MonadPrint m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
+printCtorCase :: HaskellLamValMonad m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
 printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
   args <- for fields (const LV.freshArg)
   argDocs <- for args printValueE
@@ -34,7 +39,7 @@ printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
     then return $ group $ ctorNameDoc <+> "->" <+> group bodyDoc
     else return $ group $ ctorNameDoc <+> hsep argDocs <+> "->" <+> group bodyDoc
 
-printCaseE :: MonadPrint m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
+printCaseE :: HaskellLamValMonad m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
 printCaseE (qtyN, sumTy) caseVal ctorCont = do
   caseValDoc <- printValueE caseVal
   ctorCaseDocs <-
@@ -47,14 +52,14 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
         )
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)
 
-printLamE :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printLamE :: HaskellLamValMonad m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
   arg <- LV.freshArg
   bodyDoc <- printValueE (lamVal arg)
   argDoc <- printValueE arg
   return $ lparen <> "\\" <> argDoc <+> "->" <+> group bodyDoc <+> rparen
 
-printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
+printAppE :: HaskellLamValMonad m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
@@ -71,7 +76,7 @@ printAppE funVal argVal = do
 
    foo'foo x
 -}
-printFieldE :: MonadPrint m => LV.QField -> LV.ValueE -> m (Doc ann)
+printFieldE :: HaskellLamValMonad m => LV.QField -> LV.ValueE -> m (Doc ann)
 printFieldE ((_, tyn), fieldN) recVal = do
   recDoc <- printValueE recVal
   let mayFnDoc = HsSyntax.printFieldName (withInfo tyn) (withInfo fieldN)
@@ -90,7 +95,7 @@ printFieldE ((_, tyn), fieldN) recVal = do
 
    let MkFoo x1 x2 x3 = <letVal> in <letCont>
 -}
-printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
+printLetE :: HaskellLamValMonad m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
 printLetE ((_, tyN), fields) prodVal letCont = do
   letValDoc <- printValueE prodVal
   args <- for fields (const LV.freshArg)
@@ -100,33 +105,19 @@ printLetE ((_, tyN), fields) prodVal letCont = do
   let prodCtorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ "let" <+> prodCtorDoc <+> hsep argDocs <+> equals <+> letValDoc <+> "in" <+> bodyDoc
 
-printOtherCase :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printOtherCase :: HaskellLamValMonad m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printOtherCase otherCase = do
   arg <- LV.freshArg
   argDoc <- printValueE arg
   bodyDoc <- printValueE $ otherCase arg
   return $ group $ argDoc <+> "->" <+> bodyDoc
 
-printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
-printCaseIntE caseIntVal cases otherCase = do
-  caseValDoc <- printValueE caseIntVal
-  caseDocs <-
-    for
-      cases
-      ( \(conditionVal, bodyVal) -> do
-          conditionDoc <- printValueE conditionVal
-          bodyDoc <- printValueE bodyVal
-          return $ group $ conditionDoc <+> "->" <+> bodyDoc
-      )
-  otherDoc <- printOtherCase otherCase
-  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
-
-printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
+printListE :: HaskellLamValMonad m => [LV.ValueE] -> m (Doc ann)
 printListE vals = do
   valDocs <- printValueE `traverse` vals
   return $ lbracket <> align (encloseSep mempty mempty (comma <> space) valDocs <> rbracket)
 
-printCaseListE :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseListE :: HaskellLamValMonad m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE caseListVal cases otherCase = do
   caseValDoc <- printValueE caseListVal
   caseDocs <-
@@ -141,7 +132,7 @@ printCaseListE caseListVal cases otherCase = do
   otherDoc <- printOtherCase otherCase
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
-printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
+printCtorE :: HaskellLamValMonad m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE ((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals printValueE
   let ctorNDoc = HsSyntax.printCtorName (withInfo tyN) (withInfo ctorN)
@@ -149,7 +140,7 @@ printCtorE ((_, tyN), (ctorN, _)) prodVals = do
     then return ctorNDoc
     else return $ ctorNDoc <+> align (hsep prodDocs)
 
-printRecordE :: MonadPrint m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
+printRecordE :: HaskellLamValMonad m => LV.QRecord -> [(LV.Field, LV.ValueE)] -> m (Doc ann)
 printRecordE ((_, tyN), _) vals = do
   fieldDocs <- for vals $
     \((fieldN, _), val) -> case HsSyntax.printFieldName (withInfo tyN) (withInfo fieldN) of
@@ -160,22 +151,22 @@ printRecordE ((_, tyN), _) vals = do
   let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (lbrace <+> encloseSep mempty mempty (comma <> space) fieldDocs <+> rbrace)
 
-printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
+printProductE :: HaskellLamValMonad m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE ((_, tyN), _) vals = do
   fieldDocs <- for vals printValueE
   let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
   return $ ctorDoc <+> align (hsep fieldDocs)
 
-printTupleE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
+printTupleE :: HaskellLamValMonad m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printTupleE l r = do
   lDoc <- printValueE l
   rDoc <- printValueE r
   return $ parens (lDoc <> comma <> rDoc)
 
-printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
+printTextE :: HaskellLamValMonad m => Text.Text -> m (Doc ann)
 printTextE = return . dquotes . pretty
 
-printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: HaskellLamValMonad m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE txtVal cases otherCase = do
   caseValDoc <- printValueE txtVal
   caseDocs <-
@@ -191,36 +182,35 @@ printCaseTextE txtVal cases otherCase = do
   otherDoc <- printOtherCase otherCase
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
-printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
+printRefE :: HaskellLamValMonad m => LV.Ref -> m (Doc ann)
 printRefE ref = do
   qvn <- LV.resolveRef ref
   HsSyntax.printHsQValName <$> LV.importValue qvn
 
-printVarE :: MonadPrint m => String -> m (Doc ann)
+printVarE :: HaskellLamValMonad m => String -> m (Doc ann)
 printVarE = return . pretty
 
-printErrorE :: MonadPrint m => String -> m (Doc ann)
+printErrorE :: HaskellLamValMonad m => String -> m (Doc ann)
 printErrorE err = throwInternalError $ "LamVal error builtin was called " <> err
 
-printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
-printValueE = printValueEWith printCaseIntE
-
-printValueEWith :: MonadPrint m => (LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)) -> LV.ValueE -> m (Doc ann)
-printValueEWith _ (LV.VarE v) = printVarE v
-printValueEWith _ (LV.RefE ref) = printRefE ref
-printValueEWith _ (LV.LamE lamVal) = printLamE lamVal
-printValueEWith _ (LV.AppE funVal argVal) = printAppE funVal argVal
-printValueEWith _ (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
-printValueEWith _ (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
-printValueEWith _ (LV.RecordE qrec vals) = printRecordE qrec vals
-printValueEWith _ (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
-printValueEWith _ (LV.ProductE qprod vals) = printProductE qprod vals
-printValueEWith _ (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
-printValueEWith _ (LV.IntE i) = return $ pretty i
-printValueEWith printCaseIntE' (LV.CaseIntE intVal cases otherCase) = printCaseIntE' intVal cases otherCase
-printValueEWith _ (LV.ListE vals) = printListE vals
-printValueEWith _ (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
-printValueEWith _ (LV.TextE txt) = printTextE txt
-printValueEWith _ (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
-printValueEWith _ (LV.TupleE l r) = printTupleE l r
-printValueEWith _ (LV.ErrorE err) = printErrorE err
+printValueE :: HaskellLamValMonad m => LV.ValueE -> m (Doc ann)
+printValueE (LV.VarE v) = printVarE v
+printValueE (LV.RefE ref) = printRefE ref
+printValueE (LV.LamE lamVal) = printLamE lamVal
+printValueE (LV.AppE funVal argVal) = printAppE funVal argVal
+printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
+printValueE (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
+printValueE (LV.RecordE qrec vals) = printRecordE qrec vals
+printValueE (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
+printValueE (LV.ProductE qprod vals) = printProductE qprod vals
+printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
+printValueE (LV.IntE i) = return $ pretty i
+printValueE (LV.CaseIntE intVal cases otherCase) = do
+  printCaseIntE <- ctx'printCaseIntE . LV.backendCtx <$> ask
+  printCaseIntE intVal cases otherCase
+printValueE (LV.ListE vals) = printListE vals
+printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
+printValueE (LV.TextE txt) = printTextE txt
+printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
+printValueE (LV.TupleE l r) = printTupleE l r
+printValueE (LV.ErrorE err) = printErrorE err

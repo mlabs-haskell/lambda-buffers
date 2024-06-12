@@ -4,15 +4,16 @@ import Control.Lens ((^.))
 import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Backend (MonadHaskellBackend)
 import LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal qualified as PlLamVal
 import LambdaBuffers.Codegen.Haskell.Backend.Plutarch.Refs qualified as PlRefs
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as Haskell
-import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Print.TyDef qualified as Haskell
+import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImplPlutarch, deriveToPlutusDataImplPlutarch)
 import LambdaBuffers.Codegen.Print qualified as Print
@@ -53,6 +54,9 @@ hsClassImplPrinters =
 
 useVal :: MonadHaskellBackend t m => Haskell.QValName -> m (Doc ann)
 useVal qvn = Print.importValue qvn >> return (Haskell.printHsQValName qvn)
+
+printValue :: (LV.Ref -> Maybe Haskell.QValName) -> LV.ValueE -> Either LV.PrintError (Doc ann, Set Haskell.QValName)
+printValue builtins valE = LV.runPrint (LV.Context builtins ()) (PlLamVal.printValueE valE)
 
 {- | Deriving PEq.
 
@@ -111,8 +115,8 @@ printDerivePIsData _mn _iTyDefs mkInstanceDoc _ty = do
       pfromDataImpl = printValueDef (Haskell.MkValueName "pfromDataImpl") punsafeCoerceDoc
   mkInstanceDoc (align $ vsep [pdataImpl, pfromDataImpl])
 
-lvPlutusDataBuiltinsForPlutusType :: LV.PrintRead Haskell.QValName
-lvPlutusDataBuiltinsForPlutusType = LV.MkPrintRead $ \(_ty, refName) ->
+lvPlutusDataBuiltinsForPlutusType :: LV.Ref -> Maybe Haskell.QValName
+lvPlutusDataBuiltinsForPlutusType (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("toPlutusData", (Haskell.MkCabalPackageName "lbr-plutarch", Haskell.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", Haskell.MkValueName "toPlutusData"))
@@ -138,8 +142,8 @@ printDerivePlutusType mn iTyDefs _mkInstanceDoc ty = do
         do
           toDataE <- deriveToPlutusDataImplPlutarch mn iTyDefs ty
           fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
-          (pconImplDoc, imps) <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (Haskell.printValueE toDataE)
-          (pmatchImplDoc, imps') <- LV.runPrint lvPlutusDataBuiltinsForPlutusType (PlLamVal.printValueE fromDataE)
+          (pconImplDoc, imps) <- printValue lvPlutusDataBuiltinsForPlutusType toDataE
+          (pmatchImplDoc, imps') <- printValue lvPlutusDataBuiltinsForPlutusType fromDataE
           let implDoc =
                 align $
                   vsep
@@ -201,8 +205,8 @@ printPlutusTypeInstanceDef ty implDefDoc = do
 printValueDef :: Haskell.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = Haskell.printHsValName valName <+> equals <+> valDoc
 
-lvPlutusDataBuiltinsForPTryFrom :: LV.PrintRead Haskell.QValName
-lvPlutusDataBuiltinsForPTryFrom = LV.MkPrintRead $ \(_ty, refName) ->
+lvPlutusDataBuiltinsForPTryFrom :: LV.Ref -> Maybe Haskell.QValName
+lvPlutusDataBuiltinsForPTryFrom (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("toPlutusData", (Haskell.MkCabalPackageName "lbr-plutarch", Haskell.MkModuleName "LambdaBuffers.Runtime.Plutarch.LamVal", Haskell.MkValueName "toPlutusData"))
@@ -233,7 +237,7 @@ printDerivePTryFrom mn iTyDefs _mkInstanceDoc ty = do
   pappDoc <- useVal PlRefs.pappQValName
   let resOrErr = do
         fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
-        (ptryFromImplDoc, imps) <- LV.runPrint lvPlutusDataBuiltinsForPTryFrom (PlLamVal.printValueE fromDataE)
+        (ptryFromImplDoc, imps) <- printValue lvPlutusDataBuiltinsForPTryFrom fromDataE
         return
           ( align $ printValueDef PlRefs.ptryFromMethod (parens $ "\\pd f -> f" <+> parens (parens pappDoc <+> parens ptryFromImplDoc <+> "pd" <+> "," <+> "()"))
           , imps

@@ -4,9 +4,13 @@ import Control.Lens ((^.))
 import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Set (Set)
 import LambdaBuffers.Codegen.Haskell.Backend (MonadHaskellBackend)
-import LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE)
+import LambdaBuffers.Codegen.Haskell.Backend.Native.LamVal qualified as Native
+import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as Haskell
+import LambdaBuffers.Codegen.LamVal qualified as Lv
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
@@ -46,11 +50,14 @@ hsClassImplPrinters =
       )
     ]
 
+printValue :: (Lv.Ref -> Maybe Haskell.QValName) -> Lv.ValueE -> Either LV.PrintError (Doc ann, Set Haskell.QValName)
+printValue builtins valE = LV.runPrint (LV.Context builtins Native.lamValContext) (Haskell.printValueE valE)
+
 eqClassMethodName :: H.ValueName
 eqClassMethodName = H.MkValueName "=="
 
-lvEqBuiltinsBase :: LV.PrintRead (H.CabalPackageName, H.ModuleName, H.ValueName)
-lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
+lvEqBuiltinsBase :: Lv.Ref -> Maybe Haskell.QValName
+lvEqBuiltinsBase (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("eq", (H.MkCabalPackageName "base", H.MkModuleName "Prelude", H.MkValueName "=="))
@@ -64,15 +71,15 @@ printDeriveEqBase mn iTyDefs mkInstanceDoc ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsBase (printValueE valE) of
+      case printValue lvEqBuiltinsBase valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (printValueDef eqClassMethodName implDoc)
           for_ imps Print.importValue
           return instanceDoc
 
-lvPlutusDataBuiltins :: LV.PrintRead H.QValName
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
+lvPlutusDataBuiltins :: Lv.Ref -> Maybe Haskell.QValName
+lvPlutusDataBuiltins (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("toPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "toBuiltinData"))
@@ -94,7 +101,7 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
   case deriveToPlutusDataImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+      case printValue lvPlutusDataBuiltins valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (printValueDef toPlutusDataClassMethodName implDoc)
@@ -115,7 +122,7 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
   case deriveFromPlutusDataImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+      case printValue lvPlutusDataBuiltins valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (printValueDef fromPlutusDataClassMethodName implDoc)
@@ -124,8 +131,8 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
           return instanceDoc
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
-lvJsonBuiltins :: LV.PrintRead H.QValName
-lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
+lvJsonBuiltins :: Lv.Ref -> Maybe Haskell.QValName
+lvJsonBuiltins (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("toJson", (H.MkCabalPackageName "lbr-prelude", H.MkModuleName "LambdaBuffers.Runtime.Prelude", H.MkValueName "toJson"))
@@ -152,9 +159,9 @@ printDeriveJson :: MonadHaskellBackend t m => PC.ModuleName -> PC.TyDefs -> (Doc
 printDeriveJson mn iTyDefs mkInstanceDoc ty = do
   let resOrErr = do
         toJsonValE <- deriveToJsonImpl mn iTyDefs ty
-        (toJsonImplDoc, impsA) <- LV.runPrint lvJsonBuiltins (printValueE toJsonValE)
+        (toJsonImplDoc, impsA) <- printValue lvJsonBuiltins toJsonValE
         fromJsonValE <- deriveFromJsonImpl mn iTyDefs ty
-        (fromJsonImplDoc, impsB) <- LV.runPrint lvJsonBuiltins (printValueE fromJsonValE)
+        (fromJsonImplDoc, impsB) <- printValue lvJsonBuiltins fromJsonValE
         return (toJsonImplDoc, fromJsonImplDoc, impsA <> impsB)
 
   (toJsonImplDoc, fromJsonImplDoc, imps) <- case resOrErr of

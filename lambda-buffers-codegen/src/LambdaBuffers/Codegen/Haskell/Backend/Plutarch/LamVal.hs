@@ -15,10 +15,10 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, backslash, dquotes, group, hardline, hsep, line, parens, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-throwInternalError :: MonadPrint m => String -> m a
-throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Plutarch] " <> Text.pack msg
+type PlutarchLamValMonad m = LV.MonadPrint m HsSyntax.QValName ()
 
-type MonadPrint m = LV.MonadPrint m HsSyntax.QValName
+throwInternalError :: PlutarchLamValMonad m => String -> m a
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Plutarch] " <> Text.pack msg
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id
@@ -66,7 +66,7 @@ translates to Plutarch
 plam (\x -> <expression over x>)
 ```
 -}
-printLamE :: MonadPrint m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printLamE :: PlutarchLamValMonad m => (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printLamE lamVal = do
   arg <- LV.freshArg
   bodyDoc <- printValueE (lamVal arg)
@@ -86,7 +86,7 @@ translates to Plutarch
 (#) (funVal) (argVal)
 ```
 -}
-printAppE :: MonadPrint m => LV.ValueE -> LV.ValueE -> m (Doc ann)
+printAppE :: PlutarchLamValMonad m => LV.ValueE -> LV.ValueE -> m (Doc ann)
 printAppE funVal argVal = do
   funDoc <- printValueE funVal
   argDoc <- printValueE argVal
@@ -111,7 +111,7 @@ pcon (Foo'Bar (x) (y))
 
 TODO(bladyjoker): Add import for the `Foo'Bar` constructor value reference.
 -}
-printCtorE :: MonadPrint m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
+printCtorE :: PlutarchLamValMonad m => LV.QCtor -> [LV.ValueE] -> m (Doc ann)
 printCtorE _qctor@((_, tyN), (ctorN, _)) prodVals = do
   prodDocs <- for prodVals (fmap parens . printValueE)
   let ctorNDoc = HsSyntax.printCtorName (withInfo tyN) (withInfo ctorN)
@@ -147,7 +147,7 @@ pmatch foo (\x -> case x of
            )
 ```
 -}
-printCaseE :: MonadPrint m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
+printCaseE :: PlutarchLamValMonad m => LV.QSum -> LV.ValueE -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> m (Doc ann)
 printCaseE _qsum@(qtyN, sumTy) caseVal ctorCont = do
   caseValDoc <- printValueE caseVal
   ctorCaseDocs <-
@@ -163,7 +163,7 @@ printCaseE _qsum@(qtyN, sumTy) caseVal ctorCont = do
   let casesDoc = "ca" <> align ("se" <+> pmatchContArgDoc <+> "of" <> line <> ctorCaseDocs)
   return $ pmatchDoc <+> caseValDoc <+> parens (backslash <> pmatchContArgDoc <+> "->" <+> casesDoc)
 
-printCtorCase :: MonadPrint m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
+printCtorCase :: PlutarchLamValMonad m => PC.QTyName -> ((LV.Ctor, [LV.ValueE]) -> LV.ValueE) -> LV.Ctor -> m (Doc ann)
 printCtorCase (_, tyn) ctorCont ctor@(ctorN, fields) = do
   args <- for fields (const LV.freshArg)
   argDocs <- for args printValueE
@@ -192,7 +192,7 @@ pcon (Foo (x) (y))
 
 TODO(bladyjoker): Add Product constructor import.
 -}
-printProductE :: MonadPrint m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
+printProductE :: PlutarchLamValMonad m => LV.QProduct -> [LV.ValueE] -> m (Doc ann)
 printProductE ((_, tyN), _) vals = do
   fieldDocs <- for vals (fmap parens . printValueE)
   let ctorDoc = HsSyntax.printMkCtor (withInfo tyN)
@@ -217,7 +217,7 @@ translates to Plutarch
 pmatch foo (\(Foo x y) -> <expression on x and y>)
 ```
 -}
-printLetE :: MonadPrint m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
+printLetE :: PlutarchLamValMonad m => LV.QProduct -> LV.ValueE -> ([LV.ValueE] -> LV.ValueE) -> m (Doc ann)
 printLetE ((_, tyN), fields) prodVal letCont = do
   prodValDoc <- printValueE prodVal
   args <- for fields (const LV.freshArg)
@@ -240,7 +240,7 @@ translates to Plutarch
 pcon (PCons x (PCons y PNil))
 ```
 -}
-printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
+printListE :: PlutarchLamValMonad m => [LV.ValueE] -> m (Doc ann)
 printListE [] = do
   pconDoc <- HsSyntax.printHsQValName <$> LV.importValue pconRef
   pnilDoc <- HsSyntax.printHsQValName <$> LV.importValue pnilRef
@@ -291,13 +291,13 @@ case xs of
         h4:t4 -> d xs -- OTHER
 ```
 -}
-printCaseListE :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseListE :: PlutarchLamValMonad m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseListE xs cases otherCase = do
   let maxLength = maximum $ fst <$> cases
   otherCaseDoc <- printValueE (otherCase xs)
   printCaseListE' xs cases otherCaseDoc 0 maxLength []
 
-printCaseListE' :: MonadPrint m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> Doc ann -> Int -> Int -> [LV.ValueE] -> m (Doc ann)
+printCaseListE' :: PlutarchLamValMonad m => LV.ValueE -> [(Int, [LV.ValueE] -> LV.ValueE)] -> Doc ann -> Int -> Int -> [LV.ValueE] -> m (Doc ann)
 printCaseListE' _xs _cases otherCaseDoc currentLength maxLength _args | currentLength > maxLength = return otherCaseDoc
 printCaseListE' xs cases otherCaseDoc currentLength maxLength args = do
   pnilRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pnilRef
@@ -345,7 +345,7 @@ pconstant 1
 pconstant (-1)
 ```
 -}
-printIntE :: MonadPrint m => Int -> m (Doc ann)
+printIntE :: PlutarchLamValMonad m => Int -> m (Doc ann)
 printIntE i = do
   pconstantRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconstantRef
   return $ pconstantRefDoc <+> if i < 0 then parens (pretty i) else pretty i
@@ -362,7 +362,7 @@ translates to Plutarch
 pif ((#==) (x) (pconstant 0)) <A> (pif ((#==) (x) (pconstant 123)) <B> <C>)
 ```
 -}
-printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseIntE :: PlutarchLamValMonad m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal [] otherCase = printValueE (otherCase caseIntVal) -- TODO(bladyjoker): Why is this a function and not just a ValueE?
 printCaseIntE caseIntVal ((iVal, bodyVal) : cases) otherCase = do
   pifRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pifRef
@@ -385,7 +385,7 @@ translates to Plutarch
 pconstant "Dražen Popović"
 ```
 -}
-printTextE :: MonadPrint m => Text.Text -> m (Doc ann)
+printTextE :: PlutarchLamValMonad m => Text.Text -> m (Doc ann)
 printTextE t = do
   pconstantRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pconstantRef
   return $ pconstantRefDoc <+> dquotes (pretty t)
@@ -402,7 +402,7 @@ translates to Plutarch
 pif ((#==) (x) (pconstant "a")) <A> (pif ((#==) (x) (pconstant "b")) <B> <C>)
 ```
 -}
-printCaseTextE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
+printCaseTextE :: PlutarchLamValMonad m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseTextE caseTxtVal [] otherCase = printValueE (otherCase caseTxtVal) -- TODO(bladyjoker): Why is this a function and not just a ValueE?
 printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
   pifRefDoc <- HsSyntax.printHsQValName <$> LV.importValue pifRef
@@ -413,12 +413,12 @@ printCaseTextE caseTxtVal ((txtVal, bodyVal) : cases) otherCase = do
   elseDoc <- printCaseIntE caseTxtVal cases otherCase
   return $ pifRefDoc <+> parens (peqRefDoc <+> parens caseTxtValDoc <+> parens txtValDoc) <+> parens bodyValDoc <+> parens elseDoc
 
-printRefE :: MonadPrint m => LV.Ref -> m (Doc ann)
+printRefE :: PlutarchLamValMonad m => LV.Ref -> m (Doc ann)
 printRefE ref = do
   qvn <- LV.resolveRef ref
   HsSyntax.printHsQValName <$> LV.importValue qvn
 
-printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
+printValueE :: PlutarchLamValMonad m => LV.ValueE -> m (Doc ann)
 printValueE (LV.VarE v) = return $ pretty v
 printValueE (LV.RefE ref) = printRefE ref
 printValueE (LV.LamE lamVal) = printLamE lamVal

@@ -17,7 +17,7 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hardline, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-type MonadPrint m = LV.MonadPrint m Purs.QValName
+type MonadPrint m = LV.MonadPrint m Purs.QValName ()
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Purescript.Print.LamVal] " <> Text.pack msg

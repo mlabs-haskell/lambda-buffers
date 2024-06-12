@@ -60,7 +60,7 @@ data Builtin
 
 $(makeLenses ''Builtin)
 
-type MonadPrint m = LV.MonadPrint m Builtin
+type MonadPrint m = LV.MonadPrint m Builtin ()
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Typescript.Print.LamVal] " <> Text.pack msg

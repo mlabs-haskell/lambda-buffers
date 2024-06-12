@@ -4,9 +4,13 @@ import Control.Lens ((^.))
 import Data.Foldable (for_)
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Set (Set)
 import LambdaBuffers.Codegen.Haskell.Backend (MonadHaskellBackend)
-import LambdaBuffers.Codegen.Haskell.Backend.PlutusTx.LamVal (printValueE)
+import LambdaBuffers.Codegen.Haskell.Backend.PlutusTx.LamVal qualified as PlutusTx
+import LambdaBuffers.Codegen.Haskell.Print.LamVal qualified as Haskell
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as H
+import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as Haskell
+import LambdaBuffers.Codegen.LamVal qualified as LV
 import LambdaBuffers.Codegen.LamVal.Eq (deriveEqImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
@@ -41,8 +45,11 @@ instancePrinters =
       )
     ]
 
-lvEqBuiltinsPlutusTx :: LV.PrintRead (H.CabalPackageName, H.ModuleName, H.ValueName)
-lvEqBuiltinsPlutusTx = LV.MkPrintRead $ \(_ty, refName) ->
+printValue :: (LV.Ref -> Maybe Haskell.QValName) -> LV.ValueE -> Either LV.PrintError (Doc ann, Set Haskell.QValName)
+printValue builtins valE = LV.runPrint (LV.Context builtins PlutusTx.lamValContext) (Haskell.printValueE valE)
+
+lvEqBuiltinsPlutusTx :: LV.Ref -> Maybe Haskell.QValName
+lvEqBuiltinsPlutusTx (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("eq", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx.Eq", H.MkValueName "=="))
@@ -59,7 +66,7 @@ printDeriveEqPlutusTx mn iTyDefs mkInstanceDoc ty = do
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvEqBuiltinsPlutusTx (printValueE valE) of
+      case printValue lvEqBuiltinsPlutusTx valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (align $ printInlineable eqClassMethodName <> hardline <> printValueDef eqClassMethodName implDoc)
@@ -69,8 +76,8 @@ printDeriveEqPlutusTx mn iTyDefs mkInstanceDoc ty = do
 printInlineable :: H.ValueName -> Doc ann
 printInlineable valName = "{-# INLINABLE" <+> H.printHsValName valName <+> "#-}"
 
-lvPlutusDataBuiltins :: LV.PrintRead H.QValName
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
+lvPlutusDataBuiltins :: LV.Ref -> Maybe Haskell.QValName
+lvPlutusDataBuiltins (_ty, refName) =
   Map.lookup refName $
     Map.fromList
       [ ("toPlutusData", (H.MkCabalPackageName "plutus-tx", H.MkModuleName "PlutusTx", H.MkValueName "toBuiltinData"))
@@ -92,7 +99,7 @@ printDeriveToPlutusData mn iTyDefs mkInstanceDoc ty = do
   case deriveToPlutusDataImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+      case printValue lvPlutusDataBuiltins valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (align $ printInlineable toPlutusDataClassMethodName <> hardline <> printValueDef toPlutusDataClassMethodName implDoc)
@@ -113,7 +120,7 @@ printDeriveFromPlutusData mn iTyDefs mkInstanceDoc ty = do
   case deriveFromPlutusDataImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Plutus.V1.PlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
-      case LV.runPrint lvPlutusDataBuiltins (printValueE valE) of
+      case printValue lvPlutusDataBuiltins valE of
         Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Interpreting LamVal into Haskell failed with: " <> err ^. P.msg)
         Right (implDoc, imps) -> do
           instanceDoc <- mkInstanceDoc (align $ printInlineable fromPlutusDataClassMethodName <> hardline <> printValueDef fromPlutusDataClassMethodName implDoc)

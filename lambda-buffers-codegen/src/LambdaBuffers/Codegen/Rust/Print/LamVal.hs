@@ -21,6 +21,8 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, angles, braces, brackets, colon, comma, dot, dquotes, encloseSep, equals, group, langle, lbracket, line, lparen, parens, pipe, punctuate, rangle, rbracket, rparen, semi, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
+type MonadPrint m = LV.MonadPrint m R.QValName ()
+
 toOwned :: Doc ann -> Doc ann
 toOwned = useTraitMethod RR.toOwnedTrait "to_owned"
 
@@ -38,8 +40,6 @@ useTraitMethod trait method d = angles ("_" <+> "as" <+> R.printRsQTraitName tra
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Rust.Print.LamVal] " <> Text.pack msg
-
-type MonadPrint m = LV.MonadPrint m R.QValName
 
 withInfo :: PC.InfoLessC b => PC.InfoLess b -> b
 withInfo x = PC.withInfoLess x id

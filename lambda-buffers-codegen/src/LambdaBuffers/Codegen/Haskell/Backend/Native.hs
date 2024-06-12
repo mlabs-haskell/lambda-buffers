@@ -13,7 +13,7 @@ data NativeHaskellBackend
 instance IsHaskellBackend NativeHaskellBackend where
   type HaskellBackendContext NativeHaskellBackend = ()
   type HaskellBackendState NativeHaskellBackend = ()
-  fromLbModuleName mn = Haskell.MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts]) <> ".PlutusTx"
+  fromLbModuleName mn = Haskell.MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
   filepathFromLbModuleName mn = Text.unpack (Text.replace "." "/" (let Haskell.MkModuleName txt = fromLbModuleName @NativeHaskellBackend mn in txt)) <> ".hs"
   printImplementation = NativeHaskellBackend.hsClassImplPrinters
   printModule = Haskell.printModule
