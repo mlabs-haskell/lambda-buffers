@@ -9,7 +9,7 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Typescript.Backend (MonadTypescriptBackend)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printCtorName, printFieldName, printTsQTyName, printTsQTyNameKey, printTyName, printVarName)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -22,7 +22,7 @@ Loosely, this will print things like
 \$a $b = { name: 'MkFoo',  fields: $a } | { name: 'MkBar', fields: $b }
 \$a = Prelude.Maybe $a
 -}
-printTyAbs :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
+printTyAbs :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyName -> PC.TyAbs -> m (Doc ann, Doc ann)
 printTyAbs pkgMap tyN (PC.TyAbs args body _) = do
   let argsDoc =
         if OMap.empty == args
@@ -54,7 +54,7 @@ and type classes.
 Note: opaque types are _assumed_ to have such unique symbols
 already defined.
 -}
-printTyBody :: MonadPrint m => Ts.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
+printTyBody :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (Doc ann, Doc ann)
 printTyBody pkgMap tyN args tyBody =
   let
     -- E.g.
@@ -83,7 +83,7 @@ printTyBody pkgMap tyN args tyBody =
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn
 
-printSum :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Sum -> m (Doc ann)
+printSum :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyName -> PC.Sum -> m (Doc ann)
 printSum pkgMap tyN (PC.Sum ctors _) = do
   let ctorDocs = printCtor pkgMap tyN <$> toList ctors
   return $
@@ -142,7 +142,7 @@ printCtor pkgMap tyN (PC.Constructor ctorName prod) =
               [flatAlt rbrace (space <> rbrace)]
 
 -- | Just prints out the same record as given in the .lbf file
-printRec :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Record -> m (Doc ann)
+printRec :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyName -> PC.Record -> m (Doc ann)
 printRec pkgMap tyN (PC.Record fields _) = do
   fieldsDoc <- for (toList fields) $ printField pkgMap tyN
   return $ group $ align $ case fieldsDoc of
@@ -168,9 +168,9 @@ printProd pkgMap (PC.Product fields _) = align $ case fields of
   [ty] -> printTyInner pkgMap ty
   -- TODO(jaredponn): put spaces after the comma. Similar to Note [flatAlt
   -- rbrace]
-  _ -> encloseSep lbracket rbracket comma $ map (printTyInner pkgMap) fields
+  _other -> encloseSep lbracket rbracket comma $ map (printTyInner pkgMap) fields
 
-printField :: MonadPrint m => Ts.PkgMap -> PC.TyName -> PC.Field -> m (Doc ann)
+printField :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyName -> PC.Field -> m (Doc ann)
 printField pkgMap tyN f@(PC.Field fn ty) = do
   fnDoc <-
     maybe

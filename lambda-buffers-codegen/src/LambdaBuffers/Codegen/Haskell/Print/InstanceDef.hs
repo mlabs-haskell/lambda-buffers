@@ -4,6 +4,7 @@ import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import LambdaBuffers.Codegen.Haskell.Backend (MonadHaskellBackend)
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.Haskell.Print.TyDef (printTyInner)
 import LambdaBuffers.ProtoCompat qualified as PC
@@ -20,28 +21,32 @@ instance (SomeClass a, SomeClass b, SomeClass c) => SomeClass (SomeTy a b c) whe
   someMethod = <implementation>
 ```
 -}
-printInstanceDef :: HsSyntax.QClassName -> PC.Ty -> (Doc ann -> Doc ann)
-printInstanceDef hsQClassName ty =
-  let headDoc = printConstraint hsQClassName ty
-      freeVars = collectTyVars ty
-   in case freeVars of
-        [] -> \implDoc -> "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
-        _ -> \implDoc -> "instance" <+> printInstanceContext hsQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
+printInstanceDef :: forall t m ann. MonadHaskellBackend t m => HsSyntax.QClassName -> PC.Ty -> m (Doc ann -> m (Doc ann))
+printInstanceDef hsQClassName ty = do
+  let freeVars = collectTyVars ty
+  headDoc <- printConstraint hsQClassName ty
+  return $ case freeVars of
+    [] -> \implDoc -> return $ "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
+    _r -> \implDoc -> do
+      instanceCtxDoc <- printInstanceContext hsQClassName freeVars
+      return $ "instance" <+> instanceCtxDoc <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
 
-printInstanceContext :: HsSyntax.QClassName -> [PC.Ty] -> Doc ann
+printInstanceContext :: forall t m ann. MonadHaskellBackend t m => HsSyntax.QClassName -> [PC.Ty] -> m (Doc ann)
 printInstanceContext hsQClassName = printInstanceContext' [hsQClassName]
 
-printInstanceContext' :: [HsSyntax.QClassName] -> [PC.Ty] -> Doc ann
-printInstanceContext' hsQClassNames tys = align . group $ encloseSep lparen rparen comma ([printConstraint hsQClassName ty | ty <- tys, hsQClassName <- hsQClassNames])
+printInstanceContext' :: forall t m ann. MonadHaskellBackend t m => [HsSyntax.QClassName] -> [PC.Ty] -> m (Doc ann)
+printInstanceContext' hsQClassNames tys = do
+  constraintDocs <- traverse (uncurry printConstraint) [(hsQClassName, ty) | ty <- tys, hsQClassName <- hsQClassNames]
+  return $ align . group $ encloseSep lparen rparen comma constraintDocs
 
-printConstraint :: HsSyntax.QClassName -> PC.Ty -> Doc ann
+printConstraint :: forall t m ann. MonadHaskellBackend t m => HsSyntax.QClassName -> PC.Ty -> m (Doc ann)
 printConstraint qcn ty = printConstraint' qcn [ty]
 
-printConstraint' :: HsSyntax.QClassName -> [PC.Ty] -> Doc ann
-printConstraint' qcn tys =
+printConstraint' :: forall t m ann. MonadHaskellBackend t m => HsSyntax.QClassName -> [PC.Ty] -> m (Doc ann)
+printConstraint' qcn tys = do
   let crefDoc = HsSyntax.printHsQClassName qcn
-      tyDocs = printTyInner <$> tys
-   in crefDoc <+> hsep tyDocs
+  tyDocs <- traverse printTyInner tys
+  return $ crefDoc <+> hsep tyDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]
 collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . toList . collectVars

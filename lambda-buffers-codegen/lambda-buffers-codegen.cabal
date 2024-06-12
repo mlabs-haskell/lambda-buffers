@@ -112,12 +112,21 @@ library
     LambdaBuffers.Codegen.Check
     LambdaBuffers.Codegen.Config
     LambdaBuffers.Codegen.Haskell
+    LambdaBuffers.Codegen.Haskell.Backend
+    LambdaBuffers.Codegen.Haskell.Backend.Native
+    LambdaBuffers.Codegen.Haskell.Backend.Native.Derive
+    LambdaBuffers.Codegen.Haskell.Backend.Plutarch
+    LambdaBuffers.Codegen.Haskell.Backend.Plutarch.Derive
+    LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal
+    LambdaBuffers.Codegen.Haskell.Backend.Plutarch.Refs
+    LambdaBuffers.Codegen.Haskell.Backend.Plutarch.TyDef
+    LambdaBuffers.Codegen.Haskell.Backend.PlutusTx
+    LambdaBuffers.Codegen.Haskell.Backend.PlutusTx.Derive
+    LambdaBuffers.Codegen.Haskell.Backend.PlutusTx.LamVal
     LambdaBuffers.Codegen.Haskell.Config
     LambdaBuffers.Codegen.Haskell.Print
-    LambdaBuffers.Codegen.Haskell.Print.Derive
     LambdaBuffers.Codegen.Haskell.Print.InstanceDef
     LambdaBuffers.Codegen.Haskell.Print.LamVal
-    LambdaBuffers.Codegen.Haskell.Print.MonadPrint
     LambdaBuffers.Codegen.Haskell.Print.Syntax
     LambdaBuffers.Codegen.Haskell.Print.TyDef
     LambdaBuffers.Codegen.LamVal
@@ -127,41 +136,36 @@ library
     LambdaBuffers.Codegen.LamVal.MonadPrint
     LambdaBuffers.Codegen.LamVal.PlutusData
     LambdaBuffers.Codegen.Plutarch
-    LambdaBuffers.Codegen.Plutarch.Print
-    LambdaBuffers.Codegen.Plutarch.Print.Derive
-    LambdaBuffers.Codegen.Plutarch.Print.LamVal
-    LambdaBuffers.Codegen.Plutarch.Print.Refs
-    LambdaBuffers.Codegen.Plutarch.Print.Syntax
-    LambdaBuffers.Codegen.Plutarch.Print.TyDef
+    LambdaBuffers.Codegen.PlutusTx
     LambdaBuffers.Codegen.Print
     LambdaBuffers.Codegen.Purescript
+    LambdaBuffers.Codegen.Purescript.Backend
     LambdaBuffers.Codegen.Purescript.Config
     LambdaBuffers.Codegen.Purescript.Print
     LambdaBuffers.Codegen.Purescript.Print.Derive
     LambdaBuffers.Codegen.Purescript.Print.InstanceDef
     LambdaBuffers.Codegen.Purescript.Print.LamVal
-    LambdaBuffers.Codegen.Purescript.Print.MonadPrint
     LambdaBuffers.Codegen.Purescript.Print.Names
     LambdaBuffers.Codegen.Purescript.Print.Ty
     LambdaBuffers.Codegen.Purescript.Print.TyDef
     LambdaBuffers.Codegen.Purescript.Syntax
     LambdaBuffers.Codegen.Rust
+    LambdaBuffers.Codegen.Rust.Backend
     LambdaBuffers.Codegen.Rust.Config
     LambdaBuffers.Codegen.Rust.Print
     LambdaBuffers.Codegen.Rust.Print.Derive
     LambdaBuffers.Codegen.Rust.Print.InstanceDef
     LambdaBuffers.Codegen.Rust.Print.LamVal
-    LambdaBuffers.Codegen.Rust.Print.MonadPrint
     LambdaBuffers.Codegen.Rust.Print.Refs
     LambdaBuffers.Codegen.Rust.Print.Syntax
     LambdaBuffers.Codegen.Rust.Print.TyDef
     LambdaBuffers.Codegen.Typescript
+    LambdaBuffers.Codegen.Typescript.Backend
     LambdaBuffers.Codegen.Typescript.Config
     LambdaBuffers.Codegen.Typescript.Print
     LambdaBuffers.Codegen.Typescript.Print.Derive
     LambdaBuffers.Codegen.Typescript.Print.InstanceDef
     LambdaBuffers.Codegen.Typescript.Print.LamVal
-    LambdaBuffers.Codegen.Typescript.Print.MonadPrint
     LambdaBuffers.Codegen.Typescript.Print.Names
     LambdaBuffers.Codegen.Typescript.Print.Ty
     LambdaBuffers.Codegen.Typescript.Print.TyDef
@@ -190,6 +194,7 @@ executable lbg
     LambdaBuffers.Codegen.Cli.Gen
     LambdaBuffers.Codegen.Cli.GenHaskell
     LambdaBuffers.Codegen.Cli.GenPlutarch
+    LambdaBuffers.Codegen.Cli.GenPlutusTx
     LambdaBuffers.Codegen.Cli.GenPurescript
     LambdaBuffers.Codegen.Cli.GenRust
     LambdaBuffers.Codegen.Cli.GenTypescript

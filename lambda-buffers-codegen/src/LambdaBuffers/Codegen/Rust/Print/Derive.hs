@@ -11,7 +11,7 @@ import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Rust.Print (MonadPrint)
+import LambdaBuffers.Codegen.Rust.Backend (MonadRustBackend, RustBackendContext (rust'packages))
 import LambdaBuffers.Codegen.Rust.Print.LamVal (printInstance)
 import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
@@ -21,11 +21,10 @@ import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
 rsTraitImplPrinters ::
-  MonadPrint m =>
+  MonadRustBackend m =>
   Map
     R.QTraitName
     ( PC.ModuleName ->
-      R.PkgMap ->
       PC.TyDefs ->
       (Doc ann -> Doc ann) ->
       PC.Ty ->
@@ -57,8 +56,9 @@ lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
       , ("false", R.qBuiltin R.MkValueName "false")
       ]
 
-printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
+printDerivePartialEqBase :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDerivePartialEqBase mn iTyDefs mkInstance ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
@@ -70,8 +70,8 @@ printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
             mkInstance $
               printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
 
-printDeriveEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveEqBase _ _ _ mkInstance _ = return $ mkInstance mempty
+printDeriveEqBase :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveEqBase _ _ mkInstance _ = return $ mkInstance mempty
 
 lvPlutusDataBuiltins :: LV.PrintRead R.QValName
 lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
@@ -121,8 +121,9 @@ fromPlutusDataTraitMethodReturns =
     ["result"]
     "Result<Self, plutus_ledger_api::plutus_data::PlutusDataError>"
 
-printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveIsPlutusData mn pkgs iTyDefs mkInstanceDoc ty = do
+printDeriveIsPlutusData :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.IsPlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (plutusDataInstDefDoc, imps) -> do
@@ -197,8 +198,9 @@ fromJsonTraitMethodReturns :: R.QTyName
 fromJsonTraitMethodReturns =
   R.qForeignRef R.MkTyName "std" ["result"] "Result<Self, lbr_prelude::error::Error>" -- TODO(szg251): This is a hack
 
-printDeriveJson :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveJson mn pkgs iTyDefs mkInstanceDoc ty = do
+printDeriveJson :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveJson mn iTyDefs mkInstanceDoc ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case printDeriveJson' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Json LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (jsonInstDefDoc, imps) -> do

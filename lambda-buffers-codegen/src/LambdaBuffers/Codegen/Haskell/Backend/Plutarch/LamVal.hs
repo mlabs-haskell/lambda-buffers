@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Plutarch.Print.LamVal (printValueE) where
+module LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal (printValueE) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -16,7 +16,7 @@ import Prettyprinter (Doc, Pretty (pretty), align, backslash, dquotes, group, ha
 import Proto.Codegen_Fields qualified as P
 
 throwInternalError :: MonadPrint m => String -> m a
-throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] " <> Text.pack msg
+throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Plutarch] " <> Text.pack msg
 
 type MonadPrint m = LV.MonadPrint m HsSyntax.QValName
 
@@ -156,7 +156,7 @@ printCaseE _qsum@(qtyN, sumTy) caseVal ctorCont = do
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
             LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
-            _ -> throwInternalError "Got a non-product in Sum."
+            _other -> throwInternalError "Got a non-product in Sum."
         )
   pmatchDoc <- HsSyntax.printHsQValName <$> LV.importValue pmatchRef
   pmatchContArgDoc <- LV.freshArg >>= printValueE

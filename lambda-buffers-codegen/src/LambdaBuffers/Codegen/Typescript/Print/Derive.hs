@@ -39,7 +39,7 @@ lamTy2PCTy = \case
   LamTy.Types.TyVar var -> return $ PC.TyVarI var
   LamTy.Types.TyApp _f _args (Just tyApp) -> do
     return $ PC.TyAppI tyApp
-  _ ->
+  _other ->
     -- NOTE(jaredponn): hopefully this never happens...
     Nothing
 
@@ -62,7 +62,7 @@ lvEqBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
     ("false", _) -> Just $ Builtin $ Ts.primValName "false"
     ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "and"
     ("not", _) -> Just $ Builtin $ Ts.primValName "!"
-    _ -> Nothing
+    _other -> Nothing
 
 eqClassMethodName :: Ts.ValueName
 eqClassMethodName = Ts.MkValueName "eq"
@@ -114,7 +114,7 @@ lvPlutusDataBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
     ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
     ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse('PlutusData parse failed')" -- TODO(jaredponn): bit of a hack to call the function @failParse@
     ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "bindParse"
-    _ -> Nothing
+    _other -> Nothing
 
 toPlutusDataClassMethodName :: Ts.ValueName
 toPlutusDataClassMethodName = Ts.MkValueName "toData"
@@ -184,7 +184,7 @@ lvJsonBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
     ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "succeedParse"
     ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "failParse"
     ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindParse"
-    _ -> Nothing
+    _other -> Nothing
 
 toJsonClassMethodName :: Ts.ValueName
 toJsonClassMethodName = Ts.MkValueName "toJson"

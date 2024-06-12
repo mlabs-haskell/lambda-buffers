@@ -56,10 +56,10 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
       <$> for
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
-            LT.TyProduct fields _ -> do
+            LT.TyProduct fields _other -> do
               ctorCaseDoc <- printCtorCase qtyN ctorCont (cn, fields)
               return $ ctorCaseDoc <> hardline
-            _ -> throwInternalError "Got a non-product in Sum."
+            _other -> throwInternalError "Got a non-product in Sum."
         )
   return $ align $ "case" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs
 

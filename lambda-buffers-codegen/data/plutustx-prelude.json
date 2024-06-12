@@ -5,14 +5,9 @@
       "PlutusTx.AssocMap",
       "Map"
     ],
-    "Prelude.Set": [
-      "containers",
-      "Data.Set",
-      "Set"
-    ],
     "Prelude.List": [
-      "lbr-prelude",
-      "LambdaBuffers.Runtime.Prelude",
+      "lbr-plutustx",
+      "LambdaBuffers.Runtime.PlutusTx.List",
       "List"
     ],
     "Prelude.Either": [
@@ -49,6 +44,11 @@
       "plutus-tx",
       "PlutusTx.Bool",
       "Bool"
+    ],
+    "Prelude.Set": [
+        "lbr-plutustx",
+        "LambdaBuffers.Runtime.PlutusTx.NotImplemented",
+        "Set"
     ]
   },
   "classesConfig": {
@@ -57,18 +57,6 @@
         "plutus-tx",
         "PlutusTx.Eq",
         "Eq"
-      ],
-      [
-        "base",
-        "Prelude",
-        "Eq"
-      ]
-    ],
-    "Prelude.Json": [
-      [
-        "lbr-prelude",
-        "LambdaBuffers.Runtime.Prelude",
-        "Json"
       ]
     ]
   }

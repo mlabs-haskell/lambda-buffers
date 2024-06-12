@@ -55,6 +55,7 @@ fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p 
 pkgNameToText :: PackageName -> Text
 pkgNameToText (MkPackageName pkg) = pkg
 
+-- TODO(bladyjoker): This is garbage fix with user supplied `--packages`
 pkgFromLbModuleName :: PC.ModuleName -> PackageName
 pkgFromLbModuleName mn = MkPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
 

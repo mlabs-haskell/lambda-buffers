@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Cli.GenPlutarch (GenOpts (..), gen) where
+module LambdaBuffers.Codegen.Cli.GenPlutusTx (GenOpts (..), gen) where
 
 import Control.Lens (makeLenses, (^.))
 import Control.Monad (unless)
@@ -6,7 +6,7 @@ import Data.Aeson (decodeFileStrict')
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
 import LambdaBuffers.Codegen.Haskell.Config qualified as Haskell
-import LambdaBuffers.Codegen.Plutarch qualified as Plutarch
+import LambdaBuffers.Codegen.PlutusTx qualified as PlutusTx
 import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
@@ -21,28 +21,28 @@ gen :: GenOpts -> IO ()
 gen opts = do
   cfg <- case opts ^. config of
     [] -> do
-      logError "" "No Plutarch configuration file given"
+      logError "" "No PlutusTx configuration file given"
       exitFailure
     fps -> do
-      cfgs <- traverse readPlutarchConfig fps
+      cfgs <- traverse readPlutusTxConfig fps
       return (mconcat cfgs)
 
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . Plutarch.runBackend cfg ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . PlutusTx.runBackend cfg ci <$> (ci ^. #modules))
 
-readPlutarchConfig :: FilePath -> IO Haskell.Config
-readPlutarchConfig f = do
+readPlutusTxConfig :: FilePath -> IO Haskell.Config
+readPlutusTxConfig f = do
   fExists <- doesFileExist f
   unless
     fExists
     ( do
-        logError "" $ "Provided Plutarch Codegen configuration file doesn't exists: " <> f
+        logError "" $ "Provided PlutusTx Codegen configuration file doesn't exists: " <> f
         exitFailure
     )
   mayCfg <- decodeFileStrict' f
   case mayCfg of
     Nothing -> do
-      logError "" $ "Invalid Plutarch configuration file " <> f
+      logError "" $ "Invalid PlutusTx configuration file " <> f
       exitFailure
     Just cfg -> return cfg

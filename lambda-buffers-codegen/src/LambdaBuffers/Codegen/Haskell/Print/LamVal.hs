@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE) where
+module LambdaBuffers.Codegen.Haskell.Print.LamVal (printValueE, printValueEWith, printLamE) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad (replicateM)
@@ -43,7 +43,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
             LT.TyProduct fields _ -> printCtorCase qtyN ctorCont (cn, fields)
-            _ -> throwInternalError "Got a non-product in Sum."
+            _r -> throwInternalError "Got a non-product in Sum."
         )
   return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs)
 
@@ -107,14 +107,8 @@ printOtherCase otherCase = do
   bodyDoc <- printValueE $ otherCase arg
   return $ group $ argDoc <+> "->" <+> bodyDoc
 
--- HACK(bladyjoker): This is an utter hack due to PlutusTx needing this to use the PlutusTx.Eq instances.
-caseIntERef :: HsSyntax.QValName
-caseIntERef = (HsSyntax.MkCabalPackageName "lbr-plutus", HsSyntax.MkModuleName "LambdaBuffers.Runtime.Plutus.LamVal", HsSyntax.MkValueName "caseIntE")
-
---- | `printCaseIntE i [(1, x), (2,y)] (\other -> z)` translates into `LambdaBuffers.Runtime.Plutus.LamValcaseIntE i [(1,x), (2,y)] (\other -> z)`
 printCaseIntE :: MonadPrint m => LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)
 printCaseIntE caseIntVal cases otherCase = do
-  caseIntERefDoc <- HsSyntax.printHsQValName <$> LV.importValue caseIntERef
   caseValDoc <- printValueE caseIntVal
   caseDocs <-
     for
@@ -122,10 +116,10 @@ printCaseIntE caseIntVal cases otherCase = do
       ( \(conditionVal, bodyVal) -> do
           conditionDoc <- printValueE conditionVal
           bodyDoc <- printValueE bodyVal
-          return $ group $ parens (conditionDoc <+> "," <+> bodyDoc)
+          return $ group $ conditionDoc <+> "->" <+> bodyDoc
       )
-  otherDoc <- printLamE otherCase
-  return $ group $ caseIntERefDoc <+> align (caseValDoc <+> align (encloseSep lbracket rbracket comma caseDocs) <+> otherDoc)
+  otherDoc <- printOtherCase otherCase
+  return $ "ca" <> align ("se" <+> caseValDoc <+> "of" <> line <> vsep (caseDocs <> [otherDoc]))
 
 printListE :: MonadPrint m => [LV.ValueE] -> m (Doc ann)
 printListE vals = do
@@ -202,22 +196,31 @@ printRefE ref = do
   qvn <- LV.resolveRef ref
   HsSyntax.printHsQValName <$> LV.importValue qvn
 
+printVarE :: MonadPrint m => String -> m (Doc ann)
+printVarE = return . pretty
+
+printErrorE :: MonadPrint m => String -> m (Doc ann)
+printErrorE err = throwInternalError $ "LamVal error builtin was called " <> err
+
 printValueE :: MonadPrint m => LV.ValueE -> m (Doc ann)
-printValueE (LV.VarE v) = return $ pretty v
-printValueE (LV.RefE ref) = printRefE ref
-printValueE (LV.LamE lamVal) = printLamE lamVal
-printValueE (LV.AppE funVal argVal) = printAppE funVal argVal
-printValueE (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
-printValueE (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
-printValueE (LV.RecordE qrec vals) = printRecordE qrec vals
-printValueE (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
-printValueE (LV.ProductE qprod vals) = printProductE qprod vals
-printValueE (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
-printValueE (LV.IntE i) = return $ pretty i
-printValueE (LV.CaseIntE intVal cases otherCase) = printCaseIntE intVal cases otherCase
-printValueE (LV.ListE vals) = printListE vals
-printValueE (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
-printValueE (LV.TextE txt) = printTextE txt
-printValueE (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
-printValueE (LV.TupleE l r) = printTupleE l r
-printValueE (LV.ErrorE err) = throwInternalError $ "LamVal error builtin was called " <> err
+printValueE = printValueEWith printCaseIntE
+
+printValueEWith :: MonadPrint m => (LV.ValueE -> [(LV.ValueE, LV.ValueE)] -> (LV.ValueE -> LV.ValueE) -> m (Doc ann)) -> LV.ValueE -> m (Doc ann)
+printValueEWith _ (LV.VarE v) = printVarE v
+printValueEWith _ (LV.RefE ref) = printRefE ref
+printValueEWith _ (LV.LamE lamVal) = printLamE lamVal
+printValueEWith _ (LV.AppE funVal argVal) = printAppE funVal argVal
+printValueEWith _ (LV.CaseE sumTy caseVal ctorCont) = printCaseE sumTy caseVal ctorCont
+printValueEWith _ (LV.CtorE qctor prodVals) = printCtorE qctor prodVals
+printValueEWith _ (LV.RecordE qrec vals) = printRecordE qrec vals
+printValueEWith _ (LV.FieldE fieldName recVal) = printFieldE fieldName recVal
+printValueEWith _ (LV.ProductE qprod vals) = printProductE qprod vals
+printValueEWith _ (LV.LetE prodTy prodVal letCont) = printLetE prodTy prodVal letCont
+printValueEWith _ (LV.IntE i) = return $ pretty i
+printValueEWith printCaseIntE' (LV.CaseIntE intVal cases otherCase) = printCaseIntE' intVal cases otherCase
+printValueEWith _ (LV.ListE vals) = printListE vals
+printValueEWith _ (LV.CaseListE listVal cases otherCase) = printCaseListE listVal cases otherCase
+printValueEWith _ (LV.TextE txt) = printTextE txt
+printValueEWith _ (LV.CaseTextE txtVal cases otherCase) = printCaseTextE txtVal cases otherCase
+printValueEWith _ (LV.TupleE l r) = printTupleE l r
+printValueEWith _ (LV.ErrorE err) = printErrorE err
