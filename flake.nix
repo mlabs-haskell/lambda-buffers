@@ -49,6 +49,7 @@
         ./docs/plutarch/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
+        ./extras/dev-shells/build.nix
         ./libs/build.nix
         ./api/build.nix
         ./lambda-buffers-compiler/build.nix
@@ -56,6 +57,7 @@
         ./lambda-buffers-frontend/build.nix
         ./runtimes/haskell/lbr-prelude/build.nix
         ./runtimes/haskell/lbr-plutus/build.nix
+        ./runtimes/haskell/lbr-plutustx/build.nix
         ./runtimes/haskell/lbr-plutarch/build.nix
         ./runtimes/purescript/lbr-prelude/build.nix
         ./runtimes/purescript/lbr-plutus/build.nix
@@ -75,6 +77,7 @@
         ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-typescript/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
+        ./testsuites/lbt-plutus/lbt-plutus-plutustx/build.nix
         ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
         ./docs/typescript-prelude/build.nix
