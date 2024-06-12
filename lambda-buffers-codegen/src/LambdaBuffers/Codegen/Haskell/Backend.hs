@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module LambdaBuffers.Codegen.Haskell.Backend (runBackend, MonadHaskellBackend, HaskellBackendM, HaskellBackend, IsHaskellBackend (..), runBackend) where
+module LambdaBuffers.Codegen.Haskell.Backend (runBackend, MonadHaskellBackend, HaskellBackendM, HaskellBackend, IsHaskellBackend (..)) where
 
 import Control.Lens ((^.))
 import Data.Map (Map)
