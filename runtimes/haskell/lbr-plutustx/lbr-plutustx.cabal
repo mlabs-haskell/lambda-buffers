@@ -1,8 +1,8 @@
 cabal-version: 3.0
-name:          lbr-prelude
+name:          lbr-plutustx
 version:       0.1.0.0
 synopsis:
-  Lambda Buffers Runtime library for the `lbf-prelude` package
+  Lambda Buffers Runtime library for the `lbf-plutus` package and the PlutusTx backend
 
 author:        Drazen Popovic
 maintainer:    bladyjoker@gmail.com
@@ -86,32 +86,11 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , aeson
-    , attoparsec-aeson
-    , base               >=4.16
-    , base64-bytestring
-    , bytestring
-    , containers
-    , hedgehog
-    , text
-    , vector
+    , base       >=4.18
+    , plutus-tx
 
   hs-source-dirs:  src
   exposed-modules:
-    LambdaBuffers.Runtime.Prelude
-    LambdaBuffers.Runtime.Prelude.Generators.Correct
-    LambdaBuffers.Runtime.Prelude.Json
-
-test-suite tests
-  import:         common-language
-  type:           exitcode-stdio-1.0
-  hs-source-dirs: test
-  main-is:        Test.hs
-  build-depends:
-    , base            >=4.16
-    , hedgehog
-    , lbr-prelude
-    , tasty
-    , tasty-hedgehog
-
-  other-modules:  Test.LambdaBuffers.Runtime.Prelude.Json
+    LambdaBuffers.Runtime.PlutusTx.LamVal
+    LambdaBuffers.Runtime.PlutusTx.List
+    LambdaBuffers.Runtime.PlutusTx.NotImplemented
