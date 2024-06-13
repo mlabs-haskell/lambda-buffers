@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.Haskell.Backend.Native.Derive (printDeriveEqBase, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson, hsClassImplPrinters) where
+module LambdaBuffers.Codegen.Haskell.Backend.Native.Derive (printValue, printDeriveEqBase, printDeriveToPlutusData, printDeriveFromPlutusData, printDeriveJson, hsClassImplPrinters) where
 
 import Control.Lens ((^.))
 import Data.Foldable (for_)

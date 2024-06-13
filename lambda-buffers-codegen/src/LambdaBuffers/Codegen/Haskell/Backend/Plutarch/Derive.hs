@@ -8,6 +8,7 @@ import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import LambdaBuffers.Codegen.Haskell.Backend (MonadHaskellBackend)
+import LambdaBuffers.Codegen.Haskell.Backend.Native.Derive qualified as Native
 import LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal qualified as PlLamVal
 import LambdaBuffers.Codegen.Haskell.Backend.Plutarch.Refs qualified as PlRefs
 import LambdaBuffers.Codegen.Haskell.Print.InstanceDef qualified as Haskell
@@ -142,7 +143,7 @@ printDerivePlutusType mn iTyDefs _mkInstanceDoc ty = do
         do
           toDataE <- deriveToPlutusDataImplPlutarch mn iTyDefs ty
           fromDataE <- deriveFromPlutusDataImplPlutarch mn iTyDefs ty
-          (pconImplDoc, imps) <- printValue lvPlutusDataBuiltinsForPlutusType toDataE
+          (pconImplDoc, imps) <- Native.printValue lvPlutusDataBuiltinsForPlutusType toDataE -- NOTE(bladyjoker): Yes this is printed as Native Haskell
           (pmatchImplDoc, imps') <- printValue lvPlutusDataBuiltinsForPlutusType fromDataE
           let implDoc =
                 align $
