@@ -135,15 +135,10 @@ test-suite tests
     , lbt-plutus-golden-data
     , lbt-plutus-haskell
     , plutus-tx
-    , plutus-tx-plugin
-    , prettyprinter
     , tasty                   >=1.4
-    , tasty-expected-failure
     , tasty-hedgehog          >=1.4
-    , tasty-hunit
 
   other-modules:
     Test.LambdaBuffers.Runtime.Plutus.Generators.Correct
     Test.LambdaBuffers.Runtime.Plutus.Json
     Test.LambdaBuffers.Runtime.Plutus.PlutusData
-    Test.LambdaBuffers.Runtime.Plutus.PlutusTx
