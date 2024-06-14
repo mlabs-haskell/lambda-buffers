@@ -5,3 +5,5 @@ pub mod error;
 pub mod generators;
 pub mod json;
 pub mod lamval;
+#[cfg(feature = "plutus")]
+pub mod plutus;
