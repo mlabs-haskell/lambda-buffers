@@ -9,8 +9,12 @@ import LambdaBuffers.Foo qualified as HlFoo
 import LambdaBuffers.Foo.Plutarch qualified as PlFoo
 import LambdaBuffers.Plutus.V1 qualified as HlPlutus
 import LambdaBuffers.Plutus.V1.Plutarch qualified as PlPlutus
+import LambdaBuffers.Plutus.V1.Todo qualified as HlPlutus
+import LambdaBuffers.Plutus.V1.Todo.Plutarch qualified as PlPlutus
 import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
 import LambdaBuffers.Plutus.V2.Plutarch qualified as PlPlutusV2
+import LambdaBuffers.Plutus.V2.Todo qualified as HlPlutusV2
+import LambdaBuffers.Plutus.V2.Todo.Plutarch qualified as PlPlutusV2
 import LambdaBuffers.Prelude qualified as HlPrelude
 import LambdaBuffers.Prelude.Plutarch qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutarch ()
@@ -20,7 +24,7 @@ import Plutarch (Config (Config), TracingMode (DoTracingAndBinds), pcon, perror,
 import Plutarch qualified
 import Plutarch.Bool (PBool, pif, (#==))
 import Plutarch.Builtin (PData)
-import Plutarch.Evaluate (evalScript)
+import Plutarch.Evaluate (evalScriptHuge)
 import Plutarch.Prelude (PAsData, PIsData, PTryFrom, pconstant)
 import PlutusTx (Data, ToData)
 import PlutusTx.IsData (FromData, toData)
@@ -38,7 +42,7 @@ tests =
     , forallGoldens @HlDays.WorkDay @PlDays.WorkDay "Days.WorkDay" 4
     , forallGoldens @HlFoo.A @PlFoo.A "Foo.A" 9
     , forallGoldens @HlFoo.B @PlFoo.B "Foo.B" 9
-    , forallGoldens @HlFoo.B @PlFoo.B "Foo.B" 9
+    , forallGoldens @HlFoo.C @PlFoo.C "Foo.C" 9
     , forallGoldens @HlFoo.D @PlFoo.D "Foo.D" 7
     , ignoreTestBecause "TODO(#131): Plutarch codegen: Recursive data type support" $ forallGoldens @HlFoo.FInt @PlFoo.FInt "Foo.FInt" 1
     , ignoreTestBecause "TODO(#131): Plutarch codegen: Recursive data type support" $ forallGoldens @HlFoo.GInt @PlFoo.GInt "Foo.GInt" 1
@@ -68,17 +72,23 @@ tests =
     , forallGoldens @HlPlutus.TxOutRef @PlPlutus.TxOutRef "PlutusV1.TxOutRef" 0
     , forallGoldens @(HlPlutus.UpperBound HlPlutus.POSIXTime) @(PlPlutus.UpperBound PlPlutus.POSIXTime) "PlutusV1.UpperBound" 5
     , forallGoldens @HlPlutus.Value @PlPlutus.Value "PlutusV1.Value" 2
+    , forallGoldens @HlPlutus.DCert @PlPlutus.DCert "PlutusV1.DCert" 9
+    , forallGoldens @HlPlutus.ScriptPurpose @PlPlutus.ScriptPurpose "PlutusV1.ScriptPurpose" 9
+    , forallGoldens @HlPlutus.TxInfo @PlPlutus.TxInfo "PlutusV1.TxInfo" 9
+    , forallGoldens @HlPlutus.ScriptContext @PlPlutus.ScriptContext "PlutusV1.ScriptContext" 9
     , forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum "PlutusV2.OutputDatum" 2
     , forallGoldens @HlPlutusV2.TxInInfo @PlPlutusV2.TxInInfo "PlutusV2.TxInInfo" 9
     , forallGoldens @HlPlutusV2.TxOut @PlPlutusV2.TxOut "PlutusV2.TxOut" 9
+    , forallGoldens @HlPlutusV2.TxInfo @PlPlutusV2.TxInfo "PlutusV2.TxInfo" 9
+    , forallGoldens @HlPlutusV2.ScriptContext @PlPlutusV2.ScriptContext "PlutusV2.ScriptContext" 9
     ]
 
 evalRoundTrip :: forall a. (PIsData a, PTryFrom PData (PAsData a)) => Data -> Assertion
 evalRoundTrip pd = case Plutarch.compile (Config DoTracingAndBinds) (roundTripFunction @a # pconstant pd) of
   Left err -> assertFailure $ show ("Error while evaluating a Plutarch Term", err)
-  Right script -> case evalScript script of
+  Right script -> case evalScriptHuge script of
     (Left err, _, trace) -> assertFailure $ show ("Error while evaluating a Plutarch Term", err, trace)
-    _ -> return ()
+    _other -> return ()
 
 roundTripFunction :: forall a s. (PIsData a, PTryFrom PData (PAsData a)) => Plutarch.Term s (PData :--> PBool)
 roundTripFunction =

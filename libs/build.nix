@@ -106,7 +106,7 @@
         name = "lbf-plutus-plutarch";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V1/Todo.lbf" "Plutus/V2.lbf" "Plutus/V2/Todo.lbf" ];
         classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
         dependencies = [ "lbf-prelude-plutarch" ];
         configs = [
