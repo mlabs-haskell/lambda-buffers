@@ -94,6 +94,8 @@ plutusV1Goldens =
     , forallGoldens @(HlPlutus.UpperBound HlPlutus.POSIXTime) @(PlPlutus.UpperBound PlPlutus.POSIXTime) "PlutusV1.UpperBound" 5
     , forallGoldens @HlPlutus.Value @PlPlutus.Value "PlutusV1.Value" 2
     , forallGoldens @HlPlutus.DCert @PlPlutus.DCert "PlutusV1.DCert" 9
+    , forallGoldens @HlPlutus.TxOut @PlPlutus.TxOut "PlutusV1.TxOut" 9
+    , forallGoldens @HlPlutus.TxInInfo @PlPlutus.TxInInfo "PlutusV1.TxInInfo" 9
     , forallGoldens @HlPlutus.ScriptPurpose @PlPlutus.ScriptPurpose "PlutusV1.ScriptPurpose" 9
     , forallGoldens @HlPlutus.TxInfo @PlPlutus.TxInfo "PlutusV1.TxInfo" 9
     , forallGoldens @HlPlutus.ScriptContext @PlPlutus.ScriptContext "PlutusV1.ScriptContext" 9

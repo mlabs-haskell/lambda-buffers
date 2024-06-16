@@ -171,3 +171,16 @@ instance PlutusData (Map k v) :- PlutusData k, PlutusData v
 instance Eq (Map k v) :- Eq k, Eq v
 instance Json (Map k v) :- Json k, Json v
 
+-- PlutusLedgerApi.V1.Contexts
+opaque TxInInfo
+
+instance PlutusData TxInInfo
+instance Eq TxInInfo
+instance Json TxInInfo
+
+-- PlutusLedgerApi.V1.Tx
+opaque TxOut
+
+instance PlutusData TxOut
+instance Eq TxOut
+instance Json TxOut
