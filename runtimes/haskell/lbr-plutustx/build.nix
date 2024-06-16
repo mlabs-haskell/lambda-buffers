@@ -28,7 +28,6 @@
         };
 
         lbr-plutustx-lib = hsFlake.packages."lbr-plutustx:lib:lbr-plutustx";
-        lbr-plutustx-tests = hsFlake.packages."lbr-plutustx:test:tests";
       };
 
       inherit (hsFlake) checks;
