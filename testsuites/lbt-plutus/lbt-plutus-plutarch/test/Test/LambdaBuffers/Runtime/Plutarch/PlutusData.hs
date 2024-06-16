@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Test.LambdaBuffers.Runtime.Plutus.PlutusData (tests) where
+module Test.LambdaBuffers.Runtime.Plutarch.PlutusData (tests) where
 
 import LambdaBuffers.Days qualified as HlDays
 import LambdaBuffers.Days.Plutarch qualified as PlDays
@@ -28,7 +28,7 @@ import Plutarch.Evaluate (evalScriptHuge)
 import Plutarch.Prelude (PAsData, PIsData, PTryFrom, pconstant)
 import PlutusTx (Data, ToData)
 import PlutusTx.IsData (FromData, toData)
-import Test.LambdaBuffers.Plutus.Plutarch.Golden (readGoldenPdJson)
+import Test.LambdaBuffers.Plutarch.Golden (readGoldenPdJson)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.ExpectedFailure (ignoreTestBecause)
 import Test.Tasty.HUnit (Assertion, assertFailure, testCase)
@@ -37,6 +37,16 @@ tests :: TestTree
 tests =
   testGroup
     "Round trip tests (from goldens and back)"
+    [ transparentGoldens
+    , preludeGoldens
+    , plutusV1Goldens
+    , plutusV2Goldens
+    ]
+
+transparentGoldens :: TestTree
+transparentGoldens =
+  testGroup
+    "Transparent golden types"
     [ forallGoldens @HlDays.Day @PlDays.Day "Days.Day" 6
     , forallGoldens @HlDays.FreeDay @PlDays.FreeDay "Days.FreeDay" 1
     , forallGoldens @HlDays.WorkDay @PlDays.WorkDay "Days.WorkDay" 4
@@ -46,10 +56,21 @@ tests =
     , forallGoldens @HlFoo.D @PlFoo.D "Foo.D" 7
     , ignoreTestBecause "TODO(#131): Plutarch codegen: Recursive data type support" $ forallGoldens @HlFoo.FInt @PlFoo.FInt "Foo.FInt" 1
     , ignoreTestBecause "TODO(#131): Plutarch codegen: Recursive data type support" $ forallGoldens @HlFoo.GInt @PlFoo.GInt "Foo.GInt" 1
-    , forallGoldens @(HlPrelude.Maybe HlPrelude.Bool) @(PlPrelude.Maybe PlPrelude.Bool) "Prelude.Maybe" 2
+    ]
+
+preludeGoldens :: TestTree
+preludeGoldens =
+  testGroup
+    "LB Prelude golden types"
+    [ forallGoldens @(HlPrelude.Maybe HlPrelude.Bool) @(PlPrelude.Maybe PlPrelude.Bool) "Prelude.Maybe" 2
     , forallGoldens @(HlPrelude.Either HlPrelude.Bool HlPrelude.Bool) @(PlPrelude.Either PlPrelude.Bool PlPrelude.Bool) "Prelude.Either" 2
     , forallGoldens @(HlPrelude.List HlPrelude.Bool) @(PlPrelude.List PlPrelude.Bool) "Prelude.List" 3
-    , forallGoldens @HlPlutus.Address @PlPlutus.Address "PlutusV1.Address" 7
+    ]
+plutusV1Goldens :: TestTree
+plutusV1Goldens =
+  testGroup
+    "LB Plutus.V1. golden types"
+    [ forallGoldens @HlPlutus.Address @PlPlutus.Address "PlutusV1.Address" 7
     , forallGoldens @HlPlutus.AssetClass @PlPlutus.AssetClass "PlutusV1.AssetClass" 3
     , forallGoldens @HlPlutus.Bytes @PlPlutus.Bytes "PlutusV1.Bytes" 2
     , forallGoldens @HlPlutus.Credential @PlPlutus.Credential "PlutusV1.Credential" 1
@@ -76,7 +97,13 @@ tests =
     , forallGoldens @HlPlutus.ScriptPurpose @PlPlutus.ScriptPurpose "PlutusV1.ScriptPurpose" 9
     , forallGoldens @HlPlutus.TxInfo @PlPlutus.TxInfo "PlutusV1.TxInfo" 9
     , forallGoldens @HlPlutus.ScriptContext @PlPlutus.ScriptContext "PlutusV1.ScriptContext" 9
-    , forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum "PlutusV2.OutputDatum" 2
+    ]
+
+plutusV2Goldens :: TestTree
+plutusV2Goldens =
+  testGroup
+    "LB Plutus.V2 golden types"
+    [ forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum "PlutusV2.OutputDatum" 2
     , forallGoldens @HlPlutusV2.TxInInfo @PlPlutusV2.TxInInfo "PlutusV2.TxInInfo" 9
     , forallGoldens @HlPlutusV2.TxOut @PlPlutusV2.TxOut "PlutusV2.TxOut" 9
     , forallGoldens @HlPlutusV2.TxInfo @PlPlutusV2.TxInfo "PlutusV2.TxInfo" 9

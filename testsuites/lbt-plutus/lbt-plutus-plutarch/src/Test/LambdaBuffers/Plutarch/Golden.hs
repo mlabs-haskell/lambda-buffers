@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Test.LambdaBuffers.Plutus.Plutarch.Golden (readGoldenPdJson) where
+module Test.LambdaBuffers.Plutarch.Golden (readGoldenPdJson) where
 
 import Data.ByteString qualified as B
 import LambdaBuffers.Runtime.Plutarch ()

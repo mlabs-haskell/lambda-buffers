@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Test.LambdaBuffers.Runtime.Plutus.PlutusData qualified as PlutusData
+import Test.LambdaBuffers.Runtime.Plutarch.PlutusData qualified as PlutusData
 import Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
