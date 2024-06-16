@@ -75,3 +75,50 @@ declare module "../PlutusData.js" {
   }
 }
 PlutusData.IsPlutusData[Symbols.TxOut] = PlutusLedgerApiV2.isPlutusDataTxOut;
+
+// TxInfo
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.TxInfo]: Prelude.Eq<PlutusLedgerApiV2.TxInfo>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.TxInfo]: Prelude.Json<PlutusLedgerApiV2.TxInfo>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.TxInfo] = PlutusLedgerApiV2.eqTxInfo;
+LbrPrelude.Json[Symbols.TxInfo] = PlutusLedgerApiV2.jsonTxInfo;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.TxInfo]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV2.TxInfo
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.TxInfo] = PlutusLedgerApiV2.isPlutusDataTxInfo;
+
+// ScriptContext
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.ScriptContext]: Prelude.Eq<PlutusLedgerApiV2.ScriptContext>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.ScriptContext]: Prelude.Json<PlutusLedgerApiV2.ScriptContext>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.ScriptContext] = PlutusLedgerApiV2.eqScriptContext;
+LbrPrelude.Json[Symbols.ScriptContext] = PlutusLedgerApiV2.jsonScriptContext;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.ScriptContext]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV2.ScriptContext
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.ScriptContext] =
+  PlutusLedgerApiV2.isPlutusDataScriptContext;
