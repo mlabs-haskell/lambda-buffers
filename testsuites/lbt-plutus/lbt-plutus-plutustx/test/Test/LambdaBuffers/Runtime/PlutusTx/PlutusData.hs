@@ -1,4 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
+{-# OPTIONS_GHC -Wno-unused-foralls #-}
 
 module Test.LambdaBuffers.Runtime.PlutusTx.PlutusData (tests) where
 
@@ -33,6 +35,7 @@ import Test.Tasty.ExpectedFailure (ignoreTestBecause)
 import Test.Tasty.HUnit (Assertion, assertFailure, testCase)
 import Prelude
 
+-- TODO(bladyjoker): Make the ``xyzCompiled` functions have `BuiltinData -> a` type so the `plutusType` type argument is actually used
 tests :: TestTree
 tests =
   testGroup
