@@ -23,6 +23,9 @@
           "${config.packages.lbf-plutus-haskell}"
           "${config.packages.lbf-plutus-golden-api-haskell}"
           "${config.packages.lbt-plutus-golden-haskell}"
+
+          # Plutarch (just for script evaluation module)
+          "${inputs.plutarch}"
         ];
 
         devShellTools = config.settings.shell.tools;

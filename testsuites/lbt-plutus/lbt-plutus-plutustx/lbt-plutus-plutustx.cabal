@@ -90,7 +90,9 @@ test-suite tests
   main-is:        Test.hs
   build-depends:
     , base                            >=4.16
-    , hedgehog                        >=1.2
+    , bytestring                      >=0.11
+    , filepath                        >=1.4
+    , lbf-plutus                      >=0.1
     , lbf-plutus-golden-api
     , lbf-plutus-plutustx
     , lbf-plutus-plutustx-golden-api
@@ -98,12 +100,18 @@ test-suite tests
     , lbf-prelude-plutustx
     , lbr-plutus
     , lbr-plutustx
+    , lbr-prelude
+    , lbt-plutus-golden-data
+    , plutarch
+    , plutus-core                     >=1.20
+    , plutus-ledger-api               >=1.20
     , plutus-tx
     , plutus-tx-plugin
-    , prettyprinter
     , tasty                           >=1.4
     , tasty-expected-failure
-    , tasty-hedgehog                  >=1.4
     , tasty-hunit
 
-  other-modules:  Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx
+  other-modules:
+    Test.LambdaBuffers.Runtime.PlutusTx.Evaluate
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusData
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx
