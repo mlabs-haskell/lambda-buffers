@@ -9,12 +9,8 @@ import LambdaBuffers.Foo qualified as HlFoo
 import LambdaBuffers.Foo.Plutarch qualified as PlFoo
 import LambdaBuffers.Plutus.V1 qualified as HlPlutus
 import LambdaBuffers.Plutus.V1.Plutarch qualified as PlPlutus
-import LambdaBuffers.Plutus.V1.Todo qualified as HlPlutus
-import LambdaBuffers.Plutus.V1.Todo.Plutarch qualified as PlPlutus
 import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
 import LambdaBuffers.Plutus.V2.Plutarch qualified as PlPlutusV2
-import LambdaBuffers.Plutus.V2.Todo qualified as HlPlutusV2
-import LambdaBuffers.Plutus.V2.Todo.Plutarch qualified as PlPlutusV2
 import LambdaBuffers.Prelude qualified as HlPrelude
 import LambdaBuffers.Prelude.Plutarch qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutarch ()

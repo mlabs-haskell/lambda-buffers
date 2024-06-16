@@ -15,6 +15,11 @@
       "LbrPlutusV1",
       "Credential"
     ],
+    "Plutus.V1.DCert": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "DCert"
+    ],
     "Plutus.V1.StakingCredential": [
       "lbr-plutus/V1.js",
       "LbrPlutusV1",
@@ -120,6 +125,31 @@
       "LbrPlutusV1",
       "Map"
     ],
+    "Plutus.V1.TxOut": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TxOut"
+    ],
+    "Plutus.V1.TxInInfo": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TxInInfo"
+    ],
+    "Plutus.V1.TxInfo": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "TxInfo"
+    ],
+    "Plutus.V1.ScriptPurpose": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "ScriptPurpose"
+    ],
+    "Plutus.V1.ScriptContext": [
+      "lbr-plutus/V1.js",
+      "LbrPlutusV1",
+      "ScriptContext"
+    ],
     "Plutus.V2.TxOut": [
       "lbr-plutus/V2.js",
       "LbrPlutusV2",
@@ -134,6 +164,16 @@
       "lbr-plutus/V2.js",
       "LbrPlutusV2",
       "OutputDatum"
+    ],
+    "Plutus.V2.TxInfo": [
+      "lbr-plutus/V2.js",
+      "LbrPlutusV2",
+      "TxInfo"
+    ],
+    "Plutus.V2.ScriptContext": [
+      "lbr-plutus/V2.js",
+      "LbrPlutusV2",
+      "ScriptContext"
     ]
   },
   "classesConfig": {

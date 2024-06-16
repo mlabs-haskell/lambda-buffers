@@ -145,25 +145,10 @@
       "LambdaBuffers.Runtime.Plutarch",
       "PMap"
     ],
-    "Plutus.V1.Todo.ScriptPurpose": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "PScriptPurpose"
-    ],
-    "Plutus.V1.Todo.DCert": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "PDCert"
-    ],
-    "Plutus.V1.Todo.TxInfo": [
+    "Plutus.V1.TxInfo": [
       "plutarch",
       "Plutarch.Api.V1",
       "PTxInfo"
-    ],
-    "Plutus.V1.Todo.ScriptContext": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "PScriptContext"
     ],
     "Plutus.V2.TxInInfo": [
       "plutarch",
@@ -180,12 +165,12 @@
       "Plutarch.Api.V2",
       "PTxOut"
     ],
-    "Plutus.V2.Todo.TxInfo": [
+    "Plutus.V2.TxInfo": [
       "plutarch",
       "Plutarch.Api.V2",
       "PTxInfo"
     ],
-    "Plutus.V2.Todo.ScriptContext": [
+    "Plutus.V2.ScriptContext": [
       "plutarch",
       "Plutarch.Api.V2",
       "PScriptContext"

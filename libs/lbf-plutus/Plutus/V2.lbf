@@ -22,3 +22,16 @@ opaque TxOut
 instance PlutusData TxOut
 instance Eq TxOut
 instance Json TxOut
+
+-- PlutusLedgerApi.V2.Contexts
+opaque TxInfo
+
+instance PlutusData TxInfo
+instance Eq TxInfo
+instance Json TxInfo
+
+opaque ScriptContext
+
+instance PlutusData ScriptContext
+instance Eq ScriptContext
+instance Json ScriptContext

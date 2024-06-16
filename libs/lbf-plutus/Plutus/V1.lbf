@@ -184,3 +184,25 @@ opaque TxOut
 instance PlutusData TxOut
 instance Eq TxOut
 instance Json TxOut
+
+-- PlutusLedgerApi.V1.DCert
+opaque DCert
+instance PlutusData DCert
+instance Eq DCert
+instance Json DCert
+
+-- PlutusLedgerApi.V1.Contexts
+opaque ScriptContext
+instance PlutusData ScriptContext
+instance Eq ScriptContext
+instance Json ScriptContext
+
+opaque ScriptPurpose
+instance PlutusData ScriptPurpose
+instance Eq ScriptPurpose
+instance Json ScriptPurpose
+
+opaque TxInfo
+instance PlutusData TxInfo
+instance Eq TxInfo
+instance Json TxInfo
