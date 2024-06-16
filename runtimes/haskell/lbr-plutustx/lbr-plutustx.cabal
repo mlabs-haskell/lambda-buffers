@@ -91,6 +91,7 @@ library
 
   hs-source-dirs:  src
   exposed-modules:
+    LambdaBuffers.Runtime.PlutusTx
     LambdaBuffers.Runtime.PlutusTx.LamVal
     LambdaBuffers.Runtime.PlutusTx.List
     LambdaBuffers.Runtime.PlutusTx.NotImplemented
