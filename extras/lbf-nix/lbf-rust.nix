@@ -81,15 +81,15 @@ let
   # This is a lookup table of default crate versions used by lamba-buffers modules
   # Based on the contents of `build.json` a subset of these will be attached to the
   # Cargo.toml file
-  # Note: lbr-prelude and and plutus prelude versions are pinned here, but can be overridden with `extraVersions`
+  # Note: lbr-prelude versions are pinned here, but can be overridden with `extraVersions`
   versionTable =
     {
       num-bigint = "~0.4";
       serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
-      plutus-ledger-api = { path = "../plutus-ledger-api-0.1.0"; features = [ "lbf" ]; };
+      plutus-ledger-api = { path = "../plutus-ledger-api-0.2.0"; };
     };
 
-  crateVersions = opts: with (lbfRustOpts opts);
+  versionTableJson = opts: with (lbfRustOpts opts);
     pkgs.writers.writeJSON "lambda-buffers-crate-versions" (versionTable // extraVersions);
 
   build = opts: with (lbfRustOpts opts);
@@ -113,13 +113,13 @@ let
         DEPS=$(echo ${builtins.concatStringsSep " " dependencies} $(cat build.json | jq -r ".[]" | sort -u));
         echo "Gathered Cargo deps $DEPS";
         cat ${cargoTemplate opts} > Cargo.json;
-        # Using the lookup table `crateVersions`, filling in the library version.
+        # Using the lookup table `versionTableJson`, filling in the library version.
         # If no version is found, we default to a local path dependency, pointing to
         # a sibling directory (directory in extra-sources or .extras)
         # e.g.: for `lbr-prelude` we print `lbr-prelude = { path = "../lbr-prelude" }
         for DEP in $DEPS; do
           if [ $DEP != "std" ]; then
-            VER=$(cat ${crateVersions opts} | jq ".\"$DEP\"" -c);
+            VER=$(cat ${versionTableJson opts} | jq ".\"$DEP\"" -c);
             if [ $VER == "null" ]; then
               VER="{\"path\": \"../$DEP-0.1.0\"}"
             fi

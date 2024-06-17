@@ -33,8 +33,8 @@
 
     # Rust runtime
     plutus-ledger-api-rust = {
-      url = "github:mlabs-haskell/plutus-ledger-api-rust";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:mlabs-haskell/plutus-ledger-api-rust?ref=szg251/move-plutus-lbf";
+      inputs.flake-lang.follows = "flake-lang";
 
     };
   };

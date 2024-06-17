@@ -5,7 +5,7 @@ mod utils;
 mod json_tests {
     use crate::goldens;
     use crate::utils;
-    use plutus_ledger_api::json::Json;
+    use lbr_prelude::json::Json;
 
     fn from_to_golden_test<T: Json + std::fmt::Debug + Eq>(title: &str, goldens: Vec<T>) {
         let golden_dir = "data/lbt-plutus-golden-data";
@@ -218,7 +218,7 @@ mod json_tests {
 
 mod plutus_data_tests {
     use crate::utils;
-    use plutus_ledger_api::json::Json;
+    use lbr_prelude::json::Json;
     use plutus_ledger_api::plutus_data::{IsPlutusData, PlutusData};
 
     fn from_to_golden_test<T: IsPlutusData + std::fmt::Debug + Eq>(title: &str, goldens: Vec<T>) {

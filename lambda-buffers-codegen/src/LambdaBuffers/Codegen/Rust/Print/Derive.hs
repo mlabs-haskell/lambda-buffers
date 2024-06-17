@@ -79,13 +79,13 @@ lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
     Map.fromList
       [ ("toPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "to_plutus_data")
       , ("fromPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "from_plutus_data")
-      , ("casePlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "case_plutus_data")
+      , ("casePlutusData", R.qForeignRef R.MkValueName "lbr-prelude" ["plutus", "lamval"] "case_plutus_data")
       , ("integerData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::integer")
-      , ("constrData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "constr")
+      , ("constrData", R.qForeignRef R.MkValueName "lbr-prelude" ["plutus", "lamval"] "constr")
       , ("listData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::list")
       , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
-      , ("failParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "fail_parse()")
-      , ("bindParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "bind_parse")
+      , ("failParse", R.qForeignRef R.MkValueName "lbr-prelude" ["plutus", "lamval"] "fail_parse()")
+      , ("bindParse", R.qForeignRef R.MkValueName "lbr-prelude" ["plutus", "lamval"] "bind_parse")
       ]
 
 toPlutusDataTraitMethodName :: R.ValueName
