@@ -150,6 +150,8 @@ dependencies = [
 [[package]]
 name = "lbr-prelude"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a2367a6b351bdc4e6df1989e5d2a276e8ae8e54d15dcbff6dfd21b5ff45096b"
 dependencies = [
  "data-encoding",
  "lbr-prelude-derive",
@@ -163,6 +165,8 @@ dependencies = [
 [[package]]
 name = "lbr-prelude-derive"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "370d0aa0809ee84ccf7c6d84ae2d6ac97b84cb1337b3d145101bcf6a7319deac"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -245,7 +249,7 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
 name = "plutus-ledger-api"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "data-encoding",
  "impl_ops",

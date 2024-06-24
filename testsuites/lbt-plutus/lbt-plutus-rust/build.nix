@@ -12,8 +12,6 @@
             config.packages.lbf-plutus-golden-api-rust
             config.packages.lbf-prelude-rust
             config.packages.lbf-plutus-rust
-            config.packages.lbr-prelude-rust-src
-            config.packages.lbr-prelude-derive-rust-src
           ];
           data = [
             {
