@@ -39107,11 +39107,11 @@
         "prelude-typescript": "prelude-typescript_3"
       },
       "locked": {
-        "lastModified": 1709976751,
-        "narHash": "sha256-UazLkZZRSQBqQW/8p5cPhfivDOSYsNMw84niTRm616o=",
+        "lastModified": 1718984225,
+        "narHash": "sha256-u2/7Z4WvGYa4NeVt+vYl3MVn+yMMlvM4atvA7ifyEpg=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "609e447fcf440c3f35fd078f37f0877840c926b8",
+        "rev": "f601bc2b13c6866641a009e869586ce90138e7c7",
         "type": "github"
       },
       "original": {
