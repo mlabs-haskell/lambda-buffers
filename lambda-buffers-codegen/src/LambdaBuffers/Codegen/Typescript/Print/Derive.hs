@@ -39,7 +39,7 @@ lamTy2PCTy = \case
   LamTy.Types.TyVar var -> return $ PC.TyVarI var
   LamTy.Types.TyApp _f _args (Just tyApp) -> do
     return $ PC.TyAppI tyApp
-  _ ->
+  _other ->
     -- NOTE(jaredponn): hopefully this never happens...
     Nothing
 
@@ -48,21 +48,25 @@ instanceDictIdent pkgMap className ty =
   Lens.view (dict . Lens.to (PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions)) $
     printInstanceDict pkgMap className ty
 
-lvEqBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
-lvEqBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
-  case (refName, tys) of
-    ("eq", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent pkgMap tsEqClass ty')
-          0 -- index in the list of substitutions for the type we're overloading on
-          ".eq"
-    ("true", _) -> Just $ Builtin $ Ts.primValName "true"
-    ("false", _) -> Just $ Builtin $ Ts.primValName "false"
-    ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "and"
-    ("not", _) -> Just $ Builtin $ Ts.primValName "!"
-    _ -> Nothing
+lvEqBuiltins :: Ts.PkgMap -> LV.Context Builtin ()
+lvEqBuiltins pkgMap =
+  LV.Context
+    ( \(tys, refName) ->
+        case (refName, tys) of
+          ("eq", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              OverloadedBuiltin
+                (Ts.primValName $ instanceDictIdent pkgMap tsEqClass ty')
+                0 -- index in the list of substitutions for the type we're overloading on
+                ".eq"
+          ("true", _) -> Just $ Builtin $ Ts.primValName "true"
+          ("false", _) -> Just $ Builtin $ Ts.primValName "false"
+          ("and", _) -> Just $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "and"
+          ("not", _) -> Just $ Builtin $ Ts.primValName "!"
+          _other -> Nothing
+    )
+    ()
 
 eqClassMethodName :: Ts.ValueName
 eqClassMethodName = Ts.MkValueName "eq"
@@ -90,31 +94,35 @@ printDeriveEq pkgMap mn iTyDefs mkExportInstanceDeclDoc ty = do
     , Set.map (Lens.view qualifiedValName) $ eqImports <> neqImports
     )
 
-lvPlutusDataBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
-lvPlutusDataBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
-  case (refName, tys) of
-    ("toPlutusData", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
-          0 -- index in the list of substitutions for the type we're overloading on
-          ".toData"
-    ("fromPlutusData", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
-          0 -- index in the list of substitutions for the type we're overloading on
-          ".fromData"
-    ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "casePlutusData"
-    ("integerData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "integerData"
-    ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "constrData"
-    ("listData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "listData"
-    ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
-    ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse('PlutusData parse failed')" -- TODO(jaredponn): bit of a hack to call the function @failParse@
-    ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "bindParse"
-    _ -> Nothing
+lvPlutusDataBuiltins :: Ts.PkgMap -> LV.Context Builtin ()
+lvPlutusDataBuiltins pkgMap =
+  LV.Context
+    ( \(tys, refName) ->
+        case (refName, tys) of
+          ("toPlutusData", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              OverloadedBuiltin
+                (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
+                0 -- index in the list of substitutions for the type we're overloading on
+                ".toData"
+          ("fromPlutusData", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              OverloadedBuiltin
+                (Ts.primValName $ instanceDictIdent pkgMap tsIsPlutusDataClass ty')
+                0 -- index in the list of substitutions for the type we're overloading on
+                ".fromData"
+          ("casePlutusData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "casePlutusData"
+          ("integerData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "integerData"
+          ("constrData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "constrData"
+          ("listData", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "listData"
+          ("succeedParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "succeedParse"
+          ("failParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "failParse('PlutusData parse failed')" -- TODO(jaredponn): bit of a hack to call the function @failParse@
+          ("bindParse", _) -> Just $ Builtin $ Ts.normalValName "lbr-plutus/Runtime.js" "LbrPlutusRuntime" "bindParse"
+          _other -> Nothing
+    )
+    ()
 
 toPlutusDataClassMethodName :: Ts.ValueName
 toPlutusDataClassMethodName = Ts.MkValueName "toData"
@@ -148,43 +156,47 @@ tsJsonClass :: Ts.QClassName
 tsJsonClass = (Ts.MkPackageName "lbr-prelude", Ts.MkModuleName "LbrPrelude", Ts.MkClassName "Json")
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
-lvJsonBuiltins :: Ts.PkgMap -> LV.PrintRead Builtin
-lvJsonBuiltins pkgMap = LV.MkPrintRead $ \(tys, refName) ->
-  case (refName, tys) of
-    ("toJson", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        OverloadedBuiltin
-          (Ts.primValName $ instanceDictIdent pkgMap tsJsonClass ty')
-          0 -- index in the list of substitutions for the type we're overloading on
-          ".toJson"
-    ("fromJson", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        OverloadedBuiltin
-          (Ts.primValName (instanceDictIdent pkgMap tsJsonClass ty'))
-          0 -- index in the list of substitutions for the type we're overloading on
-          ".fromJson"
-    ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonObject"
-    ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonConstructor"
-    ("jsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonArray"
-    ("caseJsonConstructor", [ty]) -> do
-      ty' <- lamTy2PCTy ty
-      return $
-        Builtin $
-          Ts.normalValName
-            "lbr-prelude"
-            "LbrPrelude"
-            ( PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions $
-                "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner pkgMap ty') langle rangle
-            )
-    ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonArray"
-    ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonObject"
-    ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonField"
-    ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "succeedParse"
-    ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "failParse"
-    ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindParse"
-    _ -> Nothing
+lvJsonBuiltins :: Ts.PkgMap -> LV.Context Builtin ()
+lvJsonBuiltins pkgMap =
+  LV.Context
+    ( \(tys, refName) ->
+        case (refName, tys) of
+          ("toJson", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              OverloadedBuiltin
+                (Ts.primValName $ instanceDictIdent pkgMap tsJsonClass ty')
+                0 -- index in the list of substitutions for the type we're overloading on
+                ".toJson"
+          ("fromJson", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              OverloadedBuiltin
+                (Ts.primValName (instanceDictIdent pkgMap tsJsonClass ty'))
+                0 -- index in the list of substitutions for the type we're overloading on
+                ".fromJson"
+          ("jsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonObject"
+          ("jsonConstructor", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonConstructor"
+          ("jsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonArray"
+          ("caseJsonConstructor", [ty]) -> do
+            ty' <- lamTy2PCTy ty
+            return $
+              Builtin $
+                Ts.normalValName
+                  "lbr-prelude"
+                  "LbrPrelude"
+                  ( PrettyPrinter.Text.renderStrict . layoutPretty defaultLayoutOptions $
+                      "caseJsonConstructor" <> surround (Typescript.Print.Ty.printTyInner pkgMap ty') langle rangle
+                  )
+          ("caseJsonArray", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonArray"
+          ("caseJsonObject", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "caseJsonObject"
+          ("jsonField", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "jsonField"
+          ("succeedParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "succeedParse"
+          ("failParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "failParse"
+          ("bindParse", _) -> return $ Builtin $ Ts.normalValName "lbr-prelude" "LbrPrelude" "bindParse"
+          _other -> Nothing
+    )
+    ()
 
 toJsonClassMethodName :: Ts.ValueName
 toJsonClassMethodName = Ts.MkValueName "toJson"

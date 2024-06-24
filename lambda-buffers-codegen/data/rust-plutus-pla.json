@@ -154,31 +154,31 @@
       "collections",
       "BTreeMap"
     ],
-    "Plutus.V1.Todo.DCert": [
+    "Plutus.V1.DCert": [
       "plutus-ledger-api",
       "v1",
       "transaction",
       "DCert"
     ],
-    "Plutus.V1.Todo.ScriptContext": [
+    "Plutus.V1.ScriptContext": [
       "plutus-ledger-api",
       "v1",
       "transaction",
       "ScriptContext"
     ],
-    "Plutus.V1.Todo.ScriptPurpose": [
+    "Plutus.V1.ScriptPurpose": [
       "plutus-ledger-api",
       "v1",
       "transaction",
       "ScriptPurpose"
     ],
-    "Plutus.V1.Todo.TxInInfo": [
+    "Plutus.V1.TxInInfo": [
       "plutus-ledger-api",
       "v1",
       "transaction",
       "TxInInfo"
     ],
-    "Plutus.V1.Todo.TxInfo": [
+    "Plutus.V1.TxInfo": [
       "plutus-ledger-api",
       "v1",
       "transaction",
@@ -202,13 +202,13 @@
       "transaction",
       "TransactionOutput"
     ],
-    "Plutus.V2.Todo.ScriptContext": [
+    "Plutus.V2.ScriptContext": [
       "plutus-ledger-api",
       "v2",
       "transaction",
       "ScriptContext"
     ],
-    "Plutus.V2.Todo.TxInfo": [
+    "Plutus.V2.TxInfo": [
       "plutus-ledger-api",
       "v2",
       "transaction",

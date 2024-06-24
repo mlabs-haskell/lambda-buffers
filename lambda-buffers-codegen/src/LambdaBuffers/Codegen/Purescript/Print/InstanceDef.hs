@@ -7,7 +7,7 @@ import Data.Map.Ordered qualified as OMap
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Print (importClass, importValue)
-import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Backend (MonadPurescriptBackend)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printPursQClassName, printPursQValName)
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyInner)
 import LambdaBuffers.Codegen.Purescript.Syntax (className, normalValName)
@@ -21,7 +21,7 @@ printInstanceDef pursQClassName ty =
       freeVars = collectTyVars ty
    in case freeVars of
         [] -> \implDoc -> "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
-        _ -> \implDoc -> "instance" <+> printInstanceContext pursQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
+        _other -> \implDoc -> "instance" <+> printInstanceContext pursQClassName freeVars <+> "=>" <+> headDoc <+> "where" <> hardline <> space <> space <> implDoc
 
 printInstanceContext :: Purs.QClassName -> [PC.Ty] -> Doc ann
 printInstanceContext hsQClassName tys = align . group $ encloseSep lparen rparen comma (printConstraint hsQClassName <$> tys)
@@ -55,13 +55,13 @@ genericClass = className "prelude" "Data.Generic.Rep" "Generic"
 showClass :: Purs.QClassName
 showClass = className "prelude" "Data.Show" "Show"
 
-printNewtypeDerive :: MonadPrint m => PC.TyDef -> m (Doc ann)
+printNewtypeDerive :: MonadPurescriptBackend m => PC.TyDef -> m (Doc ann)
 printNewtypeDerive = printDerive newtypeClass
 
-printGenericDerive :: MonadPrint m => PC.TyDef -> m (Doc ann)
+printGenericDerive :: MonadPurescriptBackend m => PC.TyDef -> m (Doc ann)
 printGenericDerive = printDerive genericClass
 
-printShowInstance :: MonadPrint m => PC.TyDef -> m (Doc ann)
+printShowInstance :: MonadPurescriptBackend m => PC.TyDef -> m (Doc ann)
 printShowInstance tyd = do
   importClass showClass
   importValue genericShow
@@ -71,7 +71,7 @@ printShowInstance tyd = do
  For a `Show` type class on a `Maybe a` type definition it prints
  `derive instance Show (Maybe a) _`
 -}
-printDerive :: MonadPrint m => Purs.QClassName -> PC.TyDef -> m (Doc ann)
+printDerive :: MonadPurescriptBackend m => Purs.QClassName -> PC.TyDef -> m (Doc ann)
 printDerive qcn tyd = do
   importClass qcn
   return $ "derive instance" <+> printPursQClassName qcn <+> (printTyInner . toSaturatedTyApp $ tyd) <+> "_"

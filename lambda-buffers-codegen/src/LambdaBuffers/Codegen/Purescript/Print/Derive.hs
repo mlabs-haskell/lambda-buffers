@@ -13,15 +13,19 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, align, equals, vsep, (<+>))
 import Proto.Codegen qualified as P
 
-lvEqBuiltins :: LV.PrintRead Purs.QValName
-lvEqBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("eq", Purs.normalValName "prelude" "Prelude" "==")
-      , ("and", Purs.normalValName "prelude" "Prelude" "&&")
-      , ("true", Purs.primValName "true")
-      , ("false", Purs.primValName "false")
-      ]
+lvEqBuiltins :: LV.Context Purs.QValName ()
+lvEqBuiltins =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("eq", Purs.normalValName "prelude" "Prelude" "==")
+            , ("and", Purs.normalValName "prelude" "Prelude" "&&")
+            , ("true", Purs.primValName "true")
+            , ("false", Purs.primValName "false")
+            ]
+    )
+    ()
 
 eqClassMethodName :: Purs.ValueName
 eqClassMethodName = Purs.MkValueName "eq"
@@ -33,20 +37,24 @@ printDeriveEq mn iTyDefs mkInstanceDoc ty = do
   let instanceDoc = mkInstanceDoc (printValueDef eqClassMethodName implDoc)
   return (instanceDoc, imports)
 
-lvPlutusDataBuiltins :: LV.PrintRead Purs.QValName
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
-      , ("fromPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.FromData" "fromData")
-      , ("casePlutusData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData")
-      , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
-      , ("constrData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr")
-      , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
-      , ("succeedParse", Purs.normalValName "maybe" "Data.Maybe" "Just")
-      , ("failParse", Purs.normalValName "maybe" "Data.Maybe" "Nothing")
-      , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
-      ]
+lvPlutusDataBuiltins :: LV.Context Purs.QValName ()
+lvPlutusDataBuiltins =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
+            , ("fromPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.FromData" "fromData")
+            , ("casePlutusData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData")
+            , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
+            , ("constrData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr")
+            , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
+            , ("succeedParse", Purs.normalValName "maybe" "Data.Maybe" "Just")
+            , ("failParse", Purs.normalValName "maybe" "Data.Maybe" "Nothing")
+            , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
+            ]
+    )
+    ()
 
 toPlutusDataClassMethodName :: Purs.ValueName
 toPlutusDataClassMethodName = Purs.MkValueName "toData"
@@ -78,23 +86,27 @@ printValueDef :: Purs.ValueName -> Doc ann -> Doc ann
 printValueDef valName valDoc = printPursValName valName <+> equals <+> valDoc
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
-lvJsonBuiltins :: LV.PrintRead Purs.QValName
-lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "toJson")
-      , ("fromJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fromJson")
-      , ("jsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonObject")
-      , ("jsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonConstructor")
-      , ("jsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonArray")
-      , ("caseJsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonConstructor")
-      , ("caseJsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonArray")
-      , ("caseJsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonObject")
-      , ("jsonField", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonField")
-      , ("succeedParse", Purs.normalValName "either" "Data.Either" "Right")
-      , ("failParse", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fail")
-      , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
-      ]
+lvJsonBuiltins :: LV.Context Purs.QValName ()
+lvJsonBuiltins =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("toJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "toJson")
+            , ("fromJson", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fromJson")
+            , ("jsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonObject")
+            , ("jsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonConstructor")
+            , ("jsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonArray")
+            , ("caseJsonConstructor", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonConstructor")
+            , ("caseJsonArray", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonArray")
+            , ("caseJsonObject", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "caseJsonObject")
+            , ("jsonField", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "jsonField")
+            , ("succeedParse", Purs.normalValName "either" "Data.Either" "Right")
+            , ("failParse", Purs.normalValName "lbr-prelude" "LambdaBuffers.Runtime.Prelude" "fail")
+            , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")
+            ]
+    )
+    ()
 
 toJsonClassMethodName :: Purs.ValueName
 toJsonClassMethodName = Purs.MkValueName "toJson"

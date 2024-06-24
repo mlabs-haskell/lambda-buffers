@@ -101,7 +101,6 @@ library
     LambdaBuffers.Runtime.Prelude
     LambdaBuffers.Runtime.Prelude.Generators.Correct
     LambdaBuffers.Runtime.Prelude.Json
-    LambdaBuffers.Runtime.Prelude.LamVal
 
 test-suite tests
   import:         common-language

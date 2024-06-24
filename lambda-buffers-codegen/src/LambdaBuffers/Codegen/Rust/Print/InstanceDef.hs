@@ -4,6 +4,7 @@ import Control.Lens (view)
 import Data.Foldable (Foldable (toList))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import LambdaBuffers.Codegen.Rust.Backend (MonadRustBackend)
 import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
 import LambdaBuffers.Codegen.Rust.Print.TyDef (printTyInner)
@@ -22,33 +23,36 @@ impl<A: SomeClass, B: SomeClass, C: SomeClass> SomeClass for SomeTy<A, B, C> {
 }
 ```
 -}
-printInstanceDef :: R.PkgMap -> R.QTraitName -> PC.Ty -> (Doc ann -> Doc ann)
-printInstanceDef pkgs rsQTraitName ty =
-  let headDoc = R.printRsQTraitName rsQTraitName <+> "for" <+> printTyInner pkgs ty
+printInstanceDef :: MonadRustBackend m => R.QTraitName -> PC.Ty -> m (Doc ann -> Doc ann)
+printInstanceDef rsQTraitName ty = do
+  tyDoc <- printTyInner ty
+  let headDoc = R.printRsQTraitName rsQTraitName <+> "for" <+> tyDoc
       freeVars = collectTyVars ty
-   in case freeVars of
-        [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
-        _ -> \implDoc ->
-          "impl"
-            <> printInstanceContext pkgs rsQTraitName freeVars
-            <+> headDoc
-            <+> braces (hardline <> space <> space <> implDoc)
+  instanceCtxDoc <- printInstanceContext rsQTraitName freeVars
+  return $ case freeVars of
+    [] -> \implDoc -> "impl" <+> headDoc <+> braces (line <> implDoc)
+    _other -> \implDoc ->
+      "impl"
+        <> instanceCtxDoc
+        <+> headDoc
+        <+> braces (hardline <> space <> space <> implDoc)
 
-printInstanceContext :: R.PkgMap -> R.QTraitName -> [PC.Ty] -> Doc ann
-printInstanceContext pkgs rsQTraitName = printInstanceContext' pkgs [rsQTraitName]
+printInstanceContext :: MonadRustBackend m => R.QTraitName -> [PC.Ty] -> m (Doc ann)
+printInstanceContext rsQTraitName = printInstanceContext' [rsQTraitName]
 
 defaultTraitBounds :: [R.QTraitName]
 defaultTraitBounds = [RR.cloneTrait]
 
-printInstanceContext' :: R.PkgMap -> [R.QTraitName] -> [PC.Ty] -> Doc ann
-printInstanceContext' pkgs rsQTraitNames tys =
-  align . group $ encloseSep langle rangle comma [printTraitBound pkgs (rsQTraitNames <> defaultTraitBounds) ty | ty <- tys]
+printInstanceContext' :: MonadRustBackend m => [R.QTraitName] -> [PC.Ty] -> m (Doc ann)
+printInstanceContext' rsQTraitNames tys = do
+  traitBoundDocs <- traverse (printTraitBound (rsQTraitNames <> defaultTraitBounds)) tys
+  return $ align . group $ encloseSep langle rangle comma traitBoundDocs
 
-printTraitBound :: R.PkgMap -> [R.QTraitName] -> PC.Ty -> Doc ann
-printTraitBound pkgs qcns ty =
+printTraitBound :: MonadRustBackend m => [R.QTraitName] -> PC.Ty -> m (Doc ann)
+printTraitBound qcns ty = do
   let crefDocs = R.printRsQTraitName <$> qcns
-      tyDoc = printTyInner pkgs ty
-   in tyDoc <> colon <+> encloseSep mempty mempty "+" crefDocs
+  tyDoc <- printTyInner ty
+  return $ tyDoc <> colon <+> encloseSep mempty mempty "+" crefDocs
 
 collectTyVars :: PC.Ty -> [PC.Ty]
 collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . toList . collectVars

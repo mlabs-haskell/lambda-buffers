@@ -17,7 +17,7 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), align, colon, comma, dot, dquotes, encloseSep, equals, group, hardline, hsep, lbrace, lbracket, line, lparen, parens, rbrace, rbracket, rparen, space, vsep, (<+>))
 import Proto.Codegen_Fields qualified as P
 
-type MonadPrint m = LV.MonadPrint m Purs.QValName
+type MonadPrint m = LV.MonadPrint m Purs.QValName ()
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Purescript.Print.LamVal] " <> Text.pack msg
@@ -56,10 +56,10 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
       <$> for
         (OMap.assocs sumTy)
         ( \(cn, ty) -> case ty of -- TODO(bladyjoker): Cleanup by refactoring LT.Ty.
-            LT.TyProduct fields _ -> do
+            LT.TyProduct fields _other -> do
               ctorCaseDoc <- printCtorCase qtyN ctorCont (cn, fields)
               return $ ctorCaseDoc <> hardline
-            _ -> throwInternalError "Got a non-product in Sum."
+            _other -> throwInternalError "Got a non-product in Sum."
         )
   return $ align $ "case" <+> caseValDoc <+> "of" <> line <> ctorCaseDocs
 

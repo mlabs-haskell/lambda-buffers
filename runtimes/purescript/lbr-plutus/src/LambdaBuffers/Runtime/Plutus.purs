@@ -3,6 +3,7 @@ module LambdaBuffers.Runtime.Plutus
   , TxInInfo(..)
   , casePlutusData
   , pdConstr
+  , NotImplemented
   ) where
 
 import Ctl.Internal.FromData (class FromData, fromData)
@@ -43,6 +44,20 @@ casePlutusData ctorCase listCase intCase otherCase pd = case pd of
   List xs -> listCase xs
   Integer bi -> intCase bi
   other -> otherCase other
+
+data NotImplemented
+
+instance eqNotImplemented :: Eq NotImplemented where
+  eq _ _ = false
+
+instance showNotImplement :: Show NotImplemented where
+  show _ = "not implemented"
+
+instance toDataNotImplemented :: ToData NotImplemented where
+  toData _ = List []
+
+instance fromDataNotImplement :: FromData NotImplemented where
+  fromData _ = Nothing
 
 -- | https://github.com/input-output-hk/plutus/blob/0f723bef8842d805f14e763fe15590cf3da622f7/plutus-ledger-api/src/PlutusLedgerApi/V2/Contexts.hs#L59
 newtype TxInInfo

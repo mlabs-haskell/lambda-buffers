@@ -66,10 +66,13 @@ export function plutusDataGoldens(): LbrPrelude.List<LbrPlutusV1.PlutusData> {
 
     {
       name: "Constr",
-      fields: [1n, [
-        { name: "Integer", fields: 1n },
-        { name: "Bytes", fields: someBytes() },
-      ]],
+      fields: [
+        1n,
+        [
+          { name: "Integer", fields: 1n },
+          { name: "Bytes", fields: someBytes() },
+        ],
+      ],
     },
     { name: "List", fields: [] },
 
@@ -90,13 +93,22 @@ export function plutusDataGoldens(): LbrPrelude.List<LbrPlutusV1.PlutusData> {
     { name: "Map", fields: PlaMap.fromList([]) },
     {
       name: "Map",
-      fields: PlaMap.fromList([[{ name: "Integer", fields: 1n }, {
-        name: "Bytes",
-        fields: someBytes(),
-      }], [{ name: "Integer", fields: 2n }, {
-        name: "Bytes",
-        fields: someMoreBytes(),
-      }]]),
+      fields: PlaMap.fromList([
+        [
+          { name: "Integer", fields: 1n },
+          {
+            name: "Bytes",
+            fields: someBytes(),
+          },
+        ],
+        [
+          { name: "Integer", fields: 2n },
+          {
+            name: "Bytes",
+            fields: someMoreBytes(),
+          },
+        ],
+      ]),
     },
     { name: "Integer", fields: 0n },
     { name: "Integer", fields: 1n },
@@ -340,22 +352,26 @@ export function adaCurrencySymbolGolden(): LbrPlutusV1.CurrencySymbol {
  */
 export function tokenNameGoldens(): LbrPrelude.List<LbrPlutusV1.TokenName> {
   const tn1 = unsafeFromJust(PlaV1.tokenNameFromBytes(emptyBytes()));
-  const tn2 = unsafeFromJust(PlaV1.tokenNameFromBytes(
-    ((arr: LbrPrelude.List<number>) => {
-      for (let i = 1; i < 16; ++i) {
-        arr.push(i);
-      }
-      return Uint8Array.from(arr);
-    })([]),
-  ));
-  const tn3 = unsafeFromJust(PlaV1.tokenNameFromBytes(
-    ((arr: LbrPrelude.List<number>) => {
-      for (let i = 1; i < 32; ++i) {
-        arr.push(i);
-      }
-      return Uint8Array.from(arr);
-    })([]),
-  ));
+  const tn2 = unsafeFromJust(
+    PlaV1.tokenNameFromBytes(
+      ((arr: LbrPrelude.List<number>) => {
+        for (let i = 1; i < 16; ++i) {
+          arr.push(i);
+        }
+        return Uint8Array.from(arr);
+      })([]),
+    ),
+  );
+  const tn3 = unsafeFromJust(
+    PlaV1.tokenNameFromBytes(
+      ((arr: LbrPrelude.List<number>) => {
+        for (let i = 1; i < 32; ++i) {
+          arr.push(i);
+        }
+        return Uint8Array.from(arr);
+      })([]),
+    ),
+  );
 
   return [tn1, tn2, tn3];
 }
@@ -404,61 +420,58 @@ export function mapGoldens(): LbrPrelude.List<
     PlaMap.fromList<
       LbrPlutusV1.CurrencySymbol,
       LbrPlutusV1.Map<LbrPlutusV1.TokenName, LbrPrelude.Integer>
-    >(
+    >([
       [
-        [
-          PlaV1.adaSymbol,
-          PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>(
-            [[PlaV1.adaToken, 1337n]],
-          ),
-        ],
+        PlaV1.adaSymbol,
+        PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>([
+          [PlaV1.adaToken, 1337n],
+        ]),
       ],
-    ),
+    ]),
     PlaMap.fromList<
       LbrPlutusV1.CurrencySymbol,
       LbrPlutusV1.Map<LbrPlutusV1.TokenName, LbrPrelude.Integer>
-    >(
+    >([
       [
-        [
-          PlaV1.adaSymbol,
-          PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>([[
-            PlaV1.adaToken,
-            1337n,
-          ]]),
-        ],
-
-        [
-          unsafeFromJust(PlaV1.currencySymbolFromBytes(blake2b_224Hash())),
-          PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>(
-            [
-              [unsafeFromJust(PlaV1.tokenNameFromBytes(emptyBytes())), 1337n],
-              [
-                unsafeFromJust(PlaV1.tokenNameFromBytes(
-                  ((arr: LbrPrelude.List<number>) => {
-                    for (let i = 1; i < 16; ++i) {
-                      arr.push(i);
-                    }
-                    return Uint8Array.from(arr);
-                  })([]),
-                )),
-                16n,
-              ],
-              [
-                unsafeFromJust(PlaV1.tokenNameFromBytes(
-                  ((arr: LbrPrelude.List<number>) => {
-                    for (let i = 1; i < 32; ++i) {
-                      arr.push(i);
-                    }
-                    return Uint8Array.from(arr);
-                  })([]),
-                )),
-                32n,
-              ],
-            ],
-          ),
-        ],
+        PlaV1.adaSymbol,
+        PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>([
+          [PlaV1.adaToken, 1337n],
+        ]),
       ],
-    ),
+
+      [
+        unsafeFromJust(PlaV1.currencySymbolFromBytes(blake2b_224Hash())),
+        PlaMap.fromList<LbrPlutusV1.TokenName, LbrPrelude.Integer>([
+          [unsafeFromJust(PlaV1.tokenNameFromBytes(emptyBytes())), 1337n],
+          [
+            unsafeFromJust(
+              PlaV1.tokenNameFromBytes(
+                ((arr: LbrPrelude.List<number>) => {
+                  for (let i = 1; i < 16; ++i) {
+                    arr.push(i);
+                  }
+                  return Uint8Array.from(arr);
+                })([]),
+              ),
+            ),
+            16n,
+          ],
+          [
+            unsafeFromJust(
+              PlaV1.tokenNameFromBytes(
+                ((arr: LbrPrelude.List<number>) => {
+                  for (let i = 1; i < 32; ++i) {
+                    arr.push(i);
+                  }
+                  return Uint8Array.from(arr);
+                })([]),
+              ),
+            ),
+            32n,
+          ],
+        ]),
+      ],
+    ]),
   ];
 }
 
@@ -466,18 +479,14 @@ export function mapGoldens(): LbrPrelude.List<
  * Hard coded {@link Redeemer} tests
  */
 export function redeemerGoldens(): LbrPrelude.List<LbrPlutusV1.Redeemer> {
-  return [
-    { name: "Integer", fields: 1337n },
-  ];
+  return [{ name: "Integer", fields: 1337n }];
 }
 
 /**
  * Hard coded {@link Datum} tests
  */
 export function datumGoldens(): LbrPrelude.List<LbrPlutusV1.Datum> {
-  return [
-    { name: "Integer", fields: 1337n },
-  ];
+  return [{ name: "Integer", fields: 1337n }];
 }
 
 /**
@@ -486,27 +495,21 @@ export function datumGoldens(): LbrPrelude.List<LbrPlutusV1.Datum> {
 export function redeemerHashGoldens(): LbrPrelude.List<
   LbrPlutusV1.RedeemerHash
 > {
-  return [
-    unsafeFromJust(PlaV1.redeemerHashFromBytes(blake2b_256Hash())),
-  ];
+  return [unsafeFromJust(PlaV1.redeemerHashFromBytes(blake2b_256Hash()))];
 }
 
 /**
  * Hard coded {@link DatumHash} tests
  */
 export function datumHashGoldens(): LbrPrelude.List<LbrPlutusV1.DatumHash> {
-  return [
-    unsafeFromJust(PlaV1.datumHashFromBytes(blake2b_256Hash())),
-  ];
+  return [unsafeFromJust(PlaV1.datumHashFromBytes(blake2b_256Hash()))];
 }
 
 /**
  * Hard coded {@link TxId} tests
  */
 export function txIdGoldens(): LbrPrelude.List<LbrPlutusV1.TxId> {
-  return [
-    unsafeFromJust(PlaV1.txIdFromBytes(blake2b_256Hash())),
-  ];
+  return [unsafeFromJust(PlaV1.txIdFromBytes(blake2b_256Hash()))];
 }
 
 /**
@@ -524,25 +527,211 @@ export function txOutRefGoldens(): LbrPrelude.List<LbrPlutusV1.TxOutRef> {
   return res;
 }
 
-// /*
-//  * Hard coded {@link TxInInfo} tests
-//  * TODO(jaredponn): this is borked -- this type doesn't actually exist in the .lbf file
-//  */
-// export function  txInInfoGoldensV1() : LbrPrelude.List<LbrPlutusV1.TxInInfo> {
-//     const  res : LbrPrelude.List<LbrPlutusV1.TxInInfo> = [];
-//
-//     for (const txOutRef of txOutRefGoldens()) {
-//         for (const txOut of txOutGoldensV1()) {
-//         }
-//     }
-//  return res
-// }
+/**
+ * Hard coded {@link TxInInfo} tests
+ */
+export function txInInfoGoldensV1(): LbrPrelude.List<LbrPlutusV1.TxInInfo> {
+  const res: LbrPrelude.List<LbrPlutusV1.TxInInfo> = [];
 
-// /*
-//  * Hard coded {@link TxOut} tests
-//  * TODO(jaredponn): this is borked -- this type doesn't actually exist in the .lbf file
-//  */
-//
+  for (const txOutRef of txOutRefGoldens()) {
+    for (const txOut of txOutGoldensV1()) {
+      res.push({ txInInfoOutRef: txOutRef, txInInfoResolved: txOut });
+    }
+  }
+  return res;
+}
+
+/**
+ * Hard coded {@link TxOut} tests
+ */
+export function txOutGoldensV1(): LbrPrelude.List<LbrPlutusV1.TxOut> {
+  const res: LbrPrelude.List<LbrPlutusV1.TxOut> = [];
+
+  for (const address of addressGoldens()) {
+    for (const value of valueGoldens()) {
+      for (const datumHash of datumHashGoldens()) {
+        const datumHash1: LbrPrelude.Maybe<PlaV1.DatumHash> = {
+          fields: datumHash,
+          name: "Just",
+        };
+        const txOut1 = {
+          txOutAddress: address,
+          txOutValue: value,
+          txOutDatumHash: datumHash1,
+        };
+
+        res.push(txOut1);
+      }
+      const datumHash2: LbrPrelude.Maybe<PlaV1.DatumHash> = {
+        name: "Nothing",
+      };
+      const txOut2 = {
+        txOutAddress: address,
+        txOutValue: value,
+        txOutDatumHash: datumHash2,
+      };
+      res.push(txOut2);
+    }
+  }
+  return res;
+}
+
+/**
+ * Hard coded {@link DCert} tests
+ */
+export function dCertGoldens(): LbrPrelude.List<LbrPlutusV1.DCert> {
+  const res: LbrPrelude.List<LbrPlutusV1.DCert> = [];
+
+  res.push({ name: "Mir" });
+  res.push({ name: "Genesis" });
+
+  for (const pubKeyHash of pubKeyHashGoldens()) {
+    res.push({
+      fields: [pubKeyHash, 1337n],
+      name: "PoolRetire",
+    });
+  }
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    res.push({
+      fields: stakingCredential,
+      name: "DelegRegKey",
+    });
+  }
+
+  for (const pubKeyHash1 of pubKeyHashGoldens()) {
+    for (const pubKeyHash2 of pubKeyHashGoldens()) {
+      res.push({
+        fields: [pubKeyHash1, pubKeyHash2],
+        name: "PoolRegister",
+      });
+    }
+  }
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    res.push({
+      fields: stakingCredential,
+      name: "DelegDeRegKey",
+    });
+  }
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    for (const pubKeyHash of pubKeyHashGoldens()) {
+      res.push({
+        fields: [stakingCredential, pubKeyHash],
+        name: "DelegDelegate",
+      });
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptPurpose} tests
+ */
+export function scriptPurposeGoldens(): LbrPrelude.List<
+  LbrPlutusV1.ScriptPurpose
+> {
+  const res: LbrPrelude.List<LbrPlutusV1.ScriptPurpose> = [];
+
+  for (const currencySymbol of currencySymbolGoldens()) {
+    res.push({
+      fields: currencySymbol,
+      name: "Minting",
+    });
+  }
+
+  for (const txOutRef of txOutRefGoldens()) {
+    res.push({
+      fields: txOutRef,
+      name: "Spending",
+    });
+  }
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    res.push({
+      fields: stakingCredential,
+      name: "Rewarding",
+    });
+  }
+
+  for (const dCert of dCertGoldens()) {
+    res.push({
+      fields: dCert,
+      name: "Certifying",
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link TxInfo} tests
+ */
+export function txInfoGoldensV1(): LbrPrelude.List<LbrPlutusV1.TxInfo> {
+  const res: LbrPrelude.List<LbrPlutusV1.TxInfo> = [];
+
+  const wdrls: LbrPrelude.List<
+    [LbrPlutusV1.StakingCredential, LbrPrelude.Integer]
+  > = [];
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    wdrls.push([stakingCredential, 1234n]);
+  }
+
+  const datums: LbrPrelude.List<[LbrPlutusV1.DatumHash, LbrPlutusV1.Datum]> =
+    [];
+
+  for (const datumHash of datumHashGoldens()) {
+    for (const datum of datumGoldens()) {
+      datums.push([datumHash, datum]);
+    }
+  }
+
+  for (const fee of valueGoldens()) {
+    for (const mint of valueGoldens()) {
+      for (const validRange of posixTimeRangeGoldens()) {
+        for (const id of txIdGoldens()) {
+          res.push({
+            txInfoInputs: txInInfoGoldensV1(),
+            txInfoOutputs: txOutGoldensV1(),
+            txInfoFee: fee,
+            txInfoMint: mint,
+            txInfoDCert: dCertGoldens(),
+            txInfoWdrl: wdrls,
+            txInfoValidRange: validRange,
+            txInfoSignatories: pubKeyHashGoldens(),
+            txInfoData: datums,
+            txInfoId: id,
+          });
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptContext} tests
+ */
+export function scriptContextGoldensV1(): LbrPrelude.List<
+  LbrPlutusV1.ScriptContext
+> {
+  const res: LbrPrelude.List<LbrPlutusV1.ScriptContext> = [];
+
+  for (const scriptPurpose of scriptPurposeGoldens()) {
+    for (const txInfo of txInfoGoldensV1()) {
+      res.push({
+        scriptContextPurpose: scriptPurpose,
+        scriptContextTxInfo: txInfo,
+      });
+    }
+  }
+
+  return res;
+}
 
 /*
  * Plutus.V2 goldens
@@ -583,14 +772,12 @@ export function txOutGoldensV2(): LbrPrelude.List<LbrPlutusV2.TxOut> {
         );
 
         for (const mScriptHash of mScriptHashes) {
-          res.push(
-            {
-              txOutAddress: address,
-              txOutValue: value,
-              txOutDatum: outDatums[outDatumIx]!,
-              txOutReferenceScript: mScriptHash,
-            },
-          );
+          res.push({
+            txOutAddress: address,
+            txOutValue: value,
+            txOutDatum: outDatums[outDatumIx]!,
+            txOutReferenceScript: mScriptHash,
+          });
         }
       }
     }
@@ -613,6 +800,83 @@ export function outDatumGoldens(): LbrPrelude.List<LbrPlutusV2.OutputDatum> {
 
   for (const outputDatum of datumGoldens()) {
     res.push({ name: "OutputDatum", fields: outputDatum });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link TxInfo} tests
+ */
+export function txInfoGoldensV2(): LbrPrelude.List<LbrPlutusV2.TxInfo> {
+  const res: LbrPrelude.List<LbrPlutusV2.TxInfo> = [];
+
+  const wdrls: PlaMap.Map<LbrPlutusV1.StakingCredential, LbrPrelude.Integer> =
+    PlaMap.empty();
+
+  for (const stakingCredential of stakingCredentialGoldens()) {
+    PlaMap.insert(PlaV1.eqStakingCredential, stakingCredential, 1234n, wdrls);
+  }
+
+  const datums: PlaMap.Map<LbrPlutusV1.DatumHash, LbrPlutusV1.Datum> = PlaMap
+    .empty();
+
+  for (const datumHash of datumHashGoldens()) {
+    for (const datum of datumGoldens()) {
+      PlaMap.insert(PlaV1.eqDatumHash, datumHash, datum, datums);
+    }
+  }
+
+  const redeemers: PlaMap.Map<LbrPlutusV1.ScriptPurpose, LbrPlutusV1.Redeemer> =
+    PlaMap.empty();
+
+  for (const scriptPurpose of scriptPurposeGoldens()) {
+    for (const redeemer of redeemerGoldens()) {
+      PlaMap.insert(PlaV1.eqScriptPurpose, scriptPurpose, redeemer, redeemers);
+    }
+  }
+
+  for (const fee of valueGoldens()) {
+    for (const mint of valueGoldens()) {
+      for (const validRange of posixTimeRangeGoldens()) {
+        for (const id of txIdGoldens()) {
+          res.push({
+            txInfoInputs: txInInfoGoldensV2(),
+            txInfoReferenceInputs: txInInfoGoldensV2(),
+            txInfoOutputs: txOutGoldensV2(),
+            txInfoFee: fee,
+            txInfoMint: mint,
+            txInfoDCert: dCertGoldens(),
+            txInfoWdrl: wdrls,
+            txInfoValidRange: validRange,
+            txInfoSignatories: pubKeyHashGoldens(),
+            txInfoRedeemers: redeemers,
+            txInfoData: datums,
+            txInfoId: id,
+          });
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptContext} tests
+ */
+export function scriptContextGoldensV2(): LbrPrelude.List<
+  LbrPlutusV2.ScriptContext
+> {
+  const res: LbrPrelude.List<LbrPlutusV2.ScriptContext> = [];
+
+  for (const scriptPurpose of scriptPurposeGoldens()) {
+    for (const txInfo of txInfoGoldensV2()) {
+      res.push({
+        scriptContextPurpose: scriptPurpose,
+        scriptContextTxInfo: txInfo,
+      });
+    }
   }
 
   return res;
@@ -658,9 +922,7 @@ export function fooRecGoldens<A, B, C>(
   y: B,
   z: C,
 ): LbfFooBar.FooRec<A, B, C>[] {
-  return [
-    { fooA: x, fooB: y, fooC: z, fooInt: 1337n },
-  ];
+  return [{ fooA: x, fooB: y, fooC: z, fooInt: 1337n }];
 }
 
 /*
@@ -777,9 +1039,7 @@ export function dGoldens(): LbrPrelude.List<LbfFoo.D> {
   for (const fooSum of fooSums) {
     for (const fooProd of fooProds) {
       for (const fooRec of fooRecs) {
-        fooComplicateds.push(
-          { sum: fooSum, prod: fooProd, rec: fooRec },
-        );
+        fooComplicateds.push({ sum: fooSum, prod: fooProd, rec: fooRec });
       }
     }
   }
@@ -830,9 +1090,15 @@ export function dayGoldens(): LbfDays.Day[] {
  * Hard coded {@link WorkDay} tests
  */
 export function workDayGoldens(): LbfDays.WorkDay[] {
-  return [{ name: "Monday" }, { name: "Tuesday" }, { name: "Wednesday" }, {
-    name: "Thursday",
-  }, { name: "Friday" }];
+  return [
+    { name: "Monday" },
+    { name: "Tuesday" },
+    { name: "Wednesday" },
+    {
+      name: "Thursday",
+    },
+    { name: "Friday" },
+  ];
 }
 
 /**
@@ -857,10 +1123,14 @@ export function boolGoldens(): LbrPrelude.Bool[] {
  * Hard coded {@link Maybe} tests
  */
 export function maybeGoldens(): LbrPrelude.Maybe<LbrPrelude.Bool>[] {
-  return [{ name: "Nothing" }, { name: "Just", fields: true }, {
-    name: "Just",
-    fields: false,
-  }];
+  return [
+    { name: "Nothing" },
+    { name: "Just", fields: true },
+    {
+      name: "Just",
+      fields: false,
+    },
+  ];
 }
 
 /**
@@ -870,10 +1140,14 @@ export function eitherGoldens(): LbrPrelude.Either<
   LbrPrelude.Bool,
   LbrPrelude.Bool
 >[] {
-  return [{ name: "Left", fields: true }, { name: "Left", fields: false }, {
-    name: "Right",
-    fields: true,
-  }];
+  return [
+    { name: "Left", fields: true },
+    { name: "Left", fields: false },
+    {
+      name: "Right",
+      fields: true,
+    },
+  ];
 }
 
 /**

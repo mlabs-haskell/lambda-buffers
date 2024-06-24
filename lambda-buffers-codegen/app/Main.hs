@@ -5,6 +5,7 @@ import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import LambdaBuffers.Codegen.Cli.Gen (GenOpts (GenOpts))
 import LambdaBuffers.Codegen.Cli.GenHaskell qualified as Haskell
 import LambdaBuffers.Codegen.Cli.GenPlutarch qualified as Plutarch
+import LambdaBuffers.Codegen.Cli.GenPlutusTx qualified as PlutusTx
 import LambdaBuffers.Codegen.Cli.GenPurescript qualified as Purescript
 import LambdaBuffers.Codegen.Cli.GenRust qualified as Rust
 import LambdaBuffers.Codegen.Cli.GenTypescript qualified as Typescript
@@ -40,6 +41,7 @@ data Command
   | GenTypescript Typescript.GenOpts
   | GenPlutarch Plutarch.GenOpts
   | GenRust Rust.GenOpts
+  | GenPlutusTx PlutusTx.GenOpts
 
 genOptsP :: Parser GenOpts
 genOptsP =
@@ -138,6 +140,19 @@ plutarchGenOptsP =
       )
     <*> genOptsP
 
+plutusTxGenOptsP :: Parser PlutusTx.GenOpts
+plutusTxGenOptsP =
+  PlutusTx.MkGenOpts
+    <$> many
+      ( strOption
+          ( long "config"
+              <> short 'c'
+              <> metavar "FILEPATH"
+              <> help "Configuration file for the PlutusTx Codegen module (multiple `config`s are merged with left first merge conflict strategy)"
+          )
+      )
+    <*> genOptsP
+
 rustGenOptsP :: Parser Rust.GenOpts
 rustGenOptsP =
   Rust.MkGenOpts
@@ -198,6 +213,12 @@ commandP =
             (GenRust <$> (helper *> rustGenOptsP))
             (mkProgDesc "Rust")
         )
+      <> command
+        "gen-plutustx"
+        ( info
+            (GenPlutusTx <$> (helper *> plutusTxGenOptsP))
+            (mkProgDesc "PlutusTx")
+        )
 
 parserInfo :: ParserInfo Command
 parserInfo = info (commandP <**> helper) (fullDesc <> progDesc "LambdaBuffers Codegen command-line interface tool")
@@ -212,3 +233,4 @@ main = do
     GenTypescript opts -> Typescript.gen opts
     GenPlutarch opts -> Plutarch.gen opts
     GenRust opts -> Rust.gen opts
+    GenPlutusTx opts -> PlutusTx.gen opts
