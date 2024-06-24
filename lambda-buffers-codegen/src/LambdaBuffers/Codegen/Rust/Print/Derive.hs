@@ -11,7 +11,7 @@ import LambdaBuffers.Codegen.LamVal.Json (deriveFromJsonImpl, deriveToJsonImpl)
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LV
 import LambdaBuffers.Codegen.LamVal.PlutusData (deriveFromPlutusDataImpl, deriveToPlutusDataImpl)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Rust.Print (MonadPrint)
+import LambdaBuffers.Codegen.Rust.Backend (MonadRustBackend, RustBackendContext (rust'packages))
 import LambdaBuffers.Codegen.Rust.Print.LamVal (printInstance)
 import LambdaBuffers.Codegen.Rust.Print.Refs qualified as RR
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as R
@@ -21,11 +21,10 @@ import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
 rsTraitImplPrinters ::
-  MonadPrint m =>
+  MonadRustBackend m =>
   Map
     R.QTraitName
     ( PC.ModuleName ->
-      R.PkgMap ->
       PC.TyDefs ->
       (Doc ann -> Doc ann) ->
       PC.Ty ->
@@ -47,18 +46,23 @@ eqTraitMethodArgs = [(R.MkValueName "self", R.qBuiltin R.MkTyName "Self"), (R.Mk
 eqTraitMethodReturns :: R.QTyName
 eqTraitMethodReturns = R.qBuiltin R.MkTyName "bool"
 
-lvEqBuiltinsBase :: LV.PrintRead R.QValName
-lvEqBuiltinsBase = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("eq", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "eq")
-      , ("and", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "and")
-      , ("true", R.qBuiltin R.MkValueName "true")
-      , ("false", R.qBuiltin R.MkValueName "false")
-      ]
+lvEqBuiltinsBase :: LV.Context R.QValName ()
+lvEqBuiltinsBase =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("eq", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "eq")
+            , ("and", R.qForeignRef R.MkValueName "lbr-prelude" ["lamval"] "and")
+            , ("true", R.qBuiltin R.MkValueName "true")
+            , ("false", R.qBuiltin R.MkValueName "false")
+            ]
+    )
+    ()
 
-printDerivePartialEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
+printDerivePartialEqBase :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDerivePartialEqBase mn iTyDefs mkInstance ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case deriveEqImpl mn iTyDefs ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Eq LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right valE -> do
@@ -70,23 +74,27 @@ printDerivePartialEqBase mn pkgs iTyDefs mkInstance ty = do
             mkInstance $
               printTraitMethod eqTraitMethodName eqTraitMethodArgs eqTraitMethodReturns implDoc
 
-printDeriveEqBase :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveEqBase _ _ _ mkInstance _ = return $ mkInstance mempty
+printDeriveEqBase :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveEqBase _ _ mkInstance _ = return $ mkInstance mempty
 
-lvPlutusDataBuiltins :: LV.PrintRead R.QValName
-lvPlutusDataBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "to_plutus_data")
-      , ("fromPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "from_plutus_data")
-      , ("casePlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "case_plutus_data")
-      , ("integerData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::integer")
-      , ("constrData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "constr")
-      , ("listData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::list")
-      , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
-      , ("failParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "fail_parse()")
-      , ("bindParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "bind_parse")
-      ]
+lvPlutusDataBuiltins :: LV.Context R.QValName ()
+lvPlutusDataBuiltins =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("toPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "to_plutus_data")
+            , ("fromPlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data", "IsPlutusData"] "from_plutus_data")
+            , ("casePlutusData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "case_plutus_data")
+            , ("integerData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::integer")
+            , ("constrData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "constr")
+            , ("listData", R.qForeignRef R.MkValueName "plutus-ledger-api" ["plutus_data"] "PlutusData::list")
+            , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
+            , ("failParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "fail_parse()")
+            , ("bindParse", R.qForeignRef R.MkValueName "plutus-ledger-api" ["lamval"] "bind_parse")
+            ]
+    )
+    ()
 
 toPlutusDataTraitMethodName :: R.ValueName
 toPlutusDataTraitMethodName = R.MkValueName "to_plutus_data"
@@ -121,8 +129,9 @@ fromPlutusDataTraitMethodReturns =
     ["result"]
     "Result<Self, plutus_ledger_api::plutus_data::PlutusDataError>"
 
-printDeriveIsPlutusData :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveIsPlutusData mn pkgs iTyDefs mkInstanceDoc ty = do
+printDeriveIsPlutusData :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveIsPlutusData mn iTyDefs mkInstanceDoc ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.IsPlutusData LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (plutusDataInstDefDoc, imps) -> do
@@ -159,23 +168,27 @@ printDeriveIsPlutusData' mn pkgs iTyDefs mkInstanceDoc ty = do
     )
 
 -- | LambdaBuffers.Codegen.LamVal.Json specification printing
-lvJsonBuiltins :: LV.PrintRead R.QValName
-lvJsonBuiltins = LV.MkPrintRead $ \(_ty, refName) ->
-  Map.lookup refName $
-    Map.fromList
-      [ ("toJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "to_json")
-      , ("fromJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "from_json")
-      , ("jsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_object")
-      , ("jsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_constructor")
-      , ("jsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_array")
-      , ("caseJsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_constructor")
-      , ("caseJsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_array")
-      , ("caseJsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_object")
-      , ("jsonField", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_field")
-      , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
-      , ("failParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "fail_parse")
-      , ("bindParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "bind_parse")
-      ]
+lvJsonBuiltins :: LV.Context R.QValName ()
+lvJsonBuiltins =
+  LV.Context
+    ( \(_ty, refName) ->
+        Map.lookup refName $
+          Map.fromList
+            [ ("toJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "to_json")
+            , ("fromJson", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "Json"] "from_json")
+            , ("jsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_object")
+            , ("jsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_constructor")
+            , ("jsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_array")
+            , ("caseJsonConstructor", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_constructor")
+            , ("caseJsonArray", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_array")
+            , ("caseJsonObject", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "case_json_object")
+            , ("jsonField", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "json_field")
+            , ("succeedParse", R.qForeignRef R.MkValueName "std" ["result", "Result"] "Ok")
+            , ("failParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "fail_parse")
+            , ("bindParse", R.qForeignRef R.MkValueName "lbr-prelude" ["json", "lamval"] "bind_parse")
+            ]
+    )
+    ()
 
 toJsonTraitMethodName :: R.ValueName
 toJsonTraitMethodName = R.MkValueName "to_json"
@@ -197,8 +210,9 @@ fromJsonTraitMethodReturns :: R.QTyName
 fromJsonTraitMethodReturns =
   R.qForeignRef R.MkTyName "std" ["result"] "Result<Self, lbr_prelude::error::Error>" -- TODO(szg251): This is a hack
 
-printDeriveJson :: MonadPrint m => PC.ModuleName -> R.PkgMap -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
-printDeriveJson mn pkgs iTyDefs mkInstanceDoc ty = do
+printDeriveJson :: MonadRustBackend m => PC.ModuleName -> PC.TyDefs -> (Doc ann -> Doc ann) -> PC.Ty -> m (Doc ann)
+printDeriveJson mn iTyDefs mkInstanceDoc ty = do
+  pkgs <- rust'packages <$> Print.askBackend
   case printDeriveJson' mn pkgs iTyDefs mkInstanceDoc ty of
     Left err -> Print.throwInternalError' (mn ^. #sourceInfo) ("Deriving Prelude.Json LamVal implementation from a type failed with: " <> err ^. P.msg)
     Right (jsonInstDefDoc, imps) -> do

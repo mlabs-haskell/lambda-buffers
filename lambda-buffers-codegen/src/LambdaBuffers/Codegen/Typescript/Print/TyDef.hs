@@ -1,6 +1,6 @@
 module LambdaBuffers.Codegen.Typescript.Print.TyDef (printTyDef) where
 
-import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Typescript.Backend (MonadTypescriptBackend)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printTyName)
 import LambdaBuffers.Codegen.Typescript.Print.Ty (printTyAbs)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
@@ -43,7 +43,7 @@ export type RecBar<$a> = { bar : $a }
 export const RecBar: unique symbol = Symbol('RecBar');
 ```
 -}
-printTyDef :: MonadPrint m => Ts.PkgMap -> PC.TyDef -> m (Doc ann)
+printTyDef :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyDef -> m (Doc ann)
 printTyDef pkgMap (PC.TyDef tyN tyabs _) = do
   (absDoc, symbolDoc) <- printTyAbs pkgMap tyN tyabs
   return $

@@ -96,7 +96,7 @@ library
     , plutus-tx               >=1.1
 
   hs-source-dirs:  src
-  exposed-modules: Test.LambdaBuffers.Plutus.Plutarch.Golden
+  exposed-modules: Test.LambdaBuffers.Plutarch.Golden
 
 test-suite tests
   import:         common-language
@@ -120,4 +120,4 @@ test-suite tests
     , tasty-expected-failure
     , tasty-hunit                     >=0.10
 
-  other-modules:  Test.LambdaBuffers.Runtime.Plutus.PlutusData
+  other-modules:  Test.LambdaBuffers.Runtime.Plutarch.PlutusData

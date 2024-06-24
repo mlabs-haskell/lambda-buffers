@@ -9,7 +9,7 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config (cfgOpaques)
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Purescript.Backend (MonadPurescriptBackend)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printCtorName, printFieldName, printMkCtor, printPursQTyName, printTyName, printVarName)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
 import LambdaBuffers.Codegen.Purescript.Syntax qualified as Purs
@@ -23,7 +23,7 @@ For the above examples it prints
 a b = Foo'MkFoo a | Foo'MkBar b
 a = Prelude.Maybe a
 -}
-printTyAbs :: MonadPrint m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann)
+printTyAbs :: MonadPurescriptBackend m => PC.TyName -> PC.TyAbs -> m (TyDefKw, Doc ann)
 printTyAbs tyN (PC.TyAbs args body _) = do
   let argsDoc = if OMap.empty == args then mempty else encloseSep mempty space space (printTyArg <$> toList args)
   (kw, bodyDoc) <- printTyBody tyN (toList args) body
@@ -38,15 +38,15 @@ Prelude.Maybe a
 
 TODO(bladyjoker): Revisit empty records and prods.
 -}
-printTyBody :: MonadPrint m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
+printTyBody :: MonadPurescriptBackend m => PC.TyName -> [PC.TyArg] -> PC.TyBody -> m (TyDefKw, Doc ann)
 printTyBody tyN _ (PC.SumI s) = (DataTyDef,) <$> printSum tyN s
 printTyBody tyN _ (PC.ProductI p@(PC.Product fields _)) = case toList fields of
   [] -> return (DataTyDef, printMkCtor tyN)
   [_] -> return (NewtypeTyDef, printMkCtor tyN <+> printProd p)
-  _ -> return (DataTyDef, printMkCtor tyN <+> printProd p)
+  _other -> return (DataTyDef, printMkCtor tyN <+> printProd p)
 printTyBody tyN _ (PC.RecordI r@(PC.Record fields _)) = case toList fields of
   [] -> return (DataTyDef, printMkCtor tyN)
-  _ -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
+  _other -> printRec tyN r >>= \recDoc -> return (NewtypeTyDef, printMkCtor tyN <+> recDoc)
 printTyBody tyN args (PC.OpaqueI si) = do
   opqs <- asks (view $ Print.ctxConfig . cfgOpaques)
   mn <- asks (view $ Print.ctxModule . #moduleName)
@@ -57,7 +57,7 @@ printTyBody tyN args (PC.OpaqueI si) = do
 printTyArg :: PC.TyArg -> Doc ann
 printTyArg (PC.TyArg vn _ _) = printVarName vn
 
-printSum :: MonadPrint m => PC.TyName -> PC.Sum -> m (Doc ann)
+printSum :: MonadPurescriptBackend m => PC.TyName -> PC.Sum -> m (Doc ann)
 printSum tyN (PC.Sum ctors _) = do
   let ctorDocs = printCtor tyN <$> toList ctors
   return $
@@ -72,7 +72,7 @@ printCtor tyN (PC.Constructor ctorName prod) =
       prodDoc = printProd prod
    in group $ ctorNDoc <+> prodDoc -- TODO(bladyjoker): Adds extra space when empty.
 
-printRec :: MonadPrint m => PC.TyName -> PC.Record -> m (Doc ann)
+printRec :: MonadPurescriptBackend m => PC.TyName -> PC.Record -> m (Doc ann)
 printRec tyN (PC.Record fields _) = do
   if null fields
     then return mempty
@@ -86,7 +86,7 @@ printProd (PC.Product fields _) = do
     then mempty
     else align $ sep (printTyInner <$> fields)
 
-printField :: MonadPrint m => PC.TyName -> PC.Field -> m (Doc ann)
+printField :: MonadPurescriptBackend m => PC.TyName -> PC.Field -> m (Doc ann)
 printField tyN f@(PC.Field fn ty) = do
   fnDoc <- case printFieldName tyN fn of
     Nothing -> throwInternalError (fn ^. #sourceInfo) ("Failed printing `FieldName` for field\n" <> show (tyN, f))
@@ -118,7 +118,7 @@ printTyAppTopLevel (PC.TyApp f args _) =
 
 printTyRef :: PC.TyRef -> Doc ann
 printTyRef (PC.LocalI (PC.LocalRef tn _)) = group $ printTyName tn
-printTyRef (PC.ForeignI fr) = let (_, Purs.MkModuleName hmn, Purs.MkTyName htn) = Purs.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn
+printTyRef (PC.ForeignI fr) = let (_, Purs.MkModuleName hmn, Purs.MkTyName htn) = Purs.fromLbForeignRef fr in pretty hmn <> dot <> pretty htn -- TODO(bladyjoker): This is not really correct but it works. Fix this with `resolveModuleToPackage` which gets the packages supplied via `--packages`
 
 printTyVar :: PC.TyVar -> Doc ann
 printTyVar (PC.TyVar vn) = printVarName vn

@@ -20,6 +20,12 @@ _: {
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
 
+        lbf-plutus-golden-api-plutustx = config.lbf-nix.lbfPlutusTx {
+          name = "lbf-plutus-plutustx-golden-api";
+          src = ./.;
+          files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
+        };
+
         lbf-plutus-golden-api-rust = config.lbf-nix.lbfPlutusRust {
           name = "lbf-plutus-rust-golden-api";
           src = ./.;

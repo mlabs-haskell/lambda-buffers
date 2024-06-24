@@ -5,7 +5,7 @@ import Control.Monad (unless)
 import Data.Aeson (decodeFileStrict')
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
-import LambdaBuffers.Codegen.Typescript (runPrint)
+import LambdaBuffers.Codegen.Typescript (runBackend)
 import LambdaBuffers.Codegen.Typescript.Config qualified as H
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Typescript.Syntax
 import Paths_lambda_buffers_codegen qualified as Paths
@@ -13,9 +13,9 @@ import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _config :: [FilePath]
-  , _packages :: FilePath
-  , _common :: Gen.GenOpts
+  { _config :: ![FilePath]
+  , _packages :: !FilePath
+  , _common :: !Gen.GenOpts
   }
 
 makeLenses 'MkGenOpts
@@ -34,7 +34,7 @@ gen opts = do
 
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg pkgs ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runBackend cfg pkgs ci <$> (ci ^. #modules))
 
 readTypescriptConfig :: FilePath -> IO H.Config
 readTypescriptConfig f = do

@@ -22,17 +22,17 @@ printPursQValName :: Purs.QValName -> Doc ann
 printPursQValName (Just (_, Purs.MkModuleName pursModName), Purs.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(bladyjoker): Got an empty Purescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursModName <> dot <> pretty pursValName
-  _ -> pretty pursModName <> dot <> enclose lparen rparen (pretty pursValName)
+  _other -> pretty pursModName <> dot <> enclose lparen rparen (pretty pursValName)
 printPursQValName (Nothing, Purs.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(bladyjoker): Got an empty Purescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursValName
-  _ -> enclose lparen rparen (pretty pursValName)
+  _other -> enclose lparen rparen (pretty pursValName)
 
 printPursValName :: Purs.ValueName -> Doc ann
 printPursValName (Purs.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(bladyjoker): Got an empty Purescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursValName
-  _ -> enclose lparen rparen $ pretty pursValName
+  _other -> enclose lparen rparen $ pretty pursValName
 
 {- | Print the Purescript class method name (ie. (==), toJSON etc.).
  This doesn't require a qualified print as it's treated special, we just need to

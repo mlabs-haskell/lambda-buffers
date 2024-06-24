@@ -149,9 +149,15 @@ plutusFromToGoldenTests =
   , fromToGoldenTest "PlutusV1.Map" Golden.mapGoldens
   , fromToGoldenTest "PlutusV1.TxInInfo" Golden.txInInfoGoldensV1
   , fromToGoldenTest "PlutusV1.TxOut" Golden.txOutGoldensV1
+  , fromToGoldenTest "PlutusV1.DCert" Golden.dCertGoldens
+  , fromToGoldenTest "PlutusV1.ScriptPurpose" Golden.scriptPurposeGoldens
+  , fromToGoldenTest "PlutusV1.TxInfo" Golden.txInfoGoldensV1
+  , fromToGoldenTest "PlutusV1.ScriptContext" Golden.scriptContextGoldensV1
   , fromToGoldenTest "PlutusV2.TxInInfo" Golden.txInInfoGoldensV2
   , fromToGoldenTest "PlutusV2.OutputDatum" Golden.outDatumGoldens
   , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldensV2
+  , fromToGoldenTest "PlutusV2.TxInfo" Golden.txInfoGoldensV2
+  , fromToGoldenTest "PlutusV2.ScriptContext" Golden.scriptContextGoldensV2
   ]
 
 -- | Prelude tests.

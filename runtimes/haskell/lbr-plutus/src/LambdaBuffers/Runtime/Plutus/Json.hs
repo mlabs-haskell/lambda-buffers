@@ -332,6 +332,191 @@ instance Json PlutusV2.TxOut where
           return $ PlutusV2.TxOut addr val dat mayRefScript
       )
 
+instance Json PlutusV1.DCert where
+  toJson (PlutusV1.DCertDelegRegKey stakingCredential) = jsonConstructor "DelegRegKey" [toJson stakingCredential]
+  toJson (PlutusV1.DCertDelegDeRegKey stakingCredential) = jsonConstructor "DelegDeRegKey" [toJson stakingCredential]
+  toJson (PlutusV1.DCertDelegDelegate delegator delegatee) = jsonConstructor "DelegDelegate" [toJson delegator, toJson delegatee]
+  toJson (PlutusV1.DCertPoolRegister poolId poolVfr) = jsonConstructor "PoolRegister" [toJson poolId, toJson poolVfr]
+  toJson (PlutusV1.DCertPoolRetire pubKeyHash integer) = jsonConstructor "PoolRetire" [toJson pubKeyHash, toJson integer]
+  toJson PlutusV1.DCertGenesis = jsonConstructor "Genesis" []
+  toJson PlutusV1.DCertMir = jsonConstructor "Mir" []
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.DCert"
+      [
+        ( "DelegRegKey"
+        , \case
+            [stakingCrendential] -> PlutusV1.DCertDelegRegKey <$> fromJson stakingCrendential
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "DelegDeRegKey"
+        , \case
+            [stakingCrendential] -> PlutusV1.DCertDelegDeRegKey <$> fromJson stakingCrendential
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "DelegDelegate"
+        , \case
+            [delegator, delegatee] -> PlutusV1.DCertDelegDelegate <$> fromJson delegator <*> fromJson delegatee
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "PoolRegister"
+        , \case
+            [poolId, poolVfr] -> PlutusV1.DCertPoolRegister <$> fromJson poolId <*> fromJson poolVfr
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "PoolRetire"
+        , \case
+            [pubKeyHash, integer] -> PlutusV1.DCertPoolRetire <$> fromJson pubKeyHash <*> fromJson integer
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "Genesis"
+        , \case
+            [] -> pure PlutusV1.DCertGenesis
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ,
+        ( "Mir"
+        , \case
+            [] -> pure PlutusV1.DCertMir
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV1.ScriptPurpose where
+  toJson (PlutusV1.Minting currencySymbol) = jsonConstructor "Minting" [toJson currencySymbol]
+  toJson (PlutusV1.Spending txOutRef) = jsonConstructor "Spending" [toJson txOutRef]
+  toJson (PlutusV1.Rewarding stakingCredential) = jsonConstructor "Rewarding" [toJson stakingCredential]
+  toJson (PlutusV1.Certifying dCert) = jsonConstructor "Certifying" [toJson dCert]
+  fromJson =
+    caseJsonConstructor
+      "Plutus.V1.ScriptPurpose"
+      [
+        ( "Minting"
+        , \case
+            [currencySymbol] -> PlutusV1.Minting <$> fromJson currencySymbol
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Spending"
+        , \case
+            [txOutRef] -> PlutusV1.Spending <$> fromJson txOutRef
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Rewarding"
+        , \case
+            [stakingCredential] -> PlutusV1.Rewarding <$> fromJson stakingCredential
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Certifying"
+        , \case
+            [dCert] -> PlutusV1.Certifying <$> fromJson dCert
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV1.TxInfo where
+  toJson
+    (PlutusV1.TxInfo inputs outputs fee mint dCert wdrl validRange signatories datums txId) =
+      object
+        [ "inputs" .= toJson inputs
+        , "outputs" .= toJson outputs
+        , "fee" .= toJson fee
+        , "mint" .= toJson mint
+        , "d_cert" .= toJson dCert
+        , "wdrl" .= toJson wdrl
+        , "valid_range" .= toJson validRange
+        , "signatories" .= toJson signatories
+        , "datums" .= toJson datums
+        , "id" .= toJson txId
+        ]
+
+  fromJson =
+    withObject
+      "Plutus.V1.TxInfo"
+      ( \obj -> do
+          inputs <- obj .: "inputs"
+          outputs <- obj .: "outputs"
+          fee <- obj .: "fee"
+          mint <- obj .: "mint"
+          dCert <- obj .: "d_cert"
+          wdrl <- obj .: "wdrl"
+          validRange <- obj .: "valid_range"
+          signatories <- obj .: "signatories"
+          datums <- obj .: "datums"
+          txId <- obj .: "id"
+          return $ PlutusV1.TxInfo inputs outputs fee mint dCert wdrl validRange signatories datums txId
+      )
+
+instance Json PlutusV1.ScriptContext where
+  toJson (PlutusV1.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "purpose" .= toJson scriptPurpose]
+  fromJson =
+    withObject
+      "Plutus.V1.ScriptContext"
+      ( \obj -> do
+          txInfo <- obj .: "tx_info"
+          scriptPurpose <- obj .: "purpose"
+          return $ PlutusV1.ScriptContext txInfo scriptPurpose
+      )
+
+instance Json PlutusV2.TxInfo where
+  toJson
+    (PlutusV2.TxInfo inputs referenceInputs outputs fee mint dCert wdrl validRange signatories redeemers datums txId) =
+      object
+        [ "inputs" .= toJson inputs
+        , "reference_inputs" .= toJson referenceInputs
+        , "outputs" .= toJson outputs
+        , "fee" .= toJson fee
+        , "mint" .= toJson mint
+        , "d_cert" .= toJson dCert
+        , "wdrl" .= toJson wdrl
+        , "valid_range" .= toJson validRange
+        , "signatories" .= toJson signatories
+        , "redeemers" .= toJson redeemers
+        , "datums" .= toJson datums
+        , "id" .= toJson txId
+        ]
+
+  fromJson =
+    withObject
+      "Plutus.V2.TxInfo"
+      ( \obj -> do
+          inputs <- obj .: "inputs"
+          referenceInputs <- obj .: "reference_inputs"
+          outputs <- obj .: "outputs"
+          fee <- obj .: "fee"
+          mint <- obj .: "mint"
+          dCert <- obj .: "d_cert"
+          wdrl <- obj .: "wdrl"
+          validRange <- obj .: "valid_range"
+          signatories <- obj .: "signatories"
+          redeemers <- obj .: "redeemers"
+          datums <- obj .: "datums"
+          txId <- obj .: "id"
+          return $
+            PlutusV2.TxInfo inputs referenceInputs outputs fee mint dCert wdrl validRange signatories redeemers datums txId
+      )
+
+instance Json PlutusV2.ScriptContext where
+  toJson (PlutusV2.ScriptContext txInfo scriptPurpose) = object ["tx_info" .= toJson txInfo, "purpose" .= toJson scriptPurpose]
+  fromJson =
+    withObject
+      "Plutus.V2.ScriptContext"
+      ( \obj -> do
+          txInfo <- obj .: "tx_info"
+          scriptPurpose <- obj .: "purpose"
+          return $ PlutusV2.ScriptContext txInfo scriptPurpose
+      )
+
+-- instance Json PlutusV2.TxInfo
+-- instance Json PlutusV2.ScriptContext
+
 instance Json PlutusV2.OutputDatum where
   toJson PlutusV2.NoOutputDatum = jsonConstructor "NoOutputDatum" []
   toJson (PlutusV2.OutputDatumHash dh) = jsonConstructor "OutputDatumHash" [toJson dh]

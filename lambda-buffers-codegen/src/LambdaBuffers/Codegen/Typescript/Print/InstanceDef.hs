@@ -13,7 +13,7 @@ import Data.Default (Default (def))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.Codegen.Print (throwInternalError)
-import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
+import LambdaBuffers.Codegen.Typescript.Backend (MonadTypescriptBackend)
 import LambdaBuffers.Codegen.Typescript.Print.Names (
   printTsQClassName,
   printTsQTyNameKey,
@@ -49,15 +49,15 @@ import Prettyprinter (
 -- | See 'printInstanceDict'
 data InstanceDict a
   = TopLevelInstanceDict
-      { _dict :: a
+      { _dict :: !a
       -- ^ name of the instance dictionary e.g. @Prelude.Eq[Prelude.Integer]@
-      , _dictClassPart :: a
+      , _dictClassPart :: !a
       -- ^ the class part of the instance dictionary e.g. @Prelude.Eq@
-      , _dictTypePart :: a
+      , _dictTypePart :: !a
       -- ^ the instance of the type e.g. @Prelude.Integer@
       }
   | ArgumentInstanceDict
-      { _dict :: a
+      { _dict :: !a
       -- ^ name of the instance dictionary as an argument e.g. @dict$a@
       }
 
@@ -141,7 +141,7 @@ collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (
 collectVars' collected _ = collected
 
 -- See the INVARIANT note below
-printExportInstanceDecl :: MonadPrint m => Ts.PkgMap -> Ts.QClassName -> PC.Ty -> m (Doc ann -> Doc ann)
+printExportInstanceDecl :: MonadTypescriptBackend m => Ts.PkgMap -> Ts.QClassName -> PC.Ty -> m (Doc ann -> Doc ann)
 printExportInstanceDecl pkgMap tsQClassName ty = do
   let
     instanceType = printInstanceType pkgMap tsQClassName ty
@@ -153,7 +153,7 @@ printExportInstanceDecl pkgMap tsQClassName ty = do
   (dictDoc, _classDoc, tyDoc) <- case lhsInstanceDecl of
     TopLevelInstanceDict dictDoc classDoc tyDoc ->
       return (dictDoc, classDoc, tyDoc)
-    _ ->
+    _other ->
       -- TODO(jaredponn): the 'def' is the default source info, but we really
       -- should put the proper source information in here.
       throwInternalError def "TODO(jaredponn): Invalid type class instance for TypeScript backend"
@@ -201,7 +201,7 @@ printExportInstanceDecl pkgMap tsQClassName ty = do
                           <+> colon
                           <+> case instanceDeclTypeVars of
                             [] -> instanceType
-                            _ -> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> "=>" <+> instanceType
+                            _other -> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> "=>" <+> instanceType
                       ]
                 , rbrace
                 ]
@@ -212,7 +212,7 @@ printExportInstanceDecl pkgMap tsQClassName ty = do
         vsep
           [ case instanceDeclTypeVars of
               [] -> dictDoc <+> equals <+> vsep [lbrace, indent 2 bodyDoc, rbrace]
-              _ ->
+              _other ->
                 vsep
                   [ dictDoc <+> equals <+> "function" <> printInstanceContext pkgMap tsQClassName instanceDeclTypeVars <+> colon <+> instanceType
                   , indent 2 $

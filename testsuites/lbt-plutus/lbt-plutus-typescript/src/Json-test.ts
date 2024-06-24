@@ -16,9 +16,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.PlutusData from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.PlutusData\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.PlutusData\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.PlutusData].fromJson,
@@ -32,9 +30,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Address from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Address\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Address\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Address].fromJson,
@@ -48,9 +44,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Credential from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Credential\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Credential\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Credential].fromJson,
@@ -80,9 +74,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.PubKeyHash from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.PubKeyHash\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.PubKeyHash\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.PubKeyHash].fromJson,
@@ -96,9 +88,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Bytes from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Bytes\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Bytes\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.LedgerBytes].fromJson,
@@ -112,9 +102,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Interval from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Interval\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Interval\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Interval](
@@ -132,9 +120,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Extended from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Extended\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Extended\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Extended](
@@ -152,9 +138,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.LowerBound from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.LowerBound\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.LowerBound\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.LowerBound](
@@ -172,9 +156,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.UpperBound from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.UpperBound\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.UpperBound\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.UpperBound](
@@ -192,9 +174,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.POSIXTime from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.POSIXTime\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.POSIXTime\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.POSIXTime].fromJson,
@@ -208,9 +188,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.POSIXTimeRange from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.POSIXTimeRange\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.POSIXTimeRange\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.POSIXTimeRange].fromJson,
@@ -224,9 +202,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.CurrencySymbol from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.CurrencySymbol\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.CurrencySymbol\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.CurrencySymbol].fromJson,
@@ -242,9 +218,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.TokenName from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.TokenName\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.TokenName\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.TokenName].fromJson,
@@ -258,9 +232,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.AssetClass from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.AssetClass\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.AssetClass\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.AssetClass].fromJson,
@@ -274,9 +246,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Value from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Value\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Value\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Value].fromJson,
@@ -290,9 +260,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Redeemer from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Redeemer\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Redeemer\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Redeemer].fromJson,
@@ -306,9 +274,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Datum from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Datum\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Datum\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Datum].fromJson,
@@ -322,9 +288,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.RedeemerHash from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.RedeemerHash\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.RedeemerHash\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.RedeemerHash].fromJson,
@@ -338,9 +302,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.DatumHash from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.DatumHash\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.DatumHash\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.DatumHash].fromJson,
@@ -354,9 +316,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.ScriptHash from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.ScriptHash\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.ScriptHash\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.ScriptHash].fromJson,
@@ -370,9 +330,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.TxId from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.TxId\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.TxId\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.TxId].fromJson,
@@ -386,9 +344,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.TxOutRef from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.TxOutRef\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.TxOutRef\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.TxOutRef].fromJson,
@@ -402,9 +358,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV1.Map from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV1\.Map\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV1\.Map\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV1.Map](
@@ -427,15 +381,94 @@ describe("JSON tests (toJson . fromJson)", () => {
     );
   });
 
-  // TODO(jaredponn): TxInInfo V1 doesn't exist yet
-  // TODO(jaredponn): TxOut V1 doesn't exist yet
+  it(`PlutusV1.TxInInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.TxInInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.TxInInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.TxInInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txInInfoGoldensV1(),
+    );
+  });
+
+  it(`PlutusV1.TxOut from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.TxOut\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.TxOut].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.TxOut].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txOutGoldensV1(),
+    );
+  });
+
+  it(`PlutusV1.DCert from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.DCert\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.DCert].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.DCert].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.dCertGoldens(),
+    );
+  });
+
+  it(`PlutusV1.ScriptPurpose from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.ScriptPurpose\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.ScriptPurpose].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.ScriptPurpose].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptPurposeGoldens(),
+    );
+  });
+
+  it(`PlutusV1.TxInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.TxInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.TxInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.TxInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txInfoGoldensV1(),
+    );
+  });
+
+  it(`PlutusV1.ScriptContext from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.ScriptContext\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.ScriptContext].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.ScriptContext].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptContextGoldensV1(),
+    );
+  });
 
   it(`PlutusV2.TxInInfo from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV2\.TxInInfo\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV2\.TxInInfo\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV2.TxInInfo].fromJson,
@@ -449,9 +482,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV2.OutputDatum from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV2\.OutputDatum\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV2\.OutputDatum\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV2.OutputDatum].fromJson,
@@ -465,9 +496,7 @@ describe("JSON tests (toJson . fromJson)", () => {
   it(`PlutusV2.TxOut from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
-      new Utils.RegExpFileFilter(
-        /^PlutusV2\.TxOut\.[0-9]*\.json$/g,
-      ),
+      new Utils.RegExpFileFilter(/^PlutusV2\.TxOut\.[0-9]*\.json$/g),
       Utils.mkFromToAssertGolden(
         PreludeJson.parseJson,
         LbrPrelude.Json[LbrPlutusV2.TxOut].fromJson,
@@ -475,6 +504,34 @@ describe("JSON tests (toJson . fromJson)", () => {
         PreludeJson.stringify,
       ),
       Goldens.txOutGoldensV2(),
+    );
+  });
+
+  it(`PlutusV2.TxInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV2\.TxInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV2.TxInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV2.TxInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txInfoGoldensV2(),
+    );
+  });
+
+  it(`PlutusV2.ScriptContext from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV2\.ScriptPurpose\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV2.ScriptContext].fromJson,
+        LbrPrelude.Json[LbrPlutusV2.ScriptContext].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptContextGoldensV2(),
     );
   });
 });

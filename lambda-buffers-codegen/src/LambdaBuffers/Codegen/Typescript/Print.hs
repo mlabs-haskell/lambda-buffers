@@ -1,12 +1,4 @@
-{- | `Print.MonadPrint` implementation for the Typescript backend.
-
- The monad is instantiated with `Ts.QTyName` which are qualified Typescript type
- names referring to `Opaque` type imports. It's also instantiated with
- `[Ts.QClassName]` which denotes the qualified Typescript class names to import.
- Note that a single LambdaBuffers 'class' can be unpacked into several related
- Typescript classes and that's why it's a list of qualified Typescript class names.
--}
-module LambdaBuffers.Codegen.Typescript.Print (MonadPrint, printModule) where
+module LambdaBuffers.Codegen.Typescript.Print (printModule) where
 
 import Control.Arrow ((***))
 import Control.Lens (view, (^.), (^..))
@@ -24,9 +16,9 @@ import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as C
 import LambdaBuffers.Codegen.Print (throwInternalError)
 import LambdaBuffers.Codegen.Print qualified as Print
+import LambdaBuffers.Codegen.Typescript.Backend (MonadTypescriptBackend)
 import LambdaBuffers.Codegen.Typescript.Print.Derive (printDeriveEq, printDeriveIsPlutusData, printDeriveJson, tsEqClass, tsIsPlutusDataClass, tsJsonClass)
 import LambdaBuffers.Codegen.Typescript.Print.InstanceDef (printExportInstanceDecl)
-import LambdaBuffers.Codegen.Typescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Typescript.Print.Names (printModName, printModName')
 import LambdaBuffers.Codegen.Typescript.Print.TyDef (printTyDef)
 import LambdaBuffers.Codegen.Typescript.Syntax qualified as Ts
@@ -34,7 +26,7 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), squotes, vsep, (<+>))
 import Proto.Codegen qualified as P
 
-printModule :: MonadPrint m => Ts.PkgMap -> m (Doc ann, Set Text)
+printModule :: MonadTypescriptBackend m => Ts.PkgMap -> m (Doc ann, Set Text)
 printModule pkgMap = do
   ctx <- ask
   tyDefDocs <- printTyDefs pkgMap (ctx ^. Print.ctxModule)
@@ -84,7 +76,7 @@ printModule pkgMap = do
           (st ^. Print.stValueImports)
   return (modDoc, pkgDeps)
 
-printTyDefs :: MonadPrint m => Ts.PkgMap -> PC.Module -> m [Doc ann]
+printTyDefs :: MonadTypescriptBackend m => Ts.PkgMap -> PC.Module -> m [Doc ann]
 printTyDefs pkgMap m = for (toList $ m ^. #typeDefs) $ printTyDef pkgMap
 
 tsClassImplPrinters ::
@@ -113,7 +105,7 @@ tsClassImplPrinters pkgMap =
       )
     ]
 
-printInstances :: MonadPrint m => Ts.PkgMap -> m [Doc ann]
+printInstances :: MonadTypescriptBackend m => Ts.PkgMap -> m [Doc ann]
 printInstances pkgMap = do
   ci <- asks (view Print.ctxCompilerInput)
   m <- asks (view Print.ctxModule)
@@ -126,7 +118,7 @@ printInstances pkgMap = do
     mempty
     (toList $ m ^. #derives)
 
-printDerive :: MonadPrint m => Ts.PkgMap -> PC.TyDefs -> PC.Derive -> m [Doc ann]
+printDerive :: MonadTypescriptBackend m => Ts.PkgMap -> PC.TyDefs -> PC.Derive -> m [Doc ann]
 printDerive pkgMap iTyDefs d = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let qcn = PC.qualifyClassRef mn (d ^. #constraint . #classRef)
@@ -141,7 +133,7 @@ printDerive pkgMap iTyDefs d = do
             printTsQClassImpl pkgMap mn iTyDefs pqcn d
         )
 
-printTsQClassImpl :: MonadPrint m => Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> Ts.QClassName -> PC.Derive -> m (Doc ann)
+printTsQClassImpl :: MonadTypescriptBackend m => Ts.PkgMap -> PC.ModuleName -> PC.TyDefs -> Ts.QClassName -> PC.Derive -> m (Doc ann)
 printTsQClassImpl pkgMap mn iTyDefs hqcn d =
   case Map.lookup hqcn (tsClassImplPrinters pkgMap) of
     Nothing -> throwInternalError (d ^. #constraint . #sourceInfo) ("Missing capability to print the Typescript type class " <> show hqcn)

@@ -39,9 +39,15 @@ generateJson opts = do
       , GoldenJson.writeGoldens goldenDir "PlutusV1.Map" $ take n Golden.mapGoldens
       , GoldenJson.writeGoldens goldenDir "PlutusV1.TxInInfo" $ take n Golden.txInInfoGoldensV1
       , GoldenJson.writeGoldens goldenDir "PlutusV1.TxOut" $ take n Golden.txOutGoldensV1
+      , GoldenJson.writeGoldens goldenDir "PlutusV1.DCert" $ take n Golden.dCertGoldens
+      , GoldenJson.writeGoldens goldenDir "PlutusV1.ScriptPurpose" $ take n Golden.scriptPurposeGoldens
+      , GoldenJson.writeGoldens goldenDir "PlutusV1.TxInfo" $ take n Golden.txInfoGoldensV1
+      , GoldenJson.writeGoldens goldenDir "PlutusV1.ScriptContext" $ take n Golden.scriptContextGoldensV1
       , GoldenJson.writeGoldens goldenDir "PlutusV2.TxInInfo" $ take n Golden.txInInfoGoldensV2
       , GoldenJson.writeGoldens goldenDir "PlutusV2.OutputDatum" $ take n Golden.outDatumGoldens
       , GoldenJson.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldensV2
+      , GoldenJson.writeGoldens goldenDir "PlutusV2.TxInfo" $ take n Golden.txInfoGoldensV2
+      , GoldenJson.writeGoldens goldenDir "PlutusV2.ScriptContext" $ take n Golden.scriptContextGoldensV2
       ]
   putStrLn "[lbt-plutus-golden] Wrote Json goldens:"
   for_ fps putStrLn

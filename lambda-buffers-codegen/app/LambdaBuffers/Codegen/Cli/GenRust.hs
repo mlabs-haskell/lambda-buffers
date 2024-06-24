@@ -6,7 +6,7 @@ import Data.Aeson (decodeFileStrict')
 import Debug.Trace (trace)
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
-import LambdaBuffers.Codegen.Rust (runPrint)
+import LambdaBuffers.Codegen.Rust (runBackend)
 import LambdaBuffers.Codegen.Rust.Config qualified as R
 import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as RS
 import Paths_lambda_buffers_codegen qualified as Paths
@@ -14,9 +14,9 @@ import System.Directory (doesFileExist)
 import System.Directory.Internal.Prelude (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _config :: [FilePath]
-  , _packages :: FilePath
-  , _common :: Gen.GenOpts
+  { _config :: ![FilePath]
+  , _packages :: !FilePath
+  , _common :: !Gen.GenOpts
   }
 
 makeLenses 'MkGenOpts
@@ -36,7 +36,7 @@ gen opts = do
 
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg pkgs ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runBackend pkgs cfg ci <$> (ci ^. #modules))
 
 readRustConfig :: FilePath -> IO R.Config
 readRustConfig f = do

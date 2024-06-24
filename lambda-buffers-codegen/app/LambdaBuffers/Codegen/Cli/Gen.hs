@@ -31,12 +31,12 @@ import System.FilePath (takeDirectory, (</>))
 import System.FilePath.Lens (extension)
 
 data GenOpts = GenOpts
-  { _inputFile :: FilePath
-  , _outputFile :: FilePath
-  , _genDir :: FilePath
-  , _debug :: Bool
-  , _requestedClasses :: [String]
-  , _requestedModules :: NonEmpty String
+  { _inputFile :: !FilePath
+  , _outputFile :: !FilePath
+  , _genDir :: !FilePath
+  , _debug :: !Bool
+  , _requestedClasses :: ![String]
+  , _requestedModules :: !(NonEmpty String)
   }
   deriving stock (Eq, Show)
 
@@ -51,9 +51,9 @@ logError "" msg = putStrLn $ msg <> " [ERROR]"
 logError fp msg = putStrLn $ fp <> ": " <> msg <> " [ERROR]"
 
 data Generated = Generated
-  { _generatedFilePath :: FilePath
-  , _generatedCode :: Text
-  , _generatedPackageDeps :: Set Text
+  { _generatedFilePath :: !FilePath
+  , _generatedCode :: !Text
+  , _generatedPackageDeps :: !(Set Text)
   }
   deriving stock (Show, Eq, Ord)
 

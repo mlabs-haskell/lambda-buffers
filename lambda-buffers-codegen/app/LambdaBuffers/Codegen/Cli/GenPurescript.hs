@@ -5,15 +5,15 @@ import Control.Monad (unless)
 import Data.Aeson (decodeFileStrict)
 import LambdaBuffers.Codegen.Cli.Gen (logError)
 import LambdaBuffers.Codegen.Cli.Gen qualified as Gen
-import LambdaBuffers.Codegen.Purescript (runPrint)
+import LambdaBuffers.Codegen.Purescript (runBackend)
 import LambdaBuffers.Codegen.Purescript.Config qualified as H
 import Paths_lambda_buffers_codegen qualified as Paths
 import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
 
 data GenOpts = MkGenOpts
-  { _config :: [FilePath]
-  , _common :: Gen.GenOpts
+  { _config :: ![FilePath]
+  , _common :: !Gen.GenOpts
   }
 
 makeLenses 'MkGenOpts
@@ -30,7 +30,7 @@ gen opts = do
 
   Gen.gen
     (opts ^. common)
-    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runPrint cfg ci <$> (ci ^. #modules))
+    (\ci -> fmap (\(fp, code, deps) -> Gen.Generated fp code deps) . runBackend cfg ci <$> (ci ^. #modules))
 
 readPurescriptConfig :: FilePath -> IO H.Config
 readPurescriptConfig f = do

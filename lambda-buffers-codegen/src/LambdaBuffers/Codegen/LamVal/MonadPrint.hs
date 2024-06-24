@@ -1,4 +1,4 @@
-module LambdaBuffers.Codegen.LamVal.MonadPrint (MonadPrint, PrintRead (MkPrintRead), runPrint, freshArg, resolveRef, importValue) where
+module LambdaBuffers.Codegen.LamVal.MonadPrint (MonadPrint, PrintError, Context (..), runPrint, freshArg, resolveRef, importValue) where
 
 import Control.Lens ((&), (.~))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -14,40 +14,41 @@ import Prettyprinter (Doc)
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 
-newtype PrintRead qvn = MkPrintRead
-  { builtins :: Ref -> Maybe qvn
+data Context qvn backend = Context
+  { builtins :: !(Ref -> Maybe qvn)
+  , backendCtx :: !backend
   }
 
-data PrintState qvn = MkPrintState
-  { currentVar :: Int
-  , valueImports :: Set qvn
+data State qvn = State
+  { currentVar :: !Int
+  , valueImports :: !(Set qvn)
   }
   deriving stock (Eq, Ord, Show)
 
 type PrintError = P.InternalError
 
-throwInternalError :: MonadPrint m qvn => String -> m a
+throwInternalError :: MonadPrint m qvn backend => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.LamVal.MonadPrint] " <> Text.pack msg
 
-type MonadPrint m qvn = (MonadRWS (PrintRead qvn) () (PrintState qvn) m, MonadError PrintError m)
+type MonadPrint m qvn backend = (MonadRWS (Context qvn backend) () (State qvn) m, MonadError PrintError m)
 
-type PrintM qvn = RWST (PrintRead qvn) () (PrintState qvn) (Except PrintError)
+type PrintM qvn backend = RWST (Context qvn backend) () (State qvn) (Except PrintError)
 
-runPrint :: Ord qvn => PrintRead qvn -> PrintM qvn (Doc ann) -> Either PrintError (Doc ann, Set qvn)
-runPrint lamValBuiltins printer =
-  let p = runExcept $ runRWST printer lamValBuiltins (MkPrintState 0 mempty)
+runPrint :: Ord qvn => Context qvn backend -> PrintM qvn backend (Doc ann) -> Either PrintError (Doc ann, Set qvn)
+runPrint ctx printer =
+  let p = runExcept $ runRWST printer ctx (State 0 mempty)
    in case p of
         Left err -> Left err
         Right (doc, st, _) -> Right (doc, valueImports st)
 
-freshArg :: MonadPrint m qvn => m ValueE
+freshArg :: MonadPrint m qvn backend => m ValueE
 freshArg = do
   i <- gets currentVar
-  modify (\(MkPrintState curr imps) -> MkPrintState (curr + 1) imps)
+  modify (\(State curr imps) -> State (curr + 1) imps)
   return $ VarE $ "x" <> show i
 
-importValue :: (MonadPrint m qvn, Ord qvn) => qvn -> m qvn
-importValue qvn = modify (\(MkPrintState curr imps) -> MkPrintState curr (Set.insert qvn imps)) >> return qvn
+importValue :: (MonadPrint m qvn backend, Ord qvn) => qvn -> m qvn
+importValue qvn = modify (\(State curr imps) -> State curr (Set.insert qvn imps)) >> return qvn
 
 {- | Resolves a `Ref` to a value reference in the target language.
  Resolves a `LV.Ref` which is a reference to a LamVal 'builtin', to the equivalent in the target language.
@@ -57,7 +58,7 @@ importValue qvn = modify (\(MkPrintState curr imps) -> MkPrintState curr (Set.in
  NOTE(bladyjoker): Currently, this is assuming all the implementations are imported.
  TODO(bladyjoker): Output all necessary implementations from the Compiler and report on missing.
 -}
-resolveRef :: MonadPrint m qvn => Ref -> m qvn
+resolveRef :: MonadPrint m qvn backend => Ref -> m qvn
 resolveRef ref = do
   bs <- asks builtins
   case bs ref of

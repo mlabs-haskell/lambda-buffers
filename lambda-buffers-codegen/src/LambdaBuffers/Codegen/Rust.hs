@@ -1,42 +1,40 @@
 module LambdaBuffers.Codegen.Rust (
-  runPrint,
+  runBackend,
 ) where
 
 import Control.Lens ((^.))
 import Data.Set (Set)
 import Data.Text (Text)
-import LambdaBuffers.Codegen.Check (runCheck)
+import LambdaBuffers.Codegen.Check qualified as Check
 import LambdaBuffers.Codegen.Print qualified as Print
-import LambdaBuffers.Codegen.Rust.Config qualified as RsConfig
-import LambdaBuffers.Codegen.Rust.Print qualified as RsPrint
-import LambdaBuffers.Codegen.Rust.Print.Derive qualified as RsDerive
-import LambdaBuffers.Codegen.Rust.Print.MonadPrint (MonadPrint)
-import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as RsSyntax
-import LambdaBuffers.Codegen.Rust.Print.TyDef qualified as RsPrint
+import LambdaBuffers.Codegen.Rust.Backend (RustBackend, RustBackendContext (RustBackendContext, rust'compilationCfgs, rust'packages))
+import LambdaBuffers.Codegen.Rust.Config qualified as Rust
+import LambdaBuffers.Codegen.Rust.Print qualified as Rust
+import LambdaBuffers.Codegen.Rust.Print.Syntax qualified as Rust
 import LambdaBuffers.ProtoCompat.Types qualified as PC
-import Prettyprinter (defaultLayoutOptions, layoutPretty)
+import Prettyprinter (
+  defaultLayoutOptions,
+  layoutPretty,
+ )
 import Prettyprinter.Render.Text (renderStrict)
 import Proto.Codegen qualified as P
 
-{- | `runPrint cfg inp mod` prints a LambdaBuffers checked module `mod`, given its entire compilation closure in `inp` and Rust configuration file in `cfg`.
-  It either errors with an API error message or succeeds with a module filepath, code and package dependencies.
--}
-runPrint :: RsConfig.Config -> RsSyntax.PkgMap -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text, Set Text)
-runPrint cfg pkgs ci m = case runCheck cfg ci m of
-  Left err -> Left err
-  Right ctx -> case Print.runPrint ctx (RsPrint.printModule rsPrintModuleEnv pkgs) of
-    Left err -> Left err
-    Right (modDoc, deps) ->
-      Right
-        ( RsSyntax.filepathFromModuleName (m ^. #moduleName)
-        , renderStrict $ layoutPretty defaultLayoutOptions modDoc
-        , deps
-        )
-
-rsPrintModuleEnv :: MonadPrint m => RsPrint.PrintModuleEnv m ann
-rsPrintModuleEnv =
-  RsPrint.PrintModuleEnv
-    RsSyntax.printModName
-    RsDerive.rsTraitImplPrinters
-    RsPrint.printTyDef
-    ["no_implicit_prelude", "allow(warnings)"]
+runBackend :: Rust.PkgMap -> Rust.Config -> PC.CodegenInput -> PC.Module -> Either P.Error (FilePath, Text, Set Text)
+runBackend pkgs cfg ci m =
+  let
+    rustCtx =
+      RustBackendContext
+        { rust'packages = pkgs
+        , rust'compilationCfgs = ["no_implicit_prelude", "allow(warnings)"]
+        }
+   in
+    case Check.runCheck @RustBackend cfg rustCtx ci m of
+      Left err -> Left err
+      Right ctx -> case Print.runPrint () ctx Rust.printModule of
+        Left err -> Left err
+        Right (modDoc, deps) ->
+          Right
+            ( Rust.filepathFromModuleName (m ^. #moduleName)
+            , renderStrict $ layoutPretty defaultLayoutOptions modDoc
+            , deps
+            )

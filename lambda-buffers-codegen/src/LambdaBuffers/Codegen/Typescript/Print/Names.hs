@@ -42,17 +42,17 @@ printTsQValName :: Ts.QValName -> Doc ann
 printTsQValName (Just (_, Ts.MkModuleName tsModName), Ts.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(jaredponn): Got an empty Typescript value name"
   Just (c, _) | Char.isAlpha c -> pretty tsModName <> dot <> pretty pursValName
-  _ -> pretty tsModName <> dot <> pretty pursValName
+  _other -> pretty tsModName <> dot <> pretty pursValName
 printTsQValName (Nothing, Ts.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(jaredponn): Got an empty Typescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursValName
-  _ -> pretty pursValName
+  _other -> pretty pursValName
 
 printTsValName :: Ts.ValueName -> Doc ann
 printTsValName (Ts.MkValueName pursValName) = case Text.uncons pursValName of
   Nothing -> "TODO(jaredponn): Got an empty Typescript value name"
   Just (c, _) | Char.isAlpha c -> pretty pursValName
-  _ -> enclose lparen rparen $ pretty pursValName
+  _other -> enclose lparen rparen $ pretty pursValName
 
 {- | Translate LambdaBuffer sum constructor names into Typescript sum constructor names.
 

@@ -1,0 +1,63 @@
+{
+  "opaquesConfig": {
+    "Prelude.Map": [
+      "plutus-tx",
+      "PlutusTx.AssocMap",
+      "Map"
+    ],
+    "Prelude.List": [
+      "lbr-plutustx",
+      "LambdaBuffers.Runtime.PlutusTx.List",
+      "List"
+    ],
+    "Prelude.Either": [
+      "plutus-tx",
+      "PlutusTx.Either",
+      "Either"
+    ],
+    "Prelude.Maybe": [
+      "plutus-tx",
+      "PlutusTx.Maybe",
+      "Maybe"
+    ],
+    "Prelude.Bytes": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinByteString"
+    ],
+    "Prelude.Text": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinString"
+    ],
+    "Prelude.Char": [
+      "base",
+      "Prelude",
+      "Char"
+    ],
+    "Prelude.Integer": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "Integer"
+    ],
+    "Prelude.Bool": [
+      "plutus-tx",
+      "PlutusTx.Bool",
+      "Bool"
+    ],
+    "Prelude.Set": [
+        "lbr-plutustx",
+        "LambdaBuffers.Runtime.PlutusTx.NotImplemented",
+        "Set"
+    ]
+  },
+  "classesConfig": {
+    "Prelude.Eq": [
+      [
+        "plutus-tx",
+        "PlutusTx.Eq",
+        "Eq"
+      ]
+    ]
+  }
+}
