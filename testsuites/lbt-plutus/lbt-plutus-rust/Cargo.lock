@@ -250,6 +250,8 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "plutus-ledger-api"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99a95c54db86ffe33293a6977ea5b865c69391b6e30fa609d0f1bb49a3832553"
 dependencies = [
  "data-encoding",
  "impl_ops",
