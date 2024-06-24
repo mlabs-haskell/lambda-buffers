@@ -30,9 +30,9 @@ import Proto.Codegen_Fields qualified as P
 -}
 data Builtin
   = OverloadedBuiltin
-      { _qualifiedValName :: Ts.QValName
+      { _qualifiedValName :: !Ts.QValName
       -- ^ the qualified name of the dictionary for the typeclass
-      , _instanceTyIx :: Int
+      , _instanceTyIx :: !Int
       -- ^ index (starting at 0) of the type in the 'LV.RefE' which is
       -- the instance type e.g.
       -- Given
@@ -49,7 +49,7 @@ data Builtin
       --
       -- Note(jaredponn): having a unique '_instanceTyIx' immediately implies
       -- that this only supports single parameter type classes.
-      , _dotMethodName :: Text
+      , _dotMethodName :: !Text
       -- ^ the method name of the dictionary prefixed with a dot.
       }
   | Builtin
@@ -60,7 +60,7 @@ data Builtin
 
 $(makeLenses ''Builtin)
 
-type MonadPrint m = LV.MonadPrint m Builtin
+type MonadPrint m = LV.MonadPrint m Builtin ()
 
 throwInternalError :: MonadPrint m => String -> m a
 throwInternalError msg = throwError $ defMessage & P.msg .~ "[LambdaBuffers.Codegen.Typescript.Print.LamVal] " <> Text.pack msg
@@ -120,7 +120,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
                           -- 'LambdaBuffers.Codegen.Typescript.Print.Ty.printProd'
                           -- for details.
                           [singleField] -> ["let" <+> singleField <+> equals <+> caseOnArgDoc <> ".fields"]
-                          _ ->
+                          _other ->
                             zipWith
                               ( \i argDoc ->
                                   "let" <+> argDoc <+> equals <+> caseOnArgDoc <> ".fields" <> lbracket <> pretty (show i) <> rbracket
@@ -132,7 +132,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
                 , rbrace
                 ]
             )
-        _ -> throwInternalError "Got a non-product in Sum."
+        _other -> throwInternalError "Got a non-product in Sum."
 
   casesDocs <- case OMap.assocs sumTy of
     t : ts -> do
@@ -146,7 +146,7 @@ printCaseE (qtyN, sumTy) caseVal ctorCont = do
                 "else" <+> "if" <+> parens (caseOnArgDoc <> dot <> "name" <+> "===" <+> cn) <> cnBody
             )
             cnsCnBodies
-    _ -> throwInternalError "Empty case not supported"
+    _other -> throwInternalError "Empty case not supported"
 
   return $
     -- Loosely, we
@@ -258,7 +258,7 @@ printLetE ((_, _tyN), fields) prodVal letCont = do
                         -- tuples", so it's wrong to access `.field`
                         -- <> ".fields"
                         ]
-                      _ ->
+                      _other ->
                         zipWith
                           ( \i argDoc ->
                               "let"
@@ -455,7 +455,7 @@ printCtorE ((_, tyN), (ctorN, _)) prodVals = do
                 ]
           , rbrace
           ]
-    _ ->
+    _other ->
       return $
         vsep
           [ lbrace
@@ -530,7 +530,7 @@ printRefE ref@(refTys, _) = do
       --                    ^~~~~~~~~~~~~~~~~~ this type
       instanceTy <- case refTys ^? ix instanceTyIndex of
         Just instanceTy -> return instanceTy
-        _ -> throwInternalError "Overloaded instance type doesn't exist"
+        _other -> throwInternalError "Overloaded instance type doesn't exist"
 
       -- Then, we do the type directed translation.
       --
@@ -579,7 +579,7 @@ printRefE ref@(refTys, _) = do
             OverloadedBuiltin d i _
               | i == instanceTyIndex -> (printTsQValName d <>) <$> tdts tys
               | otherwise -> throwInternalError "Overloaded methods should be overloaded on the same type"
-            Builtin _ -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
+            Builtin _other -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
         tdt ty@(LT.TyRef _tyRef) = do
           -- essentially similar to the previous case, except we don't recurse
           builtin <- LV.resolveRef (ref & _1 . ix instanceTyIndex .~ ty)
@@ -588,13 +588,13 @@ printRefE ref@(refTys, _) = do
             OverloadedBuiltin d i _
               | i == instanceTyIndex -> return $ printTsQValName d
               | otherwise -> throwInternalError "Overloaded methods should be overloaded on the same type"
-            Builtin _ -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
+            Builtin _other -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
         tdt ty@(LT.TyVar _tyRef) = do
           -- duplicated code from the previous case
           builtin <- LV.resolveRef (ref & _1 . ix instanceTyIndex .~ ty)
           _ <- LV.importValue builtin
           case builtin of
-            Builtin _ -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
+            Builtin _other -> throwInternalError "Expected a an OverloadedBuiltin when resolving a type class"
             OverloadedBuiltin d i _
               | i == instanceTyIndex -> return $ printTsQValName d
               | otherwise -> throwInternalError "Overloaded methods should be overloaded on the same type"

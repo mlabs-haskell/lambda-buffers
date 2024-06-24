@@ -125,11 +125,6 @@
       "Plutarch.Api.V1",
       "PTxInInfo"
     ],
-    "Plutus.V1.TxInfo": [
-      "plutarch",
-      "Plutarch.Api.V1",
-      "PTxInfo"
-    ],
     "Plutus.V1.TxId": [
       "plutarch",
       "Plutarch.Api.V1",
@@ -150,6 +145,11 @@
       "LambdaBuffers.Runtime.Plutarch",
       "PMap"
     ],
+    "Plutus.V1.TxInfo": [
+      "plutarch",
+      "Plutarch.Api.V1",
+      "PTxInfo"
+    ],
     "Plutus.V2.TxInInfo": [
       "plutarch",
       "Plutarch.Api.V2",
@@ -164,6 +164,16 @@
       "plutarch",
       "Plutarch.Api.V2",
       "PTxOut"
+    ],
+    "Plutus.V2.TxInfo": [
+      "plutarch",
+      "Plutarch.Api.V2",
+      "PTxInfo"
+    ],
+    "Plutus.V2.ScriptContext": [
+      "plutarch",
+      "Plutarch.Api.V2",
+      "PScriptContext"
     ]
   },
   "classesConfig": {

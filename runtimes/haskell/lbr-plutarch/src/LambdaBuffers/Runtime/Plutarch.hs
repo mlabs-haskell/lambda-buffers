@@ -22,6 +22,7 @@ module LambdaBuffers.Runtime.Plutarch (
 import Data.Functor.Const (Const)
 import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
+import LambdaBuffers.Runtime.Plutarch.LamVal (pfromPlutusDataPTryFrom)
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
 import Plutarch (
   PType,
@@ -40,7 +41,7 @@ import Plutarch.Api.V1 qualified
 import Plutarch.Api.V1.AssocMap qualified as AssocMap
 import Plutarch.Api.V1.Scripts (PScriptHash)
 import Plutarch.Api.V1.Scripts qualified
-import Plutarch.Api.V2 qualified (POutputDatum (PNoOutputDatum, POutputDatum, POutputDatumHash), PTxInInfo (PTxInInfo), PTxOut (PTxOut))
+import Plutarch.Api.V2 qualified (POutputDatum (PNoOutputDatum, POutputDatum, POutputDatumHash), PScriptContext (PScriptContext), PTxInInfo (PTxInInfo), PTxInfo (PTxInfo), PTxOut (PTxOut))
 import Plutarch.Builtin (
   PBuiltinList (PCons, PNil),
   PData,
@@ -48,6 +49,7 @@ import Plutarch.Builtin (
   pasList,
   pdata,
  )
+import Plutarch.Builtin qualified as Plutarch
 import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
 import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PByteString, PEq ((#==)), PInteger, PListLike, PTryFrom, pdcons, pdnil, pfromData, pif, ptryFrom)
@@ -333,7 +335,7 @@ instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.
                       PNil -> perror
                       PCons h' t' -> pmatch t' \case
                         PNil -> pcon $ Plutarch.Api.V1.PInterval (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
-                        _ -> perror
+                        _other -> perror
                 )
                 perror
           )
@@ -362,7 +364,7 @@ instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.
                       PNil -> perror
                       PCons h' t' -> pmatch t' \case
                         PNil -> pcon $ Plutarch.Api.V1.PLowerBound (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
-                        _ -> perror
+                        _other -> perror
                 )
                 perror
           )
@@ -391,7 +393,7 @@ instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.
                       PNil -> perror
                       PCons h' t' -> pmatch t' \case
                         PNil -> pcon $ Plutarch.Api.V1.PUpperBound (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
-                        _ -> perror
+                        _other -> perror
                 )
                 perror
           )
@@ -416,7 +418,7 @@ instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.
                 (ix #== 0)
                 ( pmatch args \case
                     PNil -> pcon $ Plutarch.Api.V1.PNegInf pdnil
-                    _ -> perror
+                    _other -> perror
                 )
                 ( pif
                     (ix #== 1)
@@ -424,13 +426,13 @@ instance PTryFrom PData (PAsData a) => PTryFrom PData (PAsData (Plutarch.Api.V1.
                         PNil -> perror
                         PCons h t -> pmatch t \case
                           PNil -> pcon $ Plutarch.Api.V1.PFinite (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
-                          _ -> perror
+                          _other -> perror
                     )
                     ( pif
                         (ix #== 2)
                         ( pmatch args \case
                             PNil -> pcon $ Plutarch.Api.V1.PPosInf pdnil
-                            _ -> perror
+                            _other -> perror
                         )
                         perror
                     )
@@ -457,7 +459,7 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.POutputDatum) where
                 (ix #== 0)
                 ( pmatch args \case
                     PNil -> pcon $ Plutarch.Api.V2.PNoOutputDatum pdnil
-                    _ -> perror
+                    _other -> perror
                 )
                 ( pif
                     (ix #== 1)
@@ -465,7 +467,7 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.POutputDatum) where
                         PNil -> perror
                         PCons h t -> pmatch t \case
                           PNil -> pcon $ Plutarch.Api.V2.POutputDatumHash (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
-                          _ -> perror
+                          _other -> perror
                     )
                     ( pif
                         (ix #== 2)
@@ -473,7 +475,7 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.POutputDatum) where
                             PNil -> perror
                             PCons h t -> pmatch t \case
                               PNil -> pcon $ Plutarch.Api.V2.POutputDatum (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # pdnil)
-                              _ -> perror
+                              _other -> perror
                         )
                         perror
                     )
@@ -519,7 +521,46 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxOut) where
                                               )
                                         )
                                   )
-                            _ -> perror
+                            _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PTxOut) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PTxOut) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons address t -> pmatch t \case
+                      PNil -> perror
+                      PCons val t1 -> pmatch t1 \case
+                        PNil -> perror
+                        PCons mayDatumHash t2 -> pmatch t2 \case
+                          PNil ->
+                            pcon $
+                              Plutarch.Api.V1.PTxOut
+                                ( pdcons
+                                    # (LamVal.pfromPlutusDataPTryFrom # address)
+                                    # ( pdcons
+                                          # (LamVal.pfromPlutusDataPTryFrom # val)
+                                          # ( pdcons
+                                                # (maybeToMaybe # (LamVal.pfromPlutusDataPTryFrom # mayDatumHash))
+                                                # pdnil
+                                            )
+                                      )
+                                )
+                          _other -> perror
                 )
                 perror
           )
@@ -540,6 +581,81 @@ maybeToMaybe =
           PNothing -> pcon $ PDNothing pdnil
       )
 
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PScriptContext) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PScriptContext) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V1.PScriptContext (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V2.PScriptContext) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V2.PScriptContext) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V2.PScriptContext (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PTxInInfo) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PTxInInfo) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons h t -> pmatch t \case
+                      PNil -> perror
+                      PCons h' t' -> pmatch t' \case
+                        PNil -> pcon $ Plutarch.Api.V1.PTxInInfo (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
+                        _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
 instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxInInfo) where
   type PTryFromExcess PData (PAsData Plutarch.Api.V2.PTxInInfo) = Const ()
   ptryFrom' pd f =
@@ -554,7 +670,391 @@ instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxInInfo) where
                       PNil -> perror
                       PCons h' t' -> pmatch t' \case
                         PNil -> pcon $ Plutarch.Api.V2.PTxInInfo (pdcons # (LamVal.pfromPlutusDataPTryFrom # h) # (pdcons # (LamVal.pfromPlutusDataPTryFrom # h') # pdnil))
-                        _ -> perror
+                        _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V2.PTxInInfo)) where
+  type PTryFromExcess PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V2.PTxInInfo)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pdata $ Pl.pmap # plam (\xpd -> pfromData $ pfromPlutusDataPTryFrom @Plutarch.Api.V2.PTxInInfo # xpd) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V2.PTxOut)) where
+  type PTryFromExcess PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V2.PTxOut)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pdata $ Pl.pmap # plam (\xpd -> pfromData $ pfromPlutusDataPTryFrom @Plutarch.Api.V2.PTxOut # xpd) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PTxInInfo)) where
+  type PTryFromExcess PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PTxInInfo)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pdata $ Pl.pmap # plam (\xpd -> pfromData $ pfromPlutusDataPTryFrom @Plutarch.Api.V1.PTxInInfo # xpd) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PTxOut)) where
+  type PTryFromExcess PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PTxOut)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pdata $ Pl.pmap # plam (\xpd -> pfromData $ pfromPlutusDataPTryFrom @Plutarch.Api.V1.PTxOut # xpd) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PDCert) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PDCert) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons stakingCred args2 -> pmatch args2 \case
+                      PNil -> pcon $ Plutarch.Api.V1.PDCertDelegRegKey (pdcons # (LamVal.pfromPlutusDataPTryFrom # stakingCred) # pdnil)
+                      _other -> perror
+                )
+                ( pif
+                    (ix #== 1)
+                    ( pmatch args \case
+                        PNil -> perror
+                        PCons stakingCred args2 -> pmatch args2 \case
+                          PNil -> pcon $ Plutarch.Api.V1.PDCertDelegDeRegKey (pdcons # (LamVal.pfromPlutusDataPTryFrom # stakingCred) # pdnil)
+                          _other -> perror
+                    )
+                    ( pif
+                        (ix #== 2)
+                        ( pmatch args \case
+                            PNil -> perror
+                            PCons stakingCred args2 -> pmatch args2 \case
+                              PNil -> perror
+                              PCons pkh args3 -> pmatch args3 \case
+                                PNil ->
+                                  pcon $
+                                    Plutarch.Api.V1.PDCertDelegDelegate
+                                      ( pdcons
+                                          # (LamVal.pfromPlutusDataPTryFrom # stakingCred)
+                                          # ( pdcons
+                                                # (LamVal.pfromPlutusDataPTryFrom # pkh)
+                                                # pdnil
+                                            )
+                                      )
+                                _other -> perror
+                        )
+                        ( pif
+                            (ix #== 3)
+                            ( pmatch args \case
+                                PNil -> perror
+                                PCons pkh1 args2 -> pmatch args2 \case
+                                  PNil -> perror
+                                  PCons pkh2 args3 -> pmatch args3 \case
+                                    PNil ->
+                                      pcon $
+                                        Plutarch.Api.V1.PDCertPoolRegister
+                                          ( pdcons
+                                              # (LamVal.pfromPlutusDataPTryFrom # pkh1)
+                                              # ( pdcons
+                                                    # (LamVal.pfromPlutusDataPTryFrom # pkh2)
+                                                    # pdnil
+                                                )
+                                          )
+                                    _other -> perror
+                            )
+                            ( pif
+                                (ix #== 4)
+                                ( pmatch args \case
+                                    PNil -> perror
+                                    PCons pkh args2 -> pmatch args2 \case
+                                      PNil -> perror
+                                      PCons int args3 -> pmatch args3 \case
+                                        PNil ->
+                                          pcon $
+                                            Plutarch.Api.V1.PDCertPoolRetire
+                                              ( pdcons
+                                                  # (LamVal.pfromPlutusDataPTryFrom # pkh)
+                                                  # ( pdcons
+                                                        # (LamVal.pfromPlutusDataPTryFrom # int)
+                                                        # pdnil
+                                                    )
+                                              )
+                                        _other -> perror
+                                )
+                                ( pif
+                                    (ix #== 5)
+                                    ( pmatch args \case
+                                        PNil -> pcon $ Plutarch.Api.V1.PDCertGenesis pdnil
+                                        _other -> perror
+                                    )
+                                    ( pif
+                                        (ix #== 6)
+                                        ( pmatch args \case
+                                            PNil -> pcon $ Plutarch.Api.V1.PDCertMir pdnil
+                                            _other -> perror
+                                        )
+                                        perror
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PScriptPurpose) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PScriptPurpose) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons symbol args2 -> pmatch args2 \case
+                      PNil -> pcon $ Plutarch.Api.V1.PMinting (pdcons # (LamVal.pfromPlutusDataPTryFrom # symbol) # pdnil)
+                      _other -> perror
+                )
+                ( pif
+                    (ix #== 1)
+                    ( pmatch args \case
+                        PNil -> perror
+                        PCons txOutRef args2 -> pmatch args2 \case
+                          PNil -> pcon $ Plutarch.Api.V1.PSpending (pdcons # (LamVal.pfromPlutusDataPTryFrom # txOutRef) # pdnil)
+                          _other -> perror
+                    )
+                    ( pif
+                        (ix #== 2)
+                        ( pmatch args \case
+                            PNil -> perror
+                            PCons stakingCred args2 -> pmatch args2 \case
+                              PNil -> pcon $ Plutarch.Api.V1.PRewarding (pdcons # (LamVal.pfromPlutusDataPTryFrom # stakingCred) # pdnil)
+                              _other -> perror
+                        )
+                        ( pif
+                            (ix #== 3)
+                            ( pmatch args \case
+                                PNil -> perror
+                                PCons dcert args2 -> pmatch args2 \case
+                                  PNil -> pcon $ Plutarch.Api.V1.PCertifying (pdcons # (LamVal.pfromPlutusDataPTryFrom # dcert) # pdnil)
+                                  _other -> perror
+                            )
+                            perror
+                        )
+                    )
+                )
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PDCert)) where
+  type PTryFromExcess PData (PAsData (Plutarch.PBuiltinList Plutarch.Api.V1.PDCert)) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          (const $ const perror)
+          ( \xs -> pdata $ Pl.pmap # plam (\xpd -> pfromData $ pfromPlutusDataPTryFrom @Plutarch.Api.V1.PDCert # xpd) # xs
+          )
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V2.PTxInfo) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V2.PTxInfo) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons inputs t -> pmatch t \case
+                      PNil -> perror
+                      PCons references t1 -> pmatch t1 \case
+                        PNil -> perror
+                        PCons outputs t2 -> pmatch t2 \case
+                          PNil -> perror
+                          PCons fee t3 -> pmatch t3 \case
+                            PNil -> perror
+                            PCons mint t4 -> pmatch t4 \case
+                              PNil -> perror
+                              PCons dcert t5 -> pmatch t5 \case
+                                PNil -> perror
+                                PCons wdrl t6 -> pmatch t6 \case
+                                  PNil -> perror
+                                  PCons range t7 -> pmatch t7 \case
+                                    PNil -> perror
+                                    PCons sigs t8 -> pmatch t8 \case
+                                      PNil -> perror
+                                      PCons redeemers t9 -> pmatch t9 \case
+                                        PNil -> perror
+                                        PCons datums t10 -> pmatch t10 \case
+                                          PNil -> perror
+                                          PCons txId t11 -> pmatch t11 \case
+                                            PNil ->
+                                              pcon $
+                                                Plutarch.Api.V2.PTxInfo
+                                                  ( pdcons
+                                                      # (LamVal.pfromPlutusDataPTryFrom # inputs)
+                                                      # ( pdcons
+                                                            # (LamVal.pfromPlutusDataPTryFrom # references)
+                                                            # ( pdcons
+                                                                  # (LamVal.pfromPlutusDataPTryFrom # outputs)
+                                                                  # ( pdcons
+                                                                        # (LamVal.pfromPlutusDataPTryFrom # fee)
+                                                                        # ( pdcons
+                                                                              # (LamVal.pfromPlutusDataPTryFrom # mint)
+                                                                              # ( pdcons
+                                                                                    # (LamVal.pfromPlutusDataPTryFrom # dcert)
+                                                                                    # ( pdcons
+                                                                                          # (LamVal.pfromPlutusDataPTryFrom # wdrl)
+                                                                                          # ( pdcons
+                                                                                                # (LamVal.pfromPlutusDataPTryFrom # range)
+                                                                                                # ( pdcons
+                                                                                                      # (LamVal.pfromPlutusDataPTryFrom # sigs)
+                                                                                                      # ( pdcons
+                                                                                                            # (LamVal.pfromPlutusDataPTryFrom # redeemers)
+                                                                                                            # ( pdcons
+                                                                                                                  # (LamVal.pfromPlutusDataPTryFrom # datums)
+                                                                                                                  # ( pdcons
+                                                                                                                        # (LamVal.pfromPlutusDataPTryFrom # txId)
+                                                                                                                        # pdnil
+                                                                                                                    )
+                                                                                                              )
+                                                                                                        )
+                                                                                                  )
+                                                                                            )
+                                                                                      )
+                                                                                )
+                                                                          )
+                                                                    )
+                                                              )
+                                                        )
+                                                  )
+                                            _other -> perror
+                )
+                perror
+          )
+          (const perror)
+          (const perror)
+          (const perror)
+          pd
+      , ()
+      )
+
+instance PTryFrom PData (PAsData Plutarch.Api.V1.PTxInfo) where
+  type PTryFromExcess PData (PAsData Plutarch.Api.V1.PTxInfo) = Const ()
+  ptryFrom' pd f =
+    f
+      ( LamVal.casePlutusData
+          ( \ix args ->
+              pif
+                (ix #== 0)
+                ( pmatch args \case
+                    PNil -> perror
+                    PCons inputs t -> pmatch t \case
+                      PNil -> perror
+                      PCons outputs t1 -> pmatch t1 \case
+                        PNil -> perror
+                        PCons fee t2 -> pmatch t2 \case
+                          PNil -> perror
+                          PCons mint t3 -> pmatch t3 \case
+                            PNil -> perror
+                            PCons dcert t4 -> pmatch t4 \case
+                              PNil -> perror
+                              PCons wdrl t5 -> pmatch t5 \case
+                                PNil -> perror
+                                PCons range t6 -> pmatch t6 \case
+                                  PNil -> perror
+                                  PCons sigs t7 -> pmatch t7 \case
+                                    PNil -> perror
+                                    PCons datums t8 -> pmatch t8 \case
+                                      PNil -> perror
+                                      PCons txId t9 -> pmatch t9 \case
+                                        PNil ->
+                                          pcon $
+                                            Plutarch.Api.V1.PTxInfo
+                                              ( pdcons
+                                                  # (LamVal.pfromPlutusDataPTryFrom # inputs)
+                                                  # ( pdcons
+                                                        # (LamVal.pfromPlutusDataPTryFrom # outputs)
+                                                        # ( pdcons
+                                                              # (LamVal.pfromPlutusDataPTryFrom # fee)
+                                                              # ( pdcons
+                                                                    # (LamVal.pfromPlutusDataPTryFrom # mint)
+                                                                    # ( pdcons
+                                                                          # (LamVal.pfromPlutusDataPTryFrom # dcert)
+                                                                          # ( pdcons
+                                                                                # (LamVal.pfromPlutusDataPTryFrom # wdrl)
+                                                                                # ( pdcons
+                                                                                      # (LamVal.pfromPlutusDataPTryFrom # range)
+                                                                                      # ( pdcons
+                                                                                            # (LamVal.pfromPlutusDataPTryFrom # sigs)
+                                                                                            # ( pdcons
+                                                                                                  # (LamVal.pfromPlutusDataPTryFrom # datums)
+                                                                                                  # ( pdcons
+                                                                                                        # (LamVal.pfromPlutusDataPTryFrom # txId)
+                                                                                                        # pdnil
+                                                                                                    )
+                                                                                              )
+                                                                                        )
+                                                                                  )
+                                                                            )
+                                                                      )
+                                                                )
+                                                          )
+                                                    )
+                                              )
+                                        _other -> perror
                 )
                 perror
           )

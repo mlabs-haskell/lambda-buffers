@@ -16,11 +16,11 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
+import LambdaBuffers.Codegen.Haskell.Backend.Plutarch.LamVal qualified as PlLamVal
 import LambdaBuffers.Codegen.Haskell.Config qualified as H
 import LambdaBuffers.Codegen.Haskell.Print.Syntax qualified as HsSyntax
 import LambdaBuffers.Codegen.LamVal qualified as LamVal
 import LambdaBuffers.Codegen.LamVal.MonadPrint qualified as LamVal
-import LambdaBuffers.Codegen.Plutarch.Print.LamVal qualified as PlLamVal
 import LambdaBuffers.Compiler.LamTy qualified as LT
 import LambdaBuffers.ProtoCompat qualified as PC
 import Paths_lambda_buffers_codegen qualified as Path
@@ -92,7 +92,7 @@ lamValCases =
         id
     , Right "lamval-cases/plutarch/CaseListE-1.hs"
     )
-  , ("(x, y)", LamVal.TupleE (LamVal.VarE "x") (LamVal.VarE "y"), Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal tuple literal expression is not supported for Plutarch (yet)")
+  , ("(x, y)", LamVal.TupleE (LamVal.VarE "x") (LamVal.VarE "y"), Left "[LambdaBuffers.Codegen.Plutarch] LamVal tuple literal expression is not supported for Plutarch (yet)")
   , ("x", LamVal.VarE "x", Right "lamval-cases/plutarch/VarE-1.hs")
   , ("fooRef", LamVal.RefE ([], "fooRef"), Right "lamval-cases/plutarch/RefE-1.hs")
   , ("\\x -> x", LamVal.LamE id, Right "lamval-cases/plutarch/LamE-1.hs")
@@ -138,14 +138,14 @@ lamValCases =
           , LamVal.VarE "x"
           )
         ]
-    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal record literal expression is not supported for Plutarch"
+    , Left "[LambdaBuffers.Codegen.Plutarch] LamVal record literal expression is not supported for Plutarch"
     )
   ,
     ( "unitRecord.foo"
     , LamVal.FieldE
         ((PC.mkInfoLess (PC.ModuleName [] def), PC.mkInfoLess (PC.TyName "UnitProduct" def)), PC.mkInfoLess $ PC.FieldName "foo" def)
         (LamVal.VarE "unitRecord")
-    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal record field accessor is not supported for Plutarch"
+    , Left "[LambdaBuffers.Codegen.Plutarch] LamVal record field accessor is not supported for Plutarch"
     )
   ,
     ( "Foo'Bar \"works\")"
@@ -166,7 +166,7 @@ lamValCases =
   ,
     ( "error \"some error\"'"
     , LamVal.ErrorE "some error"
-    , Left "[LambdaBuffers.Codegen.Plutarch.Print.LamVal] LamVal error builtin was called with: some error"
+    , Left "[LambdaBuffers.Codegen.Plutarch] LamVal error builtin was called with: some error"
     )
   ]
 
@@ -175,7 +175,10 @@ testLamValInterpretation =
   let
     interpret =
       LamVal.runPrint
-        (LamVal.MkPrintRead $ \(_ty, refName) -> Map.lookup refName $ Map.singleton "fooRef" (HsSyntax.MkCabalPackageName "foo-pkg", HsSyntax.MkModuleName "Foo", HsSyntax.MkValueName "fooRef"))
+        ( LamVal.Context
+            (\(_ty, refName) -> Map.lookup refName $ Map.singleton "fooRef" (HsSyntax.MkCabalPackageName "foo-pkg", HsSyntax.MkModuleName "Foo", HsSyntax.MkValueName "fooRef"))
+            ()
+        )
         . PlLamVal.printValueE
     tcs :: [TestTree]
     tcs =

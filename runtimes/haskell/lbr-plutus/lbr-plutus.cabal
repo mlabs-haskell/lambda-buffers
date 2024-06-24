@@ -98,7 +98,6 @@ library
   exposed-modules:
     LambdaBuffers.Runtime.Plutus
     LambdaBuffers.Runtime.Plutus.Json
-    LambdaBuffers.Runtime.Plutus.LamVal
     LambdaBuffers.Runtime.Plutus.PlutusData
     Test.LambdaBuffers.Plutus.Generators.Correct
 

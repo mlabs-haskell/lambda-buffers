@@ -12,8 +12,8 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Prettyprinter (Doc, Pretty (pretty), colon, comma, enclose, encloseSep, group, langle, lparen, rangle, rparen)
 
 data Qualified a
-  = Qualified'Builtin a
-  | Qualified'LibRef CrateName [ModuleName] a
+  = Qualified'Builtin !a
+  | Qualified'LibRef !CrateName ![ModuleName] !a
   deriving stock (Eq, Ord, Show)
 
 type QValName = Qualified ValueName
@@ -96,7 +96,7 @@ printRsValName :: ValueName -> Doc ann
 printRsValName (MkValueName rsValName) = case Text.uncons rsValName of
   Nothing -> "TODO(bladyjoker): Got an empty Rust value name"
   Just (c, _) | Char.isAlpha c -> pretty rsValName
-  _ -> enclose lparen rparen $ pretty rsValName
+  _other -> enclose lparen rparen $ pretty rsValName
 
 printRsQTyName :: QTyName -> Doc ann
 printRsQTyName = printQualified printRsTyName

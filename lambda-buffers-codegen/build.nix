@@ -45,6 +45,9 @@
         lbg-plutarch = pkgs.writeShellScriptBin "lbg-plutarch" ''
           ${config.packages.lbg}/bin/lbg gen-plutarch $@
         '';
+        lbg-plutustx = pkgs.writeShellScriptBin "lbg-plutustx" ''
+          ${config.packages.lbg}/bin/lbg gen-plutustx $@
+        '';
         lbg-typescript = pkgs.writeShellScriptBin "lbg-typescript" ''
           ${config.packages.lbg}/bin/lbg gen-typescript $@
         '';

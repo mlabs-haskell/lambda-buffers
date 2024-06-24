@@ -1,4 +1,27 @@
-module LambdaBuffers.Codegen.Haskell.Print.Syntax (printHsQTyName, printCtorName, printFieldName, printVarName, printTyName, printMkCtor, printModName, printHsQValName, printHsClassMethodName, printHsQClassName, printHsValName, QTyName, QClassName, QValName, CabalPackageName (..), ModuleName (..), TyName (..), ClassName (..), ValueName (..), fromLbModuleName, cabalFromLbModuleName, fromLbTyName, fromLbForeignRef, filepathFromModuleName, TyDefKw (..), cabalPackageNameToText) where
+module LambdaBuffers.Codegen.Haskell.Print.Syntax (
+  printHsQTyName,
+  printCtorName,
+  printFieldName,
+  printVarName,
+  printTyName,
+  printMkCtor,
+  printModName,
+  printHsQValName,
+  printHsClassMethodName,
+  printHsQClassName,
+  printHsValName,
+  QTyName,
+  QClassName,
+  QValName,
+  CabalPackageName (..),
+  ModuleName (..),
+  TyName (..),
+  ClassName (..),
+  ValueName (..),
+  fromLbTyName,
+  TyDefKw (..),
+  cabalPackageNameToText,
+) where
 
 import Control.Lens ((^.))
 import Data.Char qualified as Char
@@ -23,27 +46,11 @@ data TyDefKw = DataTyDef | NewtypeTyDef | SynonymTyDef deriving stock (Eq, Ord, 
 fromLbTyName :: PC.TyName -> TyName
 fromLbTyName tn = MkTyName $ tn ^. #name
 
-fromLbModuleName :: PC.ModuleName -> ModuleName
-fromLbModuleName mn = MkModuleName $ Text.intercalate "." ("LambdaBuffers" : [p ^. #name | p <- mn ^. #parts])
-
-cabalFromLbModuleName :: PC.ModuleName -> CabalPackageName
-cabalFromLbModuleName mn = MkCabalPackageName $ Text.intercalate "-" ([Text.toLower $ p ^. #name | p <- mn ^. #parts] <> ["-lb"])
-
 cabalPackageNameToText :: CabalPackageName -> Text
 cabalPackageNameToText (MkCabalPackageName cpn) = cpn
 
-fromLbForeignRef :: PC.ForeignRef -> QTyName
-fromLbForeignRef fr =
-  ( cabalFromLbModuleName $ fr ^. #moduleName
-  , fromLbModuleName $ fr ^. #moduleName
-  , fromLbTyName $ fr ^. #tyName
-  )
-
-filepathFromModuleName :: PC.ModuleName -> FilePath
-filepathFromModuleName mn = Text.unpack (Text.replace "." "/" (let MkModuleName txt = fromLbModuleName mn in txt)) <> ".hs"
-
-printModName :: PC.ModuleName -> Doc ann
-printModName mn = let MkModuleName hmn = fromLbModuleName mn in pretty hmn
+printModName :: (PC.ModuleName -> ModuleName) -> PC.ModuleName -> Doc ann
+printModName fromLbModuleName mn = let MkModuleName hmn = fromLbModuleName mn in pretty hmn
 
 printHsQTyName :: QTyName -> Doc ann
 printHsQTyName (_, MkModuleName hsModName, MkTyName hsTyName) = pretty hsModName <> dot <> pretty hsTyName
@@ -55,13 +62,13 @@ printHsQValName :: QValName -> Doc ann
 printHsQValName (_, MkModuleName hsModName, MkValueName hsValName) = case Text.uncons hsValName of
   Nothing -> "TODO(bladyjoker): Got an empty Haskell value name"
   Just (c, _) | Char.isAlpha c -> pretty hsModName <> dot <> pretty hsValName
-  _ -> enclose lparen rparen $ pretty hsModName <> dot <> pretty hsValName
+  _r -> enclose lparen rparen $ pretty hsModName <> dot <> pretty hsValName
 
 printHsValName :: ValueName -> Doc ann
 printHsValName (MkValueName hsValName) = case Text.uncons hsValName of
   Nothing -> "TODO(bladyjoker): Got an empty Haskell value name"
   Just (c, _) | Char.isAlpha c -> pretty hsValName
-  _ -> enclose lparen rparen $ pretty hsValName
+  _r -> enclose lparen rparen $ pretty hsValName
 
 {- | Print the Haskell class method name (ie. (==), toJSON etc.).
  This doesn't require a qualified print as it's treated special, we just need to

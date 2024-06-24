@@ -27,6 +27,12 @@ export const AssetClass: unique symbol = Symbol("AssetClass");
 export const Value: unique symbol = Symbol("Value");
 export const PlutusData: unique symbol = Symbol("PlutusData");
 export const Map: unique symbol = Symbol("Map");
+export const DCert: unique symbol = Symbol("DCert");
+export const TxOut: unique symbol = Symbol("TxOut");
+export const TxInInfo: unique symbol = Symbol("TxInInfo");
+export const TxInfo: unique symbol = Symbol("TxInfo");
+export const ScriptPurpose: unique symbol = Symbol("ScriptPurpose");
+export const ScriptContext: unique symbol = Symbol("ScriptContext");
 
 export type Address = PlutusLedgerApiV1.Address;
 export type LedgerBytes = PlutusLedgerApiV1.LedgerBytes;
@@ -53,3 +59,10 @@ export type AssetClass = PlutusLedgerApiV1.AssetClass;
 export type Value = PlutusLedgerApiV1.Value;
 export type PlutusData = PlutusLedgerApiPlutusData.PlutusData;
 export type Map<K, V> = PlutusLedgerApiAssocMap.Map<K, V>;
+
+export type DCert = PlutusLedgerApiV1.DCert;
+export type TxOut = PlutusLedgerApiV1.TxOut;
+export type TxInInfo = PlutusLedgerApiV1.TxInInfo;
+export type TxInfo = PlutusLedgerApiV1.TxInfo;
+export type ScriptPurpose = PlutusLedgerApiV1.ScriptPurpose;
+export type ScriptContext = PlutusLedgerApiV1.ScriptContext;

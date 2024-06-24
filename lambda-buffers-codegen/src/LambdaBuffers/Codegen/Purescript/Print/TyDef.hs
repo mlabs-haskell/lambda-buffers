@@ -1,7 +1,7 @@
 module LambdaBuffers.Codegen.Purescript.Print.TyDef (printTyDef) where
 
+import LambdaBuffers.Codegen.Purescript.Backend (MonadPurescriptBackend)
 import LambdaBuffers.Codegen.Purescript.Print.InstanceDef (printGenericDerive, printNewtypeDerive, printShowInstance)
-import LambdaBuffers.Codegen.Purescript.Print.MonadPrint (MonadPrint)
 import LambdaBuffers.Codegen.Purescript.Print.Names (printTyName)
 import LambdaBuffers.Codegen.Purescript.Print.Ty (printTyAbs)
 import LambdaBuffers.Codegen.Purescript.Syntax (TyDefKw (DataTyDef, NewtypeTyDef, SynonymTyDef))
@@ -54,7 +54,7 @@ instance (Data.Show.Show a) => Data.Show.Show (RecFoo a) where
   show = Data.Show.Generic.genericShow
 ```
 -}
-printTyDef :: MonadPrint m => PC.TyDef -> m (Doc ann)
+printTyDef :: MonadPurescriptBackend m => PC.TyDef -> m (Doc ann)
 printTyDef tyd@(PC.TyDef tyN tyabs _) = do
   (kw, absDoc) <- printTyAbs tyN tyabs
   case kw of
