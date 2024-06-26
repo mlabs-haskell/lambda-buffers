@@ -9,6 +9,7 @@
 
           extraSources = [
             config.packages.lbf-plutus-golden-api-rust
+            config.packages.lbf-plutus-golden-api-days-rust
             config.packages.lbf-prelude-rust
             config.packages.lbf-plutus-rust
           ];

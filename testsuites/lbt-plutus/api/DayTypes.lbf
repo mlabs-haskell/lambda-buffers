@@ -1,0 +1,15 @@
+module DayTypes
+
+import Plutus.V1 (PlutusData)
+import Prelude (Eq, Json)
+import Days (Day)
+
+prod WorkDay = Day
+
+derive Eq WorkDay
+derive PlutusData WorkDay
+
+record FreeDay = { day : Day }
+
+derive Eq FreeDay
+derive PlutusData FreeDay

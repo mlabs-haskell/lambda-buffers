@@ -24,7 +24,8 @@ import JS.BigInt (BigInt)
 import JS.BigInt as BigInt
 import Data.Either (Either(Left, Right))
 import Data.Maybe (Maybe(Nothing, Just))
-import LambdaBuffers.Days (Day(Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay(FreeDay), WorkDay(WorkDay))
+import LambdaBuffers.Days (Day(Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday))
+import LambdaBuffers.DayTypes (FreeDay(FreeDay), WorkDay(WorkDay))
 import LambdaBuffers.Foo (A(A), B(B), C(C), D(D), FInt(..), GInt(..))
 import LambdaBuffers.Foo.Bar (F(..), FooComplicated(FooComplicated), FooProd(FooProd), FooRec(FooRec), FooSum(FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G(..))
 import Test.LambdaBuffers.Plutus.Generators.Correct as Lbr

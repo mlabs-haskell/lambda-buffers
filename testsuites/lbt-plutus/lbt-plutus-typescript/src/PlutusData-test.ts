@@ -7,8 +7,9 @@ import * as Goldens from "./Goldens.js";
 import * as LbrPrelude from "lbr-prelude";
 import * as PreludeJson from "prelude/Json.js";
 
-import * as LbfFoo from "lbf-plutus-golden-api/LambdaBuffers/Foo.mjs";
-import * as LbfDays from "lbf-plutus-golden-api/LambdaBuffers/Days.mjs";
+import * as LbfFoo from "lbf-plutus-golden-api-typescript/LambdaBuffers/Foo.mjs";
+import * as LbfDays from "lbf-plutus-golden-api-days-typescript/LambdaBuffers/Days.mjs";
+import * as LbfDayTypes from "lbf-plutus-golden-api-typescript/LambdaBuffers/DayTypes.mjs";
 
 import * as LbrPlutusV1 from "lbr-plutus/V1.js";
 import * as LbrPlutusV2 from "lbr-plutus/V2.js";
@@ -172,12 +173,12 @@ describe("PlutusData tests (toJson . toPlutusData . fromPlutusData . fromJson)",
         Utils.mkFromToAssertGolden(
           PreludeJson.parseJson,
           (v) =>
-            LbrPlutusV1.IsPlutusData[LbfDays.WorkDay].fromData(
+            LbrPlutusV1.IsPlutusData[LbfDayTypes.WorkDay].fromData(
               LbrPrelude.Json[LbrPlutusV1.PlutusData].fromJson(v),
             ),
           (v) =>
             LbrPrelude.Json[LbrPlutusV1.PlutusData].toJson(
-              LbrPlutusV1.IsPlutusData[LbfDays.WorkDay].toData(v),
+              LbrPlutusV1.IsPlutusData[LbfDayTypes.WorkDay].toData(v),
             ),
           PreludeJson.stringify,
         ),
@@ -192,12 +193,12 @@ describe("PlutusData tests (toJson . toPlutusData . fromPlutusData . fromJson)",
         Utils.mkFromToAssertGolden(
           PreludeJson.parseJson,
           (v) =>
-            LbrPlutusV1.IsPlutusData[LbfDays.FreeDay].fromData(
+            LbrPlutusV1.IsPlutusData[LbfDayTypes.FreeDay].fromData(
               LbrPrelude.Json[LbrPlutusV1.PlutusData].fromJson(v),
             ),
           (v) =>
             LbrPrelude.Json[LbrPlutusV1.PlutusData].toJson(
-              LbrPlutusV1.IsPlutusData[LbfDays.FreeDay].toData(v),
+              LbrPlutusV1.IsPlutusData[LbfDayTypes.FreeDay].toData(v),
             ),
           PreludeJson.stringify,
         ),

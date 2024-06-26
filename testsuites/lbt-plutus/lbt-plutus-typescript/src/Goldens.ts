@@ -5,9 +5,10 @@ import * as LbrPlutusV2 from "lbr-plutus/V2.js";
 import * as PlaV1 from "plutus-ledger-api/V1.js";
 import * as PlaMap from "plutus-ledger-api/AssocMap.js";
 
-import * as LbfFooBar from "lbf-plutus-golden-api/LambdaBuffers/Foo/Bar.mjs";
-import * as LbfFoo from "lbf-plutus-golden-api/LambdaBuffers/Foo.mjs";
-import * as LbfDays from "lbf-plutus-golden-api/LambdaBuffers/Days.mjs";
+import * as LbfFooBar from "lbf-plutus-golden-api-typescript/LambdaBuffers/Foo/Bar.mjs";
+import * as LbfFoo from "lbf-plutus-golden-api-typescript/LambdaBuffers/Foo.mjs";
+import * as LbfDays from "lbf-plutus-golden-api-days-typescript/LambdaBuffers/Days.mjs";
+import * as LbfDayTypes from "lbf-plutus-golden-api-typescript/LambdaBuffers/DayTypes.mjs";
 
 /**
  * Hard coded bytes for testing
@@ -1089,7 +1090,7 @@ export function dayGoldens(): LbfDays.Day[] {
 /**
  * Hard coded {@link WorkDay} tests
  */
-export function workDayGoldens(): LbfDays.WorkDay[] {
+export function workDayGoldens(): LbfDayTypes.WorkDay[] {
   return [
     { name: "Monday" },
     { name: "Tuesday" },
@@ -1104,7 +1105,7 @@ export function workDayGoldens(): LbfDays.WorkDay[] {
 /**
  * Hard coded {@link FreeDay} tests
  */
-export function freeDayGoldens(): LbfDays.FreeDay[] {
+export function freeDayGoldens(): LbfDayTypes.FreeDay[] {
   return [{ day: { name: "Saturday" } }, { day: { name: "Sunday" } }];
 }
 

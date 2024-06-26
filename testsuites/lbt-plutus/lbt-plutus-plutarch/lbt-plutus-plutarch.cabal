@@ -104,20 +104,22 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base                            >=4.16
+    , base                                 >=4.16
     , lbf-plutus
-    , lbf-plutus-golden-api
+    , lbf-plutus-golden-api-days-haskell
+    , lbf-plutus-golden-api-days-plutarch
+    , lbf-plutus-golden-api-haskell
+    , lbf-plutus-golden-api-plutarch
     , lbf-plutus-plutarch
-    , lbf-plutus-plutarch-golden-api
     , lbf-prelude
     , lbf-prelude-plutarch
     , lbr-plutarch
     , lbr-plutus
     , lbt-plutus-plutarch
-    , plutarch                        >=1.3
-    , plutus-tx                       >=1.1
-    , tasty                           >=1.4
+    , plutarch                             >=1.3
+    , plutus-tx                            >=1.1
+    , tasty                                >=1.4
     , tasty-expected-failure
-    , tasty-hunit                     >=0.10
+    , tasty-hunit                          >=0.10
 
   other-modules:  Test.LambdaBuffers.Runtime.Plutarch.PlutusData

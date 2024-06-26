@@ -22,6 +22,8 @@
           # Golden api
           "${config.packages.lbf-plutus-golden-api-plutarch}"
           "${config.packages.lbf-plutus-golden-api-haskell}"
+          "${config.packages.lbf-plutus-golden-api-days-haskell}"
+          "${config.packages.lbf-plutus-golden-api-days-plutarch}"
           # Golden data
           "${config.packages.lbt-plutus-golden-haskell}"
           # Plutarch itself

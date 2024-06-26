@@ -3,6 +3,8 @@
 
 module Test.LambdaBuffers.Runtime.Plutarch.PlutusData (tests) where
 
+import LambdaBuffers.DayTypes qualified as HlDayTypes
+import LambdaBuffers.DayTypes.Plutarch qualified as PlDayTypes
 import LambdaBuffers.Days qualified as HlDays
 import LambdaBuffers.Days.Plutarch qualified as PlDays
 import LambdaBuffers.Foo qualified as HlFoo
@@ -44,8 +46,8 @@ transparentGoldens =
   testGroup
     "Transparent golden types"
     [ forallGoldens @HlDays.Day @PlDays.Day "Days.Day" 6
-    , forallGoldens @HlDays.FreeDay @PlDays.FreeDay "Days.FreeDay" 1
-    , forallGoldens @HlDays.WorkDay @PlDays.WorkDay "Days.WorkDay" 4
+    , forallGoldens @HlDayTypes.FreeDay @PlDayTypes.FreeDay "Days.FreeDay" 1
+    , forallGoldens @HlDayTypes.WorkDay @PlDayTypes.WorkDay "Days.WorkDay" 4
     , forallGoldens @HlFoo.A @PlFoo.A "Foo.A" 9
     , forallGoldens @HlFoo.B @PlFoo.B "Foo.B" 9
     , forallGoldens @HlFoo.C @PlFoo.C "Foo.C" 9

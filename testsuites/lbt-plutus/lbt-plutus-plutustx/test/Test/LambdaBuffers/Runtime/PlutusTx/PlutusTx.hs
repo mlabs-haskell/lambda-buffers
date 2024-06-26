@@ -58,7 +58,8 @@ module Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx (
   scriptContext2Compiled,
 ) where
 
-import LambdaBuffers.Days.PlutusTx (Day, FreeDay, WorkDay)
+import LambdaBuffers.DayTypes.PlutusTx (FreeDay, WorkDay)
+import LambdaBuffers.Days.PlutusTx (Day)
 import LambdaBuffers.Foo.PlutusTx (A, B, C, D, E, FInt, GInt)
 import LambdaBuffers.Plutus.V2.PlutusTx qualified as PlutusV2
 import PlutusLedgerApi.V1 qualified as PlutusV1

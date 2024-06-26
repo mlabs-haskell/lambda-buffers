@@ -12,6 +12,7 @@
 
         extraSources = [
           config.packages.lbf-plutus-golden-api-purescript
+          config.packages.lbf-plutus-golden-api-days-purescript
           config.packages.lbf-prelude-purescript
           config.packages.lbf-plutus-purescript
           config.packages."purescript:lbr-prelude:src"
