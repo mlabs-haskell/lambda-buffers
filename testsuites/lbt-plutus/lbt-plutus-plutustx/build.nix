@@ -14,6 +14,7 @@
           "${config.packages.lbf-prelude-plutustx}"
           "${config.packages.lbf-plutus-plutustx}"
           "${config.packages.lbf-plutus-golden-api-plutustx}"
+          "${config.packages.lbf-plutus-golden-api-days-plutustx}"
           "${config.packages.lbr-plutustx-src}"
 
           # LB Haskell backend imports (Prelude and Plutus)
@@ -22,6 +23,7 @@
           "${config.packages.lbr-plutus-haskell-src}"
           "${config.packages.lbf-plutus-haskell}"
           "${config.packages.lbf-plutus-golden-api-haskell}"
+          "${config.packages.lbf-plutus-golden-api-days-haskell}"
           "${config.packages.lbt-plutus-golden-haskell}"
 
           # Plutarch (just for script evaluation module)

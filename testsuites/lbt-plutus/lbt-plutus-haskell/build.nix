@@ -14,6 +14,7 @@
           "${config.packages.lbf-prelude-haskell}"
           "${config.packages.lbr-plutus-haskell-src}"
           "${config.packages.lbf-plutus-haskell}"
+          "${config.packages.lbf-plutus-golden-api-days-haskell}"
           "${config.packages.lbf-plutus-golden-api-haskell}"
           "${config.packages.lbt-plutus-golden-haskell}"
         ];

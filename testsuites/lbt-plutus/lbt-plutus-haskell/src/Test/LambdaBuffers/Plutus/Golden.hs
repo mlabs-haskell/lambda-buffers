@@ -53,7 +53,8 @@ module Test.LambdaBuffers.Plutus.Golden (
 ) where
 
 import Data.ByteString qualified as B
-import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday), FreeDay (FreeDay), WorkDay (WorkDay))
+import LambdaBuffers.DayTypes (FreeDay (FreeDay), WorkDay (WorkDay))
+import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday, Day'Thursday, Day'Tuesday, Day'Wednesday))
 import LambdaBuffers.Foo (A (A), B (B), C (C), D (D), FInt (FInt), GInt (GInt))
 import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G (G'Nil, G'Rec))
 import PlutusLedgerApi.V1 qualified as PlutusV1

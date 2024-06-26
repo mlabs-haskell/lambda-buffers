@@ -128,10 +128,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "lbf-plutus-rust-golden-api"
+name = "lbf-plutus-golden-api-days-rust"
 version = "0.1.0"
 dependencies = [
  "lbf-plutus",
+ "lbf-prelude",
+ "lbr-prelude",
+ "num-bigint",
+ "plutus-ledger-api",
+ "serde_json",
+]
+
+[[package]]
+name = "lbf-plutus-golden-api-rust"
+version = "0.1.0"
+dependencies = [
+ "lbf-plutus",
+ "lbf-plutus-golden-api-days-rust",
  "lbf-prelude",
  "lbr-prelude",
  "num-bigint",
@@ -178,7 +191,8 @@ dependencies = [
 name = "lbt-plutus"
 version = "0.1.0"
 dependencies = [
- "lbf-plutus-rust-golden-api",
+ "lbf-plutus-golden-api-days-rust",
+ "lbf-plutus-golden-api-rust",
  "lbf-prelude",
  "lbr-prelude",
  "num-bigint",

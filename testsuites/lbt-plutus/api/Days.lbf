@@ -7,13 +7,3 @@ sum Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
 
 derive Eq Day
 derive PlutusData Day
-
-prod WorkDay = Day
-
-derive Eq WorkDay
-derive PlutusData WorkDay
-
-record FreeDay = { day : Day }
-
-derive Eq FreeDay
-derive PlutusData FreeDay

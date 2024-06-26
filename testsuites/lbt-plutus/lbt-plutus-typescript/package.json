@@ -23,7 +23,8 @@
   },
   "dependencies": {
     "lbf-plutus": "file:.extra-dependencies/lbf-plutus",
-    "lbf-plutus-golden-api": "file:.extra-dependencies/lbf-plutus-golden-api",
+    "lbf-plutus-golden-api-typescript": "file:.extra-dependencies/lbf-plutus-golden-api-typescript",
+    "lbf-plutus-golden-api-days-typescript": "file:.extra-dependencies/lbf-plutus-golden-api-days-typescript",
     "lbf-prelude": "file:.extra-dependencies/lbf-prelude",
     "lbr-plutus": "file:.extra-dependencies/lbr-plutus",
     "lbr-prelude": "file:.extra-dependencies/lbr-prelude",

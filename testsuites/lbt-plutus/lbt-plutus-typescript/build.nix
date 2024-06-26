@@ -8,6 +8,7 @@
           src = ./.;
           npmExtraDependencies = [
             config.packages.lbf-plutus-golden-api-typescript
+            config.packages.lbf-plutus-golden-api-days-typescript
           ];
 
           devShellTools = config.settings.shell.tools;

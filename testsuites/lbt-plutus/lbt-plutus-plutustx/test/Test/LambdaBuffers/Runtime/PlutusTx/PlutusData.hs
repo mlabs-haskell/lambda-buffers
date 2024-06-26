@@ -5,6 +5,8 @@
 module Test.LambdaBuffers.Runtime.PlutusTx.PlutusData (tests) where
 
 import Data.ByteString qualified as B
+import LambdaBuffers.DayTypes qualified as HlDayTypes
+import LambdaBuffers.DayTypes.PlutusTx qualified as PlDayTypes
 import LambdaBuffers.Days qualified as HlDays
 import LambdaBuffers.Days.PlutusTx qualified as PlDays
 import LambdaBuffers.Foo qualified as HlFoo
@@ -47,8 +49,8 @@ transparentGoldens =
   testGroup
     "Transparent golden types"
     [ forallGoldens @HlDays.Day @PlDays.Day PlutusTx.dayCompiled "Days.Day" 6
-    , forallGoldens @HlDays.FreeDay @PlDays.FreeDay PlutusTx.freeDayCompiled "Days.FreeDay" 1
-    , forallGoldens @HlDays.WorkDay @PlDays.WorkDay PlutusTx.workDayCompiled "Days.WorkDay" 4
+    , forallGoldens @HlDayTypes.FreeDay @PlDayTypes.FreeDay PlutusTx.freeDayCompiled "Days.FreeDay" 1
+    , forallGoldens @HlDayTypes.WorkDay @PlDayTypes.WorkDay PlutusTx.workDayCompiled "Days.WorkDay" 4
     , forallGoldens @HlFoo.A @PlFoo.A PlutusTx.fooACompiled "Foo.A" 9
     , forallGoldens @HlFoo.B @PlFoo.B PlutusTx.fooBCompiled "Foo.B" 9
     , forallGoldens @HlFoo.C @PlFoo.C PlutusTx.fooCCompiled "Foo.C" 9

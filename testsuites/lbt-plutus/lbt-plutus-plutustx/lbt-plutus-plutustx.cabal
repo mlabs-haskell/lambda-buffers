@@ -89,13 +89,15 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base                            >=4.16
-    , bytestring                      >=0.11
-    , filepath                        >=1.4
-    , lbf-plutus                      >=0.1
-    , lbf-plutus-golden-api
+    , base                                 >=4.16
+    , bytestring                           >=0.11
+    , filepath                             >=1.4
+    , lbf-plutus                           >=0.1
+    , lbf-plutus-golden-api-days-haskell
+    , lbf-plutus-golden-api-days-plutustx
+    , lbf-plutus-golden-api-haskell
+    , lbf-plutus-golden-api-plutustx
     , lbf-plutus-plutustx
-    , lbf-plutus-plutustx-golden-api
     , lbf-prelude
     , lbf-prelude-plutustx
     , lbr-plutus
@@ -103,11 +105,11 @@ test-suite tests
     , lbr-prelude
     , lbt-plutus-golden-data
     , plutarch
-    , plutus-core                     >=1.20
-    , plutus-ledger-api               >=1.20
+    , plutus-core                          >=1.20
+    , plutus-ledger-api                    >=1.20
     , plutus-tx
     , plutus-tx-plugin
-    , tasty                           >=1.4
+    , tasty                                >=1.4
     , tasty-expected-failure
     , tasty-hunit
 
