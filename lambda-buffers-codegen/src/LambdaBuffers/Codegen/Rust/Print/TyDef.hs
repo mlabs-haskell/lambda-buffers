@@ -164,7 +164,7 @@ printProd parentTyN tyArgs (PC.Product fields _) = do
   mn <- asks (view $ Print.ctxModule . #moduleName)
   tyDocs <- for fields (printTyTopLevel parentTyN)
   let phantomTyArgs = collectPhantomTyArgs iTyDefs mn parentTyN fields tyArgs
-      phantomFields = printPhantomData <$> phantomTyArgs
+      phantomFields = pub . printPhantomData <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
     else return $ encloseSep lparen rparen comma (pub <$> (tyDocs <> phantomFields)) <> semi
@@ -234,7 +234,7 @@ printPhantomData tyArg =
 
 printPhantomDataField :: PC.TyArg -> Doc ann
 printPhantomDataField tyArg =
-  phantomFieldIdent tyArg <> colon <+> printPhantomData tyArg
+  pub $ phantomFieldIdent tyArg <> colon <+> printPhantomData tyArg
 
 phantomDataCtorIdent :: Doc ann
 phantomDataCtorIdent = "PhantomDataCtor"
