@@ -1,4 +1,4 @@
-module LambdaBuffers.Compiler.LamTy.Eval (runEval, runEval', eval) where
+module LambdaBuffers.Compiler.LamTy.Eval (runEval, runEval', eval, runEvalWithGas) where
 
 import Control.Lens (makeLenses, view, (%~), (&), (.~), (^.))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -34,6 +34,23 @@ runEval' :: PC.ModuleName -> Map PC.QTyName PC.TyDef -> Ty -> Either P.Error Ty
 runEval' mn tds ty =
   let p = runReaderT (eval ty) (MkContext mn tds mempty)
    in runExcept p
+
+-- | `runEvalWithGas someGas ci mn ty` evaluates a `ty` repeatedly until the gas is reached or no further change (fixpoint reached)
+runEvalWithGas :: Maybe Int -> PC.CompilerInput -> PC.ModuleName -> PC.Ty -> Either P.Error Ty
+runEvalWithGas mayGas ci mn ty =
+  let tydefs = PC.indexTyDefs ci
+   in fix mayGas (runEval' mn tydefs) (fromTy ty)
+
+fix :: Maybe Int -> (Ty -> Either e Ty) -> Ty -> Either e Ty
+fix Nothing r x = case r x of
+  Left err -> Left err
+  Right x' -> if x == x' then Right x else fix Nothing r x'
+fix (Just n) r x =
+  if n <= 0
+    then Right x
+    else case r x of
+      Left err -> Left err
+      Right x' -> if x == x' then Right x else fix (Just (n - 1)) r x'
 
 eval :: MonadEval m => Ty -> m Ty
 eval (TyRef tr) = eval (TyApp (TyRef tr) [] Nothing)

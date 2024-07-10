@@ -6,6 +6,7 @@ import Test.LambdaBuffers.Compiler qualified as LBC
 import Test.LambdaBuffers.Compiler.ClassClosure qualified as ClassClosure
 import Test.LambdaBuffers.Compiler.LamTy qualified as LT
 import Test.LambdaBuffers.Compiler.MiniLog qualified as ML
+import Test.LambdaBuffers.Compiler.Phantoms qualified as Phantoms
 import Test.LambdaBuffers.Compiler.TypeClassCheck qualified as TC
 import Test.Tasty (defaultMain, testGroup)
 
@@ -21,4 +22,5 @@ main =
       , ML.test
       , TC.test
       , ClassClosure.tests
+      , Phantoms.test
       ]
