@@ -3,7 +3,7 @@
 -- | unification-fd based solver.
 module LambdaBuffers.Compiler.MiniLog.UniFdSolver (solve) where
 
-import Control.Monad (filterM, foldM, when)
+import Control.Monad (filterM, foldM, when, (>=>))
 import Control.Monad.Error.Class (MonadError (catchError, throwError))
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.Reader (MonadReader (local), ReaderT (runReaderT), asks)
@@ -94,35 +94,40 @@ solve doTracing clauses goals = case runUniM doTracing clauses (top goals) of
 top :: (Eq fun, Eq atom, Show fun, Show atom) => [ML.Term fun atom] -> UniM fun atom (Map ML.VarName (ML.Term fun atom))
 top goals = do
   (goals', scope) <- interpretTerms mempty goals
+  -- I think these goals don't need to be forced as they are already ground
   _ <- solveGoal `traverse` goals'
   -- Resolve scope (applyBindings to get variables resolved to ground terms)
   traverse (fromUTerm . U.UVar) scope
 
--- | Solving a goal means looking up a matching clause and `callClause` on it with the given goal as the argument.
+{- | Solving a goal means looking up a matching clause and `callClause` on it with the given goal as the argument.
+ WARN(bladyjoker): This expects a forced goal!!!
+-}
 solveGoal :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
-solveGoal goal = do
-  traceSolveGoal goal
-  clause <- lookupClause goal
-  mayAncestor <- checkCycle goal
+solveGoal goal'forced = do
+  traceSolveGoal goal'forced
+  clause <- lookupClause goal'forced
+  mayAncestor <- checkCycle goal'forced
   retGoal <- case mayAncestor of
-    Nothing -> local (\r -> r {uCtx'trace = goal : uCtx'trace r}) (callClause clause goal)
+    Nothing -> do
+      local (\r -> r {uCtx'trace = goal'forced : uCtx'trace r}) (callClause clause goal'forced)
     Just ancestorGoal -> return ancestorGoal
-  traceDoneGoal goal
+  traceDoneGoal goal'forced
   return retGoal
 
 {- | Given a unifiable term and the knowledge base (clauses) find a next `MiniLog.Clause` to `callClause` on.
  This is a delicate operation, the search simply tries to unify the heads of `MiniLog.Clause`s with the given goal.
  However, before unifying with the goal, `duplicateTerm` is used to make sure the original goal variables are not affected (unified on) by the search.
+ WARN(bladyjoker): This expects a forced goal!!!
 -}
 lookupClause :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (ML.Clause fun atom)
-lookupClause goal = do
-  traceLookupClause goal
+lookupClause goal'forced = do
+  traceLookupClause goal'forced
   clauses <- asks uCtx'clauses
   matched <-
     filterM
       ( \cl -> do
           clauseHead' <- toUTerm $ ML.clauseHead cl
-          goal' <- duplicateTerm goal
+          goal' <- duplicateTerm goal'forced
           catchError
             (goal' `unify` clauseHead' >> return True)
             ( \case
@@ -132,9 +137,9 @@ lookupClause goal = do
       )
       clauses
   case matched of
-    [] -> fromUTerm goal >>= throwError . MLError . ML.MissingClauseError
-    [clause] -> traceFoundClause goal clause >> return clause
-    overlaps -> fromUTerm goal >>= throwError . MLError . ML.OverlappingClausesError overlaps
+    [] -> fromUTerm goal'forced >>= throwError . MLError . ML.MissingClauseError
+    [clause] -> traceFoundClause goal'forced clause >> return clause
+    overlaps -> fromUTerm goal'forced >>= throwError . MLError . ML.OverlappingClausesError overlaps
 
 {- | In functional speak, this is like a function call (application), where clause is a function and a goal is the argument.
  We simply `interpretClause` and unify the given argument with the head of the clause.
@@ -145,7 +150,7 @@ callClause clause arg = do
   traceCallClause clause arg
   (clauseHead', clauseBody') <- interpretClause clause
   retGoal <- clauseHead' `unify` arg
-  _ <- solveGoal `traverse` clauseBody'
+  _ <- (force >=> solveGoal) `traverse` clauseBody'
   traceDoneClause clause arg
   return retGoal
 
@@ -155,17 +160,20 @@ callClause clause arg = do
  - https://www.swi-prolog.org/pldoc/doc/_SWI_/library/coinduction.pl
  - https://personal.utdallas.edu/~gupta/courses/acl/2021/other-papers/colp.pdf
  - https://arxiv.org/pdf/1511.09394.pdf
+
+ WARN(bladyjoker): This expects a forced goal!!!
 -}
 checkCycle :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (Maybe (UTerm fun atom))
-checkCycle goal = do
-  visitedGoals <- asks uCtx'trace
+checkCycle goal'forced = do
+  visitedGoals <- asks uCtx'trace -- THESE ARE ALL FORCED
+  -- WARN(bladyjoker): Because of variable sharing, this has to be forced otherwise you'd yield a variable here that's not real bound by any `unify` that were applied to it beforehand
   foldM
     ( \mayCycle visited -> do
         if isJust mayCycle
           then return mayCycle
           else do
             visited' <- duplicateTerm visited
-            goal' <- duplicateTerm goal
+            goal' <- duplicateTerm goal'forced
             catchError
               ( do
                   _ <- goal' `unify` visited'
@@ -183,16 +191,13 @@ checkCycle goal = do
  See https://www.swi-prolog.org/pldoc/doc_for?object=duplicate_term/2.
 -}
 duplicateTerm :: (Eq fun, Eq atom) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
-duplicateTerm uv@(U.UVar _) = do
-  -- WARN(bladyjoker): Because of variable sharing, this has to be forced otherwise you'd yield a variable here that's not real bound by any `unify` that were applied to it beforehand
-  uv'forced <- force uv
-  case uv'forced of
-    U.UVar _ -> freeVar
-    other -> return other
+duplicateTerm (U.UVar _) = freeVar --  WARN(bladyjoker): The UTerm must be `forced` before calling this, otherwise you'd just copy a variable that's not bound to the original (and all its unifications)
 duplicateTerm at@(U.UTerm (Atom' _)) = return at
 duplicateTerm (U.UTerm (Struct' f args)) = U.UTerm . Struct' f <$> (duplicateTerm `traverse` args)
 
--- | Turn a unifiable term back into it's original MiniLog.Term.
+{- | Turn a unifiable term back into it's original MiniLog.Term.
+For showing/debugging/testing purposes.
+-}
 fromUTerm :: (Eq fun, Eq atom, Show fun, Show atom) => UTerm fun atom -> UniM fun atom (ML.Term fun atom)
 fromUTerm uv@(U.UVar _) = do
   -- WARN(bladyjoker): Because of variable sharing, this has to be forced otherwise you'd yield a variable here that's not real bound by any `unify` that were applied to it beforehand
