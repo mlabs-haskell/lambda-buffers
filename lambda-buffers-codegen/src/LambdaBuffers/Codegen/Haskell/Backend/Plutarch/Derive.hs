@@ -81,7 +81,7 @@ printPEqInstanceDef :: MonadHaskellBackend t m => PC.Ty -> Doc ann -> m (Doc ann
 printPEqInstanceDef ty implDefDoc = do
   Print.importClass PlRefs.peqQClassName
   Print.importClass PlRefs.pisDataQClassName
-  let freeVars = Haskell.collectTyVars ty
+  let freeVars = PC.collectTyVars ty
   headDoc <- Haskell.printConstraint PlRefs.peqQClassName ty
   case freeVars of
     [] -> return $ "instance" <+> headDoc <+> "where" <> hardline <> space <> space <> implDefDoc
@@ -170,7 +170,7 @@ printPlutusTypeInstanceDef ty implDefDoc = do
   Print.importType PlRefs.pdataQTyName
   headDoc <- Haskell.printConstraint PlRefs.plutusTypeQClassName ty
   tyDoc <- Haskell.printTyInner ty
-  let freeVars = Haskell.collectTyVars ty
+  let freeVars = PC.collectTyVars ty
       pinnerDefDoc = "type PInner" <+> tyDoc <+> "=" <+> Haskell.printHsQTyName PlRefs.pdataQTyName
   case freeVars of
     [] ->
@@ -272,7 +272,7 @@ printPTryFromPAsDataInstanceDef ty implDefDoc = do
         Haskell.printHsQClassName PlRefs.ptryFromQClassName
           <+> Haskell.printHsQTyName PlRefs.pdataQTyName
           <+> parens (Haskell.printHsQTyName PlRefs.pasDataQTyName <+> tyDoc)
-      freeVars = Haskell.collectTyVars ty
+      freeVars = PC.collectTyVars ty
       pinnerDefDoc =
         "type PTryFromExcess"
           <+> Haskell.printHsQTyName PlRefs.pdataQTyName
@@ -332,7 +332,7 @@ printPTryFromInstanceDef ty = do
         Haskell.printHsQClassName PlRefs.ptryFromQClassName
           <+> Haskell.printHsQTyName PlRefs.pdataQTyName
           <+> tyDoc
-      freeVars = Haskell.collectTyVars ty
+      freeVars = PC.collectTyVars ty
 
       pinnerDefDoc =
         "type PTryFromExcess"

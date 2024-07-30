@@ -24,7 +24,8 @@
 
             index-state = lib.mkOption {
               type = lib.types.str;
-              description = "Hackage index state to use when making a haskell.nix build environment";
+              description = "Hackage index state to use when making a haskell.nix
+ build environment";
             };
 
             compiler-nix-name = lib.mkOption {
@@ -50,6 +51,8 @@
 
               tools = [
 
+                pkgs.haskellPackages.fourmolu
+                pkgs.haskellPackages.hlint
                 pkgs.haskellPackages.apply-refact
 
                 pkgs.nil

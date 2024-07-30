@@ -762,7 +762,7 @@ fails :: TestName -> PC.CompilerInput -> TestTree
 fails title ci =
   Golden.fails
     goldensDir
-    (\tdir -> let fn = tdir </> "compiler_error" <.> "textproto" in (,) <$> (PbText.readMessageOrDie <$> Text.readFile fn) <*> pure fn)
+    (\tdir -> let fn = tdir </> "compiler_error" <.> "textproto" in ((,) . PbText.readMessageOrDie <$> Text.readFile fn) <*> pure fn)
     (\otherFn gotErr -> Text.writeFile otherFn (Text.pack . show $ PbText.pprintMessage gotErr))
     title
     (fst $ TC.runCheck' ci)

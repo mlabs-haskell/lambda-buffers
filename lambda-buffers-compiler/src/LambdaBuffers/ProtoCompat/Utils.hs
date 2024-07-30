@@ -1,14 +1,18 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
-module LambdaBuffers.ProtoCompat.Utils (prettyModuleName, prettyModuleName', localRef2ForeignRef, classClosure, filterClassInModule) where
+module LambdaBuffers.ProtoCompat.Utils (prettyModuleName, prettyModuleName', localRef2ForeignRef, classClosure, filterClassInModule, collectTyVars, collectVars, collectPhantomTyArgs) where
 
 import Control.Lens (Getter, to, view, (&), (.~), (^.))
+import Data.Foldable (Foldable (toList))
 import Data.Map qualified as Map
+import Data.Map.Ordered (OMap)
+import Data.Map.Ordered qualified as OMap
 import Data.ProtoLens (Message (defMessage))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import LambdaBuffers.ProtoCompat.Indexing qualified as PC
+import LambdaBuffers.ProtoCompat.InfoLess qualified as PC
 import LambdaBuffers.ProtoCompat.IsCompat.FromProto qualified as PC
 import LambdaBuffers.ProtoCompat.IsCompat.Lang ()
 import LambdaBuffers.ProtoCompat.Types qualified as PC
@@ -89,3 +93,33 @@ filterDerive cls m drv = filterConstraint cls m (drv ^. #constraint)
 
 filterConstraint :: Set PC.QClassName -> PC.Module -> PC.Constraint -> Bool
 filterConstraint cls m cnstr = PC.qualifyClassRef (m ^. #moduleName) (cnstr ^. #classRef) `Set.member` cls
+
+-- | `collectTyVars ty` scans the `PC.Ty` expression and collects all the type variables
+collectTyVars :: PC.Ty -> [PC.Ty]
+collectTyVars = fmap (`PC.withInfoLess` (PC.TyVarI . PC.TyVar)) . Set.toList . collectVars
+
+-- | `collectVars ty` is similar to `collectTyVars` but returns type variable names
+collectVars :: PC.Ty -> Set (PC.InfoLess PC.VarName)
+collectVars = collectVars' mempty
+
+collectVars' :: Set (PC.InfoLess PC.VarName) -> PC.Ty -> Set (PC.InfoLess PC.VarName)
+collectVars' collected (PC.TyVarI tv) = Set.insert (PC.mkInfoLess . view #varName $ tv) collected
+collectVars' collected (PC.TyAppI (PC.TyApp _ args _)) = collected `Set.union` (Set.unions . fmap collectVars $ args)
+collectVars' collected _ = collected
+
+collectPhantomTyArgs :: PC.TyDef -> [PC.TyArg]
+collectPhantomTyArgs tyDef =
+  let
+    PC.TyAbs tyArgs tyBody _si = PC.tyAbs tyDef
+    tys :: [PC.Ty] = go [] tyBody tyArgs
+    vars = Set.unions $ collectVars <$> tys
+    args = Set.fromList [varName | (varName, _) <- OMap.assocs tyArgs]
+    phantomArgs = Set.difference args vars
+   in
+    [tyArg | (varName, tyArg) <- OMap.assocs tyArgs, varName `Set.member` phantomArgs]
+  where
+    go :: [PC.Ty] -> PC.TyBody -> OMap (PC.InfoLess PC.VarName) PC.TyArg -> [PC.Ty]
+    go tys (PC.SumI (PC.Sum ctors _si)) tyArgs = tys <> mconcat [go tys (PC.ProductI $ PC.product ctor) tyArgs | ctor <- toList ctors]
+    go tys (PC.ProductI (PC.Product fields _si)) _tyArgs = tys <> toList fields
+    go tys (PC.RecordI (PC.Record fields _si)) _tyArgs = tys <> [PC.fieldTy field | field <- toList fields]
+    go tys (PC.OpaqueI _) tyArgs = tys <> [PC.TyVarI . PC.TyVar . PC.argName $ tyArg | (_, tyArg) <- OMap.assocs tyArgs]

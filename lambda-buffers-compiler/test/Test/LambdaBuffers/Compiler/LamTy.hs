@@ -105,6 +105,21 @@ test =
           (Just 1)
           (U.lr "Beer" U.@ [U.fr ["Prelude"] "Text"])
           "Prelude.Int8 Prelude.Text"
+      , fooCiTestCase
+          "Phantom a 1-> Prelude.Int8"
+          (Just 1)
+          (U.lr "Phantom" U.@ [U.tv "a"])
+          "Prelude.Int8"
+      , fooCiTestCase
+          "Phantom a *-> opq"
+          Nothing
+          (U.lr "Phantom" U.@ [U.tv "a"])
+          "opq"
+      , fooCiTestCase
+          "RecursiveA a 1-> opq"
+          (Just 1)
+          (U.lr "RecursiveA" U.@ [U.tv "a"])
+          "Prelude.Int8 (RecursiveA a)"
       ]
 
 fooCi :: PC.CompilerInput
@@ -125,6 +140,8 @@ fooCi =
                   ]
             )
         , U.td "Beer" (U.abs ["a"] $ U.prod' [U.fr ["Prelude"] "Int8", U.tv "a"])
+        , U.td "Phantom" (U.abs ["a"] $ U.prod' [U.fr ["Prelude"] "Int8"])
+        , U.td "RecursiveA" (U.abs ["a"] $ U.prod' [U.fr ["Prelude"] "Int8", U.lr "RecursiveA" U.@ [U.tv "a"]])
         , U.td'maybe
         , U.td'either
         , U.td'list
@@ -135,20 +152,7 @@ fooCiTestCase :: TestName -> Maybe Int -> PC.Ty -> String -> TestTree
 fooCiTestCase title mayGas ty want = testCase title $ runTestFix mayGas fooCi (U.mn ["Foo"]) ty want
 
 runTestFix :: Maybe Int -> PC.CompilerInput -> PC.ModuleName -> PC.Ty -> String -> Assertion
-runTestFix mayGas ci mn ty want =
-  let tydefs = PC.indexTyDefs ci
-   in case fix mayGas (LT.runEval' mn tydefs) (LT.fromTy ty) of
-        Left err -> assertFailure (show err)
-        Right res -> do
-          assertEqual "" want (show res)
-
-fix :: Maybe Int -> (LT.Ty -> Either e LT.Ty) -> LT.Ty -> Either e LT.Ty
-fix Nothing r x = case r x of
-  Left err -> Left err
-  Right x' -> if x == x' then Right x else fix Nothing r x'
-fix (Just n) r x =
-  if n <= 0
-    then Right x
-    else case r x of
-      Left err -> Left err
-      Right x' -> if x == x' then Right x else fix (Just (n - 1)) r x'
+runTestFix mayGas ci mn ty want = case LT.runEvalWithGas mayGas ci mn ty of
+  Left err -> assertFailure (show err)
+  Right res -> do
+    assertEqual "" want (show res)
