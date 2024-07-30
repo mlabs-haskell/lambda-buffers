@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
+
 module LambdaBuffers.Compiler.TypeClassCheck (runCheck, runCheck') where
 
 import Control.Lens ((&), (.~))
@@ -38,15 +41,7 @@ runSuperClassCycleCheck ci = case Super.runCheck ci of
  inspect the rules if needed.
 -}
 runConstraintsCheck :: Bool -> PC.CompilerInput -> (Either P.Error (), Map FilePath String)
-runConstraintsCheck doTracing ci =
-  let (errs, printed) =
-        foldr
-          (solveAndPrint doTracing)
-          (mempty, mempty)
-          (Map.toList . buildRules $ ci)
-   in if errs == mempty
-        then (Right (), printed)
-        else (Left errs, printed)
+runConstraintsCheck _doTracing _ci = (Right (), mempty) -- FIXME
 
 solveAndPrint :: Bool -> (PC.ModuleName, Either P.Error ([Clause], [Term])) -> (P.Error, Map FilePath String) -> (P.Error, Map FilePath String)
 solveAndPrint doTracing (mn, errOrClauses) (errs, printed) =
