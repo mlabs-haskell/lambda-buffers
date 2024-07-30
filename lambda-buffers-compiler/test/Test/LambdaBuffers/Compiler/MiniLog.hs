@@ -70,8 +70,8 @@ cycleTests =
 missingClauseTests :: TestTree
 missingClauseTests =
   testGroup
-    "Should fail to solve with because overlapping rules"
-    [ testCase "greeks.pl ?- animal(aristotle). % missing goal human(ariostotle)" $
+    "Should fail to solve because missing clauses"
+    [ testCase "greeks.pl ?- animal(aristotle). % missing goal human(aristotle)" $
         failsWith
           greekKnowledge
           [animal (Atom "aristotle")]
@@ -309,7 +309,7 @@ cycleKnowledge =
 -- | Testing actions.
 succeedsWith :: [TestClause] -> [TestTerm] -> [(VarName, TestTerm)] -> Assertion
 succeedsWith clauses goals wanted =
-  let (errOrRes, logs) = solve clauses goals
+  let (errOrRes, logs) = solve True clauses goals
    in case errOrRes of
         Left err -> do
           printLogs logs
@@ -323,7 +323,7 @@ succeedsWith clauses goals wanted =
 
 failsWith :: [TestClause] -> [TestTerm] -> (MiniLogError String String -> Bool) -> Assertion
 failsWith clauses goals errorPred =
-  let (errOrRes, logs) = solve clauses goals
+  let (errOrRes, logs) = solve True clauses goals
    in case errOrRes of
         Left err ->
           if errorPred err

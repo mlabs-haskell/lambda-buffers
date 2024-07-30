@@ -179,12 +179,10 @@ module Foo
 import Prelude
 
 sum Bar a = MkBar Bytes
-
 instance Eq a => Eq (Bar a)
 instance Ord a => Ord (Bar a)
 
 sum Foo a b c = MkFoo (Bar a)
-
 derive Eq (Foo a b c)
 derive Ord (Foo a b c)
 -}
@@ -556,7 +554,6 @@ import Prelude
 opaque Bar a
 
 sum Foo a b c = MkFoo (Bar a)
-
 derive Eq (Foo a b c)
 derive Ord (Foo a b c)
 -}
@@ -753,7 +750,7 @@ succeeds title ci =
     (\baseFp -> let fn = baseFp <.> "pl" in (,) <$> readFile fn <*> pure fn)
     writeFile
     title
-    ( case TC.runCheck' ci of
+    ( case TC.runCheck' True ci of
         (Left err, _printed) -> Left err
         (Right _, printed) -> Right $ Map.mapKeys Just printed
     )
@@ -762,10 +759,10 @@ fails :: TestName -> PC.CompilerInput -> TestTree
 fails title ci =
   Golden.fails
     goldensDir
-    (\tdir -> let fn = tdir </> "compiler_error" <.> "textproto" in (,) <$> (PbText.readMessageOrDie <$> Text.readFile fn) <*> pure fn)
+    (\tdir -> let fn = tdir </> "compiler_error" <.> "textproto" in ((,) . PbText.readMessageOrDie <$> Text.readFile fn) <*> pure fn)
     (\otherFn gotErr -> Text.writeFile otherFn (Text.pack . show $ PbText.pprintMessage gotErr))
     title
-    (fst $ TC.runCheck' ci)
+    (fst $ TC.runCheck' True ci)
 
 goldensDir :: FilePath
 goldensDir = "data/typeclasscheck-goldens"

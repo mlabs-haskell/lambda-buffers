@@ -14,13 +14,13 @@ import LambdaBuffers.ProtoCompat qualified as PC
 import Proto.Compiler qualified as P
 import Proto.Compiler_Fields qualified as P
 
-runCheck :: PC.CompilerInput -> Either P.Error ()
-runCheck = fst . runCheck'
+runCheck :: Bool -> PC.CompilerInput -> Either P.Error ()
+runCheck doTracing = fst . runCheck' doTracing
 
-runCheck' :: PC.CompilerInput -> (Either P.Error (), Map FilePath String)
-runCheck' ci = case runSuperClassCycleCheck ci of
+runCheck' :: Bool -> PC.CompilerInput -> (Either P.Error (), Map FilePath String)
+runCheck' doTracing ci = case runSuperClassCycleCheck ci of
   Left err -> (Left err, mempty)
-  Right _ -> runConstraintsCheck ci
+  Right _ -> runConstraintsCheck doTracing ci
 
 -- | Determines if type classes form a hierarchical relation (no cycles).
 runSuperClassCycleCheck :: PC.CompilerInput -> Either P.Error ()
@@ -37,25 +37,25 @@ runSuperClassCycleCheck ci = case Super.runCheck ci of
  a map of Prolog rendered MiniLog clauses for each module which can be used to
  inspect the rules if needed.
 -}
-runConstraintsCheck :: PC.CompilerInput -> (Either P.Error (), Map FilePath String)
-runConstraintsCheck ci =
+runConstraintsCheck :: Bool -> PC.CompilerInput -> (Either P.Error (), Map FilePath String)
+runConstraintsCheck doTracing ci =
   let (errs, printed) =
         foldr
-          solveAndPrint
+          (solveAndPrint doTracing)
           (mempty, mempty)
           (Map.toList . buildRules $ ci)
    in if errs == mempty
         then (Right (), printed)
         else (Left errs, printed)
 
-solveAndPrint :: (PC.ModuleName, Either P.Error ([Clause], [Term])) -> (P.Error, Map FilePath String) -> (P.Error, Map FilePath String)
-solveAndPrint (mn, errOrClauses) (errs, printed) =
+solveAndPrint :: Bool -> (PC.ModuleName, Either P.Error ([Clause], [Term])) -> (P.Error, Map FilePath String) -> (P.Error, Map FilePath String)
+solveAndPrint doTracing (mn, errOrClauses) (errs, printed) =
   case errOrClauses of
     Left buildErr -> (buildErr <> errs, printed)
     Right (clauses, goals) ->
       let (fp, prolog) = ML.toPrologModule (modNameToText mn) clauses
           printed' = Map.insert fp prolog printed
-       in case runSolve mn clauses goals of
+       in case runSolve doTracing mn clauses goals of
             Left solveErr -> (solveErr <> errs, printed')
             Right _ -> (errs, printed')
 

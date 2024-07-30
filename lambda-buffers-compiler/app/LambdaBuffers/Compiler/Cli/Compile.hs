@@ -15,6 +15,7 @@ import System.FilePath.Lens (extension)
 data CompileOpts = CompileOpts
   { _input :: FilePath
   , _output :: FilePath
+  , _debug :: Bool
   }
   deriving stock (Eq, Show)
 
@@ -33,7 +34,7 @@ compile :: CompileOpts -> IO ()
 compile opts = do
   logInfo "" $ "Reading Compiler Input from " <> (opts ^. input)
   compInp <- readCompilerInput (opts ^. input)
-  let compOut = runCompiler compInp
+  let compOut = runCompiler (opts ^. debug) compInp
   case compOut ^. maybe'error of
     Nothing -> do
       logInfo (opts ^. input) "Compilation succeeded"

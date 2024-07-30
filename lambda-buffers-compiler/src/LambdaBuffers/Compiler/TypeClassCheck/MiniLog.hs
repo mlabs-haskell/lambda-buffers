@@ -277,11 +277,11 @@ tyToTerm mn (LT.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.At
 {- | Solve/evaluate terms (goals) given some knowledge base (clauses).
  Tries each goal individually and collects all the errors.
 -}
-runSolve :: PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
-runSolve mn clauses goals =
+runSolve :: Bool -> PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
+runSolve doTracing mn clauses goals =
   let allErrs =
         foldr
-          ( \goal errs -> case runSolve' mn clauses goal of
+          ( \goal errs -> case runSolve' doTracing mn clauses goal of
               Left err -> err <> errs
               Right _ -> errs
           )
@@ -290,9 +290,9 @@ runSolve mn clauses goals =
    in if allErrs == mempty then Right () else Left allErrs
 
 -- | Tries to solve a single goal.
-runSolve' :: PC.ModuleName -> [Clause] -> Term -> Either P.Error ()
-runSolve' locMn clauses goal = do
-  let (errOrRes, mlTrace) = ML.solve clauses [goal]
+runSolve' :: Bool -> PC.ModuleName -> [Clause] -> Term -> Either P.Error ()
+runSolve' doTracing locMn clauses goal = do
+  let (errOrRes, mlTrace) = ML.solve doTracing clauses [goal]
   case errOrRes of
     Left mlErr -> do
       case goalToConstraint locMn goal of
