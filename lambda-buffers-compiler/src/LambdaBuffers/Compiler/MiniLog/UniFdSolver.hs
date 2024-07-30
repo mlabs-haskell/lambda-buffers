@@ -294,7 +294,9 @@ traceDoneClause clause arg = do
     trace (ML.DoneClause clause mlGoal)
 
 trace :: ML.MiniLogTrace fun atom -> UniM fun atom ()
-trace x = lift . lift . lift $ tell [x]
+trace x = do
+  doTracing <- asks uCtx'doTracing
+  when doTracing $ lift . lift . lift $ tell [x]
 
 force :: (Eq atom, Eq fun) => UTerm fun atom -> UniM fun atom (UTerm fun atom)
 force = lift . U.applyBindings
