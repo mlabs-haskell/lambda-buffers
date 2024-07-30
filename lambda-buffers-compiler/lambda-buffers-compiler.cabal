@@ -199,6 +199,7 @@ test-suite tests
     Test.LambdaBuffers.Compiler.LamTy
     Test.LambdaBuffers.Compiler.MiniLog
     Test.LambdaBuffers.Compiler.Mutation
+    Test.LambdaBuffers.Compiler.Phantoms
     Test.LambdaBuffers.Compiler.TypeClassCheck
     Test.LambdaBuffers.Compiler.Utils
     Test.LambdaBuffers.Compiler.Utils.Golden

@@ -29,6 +29,12 @@ module Test.LambdaBuffers.ProtoCompat.Utils (
   qcln',
   mod'prelude'only'eq,
   mod'prelude'noclass,
+  td'phantomA,
+  td'phantomB,
+  td'phantomC,
+  td'phantomD,
+  td'phantomE,
+  td'phantomF,
 ) where
 
 import Control.Lens ((^.))
@@ -181,6 +187,24 @@ td'list :: PC.TyDef
 td'list = td "List" (abs ["a"] $ sum [("Nil", []), ("Cons", [tv "a", lr "List" @ [tv "a"]])])
 td'listO :: PC.TyDef
 td'listO = td "List" (abs ["a"] opq)
+
+td'phantomA :: PC.TyDef
+td'phantomA = td "PhantomA" (abs ["a"] $ sum [("A", [lr "Int", lr "Int"]), ("B", [lr "Int", lr "Int"])])
+
+td'phantomB :: PC.TyDef
+td'phantomB = td "PhantomB" (abs ["a", "b"] $ sum [("A", [lr "Int", lr "Int"]), ("B", [lr "Int", lr "Int"])])
+
+td'phantomC :: PC.TyDef
+td'phantomC = td "PhantomC" (abs ["a"] $ prod' [lr "Int", lr "Int"])
+
+td'phantomD :: PC.TyDef
+td'phantomD = td "PhantomD" (abs ["a", "b"] $ prod' [lr "Int", lr "Int"])
+
+td'phantomE :: PC.TyDef
+td'phantomE = td "PhantomE" (abs ["a"] $ recrd [("foo", lr "Int"), ("bar", lr "Int")])
+
+td'phantomF :: PC.TyDef
+td'phantomF = td "PhantomF" (abs ["a", "b"] $ recrd [("foo", lr "Int"), ("bar", lr "Int")])
 
 -- | Some class definitions.
 cd'eq :: PC.ClassDef

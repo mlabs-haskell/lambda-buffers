@@ -150,7 +150,7 @@ printRec parentTyN tyArgs (PC.Record fields _) = do
   let iTyDefs = indexTyDefs ci
   mn <- asks (view $ Print.ctxModule . #moduleName)
   let phantomTyArgs = collectPhantomTyArgs iTyDefs mn parentTyN (recFieldTys fields) tyArgs
-      phantomFields = printPhantomDataField <$> phantomTyArgs
+      phantomFields = pub . printPhantomDataField <$> phantomTyArgs
   if null fields && null phantomTyArgs
     then return semi
     else do
