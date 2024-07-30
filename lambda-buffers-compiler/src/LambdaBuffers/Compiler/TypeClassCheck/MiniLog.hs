@@ -14,7 +14,6 @@ module LambdaBuffers.Compiler.TypeClassCheck.MiniLog (
 ) where
 
 import Control.Lens (view, (^.))
-import Control.Monad (forM)
 import Data.Default (Default (def))
 import Data.Map qualified as Map
 import Data.Map.Ordered qualified as OMap
