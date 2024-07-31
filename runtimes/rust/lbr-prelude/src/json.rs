@@ -8,6 +8,12 @@ use num_bigint::BigInt;
 use serde_json;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
+#[cfg(feature = "fs")]
+use std::future::Future;
+#[cfg(feature = "fs")]
+use std::{any::type_name, path::Path};
+#[cfg(feature = "fs")]
+use tokio::fs;
 
 pub mod lamval;
 
@@ -30,6 +36,57 @@ pub trait Json {
         Value::from_str(string)
             .map_err(|err| Error::MalformedJson { source: err })
             .and_then(|value| Self::from_json(&value))
+    }
+
+    /// Read a json object from a file, and decode it using lbf's Json trait.
+    /// The `type_name` is purely for error reporting purposes.
+    #[cfg(feature = "fs")]
+    fn read_lbf_json_file(path: impl AsRef<Path>) -> impl Future<Output = anyhow::Result<Self>>
+    where
+        Self: Sized,
+    {
+        async move {
+            let type_name = type_name::<Self>();
+            let json_str = fs::read_to_string(&path).await.map_err(|err| {
+                anyhow::anyhow!(
+                    "Unable to read file from {}: {}",
+                    path.as_ref().display(),
+                    err
+                )
+            })?;
+            let result = Self::from_json_string(&json_str).map_err(|err| {
+                anyhow::anyhow!(
+                    "Bad json of type {} in file {}: {}",
+                    type_name,
+                    path.as_ref().display(),
+                    err
+                )
+            })?;
+            Ok(result)
+        }
+    }
+
+    /// Encode a value using lbf's Json trait, and write the json string to a file.
+    /// The `type_name` is purely for error reporting purposes.
+    #[cfg(feature = "fs")]
+    fn write_lbf_json_file(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> impl Future<Output = anyhow::Result<()>> {
+        async move {
+            let type_name = type_name::<Self>();
+            let json_str = self.to_json_string();
+            fs::write(&path, json_str).await.map_err(|err| {
+                anyhow::anyhow!(
+                    "Unable to write value of type {} to file {}: {}",
+                    type_name,
+                    path.as_ref().display(),
+                    err
+                )
+            })?;
+
+            Ok(())
+        }
     }
 }
 
