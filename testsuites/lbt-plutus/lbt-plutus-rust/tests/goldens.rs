@@ -1,6 +1,7 @@
 use lbf_plutus_rust_golden_api::days::{Day, FreeDay, WorkDay};
 use lbf_plutus_rust_golden_api::foo::bar::{FooComplicated, FooProd, FooRec, FooSum, F, G};
 use lbf_plutus_rust_golden_api::foo::{FInt, GInt, A, B, C, D};
+use lbf_prelude::prelude::{Bool, Either, Integer, List, Map};
 use num_bigint::BigInt;
 use plutus_ledger_api::plutus_data::PlutusData;
 use plutus_ledger_api::v1::address::{
@@ -24,11 +25,11 @@ use plutus_ledger_api::v2::transaction::{
 };
 use std::collections::BTreeMap;
 
-pub fn bi(num: i32) -> BigInt {
+pub fn bi(num: i32) -> Integer {
     BigInt::from(num)
 }
 
-pub fn plutus_data_goldens() -> Vec<PlutusData> {
+pub fn plutus_data_goldens() -> List<PlutusData> {
     vec![
         PlutusData::Constr(bi(0), vec![]),
         PlutusData::Constr(
@@ -72,7 +73,7 @@ pub fn blake2b_224_hash() -> LedgerBytes {
     LedgerBytes((1..29).collect())
 }
 
-pub fn address_goldens() -> Vec<Address> {
+pub fn address_goldens() -> List<Address> {
     [
         credential_goldens()
             .into_iter()
@@ -96,7 +97,7 @@ pub fn address_goldens() -> Vec<Address> {
     .concat()
 }
 
-pub fn credential_goldens() -> Vec<Credential> {
+pub fn credential_goldens() -> List<Credential> {
     [
         pubkeyhash_goldens()
             .into_iter()
@@ -110,7 +111,7 @@ pub fn credential_goldens() -> Vec<Credential> {
     .concat()
 }
 
-pub fn staking_credential_goldens() -> Vec<StakingCredential> {
+pub fn staking_credential_goldens() -> List<StakingCredential> {
     [
         credential_goldens()
             .into_iter()
@@ -125,29 +126,29 @@ pub fn staking_credential_goldens() -> Vec<StakingCredential> {
     .concat()
 }
 
-pub fn pubkeyhash_goldens() -> Vec<Ed25519PubKeyHash> {
+pub fn pubkeyhash_goldens() -> List<Ed25519PubKeyHash> {
     vec![Ed25519PubKeyHash(blake2b_224_hash())]
 }
 
-pub fn script_hash_goldens() -> Vec<ScriptHash> {
+pub fn script_hash_goldens() -> List<ScriptHash> {
     vec![ScriptHash(blake2b_224_hash())]
 }
 
-pub fn validator_hash_goldens() -> Vec<ValidatorHash> {
+pub fn validator_hash_goldens() -> List<ValidatorHash> {
     script_hash_goldens()
         .into_iter()
         .map(ValidatorHash)
         .collect()
 }
 
-pub fn minting_policy_hash_goldens() -> Vec<MintingPolicyHash> {
+pub fn minting_policy_hash_goldens() -> List<MintingPolicyHash> {
     script_hash_goldens()
         .into_iter()
         .map(MintingPolicyHash)
         .collect()
 }
 
-pub fn bytes_goldens() -> Vec<LedgerBytes> {
+pub fn bytes_goldens() -> List<LedgerBytes> {
     vec![
         LedgerBytes(Vec::new()),
         LedgerBytes(vec![0]),
@@ -155,7 +156,7 @@ pub fn bytes_goldens() -> Vec<LedgerBytes> {
     ]
 }
 
-pub fn interval_goldens() -> Vec<PlutusInterval<POSIXTime>> {
+pub fn interval_goldens() -> List<PlutusInterval<POSIXTime>> {
     lower_bound_goldens()
         .iter()
         .flat_map(|from| {
@@ -167,7 +168,7 @@ pub fn interval_goldens() -> Vec<PlutusInterval<POSIXTime>> {
         .collect()
 }
 
-pub fn lower_bound_goldens() -> Vec<LowerBound<POSIXTime>> {
+pub fn lower_bound_goldens() -> List<LowerBound<POSIXTime>> {
     extended_goldens()
         .iter()
         .flat_map(|bound| {
@@ -179,7 +180,7 @@ pub fn lower_bound_goldens() -> Vec<LowerBound<POSIXTime>> {
         .collect()
 }
 
-pub fn upper_bound_goldens() -> Vec<UpperBound<POSIXTime>> {
+pub fn upper_bound_goldens() -> List<UpperBound<POSIXTime>> {
     extended_goldens()
         .iter()
         .flat_map(|bound| {
@@ -191,7 +192,7 @@ pub fn upper_bound_goldens() -> Vec<UpperBound<POSIXTime>> {
         .collect()
 }
 
-pub fn extended_goldens() -> Vec<Extended<POSIXTime>> {
+pub fn extended_goldens() -> List<Extended<POSIXTime>> {
     vec![
         Extended::NegInf,
         Extended::PosInf,
@@ -199,19 +200,19 @@ pub fn extended_goldens() -> Vec<Extended<POSIXTime>> {
     ]
 }
 
-pub fn closure_goldens() -> Vec<bool> {
+pub fn closure_goldens() -> List<Bool> {
     vec![true, false]
 }
 
-pub fn posix_time_goldens() -> Vec<POSIXTime> {
+pub fn posix_time_goldens() -> List<POSIXTime> {
     [bi(0), bi(1), bi(2)].into_iter().map(POSIXTime).collect()
 }
 
-pub fn posix_time_range_goldens() -> Vec<PlutusInterval<POSIXTime>> {
+pub fn posix_time_range_goldens() -> List<PlutusInterval<POSIXTime>> {
     interval_goldens()
 }
 
-pub fn currency_symbol_goldens() -> Vec<CurrencySymbol> {
+pub fn currency_symbol_goldens() -> List<CurrencySymbol> {
     minting_policy_hash_goldens()
         .into_iter()
         .map(CurrencySymbol::NativeToken)
@@ -222,7 +223,7 @@ pub fn ada_currency_symbol_golden() -> CurrencySymbol {
     CurrencySymbol::Ada
 }
 
-pub fn token_name_goldens() -> Vec<TokenName> {
+pub fn token_name_goldens() -> List<TokenName> {
     vec![
         TokenName(LedgerBytes(Vec::new())),
         TokenName(LedgerBytes((1..17).collect())),
@@ -230,7 +231,7 @@ pub fn token_name_goldens() -> Vec<TokenName> {
     ]
 }
 
-pub fn asset_class_goldens() -> Vec<AssetClass> {
+pub fn asset_class_goldens() -> List<AssetClass> {
     currency_symbol_goldens()
         .iter()
         .flat_map(|currency_symbol| {
@@ -248,11 +249,11 @@ pub fn asset_class_goldens() -> Vec<AssetClass> {
         .collect()
 }
 
-pub fn value_goldens() -> Vec<Value> {
+pub fn value_goldens() -> List<Value> {
     map_goldens().into_iter().map(Value).collect()
 }
 
-pub fn map_goldens() -> Vec<BTreeMap<CurrencySymbol, BTreeMap<TokenName, BigInt>>> {
+pub fn map_goldens() -> List<Map<CurrencySymbol, Map<TokenName, Integer>>> {
     vec![
         BTreeMap::new(),
         BTreeMap::from([(
@@ -276,27 +277,27 @@ pub fn map_goldens() -> Vec<BTreeMap<CurrencySymbol, BTreeMap<TokenName, BigInt>
     ]
 }
 
-pub fn redeemer_goldens() -> Vec<Redeemer> {
+pub fn redeemer_goldens() -> List<Redeemer> {
     vec![Redeemer(PlutusData::Integer(bi(1337)))]
 }
 
-pub fn datum_goldens() -> Vec<Datum> {
+pub fn datum_goldens() -> List<Datum> {
     vec![Datum(PlutusData::Integer(bi(1337)))]
 }
 
-pub fn redeemer_hash_goldens() -> Vec<RedeemerHash> {
+pub fn redeemer_hash_goldens() -> List<RedeemerHash> {
     vec![RedeemerHash(blake2b_256_hash())]
 }
 
-pub fn datum_hash_goldens() -> Vec<DatumHash> {
+pub fn datum_hash_goldens() -> List<DatumHash> {
     vec![DatumHash(blake2b_256_hash())]
 }
 
-pub fn tx_id_goldens() -> Vec<TransactionHash> {
+pub fn tx_id_goldens() -> List<TransactionHash> {
     vec![TransactionHash(blake2b_256_hash())]
 }
 
-pub fn tx_out_ref_goldens() -> Vec<TransactionInput> {
+pub fn tx_out_ref_goldens() -> List<TransactionInput> {
     tx_id_goldens()
         .into_iter()
         .map(|transaction_id| TransactionInput {
@@ -306,7 +307,7 @@ pub fn tx_out_ref_goldens() -> Vec<TransactionInput> {
         .collect()
 }
 
-pub fn tx_in_info_goldens_v1() -> Vec<TxInInfo> {
+pub fn tx_in_info_goldens_v1() -> List<TxInInfo> {
     tx_out_ref_goldens()
         .iter()
         .flat_map(|reference| {
@@ -318,7 +319,7 @@ pub fn tx_in_info_goldens_v1() -> Vec<TxInInfo> {
         .collect()
 }
 
-pub fn tx_out_goldens_v1() -> Vec<TransactionOutput> {
+pub fn tx_out_goldens_v1() -> List<TransactionOutput> {
     address_goldens()
         .iter()
         .flat_map(|address| {
@@ -339,7 +340,7 @@ pub fn tx_out_goldens_v1() -> Vec<TransactionOutput> {
         .collect()
 }
 
-pub fn dcert_goldens() -> Vec<DCert> {
+pub fn dcert_goldens() -> List<DCert> {
     [
         vec![DCert::Mir],
         vec![DCert::Genesis],
@@ -382,7 +383,7 @@ pub fn dcert_goldens() -> Vec<DCert> {
     .concat()
 }
 
-pub fn script_purpose_goldens() -> Vec<ScriptPurpose> {
+pub fn script_purpose_goldens() -> List<ScriptPurpose> {
     [
         currency_symbol_goldens()
             .into_iter()
@@ -404,7 +405,7 @@ pub fn script_purpose_goldens() -> Vec<ScriptPurpose> {
     .concat()
 }
 
-pub fn tx_info_goldens_v1() -> Vec<TransactionInfo> {
+pub fn tx_info_goldens_v1() -> List<TransactionInfo> {
     value_goldens()
         .iter()
         .flat_map(|fee| {
@@ -446,7 +447,7 @@ pub fn tx_info_goldens_v1() -> Vec<TransactionInfo> {
         .collect()
 }
 
-pub fn script_context_goldens_v1() -> Vec<ScriptContext> {
+pub fn script_context_goldens_v1() -> List<ScriptContext> {
     tx_info_goldens_v1()
         .iter()
         .flat_map(|tx_info| {
@@ -461,7 +462,7 @@ pub fn script_context_goldens_v1() -> Vec<ScriptContext> {
         .collect()
 }
 
-pub fn tx_in_info_goldens_v2() -> Vec<TxInInfoV2> {
+pub fn tx_in_info_goldens_v2() -> List<TxInInfoV2> {
     tx_out_ref_goldens()
         .iter()
         .flat_map(|reference| {
@@ -473,7 +474,7 @@ pub fn tx_in_info_goldens_v2() -> Vec<TxInInfoV2> {
         .collect()
 }
 
-pub fn tx_out_goldens_v2() -> Vec<TransactionOutputV2> {
+pub fn tx_out_goldens_v2() -> List<TransactionOutputV2> {
     address_goldens()
         .iter()
         .flat_map(|address| {
@@ -501,7 +502,7 @@ pub fn tx_out_goldens_v2() -> Vec<TransactionOutputV2> {
         .collect()
 }
 
-pub fn out_datum_goldens() -> Vec<OutputDatum> {
+pub fn out_datum_goldens() -> List<OutputDatum> {
     [
         vec![OutputDatum::None],
         datum_hash_goldens()
@@ -516,7 +517,7 @@ pub fn out_datum_goldens() -> Vec<OutputDatum> {
     .concat()
 }
 
-pub fn tx_info_goldens_v2() -> Vec<TransactionInfoV2> {
+pub fn tx_info_goldens_v2() -> List<TransactionInfoV2> {
     value_goldens()
         .iter()
         .flat_map(|fee| {
@@ -569,7 +570,7 @@ pub fn tx_info_goldens_v2() -> Vec<TransactionInfoV2> {
         .collect()
 }
 
-pub fn script_context_goldens_v2() -> Vec<ScriptContextV2> {
+pub fn script_context_goldens_v2() -> List<ScriptContextV2> {
     tx_info_goldens_v2()
         .iter()
         .flat_map(|tx_info| {
@@ -584,7 +585,7 @@ pub fn script_context_goldens_v2() -> Vec<ScriptContextV2> {
         .collect()
 }
 
-pub fn foo_sum_goldens<A: Clone, B: Clone, C>(x: A, y: B, z: C) -> Vec<FooSum<A, B, C>> {
+pub fn foo_sum_goldens<A: Clone, B: Clone, C>(x: A, y: B, z: C) -> List<FooSum<A, B, C>> {
     vec![
         FooSum::Foo(x.clone(), y.clone(), z),
         FooSum::Bar(x, y.clone()),
@@ -594,11 +595,11 @@ pub fn foo_sum_goldens<A: Clone, B: Clone, C>(x: A, y: B, z: C) -> Vec<FooSum<A,
     ]
 }
 
-pub fn foo_prod_goldens<A, B, C>(x: A, y: B, z: C) -> Vec<FooProd<A, B, C>> {
+pub fn foo_prod_goldens<A, B, C>(x: A, y: B, z: C) -> List<FooProd<A, B, C>> {
     vec![FooProd(x, y, z, bi(1337))]
 }
 
-pub fn foo_rec_goldens<A, B, C>(x: A, y: B, z: C) -> Vec<FooRec<A, B, C>> {
+pub fn foo_rec_goldens<A, B, C>(x: A, y: B, z: C) -> List<FooRec<A, B, C>> {
     vec![FooRec {
         foo_a: x,
         foo_b: y,
@@ -607,7 +608,7 @@ pub fn foo_rec_goldens<A, B, C>(x: A, y: B, z: C) -> Vec<FooRec<A, B, C>> {
     }]
 }
 
-pub fn a_goldens() -> Vec<A> {
+pub fn a_goldens() -> List<A> {
     address_goldens()
         .iter()
         .flat_map(|address| {
@@ -628,7 +629,7 @@ pub fn a_goldens() -> Vec<A> {
         .collect()
 }
 
-pub fn b_goldens() -> Vec<B> {
+pub fn b_goldens() -> List<B> {
     address_goldens()
         .iter()
         .flat_map(|address| {
@@ -646,7 +647,7 @@ pub fn b_goldens() -> Vec<B> {
         .collect()
 }
 
-pub fn c_goldens() -> Vec<C> {
+pub fn c_goldens() -> List<C> {
     address_goldens()
         .iter()
         .flat_map(|address| {
@@ -664,7 +665,7 @@ pub fn c_goldens() -> Vec<C> {
         .collect()
 }
 
-pub fn d_goldens() -> Vec<D> {
+pub fn d_goldens() -> List<D> {
     let foo_sum = address_goldens()
         .iter()
         .flat_map(|address| {
@@ -724,15 +725,15 @@ pub fn d_goldens() -> Vec<D> {
         .collect()
 }
 
-pub fn f_int_goldens() -> Vec<FInt> {
+pub fn f_int_goldens() -> List<FInt> {
     vec![FInt(F::Nil), FInt(F::Rec(Box::new(G::Nil)))]
 }
 
-pub fn g_int_goldens() -> Vec<GInt> {
+pub fn g_int_goldens() -> List<GInt> {
     vec![GInt(G::Nil), GInt(G::Rec(Box::new(F::Nil)))]
 }
 
-pub fn day_goldens() -> Vec<Day> {
+pub fn day_goldens() -> List<Day> {
     vec![
         Day::Monday,
         Day::Tuesday,
@@ -744,7 +745,7 @@ pub fn day_goldens() -> Vec<Day> {
     ]
 }
 
-pub fn workday_goldens() -> Vec<WorkDay> {
+pub fn workday_goldens() -> List<WorkDay> {
     vec![
         Day::Monday,
         Day::Tuesday,
@@ -757,23 +758,23 @@ pub fn workday_goldens() -> Vec<WorkDay> {
     .collect()
 }
 
-pub fn freeday_goldens() -> Vec<FreeDay> {
+pub fn freeday_goldens() -> List<FreeDay> {
     vec![FreeDay { day: Day::Saturday }, FreeDay { day: Day::Sunday }]
 }
 
-pub fn bool_goldens() -> Vec<bool> {
+pub fn bool_goldens() -> List<Bool> {
     vec![false, true]
 }
 
-pub fn maybe_goldens() -> Vec<Option<bool>> {
+pub fn maybe_goldens() -> List<Option<Bool>> {
     vec![None, Some(true), Some(false)]
 }
 
-pub fn either_goldens() -> Vec<Result<bool, bool>> {
+pub fn either_goldens() -> List<Either<Bool, Bool>> {
     vec![Err(true), Err(false), Ok(true)]
 }
 
-pub fn list_goldens() -> Vec<Vec<bool>> {
+pub fn list_goldens() -> List<List<Bool>> {
     vec![
         Vec::new(),
         vec![true],
