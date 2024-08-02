@@ -149,9 +149,9 @@ dependencies = [
 
 [[package]]
 name = "lbr-prelude"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27e70ee3e68048c85f352ee689b3a5a6cfd18c19798f84a6997469716951a746"
+checksum = "21471892874c4667636a067ed7a158b9691178988a4c5988585e1010e9b5817d"
 dependencies = [
  "data-encoding",
  "lbr-prelude-derive",

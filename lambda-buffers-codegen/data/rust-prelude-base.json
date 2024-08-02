@@ -16,9 +16,9 @@
       "Vec"
     ],
     "Prelude.Either": [
-      "std",
-      "result",
-      "Result"
+      "lbr-prelude",
+      "types",
+      "Either"
     ],
     "Prelude.Maybe": [
       "std",
