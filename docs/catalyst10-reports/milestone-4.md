@@ -1,34 +1,49 @@
-# Catalyst milestone 4: Aiken support
+# Catalyst milestone 4: Separate PlutusTx backend and improvements to existing LambdaBuffers facilities
 
 ## Outputs
 
-- [ ] A LambdaBuffers code generation module that outputs type definitions and derived implementations in the Aiken programming language given a LambdaBuffers schema.
-- [ ] An Aiken library that implements the LambdaBuffers Plutus runtime. This module would include standardised PlutusData encoding implementations for all declared type class instances in the Plutus schema.
-- [ ] An Aiken test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Plutus golden data set of PlutusData encoded files and perform correct implementation derivation.
-- [ ] Nix devops modules (Nix API) for streamlining the LambdaBuffers code generation pipeline to Aiken.
-- [ ] Documentation on LambdaBuffers usage patterns for Aiken.
-      NOTE: Milestone 4 carries the greatest amount of technical risk in this project. In the event that the outcome of Milestone 3 results in this milestone becoming infeasible, we will submit a Change Request form opting for a suitable alternative of similar scope.
+- [ ] A separate code generator for Haskell and PlutusTx
+
+- [ ] A separate LambdaBuffers code generation module that outputs type definitions and derived implementations for Haskell's Prelude and PlutusTx's Prelude (or equivalent LambdaBuffers' Preludes) given a LambdaBuffers schema.
+
+- [ ] A Haskell test suite that assures the manually implemented and automatically generated implementations are consistent with the predefined LambdaBuffers Prelude golden data set of JSON files and perform correct implementation derivation.
+
+- [ ] Nix devops modules (Nix API) for streamlining the LambdaBuffers code generation pipeline to either Haskell's Prelude or PlutusTx's Prelude.
+
+- [ ] Documentation on LambdaBuffers usage patterns for Haskell's Prelude and PlutusTx's Prelude
+
+- [ ] A complete Plutus .lbf schema file to include all Plutus Ledger API types with backend support for Rust, TypeScript, and PureScript.
+
+- [ ] An extended integration test suite to verify that the manually implemented and automatically implemented instances of the updated LambdaBuffers' Plutus .lbf schema file are consistent across all backends.
+
+- [ ] A versioning scheme for the LambdaBuffers git repository using git tags that follow semantic versioning.
+
+- [ ] Optimized Nix build times.
+
+- [ ] Error messages that follow the GNU error message format.
 
 ## Acceptance Criteria
 
-- [ ] LambdaBuffers schemas that are based on the LambdaBuffers Plutus module can be used in Aiken projects to specify application types.
+- [ ] An executable and Nix tooling to translate LambdaBuffers modules to Haskell projects to specify application types.
+
+- [ ] An executable and Nix tooling to translate LambdaBuffers modules to PlutusTx projects to specify application types.
+
+- [ ] An updated LambdaBuffers Plutus schema for the complete Plutus Ledger API types.
+
 - [ ] The documentation and devops tooling is available to facilitate easy adoption.
+
+- [ ] Git tags for official releases of LambdaBuffers.
 
 ## Evidence of Milestone Completion
 
-- [ ] The completed and reviewed LambdaBuffers Plutus runtime library is available for the Aiken programming language.
-- [ ] The completed and reviewed LambdaBuffers Plutus test suite is available and is passing in CI for the Aiken programming language.
-- [ ] The completed and reviewed Nix API for LambdaBuffers Aiken support is available.
-- [ ] The completed and reviewed LambdaBuffers for Aiken documentation is available.
+- [ ] The completed and reviewed LambdaBuffers code generator for Haskell's Prelude.
 
-## Demo recordings
+- [ ] The completed and reviewed LambdaBuffers code generator for PlutusTx's Prelude.
 
-- [ ]
+- [ ] Benchmarks of the before and after optimized Nix build times.
 
-Demo files:
-
-- [ ]
+- [ ] Demonstrations (in the form of screenshots or simply text) of error messages following the GNU error message format.
 
 ## References
 
-- [ ]
+- [Project Catalyst Milestone 4](https://milestones.projectcatalyst.io/projects/1000122/milestones/4)
