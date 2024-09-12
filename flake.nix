@@ -40,6 +40,7 @@
         ./hercules-ci.nix
         ./docs/build.nix
         ./docs/plutarch/build.nix
+        ./docs/plutustx/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
         ./extras/dev-shells/build.nix
