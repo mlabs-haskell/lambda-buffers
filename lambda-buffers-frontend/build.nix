@@ -39,6 +39,7 @@
             config.packages.lbf-pure
             config.packages.lbf-prelude-to-haskell
             config.packages.lbf-plutus-to-haskell
+            config.packages.lbf-plutus-to-plutustx
             config.packages.lbf-prelude-to-purescript
             config.packages.lbf-plutus-to-purescript
             config.packages.lbf-prelude-to-rust

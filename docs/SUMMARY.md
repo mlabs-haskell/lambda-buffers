@@ -6,6 +6,7 @@
 - [Introduction](introduction.md)
 - [Using LambdaBuffers](using-lambdabuffers.md)
   - [LambdaBuffers to Haskell](haskell.md)
+  - [LambdaBuffers to PlutusTx](plutustx.md)
   - [LambdaBuffers to Purescript](purescript.md)
   - [LambdaBuffers to Plutarch](plutarch.md)
   - [LambdaBuffers to Rust](rust.md)
