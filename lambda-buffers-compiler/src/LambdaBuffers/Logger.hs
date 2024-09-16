@@ -24,8 +24,8 @@ if @<file>@ is non empty, otherwise, it prints
 > error: <msg>
 -}
 logError :: FilePath -> String -> IO ()
-logError "" msg = putStrLn $ "error: " <> msg
-logError fp msg = putStrLn $ fp <> ": error: " <> msg
+logError "" msg = System.IO.hPutStrLn System.IO.stderr $ "error: " <> msg
+logError fp msg = System.IO.hPutStrLn System.IO.stderr $ fp <> ": error: " <> msg
 
 {- | Logs an ERROR message of the format
 > <file>:<line1>.<column1>-<line2>.<column2>: error: <msg>
@@ -35,7 +35,7 @@ if <line1>, <line2> are the same and <column1>, <column2> are the same.
 -}
 logErrorWithSourceSpan :: FilePath -> (Int, Int) -> (Int, Int) -> String -> IO ()
 logErrorWithSourceSpan fp pos1 pos2 msg =
-  putStrLn $ fp <> ":" <> showLineCol pos1 <> (if pos1 == pos2 then "" else "-" <> showLineCol pos2) <> ": " <> "error: " <> msg
+  System.IO.hPutStrLn System.IO.stderr $ fp <> ":" <> showLineCol pos1 <> (if pos1 == pos2 then "" else "-" <> showLineCol pos2) <> ": " <> "error: " <> msg
   where
     showLineCol :: (Int, Int) -> String
     showLineCol (l, c) = show l <> "." <> show c
