@@ -14,13 +14,14 @@ import Data.Text.Lazy.IO qualified as LText
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Frontend (runFrontend)
 import LambdaBuffers.Frontend.Cli.Env qualified as Env
-import LambdaBuffers.Frontend.Cli.Utils (FileOrDir (Dir, File), checkExists, logCodegenError, logCompilerError, logError, logFrontendError, logInfo, toCodegenCliModuleName)
+import LambdaBuffers.Frontend.Cli.Utils (FileOrDir (Dir, File), checkExists, logCodegenError, logCompilerError, logFrontendError, toCodegenCliModuleName)
 import LambdaBuffers.Frontend.Errors.Codegen qualified as CodegenErrors
 import LambdaBuffers.Frontend.Errors.Compiler qualified as CompilerErrors
 import LambdaBuffers.Frontend.Monad qualified as Frontend
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Syntax qualified as Frontend
 import LambdaBuffers.Frontend.ToProto (toModules)
+import LambdaBuffers.Logger (logError, logInfo)
 import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler
@@ -55,7 +56,7 @@ build opts = do
   checkExists File "gen" `traverse_` (opts ^. codegenCliFilepath)
   checkExists Dir "gen-dir" (opts ^. codegenGenDir)
   checkExists Dir "work-dir" `traverse_` (opts ^. workingDir)
-  checkExists File "module file" `traverse_` (opts ^. moduleFilepaths)
+  checkExists File "module" `traverse_` (opts ^. moduleFilepaths)
   errOrMod <- runFrontend ("." : opts ^. importPaths) (toList $ opts ^. moduleFilepaths)
   case errOrMod of
     Left err -> do
@@ -65,7 +66,7 @@ build opts = do
       mods <-
         either
           ( \e -> do
-              logError "" $ "Failed building Proto API modules: " <> show e
+              logError "" $ "failed building Proto API modules: " <> show e
               exitFailure
           )
           return
@@ -75,9 +76,9 @@ build opts = do
         ( \tempDir -> do
             workDir <- getWorkDir opts tempDir
             _compRes <- callCompiler opts workDir (defMessage & Compiler.modules .~ mods)
-            logInfo "" "Compilation OK"
+            logInfo "" "compilation OK"
             _cdgRes <- callCodegen opts workDir (Frontend.fres'requested res) (defMessage & Codegen.modules .~ mods)
-            logInfo "" "Codegen OK"
+            logInfo "" "codegen OK"
         )
 
 getWorkDir :: BuildOpts -> FilePath -> IO FilePath
@@ -87,7 +88,7 @@ getWorkDir opts tempDir = do
   unless
     exists
     ( do
-        logError "" $ "Provided working directory " <> workDir <> " doesn't exist (did you forget to create it first?)"
+        logError workDir $ "provided working directory " <> workDir <> " doesn't exist (did you forget to create it first?)"
         exitFailure
     )
   return workDir
@@ -122,7 +123,7 @@ writeCompilerInput fp compInp = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage compInp)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage compInp)
     _ -> do
-      logError fp $ "Unknown Compiler Input format (wanted .pb or .textproto) " <> ext
+      logError fp $ "unknown Compiler Input format (wanted .pb or .textproto) " <> ext
       exitFailure
 
 readCompilerOutput :: FilePath -> IO Compiler.Output
@@ -133,30 +134,30 @@ readCompilerOutput fp = do
       content <- BS.readFile fp
       case Pb.decodeMessage content of
         Left err -> do
-          logError fp $ "Failed decoding the Compiler Output\n" <> err
+          logError fp $ "failed decoding the Compiler Output\n" <> err
           exitFailure
         Right res -> return res
     ".textproto" -> do
       content <- LText.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError fp $ "Unknown Compiler Output format (wanted .pb or .textproto) " <> ext
+      logError fp $ "unknown Compiler Output format (wanted .pb or .textproto) " <> ext
       exitFailure
 
 call :: Bool -> FilePath -> [String] -> IO ()
 call dbg cliFp cliArgs = do
-  when dbg $ logInfo "" $ "Calling: " <> showCommandForUser cliFp cliArgs
+  when dbg $ logInfo cliFp $ "calling: " <> showCommandForUser cliFp cliArgs
   (exitCode, stdOut, stdErr) <- readProcessWithExitCode cliFp cliArgs ""
   case exitCode of
     (ExitFailure _) -> do
       logError cliFp stdErr
       logError cliFp stdOut
-      logError "" $ "Error from:" <> showCommandForUser cliFp cliArgs
+      logError cliFp $ "error from:" <> showCommandForUser cliFp cliArgs
       exitFailure
     _ -> do
       when (dbg && stdOut /= "") $ logInfo cliFp stdOut
       when (dbg && stdErr /= "") $ logInfo cliFp stdErr
-      logInfo "" $ "Success from: " <> showCommandForUser cliFp cliArgs
+      logInfo cliFp $ "success from: " <> showCommandForUser cliFp cliArgs
       return ()
 
 callCodegen :: BuildOpts -> FilePath -> [Frontend.ModuleName ()] -> Codegen.Input -> IO Codegen.Result

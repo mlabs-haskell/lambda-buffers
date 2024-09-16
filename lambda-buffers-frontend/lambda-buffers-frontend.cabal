@@ -123,6 +123,7 @@ executable lbf
     , directory
     , filepath                    >=1.4
     , lambda-buffers-codegen-pb   >=0.1
+    , lambda-buffers-compiler     >=0.1
     , lambda-buffers-compiler-pb  >=0.1
     , lambda-buffers-frontend
     , lens                        >=5.2

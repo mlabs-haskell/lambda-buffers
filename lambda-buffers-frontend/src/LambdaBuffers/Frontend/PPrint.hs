@@ -161,7 +161,9 @@ instance Pretty info => Pretty (Constructor info) where
   pretty (Constructor cn p _info) = group $ hsep [pretty cn, pretty p]
 
 instance Pretty SourceInfo where
-  pretty (SourceInfo fn pos pos') = pretty fn <> ":" <> pretty pos <> "-" <> pretty pos'
+  pretty (SourceInfo fn pos pos')
+    | pos == pos' = pretty fn <> ":" <> pretty pos -- NOTE(jaredponn): if they're the same, then just print off a single position since the "span" of both positions is just useless information
+    | otherwise = pretty fn <> ":" <> pretty pos <> "-" <> pretty pos'
 
 instance Pretty SourcePos where
   pretty (SourcePos r c) = pretty r <> "." <> pretty c

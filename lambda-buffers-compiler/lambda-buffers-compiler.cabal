@@ -131,6 +131,7 @@ library
     LambdaBuffers.Compiler.TypeClassCheck.MiniLog
     LambdaBuffers.Compiler.TypeClassCheck.RuleSet
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
+    LambdaBuffers.Logger
     LambdaBuffers.ProtoCompat
     LambdaBuffers.ProtoCompat.Indexing
     LambdaBuffers.ProtoCompat.InfoLess
