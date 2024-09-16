@@ -23,11 +23,13 @@
   - The Nix API for streamlining LambdaBuffers code generation PlutusTx's Prelude can be found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/extras/lbf-nix/build.nix#L22)
     or PlutusTx's Prelude can be found
 
-- [ ] Documentation on LambdaBuffers usage patterns for Haskell's Prelude and PlutusTx's Prelude
+- [x] Documentation on LambdaBuffers usage patterns for Haskell's Prelude and PlutusTx's Prelude
   
-  - TODO
+  - Documentation for Haskell's Prelude can be found [here](https://mlabs-haskell.github.io/lambda-buffers/haskell.html).
 
-- [ ] A complete Plutus .lbf schema file to include all Plutus Ledger API types with backend support for Rust, TypeScript, and PureScript.
+  - Documentation for PlutusTx's Prelude can be found [here](https://mlabs-haskell.github.io/lambda-buffers/plutustx.html).
+
+- [x] A complete Plutus .lbf schema file to include all Plutus Ledger API types with backend support for Rust, TypeScript, and PureScript.
 
   - The `.lbf` schema file for V1 Plutus Ledger API can be found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/libs/lbf-plutus/Plutus/V1.lbf)
 
@@ -38,8 +40,6 @@
   - TypeScript backend support is given by the JSON file [here](https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/lambda-buffers-codegen/data/typescript-plutus.json) where the types are provided by [this package](https://github.com/mlabs-haskell/plutus-ledger-api-typescript)
 
   - PureScript backend support is given by the JSON file [here](https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/lambda-buffers-codegen/data/purescript-plutus-ctl.json) where the types are provided by [this package](https://github.com/Plutonomicon/cardano-transaction-lib)
-
-    TODO(jaredponn): this isn't implemented yet: see the "NotImplemented" in <https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/lambda-buffers-codegen/data/purescript-plutus-ctl.json#L123-L172>
 
 - [x] An extended integration test suite to verify that the manually implemented and automatically implemented instances of the updated LambdaBuffers' Plutus .lbf schema file are consistent across all backends.
 
@@ -85,7 +85,9 @@
 
     where it now takes only about 1.5 seconds to execute the `nix flake lock` command due to the significantly reduced `flake.lock` file size of being just under 12000 lines.
 
-- [ ] Error messages that follow the GNU error message format.
+- [x] Error messages that follow the GNU error message format.
+
+  - This was implemented in PR [#147](https://github.com/mlabs-haskell/lambda-buffers/pull/147) and PR [#249](https://github.com/mlabs-haskell/lambda-buffers/pull/249). See below for examples of following the GNU error message format.
 
 ## Acceptance Criteria
 
@@ -105,9 +107,9 @@
 
   - The updated LambdaBuffers Plutus schema for the complete Plutus Ledger API types can be found [here](https://github.com/mlabs-haskell/lambda-buffers/tree/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/libs/lbf-plutus/Plutus)
 
-- [ ] The documentation and devops tooling is available to facilitate easy adoption.
+- [x] The documentation and devops tooling is available to facilitate easy adoption.
 
-  - Documentation can be found TODO(jaredponn).
+  - The entire project's documentation can be found in the documentation website [here](https://mlabs-haskell.github.io/lambda-buffers/)
 
   - Devops tooling can be found in the form of Nix functions for conveniently creating Haskell or PlutusTx projects found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/2e2ff70f155ebcbac07b817f365f1220c24dfdf0/extras/lbf-nix/build.nix#L14-L52).
 
@@ -133,7 +135,37 @@
 
   - This was fixed in [#233](https://github.com/mlabs-haskell/lambda-buffers/pull/233), see above for benchmarks.
 
-- [ ] Demonstrations (in the form of screenshots or simply text) of error messages following the GNU error message format.
+- [x] Demonstrations (in the form of screenshots or simply text) of error messages following the GNU error message format.
+
+  - We can see the following error messages follow the GNU error message format
+
+  ```shell
+  $ lbf-prelude-to-haskell DoesNotExist.lbf
+  DoesNotExist.lbf: error: the provided module file DoesNotExist.lbf doesn't exist
+
+  $ cat TEST.lbf
+  module TEST
+
+  import Prelude (Eq, Json, Maybe, Either, List, Integer)
+
+  derive Eq What
+
+  $ lbf-prelude-to-haskell TEST.lbf
+  TEST.lbf:5.11-5.15: error: [module TEST] type What not found in the module's scope Either Integer List Maybe Prelude.Either Prelude.Integer Prelude.List Prelude.Maybe
+
+  $ cat ANOTHERTEST.lbf
+  module ANOTHERTEST
+
+  import Prelude (Eq, Json, Maybe, Either, List, Integer)
+
+  prod What = (Integer
+  derive Eq What
+
+  $ lbf-prelude-to-haskell ANOTHERTEST.lbf
+  ANOTHERTEST.lbf:6.7: error:
+  unexpected keyword
+  expecting s-expression
+  ```
 
 ## References
 
