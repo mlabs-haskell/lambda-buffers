@@ -1,11 +1,13 @@
 {- | Module: LambdaBuffers.Logger
 
-Utilities for logging INFO, WARNING, and ERROR messages.
+Utilities for logging INFO, and ERROR messages.
 
 This follows the GNU error message format:
 <https://www.gnu.org/prep/standards/html_node/Errors.html>
 -}
 module LambdaBuffers.Logger (logInfo, logError, logErrorWithSourceSpan) where
+
+import System.IO qualified
 
 {- | Logs an INFO message of the format
 > <file>: info: <msg>
@@ -13,8 +15,8 @@ if @<file>@ is non empty, otherwise, it prints
 > info: <msg>
 -}
 logInfo :: FilePath -> String -> IO ()
-logInfo "" msg = putStrLn $ "info: " <> msg
-logInfo fp msg = putStrLn $ fp <> ": info: " <> msg
+logInfo "" msg = System.IO.hPutStrLn System.IO.stderr $ "info: " <> msg
+logInfo fp msg = System.IO.hPutStrLn System.IO.stderr $ fp <> ": info: " <> msg
 
 {- | Logs an ERROR message of the format
 > <file>: error: <msg>
