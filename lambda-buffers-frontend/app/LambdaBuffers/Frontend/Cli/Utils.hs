@@ -6,7 +6,7 @@ import LambdaBuffers.Frontend (FrontendError)
 import LambdaBuffers.Frontend.Errors.Frontend qualified as Errors.Frontend
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Syntax qualified as Frontend
-import LambdaBuffers.Logger (logError, logErrorWithSourceSpan)
+import LambdaBuffers.Utils.Logger (logError, logErrorWithSourceSpan)
 import Prettyprinter (Doc)
 import Prettyprinter qualified
 import Prettyprinter.Render.String qualified

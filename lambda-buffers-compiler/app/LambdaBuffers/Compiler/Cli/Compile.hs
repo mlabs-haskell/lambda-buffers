@@ -7,7 +7,7 @@ import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler (runCompiler)
-import LambdaBuffers.Logger (logError, logInfo)
+import LambdaBuffers.Utils.Logger (logError, logInfo)
 import Proto.Compiler (Input, Output)
 import Proto.Compiler_Fields (maybe'error)
 import System.Exit (exitFailure)

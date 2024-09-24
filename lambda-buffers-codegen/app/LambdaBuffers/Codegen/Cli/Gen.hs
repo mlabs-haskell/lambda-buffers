@@ -22,8 +22,8 @@ import Data.Text.IO qualified as Text
 import Data.Text.Lazy.IO qualified as LText
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as Config
-import LambdaBuffers.Logger (logError, logInfo)
 import LambdaBuffers.ProtoCompat qualified as PC
+import LambdaBuffers.Utils.Logger (logError, logInfo)
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 import System.Directory (createDirectory, createDirectoryIfMissing, doesDirectoryExist, removeDirectoryRecursive)

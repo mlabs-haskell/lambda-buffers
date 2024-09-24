@@ -21,7 +21,7 @@ import LambdaBuffers.Frontend.Monad qualified as Frontend
 import LambdaBuffers.Frontend.PPrint ()
 import LambdaBuffers.Frontend.Syntax qualified as Frontend
 import LambdaBuffers.Frontend.ToProto (toModules)
-import LambdaBuffers.Logger (logError, logInfo)
+import LambdaBuffers.Utils.Logger (logError, logInfo)
 import Proto.Codegen qualified as Codegen
 import Proto.Codegen_Fields qualified as Codegen
 import Proto.Compiler qualified as Compiler

@@ -1,11 +1,11 @@
-{- | Module: LambdaBuffers.Logger
+{- | Module: LambdaBuffers.Utils.Logger
 
 Utilities for logging INFO, and ERROR messages.
 
 This follows the GNU error message format:
 <https://www.gnu.org/prep/standards/html_node/Errors.html>
 -}
-module LambdaBuffers.Logger (logInfo, logError, logErrorWithSourceSpan) where
+module LambdaBuffers.Utils.Logger (logInfo, logError, logErrorWithSourceSpan) where
 
 import System.IO qualified
 
