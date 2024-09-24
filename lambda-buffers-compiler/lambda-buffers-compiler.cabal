@@ -131,7 +131,6 @@ library
     LambdaBuffers.Compiler.TypeClassCheck.MiniLog
     LambdaBuffers.Compiler.TypeClassCheck.RuleSet
     LambdaBuffers.Compiler.TypeClassCheck.SuperclassCycleCheck
-    LambdaBuffers.Logger
     LambdaBuffers.ProtoCompat
     LambdaBuffers.ProtoCompat.Indexing
     LambdaBuffers.ProtoCompat.InfoLess
@@ -158,6 +157,7 @@ executable lbc
     , bytestring
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb
+    , lambda-buffers-utils
     , lens
     , optparse-applicative
     , proto-lens

@@ -14,6 +14,7 @@
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
           "${config.packages.lambda-buffers-compiler-src}"
+          "${config.packages.lambda-buffers-utils-src}"
         ];
 
         devShellTools = [

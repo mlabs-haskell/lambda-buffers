@@ -1,0 +1,6 @@
+packages: ./.
+
+tests: true
+
+-- TODO(bladyjoker): Remove once freer-simple fixes the template-haskell bounds
+allow-newer: freer-simple:template-haskell
