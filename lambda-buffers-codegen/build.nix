@@ -23,7 +23,7 @@
     in
 
     {
-      devShells.dev-codegen = hsFlake.devShell;
+      devShells.dev-lambda-buffers-codegen = hsFlake.devShell;
 
       packages = {
 

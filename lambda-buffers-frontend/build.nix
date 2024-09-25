@@ -31,7 +31,7 @@
 
     {
       devShells = {
-        dev-frontend = hsFlake.devShell;
+        dev-lambda-buffers-frontend = hsFlake.devShell;
 
         lb = pkgs.mkShell {
           name = "lambdabuffers-env";

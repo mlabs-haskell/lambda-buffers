@@ -22,7 +22,7 @@
     in
 
     {
-      devShells.dev-compiler = hsFlake.devShell;
+      devShells.dev-lambda-buffers-compiler = hsFlake.devShell;
 
       packages = {
 
