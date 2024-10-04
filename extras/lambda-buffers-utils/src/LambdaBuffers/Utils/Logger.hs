@@ -15,8 +15,8 @@ if @<file>@ is non empty, otherwise, it prints
 > info: <msg>
 -}
 logInfo :: FilePath -> String -> IO ()
-logInfo "" msg = System.IO.hPutStrLn System.IO.stderr $ "info: " <> msg
-logInfo fp msg = System.IO.hPutStrLn System.IO.stderr $ fp <> ": info: " <> msg
+logInfo "" msg = System.IO.putStrLn $ "info: " <> msg
+logInfo fp msg = System.IO.putStrLn $ fp <> ": info: " <> msg
 
 {- | Logs an ERROR message of the format
 > <file>: error: <msg>
