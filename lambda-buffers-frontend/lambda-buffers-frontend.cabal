@@ -125,6 +125,7 @@ executable lbf
     , lambda-buffers-codegen-pb   >=0.1
     , lambda-buffers-compiler-pb  >=0.1
     , lambda-buffers-frontend
+    , lambda-buffers-utils
     , lens                        >=5.2
     , optparse-applicative        >=0.17
     , prettyprinter               >=1.7

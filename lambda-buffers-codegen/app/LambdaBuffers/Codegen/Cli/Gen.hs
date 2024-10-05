@@ -23,6 +23,7 @@ import Data.Text.Lazy.IO qualified as LText
 import Data.Traversable (for)
 import LambdaBuffers.Codegen.Config qualified as Config
 import LambdaBuffers.ProtoCompat qualified as PC
+import LambdaBuffers.Utils.Logger (logError, logInfo)
 import Proto.Codegen qualified as P
 import Proto.Codegen_Fields qualified as P
 import System.Directory (createDirectory, createDirectoryIfMissing, doesDirectoryExist, removeDirectoryRecursive)
@@ -42,14 +43,6 @@ data GenOpts = GenOpts
 
 makeLenses ''GenOpts
 
-logInfo :: FilePath -> String -> IO ()
-logInfo "" msg = putStrLn $ msg <> " [INFO]"
-logInfo fp msg = putStrLn $ fp <> ": " <> msg <> " [INFO]"
-
-logError :: FilePath -> String -> IO ()
-logError "" msg = putStrLn $ msg <> " [ERROR]"
-logError fp msg = putStrLn $ fp <> ": " <> msg <> " [ERROR]"
-
 data Generated = Generated
   { _generatedFilePath :: !FilePath
   , _generatedCode :: !Text
@@ -63,8 +56,8 @@ type Handler = (PC.CodegenInput -> Map (PC.InfoLess PC.ModuleName) (Either P.Err
 
 gen :: GenOpts -> Handler -> IO ()
 gen opts cont = do
-  logInfo "" $ "Reading Codegen Input at " <> opts ^. inputFile
-  when (opts ^. debug) $ logInfo "" $ "Options received: " <> show opts
+  logInfo (opts ^. inputFile) $ "reading Codegen Input at " <> opts ^. inputFile
+  when (opts ^. debug) $ logInfo "" $ "options received: " <> show opts
   ci <- readCodegenInput (opts ^. inputFile)
   ci' <- runFromProto (opts ^. outputFile) ci
   ci'' <- filterToRequestedClasses' opts ci'
@@ -75,11 +68,11 @@ gen opts cont = do
     then do
       writeCodegenResult (opts ^. outputFile)
       writePackageDeps (opts ^. genDir </> "build.json") allDeps
-      logInfo (opts ^. inputFile) "Code generation successful"
+      logInfo (opts ^. inputFile) "code generation successful"
     else do
       writeCodegenError (opts ^. outputFile) allErrors
-      logError (opts ^. inputFile) "Code generation failed"
-  logInfo "" $ "Writing Codegen Output at " <> opts ^. outputFile
+      logError (opts ^. inputFile) "code generation failed"
+  logInfo (opts ^. outputFile) $ "writing Codegen Output at " <> opts ^. outputFile
 
 instance MonadFail (Either String) where
   fail = Left
@@ -106,10 +99,10 @@ filterToRequestedClasses reqCls ci =
     requestedClasses' = PC.classClosure ciClassRels reqCls
    in
     do
-      logInfo "" $ "Computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
+      logInfo "" $ "computed class closure: " <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
       unless (null (reqCls `Set.difference` ciQClassNames)) $ do
         logError "" $
-          "Requested to print implementations for classes that are not available in the provided context (HINT: Import the module where the type class is defined)."
+          "requested to print implementations for classes that are not available in the provided context (HINT: Import the module where the type class is defined)."
             <> "\nClasses requested: "
             <> unwords (Text.unpack . Config.qClassNameToText <$> toList reqCls)
             <> "\nClasses available: "
@@ -133,13 +126,13 @@ collectErrorsAndDeps opts res = do
         case errOrPrint of
           Left err -> do
             logInfo (opts ^. inputFile) $
-              "Code generation failed for module "
+              "code generation failed for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
             return (err : errs, deps)
           Right gend -> do
             writeFileAndCreate (opts ^. genDir </> (gend ^. generatedFilePath)) (gend ^. generatedCode)
             logInfo (opts ^. inputFile) $
-              "Code generation succeeded for module "
+              "code generation succeeded for module "
                 <> PC.withInfoLess mn (show . PC.prettyModuleName)
                 <> " at file path "
                 <> (opts ^. genDir </> (gend ^. generatedFilePath))

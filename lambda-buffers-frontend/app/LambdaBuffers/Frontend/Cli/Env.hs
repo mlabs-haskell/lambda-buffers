@@ -1,6 +1,6 @@
 module LambdaBuffers.Frontend.Cli.Env (lbcVar, lbgVar, getLbcFromEnvironment, getLbgFromEnvironment) where
 
-import LambdaBuffers.Frontend.Cli.Utils (logError)
+import LambdaBuffers.Utils.Logger (logError)
 import System.Environment (lookupEnv)
 import System.Exit (exitFailure)
 

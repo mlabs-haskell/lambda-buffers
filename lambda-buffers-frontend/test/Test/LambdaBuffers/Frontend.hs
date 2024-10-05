@@ -29,31 +29,31 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":5.1-5.12: [module A] Duplicate type definition with the name A") errOrMod
+        assertError (fileErr <> ":5.1-5.12: [module A] duplicate type definition with the name A") errOrMod
     , testCase "Import cycle found" $ do
         let workDir = dataDir </> "import_cycle_found"
             fileIn = workDir </> "A.lbf"
             fileErr = workDir </> "C.lbf"
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":3.1-3.9: [module C] Tried to load module A which constitutes a cycle [B, A, ]") errOrMod
+        assertError (fileErr <> ":3.1-3.9: [module C] tried to load module A which constitutes a cycle [B, A, ]") errOrMod
     , testCase "Imported symbol not found" $ do
         let workDir = dataDir </> "imported_not_found"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":3.17-3.18: [module A] Name C not found in module B, did you mean one of the types: A B. Or did you mean one of the classes: ") errOrMod
+        assertError (fileErr <> ":3.17-3.18: [module A] name C not found in module B, did you mean one of the types: A B. Or did you mean one of the classes: ") errOrMod
     , testCase "Invalid module filepath" $ do
         let workDir = dataDir </> "invalid_module_filepath"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":1.8-1.13: [module A.B.C] File name " <> dataDir <> "/invalid_module_filepath/A.lbf doesn't match module name A.B.C expected A/B/C.lbf") errOrMod
+        assertError (fileErr <> ":1.8-1.13: [module A.B.C] file name " <> dataDir <> "/invalid_module_filepath/A.lbf doesn't match module name A.B.C expected A/B/C.lbf") errOrMod
     , testCase "Module not found" $ do
         let workDir = dataDir </> "module_not_found"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":3.1-3.9: [module A] Module B not found in available import paths [" <> dataDir <> "/module_not_found]") errOrMod
+        assertError (fileErr <> ":3.1-3.9: [module A] module B not found in available import paths [" <> dataDir <> "/module_not_found]") errOrMod
     , testCase "Module parse error" $ do
         let workDir = dataDir </> "module_parse_error"
             fileIn = workDir </> "A.lbf"
@@ -65,25 +65,25 @@ frontendErrorTests dataDir =
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir, workDir </> "another_import_path"] [fileIn]
-        assertError (fileErr <> ":3.1-3.9: [module A] Module B found in multiple files [" <> dataDir <> "/multiple_modules_found/B.lbf, " <> dataDir <> "/multiple_modules_found/another_import_path/B.lbf]") errOrMod
+        assertError (fileErr <> ":3.1-3.9: [module A] module B found in multiple files [" <> dataDir <> "/multiple_modules_found/B.lbf, " <> dataDir <> "/multiple_modules_found/another_import_path/B.lbf]") errOrMod
     , testCase "Symbol already imported" $ do
         let workDir = dataDir </> "symbol_already_imported"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":4.1-4.9: [module A] Type name A already imported from module B") errOrMod
+        assertError (fileErr <> ":4.1-4.9: [module A] type name A already imported from module B") errOrMod
     , testCase "Type definition name conflict" $ do
         let workDir = dataDir </> "tydef_name_conflict"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":5.5-5.6: [module A] Type name A conflicts with an imported type name from module B") errOrMod
+        assertError (fileErr <> ":5.5-5.6: [module A] type name A conflicts with an imported type name from module B") errOrMod
     , testCase "Type reference not found" $ do
         let workDir = dataDir </> "tyref_not_found"
             fileIn = workDir </> "A.lbf"
             fileErr = fileIn
         errOrMod <- runFrontend [workDir] [fileIn]
-        assertError (fileErr <> ":6.13-6.28: [module A] Type WhereIsThisType not found in the module's scope A B C B.B C.C") errOrMod
+        assertError (fileErr <> ":6.13-6.28: [module A] type WhereIsThisType not found in the module's scope A B C B.B C.C") errOrMod
     ]
 
 assertError :: String -> Either FrontendError FrontendResult -> Assertion

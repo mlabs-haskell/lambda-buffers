@@ -13,6 +13,7 @@
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
+          "${config.packages.lambda-buffers-utils-src}"
         ];
 
         devShellTools = config.settings.shell.tools;
@@ -21,7 +22,7 @@
     in
 
     {
-      devShells.dev-compiler = hsFlake.devShell;
+      devShells.dev-lambda-buffers-compiler = hsFlake.devShell;
 
       packages = {
 

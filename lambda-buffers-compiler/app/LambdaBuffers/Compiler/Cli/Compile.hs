@@ -7,6 +7,7 @@ import Data.ProtoLens.TextFormat qualified as PbText
 import Data.Text.Lazy qualified as Text
 import Data.Text.Lazy.IO qualified as Text
 import LambdaBuffers.Compiler (runCompiler)
+import LambdaBuffers.Utils.Logger (logError, logInfo)
 import Proto.Compiler (Input, Output)
 import Proto.Compiler_Fields (maybe'error)
 import System.Exit (exitFailure)
@@ -20,26 +21,18 @@ data CompileOpts = CompileOpts
 
 makeLenses ''CompileOpts
 
-logInfo :: FilePath -> String -> IO ()
-logInfo "" msg = putStrLn $ msg <> " [INFO]"
-logInfo fp msg = putStrLn $ fp <> ": " <> msg <> " [INFO]"
-
-logError :: FilePath -> String -> IO ()
-logError "" msg = putStrLn $ msg <> " [ERROR]"
-logError fp msg = putStrLn $ fp <> ": " <> msg <> " [ERROR]"
-
 -- | Compile LambdaBuffers modules
 compile :: CompileOpts -> IO ()
 compile opts = do
-  logInfo "" $ "Reading Compiler Input from " <> (opts ^. input)
+  logInfo (opts ^. input) $ "reading Compiler Input from " <> (opts ^. input)
   compInp <- readCompilerInput (opts ^. input)
   let compOut = runCompiler compInp
   case compOut ^. maybe'error of
     Nothing -> do
-      logInfo (opts ^. input) "Compilation succeeded"
+      logInfo (opts ^. input) "compilation succeeded"
     Just _ -> do
-      logError (opts ^. input) "Compilation failed"
-  logInfo "" $ "Writing Compiler Output at " <> (opts ^. output)
+      logError (opts ^. input) "compilation failed"
+  logInfo (opts ^. output) $ "writing Compiler Output at " <> (opts ^. output)
   writeCompilerOutput (opts ^. output) compOut
 
 readCompilerInput :: FilePath -> IO Input
@@ -53,7 +46,7 @@ readCompilerInput fp = do
       content <- Text.readFile fp
       return $ PbText.readMessageOrDie content
     _ -> do
-      logError "" $ "Unknown Compiler Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
+      logError fp $ "unknown Compiler Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure
 
 writeCompilerOutput :: FilePath -> Output -> IO ()
@@ -63,5 +56,5 @@ writeCompilerOutput fp cr = do
     ".pb" -> BS.writeFile fp (Pb.encodeMessage cr)
     ".textproto" -> Text.writeFile fp (Text.pack . show $ PbText.pprintMessage cr)
     _ -> do
-      logError "" $ "Unknown Codegen Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
+      logError fp $ "unknown Codegen Input format, wanted .pb or .textproto but got " <> ext <> " (" <> fp <> ")"
       exitFailure

@@ -44,6 +44,7 @@
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
         ./extras/dev-shells/build.nix
+        ./extras/lambda-buffers-utils/build.nix
         ./libs/build.nix
         ./api/build.nix
         ./lambda-buffers-compiler/build.nix

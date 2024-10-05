@@ -157,6 +157,7 @@ executable lbc
     , bytestring
     , lambda-buffers-compiler
     , lambda-buffers-compiler-pb
+    , lambda-buffers-utils
     , lens
     , optparse-applicative
     , proto-lens
