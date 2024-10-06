@@ -57,16 +57,8 @@ effect on the public interface of the upstream package, it can be considered a
 minor or patch release.
 
 > As an example if we have three packages `HaskellApp-v1.3.4.1`,
-> `HaskellLib-v1.3.0.0` and `RustApp-v0.1.0`, we could bump `HaskellApp` to `1.4.0.0`
-> without touching the other two if `HaskellLib` is unchanged. After this, when
-> `RustApp` reaches a stable state, we must jump to `4.0.0` straight away, to align
-> versions. Similarly, if `HaskellLib` is only updated after of `HaskellApp`
-> reached `1.5.0.0`, it must also jump to `1.5.0.0`.
->
-> In another scenario, if we refactor `HaskellLib` and push a new major version
-> `1.6.0.0`, while `HaskellApp` can update it's dependency of `HaskellLib` without
-> changing its own public interface (e.g. CLI is completely unchanged), it's
-> sufficient to do a minor (or patch) bump from `1.5.0.0` to `1.5.0.1`
+> `HaskellLib-v1.3.0.0` and `RustApp-v0.1.0`, we could bump `HaskellApp` to
+> `1.4.0.0` without touching the other two.
 
 ## Acknowledgements
 
