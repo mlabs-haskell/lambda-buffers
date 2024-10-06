@@ -49,6 +49,8 @@
 
   - A versioning scheme for the git repository using git tags that follows semantic versioning is given in the [Releases page](https://github.com/mlabs-haskell/lambda-buffers/releases)
 
+  - Documentation for how the versioning scheme interplays with the monorepo setup is described in the [CONTRIBUTING.md](https://github.com/mlabs-haskell/lambda-buffers/blob/main/CONTRIBUTING.md)
+
 - [x] Optimized Nix build times.
 
   - This was fixed in [#233](https://github.com/mlabs-haskell/lambda-buffers/pull/233).
