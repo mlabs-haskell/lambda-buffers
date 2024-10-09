@@ -1,7 +1,7 @@
 {
     "name": "lbr-plutus",
     "type": "module",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "LambdaBuffers Plutus runtime",
     "main": "app/index.js",
     "directories": {
