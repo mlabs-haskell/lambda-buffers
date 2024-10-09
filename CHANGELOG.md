@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Rust lbr-prelude
 #### Haskell lbr-prelude
 #### Typescript lbr-prelude
+#### Purescript lbr-prelude
 
 #### Rust lbr-plutus
 #### Haskell lbr-plutus
@@ -95,10 +96,11 @@ Target: [plutustx 1.20.0.0](https://github.com/IntersectMBO/plutus/tree/1.20.0.0
 #### Rust lbr-prelude v.1.0.0
 #### Haskell lbr-prelude v.1.1.0.0
 #### Typescript lbr-prelude v.1.0.0
+#### Purescript lbr-prelude v.1.0.0
 
 #### Rust lbr-plutus v.1.0.0
 #### Haskell lbr-plutus v.1.1.0.0
 #### PlutusTx lbr-plutus v.1.0.0
 #### Plutarch lbr-plutus v.1.0.0
 #### Typescript lbr-plutus v.1.0.0
-#### Purescript lbr-plutus v.0.1.0
+#### Purescript lbr-plutus v.1.0.0
