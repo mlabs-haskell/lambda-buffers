@@ -28,8 +28,8 @@ let
       # Examples: name = "lbf-myproject"
       name
     , # Version of the package and also the version of the Cabal package.
-      # Examples: version = "0.1.0.0"
-      version ? "0.1.0.0"
+      # Examples: version = "1.1.0.0"
+      version ? "1.1.0.0"
     }: { inherit src imports files classes dependencies configs name version; };
 
   lbf-build = import ./lbf-build.nix pkgs lbf;
