@@ -28,8 +28,8 @@ let
       # Examples: name = "lbf-myproject"
       name
     , # Version of the package and also the version of the Cargo crate.
-      # Examples: version = "0.1.0.0"
-      version ? "0.1.0"
+      # Examples: version = "1.0.0"
+      version ? "1.0.0"
     , # Version of dependencies 
       # A package will only be added to Cargo.toml, if the generated code directly depends on it
       # Defaults to version 0.1.0 for all packages
