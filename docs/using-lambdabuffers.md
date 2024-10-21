@@ -9,6 +9,8 @@ To set up a project with LambdaBuffers and multi-language stack, refer to our de
 To see, how LambdaBuffers code is transpiled into other languages, see:
 
 - [LambdaBuffers to Haskell](haskell.md)
+- [LambdaBuffers to PlutusTx](plutustx.md)
 - [LambdaBuffers to Purescript](purescript.md)
 - [LambdaBuffers to Plutarch](plutarch.md)
 - [LambdaBuffers to Rust](rust.md)
+- [LambdaBuffers to Typescript](typescript.md)
