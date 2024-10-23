@@ -5,7 +5,8 @@
 
     packages = {
       lbf-prelude = pkgs.stdenv.mkDerivation {
-        name = "lbf-prelude";
+        pname = "lbf-prelude";
+        version = "1.0.0";
         src = ./lbf-prelude;
         phases = "installPhase";
         installPhase = "ln -s $src $out";
@@ -64,7 +65,8 @@
       };
 
       lbf-plutus = pkgs.stdenv.mkDerivation {
-        name = "lbf-plutus";
+        pname = "lbf-plutus";
+        version = "1.0.0";
         src = ./lbf-plutus;
         phases = "installPhase";
         installPhase = "ln -s $src $out";
