@@ -28,12 +28,11 @@
 
 - [x] More importantly, demonstrates how to use LambdaBuffers to specify and exchange Plutus Datum between Plutus scripting languages and transaction-building frameworks.
 
-  - A specification for Plutus Datum using LambdaBuffers is given [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Plutus.lbf)
-    where we see its usage in Plutus scripting languages and transaction-building frameworks in the following files:
+  - A specification for Plutus Datum using LambdaBuffers is given [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Plutus.lbf) where we see its usage in Plutus scripting languages and transaction-building frameworks in the following files:
 
-    - With the PlutusTx Plutus scripting language, we see it deserialize the `EqDatum` in the `eqValidator` defined [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutustx/src/Demo/Validation.hs).
+    - With the PlutusTx Plutus scripting language, we see it deserializes the `EqDatum` in the `eqValidator` defined [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutustx/src/Demo/Validation.hs).
 
-    - With the Plutarch Plutus scripting language, we see it deserialize the `EqDatum` in the `eqValidator` defined [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutarch/src/Demo/Validation.hs)
+    - With the Plutarch Plutus scripting language, we see it deserializes the `EqDatum` in the `eqValidator` defined [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutarch/src/Demo/Validation.hs)
 
     - With Rust, we can see it uses an `EqDatum` to build a transaction over [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/lib.rs)
 
