@@ -36,7 +36,7 @@
 
     - With Rust, we can see it uses an `EqDatum` to build a transaction over [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/lib.rs)
 
-    - With TypeScript, we can see it uses an `EqDatum` to build a transaction over [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/lib.rs)
+    - With TypeScript, we can see it uses an `EqDatum` to build a transaction over [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-typescript/src/lib/index.ts)
 
     - With Haskell, we can see it uses an `EqDatum` to build a transaction over [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-haskell/src/Demo/Process.hs)
 
