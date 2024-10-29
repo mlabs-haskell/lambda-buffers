@@ -78,10 +78,6 @@
 
   - The scaffold uses LambdaBuffers to specify Plutus Datum [here](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Plutus.lbf)
 
-- [x] Final closeout report is publicly available
-
-  - This is the final closeout report.
-
 - [x] Final closeout video is publicly available
 
   - Final closeout video that is publicly available can be found [here](https://youtu.be/0NyBALSAin0).
@@ -115,10 +111,6 @@
 - [x] We will publish a fully documented scaffold project that demonstrates how LambdaBuffers is used in Cardano dApp projects.
 
   - The fully documented scaffold project that demonstrates how LambdaBuffers is used in Cardano dApp projects is in the [lambda-buffers-for-cardano](https://github.com/mlabs-haskell/lambda-buffers-for-cardano/) repository.
-
-- [x] Link to final closeout report
-
-  - This is the final closeout report
 
 - [x] Link to final closeout video
 
