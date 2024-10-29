@@ -1,0 +1,440 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Final Milestone: Project scaffold for Rust, JavaScript and Haskell - Lambda Buffers documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../using-lambdabuffers.html"><strong aria-hidden="true">2.</strong> Using LambdaBuffers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../haskell.html"><strong aria-hidden="true">2.1.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="../plutustx.html"><strong aria-hidden="true">2.2.</strong> LambdaBuffers to PlutusTx</a></li><li class="chapter-item expanded "><a href="../purescript.html"><strong aria-hidden="true">2.3.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="../plutarch.html"><strong aria-hidden="true">2.4.</strong> LambdaBuffers to Plutarch</a></li><li class="chapter-item expanded "><a href="../rust.html"><strong aria-hidden="true">2.5.</strong> LambdaBuffers to Rust</a></li><li class="chapter-item expanded "><a href="../typescript.html"><strong aria-hidden="true">2.6.</strong> LambdaBuffers to Typescript</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">3.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="../design.html"><strong aria-hidden="true">4.</strong> Design</a></li><li class="chapter-item expanded "><a href="../api.html"><strong aria-hidden="true">5.</strong> API</a></li><li class="chapter-item expanded "><a href="../syntax.html"><strong aria-hidden="true">6.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="../compiler.html"><strong aria-hidden="true">7.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="../codegen.html"><strong aria-hidden="true">8.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="../command-line-interface.html"><strong aria-hidden="true">9.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="../comparison-matrix.html"><strong aria-hidden="true">10.</strong> Comparison matrix</a></li><li class="chapter-item expanded "><a href="../aiken-integration.html"><strong aria-hidden="true">11.</strong> Aiken Research Document</a></li><li class="chapter-item expanded "><a href="../catalyst-reports.html"><strong aria-hidden="true">12.</strong> Catalyst reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../catalyst09-reports/index.html"><strong aria-hidden="true">12.1.</strong> Catalyst 9 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../catalyst09-reports/milestone-1.html"><strong aria-hidden="true">12.1.1.</strong> Milestone 1: Research</a></li><li class="chapter-item expanded "><a href="../catalyst09-reports/milestone-2.html"><strong aria-hidden="true">12.1.2.</strong> Milestone 2: End to end proof of concept</a></li><li class="chapter-item expanded "><a href="../catalyst09-reports/milestone-3.html"><strong aria-hidden="true">12.1.3.</strong> Milestone 3: Testing and documentation</a></li><li class="chapter-item expanded "><a href="../catalyst09-reports/milestone-3.html"><strong aria-hidden="true">12.1.4.</strong> Milestone 4: Project adoption</a></li></ol></li><li class="chapter-item expanded "><a href="../catalyst10-reports/index.html"><strong aria-hidden="true">12.2.</strong> Catalyst 10 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../catalyst10-reports/milestone-1.html"><strong aria-hidden="true">12.2.1.</strong> Milestone 1: Rust support</a></li><li class="chapter-item expanded "><a href="../catalyst10-reports/milestone-2.html"><strong aria-hidden="true">12.2.2.</strong> Milestone 2: Javascript/Typescript support</a></li><li class="chapter-item expanded "><a href="../catalyst10-reports/milestone-3.html"><strong aria-hidden="true">12.2.3.</strong> Milestone 3: Aiken integration research and development</a></li><li class="chapter-item expanded "><a href="../catalyst10-reports/milestone-4.html"><strong aria-hidden="true">12.2.4.</strong> Milestone 4: Separate PlutusTx backend and improvements to existing LambdaBuffers facilities</a></li><li class="chapter-item expanded "><a href="../catalyst10-reports/milestone-5.html" class="active"><strong aria-hidden="true">12.2.5.</strong> Final Milestone: Project scaffold for Rust, JavaScript and Haskell</a></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Lambda Buffers documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="catalyst-milestone-5-final-project-scaffold-for-rust-javascript-and-haskell"><a class="header" href="#catalyst-milestone-5-final-project-scaffold-for-rust-javascript-and-haskell">Catalyst milestone 5 (FINAL): Project scaffold for Rust, JavaScript and Haskell</a></h1>
+<h2 id="outputs"><a class="header" href="#outputs">Outputs</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A documented project scaffold that demonstrates the end-to-end use of LambdaBuffers with Rust, JavaScript, Haskell and PlutusTx language ecosystems.</p>
+<ul>
+<li>
+<p>A project scaffold that demonstrates end-to-end use of LambdaBuffers with Rust can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-rust">here</a></p>
+</li>
+<li>
+<p>A project scaffold that demonstrates end-to-end use of LambdaBuffers with JavaScript (TypeScript) can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-typescript">here</a></p>
+</li>
+<li>
+<p>A project scaffold that demonstrates end-to-end use of LambdaBuffers with Haskell to create transactions can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-haskell">here</a></p>
+</li>
+<li>
+<p>A project scaffold that demonstrates end-to-end use of LambdaBuffers with Haskell for onchain scripts using Plutarch can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/validation/demo-plutarch">here</a></p>
+</li>
+<li>
+<p>A project scaffold that demonstrates end-to-end use of LambdaBuffers with PlutusTx for onchain scripts can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/validation/demo-plutustx">here</a></p>
+</li>
+<li>
+<p>The LambdaBuffers schema used in all the aforementioned projects can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/api">here</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Demonstrate how to use LambdaBuffers to manage and exchange JSON-based configuration between different language ecosystems supported by LambdaBuffers.</p>
+<ul>
+<li>
+<p>The JSON-based configuration defined with LambdaBuffers is over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Config.lbf">here</a></p>
+</li>
+<li>
+<p>The Rust transaction building project uses such JSON-based configuration over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/main.rs">here</a></p>
+</li>
+<li>
+<p>The JavaScript (TypeScript) transaction building project uses such JSON-based configuration in its testsuite <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-typescript/src/tests/demo-test.ts">here</a></p>
+</li>
+<li>
+<p>The Haskell project uses such JSON-based configuration over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-haskell/src/Demo/Config.hs">here</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+More importantly, demonstrates how to use LambdaBuffers to specify and exchange Plutus Datum between Plutus scripting languages and transaction-building frameworks.</p>
+<ul>
+<li>
+<p>A specification for Plutus Datum using LambdaBuffers is given <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Plutus.lbf">here</a> where we see its usage in Plutus scripting languages and transaction-building frameworks in the following files:</p>
+<ul>
+<li>
+<p>With the PlutusTx Plutus scripting language, we see it deserializes the <code>EqDatum</code> in the <code>eqValidator</code> defined <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutustx/src/Demo/Validation.hs">here</a>.</p>
+</li>
+<li>
+<p>With the Plutarch Plutus scripting language, we see it deserializes the <code>EqDatum</code> in the <code>eqValidator</code> defined <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/validation/demo-plutarch/src/Demo/Validation.hs">here</a></p>
+</li>
+<li>
+<p>With Rust, we can see it uses an <code>EqDatum</code> to build a transaction over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/lib.rs">here</a></p>
+</li>
+<li>
+<p>With TypeScript, we can see it uses an <code>EqDatum</code> to build a transaction over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-rust/src/lib.rs">here</a></p>
+</li>
+<li>
+<p>With Haskell, we can see it uses an <code>EqDatum</code> to build a transaction over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/transactions/demo-haskell/src/Demo/Process.hs">here</a></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A fully tested and documented LambdaBuffers support for Rust, JavaScript, Haskell and PlutusTx language ecosystems.</p>
+<ul>
+<li>
+<p>A full example project with LambdaBuffers complete with automated tests for Rust can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-rust">here</a></p>
+</li>
+<li>
+<p>A full example project with LambdaBuffers complete with automated tests for JavaScript (TypeScript) can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-typescript">here</a></p>
+</li>
+<li>
+<p>A full example project with LambdaBuffers complete with automated tests for Haskell (using Rust's tx-village library) can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-haskell">here</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-tx-village">here</a></p>
+</li>
+<li>
+<p>A full example project with LambdaBuffers for creating validators with PlutusTx can be found <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/validation/demo-plutustx">here</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A documented scaffold project that serves to demonstrate how to use LambdaBuffers with the newly supported languages for easy adoption.</p>
+<ul>
+<li>
+<p>Scaffold projects can be found for each language is provided above</p>
+</li>
+<li>
+<p>The <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/README.md"><code>README.md</code></a> serves as documentation for the scaffold projects which demonstrate how LambdaBuffers may be used with such languages</p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Final close-out report</p>
+<ul>
+<li>This document is the close-out report</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Final closeout video</p>
+<ul>
+<li>Final closeout video can be found <a href="https://youtu.be/0NyBALSAin0">here</a>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="acceptance-criteria"><a class="header" href="#acceptance-criteria">Acceptance Criteria</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A LambdaBuffers scaffold repository is made available that demonstrates a working end-to-end use of LambdaBuffers with Rust, JavaScript, Haskell and PlutusTx language ecosystems.</p>
+<ul>
+<li>A LambdaBuffers scaffold repository that demonstrates a working end-to-end use of LambdaBuffers with Rust, JavaScript (TypeScript), Haskell, and PlutusTx is provided <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/tree/main/transactions/demo-rust">here</a>.</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The scaffold uses LambdaBuffers to specify JSON configuration.</p>
+<ul>
+<li>The JSON-based configuration defined with LambdaBuffers is over <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Config.lbf">here</a></li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The scaffold uses LambdaBuffers to specify Plutus Datum.</p>
+<ul>
+<li>The scaffold uses LambdaBuffers to specify Plutus Datum <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/blob/main/api/Demo/Plutus.lbf">here</a></li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Final closeout video is publicly available</p>
+<ul>
+<li>Final closeout video that is publicly available can be found <a href="https://youtu.be/0NyBALSAin0">here</a>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="evidence-of-milestone-completion"><a class="header" href="#evidence-of-milestone-completion">Evidence of Milestone Completion</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange JSON based configuration between Rust, JavaScript, Haskell and PlutusTx language ecosystems.</p>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange JSON based configuration in Rust was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/12">#12</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange JSON based configuration in JavaScript (TypeScript) was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/18">#18</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange JSON based configuration in Haskell was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/27">#27</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange JSON based configuration in PlutusTx was originally implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/1">#1</a> and more recently updated in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/25">#25</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange Plutus Datums between Rust, JavaScript, Haskell and PlutusTx language ecosystems.</p>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange Plutus Datums configuration in Rust was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/12">#12</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange Plutus Datums configuration in JavaScript (TypeScript) was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/18">#18</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange Plutus Datums configuration in Haskell was implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/27">#27</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+The completed and reviewed LambdaBuffers scaffold project that uses LambdaBuffers to specify and exchange Plutus Datums configuration in PlutusTx was originally implemented in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/1">#1</a> and more recently updated in PR <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/pull/25">#25</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+We will record a video demonstrating the LambdaBuffers toolkit, how LambdaBuffers schemas are written and checked, and how code is generated from them in the newly supported programming languages.</p>
+<ul>
+<li>A video demonstrating the LambdaBuffers toolkit, how LambdaBuffers schemas are written and checked, and how code is generated from them in the newly supported programming languages can be found <a href="https://youtu.be/0NyBALSAin0">here</a>.</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+We will publish a fully documented scaffold project that demonstrates how LambdaBuffers is used in Cardano dApp projects.</p>
+<ul>
+<li>The fully documented scaffold project that demonstrates how LambdaBuffers is used in Cardano dApp projects is in the <a href="https://github.com/mlabs-haskell/lambda-buffers-for-cardano/">lambda-buffers-for-cardano</a> repository.</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Link to final closeout video</p>
+<ul>
+<li>Final closeout video can be found <a href="https://youtu.be/0NyBALSAin0">here</a>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ul>
+<li><a href="https://milestones.projectcatalyst.io/projects/1000122/milestones/5">Project Catalyst Final Milestone</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../catalyst10-reports/milestone-4.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../catalyst10-reports/milestone-4.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
