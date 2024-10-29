@@ -34,3 +34,4 @@
     - [Milestone 2: Javascript/Typescript support](catalyst10-reports/milestone-2.md)
     - [Milestone 3: Aiken integration research and development](catalyst10-reports/milestone-3.md)
     - [Milestone 4: Separate PlutusTx backend and improvements to existing LambdaBuffers facilities](catalyst10-reports/milestone-4.md)
+    - [Final Milestone: Project scaffold for Rust, JavaScript and Haskell](catalyst10-reports/milestone-5.md)

@@ -1,4 +1,4 @@
-# Catalyst milestone 5 (FINAL): Project scaffold for Rust, Javascript and Aiken
+# Catalyst milestone 5 (FINAL): Project scaffold for Rust, JavaScript and Haskell
 
 ## Outputs
 
