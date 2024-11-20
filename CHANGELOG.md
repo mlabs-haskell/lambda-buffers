@@ -45,6 +45,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Typescript lbr-plutus
 #### Purescript lbr-plutus
 
+## LambdaBuffers v2.0.0
+
+Conway support
+
+### Schemas
+
+#### lbf-prelude
+##### Purescript
+##### Rust
+##### Haskell
+##### Typescript
+
+#### lbf-plutus
+##### Purescript
+##### Rust
+
+Target [plutus-ledger-api 1.0.0](https://crates.io/crates/plutus-ledger-api)
+
+##### Haskell
+
+Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/tree/1.36.0.0/plutus-tx)
+
+##### Typescript
+##### Plutarch
+##### PlutusTx
+
+### Tools
+
+#### Frontend
+#### Compiler
+#### Compiler Proto API
+#### Codegen
+#### Codegen Proto API
+
+### Runtimes
+
+#### Rust lbr-prelude
+#### Haskell lbr-prelude
+#### Typescript lbr-prelude
+#### Purescript lbr-prelude
+
+#### Rust lbr-plutus
+#### Haskell lbr-plutus
+
+Target: [plutustx 1.20.0.0](https://github.com/IntersectMBO/plutus/tree/1.20.0.0/plutus-tx)
+#### PlutusTx lbr-plutus
+#### Plutarch lbr-plutus
+#### Typescript lbr-plutus
+#### Purescript lbr-plutus
+
 ## LambdaBuffers v.1.0.0
 
 - Initial release

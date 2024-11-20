@@ -174,6 +174,87 @@
       "plutus-ledger-api",
       "PlutusLedgerApi.V2.Contexts",
       "TxInfo"
+    ],
+    "Plutus.V3.Rational": [
+      "plutus-ledger-api",
+      "PlutusTx.Ratio",
+      "Rational"
+    ],
+    "Plutus.V3.ColdCommitteeCredential": [
+      "PlutusLedgerApi.V3.Contexts",
+      "ColdCommitteeCredential"
+    ],
+    "Plutus.V3.HotCommitteeCredential": [
+      "PlutusLedgerApi.V3.Contexts",
+      "HotCommitteeCredential"
+    ],
+    "Plutus.V3.DRepCredential": [
+      "PlutusLedgerApi.V3.Contexts",
+      "DRepCredential"
+    ],
+    "Plutus.V3.DRep": [
+      "PlutusLedgerApi.V3.Contexts",
+      "DRep"
+    ],
+    "Plutus.V3.Delegatee": [
+      "PlutusLedgerApi.V3.Contexts",
+      "Delegatee"
+    ],
+    "Plutus.V3.TxCert": [
+      "PlutusLedgerApi.V3.Contexts",
+      "TxCert"
+    ],
+    "Plutus.V3.Voter": [
+      "PlutusLedgerApi.V3.Contexts",
+      "Voter"
+    ],
+    "Plutus.V3.Vote": [
+      "PlutusLedgerApi.V3.Contexts",
+      "Vote"
+    ],
+    "Plutus.V3.GovernanceActionId": [
+      "PlutusLedgerApi.V3.Contexts",
+      "GovernanceActionId"
+    ],
+    "Plutus.V3.Committee": [
+      "PlutusLedgerApi.V3.Contexts",
+      "Committee"
+    ],
+    "Plutus.V3.Constitution": [
+      "PlutusLedgerApi.V3.Contexts",
+      "Constitution"
+    ],
+    "Plutus.V3.ProtocolVersion": [
+      "PlutusLedgerApi.V3.Contexts",
+      "ProtocolVersion"
+    ],
+    "Plutus.V3.ChangedParameters": [
+      "PlutusLedgerApi.V3.ChangeContexts",
+      "ChangedParameters"
+    ],
+    "Plutus.V3.GovernanceAction": [
+      "PlutusLedgerApi.V3.Contexts",
+      "GovernanceAction"
+    ],
+    "Plutus.V3.ProtocolProcedure": [
+      "PlutusLedgerApi.V3.Contexts",
+      "ProtocolProcedure"
+    ],
+    "Plutus.V3.ScriptPurpose": [
+      "PlutusLedgerApi.V3.Contexts",
+      "ScriptPurpose"
+    ],
+    "Plutus.V3.ScriptInfo": [
+      "PlutusLedgerApi.V3.Contexts",
+      "ScriptInfo"
+    ],
+    "Plutus.V3.TransactionInfo": [
+      "PlutusLedgerApi.V3.Contexts",
+      "TransactionInfo"
+    ],
+    "Plutus.V3.ScriptContext": [
+      "PlutusLedgerApi.V3.ScriptContext",
+      "ScriptContext"
     ]
   },
   "classesConfig": {
