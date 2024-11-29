@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=szg251/fix-plutus";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";

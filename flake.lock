@@ -3633,15 +3633,16 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1731557676,
-        "narHash": "sha256-0tWl+bI7FHkRl1aimekAatcVwo4IPxGafzpQJdRZVbY=",
+        "lastModified": 1732799824,
+        "narHash": "sha256-ooNgr1GRWtY/cD3SxftYIkROgNXwn/5/ajCUim7pMPg=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "be2e8b60265ad3ef0a447c4d19b75f6c136aa347",
+        "rev": "e27921e3c936e4c1eaed7f9f151632ecb6b20323",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "szg251/fix-plutus",
         "repo": "flake-lang.nix",
         "type": "github"
       }
