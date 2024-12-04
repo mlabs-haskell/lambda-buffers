@@ -22,7 +22,7 @@
     ctl.follows = "flake-lang/ctl";
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=staging";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
