@@ -93,10 +93,12 @@ library
     , plutus-ledger-api
     , plutus-tx
     , text               >=1.2
+    , vector
 
   hs-source-dirs:  src
   exposed-modules:
     LambdaBuffers.Runtime.Plutus
+    LambdaBuffers.Runtime.Plutus.Eq
     LambdaBuffers.Runtime.Plutus.Json
     LambdaBuffers.Runtime.Plutus.PlutusData
     Test.LambdaBuffers.Plutus.Generators.Correct

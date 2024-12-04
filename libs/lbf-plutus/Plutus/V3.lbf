@@ -119,7 +119,7 @@ instance Json ProposalProcedure
 opaque ScriptPurpose
 
 instance PlutusData ScriptPurpose
--- instance Eq ScriptPurpose -- TODO: Apparently IOG forgot to add the PlutusTx.Eq instance here
+instance Eq ScriptPurpose
 instance Json ScriptPurpose
 
 -- PlutusLedgerApi.V3.Contexts
