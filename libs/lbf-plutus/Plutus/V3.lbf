@@ -10,12 +10,33 @@ instance PlutusData Rational
 instance Eq Rational
 instance Json Rational
 
+-- PlutusLedgerApi.V3.Tx
+opaque TxId
+
+instance PlutusData TxId
+instance Eq TxId
+instance Json TxId
+
+-- PlutusLedgerApi.V3.Tx
+opaque TxOutRef
+
+instance PlutusData TxOutRef
+instance Eq TxOutRef
+instance Json TxOutRef
+
+-- PlutusLedgerApi.V3.Tx
+opaque TxInInfo
+
+instance PlutusData TxInInfo
+instance Eq TxInInfo
+instance Json TxInInfo
+
 -- PlutusLedgerApi.V3.Contexts
 opaque ColdCommitteeCredential
 
 instance PlutusData ColdCommitteeCredential
 instance Eq ColdCommitteeCredential
-instalce Json ColdCommitteeCredential
+instance Json ColdCommitteeCredential
 
 -- PlutusLedgerApi.V3.Contexts
 opaque HotCommitteeCredential
@@ -94,7 +115,7 @@ instance PlutusData ProtocolVersion
 instance Eq ProtocolVersion
 instance Json ProtocolVersion
 
--- PlutusLedgerApi.V3.ChangeContexts
+-- PlutusLedgerApi.V3.Contexts
 opaque ChangedParameters
 
 instance PlutusData ChangedParameters
@@ -130,13 +151,13 @@ instance Eq ScriptInfo
 instance Json ScriptInfo
 
 -- PlutusLedgerApi.V3.Contexts
-opaque TransactionInfo
+opaque TxInfo
 
-instance PlutusData TransactionInfo
-instance Eq TransactionInfo
-instance Json TransactionInfo
+instance PlutusData TxInfo
+instance Eq TxInfo
+instance Json TxInfo
 
--- PlutusLedgerApi.V3.ScriptContext
+-- PlutusLedgerApi.3.ScriptContext
 opaque ScriptContext
 
 instance PlutusData ScriptContext

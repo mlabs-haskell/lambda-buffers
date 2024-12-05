@@ -46,6 +46,7 @@ Writing .lbf schemas with API types intended for Plutarch backend will typically
 1. [Prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude/Prelude.lbf),
 2. [Plutus.V1](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V1.lbf),
 3. [Plutus.V2](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf).
+4. [Plutus.V3](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V3.lbf).
 
 Take a look at [Example.lbf](https://github.com/mlabs-haskell/lambda-buffers/tree/main/docs/plutarch/api/Example.lbf) schema as an example.
 
@@ -78,6 +79,8 @@ result/autogen/LambdaBuffers/Prelude/Plutarch.hs
 result/autogen/
 result/autogen/LambdaBuffers
 result/autogen/LambdaBuffers/Plutus
+result/autogen/LambdaBuffers/Plutus/V3
+result/autogen/LambdaBuffers/Plutus/V3/Plutarch.hs
 result/autogen/LambdaBuffers/Plutus/V2
 result/autogen/LambdaBuffers/Plutus/V2/Plutarch.hs
 result/autogen/LambdaBuffers/Plutus/V1
@@ -91,18 +94,20 @@ The set of imports a Plutarch program using LambdaBuffers would typically need i
 ```haskell
 import LambdaBuffers.Plutus.V1.Plutarch ()
 import LambdaBuffers.Plutus.V2.Plutarch ()
+import LambdaBuffers.Plutus.V3.Plutarch ()
 import LambdaBuffers.Prelude.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch ()
-import Plutarch ()
 import Plutarch.Prelude ()
-import Plutarch.Api.V1 ()
-import Plutarch.Api.V2 ()
+import Plutarch.LedgerApi.V1 ()
+import Plutarch.LedgerApi.V2 ()
+import Plutarch.LedgerApi.V3 ()
 ```
 
 1. LambdaBuffers.Plutus.V1.Plutarch is a module generated from [Plutus.V1](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V1.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus) runtime library.
 2. LambdaBuffers.Plutus.V2.Plutarch is a module generated from [Plutus.V2](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus) runtime library.
-3. LambdaBuffers.Prelude.Plutarch is a module generated from [Prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude/Prelude.lbf) LambdaBuffers schema and provided by the [lbf-prelude-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude) runtime library.
-4. LambdaBuffers.Runtime.Plutarch is a module provided by the [lbr-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/runtimes/haskell/lbr-plutarch) runtime library.
+3. LambdaBuffers.Plutus.V3.Plutarch is a module generated from [Plutus.V3](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf) LambdaBuffers schema and provided by the [lbf-plutus-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus) runtime library.
+4. LambdaBuffers.Prelude.Plutarch is a module generated from [Prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude/Prelude.lbf) LambdaBuffers schema and provided by the [lbf-prelude-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude) runtime library.
+5. LambdaBuffers.Runtime.Plutarch is a module provided by the [lbr-plutarch](https://github.com/mlabs-haskell/lambda-buffers/tree/main/runtimes/haskell/lbr-plutarch) runtime library.
 
 > Generated Plutarch module for a LambdaBuffers schema `Foo/Bar.lbf` (ie. `Foo.Bar`) is stored at `Foo/Bar/Plutarch.hs`
 
@@ -178,27 +183,22 @@ module LambdaBuffers.Foo.Plutarch (Sum(..), Record(..), Product(..)) where
 import qualified LambdaBuffers.Plutus.V1.Plutarch
 import qualified LambdaBuffers.Prelude.Plutarch
 import qualified LambdaBuffers.Runtime.Plutarch
-import qualified Plutarch
-import qualified Plutarch.Bool
-import qualified Plutarch.Builtin
-import qualified Plutarch.Internal.PlutusType
 import qualified Plutarch.Prelude
-import qualified Plutarch.Show
-import qualified Plutarch.TryFrom
+import qualified Plutarch.Internal.PlutusType
 import qualified Plutarch.Unsafe
 
-data Sum (a :: PType) (s :: Plutarch.S) = Sum'Some (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Sum (a :: PType) (s :: Plutarch.Prelude.S) = Sum'Some (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
                                   | Sum'Nothing
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 
-data Record (a :: PType) (s :: Plutarch.S) = Record (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Record (a :: PType) (s :: Plutarch.Prelude.S) = Record (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 
-data Product (a :: PType) (s :: Plutarch.S) = Product (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Product (a :: PType) (s :: Plutarch.Prelude.S) = Product (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 ```
 
 ### Type class implementations
@@ -376,7 +376,7 @@ lambda-buffers/docs/plutarch ❯ cabal info .
     Executables:   plutarch-example
     Flags:         dev
     Dependencies:  base >=4.16, lbf-plutarch-example-api, lbf-plutus-plutarch,
-                   lbf-prelude-plutarch, lbr-plutarch, plutarch, plutarch-extra,
+                   lbf-prelude-plutarch, lbr-plutarch, plutarch, plutarch-ledger-api,
                    text >=1.2
     Cached:        Yes
 ```

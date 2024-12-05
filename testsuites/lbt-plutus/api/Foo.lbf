@@ -39,7 +39,7 @@ prod E a b = Address
      (Extended POSIXTime)
      (Interval POSIXTime)
      (LowerBound POSIXTime)
-     (Map Bytes Credential)
+     -- (Map Bytes Credential) TODO: PlutusTx.Eq instances from AssocMap were removed from plutus-tx
      POSIXTime
      POSIXTimeRange
      PlutusData

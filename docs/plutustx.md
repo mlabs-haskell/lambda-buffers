@@ -26,7 +26,7 @@ The key points are as follows.
 
 - The opaque types in LambdaBuffers' Prelude are often mapped to the corresponding `PlutusTx` Prelude type e.g. LambdaBuffers' Prelude's opaque `Prelude.Map` type is mapped to `PlutusTx.AssocMap`. The full mapping can be found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/main/lambda-buffers-codegen/data/plutustx-prelude.json)
 
-- The opaque types in LambdaBuffers' `Plutus.V1` and `Plutus.V2` modules are mapped to the obvious corresponding Plutus Ledger API types. The full mapping can be found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/main/lambda-buffers-codegen/data/plutustx-plutus.json).
+- The opaque types in LambdaBuffers' `Plutus.V1`, `Plutus.V2` and `Plutus.V3` modules are mapped to the obvious corresponding Plutus Ledger API types. The full mapping can be found [here](https://github.com/mlabs-haskell/lambda-buffers/blob/main/lambda-buffers-codegen/data/plutustx-plutus.json).
 
 - A LambdaBuffers module, say `<lb-module>`, is translated to the PlutusTx module `LambdaBuffers.<lb-module>.PlutusTx`
 
@@ -105,7 +105,7 @@ instance (PlutusTx.FromData a) => PlutusTx.FromData (Example a) where
 $ ghci autogen/LambdaBuffers/Example/PlutusTx.hs
 ...
 ```
-  
+
 ## Example project
 
 A complete example project using the generated PlutusTx modules can be found [here](https://github.com/mlabs-haskell/lambda-buffers/tree/main/docs/plutustx).

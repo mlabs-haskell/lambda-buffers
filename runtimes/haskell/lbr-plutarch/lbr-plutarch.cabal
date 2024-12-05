@@ -87,8 +87,9 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , base      >=4.16
+    , base                 >=4.16
     , plutarch
+    , plutarch-ledger-api
 
   hs-source-dirs:  src
   exposed-modules:
@@ -101,10 +102,11 @@ test-suite tests
   hs-source-dirs: test
   main-is:        Test.hs
   build-depends:
-    , base            >=4.16
+    , base                 >=4.16
     , hedgehog
     , lbr-plutarch
     , plutarch
+    , plutarch-ledger-api
     , tasty
     , tasty-hedgehog
     , tasty-hunit

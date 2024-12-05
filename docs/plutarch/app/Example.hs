@@ -14,7 +14,7 @@ import LambdaBuffers.Prelude.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch (PList (PList))
 import LambdaBuffers.Runtime.Plutarch qualified as Lb
 import Plutarch (ClosedTerm, Config (Config), PlutusType, Term, TracingMode (DoTracingAndBinds), compile, pcon, perror, plam, pmatch, unTermCont, (#), (:-->))
-import Plutarch.Api.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), ptuple)
+import Plutarch.Api.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), ppair)
 import Plutarch.Api.V1.Time (PPOSIXTime (PPOSIXTime))
 import Plutarch.ByteString (PByteString)
 import Plutarch.Evaluate (evalScript)
@@ -25,7 +25,7 @@ userRef :: Text -> Term s (Ref User)
 userRef userName = userRef' (pfromData $ name userName)
 
 userRef' :: Term s Bytes -> Term s (Ref User)
-userRef' userName = pcon $ Ref (pdata $ ptuple # pcon' (PCurrencySymbol (pconstant "users")) # pcon' (PTokenName userName))
+userRef' userName = pcon $ Ref (pdata $ ppair # pcon' (PCurrencySymbol (pconstant "users")) # pcon' (PTokenName userName))
 
 activeUser :: Text -> [Term s (Ref User)] -> Integer -> Term s User
 activeUser n friends since = pcon $ User (name n) (pdata $ activeSince since) (pdata $ Lb.plistFrom friends)
