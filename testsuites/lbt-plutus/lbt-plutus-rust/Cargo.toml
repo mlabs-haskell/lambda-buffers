@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-plutus-ledger-api = { version = "1.0.0", features = ["lbf"] }
+plutus-ledger-api = { version = "2.1.0", features = ["lbf"] }
 lbf-plutus-rust-golden-api = { path = ".extras/lbf-plutus-rust-golden-api-0.1.0" }
 lbf-prelude = { path = ".extras/lbf-prelude-0.1.0" }
 lbr-prelude = { version = "0.1.3" }

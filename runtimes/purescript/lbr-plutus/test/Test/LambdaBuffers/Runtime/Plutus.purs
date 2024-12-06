@@ -3,8 +3,8 @@ module Test.LambdaBuffers.Runtime.Plutus
   ) where
 
 import Prelude
-import Ctl.Internal.FromData (class FromData, fromData)
-import Ctl.Internal.ToData (class ToData, toData)
+import Cardano.FromData (class FromData, fromData)
+import Cardano.ToData (class ToData, toData)
 import Data.Maybe (Maybe(..))
 import Effect.Class (liftEffect)
 import Test.LambdaBuffers.Plutus.Generators.Correct as Correct
@@ -17,17 +17,16 @@ tests = do
   describe "lbf-plutus.Plutus.PlutusData class" do
     describe "Instance" do
       fromToTest "Plutus.V1.Integer" Correct.genInteger
-      fromToTest "Plutus.V1..Bool" Correct.genBool
-      fromToTest "Plutus.V1..Bytes" (Correct.genPlutusBytes 5)
+      fromToTest "Plutus.V1.Bool" Correct.genBool
+      fromToTest "Plutus.V1.Bytes" (Correct.genPlutusBytes 5)
       fromToTest "Plutus.V1.CurrencySymbol" Correct.genCurrencySymbol
       fromToTest "Plutus.V1.TokenName" Correct.genTokenName
       fromToTest "Plutus.V1.Value" Correct.genValue
       fromToTest "Plutus.V1.PlutusData" Correct.genData
-      fromToTest "Plutus.V1.Datum" Correct.genDatum
-      fromToTest "Plutus.V1.Redeemer" Correct.genRedeemer
       fromToTest "Plutus.V1.PubKeyHash" Correct.genPubKeyHash
       fromToTest "Plutus.V1.DatumHash" Correct.genDatumHash
-      fromToTest "Plutus.V1.RedeemerHash" Correct.genRedeemerHash
+      fromToTest "Plutus.V1.Datum" Correct.genDatum
+      fromToTest "Plutus.V1.Redeemer" Correct.genRedeemer
       fromToTest "Plutus.V1.Extended" Correct.genExtended
       fromToTest "Plutus.V1.Closure" Correct.genClosure
       fromToTest "Plutus.V1.LowerBound" Correct.genLowerBound
