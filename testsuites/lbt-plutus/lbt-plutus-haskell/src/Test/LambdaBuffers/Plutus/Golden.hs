@@ -169,15 +169,15 @@ valueGoldens =
 
 mapGoldens :: [AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)]
 mapGoldens =
-  [ AssocMap.fromList []
-  , AssocMap.fromList
-      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
+  [ AssocMap.safeFromList []
+  , AssocMap.safeFromList
+      [ (PlutusV1.adaSymbol, AssocMap.safeFromList [(PlutusV1.adaToken, 1337)])
       ]
-  , AssocMap.fromList
-      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
+  , AssocMap.safeFromList
+      [ (PlutusV1.adaSymbol, AssocMap.safeFromList [(PlutusV1.adaToken, 1337)])
       ,
         ( PlutusV1.CurrencySymbol blake2b_224Hash
-        , AssocMap.fromList
+        , AssocMap.safeFromList
             [ (PlutusV1.TokenName $ PlutusV1.toBuiltin B.empty, 1337)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 16], 16)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 32], 32)
@@ -275,11 +275,11 @@ txInfoGoldensV2 =
     <$> valueGoldens
     <*> valueGoldens
     <*> pure dCertGoldens
-    <*> pure (AssocMap.fromList (map (,1234) stakingCredentialGoldens))
+    <*> pure (AssocMap.safeFromList (map (,1234) stakingCredentialGoldens))
     <*> posixTimeRangeGoldens
     <*> pure pubKeyHashGoldens
-    <*> pure (AssocMap.fromList (zip scriptPurposeGoldens redeemerGoldens))
-    <*> pure (AssocMap.fromList (zip datumHashGoldens datumGoldens))
+    <*> pure (AssocMap.safeFromList (zip scriptPurposeGoldens redeemerGoldens))
+    <*> pure (AssocMap.safeFromList (zip datumHashGoldens datumGoldens))
     <*> txIdGoldens
 
 scriptContextGoldensV2 :: [PlutusV2.ScriptContext]

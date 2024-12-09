@@ -43,7 +43,7 @@ import Plutarch.Prelude (
   phoistAcyclic,
   plam,
   plet,
-  ptrace,
+  ptraceInfo,
   ptryFrom,
   (#),
   type (:-->),
@@ -105,10 +105,10 @@ pcasePlutusData = phoistAcyclic $ plam $ \handleConstr handleList handleInt hand
     pchooseData
       # pd
       # pdelay (plet (pasConstr # pd) $ \pair -> handleConstr # (pfstBuiltin # pair) # (psndBuiltin # pair))
-      # pdelay (ptrace "Got a PlutusData Map" (handleOther # pd))
+      # pdelay (ptraceInfo "Got a PlutusData Map" (handleOther # pd))
       # pdelay (handleList # (pasList # pd))
       # pdelay (handleInt # (pasInt # pd))
-      # pdelay (ptrace "Got PlutusData Bytes" (handleOther # pd))
+      # pdelay (ptraceInfo "Got PlutusData Bytes" (handleOther # pd))
 
 -- | Haskell `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
 casePlutusData ::

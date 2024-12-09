@@ -61,7 +61,7 @@ Conway support
 ##### Purescript
 ##### Rust
 
-Target [plutus-ledger-api 1.0.0](https://crates.io/crates/plutus-ledger-api)
+Target [plutus-ledger-api 2.1.0](https://crates.io/crates/plutus-ledger-api)
 
 ##### Haskell
 
@@ -70,6 +70,8 @@ Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/tree/1.36.0.0
 ##### Typescript
 ##### Plutarch
 ##### PlutusTx
+
+Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/tree/1.36.0.0/plutus-tx)
 
 ### Tools
 
@@ -88,9 +90,9 @@ Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/tree/1.36.0.0
 
 #### Rust lbr-plutus
 #### Haskell lbr-plutus
+#### PlutusTx lbr-plutus
 
 Target: [plutustx 1.20.0.0](https://github.com/IntersectMBO/plutus/tree/1.20.0.0/plutus-tx)
-#### PlutusTx lbr-plutus
 #### Plutarch lbr-plutus
 #### Typescript lbr-plutus
 #### Purescript lbr-plutus
