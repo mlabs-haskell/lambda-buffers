@@ -30,7 +30,7 @@ let
     , # Version of the package and also the version of the Cargo crate.
       # Examples: version = "0.1.0.0"
       version ? "0.1.0"
-    , # Version of dependencies 
+    , # Version of dependencies
       # A package will only be added to Cargo.toml, if the generated code directly depends on it
       # Defaults to version 0.1.0 for all packages
       extraVersions ? { }
@@ -86,7 +86,7 @@ let
     {
       num-bigint = "~0.4";
       serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
-      plutus-ledger-api = { version = "2.1.0"; features = [ "lbf" ]; };
+      plutus-ledger-api = { version = "3.0.0"; features = [ "lbf" ]; };
       lbr-prelude = { version = "0.1.3"; };
     };
 
@@ -124,7 +124,7 @@ let
             if [ $VER == "null" ]; then
               VER="{\"path\": \"../$DEP-0.1.0\"}"
             fi
-            cat Cargo.json | jq ".dependencies+={\"$DEP\":$VER}" > tmp.json; 
+            cat Cargo.json | jq ".dependencies+={\"$DEP\":$VER}" > tmp.json;
             mv tmp.json Cargo.json
           fi
         done

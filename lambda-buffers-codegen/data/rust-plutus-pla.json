@@ -212,7 +212,7 @@
       "plutus-ledger-api",
       "v3",
       "transaction",
-      "TransactionId"
+      "TransactionHash"
     ],
     "Plutus.V3.TxOutRef": [
       "plutus-ledger-api",
@@ -342,6 +342,8 @@
     ],
     "Plutus.V3.ScriptContext": [
       "plutus-ledger-api",
+      "v3",
+      "transaction",
       "ScriptContext"
     ]
   },

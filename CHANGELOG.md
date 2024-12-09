@@ -61,7 +61,7 @@ Conway support
 ##### Purescript
 ##### Rust
 
-Target [plutus-ledger-api 2.1.0](https://crates.io/crates/plutus-ledger-api)
+Target [plutus-ledger-api 3.0.0](https://crates.io/crates/plutus-ledger-api)
 
 ##### Haskell
 
