@@ -35,16 +35,16 @@ pmatchMethod :: Haskell.ValueName
 pmatchMethod = Haskell.MkValueName "pmatch'"
 
 peqQClassName :: Haskell.QClassName
-peqQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Bool", Haskell.MkClassName "PEq")
+peqQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkClassName "PEq")
 
 peqMethod :: Haskell.ValueName
 peqMethod = Haskell.MkValueName "#=="
 
 pisDataQClassName :: Haskell.QClassName
-pisDataQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Builtin", Haskell.MkClassName "PIsData")
+pisDataQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkClassName "PIsData")
 
 ptryFromQClassName :: Haskell.QClassName
-ptryFromQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.TryFrom", Haskell.MkClassName "PTryFrom")
+ptryFromQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkClassName "PTryFrom")
 
 ptryFromMethod :: Haskell.ValueName
 ptryFromMethod = Haskell.MkValueName "ptryFrom'"
@@ -56,37 +56,37 @@ pappQValName :: Haskell.QValName
 pappQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkValueName "#")
 
 pdataQValName :: Haskell.QValName
-pdataQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Builtin", Haskell.MkValueName "pdata")
+pdataQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkValueName "pdata")
 
 peqQValName :: Haskell.QValName
-peqQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Bool", Haskell.MkValueName "#==")
+peqQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkValueName "#==")
 
 punsafeCoerceQValName :: Haskell.QValName
 punsafeCoerceQValName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Unsafe", Haskell.MkValueName "punsafeCoerce")
 
 pdataQTyName :: Haskell.QTyName
-pdataQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Builtin", Haskell.MkTyName "PData")
+pdataQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkTyName "PData")
 
 constQTyName :: Haskell.QTyName
 constQTyName = (Haskell.MkCabalPackageName "base", Haskell.MkModuleName "Data.Functor.Const", Haskell.MkTyName "Const")
 
 pasDataQTyName :: Haskell.QTyName
-pasDataQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Builtin", Haskell.MkTyName "PAsData")
+pasDataQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkTyName "PAsData")
 
 ptryFromPAsDataQValName :: Haskell.QValName
 ptryFromPAsDataQValName = (Haskell.MkCabalPackageName "lbr-plutarch", Haskell.MkModuleName "LambdaBuffers.Runtime.Plutarch", Haskell.MkValueName "ptryFromPAsData")
 
 termQTyName :: Haskell.QTyName
-termQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch", Haskell.MkTyName "Term")
+termQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkTyName "Term")
 
 scopeQTyName :: Haskell.QTyName
-scopeQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch", Haskell.MkTyName "S")
+scopeQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkTyName "S")
 
 ptypeQTyName :: Haskell.QTyName
-ptypeQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch", Haskell.MkTyName "PType")
+ptypeQTyName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "LambdaBuffers.Runtime.Plutarch", Haskell.MkTyName "PType")
 
 showQClassName :: Haskell.QClassName
-showQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Show", Haskell.MkClassName "PShow")
+showQClassName = (Haskell.MkCabalPackageName "plutarch", Haskell.MkModuleName "Plutarch.Prelude", Haskell.MkClassName "PShow")
 
 genericQClassName :: Haskell.QClassName
 genericQClassName = (Haskell.MkCabalPackageName "base", Haskell.MkModuleName "GHC.Generics", Haskell.MkClassName "Generic")

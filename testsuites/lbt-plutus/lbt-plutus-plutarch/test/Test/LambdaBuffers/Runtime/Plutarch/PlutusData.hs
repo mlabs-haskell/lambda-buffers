@@ -16,12 +16,14 @@ import LambdaBuffers.Prelude.Plutarch qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LbPl
 import LambdaBuffers.Runtime.Plutus ()
-import Plutarch (Config (Config), TracingMode (DoTracingAndBinds), pcon, perror, plam, pmatch, (#), (:-->))
-import Plutarch qualified
-import Plutarch.Bool (PBool, pif, (#==))
-import Plutarch.Builtin (PData)
 import Plutarch.Evaluate (evalScriptHuge)
-import Plutarch.Prelude (PAsData, PIsData, PTryFrom, pconstant)
+import Plutarch.Internal.Term (
+  Config (Tracing),
+  LogLevel (LogInfo),
+  TracingMode (DoTracing),
+  compile,
+ )
+import Plutarch.Prelude (PAsData, PBool, PData, PIsData, PTryFrom, Term, pcon, pconstant, perror, pif, plam, pmatch, (#), (#==), (:-->))
 import PlutusTx (Data, ToData)
 import PlutusTx.IsData (FromData, toData)
 import Test.LambdaBuffers.Plutarch.Golden (readGoldenPdJson)
@@ -109,13 +111,13 @@ plutusV2Goldens =
     ]
 
 evalRoundTrip :: forall a. (PIsData a, PTryFrom PData (PAsData a)) => Data -> Assertion
-evalRoundTrip pd = case Plutarch.compile (Config DoTracingAndBinds) (roundTripFunction @a # pconstant pd) of
+evalRoundTrip pd = case compile (Tracing LogInfo DoTracing) (roundTripFunction @a # pconstant pd) of
   Left err -> assertFailure $ show ("Error while evaluating a Plutarch Term", err)
   Right script -> case evalScriptHuge script of
     (Left err, _, trace) -> assertFailure $ show ("Error while evaluating a Plutarch Term", err, trace)
     _other -> return ()
 
-roundTripFunction :: forall a s. (PIsData a, PTryFrom PData (PAsData a)) => Plutarch.Term s (PData :--> PBool)
+roundTripFunction :: forall a s. (PIsData a, PTryFrom PData (PAsData a)) => Term s (PData :--> PBool)
 roundTripFunction =
   plam $ \pd ->
     pmatch

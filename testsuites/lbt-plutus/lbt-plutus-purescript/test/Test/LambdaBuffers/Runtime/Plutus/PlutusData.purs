@@ -1,8 +1,8 @@
 module Test.LambdaBuffers.Runtime.Plutus.PlutusData (tests) where
 
 import Prelude
-import Ctl.Internal.FromData (class FromData, fromData)
-import Ctl.Internal.ToData (class ToData, toData)
+import Cardano.FromData (class FromData, fromData)
+import Cardano.ToData (class ToData, toData)
 import Data.Maybe (Maybe(..))
 import Effect.Class (liftEffect)
 import Test.LambdaBuffers.Runtime.Plutus.Generators.Correct as Correct
