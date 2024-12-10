@@ -20,7 +20,6 @@ import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusLedgerApi.V3 qualified as PlutusV3
 import PlutusTx.AssocMap qualified as AssocMap
-import PlutusTx.Prelude qualified
 import PlutusTx.Ratio qualified
 
 prependFailure :: forall {a}. String -> Aeson.Parser a -> Aeson.Parser a
@@ -68,7 +67,7 @@ instance Json PlutusV1.Value where
   toJson (PlutusV1.Value currencyMap) = toJson currencyMap
   fromJson v = prependFailure "Plutus.V1.Value" (PlutusV1.Value <$> fromJson @(AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)) v)
 
-instance (Json k, PlutusTx.Prelude.Eq k, Json v) => Json (AssocMap.Map k v) where
+instance (Json k, Json v) => Json (AssocMap.Map k v) where
   toJson = toJson . AssocMap.toList
   fromJson v = prependFailure "Plutus.V1.Map" $ AssocMap.unsafeFromList <$> fromJson @[(k, v)] v
 
