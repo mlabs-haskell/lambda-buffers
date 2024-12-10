@@ -70,7 +70,7 @@ instance Json PlutusV1.Value where
 
 instance (Json k, PlutusTx.Prelude.Eq k, Json v) => Json (AssocMap.Map k v) where
   toJson = toJson . AssocMap.toList
-  fromJson v = prependFailure "Plutus.V1.Map" $ AssocMap.safeFromList <$> fromJson @[(k, v)] v
+  fromJson v = prependFailure "Plutus.V1.Map" $ AssocMap.unsafeFromList <$> fromJson @[(k, v)] v
 
 -- | The hash of a public key. This is frequently used to identify the public key, rather than the key itself. Hashed with BLAKE2b-224. 28 bytes.
 instance Json PlutusV1.PubKeyHash where

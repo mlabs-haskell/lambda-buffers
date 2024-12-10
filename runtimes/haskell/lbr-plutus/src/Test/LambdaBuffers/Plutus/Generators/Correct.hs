@@ -62,7 +62,7 @@ genValue =
 
 genMap :: PlutusTx.Prelude.Eq k => H.Gen k -> H.Gen v -> H.Gen (AssocMap.Map k v)
 genMap gk gv =
-  AssocMap.safeFromList <$> do
+  AssocMap.unsafeFromList <$> do
     keys <- PlutusTx.Prelude.nub <$> H.list defRange gk
     (\k -> (k,) <$> gv) `traverse` keys
 
