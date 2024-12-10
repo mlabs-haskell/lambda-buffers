@@ -28,7 +28,7 @@
 
           # Plutarch itself
           "${inputs.plutarch}"
-          "${inputs.plutarch}/plutarch-extra"
+          "${inputs.plutarch}/plutarch-ledger-api"
         ];
 
         devShellTools = config.settings.shell.tools ++ [

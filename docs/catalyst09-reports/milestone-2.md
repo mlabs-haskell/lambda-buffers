@@ -16,8 +16,8 @@
 - [x] A Codegen module that takes in the interpreted configuration and outputs a Purescript+CTL Spago project containing all the types and necessary wiring.
   - The module implementation is in [lambda-buffers-codegen/src/LambdaBuffers/Codegen/Purescript](https://github.com/mlabs-haskell/lambda-buffers/tree/43d53222756e7b9bff836ec56e1a9b838678632e/lambda-buffers-codegen/src/LambdaBuffers/Codegen/Purescript).
   - The auto-generated Purescript files can be viewed in [lambda-buffers-codegen/data/goldens/purescript-autogen/LambdaBuffers](https://github.com/mlabs-haskell/lambda-buffers/tree/43d53222756e7b9bff836ec56e1a9b838678632e/lambda-buffers-codegen/data/goldens/purescript-autogen/LambdaBuffers).
-  - Codegen module outputs Purescript type definitions and [Prelude.Eq](https://pursuit.purescript.org/packages/purescript-prelude/3.1.0/docs/Data.Eq#t:Eq) and [Ctl.Internal.ToData
-](https://github.com/Plutonomicon/cardano-transaction-lib/blob/b565f4b1ec877c671ec4ffc13b1b89dbe498bceb/src/Internal/ToData.purs#L73) type class implementations.
+  - Codegen module outputs Purescript type definitions and [Prelude.Eq](https://pursuit.purescript.org/packages/purescript-prelude/3.1.0/docs/Data.Eq#t:Eq)
+  and [Ctl.Internal.ToData](https://github.com/Plutonomicon/cardano-transaction-lib/blob/b565f4b1ec877c671ec4ffc13b1b89dbe498bceb/src/Internal/ToData.purs#L73) type class implementations.
 
 ## Acceptance Criteria
 
@@ -40,8 +40,8 @@ https://github.com/mlabs-haskell/lambda-buffers/tree/8b0900ebdd526ed042040d5bc9c
   - The auto-generated Purescript files can be viewed in [lambda-buffers-codegen/data/goldens/purescript-autogen/LambdaBuffers](https://github.com/mlabs-haskell/lambda-buffers/tree/43d53222756e7b9bff836ec56e1a9b838678632e/lambda-buffers-codegen/data/goldens/purescript-autogen/LambdaBuffers).
   - Additionally, the auto generated Purescript files used during the demo can be found in [experimental/ctl-env/autogen/LambdaBuffers](
 https://github.com/mlabs-haskell/lambda-buffers/tree/8b0900ebdd526ed042040d5bc9cef5a5b0281e98/experimental/ctl-env/autogen/LambdaBuffers).
-  - Codegen module outputs Purescript type definitions and [Prelude.Eq](https://pursuit.purescript.org/packages/purescript-prelude/3.1.0/docs/Data.Eq#t:Eq) and [Ctl.Internal.ToData
-](https://github.com/Plutonomicon/cardano-transaction-lib/blob/b565f4b1ec877c671ec4ffc13b1b89dbe498bceb/src/Internal/ToData.purs#L73) type class implementations.
+  - Codegen module outputs Purescript type definitions and [Prelude.Eq](https://pursuit.purescript.org/packages/purescript-prelude/3.1.0/docs/Data.Eq#t:Eq) and
+  [Ctl.Internal.ToData](https://github.com/Plutonomicon/cardano-transaction-lib/blob/b565f4b1ec877c671ec4ffc13b1b89dbe498bceb/src/Internal/ToData.purs#L73) type class implementations.
 - [x] Test case: Compiler is able to output a valid module with types from a schema in Haskell+Plutarch.
   - The auto-generated Haskell files can be viewed in [lambda-buffers-codegen/data/goldens/haskell-autogen/LambdaBuffers](https://github.com/mlabs-haskell/lambda-buffers/tree/43d53222756e7b9bff836ec56e1a9b838678632e/lambda-buffers-codegen/data/goldens/haskell-autogen/LambdaBuffers).
 - [x] Test case: Compiler is able to output a valid module with types from a schema in PureScript.

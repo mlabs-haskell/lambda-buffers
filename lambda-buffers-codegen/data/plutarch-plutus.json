@@ -2,68 +2,68 @@
   "opaquesConfig": {
     "Plutus.V1.PlutusData": [
       "plutarch",
-      "Plutarch.Builtin",
+      "Plutarch.Prelude",
       "PData"
     ],
     "Plutus.V1.Address": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PAddress"
     ],
     "Plutus.V1.Credential": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PCredential"
     ],
     "Plutus.V1.StakingCredential": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PStakingCredential"
     ],
     "Plutus.V1.PubKeyHash": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PPubKeyHash"
     ],
     "Plutus.V1.DCert": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PDCert"
     ],
     "Plutus.V1.Bytes": [
       "plutarch",
-      "Plutarch.ByteString",
+      "Plutarch.Prelude",
       "PByteString"
     ],
     "Plutus.V1.Interval": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.Interval",
       "PInterval"
     ],
     "Plutus.V1.Extended": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.Interval",
       "PExtended"
     ],
     "Plutus.V1.LowerBound": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.Interval",
       "PLowerBound"
     ],
     "Plutus.V1.UpperBound": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.Interval",
       "PUpperBound"
     ],
     "Plutus.V1.POSIXTime": [
       "plutarch",
-      "Plutarch.Api.V1",
-      "PPOSIXTime"
+      "Plutarch.LedgerApi.V1",
+      "PPosixTime"
     ],
     "Plutus.V1.POSIXTimeRange": [
       "plutarch",
-      "Plutarch.Api.V1",
-      "PPOSIXTimeRange"
+      "LambdaBuffers.Runtime.Plutarch",
+      "PPosixTimeRange"
     ],
     "Plutus.V1.Value": [
       "lbr-plutarch",
@@ -72,72 +72,72 @@
     ],
     "Plutus.V1.CurrencySymbol": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PCurrencySymbol"
     ],
     "Plutus.V1.AssetClass": [
       "lbr-plutarch",
-      "LambdaBuffers.Runtime.Plutarch",
+      "Plutarch.LedgerApi.Value",
       "PAssetClass"
     ],
     "Plutus.V1.TokenName": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.Value",
       "PTokenName"
     ],
     "Plutus.V1.Redeemer": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PRedeemer"
     ],
     "Plutus.V1.Datum": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PDatum"
     ],
     "Plutus.V1.DatumHash": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PDatumHash"
     ],
     "Plutus.V1.RedeemerHash": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PRedeemerHash"
     ],
     "Plutus.V1.ScriptHash": [
       "plutarch",
-      "Plutarch.Api.V1.Scripts",
+      "Plutarch.LedgerApi.V1",
       "PScriptHash"
     ],
     "Plutus.V1.ScriptContext": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PScriptContext"
     ],
     "Plutus.V1.ScriptPurpose": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PScriptPurpose"
     ],
     "Plutus.V1.TxInInfo": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PTxInInfo"
     ],
     "Plutus.V1.TxId": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PTxId"
     ],
     "Plutus.V1.TxOut": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PTxOut"
     ],
     "Plutus.V1.TxOutRef": [
       "plutarch",
-      "Plutarch.Api.V1",
+      "Plutarch.LedgerApi.V1",
       "PTxOutRef"
     ],
     "Plutus.V1.Map": [
@@ -146,33 +146,148 @@
       "PMap"
     ],
     "Plutus.V1.TxInfo": [
-      "plutarch",
-      "Plutarch.Api.V1",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V1",
       "PTxInfo"
     ],
     "Plutus.V2.TxInInfo": [
-      "plutarch",
-      "Plutarch.Api.V2",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V2",
       "PTxInInfo"
     ],
     "Plutus.V2.OutputDatum": [
-      "plutarch",
-      "Plutarch.Api.V2",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V2",
       "POutputDatum"
     ],
     "Plutus.V2.TxOut": [
-      "plutarch",
-      "Plutarch.Api.V2",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V2",
       "PTxOut"
     ],
     "Plutus.V2.TxInfo": [
-      "plutarch",
-      "Plutarch.Api.V2",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V2",
       "PTxInfo"
     ],
     "Plutus.V2.ScriptContext": [
-      "plutarch",
-      "Plutarch.Api.V2",
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V2",
+      "PScriptContext"
+    ],
+    "Plutus.V3.TxId": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PTxId"
+    ],
+    "Plutus.V3.TxOutRef": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PTxOutRef"
+    ],
+    "Plutus.V3.TxInInfo": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PTxInInfo"
+    ],
+    "Plutus.V3.Rational": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.Utils",
+      "PRationalData"
+    ],
+    "Plutus.V3.ColdCommitteeCredential": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PColdCommitteeCredential"
+    ],
+    "Plutus.V3.HotCommitteeCredential": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PHotCommitteeCredential"
+    ],
+    "Plutus.V3.DRepCredential": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PDRepCredential"
+    ],
+    "Plutus.V3.DRep": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PDRep"
+    ],
+    "Plutus.V3.Delegatee": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PDelegatee"
+    ],
+    "Plutus.V3.TxCert": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PTxCert"
+    ],
+    "Plutus.V3.Voter": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PVoter"
+    ],
+    "Plutus.V3.Vote": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PVote"
+    ],
+    "Plutus.V3.GovernanceActionId": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PGovernanceActionId"
+    ],
+    "Plutus.V3.Committee": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PCommittee"
+    ],
+    "Plutus.V3.Constitution": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PConstitution"
+    ],
+    "Plutus.V3.ProtocolVersion": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PProtocolVersion"
+    ],
+    "Plutus.V3.ChangedParameters": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PChangedParameters"
+    ],
+    "Plutus.V3.GovernanceAction": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PGovernanceAction"
+    ],
+    "Plutus.V3.ProposalProcedure": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PProposalProcedure"
+    ],
+    "Plutus.V3.ScriptPurpose": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PScriptPurpose"
+    ],
+    "Plutus.V3.ScriptInfo": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PScriptInfo"
+    ],
+    "Plutus.V3.TxInfo": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
+      "PTxInfo"
+    ],
+    "Plutus.V3.ScriptContext": [
+      "plutarch-ledger-api",
+      "Plutarch.LedgerApi.V3",
       "PScriptContext"
     ]
   },
@@ -180,7 +295,7 @@
     "Plutus.V1.PlutusData": [
       [
         "plutarch",
-        "Plutarch.Builtin",
+        "Plutarch.Prelude",
         "PIsData"
       ],
       [
@@ -190,7 +305,7 @@
       ],
       [
         "plutarch",
-        "Plutarch.TryFrom",
+        "Plutarch.Prelude",
         "PTryFrom"
       ]
     ]

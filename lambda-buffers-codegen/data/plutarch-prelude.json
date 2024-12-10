@@ -22,22 +22,22 @@
     ],
     "Prelude.Bytes": [
       "plutarch",
-      "Plutarch.ByteString",
+      "Plutarch.Builtin.ByteString",
       "PByteString"
     ],
     "Prelude.Text": [
       "plutarch",
-      "Plutarch.ByteString",
-      "PByteString"
+      "Plutarch.Prelude",
+      "PString"
     ],
     "Prelude.Integer": [
       "plutarch",
-      "Plutarch.Integer",
+      "Plutarch.Prelude",
       "PInteger"
     ],
     "Prelude.Bool": [
       "plutarch",
-      "Plutarch.Bool",
+      "Plutarch.Prelude",
       "PBool"
     ],
     "Prelude.Char": [
@@ -55,7 +55,7 @@
     "Prelude.Eq": [
       [
         "plutarch",
-        "Plutarch.Bool",
+        "Plutarch.Prelude",
         "PEq"
       ]
     ]
