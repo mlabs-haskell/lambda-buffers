@@ -19,6 +19,7 @@
           "${config.packages.lbf-plutarch-example-api}"
           # Plutarch itself
           "${inputs.plutarch}"
+          "${inputs.plutarch}/plutarch-ledger-api"
         ];
 
         devShellTools = config.settings.shell.tools;
