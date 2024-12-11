@@ -53,8 +53,9 @@ transparentGoldens =
     , forallGoldens @HlFoo.B @PlFoo.B PlutusTx.fooBCompiled "Foo.B" 9
     , forallGoldens @HlFoo.C @PlFoo.C PlutusTx.fooCCompiled "Foo.C" 9
     , forallGoldens @HlFoo.D @PlFoo.D PlutusTx.fooDCompiled "Foo.D" 7
-    , ignoreTestBecause "TODO(bladyjoker): What happened to Foo.E goldens? Install them!" $ forallGoldens @(HlFoo.E Integer Bool) @(PlFoo.E PlutusTx.Integer PlutusTx.Bool) PlutusTx.fooECompiled "Foo.E" 1
-    , ignoreTestBecause "GHC Core to PLC plugin: E003:Error: Error from the PIR compiler: E003: Unsupported construct: Mutually recursive datatypes ((recursive) let binding; from [ AnnOther ])" $ testCase "Foo.FInt" (print ("Not compiling" :: String))
+    , -- PlutusTX compilation caused OOM
+      -- , ignoreTestBecause "TODO(bladyjoker): What happened to Foo.E goldens? Install them!" $ forallGoldens @(HlFoo.E Integer Bool) @(PlFoo.E PlutusTx.Integer PlutusTx.Bool) PlutusTx.fooECompiled "Foo.E" 1
+      ignoreTestBecause "GHC Core to PLC plugin: E003:Error: Error from the PIR compiler: E003: Unsupported construct: Mutually recursive datatypes ((recursive) let binding; from [ AnnOther ])" $ testCase "Foo.FInt" (print ("Not compiling" :: String))
     , ignoreTestBecause "GHC Core to PLC plugin: E003:Error: Error from the PIR compiler: E003: Unsupported construct: Mutually recursive datatypes ((recursive) let binding; from [ AnnOther ])" $ testCase "Foo.GInt" (print ("Not compiling" :: String))
     ]
 

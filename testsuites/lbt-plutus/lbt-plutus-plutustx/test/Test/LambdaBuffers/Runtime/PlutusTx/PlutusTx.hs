@@ -18,7 +18,7 @@ module Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx (
   fooBCompiled,
   fooCCompiled,
   fooDCompiled,
-  fooECompiled,
+  -- fooECompiled, -- Compiling this causes an OOM
   maybeCompiled,
   eitherCompiled,
   listCompiled,
@@ -26,7 +26,7 @@ module Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx (
   assetClassCompiled,
   currencySymbolCompiled,
   credentialCompiled,
-  -- mapCompiled,
+  -- mapCompiled, -- AssocMap has no PlutusTx.Eq instance
   intervalCompiled,
   extendedCompiled,
   lowerBoundCompiled,
