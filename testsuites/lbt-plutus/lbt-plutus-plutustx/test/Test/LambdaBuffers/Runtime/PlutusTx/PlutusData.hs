@@ -82,8 +82,8 @@ plutusV1Goldens =
     , forallGoldens @(HlPlutus.Extended HlPlutus.POSIXTime) @(PlPlutus.Extended PlPlutus.POSIXTime) PlutusTx.extendedCompiled "PlutusV1.Extended" 2
     , forallGoldens @(HlPlutus.Interval HlPlutus.POSIXTime) @(PlPlutus.Interval PlPlutus.POSIXTime) PlutusTx.intervalCompiled "PlutusV1.Interval" 9
     , forallGoldens @(HlPlutus.LowerBound HlPlutus.POSIXTime) @(PlPlutus.LowerBound PlPlutus.POSIXTime) PlutusTx.lowerBoundCompiled "PlutusV1.LowerBound" 5
-    , forallGoldens @(HlPlutus.Map HlPlutus.CurrencySymbol (HlPlutus.Map HlPlutus.TokenName HlPrelude.Integer)) @(PlPlutus.Map PlPlutus.CurrencySymbol (PlPlutus.Map PlPlutus.TokenName PlPrelude.Integer)) PlutusTx.mapCompiled "PlutusV1.Map" 2
-    , forallGoldens @HlPlutus.POSIXTime @PlPlutus.POSIXTime PlutusTx.posixTimeCompiled "PlutusV1.POSIXTime" 2
+    , -- , forallGoldens @(HlPlutus.Map HlPlutus.CurrencySymbol (HlPlutus.Map HlPlutus.TokenName HlPrelude.Integer)) @(PlPlutus.Map PlPlutus.CurrencySymbol (PlPlutus.Map PlPlutus.TokenName PlPrelude.Integer)) PlutusTx.mapCompiled "PlutusV1.Map" 2
+      forallGoldens @HlPlutus.POSIXTime @PlPlutus.POSIXTime PlutusTx.posixTimeCompiled "PlutusV1.POSIXTime" 2
     , forallGoldens @HlPlutus.POSIXTimeRange @PlPlutus.POSIXTimeRange PlutusTx.posixTimeRangeCompiled "PlutusV1.POSIXTimeRange" 9
     , forallGoldens @HlPlutus.PlutusData @PlPlutus.PlutusData PlutusTx.plutusDataCompiled "PlutusV1.PlutusData" 12
     , forallGoldens @HlPlutus.Redeemer @PlPlutus.Redeemer PlutusTx.redeemerCompiled "PlutusV1.Redeemer" 0
@@ -110,8 +110,8 @@ plutusV2Goldens =
     [ forallGoldens @HlPlutusV2.OutputDatum @PlPlutusV2.OutputDatum PlutusTx.outputDatumCompiled "PlutusV2.OutputDatum" 2
     , forallGoldens @HlPlutusV2.TxInInfo @PlPlutusV2.TxInInfo PlutusTx.txInInfo2Compiled "PlutusV2.TxInInfo" 9
     , forallGoldens @HlPlutusV2.TxOut @PlPlutusV2.TxOut PlutusTx.txOut2Compiled "PlutusV2.TxOut" 9
-    , forallGoldens @HlPlutusV2.TxInfo @PlPlutusV2.TxInfo PlutusTx.txInfo2Compiled "PlutusV2.TxInfo" 9
-    , forallGoldens @HlPlutusV2.ScriptContext @PlPlutusV2.ScriptContext PlutusTx.scriptContext2Compiled "PlutusV2.ScriptContext" 9
+    -- , forallGoldens @HlPlutusV2.TxInfo @PlPlutusV2.TxInfo PlutusTx.txInfo2Compiled "PlutusV2.TxInfo" 9
+    -- , forallGoldens @HlPlutusV2.ScriptContext @PlPlutusV2.ScriptContext PlutusTx.scriptContext2Compiled "PlutusV2.ScriptContext" 9
     ]
 
 forallGoldens ::

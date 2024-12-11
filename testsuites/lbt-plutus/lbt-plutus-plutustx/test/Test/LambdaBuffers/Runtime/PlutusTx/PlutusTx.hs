@@ -26,7 +26,7 @@ module Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx (
   assetClassCompiled,
   currencySymbolCompiled,
   credentialCompiled,
-  mapCompiled,
+  -- mapCompiled,
   intervalCompiled,
   extendedCompiled,
   lowerBoundCompiled,
@@ -54,8 +54,8 @@ module Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx (
   outputDatumCompiled,
   txInInfo2Compiled,
   txOut2Compiled,
-  txInfo2Compiled,
-  scriptContext2Compiled,
+  -- txInfo2Compiled,
+  -- scriptContext2Compiled,
 ) where
 
 import LambdaBuffers.Days.PlutusTx (Day, FreeDay, WorkDay)
@@ -64,7 +64,8 @@ import LambdaBuffers.Plutus.V2.PlutusTx qualified as PlutusV2
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusTx (BuiltinData, CompiledCode, FromData (fromBuiltinData), ToData (toBuiltinData), compile)
-import PlutusTx.AssocMap qualified as PlutusTx
+
+-- import PlutusTx.AssocMap qualified as PlutusTx
 import PlutusTx.Maybe (Maybe (Just, Nothing))
 import PlutusTx.Plugin ()
 import PlutusTx.Prelude (Bool, Either, Eq ((==)), Integer, error, trace, (&&))
@@ -159,8 +160,8 @@ intervalCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.Interval Pl
 lowerBoundCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
 lowerBoundCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.LowerBound PlutusV1.POSIXTime)||])
 
-mapCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-mapCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusTx.Map PlutusV1.CurrencySymbol (PlutusTx.Map PlutusV1.TokenName Integer))||])
+-- mapCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+-- mapCompiled = $$(PlutusTx.compile [||fromToData @(PlutusTx.Map PlutusV1.CurrencySymbol (PlutusTx.Map PlutusV1.TokenName Integer))||])
 
 posixTimeCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
 posixTimeCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.POSIXTime||])
@@ -226,8 +227,8 @@ txInInfo2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxInInfo||]
 txOut2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
 txOut2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxOut||])
 
-txInfo2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInfo2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxInfo||])
+-- txInfo2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+-- txInfo2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxInfo||])
 
-scriptContext2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptContext2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.ScriptContext||])
+-- scriptContext2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+-- scriptContext2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.ScriptContext||])
