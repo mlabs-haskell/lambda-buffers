@@ -15,6 +15,8 @@
     "author": "Drazen Popovic",
     "license": "MIT",
     "dependencies": {
+        "@emurgo/cardano-serialization-lib-browser": "13.2.0",
+        "@emurgo/cardano-serialization-lib-nodejs": "13.2.0",
         "@mlabs-haskell/cardano-message-signing": "^1.0.1",
         "@mlabs-haskell/cardano-serialization-lib-gc": "13.2.0",
         "@mlabs-haskell/json-bigint": "2.0.0",
