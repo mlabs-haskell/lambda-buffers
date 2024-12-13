@@ -43,7 +43,9 @@ pub enum Error {
         wanted: String,
         parser: String,
     },
-    #[error("{parser:?} > Expected a field name in a JSON Object: {wanted:?}, but got fields named {got:?}")]
+    #[error(
+        "{parser:?} > Expected a field name in a JSON Object: {wanted:?}, but got fields named {got:?}"
+    )]
     UnexpectedFieldName {
         got: Vec<String>,
         wanted: String,
