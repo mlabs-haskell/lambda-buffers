@@ -3,6 +3,8 @@ name = "lbt-plutus"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
 plutus-ledger-api = { version = "3.0.0", features = ["lbf"] }
 lbf-plutus-rust-golden-api = { path = ".extras/lbf-plutus-rust-golden-api-0.1.0" }

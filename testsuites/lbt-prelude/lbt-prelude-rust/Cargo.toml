@@ -3,6 +3,8 @@ name = "lbt-prelude"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
 lbf-prelude-golden-api = { path = ".extras/lbf-prelude-golden-api-0.1.0" }
 lbf-prelude = { path = ".extras/lbf-prelude-0.1.0" }
