@@ -21,7 +21,6 @@ import LambdaBuffers.Runtime.Prelude.Json qualified as Lb
 import Paths_lbt_plutus_golden_data qualified as Paths
 import PlutusTx (BuiltinData, CompiledCode, ToData, dataToBuiltinData)
 import PlutusTx.IsData (FromData, fromData, toData)
-import PlutusTx.Prelude qualified as PlutusTx
 import System.Exit (exitFailure)
 import System.FilePath ((</>))
 import Test.LambdaBuffers.Runtime.PlutusTx.Evaluate qualified as Evaluate
