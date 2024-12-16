@@ -15,7 +15,6 @@
           "${config.packages.lbf-plutus-plutarch}"
           "${config.packages.lbr-plutarch-src}"
           # Api
-          "${config.packages.lbf-plutus-golden-api-plutarch}"
           "${config.packages.lbf-plutarch-example-api}"
           # Plutarch itself
           "${inputs.plutarch}"
