@@ -5,7 +5,7 @@
       hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
         src = ./.;
 
-        name = "dev-plutus-haskell";
+        name = "plutus-haskell";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
