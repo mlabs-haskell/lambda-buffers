@@ -86,5 +86,8 @@ executable plutustx-example
   main-is:        Main.hs
   build-depends:
     , base                      >=4.16
+    , lbf-plutus
     , lbf-plutustx-example-api
+    , plutus-ledger-api
     , plutus-tx
+    , text
