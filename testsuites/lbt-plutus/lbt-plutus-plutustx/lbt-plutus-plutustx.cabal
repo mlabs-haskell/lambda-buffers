@@ -94,8 +94,8 @@ test-suite tests
     , filepath                        >=1.4
     , lbf-plutus                      >=0.1
     , lbf-plutus-golden-api
+    , lbf-plutus-golden-api-plutustx
     , lbf-plutus-plutustx
-    , lbf-plutus-plutustx-golden-api
     , lbf-prelude
     , lbf-prelude-plutustx
     , lbr-plutus
