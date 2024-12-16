@@ -13,25 +13,43 @@ import LambdaBuffers.Plutus.V1.Plutarch (Bytes, POSIXTime)
 import LambdaBuffers.Prelude.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch (PList (PList))
 import LambdaBuffers.Runtime.Plutarch qualified as Lb
-import Plutarch (ClosedTerm, Config (Config), PlutusType, Term, TracingMode (DoTracingAndBinds), compile, pcon, perror, plam, pmatch, unTermCont, (#), (:-->))
-import Plutarch.Api.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), ppair)
-import Plutarch.Api.V1.Time (PPOSIXTime (PPOSIXTime))
-import Plutarch.ByteString (PByteString)
+import Plutarch.Builtin.Integer (pconstantInteger)
 import Plutarch.Evaluate (evalScript)
+import Plutarch.Internal.Term (
+  Config (Tracing),
+  LogLevel (LogInfo),
+  TracingMode (DoTracing),
+  compile,
+ )
+import Plutarch.LedgerApi.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), pposixTime)
+import Plutarch.LedgerApi.Value (PAssetClass (PAssetClass))
 import Plutarch.Maybe qualified as Scott
-import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PBuiltinList, PEq ((#==)), PIsData, pconstant, pdata, pfind, pfromData, pif, pletC, pmatchC, pshow, ptrace, (#&&))
+import Plutarch.Prelude (ClosedTerm, PAsData, PBool (PFalse, PTrue), PBuiltinList, PByteString, PDataNewtype (PDataNewtype), PEq ((#==)), PIsData, PlutusType, Term, pcon, pconstant, pdata, perror, pfind, pfromData, pif, plam, pletC, pmatch, pmatchC, ppairDataBuiltin, pshow, ptraceInfo, unTermCont, (#), (#&&), (:-->))
 
 userRef :: Text -> Term s (Ref User)
 userRef userName = userRef' (pfromData $ name userName)
 
 userRef' :: Term s Bytes -> Term s (Ref User)
-userRef' userName = pcon $ Ref (pdata $ ppair # pcon' (PCurrencySymbol (pconstant "users")) # pcon' (PTokenName userName))
+userRef' userName = pcon $ Ref (pdata (userRefAssetClass userName))
+
+userRefAssetClass :: Term s Bytes -> Term s PAssetClass
+userRefAssetClass userName =
+  pcon $
+    PAssetClass
+      ( pcon $
+          PDataNewtype
+            ( pdata $
+                ppairDataBuiltin
+                  # pcon' (PCurrencySymbol $ pcon $ PDataNewtype $ name "users")
+                  # pcon' (PTokenName $ pcon $ PDataNewtype $ pdata userName)
+            )
+      )
 
 activeUser :: Text -> [Term s (Ref User)] -> Integer -> Term s User
 activeUser n friends since = pcon $ User (name n) (pdata $ activeSince since) (pdata $ Lb.plistFrom friends)
 
 activeSince :: Integer -> Term s Status
-activeSince since = pcon (Status'Active (pcon' $ PPOSIXTime (pconstant since)))
+activeSince since = pcon (Status'Active (pdata (pposixTime (pconstantInteger since))))
 
 name :: Text -> Term s (PAsData PByteString)
 name = textToBytes
@@ -53,7 +71,7 @@ isFriendly = plam $ \users msg -> unTermCont $ do
           #&& (content #== pcon' (Content'Text (textToBytes "'sup")))
       )
       (pcon PTrue)
-      (ptrace ("This wasn't a friendly message :(" <> pshow msg) perror)
+      (ptraceInfo ("This wasn't a friendly message :(" <> pshow msg) perror)
   where
     findUser :: Term s (PBuiltinList (PAsData User) :--> Ref User :--> Scott.PMaybe (PAsData User))
     findUser = plam $
@@ -69,7 +87,7 @@ isFriendly = plam $ \users msg -> unTermCont $ do
           (findUser # users # uRef)
           $ \case
             Scott.PJust uName -> uName
-            Scott.PNothing -> ptrace ("Error while finding a user with reference " <> pshow uRef <> " amongst given users " <> pshow users) perror
+            Scott.PNothing -> ptraceInfo ("Error while finding a user with reference " <> pshow uRef <> " amongst given users " <> pshow users) perror
 
     isFriend :: Term s (PAsData (Lb.PList (Ref User)) :--> (PAsData Bytes :--> PBool))
     isFriend = plam $ \friends uname ->
@@ -92,7 +110,7 @@ toBuiltinList = plam $ \xs -> pmatch xs (\(Lb.PList xs') -> xs')
 
 evalBool :: ClosedTerm PBool -> IO ()
 evalBool t =
-  case Plutarch.compile (Config DoTracingAndBinds) (pif t (pcon PTrue) (ptrace "Term evaluated to False" perror)) of
+  case compile (Tracing LogInfo DoTracing) (pif t (pcon PTrue) (ptraceInfo "Term evaluated to False" perror)) of
     Left err -> print ("Error while compiling a Plutarch Term" :: String, err)
     Right script -> case evalScript script of
       (Left err, _, trace) -> print ("Not a friendly message it seems" :: String, err, trace)
@@ -109,7 +127,7 @@ jared :: Term s User
 jared = activeUser "Jared Pon" [userRef "Gergely Szabó", userRef "Drazen Popovic"] 2
 
 supJaredSaidGergo :: Term s Message
-supJaredSaidGergo = message (pcon $ PPOSIXTime (pconstant 10)) (userRef "Gergely Szabó") (userRef "Jared Pon") (pcon $ Content'Text (textToBytes "'sup"))
+supJaredSaidGergo = message (pposixTime (pconstantInteger 10)) (userRef "Gergely Szabó") (userRef "Jared Pon") (pcon $ Content'Text (textToBytes "'sup"))
 
 main :: IO ()
 main = evalBool $ isFriendly # Lb.plistFrom [drazen, gergo, jared] # supJaredSaidGergo
