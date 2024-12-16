@@ -1,6 +1,6 @@
-use lbf_plutus_rust_golden_api::days::{Day, FreeDay, WorkDay};
-use lbf_plutus_rust_golden_api::foo::bar::{FooComplicated, FooProd, FooRec, FooSum, F, G};
-use lbf_plutus_rust_golden_api::foo::{FInt, GInt, A, B, C, D};
+use lbf_plutus_golden_api::days::{Day, FreeDay, WorkDay};
+use lbf_plutus_golden_api::foo::bar::{FooComplicated, FooProd, FooRec, FooSum, F, G};
+use lbf_plutus_golden_api::foo::{FInt, GInt, A, B, C, D};
 use lbf_prelude::prelude::{Bool, Either, Integer, List, Map};
 use num_bigint::BigInt;
 use plutus_ledger_api::plutus_data::PlutusData;
