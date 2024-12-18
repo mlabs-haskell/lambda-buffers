@@ -42,7 +42,7 @@ use plutus_ledger_api::v3::{
         HotCommitteeCredential as HotCommitteeCredentialV3,
         ProposalProcedure as ProposalProcedureV3, ProtocolVersion as ProtocolVersionV3,
         ScriptContext as ScriptContextV3, ScriptInfo as ScriptInfoV3,
-        ScriptPurpose as ScriptPurposeV3, TransactionHash as TransactionHashV2,
+        ScriptPurpose as ScriptPurposeV3, TransactionHash as TransactionHashV3,
         TransactionInfo as TransactionInfoV3, TransactionInput as TransactionInputV3,
         TxCert as TxCertV3, TxInInfo as TxInInfoV3, Vote as VoteV3, Voter as VoterV3,
     },
@@ -812,14 +812,14 @@ pub fn rational_goldens() -> List<Rational> {
     vec![Rational(BigInt::from(1), BigInt::from(2))]
 }
 
-pub fn tx_id_goldens_v3() -> List<TransactionHashV2> {
-    vec![TransactionHash(blake2b_256_hash())]
+pub fn tx_id_goldens_v3() -> List<TransactionHashV3> {
+    vec![TransactionHashV3(blake2b_256_hash())]
 }
 
 pub fn tx_out_ref_goldens_v3() -> List<TransactionInputV3> {
-    tx_id_goldens()
+    tx_id_goldens_v3()
         .into_iter()
-        .map(|transaction_id| TransactionInput {
+        .map(|transaction_id| TransactionInputV3 {
             transaction_id,
             index: bi(0),
         })
@@ -1169,7 +1169,7 @@ pub fn script_purpose_goldens_v3() -> List<ScriptPurposeV3> {
             .into_iter()
             .map(ScriptPurposeV3::Minting)
             .collect::<Vec<_>>(),
-        tx_out_ref_goldens()
+        tx_out_ref_goldens_v3()
             .into_iter()
             .map(ScriptPurposeV3::Spending)
             .collect::<Vec<_>>(),
@@ -1201,7 +1201,7 @@ pub fn script_info_goldens_v3() -> List<ScriptInfoV3> {
             .into_iter()
             .map(ScriptInfoV3::Minting)
             .collect::<Vec<_>>(),
-        tx_out_ref_goldens()
+        tx_out_ref_goldens_v3()
             .iter()
             .flat_map(|tx_out_ref| {
                 to_option(datum_goldens())
