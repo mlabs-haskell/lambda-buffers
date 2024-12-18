@@ -683,67 +683,67 @@ instance Json PlutusV3.TxCert where
     caseJsonConstructor
       "PlutusV3.TxCert"
       [
-        ( "PlutusV3.TxCertRegStaking"
+        ( "TxCertRegStaking"
         , \case
             [cred, lovelaces] -> PlutusV3.TxCertRegStaking <$> fromJson cred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertUnRegStaking"
+        ( "TxCertUnRegStaking"
         , \case
             [cred, lovelaces] -> PlutusV3.TxCertUnRegStaking <$> fromJson cred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertDelegStaking"
+        ( "TxCertDelegStaking"
         , \case
             [cred, delegatee] -> PlutusV3.TxCertDelegStaking <$> fromJson cred <*> fromJson delegatee
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertRegDeleg"
+        ( "TxCertRegDeleg"
         , \case
             [cred, delegatee, lovelaces] -> PlutusV3.TxCertRegDeleg <$> fromJson cred <*> fromJson delegatee <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 3 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertRegDRep"
+        ( "TxCertRegDRep"
         , \case
             [drep, lovelaces] -> PlutusV3.TxCertRegDRep <$> fromJson drep <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertUpdateDRep"
+        ( "TxCertUpdateDRep"
         , \case
             [drep] -> PlutusV3.TxCertUpdateDRep <$> fromJson drep
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertUnRegDRep"
+        ( "TxCertUnRegDRep"
         , \case
-            [drepCred, lovelaces] -> PlutusV3.TxCertUnRegDRep <$> fromJson lovelaces <*> fromJson drepCred
+            [drepCred, lovelaces] -> PlutusV3.TxCertUnRegDRep <$> fromJson drepCred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertPoolRegister"
+        ( "TxCertPoolRegister"
         , \case
             [poolId, poolVFR] -> PlutusV3.TxCertPoolRegister <$> fromJson poolId <*> fromJson poolVFR
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertPoolRetire"
+        ( "TxCertPoolRetire"
         , \case
             [pkh, epoch] -> PlutusV3.TxCertPoolRetire <$> fromJson pkh <*> fromJson epoch
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertAuthHotCommittee"
+        ( "TxCertAuthHotCommittee"
         , \case
             [coldCred, hotCred] -> PlutusV3.TxCertAuthHotCommittee <$> fromJson coldCred <*> fromJson hotCred
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "PlutusV3.TxCertResignColdCommittee"
+        ( "TxCertResignColdCommittee"
         , \case
             [coldCred] -> PlutusV3.TxCertResignColdCommittee <$> fromJson coldCred
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid

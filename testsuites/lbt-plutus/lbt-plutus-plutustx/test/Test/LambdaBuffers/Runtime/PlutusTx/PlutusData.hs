@@ -114,11 +114,30 @@ plutusV2Goldens =
     -- , forallGoldens @HlPlutusV2.ScriptContext @PlPlutusV2.ScriptContext PlutusTx.scriptContext2Compiled "PlutusV2.ScriptContext" 9
     ]
 
+plutusV3Goldens :: TestTree
+plutusV3Goldens =
+  testGroup
+    "LB Plutus.V3 golden types"
+    [ forallGoldens "PlutusV3.TxCert" Golden.txCertGoldensV3
+    , forallGoldens "PlutusV3.Voter" Golden.voterGoldensV3
+    , forallGoldens "PlutusV3.Vote" Golden.voteGoldensV3
+    , forallGoldens "PlutusV3.GovernanceActionId" Golden.governanceActionIdGoldensV3
+    , forallGoldens "PlutusV3.Committee" Golden.committeeGoldensV3
+    , forallGoldens "PlutusV3.Constitution" Golden.constitutionGoldensV3
+    , forallGoldens "PlutusV3.ProtocolVersion" Golden.protocolVersionGoldensV3
+    , forallGoldens "PlutusV3.ChangedParameters" Golden.changedParametersGoldensV3
+    , forallGoldens "PlutusV3.GovernanceAction" Golden.governanceActionGoldensV3
+    , forallGoldens "PlutusV3.ProposalProcedure" Golden.proposalProcedureGoldensV3
+    , forallGoldens "PlutusV3.ScriptPurpose" Golden.scriptPurposeGoldensV3
+    , forallGoldens "PlutusV3.ScriptInfo" Golden.scriptInfoGoldensV3
+    , forallGoldens "PlutusV3.TxInInfo" Golden.txInInfoGoldensV3
+    , forallGoldens "PlutusV3.TxInfo" Golden.txInfoGoldensV3
+    , forallGoldens "PlutusV3.ScriptContext" Golden.scriptContextGoldensV3
+    ]
+
 forallGoldens ::
   forall haskellType plutusTxType.
-  ( FromData haskellType
-  , ToData haskellType
-  ) =>
+  a =>
   PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool) ->
   FilePath ->
   Int ->
