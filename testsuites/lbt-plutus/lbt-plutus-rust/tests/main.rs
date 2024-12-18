@@ -15,8 +15,8 @@ mod json_tests {
             ".json",
             |golden, _index, _fp, text| {
                 let res = T::from_json_string(text).unwrap();
-                assert_eq!(golden, &res);
-                assert_eq!(golden.to_json_string(), text);
+                pretty_assertions::assert_eq!(golden, &res);
+                pretty_assertions::assert_eq!(golden.to_json_string(), text);
             },
             goldens,
         )
@@ -212,6 +212,156 @@ mod json_tests {
         from_to_golden_test(
             "PlutusV2.ScriptContext",
             goldens::script_context_goldens_v2(),
+        )
+    }
+
+    #[test]
+    fn rational_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Rational", goldens::rational_goldens())
+    }
+
+    #[test]
+    fn tx_id_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.TxId", goldens::tx_id_goldens_v3())
+    }
+
+    #[test]
+    fn tx_out_ref_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.TxOutRef", goldens::tx_out_ref_goldens_v3())
+    }
+
+    #[test]
+    fn cold_committee_credential_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ColdCommitteeCredential",
+            goldens::cold_committee_credential_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn hot_committee_credential_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.HotCommitteeCredential",
+            goldens::hot_committee_credential_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn drep_credential_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.DRepCredential",
+            goldens::drep_credential_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn drep_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.DRep", goldens::drep_goldens_v3())
+    }
+
+    #[test]
+    fn delegatee_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Delegatee", goldens::delegatee_goldens_v3())
+    }
+
+    #[test]
+    fn lovelace_from_to_golden_test() {
+        from_to_golden_test("PlutusV1.Lovelace", goldens::lovelace_goldens_v3())
+    }
+
+    #[test]
+    fn tx_cert_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.TxCert", goldens::tx_cert_goldens_v3())
+    }
+
+    #[test]
+    fn voter_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Voter", goldens::voter_goldens_v3())
+    }
+
+    #[test]
+    fn vote_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Vote", goldens::vote_goldens_v3())
+    }
+
+    #[test]
+    fn governance_action_id_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.GovernanceActionId",
+            goldens::governance_action_id_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn committee_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Committee", goldens::committee_goldens_v3())
+    }
+
+    #[test]
+    fn constitution_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.Constitution", goldens::constitution_goldens_v3())
+    }
+
+    #[test]
+    fn protocol_version_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ProtocolVersion",
+            goldens::protocol_vertion_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn changed_parameters_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ChangedParameters",
+            goldens::changed_parameters_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn governance_action_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.GovernanceAction",
+            goldens::governance_action_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn proposal_procedure_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ProposalProcedure",
+            goldens::proposal_procedure_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn script_purpose_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ScriptPurpose",
+            goldens::script_purpose_goldens_v3(),
+        )
+    }
+
+    #[test]
+    fn script_info_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.ScriptInfo", goldens::script_info_goldens_v3())
+    }
+
+    #[test]
+    fn tx_in_info_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.TxInInfo", goldens::tx_in_info_goldens_v3())
+    }
+
+    #[test]
+    fn tx_info_v3_from_to_golden_test() {
+        from_to_golden_test("PlutusV3.TxInfo", goldens::tx_info_goldens_v3())
+    }
+
+    #[test]
+    fn script_context_v3_from_to_golden_test() {
+        from_to_golden_test(
+            "PlutusV3.ScriptContext",
+            goldens::script_context_goldens_v3(),
         )
     }
 }

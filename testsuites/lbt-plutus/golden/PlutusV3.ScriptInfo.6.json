@@ -1,1 +1,1 @@
-{"fields":[0,{"fields":[{"fields":["0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c"],"name":"PubKeyCredential"},{"fields":[0],"name":"Just"}],"name":"TxCertRegStaking"}],"name":"Certifying"}
+{"fields":[0,{"fields":[{"fields":["0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c"],"name":"PubKeyCredential"},{"fields":[0],"name":"Just"}],"name":"RegStaking"}],"name":"Certifying"}

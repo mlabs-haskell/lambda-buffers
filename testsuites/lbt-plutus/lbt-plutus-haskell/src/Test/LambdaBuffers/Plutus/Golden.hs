@@ -453,8 +453,8 @@ txInfoGoldensV3 =
     <*> pure (AssocMap.unsafeFromList (zip scriptPurposeGoldensV3 redeemerGoldens))
     <*> pure (AssocMap.unsafeFromList (zip datumHashGoldens datumGoldens))
     <*> txIdGoldensV3
-    <*> [toMap voterGoldensV3 [toMap governanceActionIdGoldensV3 voteGoldensV3]]
-    <*> pure proposalProcedureGoldensV3
+    <*> [toMap (take 3 voterGoldensV3) [AssocMap.unsafeFromList (zip governanceActionIdGoldensV3 voteGoldensV3)]]
+    <*> [take 3 proposalProcedureGoldensV3]
     <*> toMaybe lovelaceGoldens
     <*> toMaybe lovelaceGoldens
 

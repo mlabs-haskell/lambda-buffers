@@ -4,25 +4,50 @@ use lbf_plutus_golden_api::foo::{FInt, GInt, A, B, C, D};
 use lbf_prelude::prelude::{Bool, Either, Integer, List, Map};
 use num_bigint::BigInt;
 use plutus_ledger_api::plutus_data::PlutusData;
-use plutus_ledger_api::v1::address::{
-    Address, CertificateIndex, ChainPointer, Credential, Slot, StakingCredential, TransactionIndex,
+use plutus_ledger_api::v1::{
+    address::{
+        Address, CertificateIndex, ChainPointer, Credential, Slot, StakingCredential,
+        TransactionIndex,
+    },
+    crypto::{Ed25519PubKeyHash, LedgerBytes, PaymentPubKeyHash},
+    datum::{Datum, DatumHash},
+    interval::{Extended, LowerBound, PlutusInterval, UpperBound},
+    redeemer::{Redeemer, RedeemerHash},
+    script::{MintingPolicyHash, ScriptHash, ValidatorHash},
+    transaction::{
+        POSIXTime, ScriptContext, TransactionHash, TransactionInfo, TransactionInput,
+        TransactionOutput, TxInInfo,
+    },
+    value::{AssetClass, CurrencySymbol, TokenName, Value},
 };
-use plutus_ledger_api::v1::crypto::{Ed25519PubKeyHash, LedgerBytes, PaymentPubKeyHash};
-use plutus_ledger_api::v1::datum::{Datum, DatumHash};
-use plutus_ledger_api::v1::interval::{Extended, LowerBound, PlutusInterval, UpperBound};
-use plutus_ledger_api::v1::redeemer::{Redeemer, RedeemerHash};
-use plutus_ledger_api::v1::script::{MintingPolicyHash, ScriptHash, ValidatorHash};
-use plutus_ledger_api::v1::transaction::{
-    POSIXTime, ScriptContext, TransactionHash, TransactionInfo, TransactionInput,
-    TransactionOutput, TxInInfo,
+use plutus_ledger_api::v2::{
+    assoc_map::AssocMap,
+    datum::OutputDatum,
+    transaction::{
+        DCert, ScriptContext as ScriptContextV2, ScriptPurpose,
+        TransactionInfo as TransactionInfoV2, TransactionOutput as TransactionOutputV2,
+        TxInInfo as TxInInfoV2,
+    },
 };
-use plutus_ledger_api::v1::value::{AssetClass, CurrencySymbol, TokenName, Value};
-use plutus_ledger_api::v2::assoc_map::AssocMap;
-use plutus_ledger_api::v2::datum::OutputDatum;
-use plutus_ledger_api::v2::transaction::{
-    DCert, ScriptContext as ScriptContextV2, ScriptPurpose, TransactionInfo as TransactionInfoV2,
-    TransactionOutput as TransactionOutputV2, TxInInfo as TxInInfoV2,
+use plutus_ledger_api::v3::crypto::StakePubKeyHash;
+use plutus_ledger_api::v3::value::Lovelace;
+use plutus_ledger_api::v3::{
+    ratio::Rational,
+    transaction::{
+        ChangedParameters as ChangedParametersV3,
+        ColdCommitteeCredential as ColdCommitteeCredentialV3, Committee as CommitteeV3,
+        Constitution as ConstitutionV3, DRep as DRepV3, DRepCredential as DRepCredentialV3,
+        Delegatee as DelegateeV3, GovernanceAction as GovernanceActionV3,
+        GovernanceActionId as GovernanceActionIdV3,
+        HotCommitteeCredential as HotCommitteeCredentialV3,
+        ProposalProcedure as ProposalProcedureV3, ProtocolVersion as ProtocolVersionV3,
+        ScriptContext as ScriptContextV3, ScriptInfo as ScriptInfoV3,
+        ScriptPurpose as ScriptPurposeV3, TransactionHash as TransactionHashV2,
+        TransactionInfo as TransactionInfoV3, TransactionInput as TransactionInputV3,
+        TxCert as TxCertV3, TxInInfo as TxInInfoV3, Vote as VoteV3, Voter as VoterV3,
+    },
 };
+
 use std::collections::BTreeMap;
 
 pub fn bi(num: i32) -> Integer {
@@ -781,4 +806,559 @@ pub fn list_goldens() -> List<List<Bool>> {
         vec![false],
         vec![true, true, false, false],
     ]
+}
+
+pub fn rational_goldens() -> List<Rational> {
+    vec![Rational(BigInt::from(1), BigInt::from(2))]
+}
+
+pub fn tx_id_goldens_v3() -> List<TransactionHashV2> {
+    vec![TransactionHash(blake2b_256_hash())]
+}
+
+pub fn tx_out_ref_goldens_v3() -> List<TransactionInputV3> {
+    tx_id_goldens()
+        .into_iter()
+        .map(|transaction_id| TransactionInput {
+            transaction_id,
+            index: bi(0),
+        })
+        .collect()
+}
+
+pub fn cold_committee_credential_goldens_v3() -> List<ColdCommitteeCredentialV3> {
+    credential_goldens()
+        .into_iter()
+        .map(ColdCommitteeCredentialV3)
+        .collect()
+}
+
+pub fn hot_committee_credential_goldens_v3() -> List<HotCommitteeCredentialV3> {
+    credential_goldens()
+        .into_iter()
+        .map(HotCommitteeCredentialV3)
+        .collect()
+}
+
+pub fn drep_credential_goldens_v3() -> List<DRepCredentialV3> {
+    credential_goldens()
+        .into_iter()
+        .map(DRepCredentialV3)
+        .collect()
+}
+
+pub fn drep_goldens_v3() -> List<DRepV3> {
+    [
+        drep_credential_goldens_v3()
+            .into_iter()
+            .map(DRepV3::DRep)
+            .collect(),
+        vec![DRepV3::AlwaysAbstain],
+        vec![DRepV3::AlwaysNoConfidence],
+    ]
+    .concat()
+}
+
+pub fn delegatee_goldens_v3() -> List<DelegateeV3> {
+    [
+        pubkeyhash_goldens()
+            .into_iter()
+            .map(|pkh| DelegateeV3::Stake(StakePubKeyHash(pkh)))
+            .collect::<Vec<_>>(),
+        drep_goldens_v3()
+            .into_iter()
+            .map(DelegateeV3::Vote)
+            .collect::<Vec<_>>(),
+        pubkeyhash_goldens()
+            .iter()
+            .flat_map(|pkh| {
+                drep_goldens_v3()
+                    .into_iter()
+                    .map(|drep| DelegateeV3::StakeVote(StakePubKeyHash(pkh.clone()), drep))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn lovelace_goldens_v3() -> List<Lovelace> {
+    vec![Lovelace(BigInt::from(0))]
+}
+
+pub fn tx_cert_goldens_v3() -> List<TxCertV3> {
+    [
+        credential_goldens()
+            .iter()
+            .flat_map(|credential| {
+                to_option(lovelace_goldens_v3())
+                    .into_iter()
+                    .map(|lovelace| TxCertV3::RegStaking(credential.clone(), lovelace))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        credential_goldens()
+            .iter()
+            .flat_map(|credential| {
+                to_option(lovelace_goldens_v3())
+                    .into_iter()
+                    .map(|lovelace| TxCertV3::UnRegStaking(credential.clone(), lovelace))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        credential_goldens()
+            .iter()
+            .flat_map(|credential| {
+                delegatee_goldens_v3()
+                    .into_iter()
+                    .map(|delegatee| TxCertV3::DelegStaking(credential.clone(), delegatee))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        credential_goldens()
+            .iter()
+            .flat_map(|credential| {
+                delegatee_goldens_v3()
+                    .iter()
+                    .flat_map(|delegatee| {
+                        lovelace_goldens_v3()
+                            .into_iter()
+                            .map(|lovelace| {
+                                TxCertV3::RegDeleg(credential.clone(), delegatee.clone(), lovelace)
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        drep_credential_goldens_v3()
+            .iter()
+            .flat_map(|drep_credential| {
+                lovelace_goldens_v3()
+                    .into_iter()
+                    .map(|lovelace| TxCertV3::RegDRep(drep_credential.clone(), lovelace))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        drep_credential_goldens_v3()
+            .into_iter()
+            .map(TxCertV3::UpdateDRep)
+            .collect::<Vec<_>>(),
+        drep_credential_goldens_v3()
+            .iter()
+            .flat_map(|drep_credential| {
+                lovelace_goldens_v3()
+                    .into_iter()
+                    .map(|lovelace| TxCertV3::UnRegDRep(drep_credential.clone(), lovelace))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        pubkeyhash_goldens()
+            .iter()
+            .flat_map(|pkh1| {
+                pubkeyhash_goldens()
+                    .into_iter()
+                    .map(|pkh2| TxCertV3::PoolRegister(pkh1.clone(), pkh2))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        pubkeyhash_goldens()
+            .into_iter()
+            .map(|pkh| TxCertV3::PoolRetire(pkh, BigInt::from(0)))
+            .collect::<Vec<_>>(),
+        cold_committee_credential_goldens_v3()
+            .iter()
+            .flat_map(|cold_committee_credential| {
+                hot_committee_credential_goldens_v3()
+                    .into_iter()
+                    .map(|hot_committee_credential| {
+                        TxCertV3::AuthHotCommittee(
+                            cold_committee_credential.clone(),
+                            hot_committee_credential,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        cold_committee_credential_goldens_v3()
+            .into_iter()
+            .map(TxCertV3::ResignColdCommittee)
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn voter_goldens_v3() -> List<VoterV3> {
+    [
+        hot_committee_credential_goldens_v3()
+            .into_iter()
+            .map(VoterV3::CommitteeVoter)
+            .collect::<Vec<_>>(),
+        drep_credential_goldens_v3()
+            .into_iter()
+            .map(VoterV3::DRepVoter)
+            .collect::<Vec<_>>(),
+        pubkeyhash_goldens()
+            .into_iter()
+            .map(VoterV3::StakePoolVoter)
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn vote_goldens_v3() -> List<VoteV3> {
+    vec![VoteV3::VoteNo, VoteV3::VoteYes, VoteV3::Abstain]
+}
+
+pub fn governance_action_id_goldens_v3() -> List<GovernanceActionIdV3> {
+    tx_id_goldens_v3()
+        .into_iter()
+        .map(|tx_id| GovernanceActionIdV3 {
+            tx_id,
+            gov_action_id: BigInt::from(0),
+        })
+        .collect::<Vec<_>>()
+}
+
+pub fn committee_goldens_v3() -> List<CommitteeV3> {
+    rational_goldens()
+        .into_iter()
+        .map(|rational| CommitteeV3 {
+            members: AssocMap(
+                cold_committee_credential_goldens_v3()
+                    .into_iter()
+                    .map(|ccc| (ccc, BigInt::from(0)))
+                    .collect(),
+            ),
+            quorum: rational,
+        })
+        .collect()
+}
+
+pub fn constitution_goldens_v3() -> List<ConstitutionV3> {
+    to_option(script_hash_goldens())
+        .into_iter()
+        .map(|script_hash| ConstitutionV3 {
+            constitution_script: script_hash,
+        })
+        .collect()
+}
+
+pub fn protocol_vertion_goldens_v3() -> List<ProtocolVersionV3> {
+    vec![ProtocolVersionV3 {
+        major: BigInt::from(1),
+        minor: BigInt::from(2),
+    }]
+}
+
+pub fn changed_parameters_goldens_v3() -> List<ChangedParametersV3> {
+    plutus_data_goldens()
+        .into_iter()
+        .map(ChangedParametersV3)
+        .collect()
+}
+
+pub fn governance_action_goldens_v3() -> List<GovernanceActionV3> {
+    [
+        to_option(governance_action_id_goldens_v3())
+            .iter()
+            .flat_map(|gov_action_id| {
+                changed_parameters_goldens_v3()
+                    .iter()
+                    .flat_map(|changed_parameters| {
+                        to_option(script_hash_goldens())
+                            .into_iter()
+                            .map(|script_hash| {
+                                GovernanceActionV3::ParameterChange(
+                                    gov_action_id.clone(),
+                                    changed_parameters.clone(),
+                                    script_hash,
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        to_option(governance_action_id_goldens_v3())
+            .iter()
+            .flat_map(|gov_action_id| {
+                protocol_vertion_goldens_v3()
+                    .into_iter()
+                    .map(|protocol_version| {
+                        GovernanceActionV3::HardForkInitiation(
+                            gov_action_id.clone(),
+                            protocol_version,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        to_option(script_hash_goldens())
+            .into_iter()
+            .map(|script_hash| {
+                GovernanceActionV3::TreasuryWithdrawals(
+                    to_map(credential_goldens(), lovelace_goldens_v3()),
+                    script_hash,
+                )
+            })
+            .collect::<Vec<_>>(),
+        to_option(governance_action_id_goldens_v3())
+            .into_iter()
+            .map(GovernanceActionV3::NoConfidence)
+            .collect::<Vec<_>>(),
+        to_option(governance_action_id_goldens_v3())
+            .iter()
+            .flat_map(|gov_action_id| {
+                rational_goldens()
+                    .into_iter()
+                    .map(|rational| {
+                        GovernanceActionV3::UpdateCommittee(
+                            gov_action_id.clone(),
+                            cold_committee_credential_goldens_v3(),
+                            to_map(
+                                cold_committee_credential_goldens_v3(),
+                                vec![BigInt::from(0)],
+                            ),
+                            rational,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        to_option(governance_action_id_goldens_v3())
+            .iter()
+            .flat_map(|gov_action_id| {
+                constitution_goldens_v3()
+                    .into_iter()
+                    .map(|constitution| {
+                        GovernanceActionV3::NewConstitution(gov_action_id.clone(), constitution)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+        vec![GovernanceActionV3::InfoAction],
+    ]
+    .concat()
+}
+
+pub fn proposal_procedure_goldens_v3() -> List<ProposalProcedureV3> {
+    lovelace_goldens_v3()
+        .iter()
+        .flat_map(|deposit| {
+            credential_goldens()
+                .iter()
+                .flat_map(|return_add| {
+                    governance_action_goldens_v3()
+                        .into_iter()
+                        .map(|gov_action| ProposalProcedureV3 {
+                            deposit: deposit.clone(),
+                            return_addr: return_add.clone(),
+                            governance_action: gov_action,
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>()
+}
+
+pub fn script_purpose_goldens_v3() -> List<ScriptPurposeV3> {
+    [
+        currency_symbol_goldens()
+            .into_iter()
+            .map(ScriptPurposeV3::Minting)
+            .collect::<Vec<_>>(),
+        tx_out_ref_goldens()
+            .into_iter()
+            .map(ScriptPurposeV3::Spending)
+            .collect::<Vec<_>>(),
+        credential_goldens()
+            .into_iter()
+            .map(ScriptPurposeV3::Rewarding)
+            .collect::<Vec<_>>(),
+        tx_cert_goldens_v3()
+            .into_iter()
+            .map(|tx_cert| ScriptPurposeV3::Certifying(BigInt::from(0), tx_cert))
+            .collect::<Vec<_>>(),
+        voter_goldens_v3()
+            .into_iter()
+            .map(ScriptPurposeV3::Voting)
+            .collect::<Vec<_>>(),
+        proposal_procedure_goldens_v3()
+            .into_iter()
+            .map(|proposal_procedure| {
+                ScriptPurposeV3::Proposing(BigInt::from(0), proposal_procedure)
+            })
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn script_info_goldens_v3() -> List<ScriptInfoV3> {
+    [
+        currency_symbol_goldens()
+            .into_iter()
+            .map(ScriptInfoV3::Minting)
+            .collect::<Vec<_>>(),
+        tx_out_ref_goldens()
+            .iter()
+            .flat_map(|tx_out_ref| {
+                to_option(datum_goldens())
+                    .into_iter()
+                    .map(|datum| ScriptInfoV3::Spending(tx_out_ref.clone(), datum))
+            })
+            .collect::<Vec<_>>(),
+        credential_goldens()
+            .into_iter()
+            .map(ScriptInfoV3::Rewarding)
+            .collect::<Vec<_>>(),
+        tx_cert_goldens_v3()
+            .into_iter()
+            .map(|tx_cert| ScriptInfoV3::Certifying(BigInt::from(0), tx_cert))
+            .collect::<Vec<_>>(),
+        voter_goldens_v3()
+            .into_iter()
+            .map(ScriptInfoV3::Voting)
+            .collect::<Vec<_>>(),
+        proposal_procedure_goldens_v3()
+            .into_iter()
+            .map(|proposal_procedure| ScriptInfoV3::Proposing(BigInt::from(0), proposal_procedure))
+            .collect::<Vec<_>>(),
+    ]
+    .concat()
+}
+
+pub fn tx_in_info_goldens_v3() -> List<TxInInfoV3> {
+    tx_out_ref_goldens_v3()
+        .iter()
+        .flat_map(|reference| {
+            tx_out_goldens_v2().into_iter().map(|output| TxInInfoV3 {
+                reference: reference.clone(),
+                output,
+            })
+        })
+        .collect()
+}
+
+pub fn tx_info_goldens_v3() -> List<TransactionInfoV3> {
+    lovelace_goldens_v3()
+        .iter()
+        .flat_map(|fee| {
+            value_goldens()
+                .iter()
+                .flat_map(|mint| {
+                    posix_time_range_goldens()
+                        .iter()
+                        .flat_map(|valid_range| {
+                            tx_id_goldens_v3()
+                                .iter()
+                                .flat_map(|tx_id| {
+                                    to_option(lovelace_goldens_v3())
+                                        .iter()
+                                        .flat_map(|current_treasury_amount| {
+                                            to_option(lovelace_goldens_v3())
+                                                .into_iter()
+                                                .map(|treasury_donation| TransactionInfoV3 {
+                                                    inputs: tx_in_info_goldens_v3(),
+                                                    reference_inputs: tx_in_info_goldens_v3(),
+                                                    outputs: tx_out_goldens_v2(),
+                                                    fee: fee.clone(),
+                                                    mint: mint.clone(),
+                                                    tx_certs: tx_cert_goldens_v3(),
+                                                    wdrl: AssocMap::from(
+                                                        credential_goldens()
+                                                            .into_iter()
+                                                            .map(|cred| {
+                                                                (cred, Lovelace(BigInt::from(1234)))
+                                                            })
+                                                            .collect::<Vec<_>>(),
+                                                    ),
+                                                    valid_range: valid_range.clone(),
+                                                    signatories: pubkeyhash_goldens()
+                                                        .into_iter()
+                                                        .map(PaymentPubKeyHash)
+                                                        .collect(),
+                                                    redeemers: AssocMap::from(
+                                                        script_purpose_goldens_v3()
+                                                            .into_iter()
+                                                            .zip(redeemer_goldens())
+                                                            .collect::<Vec<_>>(),
+                                                    ),
+                                                    datums: AssocMap::from(
+                                                        datum_hash_goldens()
+                                                            .into_iter()
+                                                            .zip(datum_goldens())
+                                                            .collect::<Vec<_>>(),
+                                                    ),
+                                                    id: tx_id.clone(),
+                                                    votes: to_map(
+                                                        voter_goldens_v3()[..3].to_vec(),
+                                                        vec![AssocMap::from(
+                                                            governance_action_id_goldens_v3()
+                                                                .into_iter()
+                                                                .zip(vote_goldens_v3())
+                                                                .collect::<Vec<_>>(),
+                                                        )],
+                                                    ),
+                                                    proposal_procedures:
+                                                        proposal_procedure_goldens_v3()[..3]
+                                                            .to_vec(),
+                                                    current_treasury_amount:
+                                                        current_treasury_amount.clone(),
+                                                    treasury_donation,
+                                                })
+                                                .collect::<Vec<_>>()
+                                        })
+                                        .collect::<Vec<_>>()
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+pub fn script_context_goldens_v3() -> List<ScriptContextV3> {
+    tx_info_goldens_v3()
+        .iter()
+        .flat_map(|tx_info| {
+            redeemer_goldens()
+                .iter()
+                .flat_map(|redeemer| {
+                    script_info_goldens_v3()
+                        .into_iter()
+                        .map(|script_info| ScriptContextV3 {
+                            tx_info: tx_info.clone(),
+                            redeemer: redeemer.clone(),
+                            script_info,
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+pub fn to_option<T>(goldens: List<T>) -> List<Option<T>> {
+    [None]
+        .into_iter()
+        .chain(goldens.into_iter().map(Some))
+        .collect()
+}
+
+pub fn to_map<K: Clone, V: Clone>(k_goldens: List<K>, v_goldens: List<V>) -> AssocMap<K, V> {
+    AssocMap(
+        k_goldens
+            .iter()
+            .flat_map(|k| {
+                v_goldens
+                    .iter()
+                    .map(|v| (k.clone(), v.clone()))
+                    .collect::<Vec<(K, V)>>()
+            })
+            .collect::<Vec<(K, V)>>(),
+    )
 }

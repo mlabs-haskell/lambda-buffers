@@ -615,8 +615,8 @@ instance Json PlutusV3.DRepCredential where
 
 instance Json PlutusV3.DRep where
   toJson (PlutusV3.DRep drepCred) = jsonConstructor "DRep" [toJson drepCred]
-  toJson PlutusV3.DRepAlwaysAbstain = jsonConstructor "DRepAlwaysAbstain" []
-  toJson PlutusV3.DRepAlwaysNoConfidence = jsonConstructor "DRepAlwaysNoConfidence" []
+  toJson PlutusV3.DRepAlwaysAbstain = jsonConstructor "AlwaysAbstain" []
+  toJson PlutusV3.DRepAlwaysNoConfidence = jsonConstructor "AlwaysNoConfidence" []
   fromJson =
     caseJsonConstructor
       "PlutusV3.DRep"
@@ -627,13 +627,13 @@ instance Json PlutusV3.DRep where
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "DRepAlwaysAbstain"
+        ( "AlwaysAbstain"
         , \case
             [] -> return PlutusV3.DRepAlwaysAbstain
             invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
         )
       ,
-        ( "DRepAlwaysNoConfidence"
+        ( "AlwaysNoConfidence"
         , \case
             [] -> return PlutusV3.DRepAlwaysNoConfidence
             invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
@@ -641,26 +641,26 @@ instance Json PlutusV3.DRep where
       ]
 
 instance Json PlutusV3.Delegatee where
-  toJson (PlutusV3.DelegStake pkh) = jsonConstructor "DelegStake" [toJson pkh]
-  toJson (PlutusV3.DelegVote drep) = jsonConstructor "DelegVote" [toJson drep]
-  toJson (PlutusV3.DelegStakeVote pkh drep) = jsonConstructor "DelegStakeVote" [toJson pkh, toJson drep]
+  toJson (PlutusV3.DelegStake pkh) = jsonConstructor "Stake" [toJson pkh]
+  toJson (PlutusV3.DelegVote drep) = jsonConstructor "Vote" [toJson drep]
+  toJson (PlutusV3.DelegStakeVote pkh drep) = jsonConstructor "StakeVote" [toJson pkh, toJson drep]
   fromJson =
     caseJsonConstructor
       "PlutusV3.Delegatee"
       [
-        ( "DelegStake"
+        ( "Stake"
         , \case
             [json] -> PlutusV3.DelegStake <$> fromJson json
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "DelegVote"
+        ( "Vote"
         , \case
             [json] -> PlutusV3.DelegVote <$> fromJson json
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "DelegStakeVote"
+        ( "StakeVote"
         , \case
             [json1, json2] -> PlutusV3.DelegStakeVote <$> fromJson json1 <*> fromJson json2
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
@@ -668,82 +668,82 @@ instance Json PlutusV3.Delegatee where
       ]
 
 instance Json PlutusV3.TxCert where
-  toJson (PlutusV3.TxCertRegStaking cred lovelaces) = jsonConstructor "TxCertRegStaking" [toJson cred, toJson lovelaces]
-  toJson (PlutusV3.TxCertUnRegStaking cred lovelaces) = jsonConstructor "TxCertUnRegStaking" [toJson cred, toJson lovelaces]
-  toJson (PlutusV3.TxCertDelegStaking cred delegatee) = jsonConstructor "TxCertDelegStaking" [toJson cred, toJson delegatee]
-  toJson (PlutusV3.TxCertRegDeleg cred delegatee lovelaces) = jsonConstructor "TxCertRegDeleg" [toJson cred, toJson delegatee, toJson lovelaces]
-  toJson (PlutusV3.TxCertRegDRep drep lovelaces) = jsonConstructor "TxCertRegDRep" [toJson drep, toJson lovelaces]
-  toJson (PlutusV3.TxCertUpdateDRep drep) = jsonConstructor "TxCertUpdateDRep" [toJson drep]
-  toJson (PlutusV3.TxCertUnRegDRep drepCred lovelaces) = jsonConstructor "TxCertUnRegDRep" [toJson drepCred, toJson lovelaces]
-  toJson (PlutusV3.TxCertPoolRegister poolId poolVFR) = jsonConstructor "TxCertPoolRegister" [toJson poolId, toJson poolVFR]
-  toJson (PlutusV3.TxCertPoolRetire pkh epoch) = jsonConstructor "TxCertPoolRetire" [toJson pkh, toJson epoch]
-  toJson (PlutusV3.TxCertAuthHotCommittee coldCred hotCred) = jsonConstructor "TxCertAuthHotCommittee" [toJson coldCred, toJson hotCred]
-  toJson (PlutusV3.TxCertResignColdCommittee coldCred) = jsonConstructor "TxCertResignColdCommittee" [toJson coldCred]
+  toJson (PlutusV3.TxCertRegStaking cred lovelaces) = jsonConstructor "RegStaking" [toJson cred, toJson lovelaces]
+  toJson (PlutusV3.TxCertUnRegStaking cred lovelaces) = jsonConstructor "UnRegStaking" [toJson cred, toJson lovelaces]
+  toJson (PlutusV3.TxCertDelegStaking cred delegatee) = jsonConstructor "DelegStaking" [toJson cred, toJson delegatee]
+  toJson (PlutusV3.TxCertRegDeleg cred delegatee lovelaces) = jsonConstructor "RegDeleg" [toJson cred, toJson delegatee, toJson lovelaces]
+  toJson (PlutusV3.TxCertRegDRep drep lovelaces) = jsonConstructor "RegDRep" [toJson drep, toJson lovelaces]
+  toJson (PlutusV3.TxCertUpdateDRep drep) = jsonConstructor "UpdateDRep" [toJson drep]
+  toJson (PlutusV3.TxCertUnRegDRep drepCred lovelaces) = jsonConstructor "UnRegDRep" [toJson drepCred, toJson lovelaces]
+  toJson (PlutusV3.TxCertPoolRegister poolId poolVFR) = jsonConstructor "PoolRegister" [toJson poolId, toJson poolVFR]
+  toJson (PlutusV3.TxCertPoolRetire pkh epoch) = jsonConstructor "PoolRetire" [toJson pkh, toJson epoch]
+  toJson (PlutusV3.TxCertAuthHotCommittee coldCred hotCred) = jsonConstructor "AuthHotCommittee" [toJson coldCred, toJson hotCred]
+  toJson (PlutusV3.TxCertResignColdCommittee coldCred) = jsonConstructor "ResignColdCommittee" [toJson coldCred]
   fromJson =
     caseJsonConstructor
       "PlutusV3.TxCert"
       [
-        ( "TxCertRegStaking"
+        ( "RegStaking"
         , \case
             [cred, lovelaces] -> PlutusV3.TxCertRegStaking <$> fromJson cred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertUnRegStaking"
+        ( "UnRegStaking"
         , \case
             [cred, lovelaces] -> PlutusV3.TxCertUnRegStaking <$> fromJson cred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertDelegStaking"
+        ( "DelegStaking"
         , \case
             [cred, delegatee] -> PlutusV3.TxCertDelegStaking <$> fromJson cred <*> fromJson delegatee
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertRegDeleg"
+        ( "RegDeleg"
         , \case
             [cred, delegatee, lovelaces] -> PlutusV3.TxCertRegDeleg <$> fromJson cred <*> fromJson delegatee <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 3 elements but got " <> show invalid
         )
       ,
-        ( "TxCertRegDRep"
+        ( "RegDRep"
         , \case
             [drep, lovelaces] -> PlutusV3.TxCertRegDRep <$> fromJson drep <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertUpdateDRep"
+        ( "UpdateDRep"
         , \case
             [drep] -> PlutusV3.TxCertUpdateDRep <$> fromJson drep
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "TxCertUnRegDRep"
+        ( "UnRegDRep"
         , \case
             [drepCred, lovelaces] -> PlutusV3.TxCertUnRegDRep <$> fromJson drepCred <*> fromJson lovelaces
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "TxCertPoolRegister"
+        ( "PoolRegister"
         , \case
             [poolId, poolVFR] -> PlutusV3.TxCertPoolRegister <$> fromJson poolId <*> fromJson poolVFR
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertPoolRetire"
+        ( "PoolRetire"
         , \case
             [pkh, epoch] -> PlutusV3.TxCertPoolRetire <$> fromJson pkh <*> fromJson epoch
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
         )
       ,
-        ( "TxCertAuthHotCommittee"
+        ( "AuthHotCommittee"
         , \case
             [coldCred, hotCred] -> PlutusV3.TxCertAuthHotCommittee <$> fromJson coldCred <*> fromJson hotCred
             invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
         )
       ,
-        ( "TxCertResignColdCommittee"
+        ( "ResignColdCommittee"
         , \case
             [coldCred] -> PlutusV3.TxCertResignColdCommittee <$> fromJson coldCred
             invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
