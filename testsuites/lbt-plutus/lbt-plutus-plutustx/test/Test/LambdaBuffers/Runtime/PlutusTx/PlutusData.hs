@@ -13,6 +13,8 @@ import LambdaBuffers.Plutus.V1 qualified as HlPlutus
 import LambdaBuffers.Plutus.V1.PlutusTx qualified as PlPlutus
 import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
 import LambdaBuffers.Plutus.V2.PlutusTx qualified as PlPlutusV2
+import LambdaBuffers.Plutus.V3 qualified as HlPlutusV3
+import LambdaBuffers.Plutus.V3.PlutusTx qualified as PlPlutusV3
 import LambdaBuffers.Prelude qualified as HlPrelude
 import LambdaBuffers.Prelude.PlutusTx qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutus ()
@@ -39,6 +41,7 @@ tests =
     , preludeGoldens
     , plutusV1Goldens
     , plutusV2Goldens
+    , plutusV3Goldens
     ]
 
 transparentGoldens :: TestTree
@@ -118,26 +121,36 @@ plutusV3Goldens :: TestTree
 plutusV3Goldens =
   testGroup
     "LB Plutus.V3 golden types"
-    [ forallGoldens "PlutusV3.TxCert" Golden.txCertGoldensV3
-    , forallGoldens "PlutusV3.Voter" Golden.voterGoldensV3
-    , forallGoldens "PlutusV3.Vote" Golden.voteGoldensV3
-    , forallGoldens "PlutusV3.GovernanceActionId" Golden.governanceActionIdGoldensV3
-    , forallGoldens "PlutusV3.Committee" Golden.committeeGoldensV3
-    , forallGoldens "PlutusV3.Constitution" Golden.constitutionGoldensV3
-    , forallGoldens "PlutusV3.ProtocolVersion" Golden.protocolVersionGoldensV3
-    , forallGoldens "PlutusV3.ChangedParameters" Golden.changedParametersGoldensV3
-    , forallGoldens "PlutusV3.GovernanceAction" Golden.governanceActionGoldensV3
-    , forallGoldens "PlutusV3.ProposalProcedure" Golden.proposalProcedureGoldensV3
-    , forallGoldens "PlutusV3.ScriptPurpose" Golden.scriptPurposeGoldensV3
-    , forallGoldens "PlutusV3.ScriptInfo" Golden.scriptInfoGoldensV3
-    , forallGoldens "PlutusV3.TxInInfo" Golden.txInInfoGoldensV3
-    , forallGoldens "PlutusV3.TxInfo" Golden.txInfoGoldensV3
-    , forallGoldens "PlutusV3.ScriptContext" Golden.scriptContextGoldensV3
+    [ forallGoldens @HlPlutusV3.Rational @PlPlutusV3.Rational PlutusTx.rationalCompiled "PlutusV3.Rational" 0
+    , forallGoldens @HlPlutusV3.TxId @PlPlutusV3.TxId PlutusTx.txIdV3Compiled "PlutusV3.TxId" 0
+    , forallGoldens @HlPlutusV3.TxOutRef @PlPlutusV3.TxOutRef PlutusTx.txOutRefV3Compiled "PlutusV3.TxOutRef" 0
+    , forallGoldens @HlPlutusV3.ColdCommitteeCredential @PlPlutusV3.ColdCommitteeCredential PlutusTx.coldCommitteeCredentialV3Compiled "PlutusV3.ColdCommitteeCredential" 1
+    , forallGoldens @HlPlutusV3.HotCommitteeCredential @PlPlutusV3.HotCommitteeCredential PlutusTx.hotCommitteeCredentialV3Compiled "PlutusV3.HotCommitteeCredential" 1
+    , forallGoldens @HlPlutusV3.DRepCredential @PlPlutusV3.DRepCredential PlutusTx.drepCredentialV3Compiled "PlutusV3.DRepCredential" 1
+    , forallGoldens @HlPlutusV3.DRep @PlPlutusV3.DRep PlutusTx.drepV3Compiled "PlutusV3.DRep" 3
+    , forallGoldens @HlPlutusV3.Delegatee @PlPlutusV3.Delegatee PlutusTx.delegateeV3Compiled "PlutusV3.Delegatee" 8
+    , forallGoldens @HlPlutusV3.TxCert @PlPlutusV3.TxCert PlutusTx.txCertV3Compiled "PlutusV3.TxCert" 9
+    , forallGoldens @HlPlutusV3.Voter @PlPlutusV3.Voter PlutusTx.voterV3Compiled "PlutusV3.Voter" 4
+    , forallGoldens @HlPlutusV3.Vote @PlPlutusV3.Vote PlutusTx.voteV3Compiled "PlutusV3.Vote" 2
+    , forallGoldens @HlPlutusV3.GovernanceActionId @PlPlutusV3.GovernanceActionId PlutusTx.governanceActionIdV3Compiled "PlutusV3.GovernanceActionId" 0
+    , -- , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee PlutusTx.committeeV3Compiled "PlutusV3.Committee"  9
+      forallGoldens @HlPlutusV3.Constitution @PlPlutusV3.Constitution PlutusTx.constitutionV3Compiled "PlutusV3.Constitution" 1
+    , forallGoldens @HlPlutusV3.ProtocolVersion @PlPlutusV3.ProtocolVersion PlutusTx.protocolVersionV3Compiled "PlutusV3.ProtocolVersion" 0
+    , forallGoldens @HlPlutusV3.ChangedParameters @PlPlutusV3.ChangedParameters PlutusTx.changedParametersV3Compiled "PlutusV3.ChangedParameters" 9
+    -- , forallGoldens @HlPlutusV3.GovernanceAction @PlPlutusV3.GovernanceAction PlutusTx.governanceActionV3Compiled "PlutusV3.GovernanceAction"  9
+    -- , forallGoldens @HlPlutusV3.ProposalProcedure @PlPlutusV3.ProposalProcedure PlutusTx.proposalProcedureV3Compiled "PlutusV3.ProposalProcedure"  9
+    -- , forallGoldens @HlPlutusV3.ScriptPurpose @PlPlutusV3.ScriptPurpose PlutusTx.scriptPurposeV3Compiled "PlutusV3.ScriptPurpose"  9
+    -- , forallGoldens @HlPlutusV3.ScriptInfo @PlPlutusV3.ScriptInfo PlutusTx.scriptInfoV3Compiled "PlutusV3.ScriptInfo"  9
+    -- , forallGoldens @HlPlutusV3.TxInInfo @PlPlutusV3.TxInInfo PlutusTx.txInInfoV3Compiled "PlutusV3.TxInInfo"  9
+    -- , forallGoldens @HlPlutusV3.TxInfo @PlPlutusV3.TxInfo PlutusTx.txInfoV3Compiled "PlutusV3.TxInfo"  9
+    -- , forallGoldens @HlPlutusV3.ScriptContext @PlPlutusV3.ScriptContext PlutusTx.scriptContextV3Compiled "PlutusV3.ScriptContext"  9
     ]
 
 forallGoldens ::
   forall haskellType plutusTxType.
-  a =>
+  ( FromData haskellType
+  , ToData haskellType
+  ) =>
   PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool) ->
   FilePath ->
   Int ->
