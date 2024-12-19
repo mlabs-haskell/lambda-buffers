@@ -1,19 +1,21 @@
 module LambdaBuffers.Runtime.Plutus
-  ( AssetClass
+  ( AssetClass(..)
   , TxInInfo(..)
   , casePlutusData
   , pdConstr
   , NotImplemented
+  , Redeemer(..)
+  , Datum(..)
   ) where
 
-import Ctl.Internal.FromData (class FromData, fromData)
-import Ctl.Internal.Plutus.Types.CurrencySymbol (CurrencySymbol)
-import Ctl.Internal.Plutus.Types.Transaction (TransactionOutput)
-import Ctl.Internal.ToData (class ToData, toData)
-import Ctl.Internal.Types.BigNum (toBigInt, fromBigInt, zero)
-import Ctl.Internal.Types.PlutusData (PlutusData(Constr, List, Integer))
-import Ctl.Internal.Types.TokenName (TokenName)
-import Ctl.Internal.Types.Transaction (TransactionInput)
+import Cardano.FromData (class FromData, fromData)
+import Cardano.Plutus.Types.CurrencySymbol (CurrencySymbol)
+import Cardano.Plutus.Types.TransactionOutput (TransactionOutput)
+import Cardano.ToData (class ToData, toData)
+import Cardano.Types.BigNum as BigNum
+import Cardano.Types.PlutusData (PlutusData(Constr, List, Integer))
+import Cardano.Plutus.Types.TokenName (TokenName)
+import Cardano.Types (TransactionInput)
 import JS.BigInt (BigInt)
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(Nothing, Just))
@@ -25,10 +27,42 @@ import Prelude (class Eq, class Show, (<$>), (<*>), (==))
 type AssetClass
   = CurrencySymbol /\ TokenName
 
+newtype Datum
+  = Datum PlutusData
+
+derive instance newtypeDatum :: Newtype Datum _
+
+derive instance genericDatum :: Generic Datum _
+
+derive newtype instance eqDatum :: Eq Datum
+
+derive newtype instance fromDataDatum :: FromData Datum
+
+derive newtype instance toDataDatum :: ToData Datum
+
+instance showDatum :: Show Datum where
+  show = genericShow
+
+newtype Redeemer
+  = Redeemer PlutusData
+
+derive instance newtypeRedeemer :: Newtype Redeemer _
+
+derive instance genericRedeemer :: Generic Redeemer _
+
+derive newtype instance eqRedeemer :: Eq Redeemer
+
+derive newtype instance fromDataRedeemer :: FromData Redeemer
+
+derive newtype instance toDataRedeemer :: ToData Redeemer
+
+instance showRedeemer :: Show Redeemer where
+  show = genericShow
+
 -- | TODO(bladyjoker): Whaaai https://github.com/Plutonomicon/cardano-transaction-lib/blob/b565f4b1ec877c671ec4ffc13b1b89dbe498bceb/src/Internal/Types/PlutusData.purs#L36
 pdConstr :: BigInt -> Array PlutusData -> PlutusData
-pdConstr bi pds = case fromBigInt bi of
-  Nothing -> Constr zero pds
+pdConstr bi pds = case BigNum.fromBigInt bi of
+  Nothing -> Constr BigNum.zero pds
   Just bn -> Constr bn pds
 
 casePlutusData ::
@@ -40,7 +74,7 @@ casePlutusData ::
   PlutusData ->
   r
 casePlutusData ctorCase listCase intCase otherCase pd = case pd of
-  Constr bn pds -> ctorCase (toBigInt bn) pds
+  Constr bn pds -> ctorCase (BigNum.toBigInt bn) pds
   List xs -> listCase xs
   Integer bi -> intCase bi
   other -> otherCase other
@@ -76,11 +110,11 @@ instance showTxInInfo :: Show TxInInfo where
   show = genericShow
 
 instance toDataTxInInfo :: ToData TxInInfo where
-  toData (TxInInfo { outRef, resolved }) = Constr zero [ toData outRef, toData resolved ]
+  toData (TxInInfo { outRef, resolved }) = Constr BigNum.zero [ toData outRef, toData resolved ]
 
 instance fromDataTxInInfo :: FromData TxInInfo where
   fromData (Constr n [ outRef, resolved ])
-    | n == zero =
+    | n == BigNum.zero =
       TxInInfo
         <$> ({ outRef: _, resolved: _ } <$> fromData outRef <*> fromData resolved)
   fromData _ = Nothing

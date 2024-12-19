@@ -48,6 +48,30 @@ generatePlutusData opts = do
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.TxInfo" $ take n Golden.txInfoGoldensV2
       , GoldenPlutusData.writeGoldens goldenDir "PlutusV2.ScriptContext" $ take n Golden.scriptContextGoldensV2
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Rational" $ take n Golden.rationalGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.TxId" $ take n Golden.txIdGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.TxOutRef" $ take n Golden.txOutRefGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ColdCommitteeCredential" $ take n Golden.coldCommitteeCredentialGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.HotCommitteeCredential" $ take n Golden.hotCommitteeCredentialGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.DRepCredential" $ take n Golden.drepCredentialGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.DRep" $ take n Golden.drepGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Delegatee" $ take n Golden.delegateeGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV1.Lovelace" $ take n Golden.lovelaceGoldens
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.TxCert" $ take n Golden.txCertGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Voter" $ take n Golden.voterGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Vote" $ take n Golden.voteGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.GovernanceActionId" $ take n Golden.governanceActionIdGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Committee" $ take n Golden.committeeGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.Constitution" $ take n Golden.constitutionGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ProtocolVersion" $ take n Golden.protocolVersionGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ChangedParameters" $ take n Golden.changedParametersGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.GovernanceAction" $ take n Golden.governanceActionGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ProposalProcedure" $ take n Golden.proposalProcedureGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ScriptPurpose" $ take n Golden.scriptPurposeGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ScriptInfo" $ take n Golden.scriptInfoGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.TxInInfo" $ take n Golden.txInInfoGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.TxInfo" $ take n Golden.txInfoGoldensV3
+      , GoldenPlutusData.writeGoldens goldenDir "PlutusV3.ScriptContext" $ take n Golden.scriptContextGoldensV3
       , GoldenPlutusData.writeGoldens goldenDir "Days.Day" $ take n Golden.dayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.WorkDay" $ take n Golden.workDayGoldens
       , GoldenPlutusData.writeGoldens goldenDir "Days.FreeDay" $ take n Golden.freeDayGoldens

@@ -43,12 +43,12 @@ lvPlutusDataBuiltins =
     ( \(_ty, refName) ->
         Map.lookup refName $
           Map.fromList
-            [ ("toPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.ToData" "toData")
-            , ("fromPlutusData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.FromData" "fromData")
+            [ ("toPlutusData", Purs.normalValName "cardano-types" "Cardano.ToData" "toData")
+            , ("fromPlutusData", Purs.normalValName "cardano-types" "Cardano.FromData" "fromData")
             , ("casePlutusData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "casePlutusData")
-            , ("integerData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "Integer")
+            , ("integerData", Purs.normalValName "cardano-types" "Cardano.Types.PlutusData" "Integer")
             , ("constrData", Purs.normalValName "lbr-plutus" "LambdaBuffers.Runtime.Plutus" "pdConstr")
-            , ("listData", Purs.normalValName "cardano-transaction-lib" "Ctl.Internal.Types.PlutusData" "List")
+            , ("listData", Purs.normalValName "cardano-types" "Cardano.Types.PlutusData" "List")
             , ("succeedParse", Purs.normalValName "maybe" "Data.Maybe" "Just")
             , ("failParse", Purs.normalValName "maybe" "Data.Maybe" "Nothing")
             , ("bindParse", Purs.normalValName "prelude" "Prelude" ">>=")

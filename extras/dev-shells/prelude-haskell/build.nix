@@ -5,7 +5,7 @@
       hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
         src = ./.;
 
-        name = "dev-prelude-haskell";
+        name = "prelude-haskell";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
@@ -24,4 +24,3 @@
       packages.play-prelude-haskell-lib = hsFlake.packages."prelude-haskell:lib:prelude-haskell";
     };
 }
-

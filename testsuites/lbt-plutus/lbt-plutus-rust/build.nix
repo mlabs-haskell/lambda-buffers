@@ -7,6 +7,7 @@
           src = ./.;
           crateName = "lbt-plutus";
 
+          generateDocs = false;
           extraSources = [
             config.packages.lbf-plutus-golden-api-rust
             config.packages.lbf-prelude-rust

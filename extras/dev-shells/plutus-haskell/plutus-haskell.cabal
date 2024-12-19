@@ -100,7 +100,7 @@ library
     , lbr-plutustx          >=0.1
     , lbr-prelude           >=0.1
     , plutarch              >=1.5
-    , plutarch-extra        >=1.2
+    , plutarch-ledger-api   >=1.2
     , plutus-ledger-api     >=1.20
     , plutus-tx             >=1.1
     , text                  >=2.0

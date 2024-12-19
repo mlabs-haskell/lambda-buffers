@@ -50,6 +50,30 @@ module Test.LambdaBuffers.Plutus.Golden (
   eitherGoldens,
   listGoldens,
   boolGoldens,
+  rationalGoldens,
+  txIdGoldensV3,
+  txOutRefGoldensV3,
+  coldCommitteeCredentialGoldensV3,
+  hotCommitteeCredentialGoldensV3,
+  drepCredentialGoldensV3,
+  drepGoldensV3,
+  delegateeGoldensV3,
+  lovelaceGoldens,
+  txCertGoldensV3,
+  voterGoldensV3,
+  voteGoldensV3,
+  governanceActionIdGoldensV3,
+  committeeGoldensV3,
+  constitutionGoldensV3,
+  protocolVersionGoldensV3,
+  changedParametersGoldensV3,
+  governanceActionGoldensV3,
+  proposalProcedureGoldensV3,
+  scriptPurposeGoldensV3,
+  scriptInfoGoldensV3,
+  txInInfoGoldensV3,
+  txInfoGoldensV3,
+  scriptContextGoldensV3,
 ) where
 
 import Data.ByteString qualified as B
@@ -59,7 +83,9 @@ import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated),
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
+import PlutusLedgerApi.V3 qualified as PlutusV3
 import PlutusTx.AssocMap qualified as AssocMap
+import PlutusTx.Ratio (unsafeRatio)
 
 -- | Plutus.V1
 plutusDataGoldens :: [PlutusV1.Data]
@@ -169,15 +195,15 @@ valueGoldens =
 
 mapGoldens :: [AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)]
 mapGoldens =
-  [ AssocMap.fromList []
-  , AssocMap.fromList
-      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
+  [ AssocMap.unsafeFromList []
+  , AssocMap.unsafeFromList
+      [ (PlutusV1.adaSymbol, AssocMap.unsafeFromList [(PlutusV1.adaToken, 1337)])
       ]
-  , AssocMap.fromList
-      [ (PlutusV1.adaSymbol, AssocMap.fromList [(PlutusV1.adaToken, 1337)])
+  , AssocMap.unsafeFromList
+      [ (PlutusV1.adaSymbol, AssocMap.unsafeFromList [(PlutusV1.adaToken, 1337)])
       ,
         ( PlutusV1.CurrencySymbol blake2b_224Hash
-        , AssocMap.fromList
+        , AssocMap.unsafeFromList
             [ (PlutusV1.TokenName $ PlutusV1.toBuiltin B.empty, 1337)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 16], 16)
             , (PlutusV1.TokenName $ PlutusV1.toBuiltin $ B.pack [1 .. 32], 32)
@@ -210,7 +236,7 @@ txInInfoGoldensV1 = mconcat [PlutusV1.TxInInfo <$> txOutRefGoldens <*> txOutGold
 txOutGoldensV1 :: [PlutusV1.TxOut]
 txOutGoldensV1 =
   mconcat
-    [PlutusV1.TxOut <$> addressGoldens <*> valueGoldens <*> (Nothing : (Just <$> datumHashGoldens))]
+    [PlutusV1.TxOut <$> addressGoldens <*> valueGoldens <*> toMaybe datumHashGoldens]
 
 dCertGoldens :: [PlutusV1.DCert]
 dCertGoldens =
@@ -258,7 +284,7 @@ txInInfoGoldensV2 = mconcat [PlutusV2.TxInInfo <$> txOutRefGoldens <*> txOutGold
 txOutGoldensV2 :: [PlutusV2.TxOut]
 txOutGoldensV2 =
   mconcat
-    [ PlutusV2.TxOut <$> addressGoldens <*> valueGoldens <*> take 2 outDatumGoldens <*> (Nothing : (Just <$> scriptHashGoldens))
+    [ PlutusV2.TxOut <$> addressGoldens <*> valueGoldens <*> take 2 outDatumGoldens <*> toMaybe scriptHashGoldens
     ]
 
 outDatumGoldens :: [PlutusV2.OutputDatum]
@@ -275,11 +301,11 @@ txInfoGoldensV2 =
     <$> valueGoldens
     <*> valueGoldens
     <*> pure dCertGoldens
-    <*> pure (AssocMap.fromList (map (,1234) stakingCredentialGoldens))
+    <*> pure (AssocMap.unsafeFromList (map (,1234) stakingCredentialGoldens))
     <*> posixTimeRangeGoldens
     <*> pure pubKeyHashGoldens
-    <*> pure (AssocMap.fromList (zip scriptPurposeGoldens redeemerGoldens))
-    <*> pure (AssocMap.fromList (zip datumHashGoldens datumGoldens))
+    <*> pure (AssocMap.unsafeFromList (zip scriptPurposeGoldens redeemerGoldens))
+    <*> pure (AssocMap.unsafeFromList (zip datumHashGoldens datumGoldens))
     <*> txIdGoldens
 
 scriptContextGoldensV2 :: [PlutusV2.ScriptContext]
@@ -287,6 +313,163 @@ scriptContextGoldensV2 =
   PlutusV2.ScriptContext
     <$> txInfoGoldensV2
     <*> scriptPurposeGoldens
+
+rationalGoldens :: [PlutusV3.Rational]
+rationalGoldens =
+  [unsafeRatio 1 2]
+
+txIdGoldensV3 :: [PlutusV3.TxId]
+txIdGoldensV3 = [PlutusV3.TxId blake2b_256Hash]
+
+txOutRefGoldensV3 :: [PlutusV3.TxOutRef]
+txOutRefGoldensV3 = mconcat [PlutusV3.TxOutRef <$> txIdGoldensV3 <*> [0]]
+
+coldCommitteeCredentialGoldensV3 :: [PlutusV3.ColdCommitteeCredential]
+coldCommitteeCredentialGoldensV3 = PlutusV3.ColdCommitteeCredential <$> credentialGoldens
+
+hotCommitteeCredentialGoldensV3 :: [PlutusV3.HotCommitteeCredential]
+hotCommitteeCredentialGoldensV3 = PlutusV3.HotCommitteeCredential <$> credentialGoldens
+
+drepCredentialGoldensV3 :: [PlutusV3.DRepCredential]
+drepCredentialGoldensV3 = PlutusV3.DRepCredential <$> credentialGoldens
+
+drepGoldensV3 :: [PlutusV3.DRep]
+drepGoldensV3 =
+  mconcat
+    [ PlutusV3.DRep <$> drepCredentialGoldensV3
+    , [PlutusV3.DRepAlwaysAbstain]
+    , [PlutusV3.DRepAlwaysNoConfidence]
+    ]
+
+delegateeGoldensV3 :: [PlutusV3.Delegatee]
+delegateeGoldensV3 =
+  mconcat
+    [ PlutusV3.DelegStake <$> pubKeyHashGoldens
+    , PlutusV3.DelegVote <$> drepGoldensV3
+    , PlutusV3.DelegStakeVote <$> pubKeyHashGoldens <*> drepGoldensV3
+    ]
+
+lovelaceGoldens :: [PlutusV1.Lovelace]
+lovelaceGoldens = PlutusV1.Lovelace <$> [0]
+
+txCertGoldensV3 :: [PlutusV3.TxCert]
+txCertGoldensV3 =
+  mconcat
+    [ PlutusV3.TxCertRegStaking <$> credentialGoldens <*> toMaybe lovelaceGoldens
+    , PlutusV3.TxCertUnRegStaking <$> credentialGoldens <*> toMaybe lovelaceGoldens
+    , PlutusV3.TxCertDelegStaking <$> credentialGoldens <*> delegateeGoldensV3
+    , PlutusV3.TxCertRegDeleg <$> credentialGoldens <*> delegateeGoldensV3 <*> lovelaceGoldens
+    , PlutusV3.TxCertRegDRep <$> drepCredentialGoldensV3 <*> lovelaceGoldens
+    , PlutusV3.TxCertUpdateDRep <$> drepCredentialGoldensV3
+    , PlutusV3.TxCertUnRegDRep <$> drepCredentialGoldensV3 <*> lovelaceGoldens
+    , PlutusV3.TxCertPoolRegister <$> pubKeyHashGoldens <*> pubKeyHashGoldens
+    , PlutusV3.TxCertPoolRetire <$> pubKeyHashGoldens <*> [0]
+    , PlutusV3.TxCertAuthHotCommittee <$> coldCommitteeCredentialGoldensV3 <*> hotCommitteeCredentialGoldensV3
+    , PlutusV3.TxCertResignColdCommittee <$> coldCommitteeCredentialGoldensV3
+    ]
+
+voterGoldensV3 :: [PlutusV3.Voter]
+voterGoldensV3 =
+  mconcat
+    [ PlutusV3.CommitteeVoter <$> hotCommitteeCredentialGoldensV3
+    , PlutusV3.DRepVoter <$> drepCredentialGoldensV3
+    , PlutusV3.StakePoolVoter <$> pubKeyHashGoldens
+    ]
+
+voteGoldensV3 :: [PlutusV3.Vote]
+voteGoldensV3 = [PlutusV3.VoteNo, PlutusV3.VoteYes, PlutusV3.Abstain]
+
+governanceActionIdGoldensV3 :: [PlutusV3.GovernanceActionId]
+governanceActionIdGoldensV3 =
+  PlutusV3.GovernanceActionId <$> txIdGoldensV3 <*> [0]
+
+committeeGoldensV3 :: [PlutusV3.Committee]
+committeeGoldensV3 =
+  PlutusV3.Committee
+    <$> [AssocMap.unsafeFromList ((,) <$> coldCommitteeCredentialGoldensV3 <*> [0])]
+    <*> rationalGoldens
+
+constitutionGoldensV3 :: [PlutusV3.Constitution]
+constitutionGoldensV3 = PlutusV3.Constitution <$> toMaybe scriptHashGoldens
+
+protocolVersionGoldensV3 :: [PlutusV3.ProtocolVersion]
+protocolVersionGoldensV3 =
+  PlutusV3.ProtocolVersion <$> [1] <*> [2]
+
+changedParametersGoldensV3 :: [PlutusV3.ChangedParameters]
+changedParametersGoldensV3 =
+  PlutusV3.ChangedParameters <$> plutusDataGoldens'
+
+governanceActionGoldensV3 :: [PlutusV3.GovernanceAction]
+governanceActionGoldensV3 =
+  mconcat
+    [ PlutusV3.ParameterChange <$> toMaybe governanceActionIdGoldensV3 <*> changedParametersGoldensV3 <*> toMaybe scriptHashGoldens
+    , PlutusV3.HardForkInitiation <$> toMaybe governanceActionIdGoldensV3 <*> protocolVersionGoldensV3
+    , PlutusV3.TreasuryWithdrawals <$> [toMap credentialGoldens lovelaceGoldens] <*> toMaybe scriptHashGoldens
+    , PlutusV3.NoConfidence <$> toMaybe governanceActionIdGoldensV3
+    , PlutusV3.UpdateCommittee <$> toMaybe governanceActionIdGoldensV3 <*> [coldCommitteeCredentialGoldensV3] <*> [toMap coldCommitteeCredentialGoldensV3 [0]] <*> rationalGoldens
+    , PlutusV3.NewConstitution <$> toMaybe governanceActionIdGoldensV3 <*> constitutionGoldensV3
+    , [PlutusV3.InfoAction]
+    ]
+
+proposalProcedureGoldensV3 :: [PlutusV3.ProposalProcedure]
+proposalProcedureGoldensV3 =
+  PlutusV3.ProposalProcedure <$> lovelaceGoldens <*> credentialGoldens <*> governanceActionGoldensV3
+
+scriptPurposeGoldensV3 :: [PlutusV3.ScriptPurpose]
+scriptPurposeGoldensV3 =
+  mconcat
+    [ PlutusV3.Minting <$> currencySymbolGoldens
+    , PlutusV3.Spending <$> txOutRefGoldensV3
+    , PlutusV3.Rewarding <$> credentialGoldens
+    , PlutusV3.Certifying <$> [0] <*> txCertGoldensV3
+    , PlutusV3.Voting <$> voterGoldensV3
+    , PlutusV3.Proposing <$> [0] <*> proposalProcedureGoldensV3
+    ]
+
+scriptInfoGoldensV3 :: [PlutusV3.ScriptInfo]
+scriptInfoGoldensV3 =
+  mconcat
+    [ PlutusV3.MintingScript <$> currencySymbolGoldens
+    , PlutusV3.SpendingScript <$> txOutRefGoldensV3 <*> toMaybe datumGoldens
+    , PlutusV3.RewardingScript <$> credentialGoldens
+    , PlutusV3.CertifyingScript <$> [0] <*> txCertGoldensV3
+    , PlutusV3.VotingScript <$> voterGoldensV3
+    , PlutusV3.ProposingScript <$> [0] <*> proposalProcedureGoldensV3
+    ]
+
+txInInfoGoldensV3 :: [PlutusV3.TxInInfo]
+txInInfoGoldensV3 = mconcat [PlutusV3.TxInInfo <$> txOutRefGoldensV3 <*> txOutGoldensV2]
+
+txInfoGoldensV3 :: [PlutusV3.TxInfo]
+txInfoGoldensV3 =
+  PlutusV3.TxInfo txInInfoGoldensV3 txInInfoGoldensV3 txOutGoldensV2
+    <$> lovelaceGoldens
+    <*> valueGoldens
+    <*> pure txCertGoldensV3
+    <*> pure (AssocMap.unsafeFromList (map (,1234) credentialGoldens))
+    <*> posixTimeRangeGoldens
+    <*> pure pubKeyHashGoldens
+    <*> pure (AssocMap.unsafeFromList (zip scriptPurposeGoldensV3 redeemerGoldens))
+    <*> pure (AssocMap.unsafeFromList (zip datumHashGoldens datumGoldens))
+    <*> txIdGoldensV3
+    <*> [toMap (take 3 voterGoldensV3) [AssocMap.unsafeFromList (zip governanceActionIdGoldensV3 voteGoldensV3)]]
+    <*> [take 3 proposalProcedureGoldensV3]
+    <*> toMaybe lovelaceGoldens
+    <*> toMaybe lovelaceGoldens
+
+scriptContextGoldensV3 :: [PlutusV3.ScriptContext]
+scriptContextGoldensV3 =
+  PlutusV3.ScriptContext
+    <$> txInfoGoldensV3
+    <*> redeemerGoldens
+    <*> scriptInfoGoldensV3
+
+toMaybe :: forall a. [a] -> [Maybe a]
+toMaybe goldens = Nothing : (Just <$> goldens)
+
+toMap :: forall a b. [a] -> [b] -> AssocMap.Map a b
+toMap goldensA goldensB = AssocMap.unsafeFromList ((,) <$> goldensA <*> goldensB)
 
 -- | Foo.Bar
 fooSumGoldens :: a -> b -> c -> [FooSum a b c]

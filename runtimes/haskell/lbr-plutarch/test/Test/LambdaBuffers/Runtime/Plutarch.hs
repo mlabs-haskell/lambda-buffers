@@ -6,9 +6,26 @@ import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import LambdaBuffers.Runtime.Plutarch (PList)
 import LambdaBuffers.Runtime.Plutarch qualified as Lb
-import Plutarch (ClosedTerm, Config (Config), TracingMode (DoTracingAndBinds), compile, pcon, perror, plet, (#))
+import Plutarch.Builtin.Integer (pconstantInteger)
 import Plutarch.Evaluate (evalScript)
-import Plutarch.Prelude (PBool (PTrue), PEq ((#==)), PListLike (pcons, pelimList, pnil), pconstant, pif, ptrace)
+import Plutarch.Internal.Term (
+  Config (Tracing),
+  LogLevel (LogInfo),
+  TracingMode (DoTracing),
+  compile,
+ )
+import Plutarch.Prelude (
+  ClosedTerm,
+  PBool (PTrue),
+  PEq ((#==)),
+  PListLike (pcons, pelimList, pnil),
+  pcon,
+  perror,
+  pif,
+  plet,
+  ptraceInfo,
+  (#),
+ )
 import Test.Tasty (TestTree, adjustOption, testGroup)
 import Test.Tasty.HUnit (assertFailure)
 import Test.Tasty.Hedgehog (testProperty)
@@ -24,7 +41,7 @@ test =
             H.forAll
               ((,) <$> genInts <*> genInts)
               >>= ( \(xs, ys) -> do
-                      b <- liftIO $ evalBool (Lb.plistFrom @PList (pconstant <$> xs) #== Lb.plistFrom (pconstant <$> ys))
+                      b <- liftIO $ evalBool (Lb.plistFrom @PList (pconstantInteger <$> xs) #== Lb.plistFrom (pconstantInteger <$> ys))
                       (xs == ys) H.=== b
                   )
       , testProperty "forall xs :: [Integer]. evalEq (pelimList pcons pnil (plistFrom xs)) (plistFrom xs)" $
@@ -35,7 +52,7 @@ test =
                       b <-
                         liftIO $
                           evalBool
-                            (plet (Lb.plistFrom @PList $ pconstant <$> xs) $ \xs' -> pelimList (\x t -> pcons # x # t) pnil xs' #== xs')
+                            (plet (Lb.plistFrom @PList $ pconstantInteger <$> xs) $ \xs' -> pelimList (\x t -> pcons # x # t) pnil xs' #== xs')
                       True H.=== b
                   )
       ]
@@ -48,9 +65,9 @@ evalBool :: ClosedTerm PBool -> IO Bool
 evalBool t =
   let
     t' :: ClosedTerm PBool
-    t' = pif t (pcon PTrue) (ptrace "Got False" perror)
+    t' = pif t (pcon PTrue) (ptraceInfo "Got False" perror)
    in
-    case Plutarch.compile (Config DoTracingAndBinds) t' of
+    case compile (Tracing LogInfo DoTracing) t' of
       Left err -> assertFailure $ show ("Error while compiling a Plutarch Term" :: String, err)
       Right script -> case evalScript script of
         (Left _err, _, _trace) -> return False

@@ -3,12 +3,12 @@
 //! These strategies always return valid values.
 
 use num_bigint::{BigInt, Sign};
-use proptest::arbitrary::{any, StrategyFor};
+use proptest::arbitrary::{StrategyFor, any};
 use proptest::char::CharStrategy;
 use proptest::collection::vec;
 use proptest::collection::{btree_map, btree_set};
 use proptest::option;
-use proptest::prelude::{prop_oneof, Just};
+use proptest::prelude::{Just, prop_oneof};
 use proptest::result::maybe_err;
 use proptest::strategy::Strategy;
 use std::collections::{BTreeMap, BTreeSet};
@@ -50,9 +50,8 @@ pub fn arb_text() -> StrategyFor<String> {
 }
 
 /// Strategy to generate a complicated data structure
-pub fn arb_complicated(
-) -> impl Strategy<Value = BTreeMap<String, Result<BTreeSet<char>, Option<Result<Vec<u8>, bool>>>>>
-{
+pub fn arb_complicated()
+-> impl Strategy<Value = BTreeMap<String, Result<BTreeSet<char>, Option<Result<Vec<u8>, bool>>>>> {
     btree_map(
         arb_text(),
         maybe_err(

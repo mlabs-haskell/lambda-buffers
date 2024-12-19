@@ -20,14 +20,11 @@
     - Schemas are available at [libs/lbf-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude)
     - Haskell runtime library is in [runtimes/haskell/lbr-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-prelude)
     - Purescript runtime library is in [runtimes/purescript/lbr-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-prelude)
-    - Haskell test suite is in [testsuites/lbt-prelude/lbt-prelude-haskell
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell)
-    - Purescript test suite is in [testsuites/lbt-prelude/lbt-prelude-purescript
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript)
+    - Haskell test suite is in [testsuites/lbt-prelude/lbt-prelude-haskell](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell)
+    - Purescript test suite is in [testsuites/lbt-prelude/lbt-prelude-purescript](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript)
   - LambdaBuffers Plutus
     - Schemas are available at [libs/lbf-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus)
-    - Haskell runtime library is in [runtimes/haskell/lbr-plutus
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus)
+    - Haskell runtime library is in [runtimes/haskell/lbr-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus)
     - Purescript runtime library is in [runtimes/purescript/lbr-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-plutus)
     - Haskell test suite is in [testsuites/lbt-plutus/lbt-plutus-haskell](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell)
     - Purescript test suite is in [testsuites/lbt-plutus/lbt-plutus-purescript](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript)
@@ -55,19 +52,16 @@
   - LambdaBuffers Prelude
     - Schemas are available at [libs/lbf-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude)
     - Haskell runtime library is in [runtimes/haskell/lbr-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-prelude)
-    - Haskell test suite is in [testsuites/lbt-prelude/lbt-prelude-haskell
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell)
+    - Haskell test suite is in [testsuites/lbt-prelude/lbt-prelude-haskell](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell)
   - LambdaBuffers Plutus
     - Schemas are available at [libs/lbf-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus)
-    - Haskell runtime library is in [runtimes/haskell/lbr-plutus
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus)
+    - Haskell runtime library is in [runtimes/haskell/lbr-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus)
     - Haskell test suite is in [testsuites/lbt-plutus/lbt-plutus-haskell](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell)
 - [x] The completed and reviewed test suite implementation for Purescript+CTL codegen module is made available in the project repository.
   - LambdaBuffers Prelude
     - Schemas are available at [libs/lbf-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude)
     - Purescript runtime library is in [runtimes/purescript/lbr-prelude](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-prelude)
-    - Purescript test suite is in [testsuites/lbt-prelude/lbt-prelude-purescript
-](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript)
+    - Purescript test suite is in [testsuites/lbt-prelude/lbt-prelude-purescript](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript)
   - LambdaBuffers Plutus
     - Schemas are available at [libs/lbf-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus)
     - Purescript runtime library is in [runtimes/purescript/lbr-plutus](https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-plutus)
