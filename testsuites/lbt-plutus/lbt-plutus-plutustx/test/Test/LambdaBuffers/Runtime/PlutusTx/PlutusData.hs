@@ -133,7 +133,7 @@ plutusV3Goldens =
     , forallGoldens @HlPlutusV3.Voter @PlPlutusV3.Voter PlutusTx.voterV3Compiled "PlutusV3.Voter" 4
     , forallGoldens @HlPlutusV3.Vote @PlPlutusV3.Vote PlutusTx.voteV3Compiled "PlutusV3.Vote" 2
     , forallGoldens @HlPlutusV3.GovernanceActionId @PlPlutusV3.GovernanceActionId PlutusTx.governanceActionIdV3Compiled "PlutusV3.GovernanceActionId" 0
-    , -- , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee PlutusTx.committeeV3Compiled "PlutusV3.Committee"  9
+    , -- , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee PlutusTx.committeeV3Compiled "PlutusV3.Committee"  0
       forallGoldens @HlPlutusV3.Constitution @PlPlutusV3.Constitution PlutusTx.constitutionV3Compiled "PlutusV3.Constitution" 1
     , forallGoldens @HlPlutusV3.ProtocolVersion @PlPlutusV3.ProtocolVersion PlutusTx.protocolVersionV3Compiled "PlutusV3.ProtocolVersion" 0
     , forallGoldens @HlPlutusV3.ChangedParameters @PlPlutusV3.ChangedParameters PlutusTx.changedParametersV3Compiled "PlutusV3.ChangedParameters" 9
