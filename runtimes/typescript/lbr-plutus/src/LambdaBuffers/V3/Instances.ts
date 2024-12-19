@@ -6,6 +6,53 @@ import * as LbrPrelude from "lbr-prelude";
 import * as Prelude from "prelude";
 import * as Symbols from "./Symbols.js";
 
+// TxId
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.TxId]: Prelude.Eq<PlutusLedgerApiV3.TxId>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.TxId]: Prelude.Json<PlutusLedgerApiV3.TxId>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.TxId] = PlutusLedgerApiV3.eqTxId;
+LbrPrelude.Json[Symbols.TxId] = PlutusLedgerApiV3.jsonTxId;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.TxId]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV3.TxId
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.TxId] = PlutusLedgerApiV3.isPlutusDataTxId;
+
+// TxOutRef
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.TxOutRef]: Prelude.Eq<PlutusLedgerApiV3.TxOutRef>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.TxOutRef]: Prelude.Json<PlutusLedgerApiV3.TxOutRef>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.TxOutRef] = PlutusLedgerApiV3.eqTxOutRef;
+LbrPrelude.Json[Symbols.TxOutRef] = PlutusLedgerApiV3.jsonTxOutRef;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.TxOutRef]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV3.TxOutRef
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.TxOutRef] =
+  PlutusLedgerApiV3.isPlutusDataTxOutRef;
+
 // Rational
 declare module "lbr-prelude" {
   export interface EqInstances {

@@ -176,18 +176,18 @@
       "ScriptContext"
     ],
     "Plutus.V3.TxId": [
-      "lbr-plutus/V1.js",
-      "LbrPlutusV1",
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
       "TxId"
     ],
     "Plutus.V3.TxOutRef": [
-      "lbr-plutus/V1.js",
-      "LbrPlutusV1",
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
       "TxOutRef"
     ],
     "Plutus.V3.TxInInfo": [
-      "lbr-plutus/V1.js",
-      "LbrPlutusV1",
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
       "TxInInfo"
     ],
     "Plutus.V3.Rational": [

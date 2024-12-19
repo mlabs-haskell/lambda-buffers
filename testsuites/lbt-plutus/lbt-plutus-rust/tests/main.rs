@@ -306,7 +306,7 @@ mod json_tests {
     fn protocol_version_v3_from_to_golden_test() {
         from_to_golden_test(
             "PlutusV3.ProtocolVersion",
-            goldens::protocol_vertion_goldens_v3(),
+            goldens::protocol_version_goldens_v3(),
         )
     }
 
@@ -731,7 +731,7 @@ mod plutus_data_tests {
         fn protocol_version_v3_from_to_golden_test() {
             from_to_golden_test(
                 "PlutusV3.ProtocolVersion",
-                goldens::protocol_vertion_goldens_v3(),
+                goldens::protocol_version_goldens_v3(),
             )
         }
 

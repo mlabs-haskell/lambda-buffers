@@ -1044,7 +1044,7 @@ pub fn constitution_goldens_v3() -> List<ConstitutionV3> {
         .collect()
 }
 
-pub fn protocol_vertion_goldens_v3() -> List<ProtocolVersionV3> {
+pub fn protocol_version_goldens_v3() -> List<ProtocolVersionV3> {
     vec![ProtocolVersionV3 {
         major: BigInt::from(1),
         minor: BigInt::from(2),
@@ -1083,7 +1083,7 @@ pub fn governance_action_goldens_v3() -> List<GovernanceActionV3> {
         to_option(governance_action_id_goldens_v3())
             .iter()
             .flat_map(|gov_action_id| {
-                protocol_vertion_goldens_v3()
+                protocol_version_goldens_v3()
                     .into_iter()
                     .map(|protocol_version| {
                         GovernanceActionV3::HardForkInitiation(
@@ -1148,12 +1148,12 @@ pub fn proposal_procedure_goldens_v3() -> List<ProposalProcedureV3> {
         .flat_map(|deposit| {
             credential_goldens()
                 .iter()
-                .flat_map(|return_add| {
+                .flat_map(|return_addr| {
                     governance_action_goldens_v3()
                         .into_iter()
                         .map(|gov_action| ProposalProcedureV3 {
                             deposit: deposit.clone(),
-                            return_addr: return_add.clone(),
+                            return_addr: return_addr.clone(),
                             governance_action: gov_action,
                         })
                         .collect::<Vec<_>>()

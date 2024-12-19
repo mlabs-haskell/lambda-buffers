@@ -1,6 +1,8 @@
 import * as PlutusLedgerApiV3 from "plutus-ledger-api/V3.js";
 import * as PlutusLedgerApiRatio from "plutus-ledger-api/Ratio.js";
 
+export const TxId: unique symbol = Symbol("TxId");
+export const TxOutRef: unique symbol = Symbol("TxOutRef");
 export const Rational: unique symbol = Symbol("Rational");
 export const ColdCommitteeCredential: unique symbol = Symbol(
   "ColdCommitteeCredential",
@@ -23,9 +25,12 @@ export const GovernanceAction: unique symbol = Symbol("GovernanceAction");
 export const ProposalProcedure: unique symbol = Symbol("ProposalProcedure");
 export const ScriptPurpose: unique symbol = Symbol("ScriptPurpose");
 export const ScriptInfo: unique symbol = Symbol("ScriptInfo");
+export const TxInInfo: unique symbol = Symbol("TxInInfo");
 export const TxInfo: unique symbol = Symbol("TxInfo");
 export const ScriptContext: unique symbol = Symbol("ScriptContext");
 
+export type TxId = PlutusLedgerApiV3.TxId;
+export type TxOutRef = PlutusLedgerApiV3.TxOutRef;
 export type Rational = PlutusLedgerApiRatio.Rational;
 export type ColdCommitteeCredential = PlutusLedgerApiV3.ColdCommitteeCredential;
 export type HotCommitteeCredential = PlutusLedgerApiV3.HotCommitteeCredential;
@@ -44,5 +49,6 @@ export type GovernanceAction = PlutusLedgerApiV3.GovernanceAction;
 export type ProposalProcedure = PlutusLedgerApiV3.ProposalProcedure;
 export type ScriptPurpose = PlutusLedgerApiV3.ScriptPurpose;
 export type ScriptInfo = PlutusLedgerApiV3.ScriptInfo;
+export type TxInInfo = PlutusLedgerApiV3.TxInInfo;
 export type TxInfo = PlutusLedgerApiV3.TxInfo;
 export type ScriptContext = PlutusLedgerApiV3.ScriptContext;
