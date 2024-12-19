@@ -48,6 +48,30 @@ generateJson opts = do
       , GoldenJson.writeGoldens goldenDir "PlutusV2.TxOut" $ take n Golden.txOutGoldensV2
       , GoldenJson.writeGoldens goldenDir "PlutusV2.TxInfo" $ take n Golden.txInfoGoldensV2
       , GoldenJson.writeGoldens goldenDir "PlutusV2.ScriptContext" $ take n Golden.scriptContextGoldensV2
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Rational" $ take n Golden.rationalGoldens
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.TxId" $ take n Golden.txIdGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.TxOutRef" $ take n Golden.txOutRefGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ColdCommitteeCredential" $ take n Golden.coldCommitteeCredentialGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.HotCommitteeCredential" $ take n Golden.hotCommitteeCredentialGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.DRepCredential" $ take n Golden.drepCredentialGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.DRep" $ take n Golden.drepGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Delegatee" $ take n Golden.delegateeGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV1.Lovelace" $ take n Golden.lovelaceGoldens
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.TxCert" $ take n Golden.txCertGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Voter" $ take n Golden.voterGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Vote" $ take n Golden.voteGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.GovernanceActionId" $ take n Golden.governanceActionIdGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Committee" $ take n Golden.committeeGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.Constitution" $ take n Golden.constitutionGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ProtocolVersion" $ take n Golden.protocolVersionGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ChangedParameters" $ take n Golden.changedParametersGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.GovernanceAction" $ take n Golden.governanceActionGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ProposalProcedure" $ take n Golden.proposalProcedureGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ScriptPurpose" $ take n Golden.scriptPurposeGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ScriptInfo" $ take n Golden.scriptInfoGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.TxInInfo" $ take n Golden.txInInfoGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.TxInfo" $ take n Golden.txInfoGoldensV3
+      , GoldenJson.writeGoldens goldenDir "PlutusV3.ScriptContext" $ take n Golden.scriptContextGoldensV3
       ]
   putStrLn "[lbt-plutus-golden] Wrote Json goldens:"
   for_ fps putStrLn

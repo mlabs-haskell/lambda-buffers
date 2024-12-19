@@ -16,20 +16,7 @@ module LambdaBuffers.Runtime.Plutarch.LamVal (
   pfromPlutusDataPTryFrom,
 ) where
 
-import Plutarch (
-  ClosedTerm,
-  Term,
-  pcon,
-  pdelay,
-  perror,
-  pforce,
-  phoistAcyclic,
-  plam,
-  plet,
-  (#),
-  type (:-->),
- )
-import Plutarch.Builtin (
+import Plutarch.Builtin.Data (
   PBuiltinList (PNil),
   PData,
   pasConstr,
@@ -37,12 +24,30 @@ import Plutarch.Builtin (
   pasList,
   pchooseData,
   pconstrBuiltin,
-  pdata,
-  pforgetData,
   pfstBuiltin,
   psndBuiltin,
  )
-import Plutarch.Prelude (PAsData, PBuiltinList (PCons), PInteger, PTryFrom, ptrace, ptryFrom)
+import Plutarch.Prelude (
+  ClosedTerm,
+  PAsData,
+  PBuiltinList (PCons),
+  PInteger,
+  PTryFrom,
+  Term,
+  pcon,
+  pdata,
+  pdelay,
+  perror,
+  pforce,
+  pforgetData,
+  phoistAcyclic,
+  plam,
+  plet,
+  ptraceInfo,
+  ptryFrom,
+  (#),
+  type (:-->),
+ )
 import Plutarch.Unsafe (punsafeCoerce)
 
 -- | Plutarch `toPlutusData :: a -> PlutusData`
@@ -100,10 +105,10 @@ pcasePlutusData = phoistAcyclic $ plam $ \handleConstr handleList handleInt hand
     pchooseData
       # pd
       # pdelay (plet (pasConstr # pd) $ \pair -> handleConstr # (pfstBuiltin # pair) # (psndBuiltin # pair))
-      # pdelay (ptrace "Got a PlutusData Map" (handleOther # pd))
+      # pdelay (ptraceInfo "Got a PlutusData Map" (handleOther # pd))
       # pdelay (handleList # (pasList # pd))
       # pdelay (handleInt # (pasInt # pd))
-      # pdelay (ptrace "Got PlutusData Bytes" (handleOther # pd))
+      # pdelay (ptraceInfo "Got PlutusData Bytes" (handleOther # pd))
 
 -- | Haskell `casePlutusData :: (Int -> [PlutusData] -> a) -> ([PlutusData] -> a) -> (Int -> a) -> (PlutusData -> a) -> PlutusData -> a`
 casePlutusData ::

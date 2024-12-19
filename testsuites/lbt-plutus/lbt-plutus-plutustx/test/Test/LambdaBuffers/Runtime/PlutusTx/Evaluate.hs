@@ -1,8 +1,8 @@
 module Test.LambdaBuffers.Runtime.PlutusTx.Evaluate (evalScript, evalScriptHuge, evalScript', EvalError, Script (..), fromCompiledCode, applyArg) where
 
 import Data.Functor (void)
-import Plutarch (Script (Script))
 import Plutarch.Evaluate (EvalError, evalScript, evalScript', evalScriptHuge)
+import Plutarch.Script (Script (Script))
 import PlutusCore qualified as PLC
 import PlutusTx (CompiledCode, Lift, applyCode, getPlc, liftCode)
 import UntypedPlutusCore (

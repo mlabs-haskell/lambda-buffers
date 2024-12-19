@@ -69,4 +69,19 @@ plutusFromToGoldenTests =
   , fromToGoldenTest "PlutusV2.TxOut" Golden.txOutGoldensV2
   , fromToGoldenTest "PlutusV2.TxInfo" Golden.txInfoGoldensV2
   , fromToGoldenTest "PlutusV2.ScriptContext" Golden.scriptContextGoldensV2
+  , fromToGoldenTest "PlutusV3.TxCert" Golden.txCertGoldensV3
+  , fromToGoldenTest "PlutusV3.Voter" Golden.voterGoldensV3
+  , fromToGoldenTest "PlutusV3.Vote" Golden.voteGoldensV3
+  , fromToGoldenTest "PlutusV3.GovernanceActionId" Golden.governanceActionIdGoldensV3
+  , fromToGoldenTest "PlutusV3.Committee" Golden.committeeGoldensV3
+  , fromToGoldenTest "PlutusV3.Constitution" Golden.constitutionGoldensV3
+  , fromToGoldenTest "PlutusV3.ProtocolVersion" Golden.protocolVersionGoldensV3
+  , fromToGoldenTest "PlutusV3.ChangedParameters" Golden.changedParametersGoldensV3
+  , fromToGoldenTest "PlutusV3.GovernanceAction" Golden.governanceActionGoldensV3
+  , fromToGoldenTest "PlutusV3.ProposalProcedure" Golden.proposalProcedureGoldensV3
+  , fromToGoldenTest "PlutusV3.ScriptPurpose" Golden.scriptPurposeGoldensV3
+  , fromToGoldenTest "PlutusV3.ScriptInfo" Golden.scriptInfoGoldensV3
+  , fromToGoldenTest "PlutusV3.TxInInfo" Golden.txInInfoGoldensV3
+  , fromToGoldenTest "PlutusV3.TxInfo" Golden.txInfoGoldensV3
+  , fromToGoldenTest "PlutusV3.ScriptContext" Golden.scriptContextGoldensV3
   ]

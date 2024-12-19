@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=szg251/fix-plutus";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -22,12 +22,12 @@
     ctl.follows = "flake-lang/ctl";
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=staging";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript?ref=connor/v3-types";
       inputs.flake-lang.follows = "flake-lang";
     };
   };

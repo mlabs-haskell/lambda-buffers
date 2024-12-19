@@ -76,7 +76,7 @@
         name = "lbf-plutus";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         dependencies =
           [
@@ -95,7 +95,7 @@
         name = "lbf-plutus";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         dependencies = [ "lbf-prelude" ];
         configs = [
@@ -108,7 +108,7 @@
         name = "lbf-plutus-plutarch";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
         dependencies = [ "lbf-prelude-plutarch" ];
         configs = [
@@ -121,7 +121,7 @@
         name = "lbf-plutus-plutustx";
         src = ./lbf-plutus;
         imports = [ ./lbf-prelude ];
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         classes = [ "Prelude.Eq" "Plutus.V1.PlutusData" ];
         dependencies = [ "lbf-prelude-plutustx" ];
         configs = [
@@ -133,7 +133,7 @@
       lbf-plutus-typescript = config.lbf-nix.lbfTypescript {
         name = "lbf-plutus";
         src = ./lbf-plutus;
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         imports = { lbf-prelude = ./lbf-prelude; };
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         configs = [
@@ -151,7 +151,7 @@
         name = "lbf-plutus";
         src = ./lbf-plutus;
         imports = { lbf-prelude = ./lbf-prelude; };
-        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" ];
+        files = [ "Plutus/V1.lbf" "Plutus/V2.lbf" "Plutus/V3.lbf" ];
         classes = [ "Prelude.Eq" "Prelude.Json" "Plutus.V1.PlutusData" ];
         configs = [
           "${config.packages.codegen-configs}/rust-prelude-base.json"
@@ -161,4 +161,3 @@
     };
   };
 }
-

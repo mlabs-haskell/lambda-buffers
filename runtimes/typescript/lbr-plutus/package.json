@@ -6,6 +6,7 @@
   "exports": {
     "./V1.js": "./dist/LambdaBuffers/V1.js",
     "./V2.js": "./dist/LambdaBuffers/V2.js",
+    "./V3.js": "./dist/LambdaBuffers/V3.js",
     "./Runtime.js": "./dist/LambdaBuffers/Runtime.js",
     "./PlutusData.js": "./dist/LambdaBuffers/PlutusData.js",
     "./package.json": "./package.json"

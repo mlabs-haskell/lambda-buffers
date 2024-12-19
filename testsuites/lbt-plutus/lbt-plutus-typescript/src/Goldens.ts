@@ -1,8 +1,10 @@
 import * as LbrPrelude from "lbr-prelude";
 import * as LbrPlutusV1 from "lbr-plutus/V1.js";
 import * as LbrPlutusV2 from "lbr-plutus/V2.js";
+import * as LbrPlutusV3 from "lbr-plutus/V3.js";
 
 import * as PlaV1 from "plutus-ledger-api/V1.js";
+import * as PlaV3 from "plutus-ledger-api/V3.js";
 import * as PlaMap from "plutus-ledger-api/AssocMap.js";
 
 import * as LbfFooBar from "lbf-plutus-golden-api/LambdaBuffers/Foo/Bar.mjs";
@@ -883,6 +885,607 @@ export function scriptContextGoldensV2(): LbrPrelude.List<
 }
 
 /*
+ * Plutus.V3 goldens
+ */
+
+/**
+ * Hard coded {@link Rational} tests
+ */
+export function rationalGoldensV3(): LbrPrelude.List<LbrPlutusV3.Rational> {
+  return [{ numerator: 1n, denominator: 2n }];
+}
+
+/**
+ * Hard coded {@link TxId} tests
+ */
+export function txIdGoldensV3(): LbrPrelude.List<LbrPlutusV3.TxId> {
+  return [unsafeFromJust(PlaV3.txIdFromBytes(blake2b_256Hash()))];
+}
+
+/**
+ * Hard coded {@link TxOutRef} tests
+ */
+export function txOutRefGoldensV3(): LbrPrelude.List<LbrPlutusV3.TxOutRef> {
+  const res: LbrPrelude.List<LbrPlutusV3.TxOutRef> = [];
+
+  for (const txId of txIdGoldens()) {
+    for (const txIdx of [0n]) {
+      res.push({ txOutRefId: txId, txOutRefIdx: txIdx });
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ColdCommitteeCredential} tests
+ */
+export function coldCommitteeCredentialGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ColdCommitteeCredential
+> {
+  return credentialGoldens();
+}
+
+/**
+ * Hard coded {@link HotCommitteeCredential} tests
+ */
+export function hotCommitteeCredentialGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.HotCommitteeCredential
+> {
+  return credentialGoldens();
+}
+
+/**
+ * Hard coded {@link DRepCredential} tests
+ */
+export function drepCredentialGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.DRepCredential
+> {
+  return credentialGoldens();
+}
+
+/**
+ * Hard coded {@link DRep} tests
+ */
+export function drepGoldensV3(): LbrPrelude.List<LbrPlutusV3.DRep> {
+  const res: LbrPrelude.List<LbrPlutusV3.DRep> = [];
+
+  for (const drepCred of drepCredentialGoldensV3()) {
+    res.push({ name: "DRep", fields: drepCred });
+  }
+
+  res.push({ name: "AlwaysAbstain" });
+
+  res.push({ name: "AlwaysNoConfidence" });
+
+  return res;
+}
+
+/**
+ * Hard coded {@link DRep} tests
+ */
+export function delegateeGoldensV3(): LbrPrelude.List<LbrPlutusV3.Delegatee> {
+  const res: LbrPrelude.List<LbrPlutusV3.Delegatee> = [];
+
+  for (const pkh of pubKeyHashGoldens()) {
+    res.push({ name: "Stake", fields: pkh });
+  }
+
+  for (const drep of drepGoldensV3()) {
+    res.push({ name: "Vote", fields: drep });
+  }
+
+  for (const pkh of pubKeyHashGoldens()) {
+    for (const drep of drepGoldensV3()) {
+      res.push({ name: "StakeVote", fields: [pkh, drep] });
+    }
+  }
+
+  for (const drep of drepGoldensV3()) {
+    res.push({ name: "Vote", fields: drep });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link Lovelace} tests
+ */
+export function lovelaceGoldensV3(): LbrPrelude.List<PlaV1.Lovelace> {
+  return [0n];
+}
+
+/**
+ * Hard coded {@link TxCert} tests
+ */
+export function txCertGoldensV3(): LbrPrelude.List<LbrPlutusV3.TxCert> {
+  const res: LbrPrelude.List<LbrPlutusV3.TxCert> = [];
+
+  for (const cred of credentialGoldens()) {
+    for (const lovelace of toMaybe(lovelaceGoldensV3())) {
+      res.push({ name: "RegStaking", fields: [cred, lovelace] });
+    }
+  }
+
+  for (const cred of credentialGoldens()) {
+    for (const lovelace of toMaybe(lovelaceGoldensV3())) {
+      res.push({ name: "UnRegStaking", fields: [cred, lovelace] });
+    }
+  }
+
+  for (const cred of credentialGoldens()) {
+    for (const delegatee of delegateeGoldensV3()) {
+      res.push({ name: "DelegStaking", fields: [cred, delegatee] });
+    }
+  }
+
+  for (const cred of credentialGoldens()) {
+    for (const delegatee of delegateeGoldensV3()) {
+      for (const lovelace of lovelaceGoldensV3()) {
+        res.push({ name: "RegDeleg", fields: [cred, delegatee, lovelace] });
+      }
+    }
+  }
+
+  for (const cred of drepCredentialGoldensV3()) {
+    for (const lovelace of lovelaceGoldensV3()) {
+      res.push({ name: "RegDRep", fields: [cred, lovelace] });
+    }
+  }
+
+  for (const cred of drepCredentialGoldensV3()) {
+    res.push({ name: "UpdateDRep", fields: cred });
+  }
+
+  for (const cred of drepCredentialGoldensV3()) {
+    for (const lovelace of lovelaceGoldensV3()) {
+      res.push({ name: "UnRegDRep", fields: [cred, lovelace] });
+    }
+  }
+
+  for (const pkh1 of pubKeyHashGoldens()) {
+    for (const pkh2 of pubKeyHashGoldens()) {
+      res.push({ name: "PoolRegister", fields: [pkh1, pkh2] });
+    }
+  }
+
+  for (const pkh of pubKeyHashGoldens()) {
+    res.push({ name: "PoolRetire", fields: [pkh, 0n] });
+  }
+
+  for (const coldCommitteeCred of coldCommitteeCredentialGoldensV3()) {
+    for (const hotCommitteeCred of hotCommitteeCredentialGoldensV3()) {
+      res.push({
+        name: "AuthHotCommittee",
+        fields: [coldCommitteeCred, hotCommitteeCred],
+      });
+    }
+  }
+
+  for (const coldCommitteeCred of coldCommitteeCredentialGoldensV3()) {
+    res.push({ name: "ResignColdCommittee", fields: coldCommitteeCred });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link Voter} tests
+ */
+export function voterGoldensV3(): LbrPrelude.List<LbrPlutusV3.Voter> {
+  const res: LbrPrelude.List<LbrPlutusV3.Voter> = [];
+
+  for (const hotCommitteeCred of hotCommitteeCredentialGoldensV3()) {
+    res.push({ name: "CommitteeVoter", fields: hotCommitteeCred });
+  }
+
+  for (const drepCred of drepCredentialGoldensV3()) {
+    res.push({ name: "DRepVoter", fields: drepCred });
+  }
+
+  for (const pkh of pubKeyHashGoldens()) {
+    res.push({ name: "StakePoolVoter", fields: pkh });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link Vote} tests
+ */
+export function voteGoldensV3(): LbrPrelude.List<LbrPlutusV3.Vote> {
+  return [{ name: "VoteNo" }, { name: "VoteYes" }, { name: "Abstain" }];
+}
+
+/**
+ * Hard coded {@link GovernanceActionId} tests
+ */
+export function governanceActionIdGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.GovernanceActionId
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.GovernanceActionId> = [];
+
+  for (const gaidTxId of txIdGoldensV3()) {
+    res.push({
+      gaidTxId,
+      gaidGovActionIx: 0n,
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link Committee} tests
+ */
+export function committeeGoldensV3(): LbrPrelude.List<LbrPlutusV3.Committee> {
+  const res: LbrPrelude.List<LbrPlutusV3.Committee> = [];
+
+  for (const committeeQuorum of rationalGoldensV3()) {
+    res.push({
+      committeeMembers: PlaMap.fromList(
+        coldCommitteeCredentialGoldensV3().map((cc) => [cc, 0n]),
+      ),
+      committeeQuorum,
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link Constitution} tests
+ */
+export function constitutionGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.Constitution
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.Constitution> = [];
+
+  for (const constitutionScript of toMaybe(scriptHashGoldens())) {
+    res.push({
+      constitutionScript,
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ProtocolVersion} tests
+ */
+export function protocolVersionGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ProtocolVersion
+> {
+  return [{ pvMajor: 1n, pvMinor: 2n }];
+}
+
+/**
+ * Hard coded {@link ChangedParameters} tests
+ */
+export function changedParametersGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ChangedParameters
+> {
+  return plutusDataGoldens();
+}
+
+/**
+ * Hard coded {@link GovernanceAction} tests
+ */
+export function governanceActionGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.GovernanceAction
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.GovernanceAction> = [];
+
+  for (const govActionId of toMaybe(governanceActionIdGoldensV3())) {
+    for (const changedParams of changedParametersGoldensV3()) {
+      for (const scriptHash of toMaybe(scriptHashGoldens())) {
+        res.push({
+          name: "ParameterChange",
+          fields: [govActionId, changedParams, scriptHash],
+        });
+      }
+    }
+  }
+
+  for (const govActionId of toMaybe(governanceActionIdGoldensV3())) {
+    for (const protocolVersion of protocolVersionGoldensV3()) {
+      res.push({
+        name: "HardForkInitiation",
+        fields: [govActionId, protocolVersion],
+      });
+    }
+  }
+
+  for (const scriptHash of toMaybe(scriptHashGoldens())) {
+    res.push({
+      name: "TreasuryWithdrawal",
+      fields: [toMap(credentialGoldens(), lovelaceGoldensV3()), scriptHash],
+    });
+  }
+
+  for (const govActionId of toMaybe(governanceActionIdGoldensV3())) {
+    res.push({
+      name: "NoConfidence",
+      fields: govActionId,
+    });
+  }
+
+  for (const govActionId of toMaybe(governanceActionIdGoldensV3())) {
+    for (const rational of rationalGoldensV3()) {
+      res.push({
+        name: "UpdateCommittee",
+        fields: [
+          govActionId,
+          coldCommitteeCredentialGoldensV3(),
+          toMap(coldCommitteeCredentialGoldensV3(), [0n]),
+          rational,
+        ],
+      });
+    }
+  }
+
+  for (const govActionId of toMaybe(governanceActionIdGoldensV3())) {
+    for (const constitution of constitutionGoldensV3()) {
+      res.push({
+        name: "NewConstitution",
+        fields: [
+          govActionId,
+          constitution,
+        ],
+      });
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ProposalProcedure} tests
+ */
+export function proposalProcedureGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ProposalProcedure
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.ProposalProcedure> = [];
+
+  for (const ppDeposit of lovelaceGoldensV3()) {
+    for (const ppReturnAddr of credentialGoldens()) {
+      for (const ppGovernanceAction of governanceActionGoldensV3()) {
+        res.push({
+          ppDeposit,
+          ppReturnAddr,
+          ppGovernanceAction,
+        });
+      }
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptPurpose} tests
+ */
+export function scriptPurposeGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ScriptPurpose
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.ScriptPurpose> = [];
+
+  for (const currencySymbol of currencySymbolGoldens()) {
+    res.push({
+      fields: currencySymbol,
+      name: "Minting",
+    });
+  }
+
+  for (const txOutRef of txOutRefGoldens()) {
+    res.push({
+      fields: txOutRef,
+      name: "Spending",
+    });
+  }
+
+  for (const credential of credentialGoldens()) {
+    res.push({
+      fields: credential,
+      name: "Rewarding",
+    });
+  }
+
+  for (const txCert of txCertGoldensV3()) {
+    res.push({
+      fields: [0n, txCert],
+      name: "Certifying",
+    });
+  }
+
+  for (const voter of voterGoldensV3()) {
+    res.push({
+      fields: voter,
+      name: "Voting",
+    });
+  }
+
+  for (const proposalProcedure of proposalProcedureGoldensV3()) {
+    res.push({
+      fields: [0n, proposalProcedure],
+      name: "Proposing",
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptPurpose} tests
+ */
+export function scriptInfoGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ScriptInfo
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.ScriptInfo> = [];
+
+  for (const currencySymbol of currencySymbolGoldens()) {
+    res.push({
+      fields: currencySymbol,
+      name: "Minting",
+    });
+  }
+
+  for (const txOutRef of txOutRefGoldens()) {
+    for (const datum of toMaybe(datumGoldens())) {
+      res.push({
+        fields: [txOutRef, datum],
+        name: "Spending",
+      });
+    }
+  }
+
+  for (const credential of credentialGoldens()) {
+    res.push({
+      fields: credential,
+      name: "Rewarding",
+    });
+  }
+
+  for (const txCert of txCertGoldensV3()) {
+    res.push({
+      fields: [0n, txCert],
+      name: "Certifying",
+    });
+  }
+
+  for (const voter of voterGoldensV3()) {
+    res.push({
+      fields: voter,
+      name: "Voting",
+    });
+  }
+
+  for (const proposalProcedure of proposalProcedureGoldensV3()) {
+    res.push({
+      fields: [0n, proposalProcedure],
+      name: "Proposing",
+    });
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link  TxInInfo} tests
+ */
+export function txInInfoGoldensV3(): LbrPrelude.List<LbrPlutusV3.TxInInfo> {
+  const res: LbrPrelude.List<LbrPlutusV3.TxInInfo> = [];
+
+  for (const txOutRef of txOutRefGoldensV3()) {
+    for (const txOut of txOutGoldensV2()) {
+      res.push({ txInInfoOutRef: txOutRef, txInInfoResolved: txOut });
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link TxInfo} tests
+ */
+export function txInfoGoldensV3(): LbrPrelude.List<LbrPlutusV3.TxInfo> {
+  const res: LbrPrelude.List<LbrPlutusV3.TxInfo> = [];
+
+  const wdrls: PlaMap.Map<LbrPlutusV1.Credential, PlaV1.Lovelace> = PlaMap
+    .empty();
+
+  for (const credential of credentialGoldens()) {
+    PlaMap.insert(PlaV1.eqCredential, credential, 1234n, wdrls);
+  }
+
+  const datums: PlaMap.Map<LbrPlutusV1.DatumHash, LbrPlutusV1.Datum> = PlaMap
+    .empty();
+
+  for (const datumHash of datumHashGoldens()) {
+    for (const datum of datumGoldens()) {
+      PlaMap.insert(PlaV1.eqDatumHash, datumHash, datum, datums);
+    }
+  }
+
+  const redeemers: PlaMap.Map<LbrPlutusV3.ScriptPurpose, LbrPlutusV1.Redeemer> =
+    PlaMap.empty();
+
+  for (const scriptPurpose of scriptPurposeGoldensV3()) {
+    for (const redeemer of redeemerGoldens()) {
+      PlaMap.insert(PlaV3.eqScriptPurpose, scriptPurpose, redeemer, redeemers);
+    }
+  }
+
+  for (const fee of lovelaceGoldensV3()) {
+    for (const mint of valueGoldens()) {
+      for (const validRange of posixTimeRangeGoldens()) {
+        for (const id of txIdGoldens()) {
+          for (const currentTreasuryAmount of toMaybe(lovelaceGoldensV3())) {
+            for (const treasuryDonation of toMaybe(lovelaceGoldensV3())) {
+              res.push({
+                txInfoInputs: txInInfoGoldensV2(),
+                txInfoReferenceInputs: txInInfoGoldensV2(),
+                txInfoOutputs: txOutGoldensV2(),
+                txInfoFee: fee,
+                txInfoMint: mint,
+                txInfoTxCerts: txCertGoldensV3(),
+                txInfoWdrl: wdrls,
+                txInfoValidRange: validRange,
+                txInfoSignatories: pubKeyHashGoldens(),
+                txInfoRedeemers: redeemers,
+                txInfoData: datums,
+                txInfoId: id,
+                txInfoVotes: toMap(voterGoldensV3().slice(0, 3), [
+                  toMap(governanceActionIdGoldensV3(), voteGoldensV3()),
+                ]),
+                txInfoProposalProcedures: proposalProcedureGoldensV3().slice(
+                  0,
+                  3,
+                ),
+                txInfoCurrentTreasuryAmount: currentTreasuryAmount,
+                txInfoTreasuryDonation: treasuryDonation,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link ScriptContext} tests
+ */
+export function scriptContextGoldensV3(): LbrPrelude.List<
+  LbrPlutusV3.ScriptContext
+> {
+  const res: LbrPrelude.List<LbrPlutusV3.ScriptContext> = [];
+
+  for (const scriptInfo of scriptInfoGoldensV3()) {
+    for (const redeemer of redeemerGoldens()) {
+      for (const txInfo of txInfoGoldensV3()) {
+        res.push({
+          scriptContextScriptInfo: scriptInfo,
+          scriptContextRedeemer: redeemer,
+          scriptContextTxInfo: txInfo,
+        });
+      }
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Hard coded {@link List} tests
+ */
+export function listGoldens(): LbrPrelude.List<LbrPrelude.Bool>[] {
+  return [[], [true], [false], [true, true, false, false]];
+}
+
+/*
  * Foo.Bar goldens
  */
 
@@ -1151,8 +1754,29 @@ export function eitherGoldens(): LbrPrelude.Either<
 }
 
 /**
- * Hard coded {@link List} tests
+ * Map test cases to Maybe type and add a Nothing variant
  */
-export function listGoldens(): LbrPrelude.List<LbrPrelude.Bool>[] {
-  return [[], [true], [false], [true, true, false, false]];
+export function toMaybe<T>(goldens: LbrPrelude.List<T>): LbrPrelude.Maybe<T>[] {
+  return [
+    { name: "Nothing" },
+    ...goldens.map((golden): LbrPrelude.Maybe<T> => ({
+      name: "Just",
+      fields: golden,
+    })),
+  ];
+}
+
+export function toMap<K, V>(
+  goldensK: LbrPrelude.List<K>,
+  goldensV: LbrPrelude.List<V>,
+): PlaMap.Map<K, V> {
+  const res: [K, V][] = [];
+
+  for (const k of goldensK) {
+    for (const v of goldensV) {
+      res.push([k, v]);
+    }
+  }
+
+  return PlaMap.fromList(res);
 }

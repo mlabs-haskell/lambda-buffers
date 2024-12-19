@@ -5,7 +5,7 @@
       hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
         src = ./.;
 
-        name = "dev-plutus-haskell";
+        name = "plutus-haskell";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
@@ -28,7 +28,7 @@
 
           # Plutarch itself
           "${inputs.plutarch}"
-          "${inputs.plutarch}/plutarch-extra"
+          "${inputs.plutarch}/plutarch-ledger-api"
         ];
 
         devShellTools = config.settings.shell.tools ++ [
