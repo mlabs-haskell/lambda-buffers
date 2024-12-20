@@ -14,7 +14,7 @@ proptest = "^1.6.0"
 serde = "^1.0.216"
 serde_json = { version = "^1.0", features = ["arbitrary_precision"] }
 thiserror = "^1.0.69"
-lbr-prelude-derive = { version = "0.1.2", path = ".extras/lbr-prelude-derive-v0", optional = true }
+lbr-prelude-derive = { version = "1.0.1", path = ".extras/lbr-prelude-derive-v0", optional = true }
 tokio = { version = "1.42.0", optional = true, features = ["fs"] }
 anyhow = { version = "1.0.94", optional = true }
 
