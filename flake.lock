@@ -12897,16 +12897,16 @@
         "prelude-typescript": "prelude-typescript"
       },
       "locked": {
-        "lastModified": 1734622274,
-        "narHash": "sha256-Okv8jTWh0OpInbU1V5vfWTWqR28NcsQpp3a5aQRhZCc=",
+        "lastModified": 1734694783,
+        "narHash": "sha256-Ell99FSJIkKKdOHkOGikt5yXOnXEMEiwwY2aY5M3Q34=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "93f3ac80515db95ec1054077542131738867542f",
+        "rev": "f3f805228b4c2c54a7ed4d782835bef91489a949",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "connor/v3-types",
+        "ref": "v1.1.0",
         "repo": "plutus-ledger-api-typescript",
         "type": "github"
       }
