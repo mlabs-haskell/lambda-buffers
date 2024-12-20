@@ -140,7 +140,7 @@ dependencies = [
 
 [[package]]
 name = "lbr-prelude-derive"
-version = "0.1.2"
+version = "1.0.1"
 dependencies = [
  "lbr-prelude",
  "num-bigint",
