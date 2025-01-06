@@ -12,6 +12,7 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Vector ((!?))
+import Data.Vector qualified
 import LambdaBuffers.Runtime.Plutus.Eq ()
 import LambdaBuffers.Runtime.Prelude (Json (fromJson, toJson), caseJsonConstructor, jsonConstructor, (.:), (.=))
 import PlutusLedgerApi.V1 (BuiltinByteString)
@@ -570,7 +571,7 @@ instance Json PlutusTx.Ratio.Rational where
       "PlutusV3.Rational"
       ( \array ->
           case (array !? 0, array !? 1) of
-            (Just num, Just denom) -> PlutusTx.Ratio.unsafeRatio <$> fromJson num <*> fromJson denom
+            (Just num, Just denom) | Data.Vector.length array == 2 -> PlutusTx.Ratio.unsafeRatio <$> fromJson num <*> fromJson denom
             _ -> fail $ "Expected array of length 2 but got " <> show array
       )
 
