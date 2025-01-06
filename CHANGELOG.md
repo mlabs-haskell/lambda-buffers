@@ -90,7 +90,7 @@ Target: [plutus-ledger-api-typescript 1.1.0](https://github.com/mlabs-haskell/pl
 
 ##### Plutarch
 
-Target: [plutarch 1.5.0](https://github.com/Plutonomicon/plutarch-plutus/tree/780d350f1985e89e3294861118f721d4141b2a6a)
+Target: [plutarch 1.5.0](https://github.com/Plutonomicon/plutarch-plutus/tree/e9e9df286768440733890b1260ad569a2f882890)
 
 ##### PlutusTx
 
