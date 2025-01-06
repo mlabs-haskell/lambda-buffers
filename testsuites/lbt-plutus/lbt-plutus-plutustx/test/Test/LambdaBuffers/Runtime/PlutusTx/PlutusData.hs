@@ -85,7 +85,8 @@ plutusV1Goldens =
     , forallGoldens @(HlPlutus.Extended HlPlutus.POSIXTime) @(PlPlutus.Extended PlPlutus.POSIXTime) PlutusTx.extendedCompiled "PlutusV1.Extended" 2
     , forallGoldens @(HlPlutus.Interval HlPlutus.POSIXTime) @(PlPlutus.Interval PlPlutus.POSIXTime) PlutusTx.intervalCompiled "PlutusV1.Interval" 9
     , forallGoldens @(HlPlutus.LowerBound HlPlutus.POSIXTime) @(PlPlutus.LowerBound PlPlutus.POSIXTime) PlutusTx.lowerBoundCompiled "PlutusV1.LowerBound" 5
-    , -- , forallGoldens @(HlPlutus.Map HlPlutus.CurrencySymbol (HlPlutus.Map HlPlutus.TokenName HlPrelude.Integer)) @(PlPlutus.Map PlPlutus.CurrencySymbol (PlPlutus.Map PlPlutus.TokenName PlPrelude.Integer)) PlutusTx.mapCompiled "PlutusV1.Map" 2
+    , -- AssocMap has no PlutusTx.Eq instance
+      -- , forallGoldens @(HlPlutus.Map HlPlutus.CurrencySymbol (HlPlutus.Map HlPlutus.TokenName HlPrelude.Integer)) @(PlPlutus.Map PlPlutus.CurrencySymbol (PlPlutus.Map PlPlutus.TokenName PlPrelude.Integer)) PlutusTx.mapCompiled "PlutusV1.Map" 2
       forallGoldens @HlPlutus.POSIXTime @PlPlutus.POSIXTime PlutusTx.posixTimeCompiled "PlutusV1.POSIXTime" 2
     , forallGoldens @HlPlutus.POSIXTimeRange @PlPlutus.POSIXTimeRange PlutusTx.posixTimeRangeCompiled "PlutusV1.POSIXTimeRange" 9
     , forallGoldens @HlPlutus.PlutusData @PlPlutus.PlutusData PlutusTx.plutusDataCompiled "PlutusV1.PlutusData" 12
@@ -133,7 +134,8 @@ plutusV3Goldens =
     , forallGoldens @HlPlutusV3.Voter @PlPlutusV3.Voter PlutusTx.voterV3Compiled "PlutusV3.Voter" 4
     , forallGoldens @HlPlutusV3.Vote @PlPlutusV3.Vote PlutusTx.voteV3Compiled "PlutusV3.Vote" 2
     , forallGoldens @HlPlutusV3.GovernanceActionId @PlPlutusV3.GovernanceActionId PlutusTx.governanceActionIdV3Compiled "PlutusV3.GovernanceActionId" 0
-    , -- , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee PlutusTx.committeeV3Compiled "PlutusV3.Committee"  0
+    , -- No PlutusTx.Eq instances for the V3 types below
+      -- , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee PlutusTx.committeeV3Compiled "PlutusV3.Committee"  0
       forallGoldens @HlPlutusV3.Constitution @PlPlutusV3.Constitution PlutusTx.constitutionV3Compiled "PlutusV3.Constitution" 1
     , forallGoldens @HlPlutusV3.ProtocolVersion @PlPlutusV3.ProtocolVersion PlutusTx.protocolVersionV3Compiled "PlutusV3.ProtocolVersion" 0
     , forallGoldens @HlPlutusV3.ChangedParameters @PlPlutusV3.ChangedParameters PlutusTx.changedParametersV3Compiled "PlutusV3.ChangedParameters" 9
