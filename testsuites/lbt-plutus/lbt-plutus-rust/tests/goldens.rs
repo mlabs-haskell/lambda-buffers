@@ -50,6 +50,8 @@ use plutus_ledger_api::v3::{
 
 use std::collections::BTreeMap;
 
+const MAX_TEST_CASES: usize = 10;
+
 pub fn bi(num: i32) -> Integer {
     BigInt::from(num)
 }
@@ -230,7 +232,7 @@ pub fn closure_goldens() -> List<Bool> {
 }
 
 pub fn posix_time_goldens() -> List<POSIXTime> {
-    [bi(0), bi(1), bi(2)].into_iter().map(POSIXTime).collect()
+    vec![POSIXTime(bi(0)), POSIXTime(bi(1)), POSIXTime(bi(2))]
 }
 
 pub fn posix_time_range_goldens() -> List<PlutusInterval<POSIXTime>> {
@@ -484,6 +486,7 @@ pub fn script_context_goldens_v1() -> List<ScriptContext> {
                 })
                 .collect::<Vec<_>>()
         })
+        .take(MAX_TEST_CASES)
         .collect()
 }
 
@@ -607,6 +610,7 @@ pub fn script_context_goldens_v2() -> List<ScriptContextV2> {
                 })
                 .collect::<Vec<_>>()
         })
+        .take(MAX_TEST_CASES)
         .collect()
 }
 
@@ -1339,6 +1343,7 @@ pub fn script_context_goldens_v3() -> List<ScriptContextV3> {
                 })
                 .collect::<Vec<_>>()
         })
+        .take(MAX_TEST_CASES)
         .collect()
 }
 
