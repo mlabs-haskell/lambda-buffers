@@ -11,17 +11,21 @@ import LambdaBuffers.Plutus.V1 qualified as HlPlutus
 import LambdaBuffers.Plutus.V1.Plutarch qualified as PlPlutus
 import LambdaBuffers.Plutus.V2 qualified as HlPlutusV2
 import LambdaBuffers.Plutus.V2.Plutarch qualified as PlPlutusV2
+import LambdaBuffers.Plutus.V3 qualified as HlPlutusV3
+import LambdaBuffers.Plutus.V3.Plutarch qualified as PlPlutusV3
 import LambdaBuffers.Prelude qualified as HlPrelude
 import LambdaBuffers.Prelude.Plutarch qualified as PlPrelude
 import LambdaBuffers.Runtime.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LbPl
 import LambdaBuffers.Runtime.Plutus ()
-import Plutarch (Config (Config), TracingMode (DoTracingAndBinds), pcon, perror, plam, pmatch, (#), (:-->))
-import Plutarch qualified
-import Plutarch.Bool (PBool, pif, (#==))
-import Plutarch.Builtin (PData)
 import Plutarch.Evaluate (evalScriptHuge)
-import Plutarch.Prelude (PAsData, PIsData, PTryFrom, pconstant)
+import Plutarch.Internal.Term (
+  Config (Tracing),
+  LogLevel (LogInfo),
+  TracingMode (DoTracing),
+  compile,
+ )
+import Plutarch.Prelude (PAsData, PBool, PData, PIsData, PTryFrom, Term, pcon, pconstant, perror, pif, plam, pmatch, (#), (#==), (:-->))
 import PlutusTx (Data, ToData)
 import PlutusTx.IsData (FromData, toData)
 import Test.LambdaBuffers.Plutarch.Golden (readGoldenPdJson)
@@ -37,6 +41,7 @@ tests =
     , preludeGoldens
     , plutusV1Goldens
     , plutusV2Goldens
+    , plutusV3Goldens
     ]
 
 transparentGoldens :: TestTree
@@ -108,14 +113,43 @@ plutusV2Goldens =
     , forallGoldens @HlPlutusV2.ScriptContext @PlPlutusV2.ScriptContext "PlutusV2.ScriptContext" 9
     ]
 
+plutusV3Goldens :: TestTree
+plutusV3Goldens =
+  testGroup
+    "LB Plutus.V3 golden types"
+    [ forallGoldens @HlPlutusV3.Rational @PlPlutusV3.Rational "PlutusV3.Rational" 0
+    , forallGoldens @HlPlutusV3.TxId @PlPlutusV3.TxId "PlutusV3.TxId" 0
+    , forallGoldens @HlPlutusV3.TxOutRef @PlPlutusV3.TxOutRef "PlutusV3.TxOutRef" 0
+    , forallGoldens @HlPlutusV3.ColdCommitteeCredential @PlPlutusV3.ColdCommitteeCredential "PlutusV3.ColdCommitteeCredential" 1
+    , forallGoldens @HlPlutusV3.HotCommitteeCredential @PlPlutusV3.HotCommitteeCredential "PlutusV3.HotCommitteeCredential" 1
+    , forallGoldens @HlPlutusV3.DRepCredential @PlPlutusV3.DRepCredential "PlutusV3.DRepCredential" 1
+    , forallGoldens @HlPlutusV3.DRep @PlPlutusV3.DRep "PlutusV3.DRep" 3
+    , forallGoldens @HlPlutusV3.Delegatee @PlPlutusV3.Delegatee "PlutusV3.Delegatee" 8
+    , forallGoldens @HlPlutusV3.TxCert @PlPlutusV3.TxCert "PlutusV3.TxCert" 9
+    , forallGoldens @HlPlutusV3.Voter @PlPlutusV3.Voter "PlutusV3.Voter" 4
+    , forallGoldens @HlPlutusV3.Vote @PlPlutusV3.Vote "PlutusV3.Vote" 2
+    , forallGoldens @HlPlutusV3.GovernanceActionId @PlPlutusV3.GovernanceActionId "PlutusV3.GovernanceActionId" 0
+    , forallGoldens @HlPlutusV3.Committee @PlPlutusV3.Committee "PlutusV3.Committee" 0
+    , forallGoldens @HlPlutusV3.Constitution @PlPlutusV3.Constitution "PlutusV3.Constitution" 1
+    , forallGoldens @HlPlutusV3.ProtocolVersion @PlPlutusV3.ProtocolVersion "PlutusV3.ProtocolVersion" 0
+    , forallGoldens @HlPlutusV3.ChangedParameters @PlPlutusV3.ChangedParameters "PlutusV3.ChangedParameters" 9
+    , forallGoldens @HlPlutusV3.GovernanceAction @PlPlutusV3.GovernanceAction "PlutusV3.GovernanceAction" 9
+    , forallGoldens @HlPlutusV3.ProposalProcedure @PlPlutusV3.ProposalProcedure "PlutusV3.ProposalProcedure" 9
+    , forallGoldens @HlPlutusV3.ScriptPurpose @PlPlutusV3.ScriptPurpose "PlutusV3.ScriptPurpose" 9
+    , forallGoldens @HlPlutusV3.ScriptInfo @PlPlutusV3.ScriptInfo "PlutusV3.ScriptInfo" 9
+    , forallGoldens @HlPlutusV3.TxInInfo @PlPlutusV3.TxInInfo "PlutusV3.TxInInfo" 9
+    , forallGoldens @HlPlutusV3.TxInfo @PlPlutusV3.TxInfo "PlutusV3.TxInfo" 9
+    , forallGoldens @HlPlutusV3.ScriptContext @PlPlutusV3.ScriptContext "PlutusV3.ScriptContext" 9
+    ]
+
 evalRoundTrip :: forall a. (PIsData a, PTryFrom PData (PAsData a)) => Data -> Assertion
-evalRoundTrip pd = case Plutarch.compile (Config DoTracingAndBinds) (roundTripFunction @a # pconstant pd) of
+evalRoundTrip pd = case compile (Tracing LogInfo DoTracing) (roundTripFunction @a # pconstant pd) of
   Left err -> assertFailure $ show ("Error while evaluating a Plutarch Term", err)
   Right script -> case evalScriptHuge script of
     (Left err, _, trace) -> assertFailure $ show ("Error while evaluating a Plutarch Term", err, trace)
     _other -> return ()
 
-roundTripFunction :: forall a s. (PIsData a, PTryFrom PData (PAsData a)) => Plutarch.Term s (PData :--> PBool)
+roundTripFunction :: forall a s. (PIsData a, PTryFrom PData (PAsData a)) => Term s (PData :--> PBool)
 roundTripFunction =
   plam $ \pd ->
     pmatch

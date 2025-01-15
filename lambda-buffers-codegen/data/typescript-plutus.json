@@ -174,6 +174,121 @@
       "lbr-plutus/V2.js",
       "LbrPlutusV2",
       "ScriptContext"
+    ],
+    "Plutus.V3.TxId": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "TxId"
+    ],
+    "Plutus.V3.TxOutRef": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "TxOutRef"
+    ],
+    "Plutus.V3.TxInInfo": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "TxInInfo"
+    ],
+    "Plutus.V3.Rational": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Rational"
+    ],
+    "Plutus.V3.ColdCommitteeCredential": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ColdCommitteeCredential"
+    ],
+    "Plutus.V3.HotCommitteeCredential": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "HotCommitteeCredential"
+    ],
+    "Plutus.V3.DRepCredential": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "DRepCredential"
+    ],
+    "Plutus.V3.DRep": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "DRep"
+    ],
+    "Plutus.V3.Delegatee": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Delegatee"
+    ],
+    "Plutus.V3.TxCert": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "TxCert"
+    ],
+    "Plutus.V3.Voter": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Voter"
+    ],
+    "Plutus.V3.Vote": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Vote"
+    ],
+    "Plutus.V3.GovernanceActionId": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "GovernanceActionId"
+    ],
+    "Plutus.V3.Committee": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Committee"
+    ],
+    "Plutus.V3.Constitution": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "Constitution"
+    ],
+    "Plutus.V3.ProtocolVersion": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ProtocolVersion"
+    ],
+    "Plutus.V3.ChangedParameters": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ChangedParameters"
+    ],
+    "Plutus.V3.GovernanceAction": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "GovernanceAction"
+    ],
+    "Plutus.V3.ProposalProcedure": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ProposalProcedure"
+    ],
+    "Plutus.V3.ScriptPurpose": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ScriptPurpose"
+    ],
+    "Plutus.V3.ScriptInfo": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ScriptInfo"
+    ],
+    "Plutus.V3.TxInfo": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "TxInfo"
+    ],
+    "Plutus.V3.ScriptContext": [
+      "lbr-plutus/V3.js",
+      "LbrPlutusV3",
+      "ScriptContext"
     ]
   },
   "classesConfig": {

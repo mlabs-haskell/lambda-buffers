@@ -11,12 +11,17 @@ import Data.ByteString.Base16 qualified as Base16
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
+import Data.Vector ((!?))
+import Data.Vector qualified
+import LambdaBuffers.Runtime.Plutus.Eq ()
 import LambdaBuffers.Runtime.Prelude (Json (fromJson, toJson), caseJsonConstructor, jsonConstructor, (.:), (.=))
 import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
 import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
-import PlutusTx.AssocMap qualified as PlutusTx
+import PlutusLedgerApi.V3 qualified as PlutusV3
+import PlutusTx.AssocMap qualified as AssocMap
+import PlutusTx.Ratio qualified
 
 prependFailure :: forall {a}. String -> Aeson.Parser a -> Aeson.Parser a
 prependFailure msg = Aeson.prependFailure $ msg <> " > "
@@ -34,6 +39,10 @@ instance Json PlutusV1.AssetClass where
             <*> obj
               .: "token_name"
       )
+
+instance Json PlutusV1.Lovelace where
+  toJson (PlutusV1.Lovelace amount) = toJson amount
+  fromJson json = PlutusV1.Lovelace <$> fromJson json
 
 -- | ByteString representing the currency, hashed with /BLAKE2b-224/. It is empty for `Ada`, 28 bytes for `MintingPolicyHash`.
 instance Json PlutusV1.CurrencySymbol where
@@ -57,11 +66,11 @@ instance Json PlutusV1.TokenName where
 
 instance Json PlutusV1.Value where
   toJson (PlutusV1.Value currencyMap) = toJson currencyMap
-  fromJson v = prependFailure "Plutus.V1.Value" (PlutusV1.Value <$> fromJson @(PlutusTx.Map PlutusV1.CurrencySymbol (PlutusTx.Map PlutusV1.TokenName Integer)) v)
+  fromJson v = prependFailure "Plutus.V1.Value" (PlutusV1.Value <$> fromJson @(AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)) v)
 
-instance (Json k, Json v) => Json (PlutusTx.Map k v) where
-  toJson = toJson . PlutusTx.toList
-  fromJson v = prependFailure "Plutus.V1.Map" $ PlutusTx.fromList <$> fromJson @[(k, v)] v
+instance (Json k, Json v) => Json (AssocMap.Map k v) where
+  toJson = toJson . AssocMap.toList
+  fromJson v = prependFailure "Plutus.V1.Map" $ AssocMap.unsafeFromList <$> fromJson @[(k, v)] v
 
 -- | The hash of a public key. This is frequently used to identify the public key, rather than the key itself. Hashed with BLAKE2b-224. 28 bytes.
 instance Json PlutusV1.PubKeyHash where
@@ -555,6 +564,567 @@ instance Json PlutusV2.TxInInfo where
           return $ PlutusV2.TxInInfo outRef out
       )
 
+instance Json PlutusTx.Ratio.Rational where
+  toJson rational = toJson (PlutusTx.Ratio.numerator rational, PlutusTx.Ratio.denominator rational)
+  fromJson =
+    Aeson.withArray
+      "PlutusV3.Rational"
+      ( \array ->
+          case (array !? 0, array !? 1) of
+            (Just num, Just denom) | Data.Vector.length array == 2 -> PlutusTx.Ratio.unsafeRatio <$> fromJson num <*> fromJson denom
+            _ -> fail $ "Expected array of length 2 but got " <> show array
+      )
+
+-- | A transaction ID, i.e. the hash of a transaction. Hashed with BLAKE2b-256. 32 byte.
+instance Json PlutusV3.TxId where
+  toJson (PlutusV3.TxId txId) = toJson txId
+  fromJson v = prependFailure "Plutus.V3.TxId" (PlutusV3.TxId <$> decodeSizedPlutusBytes 32 v)
+
+instance Json PlutusV3.TxOutRef where
+  toJson (PlutusV3.TxOutRef txId ix) = object ["transaction_id" .= toJson txId, "index" .= toJson ix]
+  fromJson =
+    withObject
+      "Plutus.V3.TxOutRef"
+      ( \obj -> do
+          txId <- obj .: "transaction_id"
+          index <- obj .: "index"
+          return $ PlutusV3.TxOutRef txId index
+      )
+
+instance Json PlutusV3.TxInInfo where
+  toJson (PlutusV3.TxInInfo outRef out) = object ["reference" .= toJson outRef, "output" .= toJson out]
+  fromJson =
+    withObject
+      "Plutus.V3.TxInInfo"
+      ( \obj -> do
+          outRef <- obj .: "reference"
+          out <- obj .: "output"
+          return $ PlutusV3.TxInInfo outRef out
+      )
+
+instance Json PlutusV3.ColdCommitteeCredential where
+  toJson (PlutusV3.ColdCommitteeCredential cred) = toJson cred
+  fromJson json = PlutusV3.ColdCommitteeCredential <$> fromJson json
+
+instance Json PlutusV3.HotCommitteeCredential where
+  toJson (PlutusV3.HotCommitteeCredential cred) = toJson cred
+  fromJson json = PlutusV3.HotCommitteeCredential <$> fromJson json
+
+instance Json PlutusV3.DRepCredential where
+  toJson (PlutusV3.DRepCredential cred) = toJson cred
+  fromJson json = PlutusV3.DRepCredential <$> fromJson json
+
+instance Json PlutusV3.DRep where
+  toJson (PlutusV3.DRep drepCred) = jsonConstructor "DRep" [toJson drepCred]
+  toJson PlutusV3.DRepAlwaysAbstain = jsonConstructor "AlwaysAbstain" []
+  toJson PlutusV3.DRepAlwaysNoConfidence = jsonConstructor "AlwaysNoConfidence" []
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.DRep"
+      [
+        ( "DRep"
+        , \case
+            [json] -> PlutusV3.DRep <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "AlwaysAbstain"
+        , \case
+            [] -> return PlutusV3.DRepAlwaysAbstain
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ,
+        ( "AlwaysNoConfidence"
+        , \case
+            [] -> return PlutusV3.DRepAlwaysNoConfidence
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.Delegatee where
+  toJson (PlutusV3.DelegStake pkh) = jsonConstructor "Stake" [toJson pkh]
+  toJson (PlutusV3.DelegVote drep) = jsonConstructor "Vote" [toJson drep]
+  toJson (PlutusV3.DelegStakeVote pkh drep) = jsonConstructor "StakeVote" [toJson pkh, toJson drep]
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.Delegatee"
+      [
+        ( "Stake"
+        , \case
+            [json] -> PlutusV3.DelegStake <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Vote"
+        , \case
+            [json] -> PlutusV3.DelegVote <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "StakeVote"
+        , \case
+            [json1, json2] -> PlutusV3.DelegStakeVote <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.TxCert where
+  toJson (PlutusV3.TxCertRegStaking cred lovelaces) = jsonConstructor "RegStaking" [toJson cred, toJson lovelaces]
+  toJson (PlutusV3.TxCertUnRegStaking cred lovelaces) = jsonConstructor "UnRegStaking" [toJson cred, toJson lovelaces]
+  toJson (PlutusV3.TxCertDelegStaking cred delegatee) = jsonConstructor "DelegStaking" [toJson cred, toJson delegatee]
+  toJson (PlutusV3.TxCertRegDeleg cred delegatee lovelaces) = jsonConstructor "RegDeleg" [toJson cred, toJson delegatee, toJson lovelaces]
+  toJson (PlutusV3.TxCertRegDRep drep lovelaces) = jsonConstructor "RegDRep" [toJson drep, toJson lovelaces]
+  toJson (PlutusV3.TxCertUpdateDRep drep) = jsonConstructor "UpdateDRep" [toJson drep]
+  toJson (PlutusV3.TxCertUnRegDRep drepCred lovelaces) = jsonConstructor "UnRegDRep" [toJson drepCred, toJson lovelaces]
+  toJson (PlutusV3.TxCertPoolRegister poolId poolVFR) = jsonConstructor "PoolRegister" [toJson poolId, toJson poolVFR]
+  toJson (PlutusV3.TxCertPoolRetire pkh epoch) = jsonConstructor "PoolRetire" [toJson pkh, toJson epoch]
+  toJson (PlutusV3.TxCertAuthHotCommittee coldCred hotCred) = jsonConstructor "AuthHotCommittee" [toJson coldCred, toJson hotCred]
+  toJson (PlutusV3.TxCertResignColdCommittee coldCred) = jsonConstructor "ResignColdCommittee" [toJson coldCred]
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.TxCert"
+      [
+        ( "RegStaking"
+        , \case
+            [cred, lovelaces] -> PlutusV3.TxCertRegStaking <$> fromJson cred <*> fromJson lovelaces
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "UnRegStaking"
+        , \case
+            [cred, lovelaces] -> PlutusV3.TxCertUnRegStaking <$> fromJson cred <*> fromJson lovelaces
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "DelegStaking"
+        , \case
+            [cred, delegatee] -> PlutusV3.TxCertDelegStaking <$> fromJson cred <*> fromJson delegatee
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "RegDeleg"
+        , \case
+            [cred, delegatee, lovelaces] -> PlutusV3.TxCertRegDeleg <$> fromJson cred <*> fromJson delegatee <*> fromJson lovelaces
+            invalid -> fail $ "Expected a JSON Array with 3 elements but got " <> show invalid
+        )
+      ,
+        ( "RegDRep"
+        , \case
+            [drep, lovelaces] -> PlutusV3.TxCertRegDRep <$> fromJson drep <*> fromJson lovelaces
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "UpdateDRep"
+        , \case
+            [drep] -> PlutusV3.TxCertUpdateDRep <$> fromJson drep
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "UnRegDRep"
+        , \case
+            [drepCred, lovelaces] -> PlutusV3.TxCertUnRegDRep <$> fromJson drepCred <*> fromJson lovelaces
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "PoolRegister"
+        , \case
+            [poolId, poolVFR] -> PlutusV3.TxCertPoolRegister <$> fromJson poolId <*> fromJson poolVFR
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "PoolRetire"
+        , \case
+            [pkh, epoch] -> PlutusV3.TxCertPoolRetire <$> fromJson pkh <*> fromJson epoch
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "AuthHotCommittee"
+        , \case
+            [coldCred, hotCred] -> PlutusV3.TxCertAuthHotCommittee <$> fromJson coldCred <*> fromJson hotCred
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "ResignColdCommittee"
+        , \case
+            [coldCred] -> PlutusV3.TxCertResignColdCommittee <$> fromJson coldCred
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.Voter where
+  toJson (PlutusV3.CommitteeVoter cred) = jsonConstructor "CommitteeVoter" [toJson cred]
+  toJson (PlutusV3.DRepVoter drep) = jsonConstructor "DRepVoter" [toJson drep]
+  toJson (PlutusV3.StakePoolVoter pkh) = jsonConstructor "StakePoolVoter" [toJson pkh]
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.Voter"
+      [
+        ( "CommitteeVoter"
+        , \case
+            [json] -> PlutusV3.CommitteeVoter <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "DRepVoter"
+        , \case
+            [json] -> PlutusV3.DRepVoter <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "StakePoolVoter"
+        , \case
+            [json] -> PlutusV3.StakePoolVoter <$> fromJson json
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.Vote where
+  toJson PlutusV3.VoteNo = jsonConstructor "VoteNo" []
+  toJson PlutusV3.VoteYes = jsonConstructor "VoteYes" []
+  toJson PlutusV3.Abstain = jsonConstructor "Abstain" []
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.Vote"
+      [
+        ( "VoteNo"
+        , \case
+            [] -> return PlutusV3.VoteNo
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ,
+        ( "VoteYes"
+        , \case
+            [] -> return PlutusV3.VoteYes
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ,
+        ( "Abstain"
+        , \case
+            [] -> return PlutusV3.Abstain
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.GovernanceActionId where
+  toJson (PlutusV3.GovernanceActionId txId govActionId) = object ["tx_id" .= toJson txId, "gov_action_id" .= toJson govActionId]
+  fromJson =
+    withObject
+      "Plutus.V2.TxInInfo"
+      ( \obj -> do
+          txId <- obj .: "tx_id"
+          govActionId <- obj .: "gov_action_id"
+          return $ PlutusV3.GovernanceActionId txId govActionId
+      )
+
+instance Json PlutusV3.Committee where
+  toJson (PlutusV3.Committee members quorum) = object ["members" .= toJson members, "quorum" .= toJson quorum]
+  fromJson =
+    withObject
+      "Plutus.V3.Committee"
+      ( \obj -> do
+          members <- obj .: "members"
+          quorum <- obj .: "quorum"
+          return $ PlutusV3.Committee members quorum
+      )
+
+instance Json PlutusV3.Constitution where
+  toJson (PlutusV3.Constitution constitutionScript) = object ["constitution_script" .= toJson constitutionScript]
+  fromJson =
+    withObject
+      "Plutus.V3.Constitution"
+      ( \obj -> do
+          constitutionScript <- obj .: "constitution_script"
+          return $ PlutusV3.Constitution constitutionScript
+      )
+
+instance Json PlutusV3.ProtocolVersion where
+  toJson (PlutusV3.ProtocolVersion major minor) = object ["major" .= toJson major, "minor" .= toJson minor]
+  fromJson =
+    withObject
+      "Plutus.V3.ProtocolVersion"
+      ( \obj -> do
+          major <- obj .: "major"
+          minor <- obj .: "minor"
+          return $ PlutusV3.ProtocolVersion major minor
+      )
+
+instance Json PlutusV3.ChangedParameters where
+  toJson (PlutusV3.ChangedParameters plutusData) = toJson plutusData
+  fromJson json = PlutusV3.ChangedParameters <$> fromJson json
+
+instance Json PlutusV3.GovernanceAction where
+  toJson (PlutusV3.ParameterChange govActionId changedParams scriptHash) =
+    jsonConstructor "ParameterChange" [toJson govActionId, toJson changedParams, toJson scriptHash]
+  toJson (PlutusV3.HardForkInitiation govActionId protocolVersion) =
+    jsonConstructor "HardForkInitiation" [toJson govActionId, toJson protocolVersion]
+  toJson (PlutusV3.TreasuryWithdrawals withdrawals scriptHash) =
+    jsonConstructor "TreasuryWithdrawals" [toJson withdrawals, toJson scriptHash]
+  toJson (PlutusV3.NoConfidence govActionId) = jsonConstructor "NoConfidence" [toJson govActionId]
+  toJson (PlutusV3.UpdateCommittee govActionId remove add quorum) =
+    jsonConstructor "UpdateCommittee" [toJson govActionId, toJson remove, toJson add, toJson quorum]
+  toJson (PlutusV3.NewConstitution govActionId constitution) =
+    jsonConstructor "NewConstitution" [toJson govActionId, toJson constitution]
+  toJson PlutusV3.InfoAction = jsonConstructor "InfoAction" []
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.GovernanceAction"
+      [
+        ( "ParameterChange"
+        , \case
+            [json1, json2, json3] -> PlutusV3.ParameterChange <$> fromJson json1 <*> fromJson json2 <*> fromJson json3
+            invalid -> fail $ "Expected a JSON Array with 3 elements but got " <> show invalid
+        )
+      ,
+        ( "HardForkInitiation"
+        , \case
+            [json1, json2] -> PlutusV3.HardForkInitiation <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "TreasuryWithdrawals"
+        , \case
+            [json1, json2] -> PlutusV3.TreasuryWithdrawals <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "NoConfidence"
+        , \case
+            [json1] -> PlutusV3.NoConfidence <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "UpdateCommittee"
+        , \case
+            [json1, json2, json3, json4] ->
+              PlutusV3.UpdateCommittee
+                <$> fromJson json1
+                <*> fromJson json2
+                <*> fromJson json3
+                <*> fromJson json4
+            invalid -> fail $ "Expected a JSON Array with 4 elements but got " <> show invalid
+        )
+      ,
+        ( "NewConstitution"
+        , \case
+            [json1, json2] -> PlutusV3.NewConstitution <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "InfoAction"
+        , \case
+            [] -> return PlutusV3.InfoAction
+            invalid -> fail $ "Expected a JSON Array with 0 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.ProposalProcedure where
+  toJson (PlutusV3.ProposalProcedure deposit returnAddr governanceAction) =
+    object
+      [ "deposit" .= toJson deposit
+      , "return_addr" .= toJson returnAddr
+      , "governance_action" .= toJson governanceAction
+      ]
+  fromJson =
+    withObject
+      "Plutus.V3.ProposalProcedure"
+      ( \obj -> do
+          deposit <- obj .: "deposit"
+          returnAddr <- obj .: "return_addr"
+          governanceAction <- obj .: "governance_action"
+          return $ PlutusV3.ProposalProcedure deposit returnAddr governanceAction
+      )
+
+instance Json PlutusV3.ScriptPurpose where
+  toJson (PlutusV3.Minting curSym) = jsonConstructor "Minting" [toJson curSym]
+  toJson (PlutusV3.Spending txIn) = jsonConstructor "Spending" [toJson txIn]
+  toJson (PlutusV3.Rewarding cred) = jsonConstructor "Rewarding" [toJson cred]
+  toJson (PlutusV3.Certifying index txCert) = jsonConstructor "Certifying" [toJson index, toJson txCert]
+  toJson (PlutusV3.Voting voter) = jsonConstructor "Voting" [toJson voter]
+  toJson (PlutusV3.Proposing index pproc) = jsonConstructor "Proposing" [toJson index, toJson pproc]
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.ScriptPurpose"
+      [
+        ( "Minting"
+        , \case
+            [json1] -> PlutusV3.Minting <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Spending"
+        , \case
+            [json1] -> PlutusV3.Spending <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Rewarding"
+        , \case
+            [json1] -> PlutusV3.Rewarding <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Certifying"
+        , \case
+            [json1, json2] -> PlutusV3.Certifying <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "Voting"
+        , \case
+            [json1] -> PlutusV3.Voting <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Proposing"
+        , \case
+            [json1, json2] -> PlutusV3.Proposing <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.ScriptInfo where
+  toJson (PlutusV3.MintingScript curSym) = jsonConstructor "Minting" [toJson curSym]
+  toJson (PlutusV3.SpendingScript txIn datum) = jsonConstructor "Spending" [toJson txIn, toJson datum]
+  toJson (PlutusV3.RewardingScript cred) = jsonConstructor "Rewarding" [toJson cred]
+  toJson (PlutusV3.CertifyingScript index txCert) = jsonConstructor "Certifying" [toJson index, toJson txCert]
+  toJson (PlutusV3.VotingScript voter) = jsonConstructor "Voting" [toJson voter]
+  toJson (PlutusV3.ProposingScript index pproc) = jsonConstructor "Proposing" [toJson index, toJson pproc]
+  fromJson =
+    caseJsonConstructor
+      "PlutusV3.ScriptInfo"
+      [
+        ( "Minting"
+        , \case
+            [json1] -> PlutusV3.MintingScript <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Spending"
+        , \case
+            [json1, json2] -> PlutusV3.SpendingScript <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Rewarding"
+        , \case
+            [json1] -> PlutusV3.RewardingScript <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Certifying"
+        , \case
+            [json1, json2] -> PlutusV3.CertifyingScript <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ,
+        ( "Voting"
+        , \case
+            [json1] -> PlutusV3.VotingScript <$> fromJson json1
+            invalid -> fail $ "Expected a JSON Array with 1 elements but got " <> show invalid
+        )
+      ,
+        ( "Proposing"
+        , \case
+            [json1, json2] -> PlutusV3.ProposingScript <$> fromJson json1 <*> fromJson json2
+            invalid -> fail $ "Expected a JSON Array with 2 elements but got " <> show invalid
+        )
+      ]
+
+instance Json PlutusV3.TxInfo where
+  toJson
+    ( PlutusV3.TxInfo
+        inputs
+        referenceInputs
+        outputs
+        fee
+        mint
+        txCerts
+        wdrl
+        validRange
+        signatories
+        redeemers
+        datums
+        txId
+        votes
+        proposalProcedures
+        currentTreasuryAmount
+        treasuryDonation
+      ) =
+      object
+        [ "inputs" .= toJson inputs
+        , "reference_inputs" .= toJson referenceInputs
+        , "outputs" .= toJson outputs
+        , "fee" .= toJson fee
+        , "mint" .= toJson mint
+        , "tx_certs" .= toJson txCerts
+        , "wdrl" .= toJson wdrl
+        , "valid_range" .= toJson validRange
+        , "signatories" .= toJson signatories
+        , "redeemers" .= toJson redeemers
+        , "datums" .= toJson datums
+        , "id" .= toJson txId
+        , "votes" .= toJson votes
+        , "proposal_procedures" .= toJson proposalProcedures
+        , "current_treasury_amount" .= toJson currentTreasuryAmount
+        , "treasury_donation" .= toJson treasuryDonation
+        ]
+  fromJson =
+    withObject
+      "Plutus.V3.TxInfo"
+      ( \obj -> do
+          inputs <- obj .: "inputs"
+          referenceInputs <- obj .: "reference_inputs"
+          outputs <- obj .: "outputs"
+          fee <- obj .: "fee"
+          mint <- obj .: "mint"
+          txCerts <- obj .: "tx_certs"
+          wdrl <- obj .: "wdrl"
+          validRange <- obj .: "valid_range"
+          signatories <- obj .: "signatories"
+          redeemers <- obj .: "redeemers"
+          datums <- obj .: "datums"
+          txId <- obj .: "id"
+          votes <- obj .: "votes"
+          proposalProcedures <- obj .: "proposal_procedures"
+          currentTreasuryAmount <- obj .: "current_treasury_amount"
+          treasuryDonation <- obj .: "treasury_donation"
+          return $
+            PlutusV3.TxInfo
+              inputs
+              referenceInputs
+              outputs
+              fee
+              mint
+              txCerts
+              wdrl
+              validRange
+              signatories
+              redeemers
+              datums
+              txId
+              votes
+              proposalProcedures
+              currentTreasuryAmount
+              treasuryDonation
+      )
+
+instance Json PlutusV3.ScriptContext where
+  toJson (PlutusV3.ScriptContext txInfo redeemer scriptInfo) =
+    object
+      [ "tx_info" .= toJson txInfo
+      , "redeemer" .= toJson redeemer
+      , "script_info" .= toJson scriptInfo
+      ]
+  fromJson =
+    withObject
+      "Plutus.V3.ScriptContext"
+      ( \obj -> do
+          txInfo <- obj .: "tx_info"
+          redeemer <- obj .: "redeemer"
+          scriptInfo <- obj .: "script_info"
+          return $ PlutusV3.ScriptContext txInfo redeemer scriptInfo
+      )
+
 encodeByteString :: BSS.ByteString -> Text.Text
 encodeByteString = Text.decodeUtf8 . Base16.encode
 
@@ -567,5 +1137,5 @@ decodeByteString = either (\err -> fail $ "[LambdaBuffers.Runtime.Json.Plutus] F
 decodeSizedPlutusBytes :: Int -> Aeson.Value -> Aeson.Parser PlutusV1.BuiltinByteString
 decodeSizedPlutusBytes size json = do
   bytes <- fromJson @PlutusV1.BuiltinByteString json
-  unless ((BSS.length . PlutusV1.fromBuiltin @_ @BSS.ByteString $ bytes) == size) $ fail $ "Expected Plutus Bytes of size " <> show size <> " but got: " <> show bytes
+  unless ((BSS.length . PlutusV1.fromBuiltin $ bytes) == size) $ fail $ "Expected Plutus Bytes of size " <> show size <> " but got: " <> show bytes
   return bytes

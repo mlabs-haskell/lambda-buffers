@@ -107,8 +107,8 @@ test-suite tests
     , base                            >=4.16
     , lbf-plutus
     , lbf-plutus-golden-api
+    , lbf-plutus-golden-api-plutarch
     , lbf-plutus-plutarch
-    , lbf-plutus-plutarch-golden-api
     , lbf-prelude
     , lbf-prelude-plutarch
     , lbr-plutarch

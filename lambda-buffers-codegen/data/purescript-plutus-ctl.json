@@ -1,33 +1,33 @@
 {
   "opaquesConfig": {
     "Plutus.V1.PlutusData": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.PlutusData",
+      "cardano-types",
+      "Cardano.Types.PlutusData",
       "PlutusData"
     ],
     "Plutus.V1.Address": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.Address",
+      "plutus-types",
+      "Cardano.Plutus.Types.Address",
       "Address"
     ],
     "Plutus.V1.Credential": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.Credential",
+      "plutus-types",
+      "Cardano.Plutus.Types.Credential",
       "Credential"
     ],
     "Plutus.V1.StakingCredential": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.Credential",
+      "plutus-types",
+      "Cardano.Plutus.Types.StakingCredential",
       "StakingCredential"
     ],
     "Plutus.V1.PubKeyHash": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.PubKeyHash",
+      "plutus-types",
+      "Cardano.Plutus.Types.PubKeyHash",
       "PubKeyHash"
     ],
     "Plutus.V1.Bytes": [
       "cardano-transaction-lib",
-      "Ctl.Internal.Types.ByteArray",
+      "Contract.Prim.ByteArray",
       "ByteArray"
     ],
     "Plutus.V1.Interval": [
@@ -61,13 +61,13 @@
       "POSIXTimeRange"
     ],
     "Plutus.V1.Value": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.Value",
+      "plutus-types",
+      "Cardano.Plutus.Types.Value",
       "Value"
     ],
     "Plutus.V1.CurrencySymbol": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.CurrencySymbol",
+      "plutus-types",
+      "Cardano.Plutus.Types.CurrencySymbol",
       "CurrencySymbol"
     ],
     "Plutus.V1.AssetClass": [
@@ -76,48 +76,48 @@
       "AssetClass"
     ],
     "Plutus.V1.TokenName": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.TokenName",
+      "plutus-types",
+      "Cardano.Plutus.Types.TokenName",
       "TokenName"
     ],
     "Plutus.V1.Redeemer": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Redeemer",
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
       "Redeemer"
     ],
     "Plutus.V1.Datum": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Datum",
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
       "Datum"
     ],
     "Plutus.V1.DatumHash": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Datum",
+      "cardano-types",
+      "Cardano.Types",
       "DataHash"
     ],
     "Plutus.V1.RedeemerHash": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Redeemer",
-      "RedeemerHash"
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
     ],
     "Plutus.V1.ScriptHash": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Serialization.Hash",
+      "cardano-types",
+      "Cardano.Types",
       "ScriptHash"
     ],
     "Plutus.V1.TxId": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Transaction",
+      "cardano-types",
+      "Cardano.Types",
       "TransactionHash"
     ],
     "Plutus.V1.TxOutRef": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.Transaction",
+      "cardano-types",
+      "Cardano.Types",
       "TransactionInput"
     ],
     "Plutus.V1.Map": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Plutus.Types.AssocMap",
+      "plutus-types",
+      "Cardano.Plutus.Types.Map",
       "Map"
     ],
     "Plutus.V1.DCert": [
@@ -158,7 +158,7 @@
     "Plutus.V2.TxInInfo": [
       "lbr-plutus",
       "LambdaBuffers.Runtime.Plutus",
-      "TxInInfo"
+      "NotImplemented"
     ],
     "Plutus.V2.TxInfo": [
       "lbr-plutus",
@@ -171,21 +171,136 @@
       "NotImplemented"
     ],
     "Plutus.V2.OutputDatum": [
-      "cardano-transaction-lib",
-      "Ctl.Internal.Types.OutputDatum",
+      "plutus-types",
+      "Cardano.Plutus.Types.OutputDatum",
       "OutputDatum"
+    ],
+    "Plutus.V3.TxId": [
+      "cardano-types",
+      "Cardano.Types",
+      "TransactionHash"
+    ],
+    "Plutus.V3.TxOutRef": [
+      "cardano-types",
+      "Cardano.Types",
+      "TransactionInput"
+    ],
+    "Plutus.V3.TxInInfo": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "TxInInfo"
+    ],
+    "Plutus.V3.Rational": [
+      "rationals",
+      "Data.Ratio",
+      "Ratio"
+    ],
+    "Plutus.V3.ColdCommitteeCredential": [
+      "plutus-types",
+      "Cardano.Types.Credential",
+      "Credential"
+    ],
+    "Plutus.V3.HotCommitteeCredential": [
+      "plutus-types",
+      "Cardano.Types.Credential",
+      "Credential"
+    ],
+    "Plutus.V3.DRepCredential": [
+      "plutus-types",
+      "Cardano.Types.Credential",
+      "Credential"
+    ],
+    "Plutus.V3.DRep": [
+      "cardano-types",
+      "Cardano.Types",
+      "DRep"
+    ],
+    "Plutus.V3.Delegatee": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.TxCert": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.Voter": [
+      "cardano-types",
+      "Cardano.Types",
+      "Voter"
+    ],
+    "Plutus.V3.Vote": [
+      "cardano-types",
+      "Cardano.Types",
+      "Vote"
+    ],
+    "Plutus.V3.GovernanceActionId": [
+      "cardano-types",
+      "Cardano.Types",
+      "GovernanceActionId"
+    ],
+    "Plutus.V3.Committee": [
+      "cardano-types",
+      "Cardano.Types",
+      "Committee"
+    ],
+    "Plutus.V3.Constitution": [
+      "cardano-types",
+      "Cardano.Types",
+      "Constitution"
+    ],
+    "Plutus.V3.ProtocolVersion": [
+      "cardano-types",
+      "Cardano.Types",
+      "ProtocolVersion"
+    ],
+    "Plutus.V3.ChangedParameters": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.GovernanceAction": [
+      "cardano-types",
+      "Cardano.Types",
+      "GovernanceAction"
+    ],
+    "Plutus.V3.ProposalProcedure": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.ScriptPurpose": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.ScriptInfo": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.TxInfo": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
+    ],
+    "Plutus.V3.ScriptContext": [
+      "lbr-plutus",
+      "LambdaBuffers.Runtime.Plutus",
+      "NotImplemented"
     ]
   },
   "classesConfig": {
     "Plutus.V1.PlutusData": [
       [
-        "cardano-transaction-lib",
-        "Ctl.Internal.ToData",
+        "cardano-types",
+        "Cardano.ToData",
         "ToData"
       ],
       [
-        "cardano-transaction-lib",
-        "Ctl.Internal.FromData",
+        "cardano-types",
+        "Cardano.FromData",
         "FromData"
       ]
     ]

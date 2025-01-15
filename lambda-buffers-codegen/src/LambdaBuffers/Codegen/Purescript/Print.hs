@@ -62,11 +62,11 @@ pursClassImplPrinters =
       , printDeriveEq
       )
     ,
-      ( (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.ToData", Purs.MkClassName "ToData")
+      ( (Purs.MkPackageName "cardano-types", Purs.MkModuleName "Cardano.ToData", Purs.MkClassName "ToData")
       , printDeriveToPlutusData
       )
     ,
-      ( (Purs.MkPackageName "cardano-transaction-lib", Purs.MkModuleName "Ctl.Internal.FromData", Purs.MkClassName "FromData")
+      ( (Purs.MkPackageName "cardano-types", Purs.MkModuleName "Cardano.FromData", Purs.MkClassName "FromData")
       , printDeriveFromPlutusData
       )
     ,

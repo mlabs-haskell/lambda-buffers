@@ -15,19 +15,19 @@ _: {
         };
 
         lbf-plutus-golden-api-plutarch = config.lbf-nix.lbfPlutarch {
-          name = "lbf-plutus-plutarch-golden-api";
+          name = "lbf-plutus-golden-api-plutarch";
           src = ./.;
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
 
         lbf-plutus-golden-api-plutustx = config.lbf-nix.lbfPlutusTx {
-          name = "lbf-plutus-plutustx-golden-api";
+          name = "lbf-plutus-golden-api-plutustx";
           src = ./.;
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
 
         lbf-plutus-golden-api-rust = config.lbf-nix.lbfPlutusRust {
-          name = "lbf-plutus-rust-golden-api";
+          name = "lbf-plutus-golden-api";
           src = ./.;
           files = [ "Foo.lbf" "Foo/Bar.lbf" "Days.lbf" ];
         };
@@ -41,4 +41,3 @@ _: {
       };
     };
 }
-

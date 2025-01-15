@@ -87,8 +87,9 @@ common common-language
 library
   import:          common-language
   build-depends:
-    , base      >=4.16
+    , base                 >=4.16
     , plutarch
+    , plutarch-ledger-api
 
   hs-source-dirs:  src
   exposed-modules:

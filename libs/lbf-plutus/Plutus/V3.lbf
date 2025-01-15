@@ -1,0 +1,165 @@
+module Plutus.V3
+
+import Prelude (Eq, Json)
+import Plutus.V1 (PlutusData)
+
+-- PlutusTx.Ratio.Rational
+opaque Rational
+
+instance PlutusData Rational
+instance Eq Rational
+instance Json Rational
+
+-- PlutusLedgerApi.V3.Tx
+opaque TxId
+
+instance PlutusData TxId
+instance Eq TxId
+instance Json TxId
+
+-- PlutusLedgerApi.V3.Tx
+opaque TxOutRef
+
+instance PlutusData TxOutRef
+instance Eq TxOutRef
+instance Json TxOutRef
+
+-- PlutusLedgerApi.V3.Tx
+opaque TxInInfo
+
+instance PlutusData TxInInfo
+instance Eq TxInInfo
+instance Json TxInInfo
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ColdCommitteeCredential
+
+instance PlutusData ColdCommitteeCredential
+instance Eq ColdCommitteeCredential
+instance Json ColdCommitteeCredential
+
+-- PlutusLedgerApi.V3.Contexts
+opaque HotCommitteeCredential
+
+instance PlutusData HotCommitteeCredential
+instance Eq HotCommitteeCredential
+instance Json HotCommitteeCredential
+
+-- PlutusLedgerApi.V3.Contexts
+opaque DRepCredential
+
+instance PlutusData DRepCredential
+instance Eq DRepCredential
+instance Json DRepCredential
+
+-- PlutusLedgerApi.V3.Contexts
+opaque DRep
+
+instance PlutusData DRep
+instance Eq DRep
+instance Json DRep
+
+-- PlutusLedgerApi.V3.Contexts
+opaque Delegatee
+
+instance PlutusData Delegatee
+instance Eq Delegatee
+instance Json Delegatee
+
+-- PlutusLedgerApi.V3.Contexts
+opaque TxCert
+
+instance PlutusData TxCert
+instance Eq TxCert
+instance Json TxCert
+
+-- PlutusLedgerApi.V3.Contexts
+opaque Voter
+
+instance PlutusData Voter
+instance Eq Voter
+instance Json Voter
+
+-- PlutusLedgerApi.V3.Contexts
+opaque Vote
+
+instance PlutusData Vote
+instance Eq Vote
+instance Json Vote
+
+-- PlutusLedgerApi.V3.Contexts
+opaque GovernanceActionId
+
+instance PlutusData GovernanceActionId
+instance Eq GovernanceActionId
+instance Json GovernanceActionId
+
+-- PlutusLedgerApi.V3.Contexts
+opaque Committee
+
+instance PlutusData Committee
+instance Eq Committee
+instance Json Committee
+
+-- PlutusLedgerApi.V3.Contexts
+opaque Constitution
+
+instance PlutusData Constitution
+instance Eq Constitution
+instance Json Constitution
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ProtocolVersion
+
+instance PlutusData ProtocolVersion
+instance Eq ProtocolVersion
+instance Json ProtocolVersion
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ChangedParameters
+
+instance PlutusData ChangedParameters
+instance Eq ChangedParameters
+instance Json ChangedParameters
+
+-- PlutusLedgerApi.V3.Contexts
+opaque GovernanceAction
+
+instance PlutusData GovernanceAction
+instance Eq GovernanceAction
+instance Json GovernanceAction
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ProposalProcedure
+
+instance PlutusData ProposalProcedure
+instance Eq ProposalProcedure
+instance Json ProposalProcedure
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ScriptPurpose
+
+instance PlutusData ScriptPurpose
+instance Eq ScriptPurpose
+instance Json ScriptPurpose
+
+-- PlutusLedgerApi.V3.Contexts
+opaque ScriptInfo
+
+instance PlutusData ScriptInfo
+instance Eq ScriptInfo
+instance Json ScriptInfo
+
+-- PlutusLedgerApi.V3.Contexts
+opaque TxInfo
+
+instance PlutusData TxInfo
+instance Eq TxInfo
+instance Json TxInfo
+
+-- PlutusLedgerApi.3.ScriptContext
+opaque ScriptContext
+
+instance PlutusData ScriptContext
+instance Eq ScriptContext
+instance Json ScriptContext

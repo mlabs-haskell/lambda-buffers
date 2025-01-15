@@ -22,12 +22,12 @@
     ctl.follows = "flake-lang/ctl";
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=e9e9df286768440733890b1260ad569a2f882890";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript?ref=v1.1.0";
       inputs.flake-lang.follows = "flake-lang";
     };
   };
