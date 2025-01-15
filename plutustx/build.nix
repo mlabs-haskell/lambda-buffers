@@ -5,7 +5,7 @@
       hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
         src = ./.;
 
-        name = "lbt-plutus-plutustx";
+        name = "plutustx-example";
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
@@ -33,7 +33,7 @@
     in
 
     {
-      devShells.plutustx-example = hsFlake.devShell;
+      devShells.dev-plutustx-example = hsFlake.devShell;
 
       packages = {
         # Derivation for the .lbf schema file

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="light" dir="ltr">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
@@ -30,15 +30,17 @@
 
         <!-- Custom theme stylesheets -->
 
-    </head>
-    <body class="sidebar-visible no-js">
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -60,19 +62,16 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            html.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var body = document.querySelector('body');
             var sidebar = null;
             var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
@@ -82,45 +81,25 @@
                 sidebar = 'hidden';
             }
             sidebar_toggle.checked = sidebar === 'visible';
-            body.classList.remove('sidebar-visible');
-            body.classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="using-lambdabuffers.html"><strong aria-hidden="true">2.</strong> Using LambdaBuffers</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="haskell.html"><strong aria-hidden="true">2.1.</strong> LambdaBuffers to Haskell</a></li><li class="chapter-item expanded "><a href="plutustx.html"><strong aria-hidden="true">2.2.</strong> LambdaBuffers to PlutusTx</a></li><li class="chapter-item expanded "><a href="purescript.html"><strong aria-hidden="true">2.3.</strong> LambdaBuffers to Purescript</a></li><li class="chapter-item expanded "><a href="plutarch.html" class="active"><strong aria-hidden="true">2.4.</strong> LambdaBuffers to Plutarch</a></li><li class="chapter-item expanded "><a href="rust.html"><strong aria-hidden="true">2.5.</strong> LambdaBuffers to Rust</a></li><li class="chapter-item expanded "><a href="typescript.html"><strong aria-hidden="true">2.6.</strong> LambdaBuffers to Typescript</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">3.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="design.html"><strong aria-hidden="true">4.</strong> Design</a></li><li class="chapter-item expanded "><a href="api.html"><strong aria-hidden="true">5.</strong> API</a></li><li class="chapter-item expanded "><a href="syntax.html"><strong aria-hidden="true">6.</strong> LambdaBuffers Frontend (.lbf) syntax</a></li><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">7.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="codegen.html"><strong aria-hidden="true">8.</strong> Codegen</a></li><li class="chapter-item expanded "><a href="command-line-interface.html"><strong aria-hidden="true">9.</strong> Command line interface</a></li><li class="chapter-item expanded "><a href="comparison-matrix.html"><strong aria-hidden="true">10.</strong> Comparison matrix</a></li><li class="chapter-item expanded "><a href="aiken-integration.html"><strong aria-hidden="true">11.</strong> Aiken Research Document</a></li><li class="chapter-item expanded "><a href="catalyst-reports.html"><strong aria-hidden="true">12.</strong> Catalyst reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst09-reports/index.html"><strong aria-hidden="true">12.1.</strong> Catalyst 9 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-1.html"><strong aria-hidden="true">12.1.1.</strong> Milestone 1: Research</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-2.html"><strong aria-hidden="true">12.1.2.</strong> Milestone 2: End to end proof of concept</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-3.html"><strong aria-hidden="true">12.1.3.</strong> Milestone 3: Testing and documentation</a></li><li class="chapter-item expanded "><a href="catalyst09-reports/milestone-3.html"><strong aria-hidden="true">12.1.4.</strong> Milestone 4: Project adoption</a></li></ol></li><li class="chapter-item expanded "><a href="catalyst10-reports/index.html"><strong aria-hidden="true">12.2.</strong> Catalyst 10 reports</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-1.html"><strong aria-hidden="true">12.2.1.</strong> Milestone 1: Rust support</a></li><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-2.html"><strong aria-hidden="true">12.2.2.</strong> Milestone 2: Javascript/Typescript support</a></li><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-3.html"><strong aria-hidden="true">12.2.3.</strong> Milestone 3: Aiken integration research and development</a></li><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-4.html"><strong aria-hidden="true">12.2.4.</strong> Milestone 4: Separate PlutusTx backend and improvements to existing LambdaBuffers facilities</a></li><li class="chapter-item expanded "><a href="catalyst10-reports/milestone-5.html"><strong aria-hidden="true">12.2.5.</strong> Final Milestone: Project scaffold for Rust, JavaScript and Haskell</a></li></ol></li></ol></li></ol>
-            </div>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <!-- Track and set sidebar scroll position -->
-        <script>
-            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
-            sidebarScrollbox.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
-                }
-            }, { passive: true });
-            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-            sessionStorage.removeItem('sidebar-scroll');
-            if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
-                sidebarScrollbox.scrollTop = sidebarScrollTop;
-            } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-                var activeSection = document.querySelector('#sidebar .active');
-                if (activeSection) {
-                    activeSection.scrollIntoView({ block: 'center' });
-                }
-            }
-        </script>
-
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
@@ -212,6 +191,7 @@ autogen/LambdaBuffers/Example/Plutarch.hs
 <li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude/Prelude.lbf">Prelude</a>,</li>
 <li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V1.lbf">Plutus.V1</a>,</li>
 <li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf">Plutus.V2</a>.</li>
+<li><a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V3.lbf">Plutus.V3</a>.</li>
 </ol>
 <p>Take a look at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/docs/plutarch/api/Example.lbf">Example.lbf</a> schema as an example.</p>
 <h2 id="haskell-libraries"><a class="header" href="#haskell-libraries">Haskell libraries</a></h2>
@@ -237,6 +217,8 @@ result/autogen/LambdaBuffers/Prelude/Plutarch.hs
 result/autogen/
 result/autogen/LambdaBuffers
 result/autogen/LambdaBuffers/Plutus
+result/autogen/LambdaBuffers/Plutus/V3
+result/autogen/LambdaBuffers/Plutus/V3/Plutarch.hs
 result/autogen/LambdaBuffers/Plutus/V2
 result/autogen/LambdaBuffers/Plutus/V2/Plutarch.hs
 result/autogen/LambdaBuffers/Plutus/V1
@@ -246,16 +228,18 @@ result/autogen/LambdaBuffers/Plutus/V1/Plutarch.hs
 <p>The set of imports a Plutarch program using LambdaBuffers would typically need is the following:</p>
 <pre><code class="language-haskell">import LambdaBuffers.Plutus.V1.Plutarch ()
 import LambdaBuffers.Plutus.V2.Plutarch ()
+import LambdaBuffers.Plutus.V3.Plutarch ()
 import LambdaBuffers.Prelude.Plutarch ()
 import LambdaBuffers.Runtime.Plutarch ()
-import Plutarch ()
 import Plutarch.Prelude ()
-import Plutarch.Api.V1 ()
-import Plutarch.Api.V2 ()
+import Plutarch.LedgerApi.V1 ()
+import Plutarch.LedgerApi.V2 ()
+import Plutarch.LedgerApi.V3 ()
 </code></pre>
 <ol>
 <li>LambdaBuffers.Plutus.V1.Plutarch is a module generated from <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V1.lbf">Plutus.V1</a> LambdaBuffers schema and provided by the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus">lbf-plutus-plutarch</a> runtime library.</li>
 <li>LambdaBuffers.Plutus.V2.Plutarch is a module generated from <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf">Plutus.V2</a> LambdaBuffers schema and provided by the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus">lbf-plutus-plutarch</a> runtime library.</li>
+<li>LambdaBuffers.Plutus.V3.Plutarch is a module generated from <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus/Plutus/V2.lbf">Plutus.V3</a> LambdaBuffers schema and provided by the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-plutus">lbf-plutus-plutarch</a> runtime library.</li>
 <li>LambdaBuffers.Prelude.Plutarch is a module generated from <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude/Prelude.lbf">Prelude</a> LambdaBuffers schema and provided by the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/libs/lbf-prelude">lbf-prelude-plutarch</a> runtime library.</li>
 <li>LambdaBuffers.Runtime.Plutarch is a module provided by the <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/main/runtimes/haskell/lbr-plutarch">lbr-plutarch</a> runtime library.</li>
 </ol>
@@ -313,27 +297,22 @@ prod Product a = Bytes a
 import qualified LambdaBuffers.Plutus.V1.Plutarch
 import qualified LambdaBuffers.Prelude.Plutarch
 import qualified LambdaBuffers.Runtime.Plutarch
-import qualified Plutarch
-import qualified Plutarch.Bool
-import qualified Plutarch.Builtin
-import qualified Plutarch.Internal.PlutusType
 import qualified Plutarch.Prelude
-import qualified Plutarch.Show
-import qualified Plutarch.TryFrom
+import qualified Plutarch.Internal.PlutusType
 import qualified Plutarch.Unsafe
 
-data Sum (a :: PType) (s :: Plutarch.S) = Sum'Some (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Sum (a :: PType) (s :: Plutarch.Prelude.S) = Sum'Some (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
                                   | Sum'Nothing
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 
-data Record (a :: PType) (s :: Plutarch.S) = Record (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Record (a :: PType) (s :: Plutarch.Prelude.S) = Record (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 
-data Product (a :: PType) (s :: Plutarch.S) = Product (Plutarch.Term s (Plutarch.Builtin.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Builtin.PAsData PAsData))
+data Product (a :: PType) (s :: Plutarch.Prelude.S) = Product (Plutarch.Prelude.Term s (Plutarch.Prelude.PAsData LambdaBuffers.Plutus.V1.Plutarch.Bytes)) (Plutarch.Term s (Plutarch.Prelude.PAsData PAsData))
   deriving stock GHC.Generics.Generic
-  deriving anyclass Plutarch.Show.PShow
+  deriving anyclass Plutarch.Prelude.PShow
 </code></pre>
 <h3 id="type-class-implementations"><a class="header" href="#type-class-implementations">Type class implementations</a></h3>
 <p>Plutarch has a couple of fundamental type classes essential to its operations namely, <code>PlutusType</code>, <code>PIsData</code>, <code>PTryFrom</code> and <code>PEq</code>.</p>
@@ -467,7 +446,7 @@ autogen/LambdaBuffers/Example/Plutarch.hs
     Executables:   plutarch-example
     Flags:         dev
     Dependencies:  base &gt;=4.16, lbf-plutarch-example-api, lbf-plutus-plutarch,
-                   lbf-prelude-plutarch, lbr-plutarch, plutarch, plutarch-extra,
+                   lbf-prelude-plutarch, lbr-plutarch, plutarch, plutarch-ledger-api,
                    text &gt;=1.2
     Cached:        Yes
 </code></pre>

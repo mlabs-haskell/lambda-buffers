@@ -90,6 +90,7 @@ executable plutarch-example
     , lbf-prelude-plutarch
     , lbr-plutarch
     , plutarch
+    , plutarch-ledger-api
     , text                      >=1.2
 
   hs-source-dirs: app
