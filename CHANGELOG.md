@@ -86,7 +86,7 @@ Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/releases/tag/
 
 ##### Typescript
 
-Target: [plutus-ledger-api-typescript 1.1.0](https://github.com/mlabs-haskell/plutus-ledger-api-typescript/releases/tag/v1.1.0)
+Target: [plutus-ledger-api-typescript 1.1.0](https://github.com/mlabs-haskell/plutus-ledger-api-typescript/releases/tag/v1.2.0)
 
 ##### Plutarch
 
