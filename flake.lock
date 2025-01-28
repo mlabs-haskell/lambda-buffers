@@ -12854,16 +12854,16 @@
         "prelude-typescript": "prelude-typescript"
       },
       "locked": {
-        "lastModified": 1734694783,
-        "narHash": "sha256-Ell99FSJIkKKdOHkOGikt5yXOnXEMEiwwY2aY5M3Q34=",
+        "lastModified": 1737100164,
+        "narHash": "sha256-ptZVUvjPS3uFIZqZqVnzLF8wjFSTEom/201vcKshC0E=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "f3f805228b4c2c54a7ed4d782835bef91489a949",
+        "rev": "20e388793db22e7c52ef088a8e1c3beeced8cb6d",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "v1.1.0",
+        "ref": "v1.2.0",
         "repo": "plutus-ledger-api-typescript",
         "type": "github"
       }

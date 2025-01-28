@@ -1,4 +1,5 @@
 import * as PlutusData from "../PlutusData.js";
+import * as PlutusLedgerApiPreludeInstances from "plutus-ledger-api/Prelude/Instances.js";
 import * as PlutusLedgerApiPlutusData from "plutus-ledger-api/PlutusData.js";
 import * as PlutusLedgerApiAssocMap from "plutus-ledger-api/AssocMap.js";
 import * as PlutusLedgerApiV1 from "plutus-ledger-api/V1.js";
@@ -776,3 +777,27 @@ declare module "../PlutusData.js" {
 }
 PlutusData.IsPlutusData[Symbols.ScriptContext] =
   PlutusLedgerApiV1.isPlutusDataScriptContext;
+
+// Lovelace
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.Lovelace]: Prelude.Eq<PlutusLedgerApiV1.Lovelace>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.Lovelace]: Prelude.Json<PlutusLedgerApiV1.Lovelace>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.Lovelace] = Prelude.eqInteger;
+LbrPrelude.Json[Symbols.Lovelace] = Prelude.jsonInteger;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.Lovelace]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV1.Lovelace
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.Lovelace] =
+  PlutusLedgerApiPreludeInstances.isPlutusDataInteger;

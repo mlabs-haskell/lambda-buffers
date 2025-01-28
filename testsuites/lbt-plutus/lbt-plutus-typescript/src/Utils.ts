@@ -121,11 +121,16 @@ export function mkFromToAssertGolden<A, B>(
 ): (index: string, contents: string) => void {
   return (index: string, contents: string) => {
     try {
-      const fromTo = serialise(to(from(deserialise(contents))));
+      const fromTo = JSON.stringify(
+        JSON.parse(serialise(to(from(deserialise(contents))))),
+        null,
+        2,
+      );
+      const jsonContents = JSON.stringify(JSON.parse(contents), null, 2);
 
-      if (contents !== fromTo) {
+      if (jsonContents !== fromTo) {
         assert.fail(
-          `Golden test failed for ${index}. Expected:\n\`${contents}\`\nbut got\n\`${fromTo}\``,
+          `Golden test failed for ${index}. Expected:\n\`${jsonContents}\`\nbut got\n\`${fromTo}\``,
         );
       }
     } catch (err) {

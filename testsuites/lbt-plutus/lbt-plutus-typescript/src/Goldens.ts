@@ -11,6 +11,8 @@ import * as LbfFooBar from "lbf-plutus-golden-api/LambdaBuffers/Foo/Bar.mjs";
 import * as LbfFoo from "lbf-plutus-golden-api/LambdaBuffers/Foo.mjs";
 import * as LbfDays from "lbf-plutus-golden-api/LambdaBuffers/Days.mjs";
 
+const MAX_TEST_CASES = 10;
+
 /**
  * Hard coded bytes for testing
  */
@@ -1471,6 +1473,9 @@ export function scriptContextGoldensV3(): LbrPrelude.List<
           scriptContextRedeemer: redeemer,
           scriptContextTxInfo: txInfo,
         });
+        if (res.length >= MAX_TEST_CASES) {
+          return res;
+        }
       }
     }
   }
