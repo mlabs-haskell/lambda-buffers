@@ -12808,15 +12808,16 @@
         "prelude-typescript": "prelude-typescript"
       },
       "locked": {
-        "lastModified": 1738347484,
-        "narHash": "sha256-eAkzK8c3L8B/gB6qoAYPhz8IXdXHNrggermLXi8UDHo=",
+        "lastModified": 1738353377,
+        "narHash": "sha256-axMqRPot0dGTNnpKFW6PfHk7RRDaWilMdBGTGOUXTPE=",
         "owner": "mlabs-haskell",
         "repo": "plutus-ledger-api-typescript",
-        "rev": "c06d6a3383d23a8dc98ccf4b63b8b684447c41d6",
+        "rev": "5e74fad26fb61bd41e226bd3be64de2bb4097007",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "v1.2.1",
         "repo": "plutus-ledger-api-typescript",
         "type": "github"
       }
@@ -12998,15 +12999,16 @@
         "pre-commit-hooks-nix": "pre-commit-hooks-nix_3"
       },
       "locked": {
-        "lastModified": 1738346767,
-        "narHash": "sha256-rVKT5LirYOJuoGfTaU8jMvMCEfhOd2RqPJlU1WAhej8=",
+        "lastModified": 1738352819,
+        "narHash": "sha256-d6fCFhMNg77z9mdBOnjf4XpwGuGQHXKyiq/7xR42ubM=",
         "owner": "mlabs-haskell",
         "repo": "prelude-typescript",
-        "rev": "6c6d2c085323582aa584ba06f4148c13d4708e19",
+        "rev": "588054286fae40e29f98a0938d59e2064b639fbe",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
+        "ref": "v1.0.2",
         "repo": "prelude-typescript",
         "type": "github"
       }
