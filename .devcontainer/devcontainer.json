@@ -1,0 +1,7 @@
+{
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "mlabs-devcontainer",
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "code"
+}
