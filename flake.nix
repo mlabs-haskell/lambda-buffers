@@ -1,10 +1,10 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-
     # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+
+    nixpkgs.follows = "flake-lang/nixpkgs";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
