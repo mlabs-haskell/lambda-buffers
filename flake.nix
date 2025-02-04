@@ -1,10 +1,10 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-
     # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+
+    nixpkgs.follows = "flake-lang/nixpkgs";
 
     # Flakes as modules, using this extensively to organize the repo into modules (build.nix files)
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -27,12 +27,13 @@
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript?ref=v1.1.0";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.1";
       inputs.flake-lang.follows = "flake-lang";
     };
   };
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs =
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./settings.nix
@@ -79,6 +80,11 @@
         ./docs/typescript-plutus/build.nix
       ];
       debug = true;
-      systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" "aarch64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+        "aarch64-linux"
+      ];
     };
 }
