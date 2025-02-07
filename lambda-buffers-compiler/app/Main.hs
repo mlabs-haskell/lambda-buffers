@@ -14,14 +14,18 @@ import Options.Applicative (
   info,
   long,
   metavar,
+  option,
   prefs,
   progDesc,
   short,
+  showDefault,
   showHelpOnEmpty,
   showHelpOnError,
   strOption,
   subparser,
+  value,
  )
+import Options.Applicative.Builder (auto)
 
 newtype Command = Compile CompileOpts
 
@@ -43,8 +47,20 @@ outputPathP =
         <> help "File to write the output to (lambdabuffers.compiler.CompilerOutput in .textproto format)"
     )
 
+debugP :: Parser Bool
+debugP =
+  option
+    auto
+    ( long "debug"
+        <> short 'd'
+        <> metavar "DEBUG"
+        <> help "Run everything in debug mode"
+        <> value False
+        <> showDefault
+    )
+
 compileOptsP :: Parser CompileOpts
-compileOptsP = CompileOpts <$> inputPathP <*> outputPathP
+compileOptsP = CompileOpts <$> inputPathP <*> outputPathP <*> debugP
 
 optionsP :: Parser Command
 optionsP =

@@ -34,7 +34,7 @@ allWellFormedCompInpCompile =
     ( H.property $ do
         compInp <- H.forAll genCompilerInput
         coverage compInp
-        compilationOk . runCompiler $ compInp
+        compilationOk . runCompiler True $ compInp
     )
 
 allWellFormedCompInpCompileAfterBenignMut :: HasCallStack => TestTree
@@ -53,8 +53,8 @@ allWellFormedCompInpCompileAfterBenignMut =
             ]
       H.collect mut
       compInp' <- H.forAllWith (const "") (Mut.mutFn mut compInp)
-      let compOut = runCompiler compInp
-          compOut' = runCompiler compInp'
+      let compOut = runCompiler True compInp
+          compOut' = runCompiler True compInp'
       compilationOk compOut
       compilationOk compOut'
       Mut.mutAssert mut compOut'
