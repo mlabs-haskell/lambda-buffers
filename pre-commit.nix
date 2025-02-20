@@ -32,7 +32,6 @@
             cabal-fmt.enable = true;
             fourmolu.enable = true;
             ormolu.settings.cabalDefaultExtensions = true;
-            shellcheck.enable = true;
             hlint.enable = true;
             typos.enable = true;
             typos.settings = {

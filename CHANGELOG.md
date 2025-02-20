@@ -10,39 +10,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Schemas
 
 #### lbf-prelude
+
 ##### Purescript
+
 ##### Rust
+
 ##### Haskell
+
 ##### Typescript
 
 #### lbf-plutus
+
 ##### Purescript
+
 ##### Rust
+
 ##### Haskell
+
 ##### Typescript
+
 ##### Plutarch
+
 ##### PlutusTx
 
 ### Tools
 
 #### Frontend
+
 #### Compiler
+
 #### Compiler Proto API
+
 #### Codegen
+
 #### Codegen Proto API
 
 ### Runtimes
 
 #### Rust lbr-prelude
+
 #### Haskell lbr-prelude
+
 #### Typescript lbr-prelude
+
 #### Purescript lbr-prelude
 
 #### Rust lbr-plutus
+
 #### Haskell lbr-plutus
+
 #### PlutusTx lbr-plutus
+
 #### Plutarch lbr-plutus
+
 #### Typescript lbr-plutus
+
 #### Purescript lbr-plutus
 
 ## LambdaBuffers v2.0.0
@@ -68,7 +90,7 @@ Targets: [ghc 9.6.6](https://www.haskell.org/ghc/download_ghc_9_6_6.html) [base 
 
 ##### Typescript
 
-Target: [prelude-typescript 1.0.1](https://github.com/mlabs-haskell/prelude-typescript/releases/tag/v1.0.1)
+Target: [prelude-typescript 1.0.2](https://github.com/mlabs-haskell/prelude-typescript/releases/tag/v1.0.2)
 
 #### lbf-plutus
 
@@ -86,7 +108,7 @@ Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/releases/tag/
 
 ##### Typescript
 
-Target: [plutus-ledger-api-typescript 1.1.0](https://github.com/mlabs-haskell/plutus-ledger-api-typescript/releases/tag/v1.2.0)
+Target: [plutus-ledger-api-typescript 1.2.1](https://github.com/mlabs-haskell/plutus-ledger-api-typescript/releases/tag/v1.2.1)
 
 ##### Plutarch
 
@@ -99,23 +121,35 @@ Target: [plutustx 1.36.0.0](https://github.com/IntersectMBO/plutus/releases/tag/
 ### Tools
 
 #### Frontend v.1.1.0.0
+
 #### Compiler v.1.1.0.0
+
 #### Compiler Proto API v.1.0.0
+
 #### Codegen v.1.1.0.0
+
 #### Codegen Proto API v.1.0.0
+
 #### Utils v.1.1.0.0
 
 ### Runtimes
 
 #### Rust lbr-prelude v.1.0.1
+
 #### Haskell lbr-prelude v.1.1.0.0
+
 #### Typescript lbr-prelude v.1.0.0
+
 #### Purescript lbr-prelude v.1.0.0
 
 #### Haskell lbr-plutus v.1.1.0.0
+
 #### PlutusTx lbr-plutus v.1.0.0
+
 #### Plutarch lbr-plutus v.1.0.0
+
 #### Typescript lbr-plutus v.1.0.0
+
 #### Purescript lbr-plutus v.1.0.0
 
 ## LambdaBuffers v.1.0.0
@@ -171,21 +205,33 @@ Target: [plutustx 1.20.0.0](https://github.com/IntersectMBO/plutus/tree/1.20.0.0
 ### Tools
 
 #### Frontend v.1.1.0.0
+
 #### Compiler v.1.1.0.0
+
 #### Compiler Proto API v.1.0.0
+
 #### Codegen v.1.1.0.0
+
 #### Codegen Proto API v.1.0.0
+
 #### Utils v.1.1.0.0
 
 ### Runtimes
 
 #### Rust lbr-prelude v.0.1.3
+
 #### Haskell lbr-prelude v.1.1.0.0
+
 #### Typescript lbr-prelude v.1.0.0
+
 #### Purescript lbr-prelude v.1.0.0
 
 #### Haskell lbr-plutus v.1.1.0.0
+
 #### PlutusTx lbr-plutus v.1.0.0
+
 #### Plutarch lbr-plutus v.1.0.0
+
 #### Typescript lbr-plutus v.1.0.0
+
 #### Purescript lbr-plutus v.1.0.0
