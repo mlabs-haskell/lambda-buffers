@@ -1,3 +1,3 @@
-# Catalyst 10 reports
+# Catalyst 13 reports
 
-- [Milestone 1: Rust support](catalyst10-reports/milestone-1.md)
+- [Milestone 1: LambdaBuffers Conway support](catalyst13-reports/milestone-1.md)
