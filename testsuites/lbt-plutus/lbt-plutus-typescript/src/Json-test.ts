@@ -9,6 +9,7 @@ import * as PreludeJson from "prelude/Json.js";
 
 import * as LbrPlutusV1 from "lbr-plutus/V1.js";
 import * as LbrPlutusV2 from "lbr-plutus/V2.js";
+import * as LbrPlutusV3 from "lbr-plutus/V3.js";
 
 describe("JSON tests (toJson . fromJson)", () => {
   const goldenDir = `data/lbt-plutus-golden-data`;
@@ -465,6 +466,20 @@ describe("JSON tests (toJson . fromJson)", () => {
     );
   });
 
+  it(`PlutusV1.Lovelace from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV1\.Lovelace\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV1.Lovelace].fromJson,
+        LbrPrelude.Json[LbrPlutusV1.Lovelace].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.lovelaceGoldensV3(),
+    );
+  });
+
   it(`PlutusV2.TxInInfo from to golden tests`, async () => {
     await Utils.fromToGoldenTest(
       goldenDir,
@@ -532,6 +547,352 @@ describe("JSON tests (toJson . fromJson)", () => {
         PreludeJson.stringify,
       ),
       Goldens.scriptContextGoldensV2(),
+    );
+  });
+
+  it(`PlutusV3.Rational from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Rational\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Rational].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Rational].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.rationalGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Rational from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Rational\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Rational].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Rational].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.rationalGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.TxId from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.TxId\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.TxId].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.TxId].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txIdGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.TxOutRef from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.TxOutRef\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.TxOutRef].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.TxOutRef].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txOutRefGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ColdCommitteeCredential from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(
+        /^PlutusV3\.ColdCommitteeCredential\.[0-9]*\.json$/g,
+      ),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ColdCommitteeCredential].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ColdCommitteeCredential].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.coldCommitteeCredentialGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.HotCommitteeCredential from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(
+        /^PlutusV3\.HotCommitteeCredential\.[0-9]*\.json$/g,
+      ),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.HotCommitteeCredential].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.HotCommitteeCredential].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.hotCommitteeCredentialGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.DRepCredential from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.DRepCredential\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.DRepCredential].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.DRepCredential].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.drepCredentialGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.DRep from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.DRep\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.DRep].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.DRep].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.drepGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Delegatee from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Delegatee\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Delegatee].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Delegatee].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.delegateeGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.TxCert from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.TxCert\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.TxCert].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.TxCert].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txCertGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Voter from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Voter\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Voter].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Voter].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.voteGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Vote from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Vote\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Vote].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Vote].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.voteGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.GovernanceActionId from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(
+        /^PlutusV3\.GovernanceActionId\.[0-9]*\.json$/g,
+      ),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.GovernanceActionId].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.GovernanceActionId].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.governanceActionIdGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Committee from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Committee\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Committee].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Committee].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.committeeGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.Constitution from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.Constitution\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.Constitution].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.Constitution].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.constitutionGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ProtocolVersion from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.ProtocolVersion\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ProtocolVersion].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ProtocolVersion].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.protocolVersionGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ChangedParameters from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(
+        /^PlutusV3\.ChangedParameters\.[0-9]*\.json$/g,
+      ),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ChangedParameters].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ChangedParameters].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.changedParametersGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.GovernanceAction from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.GovernanceAction\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.GovernanceAction].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.GovernanceAction].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.governanceActionGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ProposalProcedure from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(
+        /^PlutusV3\.ProposalProcedure\.[0-9]*\.json$/g,
+      ),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ProposalProcedure].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ProposalProcedure].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.proposalProcedureGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ScriptPurpose from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.ScriptPurpose\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptPurpose].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptPurpose].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptPurposeGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ScriptInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.ScriptInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptInfoGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.TxInInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.TxInInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.TxInInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.TxInInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txInInfoGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.TxInfo from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.TxInfo\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.TxInfo].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.TxInfo].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.txInfoGoldensV3(),
+    );
+  });
+
+  it(`PlutusV3.ScriptContext from to golden tests`, async () => {
+    await Utils.fromToGoldenTest(
+      goldenDir,
+      new Utils.RegExpFileFilter(/^PlutusV3\.ScriptContext\.[0-9]*\.json$/g),
+      Utils.mkFromToAssertGolden(
+        PreludeJson.parseJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptContext].fromJson,
+        LbrPrelude.Json[LbrPlutusV3.ScriptContext].toJson,
+        PreludeJson.stringify,
+      ),
+      Goldens.scriptContextGoldensV3(),
     );
   });
 });
