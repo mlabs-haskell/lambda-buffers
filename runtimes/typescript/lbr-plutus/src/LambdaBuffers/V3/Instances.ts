@@ -515,6 +515,30 @@ declare module "../PlutusData.js" {
 PlutusData.IsPlutusData[Symbols.ScriptInfo] =
   PlutusLedgerApiV3.isPlutusDataScriptInfo;
 
+// TxInInfo
+declare module "lbr-prelude" {
+  export interface EqInstances {
+    [Symbols.TxInInfo]: Prelude.Eq<PlutusLedgerApiV3.TxInInfo>;
+  }
+
+  export interface JsonInstances {
+    [Symbols.TxInInfo]: Prelude.Json<PlutusLedgerApiV3.TxInInfo>;
+  }
+}
+
+LbrPrelude.Eq[Symbols.TxInInfo] = PlutusLedgerApiV3.eqTxInInfo;
+LbrPrelude.Json[Symbols.TxInInfo] = PlutusLedgerApiV3.jsonTxInInfo;
+
+declare module "../PlutusData.js" {
+  export interface IsPlutusDataInstances {
+    [Symbols.TxInInfo]: PlutusLedgerApiPlutusData.IsPlutusData<
+      PlutusLedgerApiV3.TxInInfo
+    >;
+  }
+}
+PlutusData.IsPlutusData[Symbols.TxInInfo] =
+  PlutusLedgerApiV3.isPlutusDataTxInInfo;
+
 // TxInfo
 declare module "lbr-prelude" {
   export interface EqInstances {
