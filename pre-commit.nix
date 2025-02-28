@@ -51,6 +51,10 @@
                 [type.png]
                 extend-glob = ["*.png"]
                 check-file = false
+
+                [type.log]
+                extend-glob = ["*.log"]
+                check-file = false
               '';
               exclude = "fourmolu.yaml";
             };

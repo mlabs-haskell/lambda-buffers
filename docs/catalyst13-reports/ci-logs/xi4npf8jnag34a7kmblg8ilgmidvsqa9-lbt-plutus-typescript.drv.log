@@ -1,0 +1,1095 @@
+querying info about missing paths
+querying info about '/nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript' on 'https://cache.nixos.org'
+downloading 'https://cache.nixos.org/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl.narinfo'
+querying info about '/nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript' on 'https://mlabs.cachix.org'
+downloading 'https://mlabs.cachix.org/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl.narinfo'
+querying info about '/nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript' on 'https://cache.nixos.org'
+downloading 'https://cache.nixos.org/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl.narinfo'
+querying info about '/nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript' on 'https://mlabs.cachix.org'
+downloading 'https://mlabs.cachix.org/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl.narinfo'
+building '/nix/store/xi4npf8jnag34a7kmblg8ilgmidvsqa9-lbt-plutus-typescript.drv'
+Running phase: unpackPhase
+unpacking source archive /nix/store/ln0q0shiv0pyvv0x0pl9vz26i85ij6sl-lbt-plutus-node2nix
+source root is lbt-plutus-node2nix
+Running phase: patchPhase
+Running phase: updateAutotoolsGnuConfigScriptsPhase
+Running phase: configurePhase
+Running phase: buildPhase
+[1mnpm[22m [34mverbose[39m [94mcli[39m /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/bin/node /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/bin/npm
+[1mnpm[22m [36minfo[39m [94musing[39m npm@10.9.2
+[1mnpm[22m [36minfo[39m [94musing[39m node@v22.14.0
+[1mnpm[22m [34mverbose[39m [94mtitle[39m npm run build
+[1mnpm[22m [34mverbose[39m [94margv[39m "run" "build"
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m logs-max:10 dir:/build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_11_162Z-
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m /build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_11_162Z-debug-0.log
+[1G[0K\[1G[0K[1mnpm[22m [32mhttp[39m [94mfetch[39m GET https://registry.npmjs.org/npm attempt 1 failed with EAI_AGAIN
+[1G[0K\[1G[0K
+> lbf-prelude-typescript@1.0.0 build
+> npx tsc -b src/
+
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mcli[39m /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/bin/node /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/lib/node_modules/npm/bin/npm-cli.js
+[1mnpm[22m [36minfo[39m [94musing[39m npm@10.9.2
+[1mnpm[22m [36minfo[39m [94musing[39m node@v22.14.0
+[1mnpm[22m [34mverbose[39m [94mtitle[39m npm exec tsc -b src/
+[1mnpm[22m [34mverbose[39m [94margv[39m "exec" "--" "tsc" "-b" "src/"
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m logs-max:10 dir:/build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_11_523Z-
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m /build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_11_523Z-debug-0.log
+[1G[0K\[1G[0K[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mcwd[39m /build/lbt-plutus-node2nix
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mos[39m Linux 6.6.47
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnode[39m v22.14.0
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnpm [39m v10.9.2
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mexit[39m [33m0[39m
+[1G[0K\[1G[0K[1mnpm[22m [36minfo[39m [94mok[39m
+[1G[0K\[1G[0K[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mcwd[39m /build/lbt-plutus-node2nix
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mos[39m Linux 6.6.47
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnode[39m v22.14.0
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnpm [39m v10.9.2
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mexit[39m [33m0[39m
+[1G[0K\[1G[0K[1mnpm[22m [36minfo[39m [94mok[39m
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mcli[39m /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/bin/node /nix/store/7l1wra7b87yci5dln0hm0k8rwww6f2xj-nodejs-22.14.0/bin/npm
+[1mnpm[22m [36minfo[39m [94musing[39m npm@10.9.2
+[1mnpm[22m [36minfo[39m [94musing[39m node@v22.14.0
+[1mnpm[22m [34mverbose[39m [94mtitle[39m npm test
+[1mnpm[22m [34mverbose[39m [94margv[39m "test"
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m logs-max:10 dir:/build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_14_396Z-
+[1mnpm[22m [34mverbose[39m [94mlogfile[39m /build/tmp.LKs8vnb3es/.npm/_logs/2025-02-24T09_52_14_396Z-debug-0.log
+
+> lbf-prelude-typescript@1.0.0 test
+> node --test
+
+[1G[0Klbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV1\.PlutusData\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+▶ JSON tests (toJson . fromJson)
+  ▶ PlutusV1.PlutusData from to golden tests
+    [32m✔ PlutusV1.PlutusData.0.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.0.json [90m(3.351782ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.1.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.1.json [90m(2.686662ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.2.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.2.json [90m(1.723296ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.3.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.3.json [90m(1.733107ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.4.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.4.json [90m(1.727927ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.5.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.5.json [90m(3.460714ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.6.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.6.json [90m(2.136213ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.7.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.7.json [90m(1.427512ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.8.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.8.json [90m(1.900929ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData.9.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.9.json [90m(1.599474ms)[39m[39m
+  [32m✔ PlutusV1.PlutusData from to golden tests [90m(59.458648ms)[39m[39m
+  ▶ PlutusV1.Address from to golden tests
+    [32m✔ PlutusV1.Address.0.json at data/lbt-plutus-golden-data/PlutusV1.Address.0.json [90m(1.637135ms)[39m[39m
+    [32m✔ PlutusV1.Address.1.json at data/lbt-plutus-golden-data/PlutusV1.Address.1.json [90m(1.95255ms)[39m[39m
+    [32m✔ PlutusV1.Address.2.json at data/lbt-plutus-golden-data/PlutusV1.Address.2.json [90m(2.136143ms)[39m[39m
+    [32m✔ PlutusV1.Address.3.json at data/lbt-plutus-golden-data/PlutusV1.Address.3.json [90m(1.32203ms)[39m[39m
+    [32m✔ PlutusV1.Address.4.json at data/lbt-plutus-golden-data/PlutusV1.Address.4.json [90m(1.576444ms)[39m[39m
+    [32m✔ PlutusV1.Address.5.json at data/lbt-plutus-golden-data/PlutusV1.Address.5.json [90m(1.326031ms)[39m[39m
+    [32m✔ PlutusV1.Address.6.json at data/lbt-plutus-golden-data/PlutusV1.Address.6.json [90m(1.27216ms)[39m[39m
+    [32m✔ PlutusV1.Address.7.json at data/lbt-plutus-golden-data/PlutusV1.Address.7.json [90m(2.994946ms)[39m[39m
+  [32m✔ PlutusV1.Address from to golden tests [90m(32.990039ms)[39m[39m
+  ▶ PlutusV1.Credential from to golden tests
+    [32m✔ PlutusV1.Credential.0.json at data/lbt-plutus-golden-data/PlutusV1.Credential.0.json [90m(1.003296ms)[39m[39m
+    [32m✔ PlutusV1.Credential.1.json at data/lbt-plutus-golden-data/PlutusV1.Credential.1.json [90m(1.123327ms)[39m[39m
+  [32m✔ PlutusV1.Credential from to golden tests [90m(16.907021ms)[39m[39m
+  ▶ PlutusV1.StakingCredential from to golden tests
+    [32m✔ PlutusV1.StakingCredential.0.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.0.json [90m(1.652016ms)[39m[39m
+    [32m✔ PlutusV1.StakingCredential.1.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.1.json [90m(1.109348ms)[39m[39m
+    [32m✔ PlutusV1.StakingCredential.2.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.2.json [90m(0.992325ms)[39m[39m
+  [32m✔ PlutusV1.StakingCredential from to golden tests [90m(19.526241ms)[39m[39m
+  ▶ PlutusV1.PubKeyHash from to golden tests
+    [32m✔ PlutusV1.PubKeyHash.0.json at data/lbt-plutus-golden-data/PlutusV1.PubKeyHash.0.json [90m(0.836793ms)[39m[39m
+  [32m✔ PlutusV1.PubKeyHash from to golden tests [90m(13.927765ms)[39m[39m
+  ▶ PlutusV1.Bytes from to golden tests
+    [32m✔ PlutusV1.Bytes.0.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.0.json [90m(1.94601ms)[39m[39m
+    [32m✔ PlutusV1.Bytes.1.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.1.json [90m(1.23973ms)[39m[39m
+    [32m✔ PlutusV1.Bytes.2.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.2.json [90m(0.791352ms)[39m[39m
+  [32m✔ PlutusV1.Bytes from to golden tests [90m(17.539151ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 36 golden files for /^PlutusV1\.Interval\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.Interval from to golden tests
+    [32m✔ PlutusV1.Interval.0.json at data/lbt-plutus-golden-data/PlutusV1.Interval.0.json [90m(1.32509ms)[39m[39m
+    [32m✔ PlutusV1.Interval.1.json at data/lbt-plutus-golden-data/PlutusV1.Interval.1.json [90m(1.044196ms)[39m[39m
+    [32m✔ PlutusV1.Interval.2.json at data/lbt-plutus-golden-data/PlutusV1.Interval.2.json [90m(1.151898ms)[39m[39m
+    [32m✔ PlutusV1.Interval.3.json at data/lbt-plutus-golden-data/PlutusV1.Interval.3.json [90m(0.953625ms)[39m[39m
+    [32m✔ PlutusV1.Interval.4.json at data/lbt-plutus-golden-data/PlutusV1.Interval.4.json [90m(1.019376ms)[39m[39m
+    [32m✔ PlutusV1.Interval.5.json at data/lbt-plutus-golden-data/PlutusV1.Interval.5.json [90m(0.868423ms)[39m[39m
+    [32m✔ PlutusV1.Interval.6.json at data/lbt-plutus-golden-data/PlutusV1.Interval.6.json [90m(0.804723ms)[39m[39m
+    [32m✔ PlutusV1.Interval.7.json at data/lbt-plutus-golden-data/PlutusV1.Interval.7.json [90m(0.955625ms)[39m[39m
+    [32m✔ PlutusV1.Interval.8.json at data/lbt-plutus-golden-data/PlutusV1.Interval.8.json [90m(0.859393ms)[39m[39m
+    [32m✔ PlutusV1.Interval.9.json at data/lbt-plutus-golden-data/PlutusV1.Interval.9.json [90m(0.868233ms)[39m[39m
+  [32m✔ PlutusV1.Interval from to golden tests [90m(25.727097ms)[39m[39m
+  ▶ PlutusV1.Extended from to golden tests
+    [32m✔ PlutusV1.Extended.0.json at data/lbt-plutus-golden-data/PlutusV1.Extended.0.json [90m(1.153598ms)[39m[39m
+    [32m✔ PlutusV1.Extended.1.json at data/lbt-plutus-golden-data/PlutusV1.Extended.1.json [90m(0.894664ms)[39m[39m
+    [32m✔ PlutusV1.Extended.2.json at data/lbt-plutus-golden-data/PlutusV1.Extended.2.json [90m(1.047936ms)[39m[39m
+  [32m✔ PlutusV1.Extended from to golden tests [90m(18.280232ms)[39m[39m
+  ▶ PlutusV1.LowerBound from to golden tests
+    [32m✔ PlutusV1.LowerBound.0.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.0.json [90m(0.750312ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound.1.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.1.json [90m(0.948195ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound.2.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.2.json [90m(0.881993ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound.3.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.3.json [90m(1.063876ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound.4.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.4.json [90m(0.798542ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound.5.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.5.json [90m(1.234609ms)[39m[39m
+  [32m✔ PlutusV1.LowerBound from to golden tests [90m(20.186361ms)[39m[39m
+  ▶ PlutusV1.UpperBound from to golden tests
+    [32m✔ PlutusV1.UpperBound.0.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.0.json [90m(1.044126ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound.1.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.1.json [90m(0.854273ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound.2.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.2.json [90m(0.859103ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound.3.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.3.json [90m(0.749461ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound.4.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.4.json [90m(0.913944ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound.5.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.5.json [90m(1.052386ms)[39m[39m
+  [32m✔ PlutusV1.UpperBound from to golden tests [90m(20.963084ms)[39m[39m
+  ▶ PlutusV1.POSIXTime from to golden tests
+    [32m✔ PlutusV1.POSIXTime.0.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.0.json [90m(0.829492ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTime.1.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.1.json [90m(0.783672ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTime.2.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.2.json [90m(0.891024ms)[39m[39m
+  [32m✔ PlutusV1.POSIXTime from to golden tests [90m(16.81368ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 36 golden files for /^PlutusV1\.POSIXTimeRange\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.POSIXTimeRange from to golden tests
+    [32m✔ PlutusV1.POSIXTimeRange.0.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.0.json [90m(1.145077ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.1.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.1.json [90m(0.951584ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.2.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.2.json [90m(1.039166ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.3.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.3.json [90m(0.805143ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.4.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.4.json [90m(0.859573ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.5.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.5.json [90m(0.818113ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.6.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.6.json [90m(0.904454ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.7.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.7.json [90m(0.999055ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.8.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.8.json [90m(1.025116ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange.9.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.9.json [90m(0.949655ms)[39m[39m
+  [32m✔ PlutusV1.POSIXTimeRange from to golden tests [90m(25.088818ms)[39m[39m
+  ▶ PlutusV1.CurrencySymbol from to golden tests
+    [32m✔ PlutusV1.CurrencySymbol.0.json at data/lbt-plutus-golden-data/PlutusV1.CurrencySymbol.0.json [90m(0.860863ms)[39m[39m
+    [32m✔ PlutusV1.CurrencySymbol.1.json at data/lbt-plutus-golden-data/PlutusV1.CurrencySymbol.1.json [90m(0.892404ms)[39m[39m
+  [32m✔ PlutusV1.CurrencySymbol from to golden tests [90m(15.427088ms)[39m[39m
+  ▶ PlutusV1.TokenName from to golden tests
+    [32m✔ PlutusV1.TokenName.0.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.0.json [90m(1.204889ms)[39m[39m
+    [32m✔ PlutusV1.TokenName.1.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.1.json [90m(0.858253ms)[39m[39m
+    [32m✔ PlutusV1.TokenName.2.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.2.json [90m(1.043656ms)[39m[39m
+  [32m✔ PlutusV1.TokenName from to golden tests [90m(18.889961ms)[39m[39m
+  ▶ PlutusV1.AssetClass from to golden tests
+    [32m✔ PlutusV1.AssetClass.0.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.0.json [90m(0.919124ms)[39m[39m
+    [32m✔ PlutusV1.AssetClass.1.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.1.json [90m(0.797412ms)[39m[39m
+    [32m✔ PlutusV1.AssetClass.2.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.2.json [90m(0.728211ms)[39m[39m
+    [32m✔ PlutusV1.AssetClass.3.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.3.json [90m(0.68434ms)[39m[39m
+  [32m✔ PlutusV1.AssetClass from to golden tests [90m(17.098234ms)[39m[39m
+  ▶ PlutusV1.Value from to golden tests
+    [32m✔ PlutusV1.Value.0.json at data/lbt-plutus-golden-data/PlutusV1.Value.0.json [90m(1.048026ms)[39m[39m
+    [32m✔ PlutusV1.Value.1.json at data/lbt-plutus-golden-data/PlutusV1.Value.1.json [90m(0.846493ms)[39m[39m
+    [32m✔ PlutusV1.Value.2.json at data/lbt-plutus-golden-data/PlutusV1.Value.2.json [90m(0.902774ms)[39m[39m
+  [32m✔ PlutusV1.Value from to golden tests [90m(16.712088ms)[39m[39m
+  ▶ PlutusV1.Redeemer from to golden tests
+    [32m✔ PlutusV1.Redeemer.0.json at data/lbt-plutus-golden-data/PlutusV1.Redeemer.0.json [90m(0.839923ms)[39m[39m
+  [32m✔ PlutusV1.Redeemer from to golden tests [90m(13.667582ms)[39m[39m
+  ▶ PlutusV1.Datum from to golden tests
+    [32m✔ PlutusV1.Datum.0.json at data/lbt-plutus-golden-data/PlutusV1.Datum.0.json [90m(1.838409ms)[39m[39m
+  [32m✔ PlutusV1.Datum from to golden tests [90m(16.054328ms)[39m[39m
+  ▶ PlutusV1.RedeemerHash from to golden tests
+    [32m✔ PlutusV1.RedeemerHash.0.json at data/lbt-plutus-golden-data/PlutusV1.RedeemerHash.0.json [90m(0.887184ms)[39m[39m
+  [32m✔ PlutusV1.RedeemerHash from to golden tests [90m(13.363497ms)[39m[39m
+  ▶ PlutusV1.DatumHash from to golden tests
+    [32m✔ PlutusV1.DatumHash.0.json at data/lbt-plutus-golden-data/PlutusV1.DatumHash.0.json [90m(1.846779ms)[39m[39m
+  [32m✔ PlutusV1.DatumHash from to golden tests [90m(15.274646ms)[39m[39m
+  ▶ PlutusV1.ScriptHash from to golden tests
+    [32m✔ PlutusV1.ScriptHash.0.json at data/lbt-plutus-golden-data/PlutusV1.ScriptHash.0.json [90m(1.596734ms)[39m[39m
+  [32m✔ PlutusV1.ScriptHash from to golden tests [90m(15.812344ms)[39m[39m
+  ▶ PlutusV1.TxId from to golden tests
+    [32m✔ PlutusV1.TxId.0.json at data/lbt-plutus-golden-data/PlutusV1.TxId.0.json [90m(3.568175ms)[39m[39m
+  [32m✔ PlutusV1.TxId from to golden tests [90m(18.241862ms)[39m[39m
+  ▶ PlutusV1.TxOutRef from to golden tests
+    [32m✔ PlutusV1.TxOutRef.0.json at data/lbt-plutus-golden-data/PlutusV1.TxOutRef.0.json [90m(0.953735ms)[39m[39m
+  [32m✔ PlutusV1.TxOutRef from to golden tests [90m(14.953011ms)[39m[39m
+  ▶ PlutusV1.Map from to golden tests
+    [32m✔ PlutusV1.Map.0.json at data/lbt-plutus-golden-data/PlutusV1.Map.0.json [90m(0.783072ms)[39m[39m
+    [32m✔ PlutusV1.Map.1.json at data/lbt-plutus-golden-data/PlutusV1.Map.1.json [90m(0.796873ms)[39m[39m
+    [32m✔ PlutusV1.Map.2.json at data/lbt-plutus-golden-data/PlutusV1.Map.2.json [90m(1.649836ms)[39m[39m
+  [32m✔ PlutusV1.Map from to golden tests [90m(16.404584ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 48 golden files for /^PlutusV1\.TxInInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.TxInInfo from to golden tests
+    [32m✔ PlutusV1.TxInInfo.0.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.0.json [90m(1.150248ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.1.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.1.json [90m(0.888323ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.2.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.2.json [90m(0.704061ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.3.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.3.json [90m(0.679191ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.4.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.4.json [90m(0.796552ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.5.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.5.json [90m(0.830482ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.6.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.6.json [90m(0.68758ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.7.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.7.json [90m(0.830683ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.8.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.8.json [90m(0.799553ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo.9.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.9.json [90m(0.847703ms)[39m[39m
+  [32m✔ PlutusV1.TxInInfo from to golden tests [90m(22.04462ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 48 golden files for /^PlutusV1\.TxOut\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.TxOut from to golden tests
+    [32m✔ PlutusV1.TxOut.0.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.0.json [90m(0.881504ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.1.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.1.json [90m(0.728581ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.2.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.2.json [90m(0.64185ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.3.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.3.json [90m(0.66348ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.4.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.4.json [90m(0.66121ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.5.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.5.json [90m(0.62879ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.6.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.6.json [90m(0.480187ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.7.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.7.json [90m(2.130443ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.8.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.8.json [90m(1.158118ms)[39m[39m
+    [32m✔ PlutusV1.TxOut.9.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.9.json [90m(0.989356ms)[39m[39m
+  [32m✔ PlutusV1.TxOut from to golden tests [90m(25.350031ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV1\.DCert\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.DCert from to golden tests
+    [32m✔ PlutusV1.DCert.0.json at data/lbt-plutus-golden-data/PlutusV1.DCert.0.json [90m(1.194068ms)[39m[39m
+    [32m✔ PlutusV1.DCert.1.json at data/lbt-plutus-golden-data/PlutusV1.DCert.1.json [90m(0.60886ms)[39m[39m
+    [32m✔ PlutusV1.DCert.2.json at data/lbt-plutus-golden-data/PlutusV1.DCert.2.json [90m(0.63377ms)[39m[39m
+    [32m✔ PlutusV1.DCert.3.json at data/lbt-plutus-golden-data/PlutusV1.DCert.3.json [90m(0.579199ms)[39m[39m
+    [32m✔ PlutusV1.DCert.4.json at data/lbt-plutus-golden-data/PlutusV1.DCert.4.json [90m(0.594649ms)[39m[39m
+    [32m✔ PlutusV1.DCert.5.json at data/lbt-plutus-golden-data/PlutusV1.DCert.5.json [90m(0.542388ms)[39m[39m
+    [32m✔ PlutusV1.DCert.6.json at data/lbt-plutus-golden-data/PlutusV1.DCert.6.json [90m(0.68676ms)[39m[39m
+    [32m✔ PlutusV1.DCert.7.json at data/lbt-plutus-golden-data/PlutusV1.DCert.7.json [90m(0.60899ms)[39m[39m
+    [32m✔ PlutusV1.DCert.8.json at data/lbt-plutus-golden-data/PlutusV1.DCert.8.json [90m(0.61044ms)[39m[39m
+    [32m✔ PlutusV1.DCert.9.json at data/lbt-plutus-golden-data/PlutusV1.DCert.9.json [90m(0.580379ms)[39m[39m
+  [32m✔ PlutusV1.DCert from to golden tests [90m(21.712345ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 18 golden files for /^PlutusV1\.ScriptPurpose\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.ScriptPurpose from to golden tests
+    [32m✔ PlutusV1.ScriptPurpose.0.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.0.json [90m(1.046016ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.1.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.1.json [90m(0.785532ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.2.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.2.json [90m(0.750241ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.3.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.3.json [90m(0.602969ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.4.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.4.json [90m(2.457638ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.5.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.5.json [90m(0.903614ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.6.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.6.json [90m(0.625ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.7.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.7.json [90m(0.683051ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.8.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.8.json [90m(0.6223ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose.9.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.9.json [90m(0.523338ms)[39m[39m
+  [32m✔ PlutusV1.ScriptPurpose from to golden tests [90m(23.945449ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 324 golden files for /^PlutusV1\.TxInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.TxInfo from to golden tests
+    [32m✔ PlutusV1.TxInfo.0.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.0.json [90m(37.58589ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.1.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.1.json [90m(17.999478ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.2.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.2.json [90m(14.665446ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.3.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.3.json [90m(13.112483ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.4.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.4.json [90m(13.038791ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.5.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.5.json [90m(14.24923ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.6.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.6.json [90m(12.353731ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.7.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.7.json [90m(13.183463ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.8.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.8.json [90m(13.704112ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo.9.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.9.json [90m(13.739662ms)[39m[39m
+  [32m✔ PlutusV1.TxInfo from to golden tests [90m(273.38694ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 5832 golden files for /^PlutusV1\.ScriptContext\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV1.ScriptContext from to golden tests
+    [32m✔ PlutusV1.ScriptContext.0.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.0.json [90m(44.426586ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.1.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.1.json [90m(15.759363ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.2.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.2.json [90m(17.202926ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.3.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.3.json [90m(16.630796ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.4.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.4.json [90m(13.251165ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.5.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.5.json [90m(15.604141ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.6.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.6.json [90m(18.535336ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.7.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.7.json [90m(13.856134ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.8.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.8.json [90m(16.066868ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext.9.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.9.json [90m(16.668677ms)[39m[39m
+  [32m✔ PlutusV1.ScriptContext from to golden tests [90m(1161.216232ms)[39m[39m
+  ▶ PlutusV1.Lovelace from to golden tests
+    [32m✔ PlutusV1.Lovelace.0.json at data/lbt-plutus-golden-data/PlutusV1.Lovelace.0.json [90m(0.983646ms)[39m[39m
+  [32m✔ PlutusV1.Lovelace from to golden tests [90m(14.787049ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV2\.TxInInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV2.TxInInfo from to golden tests
+    [32m✔ PlutusV2.TxInInfo.0.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.0.json [90m(1.583015ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.1.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.1.json [90m(1.050346ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.2.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.2.json [90m(1.041406ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.3.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.3.json [90m(0.863683ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.4.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.4.json [90m(0.723551ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.5.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.5.json [90m(0.742731ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.6.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.6.json [90m(0.789292ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.7.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.7.json [90m(0.862623ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.8.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.8.json [90m(1.216309ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo.9.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.9.json [90m(1.95381ms)[39m[39m
+  [32m✔ PlutusV2.TxInInfo from to golden tests [90m(27.128109ms)[39m[39m
+  ▶ PlutusV2.OutputDatum from to golden tests
+    [32m✔ PlutusV2.OutputDatum.0.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.0.json [90m(1.087207ms)[39m[39m
+    [32m✔ PlutusV2.OutputDatum.1.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.1.json [90m(0.994725ms)[39m[39m
+    [32m✔ PlutusV2.OutputDatum.2.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.2.json [90m(0.808163ms)[39m[39m
+  [32m✔ PlutusV2.OutputDatum from to golden tests [90m(17.023662ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV2\.TxOut\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV2.TxOut from to golden tests
+    [32m✔ PlutusV2.TxOut.0.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.0.json [90m(0.862373ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.1.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.1.json [90m(1.035966ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.2.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.2.json [90m(3.755918ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.3.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.3.json [90m(1.498184ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.4.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.4.json [90m(1.136657ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.5.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.5.json [90m(0.938734ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.6.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.6.json [90m(0.807073ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.7.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.7.json [90m(0.66196ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.8.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.8.json [90m(0.68223ms)[39m[39m
+    [32m✔ PlutusV2.TxOut.9.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.9.json [90m(0.66894ms)[39m[39m
+  [32m✔ PlutusV2.TxOut from to golden tests [90m(28.216625ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 324 golden files for /^PlutusV2\.TxInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV2.TxInfo from to golden tests
+    [32m✔ PlutusV2.TxInfo.0.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.0.json [90m(42.616408ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.1.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.1.json [90m(41.627643ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.2.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.2.json [90m(40.451634ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.3.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.3.json [90m(52.145824ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.4.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.4.json [90m(71.168628ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.5.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.5.json [90m(82.077186ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.6.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.6.json [90m(43.535092ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.7.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.7.json [90m(37.159453ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.8.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.8.json [90m(36.157608ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.9.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.9.json [90m(37.5527ms)[39m[39m
+  [32m✔ PlutusV2.TxInfo from to golden tests [90m(612.774056ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 5832 golden files for /^PlutusV2\.ScriptPurpose\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 0. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  [32m✔ PlutusV2.ScriptContext from to golden tests [90m(1504.836649ms)[39m[39m
+  ▶ PlutusV3.Rational from to golden tests
+    [32m✔ PlutusV3.Rational.0.json at data/lbt-plutus-golden-data/PlutusV3.Rational.0.json [90m(1.009525ms)[39m[39m
+  [32m✔ PlutusV3.Rational from to golden tests [90m(13.408067ms)[39m[39m
+  ▶ PlutusV3.Rational from to golden tests
+    [32m✔ PlutusV3.Rational.0.json at data/lbt-plutus-golden-data/PlutusV3.Rational.0.json [90m(0.896044ms)[39m[39m
+  [32m✔ PlutusV3.Rational from to golden tests [90m(12.808558ms)[39m[39m
+  ▶ PlutusV3.TxId from to golden tests
+    [32m✔ PlutusV3.TxId.0.json at data/lbt-plutus-golden-data/PlutusV3.TxId.0.json [90m(0.881104ms)[39m[39m
+  [32m✔ PlutusV3.TxId from to golden tests [90m(13.171433ms)[39m[39m
+  ▶ PlutusV3.TxOutRef from to golden tests
+    [32m✔ PlutusV3.TxOutRef.0.json at data/lbt-plutus-golden-data/PlutusV3.TxOutRef.0.json [90m(0.936805ms)[39m[39m
+  [32m✔ PlutusV3.TxOutRef from to golden tests [90m(12.390201ms)[39m[39m
+  ▶ PlutusV3.ColdCommitteeCredential from to golden tests
+    [32m✔ PlutusV3.ColdCommitteeCredential.0.json at data/lbt-plutus-golden-data/PlutusV3.ColdCommitteeCredential.0.json [90m(0.755771ms)[39m[39m
+    [32m✔ PlutusV3.ColdCommitteeCredential.1.json at data/lbt-plutus-golden-data/PlutusV3.ColdCommitteeCredential.1.json [90m(0.610049ms)[39m[39m
+  [32m✔ PlutusV3.ColdCommitteeCredential from to golden tests [90m(12.732647ms)[39m[39m
+  ▶ PlutusV3.HotCommitteeCredential from to golden tests
+    [32m✔ PlutusV3.HotCommitteeCredential.0.json at data/lbt-plutus-golden-data/PlutusV3.HotCommitteeCredential.0.json [90m(0.776692ms)[39m[39m
+    [32m✔ PlutusV3.HotCommitteeCredential.1.json at data/lbt-plutus-golden-data/PlutusV3.HotCommitteeCredential.1.json [90m(0.539148ms)[39m[39m
+  [32m✔ PlutusV3.HotCommitteeCredential from to golden tests [90m(14.339651ms)[39m[39m
+  ▶ PlutusV3.DRepCredential from to golden tests
+    [32m✔ PlutusV3.DRepCredential.0.json at data/lbt-plutus-golden-data/PlutusV3.DRepCredential.0.json [90m(0.856673ms)[39m[39m
+    [32m✔ PlutusV3.DRepCredential.1.json at data/lbt-plutus-golden-data/PlutusV3.DRepCredential.1.json [90m(0.6087ms)[39m[39m
+  [32m✔ PlutusV3.DRepCredential from to golden tests [90m(15.694183ms)[39m[39m
+  ▶ PlutusV3.DRep from to golden tests
+    [32m✔ PlutusV3.DRep.0.json at data/lbt-plutus-golden-data/PlutusV3.DRep.0.json [90m(0.940524ms)[39m[39m
+    [32m✔ PlutusV3.DRep.1.json at data/lbt-plutus-golden-data/PlutusV3.DRep.1.json [90m(0.61976ms)[39m[39m
+    [32m✔ PlutusV3.DRep.2.json at data/lbt-plutus-golden-data/PlutusV3.DRep.2.json [90m(0.808153ms)[39m[39m
+    [32m✔ PlutusV3.DRep.3.json at data/lbt-plutus-golden-data/PlutusV3.DRep.3.json [90m(0.554459ms)[39m[39m
+  [32m✔ PlutusV3.DRep from to golden tests [90m(14.775388ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV3\.Delegatee\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 9. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.Delegatee from to golden tests
+    [32m✔ PlutusV3.Delegatee.0.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.0.json [90m(0.981045ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.1.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.1.json [90m(0.751272ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.2.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.2.json [90m(0.579279ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.3.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.3.json [90m(0.529308ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.4.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.4.json [90m(0.609299ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.5.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.5.json [90m(1.405712ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.6.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.6.json [90m(1.006846ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.7.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.7.json [90m(0.598809ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.8.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.8.json [90m(0.925585ms)[39m[39m
+  [32m✔ PlutusV3.Delegatee from to golden tests [90m(20.547937ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 74 golden files for /^PlutusV3\.TxCert\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxCert from to golden tests
+    [32m✔ PlutusV3.TxCert.0.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.0.json [90m(1.429262ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.1.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.1.json [90m(0.873914ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.2.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.2.json [90m(0.632759ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.3.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.3.json [90m(0.604799ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.4.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.4.json [90m(0.724861ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.5.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.5.json [90m(0.550869ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.6.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.6.json [90m(0.589539ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.7.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.7.json [90m(0.591729ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.8.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.8.json [90m(0.918184ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.9.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.9.json [90m(0.747432ms)[39m[39m
+  [32m✔ PlutusV3.TxCert from to golden tests [90m(22.901823ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 3 golden files for /^PlutusV3\.Voter\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 5. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.Voter from to golden tests
+    [32m✔ PlutusV3.Voter.0.json at data/lbt-plutus-golden-data/PlutusV3.Voter.0.json [90m(1.121658ms)[39m[39m
+    [32m✔ PlutusV3.Voter.1.json at data/lbt-plutus-golden-data/PlutusV3.Voter.1.json [90m(0.978805ms)[39m[39m
+    [32m✔ PlutusV3.Voter.2.json at data/lbt-plutus-golden-data/PlutusV3.Voter.2.json [90m(1.30024ms)[39m[39m
+    [32m✔ PlutusV3.Voter.3.json at data/lbt-plutus-golden-data/PlutusV3.Voter.3.json [90m(1.743017ms)[39m[39m
+    [32m✔ PlutusV3.Voter.4.json at data/lbt-plutus-golden-data/PlutusV3.Voter.4.json [90m(1.054716ms)[39m[39m
+  [32m✔ PlutusV3.Voter from to golden tests [90m(20.09107ms)[39m[39m
+  ▶ PlutusV3.Vote from to golden tests
+    [32m✔ PlutusV3.Vote.0.json at data/lbt-plutus-golden-data/PlutusV3.Vote.0.json [90m(1.25302ms)[39m[39m
+    [32m✔ PlutusV3.Vote.1.json at data/lbt-plutus-golden-data/PlutusV3.Vote.1.json [90m(1.008366ms)[39m[39m
+    [32m✔ PlutusV3.Vote.2.json at data/lbt-plutus-golden-data/PlutusV3.Vote.2.json [90m(0.690911ms)[39m[39m
+  [32m✔ PlutusV3.Vote from to golden tests [90m(18.317502ms)[39m[39m
+  ▶ PlutusV3.GovernanceActionId from to golden tests
+    [32m✔ PlutusV3.GovernanceActionId.0.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceActionId.0.json [90m(4.466049ms)[39m[39m
+  [32m✔ PlutusV3.GovernanceActionId from to golden tests [90m(18.364953ms)[39m[39m
+  ▶ PlutusV3.Committee from to golden tests
+    [32m✔ PlutusV3.Committee.0.json at data/lbt-plutus-golden-data/PlutusV3.Committee.0.json [90m(0.974565ms)[39m[39m
+  [32m✔ PlutusV3.Committee from to golden tests [90m(12.576254ms)[39m[39m
+  ▶ PlutusV3.Constitution from to golden tests
+    [32m✔ PlutusV3.Constitution.0.json at data/lbt-plutus-golden-data/PlutusV3.Constitution.0.json [90m(0.944104ms)[39m[39m
+    [32m✔ PlutusV3.Constitution.1.json at data/lbt-plutus-golden-data/PlutusV3.Constitution.1.json [90m(0.62822ms)[39m[39m
+  [32m✔ PlutusV3.Constitution from to golden tests [90m(12.96844ms)[39m[39m
+  ▶ PlutusV3.ProtocolVersion from to golden tests
+    [32m✔ PlutusV3.ProtocolVersion.0.json at data/lbt-plutus-golden-data/PlutusV3.ProtocolVersion.0.json [90m(0.888703ms)[39m[39m
+  [32m✔ PlutusV3.ProtocolVersion from to golden tests [90m(12.363891ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV3\.ChangedParameters\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ChangedParameters from to golden tests
+    [32m✔ PlutusV3.ChangedParameters.0.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.0.json [90m(0.730462ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.1.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.1.json [90m(0.568309ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.2.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.2.json [90m(0.430886ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.3.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.3.json [90m(0.484828ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.4.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.4.json [90m(0.492017ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.5.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.5.json [90m(0.452096ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.6.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.6.json [90m(0.665941ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.7.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.7.json [90m(0.611009ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.8.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.8.json [90m(0.880014ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.9.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.9.json [90m(0.723461ms)[39m[39m
+  [32m✔ PlutusV3.ChangedParameters from to golden tests [90m(18.054449ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 64 golden files for /^PlutusV3\.GovernanceAction\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.GovernanceAction from to golden tests
+    [32m✔ PlutusV3.GovernanceAction.0.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.0.json [90m(1.088067ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.1.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.1.json [90m(0.59819ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.2.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.2.json [90m(0.522438ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.3.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.3.json [90m(0.545768ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.4.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.4.json [90m(0.492388ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.5.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.5.json [90m(0.509008ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.6.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.6.json [90m(0.499348ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.7.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.7.json [90m(0.591199ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.8.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.8.json [90m(0.522308ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.9.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.9.json [90m(0.497868ms)[39m[39m
+  [32m✔ PlutusV3.GovernanceAction from to golden tests [90m(20.797661ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 128 golden files for /^PlutusV3\.ProposalProcedure\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ProposalProcedure from to golden tests
+    [32m✔ PlutusV3.ProposalProcedure.0.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.0.json [90m(0.995745ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.1.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.1.json [90m(0.64686ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.2.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.2.json [90m(0.939334ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.3.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.3.json [90m(0.848853ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.4.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.4.json [90m(0.799633ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.5.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.5.json [90m(0.727482ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.6.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.6.json [90m(0.705231ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.7.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.7.json [90m(0.780202ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.8.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.8.json [90m(0.841983ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.9.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.9.json [90m(0.849253ms)[39m[39m
+  [32m✔ PlutusV3.ProposalProcedure from to golden tests [90m(21.173947ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 211 golden files for /^PlutusV3\.ScriptPurpose\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ScriptPurpose from to golden tests
+    [32m✔ PlutusV3.ScriptPurpose.0.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.0.json [90m(1.089907ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.1.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.1.json [90m(0.67161ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.2.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.2.json [90m(0.967596ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.3.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.3.json [90m(2.088612ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.4.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.4.json [90m(1.053926ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.5.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.5.json [90m(0.751962ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.6.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.6.json [90m(0.578259ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.7.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.7.json [90m(0.479417ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.8.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.8.json [90m(0.500398ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.9.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.9.json [90m(0.520708ms)[39m[39m
+  [32m✔ PlutusV3.ScriptPurpose from to golden tests [90m(29.022197ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 212 golden files for /^PlutusV3\.ScriptInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ScriptInfo from to golden tests
+    [32m✔ PlutusV3.ScriptInfo.0.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.0.json [90m(1.097197ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.1.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.1.json [90m(0.947224ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.2.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.2.json [90m(0.756562ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.3.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.3.json [90m(0.688901ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.4.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.4.json [90m(0.496528ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.5.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.5.json [90m(0.6666ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.6.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.6.json [90m(0.62783ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.7.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.7.json [90m(0.539199ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.8.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.8.json [90m(0.495748ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.9.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.9.json [90m(0.509338ms)[39m[39m
+  [32m✔ PlutusV3.ScriptInfo from to golden tests [90m(20.346884ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV3\.TxInInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxInInfo from to golden tests
+    [32m✔ PlutusV3.TxInInfo.0.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.0.json [90m(1.045646ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.1.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.1.json [90m(0.725041ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.2.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.2.json [90m(0.624149ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.3.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.3.json [90m(0.5991ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.4.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.4.json [90m(0.569879ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.5.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.5.json [90m(0.604659ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.6.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.6.json [90m(0.62879ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.7.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.7.json [90m(0.807172ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.8.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.8.json [90m(0.872274ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.9.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.9.json [90m(1.243869ms)[39m[39m
+  [32m✔ PlutusV3.TxInInfo from to golden tests [90m(21.599653ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 432 golden files for /^PlutusV3\.TxInfo\.[0-9]*\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxInfo from to golden tests
+    [32m✔ PlutusV3.TxInfo.0.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.0.json [90m(55.442125ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.1.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.1.json [90m(56.882378ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.2.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.2.json [90m(44.209612ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.3.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.3.json [90m(47.830468ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.4.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.4.json [90m(64.21867ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.5.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.5.json [90m(54.856676ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.6.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.6.json [90m(55.07152ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.7.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.7.json [90m(61.278616ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.8.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.8.json [90m(46.916534ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.9.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.9.json [90m(54.411369ms)[39m[39m
+  [32m✔ PlutusV3.TxInfo from to golden tests [90m(766.512494ms)[39m[39m
+  ▶ PlutusV3.ScriptContext from to golden tests
+    [32m✔ PlutusV3.ScriptContext.0.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.0.json [90m(59.63193ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.1.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.1.json [90m(45.446951ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.2.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.2.json [90m(40.628617ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.3.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.3.json [90m(41.706053ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.4.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.4.json [90m(42.187551ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.5.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.5.json [90m(44.657988ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.6.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.6.json [90m(40.570736ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.7.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.7.json [90m(42.675978ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.8.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.8.json [90m(57.141362ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.9.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.9.json [90m(58.247708ms)[39m[39m
+  [32m✔ PlutusV3.ScriptContext from to golden tests [90m(655.906857ms)[39m[39m
+[32m✔ JSON tests (toJson . fromJson) [90m(6015.501721ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 120 golden files for /^Foo\.A\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+▶ PlutusData tests (toJson . toPlutusData . fromPlutusData . fromJson)
+  ▶ Foo tests
+    ▶ Foo.A from to golden tests
+      [32m✔ Foo.A.0.pd.json at data/lbt-plutus-golden-data/Foo.A.0.pd.json [90m(5.650887ms)[39m[39m
+      [32m✔ Foo.A.1.pd.json at data/lbt-plutus-golden-data/Foo.A.1.pd.json [90m(2.225334ms)[39m[39m
+      [32m✔ Foo.A.2.pd.json at data/lbt-plutus-golden-data/Foo.A.2.pd.json [90m(1.351341ms)[39m[39m
+      [32m✔ Foo.A.3.pd.json at data/lbt-plutus-golden-data/Foo.A.3.pd.json [90m(1.172328ms)[39m[39m
+      [32m✔ Foo.A.4.pd.json at data/lbt-plutus-golden-data/Foo.A.4.pd.json [90m(1.603685ms)[39m[39m
+      [32m✔ Foo.A.5.pd.json at data/lbt-plutus-golden-data/Foo.A.5.pd.json [90m(2.234845ms)[39m[39m
+      [32m✔ Foo.A.6.pd.json at data/lbt-plutus-golden-data/Foo.A.6.pd.json [90m(2.160233ms)[39m[39m
+      [32m✔ Foo.A.7.pd.json at data/lbt-plutus-golden-data/Foo.A.7.pd.json [90m(1.716527ms)[39m[39m
+      [32m✔ Foo.A.8.pd.json at data/lbt-plutus-golden-data/Foo.A.8.pd.json [90m(1.502963ms)[39m[39m
+      [32m✔ Foo.A.9.pd.json at data/lbt-plutus-golden-data/Foo.A.9.pd.json [90m(1.385841ms)[39m[39m
+    [32m✔ Foo.A from to golden tests [90m(53.440734ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^Foo\.B\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ Foo.B from to golden tests
+      [32m✔ Foo.B.0.pd.json at data/lbt-plutus-golden-data/Foo.B.0.pd.json [90m(2.269755ms)[39m[39m
+      [32m✔ Foo.B.1.pd.json at data/lbt-plutus-golden-data/Foo.B.1.pd.json [90m(1.493244ms)[39m[39m
+      [32m✔ Foo.B.2.pd.json at data/lbt-plutus-golden-data/Foo.B.2.pd.json [90m(1.96221ms)[39m[39m
+      [32m✔ Foo.B.3.pd.json at data/lbt-plutus-golden-data/Foo.B.3.pd.json [90m(1.464542ms)[39m[39m
+      [32m✔ Foo.B.4.pd.json at data/lbt-plutus-golden-data/Foo.B.4.pd.json [90m(1.26965ms)[39m[39m
+      [32m✔ Foo.B.5.pd.json at data/lbt-plutus-golden-data/Foo.B.5.pd.json [90m(1.868329ms)[39m[39m
+      [32m✔ Foo.B.6.pd.json at data/lbt-plutus-golden-data/Foo.B.6.pd.json [90m(2.133972ms)[39m[39m
+      [32m✔ Foo.B.7.pd.json at data/lbt-plutus-golden-data/Foo.B.7.pd.json [90m(1.92776ms)[39m[39m
+      [32m✔ Foo.B.8.pd.json at data/lbt-plutus-golden-data/Foo.B.8.pd.json [90m(2.420727ms)[39m[39m
+      [32m✔ Foo.B.9.pd.json at data/lbt-plutus-golden-data/Foo.B.9.pd.json [90m(1.372251ms)[39m[39m
+    [32m✔ Foo.B from to golden tests [90m(36.609405ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^Foo\.C\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ Foo.C from to golden tests
+      [32m✔ Foo.C.0.pd.json at data/lbt-plutus-golden-data/Foo.C.0.pd.json [90m(1.34906ms)[39m[39m
+      [32m✔ Foo.C.1.pd.json at data/lbt-plutus-golden-data/Foo.C.1.pd.json [90m(1.044286ms)[39m[39m
+      [32m✔ Foo.C.2.pd.json at data/lbt-plutus-golden-data/Foo.C.2.pd.json [90m(1.016716ms)[39m[39m
+      [32m✔ Foo.C.3.pd.json at data/lbt-plutus-golden-data/Foo.C.3.pd.json [90m(0.876013ms)[39m[39m
+      [32m✔ Foo.C.4.pd.json at data/lbt-plutus-golden-data/Foo.C.4.pd.json [90m(0.862763ms)[39m[39m
+      [32m✔ Foo.C.5.pd.json at data/lbt-plutus-golden-data/Foo.C.5.pd.json [90m(1.084237ms)[39m[39m
+      [32m✔ Foo.C.6.pd.json at data/lbt-plutus-golden-data/Foo.C.6.pd.json [90m(0.976235ms)[39m[39m
+      [32m✔ Foo.C.7.pd.json at data/lbt-plutus-golden-data/Foo.C.7.pd.json [90m(1.038786ms)[39m[39m
+      [32m✔ Foo.C.8.pd.json at data/lbt-plutus-golden-data/Foo.C.8.pd.json [90m(2.450428ms)[39m[39m
+      [32m✔ Foo.C.9.pd.json at data/lbt-plutus-golden-data/Foo.C.9.pd.json [90m(1.183839ms)[39m[39m
+    [32m✔ Foo.C from to golden tests [90m(29.321712ms)[39m[39m
+    ▶ Foo.D from to golden tests
+      [32m✔ Foo.D.0.pd.json at data/lbt-plutus-golden-data/Foo.D.0.pd.json [90m(1.572014ms)[39m[39m
+      [32m✔ Foo.D.1.pd.json at data/lbt-plutus-golden-data/Foo.D.1.pd.json [90m(1.30968ms)[39m[39m
+      [32m✔ Foo.D.2.pd.json at data/lbt-plutus-golden-data/Foo.D.2.pd.json [90m(1.204778ms)[39m[39m
+      [32m✔ Foo.D.3.pd.json at data/lbt-plutus-golden-data/Foo.D.3.pd.json [90m(2.093902ms)[39m[39m
+      [32m✔ Foo.D.4.pd.json at data/lbt-plutus-golden-data/Foo.D.4.pd.json [90m(1.387151ms)[39m[39m
+      [32m✔ Foo.D.5.pd.json at data/lbt-plutus-golden-data/Foo.D.5.pd.json [90m(1.278359ms)[39m[39m
+      [32m✔ Foo.D.6.pd.json at data/lbt-plutus-golden-data/Foo.D.6.pd.json [90m(1.495744ms)[39m[39m
+      [32m✔ Foo.D.7.pd.json at data/lbt-plutus-golden-data/Foo.D.7.pd.json [90m(1.515833ms)[39m[39m
+    [32m✔ Foo.D from to golden tests [90m(26.520159ms)[39m[39m
+    ▶ Foo.FInt from to golden tests
+      [32m✔ Foo.FInt.0.pd.json at data/lbt-plutus-golden-data/Foo.FInt.0.pd.json [90m(1.94485ms)[39m[39m
+      [32m✔ Foo.FInt.1.pd.json at data/lbt-plutus-golden-data/Foo.FInt.1.pd.json [90m(1.205309ms)[39m[39m
+    [32m✔ Foo.FInt from to golden tests [90m(17.857135ms)[39m[39m
+    ▶ Foo.GInt from to golden tests
+      [32m✔ Foo.GInt.0.pd.json at data/lbt-plutus-golden-data/Foo.GInt.0.pd.json [90m(0.991196ms)[39m[39m
+      [32m✔ Foo.GInt.1.pd.json at data/lbt-plutus-golden-data/Foo.GInt.1.pd.json [90m(0.869253ms)[39m[39m
+    [32m✔ Foo.GInt from to golden tests [90m(15.199005ms)[39m[39m
+  [32m✔ Foo tests [90m(179.773805ms)[39m[39m
+  ▶ Day tests
+    ▶ Days.Day from to golden tests
+      [32m✔ Days.Day.0.pd.json at data/lbt-plutus-golden-data/Days.Day.0.pd.json [90m(1.906279ms)[39m[39m
+      [32m✔ Days.Day.1.pd.json at data/lbt-plutus-golden-data/Days.Day.1.pd.json [90m(1.005276ms)[39m[39m
+      [32m✔ Days.Day.2.pd.json at data/lbt-plutus-golden-data/Days.Day.2.pd.json [90m(0.790132ms)[39m[39m
+      [32m✔ Days.Day.3.pd.json at data/lbt-plutus-golden-data/Days.Day.3.pd.json [90m(0.926324ms)[39m[39m
+      [32m✔ Days.Day.4.pd.json at data/lbt-plutus-golden-data/Days.Day.4.pd.json [90m(0.665491ms)[39m[39m
+      [32m✔ Days.Day.5.pd.json at data/lbt-plutus-golden-data/Days.Day.5.pd.json [90m(0.558329ms)[39m[39m
+      [32m✔ Days.Day.6.pd.json at data/lbt-plutus-golden-data/Days.Day.6.pd.json [90m(0.605809ms)[39m[39m
+    [32m✔ Days.Day from to golden tests [90m(20.994644ms)[39m[39m
+    ▶ Days.WorkDay from to golden tests
+      [32m✔ Days.WorkDay.0.pd.json at data/lbt-plutus-golden-data/Days.WorkDay.0.pd.json [90m(1.020675ms)[39m[39m
+      [32m✔ Days.WorkDay.1.pd.json at data/lbt-plutus-golden-data/Days.WorkDay.1.pd.json [90m(0.945615ms)[39m[39m
+      [32m✔ Days.WorkDay.2.pd.json at data/lbt-plutus-golden-data/Days.WorkDay.2.pd.json [90m(0.820543ms)[39m[39m
+      [32m✔ Days.WorkDay.3.pd.json at data/lbt-plutus-golden-data/Days.WorkDay.3.pd.json [90m(0.626479ms)[39m[39m
+      [32m✔ Days.WorkDay.4.pd.json at data/lbt-plutus-golden-data/Days.WorkDay.4.pd.json [90m(0.65088ms)[39m[39m
+    [32m✔ Days.WorkDay from to golden tests [90m(17.759634ms)[39m[39m
+    ▶ Days.FreeDay from to golden tests
+      [32m✔ Days.FreeDay.0.pd.json at data/lbt-plutus-golden-data/Days.FreeDay.0.pd.json [90m(1.29186ms)[39m[39m
+      [32m✔ Days.FreeDay.1.pd.json at data/lbt-plutus-golden-data/Days.FreeDay.1.pd.json [90m(0.770971ms)[39m[39m
+    [32m✔ Days.FreeDay from to golden tests [90m(16.418543ms)[39m[39m
+  [32m✔ Day tests [90m(55.351944ms)[39m[39m
+  ▶ Plutus tests
+    ▶ PlutusV1.PlutusData from to golden tests
+      [32m✔ PlutusV1.PlutusData.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.0.pd.json [90m(0.893044ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.1.pd.json [90m(1.092827ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.10.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.10.pd.json [90m(0.871444ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.11.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.11.pd.json [90m(0.717381ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.12.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.12.pd.json [90m(0.584809ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.2.pd.json [90m(0.867153ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.3.pd.json [90m(0.672221ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.4.pd.json [90m(0.821853ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.5.pd.json [90m(0.713471ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.6.pd.json [90m(0.717911ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.7.pd.json [90m(0.882534ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.8.pd.json [90m(0.63722ms)[39m[39m
+      [32m✔ PlutusV1.PlutusData.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.PlutusData.9.pd.json [90m(2.881774ms)[39m[39m
+    [32m✔ PlutusV1.PlutusData from to golden tests [90m(30.156015ms)[39m[39m
+    ▶ PlutusV1.Address from to golden tests
+      [32m✔ PlutusV1.Address.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.0.pd.json [90m(0.980395ms)[39m[39m
+      [32m✔ PlutusV1.Address.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.1.pd.json [90m(1.049836ms)[39m[39m
+      [32m✔ PlutusV1.Address.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.2.pd.json [90m(1.008756ms)[39m[39m
+      [32m✔ PlutusV1.Address.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.3.pd.json [90m(1.014476ms)[39m[39m
+      [32m✔ PlutusV1.Address.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.4.pd.json [90m(0.875253ms)[39m[39m
+      [32m✔ PlutusV1.Address.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.5.pd.json [90m(0.780852ms)[39m[39m
+      [32m✔ PlutusV1.Address.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.6.pd.json [90m(1.039056ms)[39m[39m
+      [32m✔ PlutusV1.Address.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.Address.7.pd.json [90m(1.006565ms)[39m[39m
+    [32m✔ PlutusV1.Address from to golden tests [90m(21.747856ms)[39m[39m
+    ▶ PlutusV1.Credential from to golden tests
+      [32m✔ PlutusV1.Credential.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Credential.0.pd.json [90m(1.757598ms)[39m[39m
+      [32m✔ PlutusV1.Credential.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Credential.1.pd.json [90m(1.438063ms)[39m[39m
+    [32m✔ PlutusV1.Credential from to golden tests [90m(19.536212ms)[39m[39m
+    ▶ PlutusV1.StakingCredential from to golden tests
+      [32m✔ PlutusV1.StakingCredential.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.0.pd.json [90m(1.050636ms)[39m[39m
+      [32m✔ PlutusV1.StakingCredential.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.1.pd.json [90m(0.877573ms)[39m[39m
+      [32m✔ PlutusV1.StakingCredential.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.StakingCredential.2.pd.json [90m(0.791462ms)[39m[39m
+    [32m✔ PlutusV1.StakingCredential from to golden tests [90m(19.856707ms)[39m[39m
+    ▶ PlutusV1.PubKeyHash from to golden tests
+      [32m✔ PlutusV1.PubKeyHash.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.PubKeyHash.0.pd.json [90m(1.832368ms)[39m[39m
+    [32m✔ PlutusV1.PubKeyHash from to golden tests [90m(15.637621ms)[39m[39m
+    ▶ PlutusV1.Bytes from to golden tests
+      [32m✔ PlutusV1.Bytes.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.0.pd.json [90m(0.813973ms)[39m[39m
+      [32m✔ PlutusV1.Bytes.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.1.pd.json [90m(0.588449ms)[39m[39m
+      [32m✔ PlutusV1.Bytes.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Bytes.2.pd.json [90m(0.563559ms)[39m[39m
+    [32m✔ PlutusV1.Bytes from to golden tests [90m(15.700122ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 36 golden files for /^PlutusV1\.Interval\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.Interval from to golden tests
+      [32m✔ PlutusV1.Interval.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.0.pd.json [90m(2.343766ms)[39m[39m
+      [32m✔ PlutusV1.Interval.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.1.pd.json [90m(0.923134ms)[39m[39m
+      [32m✔ PlutusV1.Interval.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.2.pd.json [90m(0.64008ms)[39m[39m
+      [32m✔ PlutusV1.Interval.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.3.pd.json [90m(0.597349ms)[39m[39m
+      [32m✔ PlutusV1.Interval.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.4.pd.json [90m(0.590809ms)[39m[39m
+      [32m✔ PlutusV1.Interval.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.5.pd.json [90m(0.62688ms)[39m[39m
+      [32m✔ PlutusV1.Interval.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.6.pd.json [90m(0.569419ms)[39m[39m
+      [32m✔ PlutusV1.Interval.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.7.pd.json [90m(0.583479ms)[39m[39m
+      [32m✔ PlutusV1.Interval.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.8.pd.json [90m(0.721231ms)[39m[39m
+      [32m✔ PlutusV1.Interval.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.Interval.9.pd.json [90m(0.739711ms)[39m[39m
+    [32m✔ PlutusV1.Interval from to golden tests [90m(22.520837ms)[39m[39m
+    ▶ PlutusV1.Extended from to golden tests
+      [32m✔ PlutusV1.Extended.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Extended.0.pd.json [90m(0.821533ms)[39m[39m
+      [32m✔ PlutusV1.Extended.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Extended.1.pd.json [90m(0.592909ms)[39m[39m
+      [32m✔ PlutusV1.Extended.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Extended.2.pd.json [90m(0.536088ms)[39m[39m
+    [32m✔ PlutusV1.Extended from to golden tests [90m(14.602265ms)[39m[39m
+    ▶ PlutusV1.LowerBound from to golden tests
+      [32m✔ PlutusV1.LowerBound.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.0.pd.json [90m(1.267419ms)[39m[39m
+      [32m✔ PlutusV1.LowerBound.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.1.pd.json [90m(0.674881ms)[39m[39m
+      [32m✔ PlutusV1.LowerBound.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.2.pd.json [90m(0.547209ms)[39m[39m
+      [32m✔ PlutusV1.LowerBound.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.3.pd.json [90m(0.477507ms)[39m[39m
+      [32m✔ PlutusV1.LowerBound.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.4.pd.json [90m(0.546749ms)[39m[39m
+      [32m✔ PlutusV1.LowerBound.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.LowerBound.5.pd.json [90m(0.508028ms)[39m[39m
+    [32m✔ PlutusV1.LowerBound from to golden tests [90m(18.926202ms)[39m[39m
+    ▶ PlutusV1.UpperBound from to golden tests
+      [32m✔ PlutusV1.UpperBound.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.0.pd.json [90m(0.867753ms)[39m[39m
+      [32m✔ PlutusV1.UpperBound.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.1.pd.json [90m(0.820642ms)[39m[39m
+      [32m✔ PlutusV1.UpperBound.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.2.pd.json [90m(0.583969ms)[39m[39m
+      [32m✔ PlutusV1.UpperBound.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.3.pd.json [90m(0.62589ms)[39m[39m
+      [32m✔ PlutusV1.UpperBound.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.4.pd.json [90m(0.571509ms)[39m[39m
+      [32m✔ PlutusV1.UpperBound.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.UpperBound.5.pd.json [90m(1.973881ms)[39m[39m
+    [32m✔ PlutusV1.UpperBound from to golden tests [90m(20.417435ms)[39m[39m
+    ▶ PlutusV1.POSIXTime from to golden tests
+      [32m✔ PlutusV1.POSIXTime.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.0.pd.json [90m(0.825263ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTime.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.1.pd.json [90m(0.566588ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTime.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTime.2.pd.json [90m(0.485158ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTime from to golden tests [90m(15.962936ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 36 golden files for /^PlutusV1\.POSIXTimeRange\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.POSIXTimeRange from to golden tests
+      [32m✔ PlutusV1.POSIXTimeRange.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.0.pd.json [90m(1.788218ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.1.pd.json [90m(1.083547ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.2.pd.json [90m(0.914414ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.3.pd.json [90m(0.733891ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.4.pd.json [90m(0.597799ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.5.pd.json [90m(0.589929ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.6.pd.json [90m(0.795602ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.7.pd.json [90m(0.778372ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.8.pd.json [90m(0.762332ms)[39m[39m
+      [32m✔ PlutusV1.POSIXTimeRange.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.POSIXTimeRange.9.pd.json [90m(0.6531ms)[39m[39m
+    [32m✔ PlutusV1.POSIXTimeRange from to golden tests [90m(22.522308ms)[39m[39m
+    ▶ PlutusV1.CurrencySymbol from to golden tests
+      [32m✔ PlutusV1.CurrencySymbol.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.CurrencySymbol.0.pd.json [90m(0.940885ms)[39m[39m
+      [32m✔ PlutusV1.CurrencySymbol.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.CurrencySymbol.1.pd.json [90m(0.618209ms)[39m[39m
+    [32m✔ PlutusV1.CurrencySymbol from to golden tests [90m(14.173158ms)[39m[39m
+    ▶ PlutusV1.TokenName from to golden tests
+      [32m✔ PlutusV1.TokenName.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.0.pd.json [90m(1.176438ms)[39m[39m
+      [32m✔ PlutusV1.TokenName.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.1.pd.json [90m(0.571929ms)[39m[39m
+      [32m✔ PlutusV1.TokenName.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.TokenName.2.pd.json [90m(0.519248ms)[39m[39m
+    [32m✔ PlutusV1.TokenName from to golden tests [90m(18.082889ms)[39m[39m
+    ▶ PlutusV1.AssetClass from to golden tests
+      [32m✔ PlutusV1.AssetClass.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.0.pd.json [90m(0.848263ms)[39m[39m
+      [32m✔ PlutusV1.AssetClass.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.1.pd.json [90m(0.594489ms)[39m[39m
+      [32m✔ PlutusV1.AssetClass.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.2.pd.json [90m(0.483337ms)[39m[39m
+      [32m✔ PlutusV1.AssetClass.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.AssetClass.3.pd.json [90m(0.468787ms)[39m[39m
+    [32m✔ PlutusV1.AssetClass from to golden tests [90m(14.073658ms)[39m[39m
+    ▶ PlutusV1.Value from to golden tests
+      [32m✔ PlutusV1.Value.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Value.0.pd.json [90m(1.107777ms)[39m[39m
+      [32m✔ PlutusV1.Value.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Value.1.pd.json [90m(0.63592ms)[39m[39m
+      [32m✔ PlutusV1.Value.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Value.2.pd.json [90m(0.688861ms)[39m[39m
+    [32m✔ PlutusV1.Value from to golden tests [90m(16.259791ms)[39m[39m
+    ▶ PlutusV1.Redeemer from to golden tests
+      [32m✔ PlutusV1.Redeemer.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Redeemer.0.pd.json [90m(0.911444ms)[39m[39m
+    [32m✔ PlutusV1.Redeemer from to golden tests [90m(14.034157ms)[39m[39m
+    ▶ PlutusV1.Datum from to golden tests
+      [32m✔ PlutusV1.Datum.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Datum.0.pd.json [90m(2.062662ms)[39m[39m
+    [32m✔ PlutusV1.Datum from to golden tests [90m(14.21145ms)[39m[39m
+    ▶ PlutusV1.RedeemerHash from to golden tests
+      [32m✔ PlutusV1.RedeemerHash.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.RedeemerHash.0.pd.json [90m(1.063687ms)[39m[39m
+    [32m✔ PlutusV1.RedeemerHash from to golden tests [90m(13.477228ms)[39m[39m
+    ▶ PlutusV1.DatumHash from to golden tests
+      [32m✔ PlutusV1.DatumHash.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.DatumHash.0.pd.json [90m(0.970476ms)[39m[39m
+    [32m✔ PlutusV1.DatumHash from to golden tests [90m(14.27864ms)[39m[39m
+    ▶ PlutusV1.ScriptHash from to golden tests
+      [32m✔ PlutusV1.ScriptHash.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptHash.0.pd.json [90m(1.104557ms)[39m[39m
+    [32m✔ PlutusV1.ScriptHash from to golden tests [90m(14.318281ms)[39m[39m
+    ▶ PlutusV1.TxId from to golden tests
+      [32m✔ PlutusV1.TxId.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxId.0.pd.json [90m(1.068977ms)[39m[39m
+    [32m✔ PlutusV1.TxId from to golden tests [90m(12.99081ms)[39m[39m
+    ▶ PlutusV1.TxOutRef from to golden tests
+      [32m✔ PlutusV1.TxOutRef.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOutRef.0.pd.json [90m(1.30613ms)[39m[39m
+    [32m✔ PlutusV1.TxOutRef from to golden tests [90m(15.629141ms)[39m[39m
+    ▶ PlutusV1.Map from to golden tests
+      [32m✔ PlutusV1.Map.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Map.0.pd.json [90m(1.003636ms)[39m[39m
+      [32m✔ PlutusV1.Map.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.Map.1.pd.json [90m(0.882874ms)[39m[39m
+      [32m✔ PlutusV1.Map.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.Map.2.pd.json [90m(2.062081ms)[39m[39m
+    [32m✔ PlutusV1.Map from to golden tests [90m(18.042439ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 48 golden files for /^PlutusV1\.TxInInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.TxInInfo from to golden tests
+      [32m✔ PlutusV1.TxInInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.0.pd.json [90m(1.479203ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.1.pd.json [90m(1.133478ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.2.pd.json [90m(0.927064ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.3.pd.json [90m(0.915084ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.4.pd.json [90m(1.565614ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.5.pd.json [90m(1.539144ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.6.pd.json [90m(1.750417ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.7.pd.json [90m(1.169738ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.8.pd.json [90m(1.221288ms)[39m[39m
+      [32m✔ PlutusV1.TxInInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInInfo.9.pd.json [90m(1.221329ms)[39m[39m
+    [32m✔ PlutusV1.TxInInfo from to golden tests [90m(28.229996ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 48 golden files for /^PlutusV1\.TxOut\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.TxOut from to golden tests
+      [32m✔ PlutusV1.TxOut.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.0.pd.json [90m(1.439152ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.1.pd.json [90m(0.974315ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.2.pd.json [90m(0.862644ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.3.pd.json [90m(0.886374ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.4.pd.json [90m(1.049186ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.5.pd.json [90m(2.546619ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.6.pd.json [90m(0.984585ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.7.pd.json [90m(0.793552ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.8.pd.json [90m(0.891234ms)[39m[39m
+      [32m✔ PlutusV1.TxOut.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxOut.9.pd.json [90m(0.863483ms)[39m[39m
+    [32m✔ PlutusV1.TxOut from to golden tests [90m(26.243395ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV1\.DCert\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.DCert from to golden tests
+      [32m✔ PlutusV1.DCert.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.0.pd.json [90m(1.067327ms)[39m[39m
+      [32m✔ PlutusV1.DCert.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.1.pd.json [90m(1.132587ms)[39m[39m
+      [32m✔ PlutusV1.DCert.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.2.pd.json [90m(1.412192ms)[39m[39m
+      [32m✔ PlutusV1.DCert.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.3.pd.json [90m(0.943575ms)[39m[39m
+      [32m✔ PlutusV1.DCert.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.4.pd.json [90m(0.586149ms)[39m[39m
+      [32m✔ PlutusV1.DCert.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.5.pd.json [90m(0.604559ms)[39m[39m
+      [32m✔ PlutusV1.DCert.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.6.pd.json [90m(0.567619ms)[39m[39m
+      [32m✔ PlutusV1.DCert.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.7.pd.json [90m(0.541848ms)[39m[39m
+      [32m✔ PlutusV1.DCert.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.8.pd.json [90m(0.546238ms)[39m[39m
+      [32m✔ PlutusV1.DCert.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.DCert.9.pd.json [90m(0.559529ms)[39m[39m
+    [32m✔ PlutusV1.DCert from to golden tests [90m(20.524477ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 18 golden files for /^PlutusV1\.ScriptPurpose\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.ScriptPurpose from to golden tests
+      [32m✔ PlutusV1.ScriptPurpose.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.0.pd.json [90m(0.919584ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.1.pd.json [90m(0.66194ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.2.pd.json [90m(0.518128ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.3.pd.json [90m(0.506498ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.4.pd.json [90m(0.474537ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.5.pd.json [90m(0.476078ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.6.pd.json [90m(0.487707ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.7.pd.json [90m(0.511447ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.8.pd.json [90m(0.602959ms)[39m[39m
+      [32m✔ PlutusV1.ScriptPurpose.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptPurpose.9.pd.json [90m(0.65415ms)[39m[39m
+    [32m✔ PlutusV1.ScriptPurpose from to golden tests [90m(19.45771ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 324 golden files for /^PlutusV1\.TxInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.TxInfo from to golden tests
+      [32m✔ PlutusV1.TxInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.0.pd.json [90m(54.793346ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.1.pd.json [90m(31.73983ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.2.pd.json [90m(38.704017ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.3.pd.json [90m(28.727764ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.4.pd.json [90m(30.125765ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.5.pd.json [90m(28.154474ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.6.pd.json [90m(29.79876ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.7.pd.json [90m(26.377217ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.8.pd.json [90m(28.715144ms)[39m[39m
+      [32m✔ PlutusV1.TxInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.TxInfo.9.pd.json [90m(26.678692ms)[39m[39m
+    [32m✔ PlutusV1.TxInfo from to golden tests [90m(431.928747ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 5832 golden files for /^PlutusV1\.ScriptContext\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV1.ScriptContext from to golden tests
+      [32m✔ PlutusV1.ScriptContext.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.0.pd.json [90m(54.844756ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.1.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.1.pd.json [90m(30.699804ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.2.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.2.pd.json [90m(34.293719ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.3.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.3.pd.json [90m(33.332874ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.4.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.4.pd.json [90m(41.4727ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.5.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.5.pd.json [90m(44.74934ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.6.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.6.pd.json [90m(88.902402ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.7.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.7.pd.json [90m(44.290513ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.8.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.8.pd.json [90m(32.201267ms)[39m[39m
+      [32m✔ PlutusV1.ScriptContext.9.pd.json at data/lbt-plutus-golden-data/PlutusV1.ScriptContext.9.pd.json [90m(29.14912ms)[39m[39m
+    [32m✔ PlutusV1.ScriptContext from to golden tests [90m(1439.433034ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV2\.TxInInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV2.TxInInfo from to golden tests
+      [32m✔ PlutusV2.TxInInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.0.pd.json [90m(1.185768ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.1.pd.json [90m(0.690381ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.2.pd.json [90m(0.691871ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.3.pd.json [90m(0.617049ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.4.pd.json [90m(0.639319ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.5.pd.json [90m(0.65043ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.6.pd.json [90m(0.656771ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.7.pd.json [90m(0.741121ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.8.pd.json [90m(0.846043ms)[39m[39m
+      [32m✔ PlutusV2.TxInInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInInfo.9.pd.json [90m(0.829783ms)[39m[39m
+    [32m✔ PlutusV2.TxInInfo from to golden tests [90m(20.853432ms)[39m[39m
+    ▶ PlutusV2.OutputDatum from to golden tests
+      [32m✔ PlutusV2.OutputDatum.0.pd.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.0.pd.json [90m(0.949854ms)[39m[39m
+      [32m✔ PlutusV2.OutputDatum.1.pd.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.1.pd.json [90m(0.564958ms)[39m[39m
+      [32m✔ PlutusV2.OutputDatum.2.pd.json at data/lbt-plutus-golden-data/PlutusV2.OutputDatum.2.pd.json [90m(0.60573ms)[39m[39m
+    [32m✔ PlutusV2.OutputDatum from to golden tests [90m(14.21533ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV2\.TxOut\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+    ▶ PlutusV2.TxOut from to golden tests
+      [32m✔ PlutusV2.TxOut.0.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.0.pd.json [90m(1.071627ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.1.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.1.pd.json [90m(0.709631ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.2.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.2.pd.json [90m(0.572279ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.3.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.3.pd.json [90m(0.65418ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.4.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.4.pd.json [90m(0.61613ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.5.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.5.pd.json [90m(0.562829ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.6.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.6.pd.json [90m(0.69458ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.7.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.7.pd.json [90m(0.67084ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.8.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.8.pd.json [90m(0.63338ms)[39m[39m
+      [32m✔ PlutusV2.TxOut.9.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxOut.9.pd.json [90m(0.879683ms)[39m[39m
+    [32m✔ PlutusV2.TxOut from to golden tests [90m(21.858227ms)[39m[39m
+  [32m✔ Plutus tests [90m(2440.952592ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 324 golden files for /^PlutusV2\.TxInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV2.TxInfo from to golden tests
+    [32m✔ PlutusV2.TxInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.0.pd.json [90m(114.028559ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.1.pd.json [90m(117.058896ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.2.pd.json [90m(121.048158ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.3.pd.json [90m(107.60012ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.4.pd.json [90m(106.456402ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.5.pd.json [90m(109.239985ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.6.pd.json [90m(113.575452ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.7.pd.json [90m(117.27507ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.8.pd.json [90m(158.718529ms)[39m[39m
+    [32m✔ PlutusV2.TxInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV2.TxInfo.9.pd.json [90m(144.266776ms)[39m[39m
+  [32m✔ PlutusV2.TxInfo from to golden tests [90m(1325.225158ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 5832 golden files for /^PlutusV2\.ScriptContext\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV2.ScriptContext from to golden tests
+    [32m✔ PlutusV2.ScriptContext.0.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.0.pd.json [90m(140.840322ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.1.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.1.pd.json [90m(104.172517ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.2.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.2.pd.json [90m(115.640294ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.3.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.3.pd.json [90m(109.608231ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.4.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.4.pd.json [90m(113.340828ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.5.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.5.pd.json [90m(111.982988ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.6.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.6.pd.json [90m(98.460679ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.7.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.7.pd.json [90m(184.180961ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.8.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.8.pd.json [90m(287.475834ms)[39m[39m
+    [32m✔ PlutusV2.ScriptContext.9.pd.json at data/lbt-plutus-golden-data/PlutusV2.ScriptContext.9.pd.json [90m(104.335929ms)[39m[39m
+  [32m✔ PlutusV2.ScriptContext from to golden tests [90m(2685.15169ms)[39m[39m
+  ▶ PlutusV3.Rational from to golden tests
+    [32m✔ PlutusV3.Rational.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Rational.0.pd.json [90m(0.991995ms)[39m[39m
+  [32m✔ PlutusV3.Rational from to golden tests [90m(12.404122ms)[39m[39m
+  ▶ PlutusV3.TxId from to golden tests
+    [32m✔ PlutusV3.TxId.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxId.0.pd.json [90m(0.968145ms)[39m[39m
+  [32m✔ PlutusV3.TxId from to golden tests [90m(12.519163ms)[39m[39m
+  ▶ PlutusV3.TxOutRef from to golden tests
+    [32m✔ PlutusV3.TxOutRef.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxOutRef.0.pd.json [90m(0.967985ms)[39m[39m
+  [32m✔ PlutusV3.TxOutRef from to golden tests [90m(14.762137ms)[39m[39m
+  ▶ PlutusV3.ColdCommitteeCredential from to golden tests
+    [32m✔ PlutusV3.ColdCommitteeCredential.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ColdCommitteeCredential.0.pd.json [90m(0.873683ms)[39m[39m
+    [32m✔ PlutusV3.ColdCommitteeCredential.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ColdCommitteeCredential.1.pd.json [90m(0.572569ms)[39m[39m
+  [32m✔ PlutusV3.ColdCommitteeCredential from to golden tests [90m(13.052081ms)[39m[39m
+  ▶ PlutusV3.HotCommitteeCredential from to golden tests
+    [32m✔ PlutusV3.HotCommitteeCredential.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.HotCommitteeCredential.0.pd.json [90m(0.823892ms)[39m[39m
+    [32m✔ PlutusV3.HotCommitteeCredential.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.HotCommitteeCredential.1.pd.json [90m(0.550059ms)[39m[39m
+  [32m✔ PlutusV3.HotCommitteeCredential from to golden tests [90m(13.070242ms)[39m[39m
+  ▶ PlutusV3.DRepCredential from to golden tests
+    [32m✔ PlutusV3.DRepCredential.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRepCredential.0.pd.json [90m(4.457869ms)[39m[39m
+    [32m✔ PlutusV3.DRepCredential.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRepCredential.1.pd.json [90m(0.846253ms)[39m[39m
+  [32m✔ PlutusV3.DRepCredential from to golden tests [90m(18.390314ms)[39m[39m
+  ▶ PlutusV3.DRep from to golden tests
+    [32m✔ PlutusV3.DRep.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRep.0.pd.json [90m(0.883693ms)[39m[39m
+    [32m✔ PlutusV3.DRep.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRep.1.pd.json [90m(0.530368ms)[39m[39m
+    [32m✔ PlutusV3.DRep.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRep.2.pd.json [90m(0.491657ms)[39m[39m
+    [32m✔ PlutusV3.DRep.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.DRep.3.pd.json [90m(0.536778ms)[39m[39m
+  [32m✔ PlutusV3.DRep from to golden tests [90m(14.652206ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV3\.Delegatee\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 9. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.Delegatee from to golden tests
+    [32m✔ PlutusV3.Delegatee.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.0.pd.json [90m(1.093947ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.1.pd.json [90m(0.747632ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.2.pd.json [90m(0.585319ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.3.pd.json [90m(0.59282ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.4.pd.json [90m(0.549458ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.5.pd.json [90m(1.066877ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.6.pd.json [90m(1.26683ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.7.pd.json [90m(0.817773ms)[39m[39m
+    [32m✔ PlutusV3.Delegatee.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.Delegatee.8.pd.json [90m(0.568089ms)[39m[39m
+  [32m✔ PlutusV3.Delegatee from to golden tests [90m(22.229142ms)[39m[39m
+  ▶ PlutusV1.Lovelace from to golden tests
+    [32m✔ PlutusV1.Lovelace.0.pd.json at data/lbt-plutus-golden-data/PlutusV1.Lovelace.0.pd.json [90m(0.903194ms)[39m[39m
+  [32m✔ PlutusV1.Lovelace from to golden tests [90m(15.002111ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 74 golden files for /^PlutusV3\.TxCert\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxCert from to golden tests
+    [32m✔ PlutusV3.TxCert.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.0.pd.json [90m(1.430092ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.1.pd.json [90m(0.811112ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.2.pd.json [90m(0.64828ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.3.pd.json [90m(0.67667ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.4.pd.json [90m(0.66498ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.5.pd.json [90m(0.65995ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.6.pd.json [90m(0.64427ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.7.pd.json [90m(0.62ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.8.pd.json [90m(0.60319ms)[39m[39m
+    [32m✔ PlutusV3.TxCert.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxCert.9.pd.json [90m(0.718291ms)[39m[39m
+  [32m✔ PlutusV3.TxCert from to golden tests [90m(23.034895ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 3 golden files for /^PlutusV3\.Voter\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 5. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.Voter from to golden tests
+    [32m✔ PlutusV3.Voter.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Voter.0.pd.json [90m(0.956115ms)[39m[39m
+    [32m✔ PlutusV3.Voter.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.Voter.1.pd.json [90m(0.521589ms)[39m[39m
+    [32m✔ PlutusV3.Voter.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.Voter.2.pd.json [90m(0.445156ms)[39m[39m
+    [32m✔ PlutusV3.Voter.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.Voter.3.pd.json [90m(0.470918ms)[39m[39m
+    [32m✔ PlutusV3.Voter.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.Voter.4.pd.json [90m(0.515678ms)[39m[39m
+  [32m✔ PlutusV3.Voter from to golden tests [90m(16.578635ms)[39m[39m
+  ▶ PlutusV3.Vote from to golden tests
+    [32m✔ PlutusV3.Vote.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Vote.0.pd.json [90m(0.939695ms)[39m[39m
+    [32m✔ PlutusV3.Vote.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.Vote.1.pd.json [90m(0.521099ms)[39m[39m
+    [32m✔ PlutusV3.Vote.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.Vote.2.pd.json [90m(0.452427ms)[39m[39m
+  [32m✔ PlutusV3.Vote from to golden tests [90m(14.592505ms)[39m[39m
+  ▶ PlutusV3.GovernanceActionId from to golden tests
+    [32m✔ PlutusV3.GovernanceActionId.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceActionId.0.pd.json [90m(5.680118ms)[39m[39m
+  [32m✔ PlutusV3.GovernanceActionId from to golden tests [90m(17.095714ms)[39m[39m
+  ▶ PlutusV3.Committee from to golden tests
+    [32m✔ PlutusV3.Committee.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Committee.0.pd.json [90m(1.123467ms)[39m[39m
+  [32m✔ PlutusV3.Committee from to golden tests [90m(14.963341ms)[39m[39m
+  ▶ PlutusV3.Constitution from to golden tests
+    [32m✔ PlutusV3.Constitution.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.Constitution.0.pd.json [90m(0.951375ms)[39m[39m
+    [32m✔ PlutusV3.Constitution.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.Constitution.1.pd.json [90m(0.538928ms)[39m[39m
+  [32m✔ PlutusV3.Constitution from to golden tests [90m(13.179054ms)[39m[39m
+  ▶ PlutusV3.ProtocolVersion from to golden tests
+    [32m✔ PlutusV3.ProtocolVersion.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProtocolVersion.0.pd.json [90m(0.918274ms)[39m[39m
+  [32m✔ PlutusV3.ProtocolVersion from to golden tests [90m(12.735516ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 13 golden files for /^PlutusV3\.ChangedParameters\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ChangedParameters from to golden tests
+    [32m✔ PlutusV3.ChangedParameters.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.0.pd.json [90m(1.109917ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.1.pd.json [90m(0.836773ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.2.pd.json [90m(0.623679ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.3.pd.json [90m(0.63304ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.4.pd.json [90m(0.59978ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.5.pd.json [90m(0.610269ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.6.pd.json [90m(0.631749ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.7.pd.json [90m(0.562559ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.8.pd.json [90m(0.788212ms)[39m[39m
+    [32m✔ PlutusV3.ChangedParameters.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.ChangedParameters.9.pd.json [90m(0.801363ms)[39m[39m
+  [32m✔ PlutusV3.ChangedParameters from to golden tests [90m(24.69516ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 64 golden files for /^PlutusV3\.GovernanceAction\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.GovernanceAction from to golden tests
+    [32m✔ PlutusV3.GovernanceAction.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.0.pd.json [90m(1.398902ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.1.pd.json [90m(0.880353ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.2.pd.json [90m(0.742771ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.3.pd.json [90m(0.832053ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.4.pd.json [90m(0.704151ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.5.pd.json [90m(0.712091ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.6.pd.json [90m(0.711771ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.7.pd.json [90m(0.734251ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.8.pd.json [90m(0.735081ms)[39m[39m
+    [32m✔ PlutusV3.GovernanceAction.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.GovernanceAction.9.pd.json [90m(1.30552ms)[39m[39m
+  [32m✔ PlutusV3.GovernanceAction from to golden tests [90m(26.60124ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 128 golden files for /^PlutusV3\.ProposalProcedure\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ProposalProcedure from to golden tests
+    [32m✔ PlutusV3.ProposalProcedure.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.0.pd.json [90m(1.30788ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.1.pd.json [90m(0.978065ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.2.pd.json [90m(0.792492ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.3.pd.json [90m(1.172168ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.4.pd.json [90m(1.103777ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.5.pd.json [90m(1.024796ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.6.pd.json [90m(0.675231ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.7.pd.json [90m(0.63056ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.8.pd.json [90m(5.101258ms)[39m[39m
+    [32m✔ PlutusV3.ProposalProcedure.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.ProposalProcedure.9.pd.json [90m(0.884653ms)[39m[39m
+  [32m✔ PlutusV3.ProposalProcedure from to golden tests [90m(30.860816ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 211 golden files for /^PlutusV3\.ScriptPurpose\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ScriptPurpose from to golden tests
+    [32m✔ PlutusV3.ScriptPurpose.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.0.pd.json [90m(1.184978ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.1.pd.json [90m(0.791212ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.2.pd.json [90m(0.65651ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.3.pd.json [90m(0.62852ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.4.pd.json [90m(0.556739ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.5.pd.json [90m(0.65951ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.6.pd.json [90m(0.724161ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.7.pd.json [90m(0.64131ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.8.pd.json [90m(0.569149ms)[39m[39m
+    [32m✔ PlutusV3.ScriptPurpose.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptPurpose.9.pd.json [90m(0.594209ms)[39m[39m
+  [32m✔ PlutusV3.ScriptPurpose from to golden tests [90m(21.41194ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 212 golden files for /^PlutusV3\.ScriptInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.ScriptInfo from to golden tests
+    [32m✔ PlutusV3.ScriptInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.0.pd.json [90m(1.059357ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.1.pd.json [90m(0.843323ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.2.pd.json [90m(0.755712ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.3.pd.json [90m(0.65144ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.4.pd.json [90m(0.549169ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.5.pd.json [90m(0.63295ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.6.pd.json [90m(0.683371ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.7.pd.json [90m(0.69492ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.8.pd.json [90m(0.65ms)[39m[39m
+    [32m✔ PlutusV3.ScriptInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptInfo.9.pd.json [90m(0.67496ms)[39m[39m
+  [32m✔ PlutusV3.ScriptInfo from to golden tests [90m(20.900032ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 24 golden files for /^PlutusV3\.TxInInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxInInfo from to golden tests
+    [32m✔ PlutusV3.TxInInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.0.pd.json [90m(1.25904ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.1.pd.json [90m(1.010376ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.2.pd.json [90m(0.831273ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.3.pd.json [90m(1.29285ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.4.pd.json [90m(0.889984ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.5.pd.json [90m(1.020266ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.6.pd.json [90m(0.810112ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.7.pd.json [90m(0.821243ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.8.pd.json [90m(0.992636ms)[39m[39m
+    [32m✔ PlutusV3.TxInInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInInfo.9.pd.json [90m(0.931895ms)[39m[39m
+  [32m✔ PlutusV3.TxInInfo from to golden tests [90m(23.36976ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 432 golden files for /^PlutusV3\.TxInfo\.[0-9]*\.pd\.json$/g in data/lbt-plutus-golden-data, but got 10. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ PlutusV3.TxInfo from to golden tests
+    [32m✔ PlutusV3.TxInfo.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.0.pd.json [90m(107.189863ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.1.pd.json [90m(107.619209ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.2.pd.json [90m(99.420063ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.3.pd.json [90m(102.007033ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.4.pd.json [90m(96.451677ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.5.pd.json [90m(100.110534ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.6.pd.json [90m(101.697978ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.7.pd.json [90m(101.702698ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.8.pd.json [90m(117.775396ms)[39m[39m
+    [32m✔ PlutusV3.TxInfo.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.TxInfo.9.pd.json [90m(98.645401ms)[39m[39m
+  [32m✔ PlutusV3.TxInfo from to golden tests [90m(1257.739625ms)[39m[39m
+  ▶ PlutusV3.ScriptContext from to golden tests
+    [32m✔ PlutusV3.ScriptContext.0.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.0.pd.json [90m(101.743119ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.1.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.1.pd.json [90m(103.902282ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.2.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.2.pd.json [90m(102.909067ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.3.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.3.pd.json [90m(101.861561ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.4.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.4.pd.json [90m(123.033887ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.5.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.5.pd.json [90m(129.882633ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.6.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.6.pd.json [90m(128.052075ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.7.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.7.pd.json [90m(116.215811ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.8.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.8.pd.json [90m(110.957941ms)[39m[39m
+    [32m✔ PlutusV3.ScriptContext.9.pd.json at data/lbt-plutus-golden-data/PlutusV3.ScriptContext.9.pd.json [90m(111.183994ms)[39m[39m
+  [32m✔ PlutusV3.ScriptContext from to golden tests [90m(1342.320964ms)[39m[39m
+lbt-plutus-typescript: warning: expected to find 2 golden files for /^Prelude\.Bool\.[0-9]*\.pd\.pd\.json$/g in data/lbt-plutus-golden-data, but got 0. Forgot to (re)generate the goldens? Or there is a mismatch in the number of TS goldens and generated Haskell goldens
+  ▶ Prelude tests
+    [32m✔ Prelude.Bool from to golden tests [90m(14.757207ms)[39m[39m
+    ▶ Prelude.Maybe from to golden tests
+      [32m✔ Prelude.Maybe.0.pd.json at data/lbt-plutus-golden-data/Prelude.Maybe.0.pd.json [90m(0.889834ms)[39m[39m
+      [32m✔ Prelude.Maybe.1.pd.json at data/lbt-plutus-golden-data/Prelude.Maybe.1.pd.json [90m(0.61372ms)[39m[39m
+      [32m✔ Prelude.Maybe.2.pd.json at data/lbt-plutus-golden-data/Prelude.Maybe.2.pd.json [90m(0.496538ms)[39m[39m
+    [32m✔ Prelude.Maybe from to golden tests [90m(14.052587ms)[39m[39m
+    ▶ Prelude.Either from to golden tests
+      [32m✔ Prelude.Either.0.pd.json at data/lbt-plutus-golden-data/Prelude.Either.0.pd.json [90m(5.156839ms)[39m[39m
+      [32m✔ Prelude.Either.1.pd.json at data/lbt-plutus-golden-data/Prelude.Either.1.pd.json [90m(0.869493ms)[39m[39m
+      [32m✔ Prelude.Either.2.pd.json at data/lbt-plutus-golden-data/Prelude.Either.2.pd.json [90m(0.505598ms)[39m[39m
+    [32m✔ Prelude.Either from to golden tests [90m(19.822856ms)[39m[39m
+    ▶ Prelude.List from to golden tests
+      [32m✔ Prelude.List.0.pd.json at data/lbt-plutus-golden-data/Prelude.List.0.pd.json [90m(0.815012ms)[39m[39m
+      [32m✔ Prelude.List.1.pd.json at data/lbt-plutus-golden-data/Prelude.List.1.pd.json [90m(0.546389ms)[39m[39m
+      [32m✔ Prelude.List.2.pd.json at data/lbt-plutus-golden-data/Prelude.List.2.pd.json [90m(0.473537ms)[39m[39m
+      [32m✔ Prelude.List.3.pd.json at data/lbt-plutus-golden-data/Prelude.List.3.pd.json [90m(0.473757ms)[39m[39m
+    [32m✔ Prelude.List from to golden tests [90m(15.52175ms)[39m[39m
+  [32m✔ Prelude tests [90m(64.369932ms)[39m[39m
+[32m✔ PlutusData tests (toJson . toPlutusData . fromPlutusData . fromJson) [90m(9749.775923ms)[39m[39m
+[34mℹ tests 824[39m
+[34mℹ suites 6[39m
+[34mℹ pass 824[39m
+[34mℹ fail 0[39m
+[34mℹ cancelled 0[39m
+[34mℹ skipped 0[39m
+[34mℹ todo 0[39m
+[34mℹ duration_ms 10044.782554[39m
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mcwd[39m /build/lbt-plutus-node2nix
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mos[39m Linux 6.6.47
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnode[39m v22.14.0
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mnpm [39m v10.9.2
+[1G[0K\[1G[0K[1mnpm[22m [34mverbose[39m [94mexit[39m [33m0[39m
+[1G[0K\[1G[0K[1mnpm[22m [36minfo[39m [94mok[39m
+[1G[0K\[1G[0KRunning phase: installPhase
+Running phase: fixupPhase
+shrinking RPATHs of ELF executables and libraries in /nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript
+checking for references to /build/ in /nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript...
+patching script interpreter paths in /nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript
+linking '/nix/store/7jf6jfr3crjyhi0g7i5bvs6lrq1f51wl-lbt-plutus-typescript' to '/nix/store/.links/0ip26j2h11n1kgkz36rl4akv694yz65hr72q4kv4b3lxcbi65b3p'
+
