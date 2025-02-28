@@ -1,5 +1,7 @@
 # Lambda Buffers
 
+[![Hercules CI](https://hercules-ci.com/api/v1/site/github/account/mlabs-haskell/project/lambda-buffers/badge)](https://hercules-ci.com/github/mlabs-haskell/lambda-buffers/status)
+
 ![LambdaBuffers banner](docs/images/lambda-buffers-banner.png)
 
 ## Introduction
