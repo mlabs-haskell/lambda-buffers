@@ -1,5 +1,11 @@
 # Makes a Cabal package with just a 'data' directory with proper 'data-filers' stanza
-pkgs: { srcs, cabalDataPatterns, cabalPackageName, cabalPackageVersion ? "0.1.0.0" }:
+pkgs:
+{
+  srcs,
+  cabalDataPatterns,
+  cabalPackageName,
+  cabalPackageVersion ? "0.1.0.0",
+}:
 let
   cabalTemplate = pkgs.writeTextFile {
     name = "haskell-data.nix-cabal-template";
@@ -14,7 +20,7 @@ let
       library
           default-language: Haskell2010
           build-depends: base >=4.16
-          exposed-modules: Paths_${builtins.replaceStrings ["-"] ["_"] cabalPackageName}
+          exposed-modules: Paths_${builtins.replaceStrings [ "-" ] [ "_" ] cabalPackageName}
     '';
   };
 in

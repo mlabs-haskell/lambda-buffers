@@ -11,96 +11,126 @@ let
     {
       # Source that is passed to `lbf` as the `--import-path` flag and used to find `files`.
       # Examples: src = ./api
-      src
-    , # Additional sources that are passed to `lbf` as the `--import-path` flag.
+      src,
+      # Additional sources that are passed to `lbf` as the `--import-path` flag.
       # Examples: imports = { lbf-prelude = ./lbf-prelude; }
-      imports ? { }
-    , # .lbf files in `src` to compile and codegen.
+      imports ? { },
+      # .lbf files in `src` to compile and codegen.
       # Examples: files = [ "Foo.lbf" "Foo/Bar.lbf" ]
-      files
+      files,
       # Classes for which to generate implementations for (default lbf-prelude classes).
-    , classes ? [ ]
-    , # Dependencies to include in the Cargo's `dependencies` section.
+      classes ? [ ],
+      # Dependencies to include in the Cargo's `dependencies` section.
       # examples: dependencies = [ "lbf-prelude" ]
-      dependencies ? [ ]
-    , configs ? [ ]
-    , # Name of the package and also the name of the Cargo crate.
+      dependencies ? [ ],
+      configs ? [ ],
+      # Name of the package and also the name of the Cargo crate.
       # Examples: name = "lbf-myproject"
-      name
-    , # Version of the package and also the version of the Cargo crate.
+      name,
+      # Version of the package and also the version of the Cargo crate.
       # Examples: version = "0.1.0.0"
-      version ? "0.1.0"
-    , # Version of dependencies
+      version ? "0.1.0",
+      # Version of dependencies
       # A package will only be added to Cargo.toml, if the generated code directly depends on it
       # Defaults to version 0.1.0 for all packages
-      extraVersions ? { }
-    }: { inherit src imports files classes dependencies configs name version extraVersions; };
+      extraVersions ? { },
+    }:
+    {
+      inherit
+        src
+        imports
+        files
+        classes
+        dependencies
+        configs
+        name
+        version
+        extraVersions
+        ;
+    };
 
   lbf-build = import ./lbf-build.nix pkgs lbf;
 
-  lbfBuild = opts: with (lbfRustOpts opts);
+  lbfBuild =
+    opts:
+    with (lbfRustOpts opts);
     let
-      findModules = root: map
-        (path: builtins.replaceStrings [ "/" ] [ "." ]
-          (pkgs.lib.strings.removePrefix "./" (pkgs.lib.strings.removeSuffix ".lbf"
-            (pkgs.lib.path.removePrefix root path))))
-        (builtins.filter (pkgs.lib.hasSuffix ".lbf")
-          (pkgs.lib.filesystem.listFilesRecursive root));
-      packageSet =
-        pkgs.writeTextFile {
-          name = "lb-packages";
-          text =
-            builtins.toJSON
-              ({ crate = findModules src; } // builtins.mapAttrs (_: findModules) imports);
-        };
+      findModules =
+        root:
+        map (
+          path:
+          builtins.replaceStrings [ "/" ] [ "." ] (
+            pkgs.lib.strings.removePrefix "./" (
+              pkgs.lib.strings.removeSuffix ".lbf" (pkgs.lib.path.removePrefix root path)
+            )
+          )
+        ) (builtins.filter (pkgs.lib.hasSuffix ".lbf") (pkgs.lib.filesystem.listFilesRecursive root));
+      packageSet = pkgs.writeTextFile {
+        name = "lb-packages";
+        text = builtins.toJSON ({ crate = findModules src; } // builtins.mapAttrs (_: findModules) imports);
+      };
 
     in
-    lbf-build.build
-      {
-        inherit src;
-        opts = {
-          inherit files;
-          import-paths = pkgs.lib.attrsets.attrValues imports;
-          gen = lbg-rust;
-          gen-classes = classes;
-          gen-dir = "autogen";
-          gen-opts = [ "--packages=${packageSet}" ] ++ builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
-          work-dir = ".work";
-        };
+    lbf-build.build {
+      inherit src;
+      opts = {
+        inherit files;
+        import-paths = pkgs.lib.attrsets.attrValues imports;
+        gen = lbg-rust;
+        gen-classes = classes;
+        gen-dir = "autogen";
+        gen-opts = [ "--packages=${packageSet}" ] ++ builtins.map (c: "--config=${c}") configs; # WARN(bladyjoker): If I put quotes here everything breaks.
+        work-dir = ".work";
       };
+    };
 
-  cargoTemplate = opts: with (lbfRustOpts opts);
-    pkgs.writers.writeJSON "lambda-buffers-cargo-template"
-      {
-        package = {
-          inherit name version;
-          edition = "2021";
-        };
+  cargoTemplate =
+    opts:
+    with (lbfRustOpts opts);
+    pkgs.writers.writeJSON "lambda-buffers-cargo-template" {
+      package = {
+        inherit name version;
+        edition = "2021";
       };
+    };
 
   # This is a lookup table of default crate versions used by lamba-buffers modules
   # Based on the contents of `build.json` a subset of these will be attached to the
   # Cargo.toml file
   # Note: lbr-prelude and and plutus prelude versions are pinned here, but can be overridden with `extraVersions`
-  versionTable =
-    {
-      num-bigint = "~0.4";
-      serde_json = { version = "^1.0"; features = [ "arbitrary_precision" ]; };
-      plutus-ledger-api = { version = "^3.0.1"; features = [ "lbf" ]; };
-      lbr-prelude = { version = "0.1.3"; };
+  versionTable = {
+    num-bigint = "~0.4";
+    serde_json = {
+      version = "^1.0";
+      features = [ "arbitrary_precision" ];
     };
+    plutus-ledger-api = {
+      version = "^3.0.1";
+      features = [ "lbf" ];
+    };
+    lbr-prelude = {
+      version = "0.1.3";
+    };
+  };
 
-  crateVersions = opts: with (lbfRustOpts opts);
+  crateVersions =
+    opts:
+    with (lbfRustOpts opts);
     pkgs.writers.writeJSON "lambda-buffers-crate-versions" (versionTable // extraVersions);
 
-  build = opts: with (lbfRustOpts opts);
+  build =
+    opts:
+    with (lbfRustOpts opts);
     let
       lbfBuilt = lbfBuild opts;
     in
     pkgs.stdenv.mkDerivation {
       inherit src version;
       pname = name;
-      outputs = [ "out" "buildjson" ];
+      outputs = [
+        "out"
+        "buildjson"
+      ];
       buildInputs = [
         pkgs.jq
         pkgs.yj

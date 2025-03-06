@@ -1,6 +1,12 @@
 { inputs, ... }:
 {
-  perSystem = { config, pkgs, system, ... }:
+  perSystem =
+    {
+      config,
+      pkgs,
+      system,
+      ...
+    }:
     let
       # TODO: plutusTxFlake
       hsFlake = inputs.flake-lang.lib.${system}.haskellPlutusFlake {
