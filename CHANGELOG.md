@@ -1,11 +1,11 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- ## [Unreleased]
 
 ### Schemas
 
@@ -65,12 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Typescript lbr-plutus
 
-#### Purescript lbr-plutus
+#### Purescript lbr-plutus -->
 
 ## LambdaBuffers v2.0.0
 
 Conway support, with new V3 types and updated dependencies.
+
 V1 and V2 behaviour is unchanged, all serialization formats are backward compatible.
+Migrating LambdaBuffers from from v1.0.0 does not require any changes on the
+API level, however all libraries have been updated (CTL, plutus-ledger-api-rust, plutus-tx, etc.),
+most of them containing breaking changes. For migrations guides, please refer to the
+documentation of these libraries. You can find the library versions below:
 
 ### Schemas
 
