@@ -107,3 +107,5 @@ Implementation in repository:
   - Documentation of plutus-ledger-api-rust V3 types is located here: [https://mlabs-haskell.github.io/plutus-ledger-api-rust/plutus_ledger_api/v3](https://mlabs-haskell.github.io/plutus-ledger-api-rust/plutus_ledger_api/v3)
   - Documentation of plutus-ledger-api-typescript V3 types is located here: [https://mlabs-haskell.github.io/plutus-ledger-api-typescript/modules/plutus_ledger_api_V3_js](https://mlabs-haskell.github.io/plutus-ledger-api-typescript/modules/plutus_ledger_api_V3_js.html)
   - Conway compatibility report [docs/catalyst13-reports/milestone-1.md](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/docs/catalyst13-reports/milestone-1.md)
+  - Updated [lambda-buffers-for-cardano](https://github.com/mlabs-haskell/lambda-buffers-for-cardano) repository and documentation
+  - Updated [Changelog](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/CHANGELOG.md)
