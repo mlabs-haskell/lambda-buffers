@@ -3,6 +3,7 @@
   inputs = {
     # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang.inputs.ctl.follows = "ctl";
 
     nixpkgs.follows = "flake-lang/nixpkgs";
 
@@ -19,7 +20,7 @@
     proto-nix.url = "github:mlabs-haskell/proto.nix";
 
     # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
-    ctl.follows = "flake-lang/ctl";
+    ctl.url = "github:Plutonomicon/cardano-transaction-lib/5b0a18b5a79c1ee024ca2668af04fab42c444e8f";
 
     # Plutarch eDSL (LB Codegen target)
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=e9e9df286768440733890b1260ad569a2f882890";
