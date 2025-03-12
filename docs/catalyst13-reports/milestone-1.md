@@ -47,7 +47,7 @@ Implementation in repository:
 ## Evidence of Milestone Completion
 
 - Proof of Achievement 1: Codegen implementation will be added to the github.com/mlabs-haskell/lambda-buffers repository and a link will be provided.
-  - Codegen configuration files for all languager are augmented with the new Plutus V3 types, pointing the opaque types to their respective type declarations in libraries.
+  - Codegen configuration files for all languages are augmented with the new Plutus V3 types, pointing the opaque types to their respective type declarations in libraries.
     Users of the LambdaBuffers library can now use V3 types in their schemas, and generate code for all the supported languages:
     - Haskell (with Haskell Prelude) PlutusTx codegen config: [lambda-buffers-codegen/data/haskell-plutus-plutustx.json](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/lambda-buffers-codegen/data/haskell-plutus-plutustx.json)
     - Plutarch codegen config: [lambda-buffers-codegen/data/plutarch-plutus.json](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/lambda-buffers-codegen/data/plutarch-plutus.json)
