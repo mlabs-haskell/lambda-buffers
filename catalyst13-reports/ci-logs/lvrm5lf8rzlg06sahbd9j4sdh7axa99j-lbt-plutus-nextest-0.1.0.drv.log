@@ -1,0 +1,179 @@
+querying info about missing paths
+querying info about '/nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0' on 'https://cache.nixos.org'
+downloading 'https://cache.nixos.org/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0.narinfo'
+querying info about '/nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0' on 'https://mlabs.cachix.org'
+downloading 'https://mlabs.cachix.org/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0.narinfo'
+querying info about '/nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0' on 'https://cache.nixos.org'
+downloading 'https://cache.nixos.org/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0.narinfo'
+querying info about '/nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0' on 'https://mlabs.cachix.org'
+downloading 'https://mlabs.cachix.org/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0.narinfo'
+building '/nix/store/lvrm5lf8rzlg06sahbd9j4sdh7axa99j-lbt-plutus-nextest-0.1.0.drv'
+Running phase: unpackPhase
+unpacking source archive /nix/store/ds5611ivha23hy9i7dywilg1aml1ais1-lbt-plutus-build-env
+source root is lbt-plutus-build-env
+Running phase: patchPhase
+Executing configureCargoCommonVars
+decompressing cargo artifacts from /nix/store/x84nf4h86vwf17z1yy0zxqiyb6j318ji-lbt-plutus-deps-0.1.0/target.tar.zst to target
+Running phase: updateAutotoolsGnuConfigScriptsPhase
+Running phase: configurePhase
+will append /build/lbt-plutus-build-env/.cargo-home/config.toml with contents of /nix/store/3ihmn7pbv1wybhfzvxy69hm1y5y2x731-vendor-cargo-deps/config.toml
+default configurePhase, nothing to do
+Running phase: buildPhase
++++ command cargo --version
+cargo 1.85.0 (d73d2caf9 2024-12-31)
++++ command cargo nextest --version
+cargo-nextest 0.9.91
+release: 0.9.91
+host: x86_64-unknown-linux-gnu
+Running phase: checkPhase
++++ command cargo nextest run --cargo-profile release
+[1m[32m   Compiling[0m lbf-prelude v0.1.0 (/build/lbt-plutus-build-env/.extras/lbf-prelude-0.1.0)
+[1m[32m   Compiling[0m lbf-plutus v0.1.0 (/build/lbt-plutus-build-env/.extras/lbf-plutus-0.1.0)
+[1m[32m   Compiling[0m lbf-plutus-golden-api v0.1.0 (/build/lbt-plutus-build-env/.extras/lbf-plutus-golden-api-0.1.0)
+[1m[32m   Compiling[0m lbt-plutus v0.1.0 (/build/lbt-plutus-build-env)
+[1m[32m    Finished[0m `release` profile [optimized] target(s) in 13.40s
+[2K------------0:00:00]                                            0/131:      
+[32;1m Nextest run[0m ID [1m641a46a5-361f-44ca-83f0-2b333b08090e[0m with nextest profile: [1mdefault[0m
+[32;1m    Starting[0m [1m131[0m tests across [1m4[0m binaries
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1masset_class_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mredeemer_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdatum_hash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mbytes_from_to_golden_test[0m0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mcredential_from_to_golden_test[0m  
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mcommittee_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdatum_from_to_golden_test[0m0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdelegatee_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mcold_committee_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mchanged_parameters_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mmap_from_to_golden_test[0m[0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mlovelace_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mplutus_data_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdcert_v1_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1maddress_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mprotocol_version_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdrep_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mada_currency_symbol_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mconstitution_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1minterval_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mhot_committee_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mextended_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mdrep_v3_from_to_golden_test[0m     
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mgovernance_action_id_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mout_datum_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mposix_time_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mposix_time_range_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mlower_bound_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mpubkeyhash_from_to_golden_test[0m  
+[2K[32;1m        PASS[0m [   0.014s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mgovernance_action_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mproposal_procedure_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.016s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mrational_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mredeemer_hash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_hash_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtoken_name_from_to_golden_test[0m  
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mstaking_credential_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_purpose_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_info_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_purpose_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mvote_v3_from_to_golden_test[0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_id_from_to_golden_test[0m0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_out_v1_from_to_golden_test[0m   
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::days_tests[0m[36m::[0m[34;1mdays_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mupper_bound_from_to_golden_test[0m 
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_in_info_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::days_tests[0m[36m::[0m[34;1mfreedays_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mvoter_v3_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_out_v2_from_to_golden_test[0m   
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_out_ref_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_in_info_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_out_ref_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mvalue_from_to_golden_test[0m0m     
+[2K[32;1m        PASS[0m [   0.014s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_id_v3_from_to_golden_test[0m    
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::days_tests[0m[36m::[0m[34;1mworkdays_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.014s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_in_info_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.014s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_cert_from_to_golden_test[0m     
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mada_currency_symbol_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_g_int_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_f_int_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1masset_class_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_d_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_a_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mchanged_parameters_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mconstitution_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_c_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1maddress_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mcold_committee_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mcommittee_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::foo_tests[0m[36m::[0m[34;1mfoo_b_from_to_golden_tests[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdcert_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mbytes_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdatum_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mcredential_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdelegatee_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdrep_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdrep_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mdatum_hash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1minterval_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mextended_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mredeemer_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mposix_time_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mgovernance_action_id_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mhot_committee_credential_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mpubkeyhash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mplutus_data_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mredeemer_hash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_hash_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mposix_time_range_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mlovelace_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mlower_bound_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mrational_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mmap_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mout_datum_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.010s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mprotocol_version_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.013s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mgovernance_action_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_purpose_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtoken_name_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mstaking_credential_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.014s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_info_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_purpose_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_id_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_id_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_cert_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.008s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_out_ref_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.009s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_in_info_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.016s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mproposal_procedure_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mvalue_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_out_ref_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_in_info_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mvoter_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mvote_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_out_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.013s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_in_info_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mupper_bound_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.012s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_out_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::prelude_tests[0m[36m::[0m[34;1meither_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.011s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::prelude_tests[0m[36m::[0m[34;1mbool_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::prelude_tests[0m[36m::[0m[34;1mmaybe_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.007s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::prelude_tests[0m[36m::[0m[34;1mlist_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.151s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_context_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.151s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_info_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.331s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_context_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.370s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_info_v1_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.425s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_info_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.434s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_context_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.637s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mtx_info_v3_from_to_golden_test[0m  
+[2K[32;1m        PASS[0m [   0.784s] [35;1mlbt-plutus::main[0m [36mjson_tests[0m[36m::[0m[34;1mscript_context_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   0.985s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_info_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   1.042s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_context_v2_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   1.192s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mtx_info_v3_from_to_golden_test[0m
+[2K[32;1m        PASS[0m [   1.411s] [35;1mlbt-plutus::main[0m [36mplutus_data_tests::plutus_tests[0m[36m::[0m[34;1mscript_context_v3_from_to_golden_test[0m
+[2K------------ing[0m [ 00:00:01] ======== 131/131: [1m0[0m running, [1m131[0m [32;1mpassed[0m, [1m0[0m [33;1mskipped[0m     
+[32;1m     Summary[0m [   1.442s] [1m131[0m tests run: [1m131[0m [32;1mpassed[0m, [1m0[0m [33;1mskipped[0m
+[2KRunning phase: installPhase:01] ======== 131/131: [1m0[0m running, [1m131[0m [32;1mpassed[0m, [1m0[0m [33;1mskipped[0m     
+linking previous artifacts /nix/store/x84nf4h86vwf17z1yy0zxqiyb6j318ji-lbt-plutus-deps-0.1.0/target.tar.zst to /nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0/target.tar.zst
+/*stdin*\            : 25.63%   (  9.65 MiB =>   2.47 MiB, /nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0/target.tar.zst) 
+Running phase: fixupPhase
+shrinking RPATHs of ELF executables and libraries in /nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0
+checking for references to /build/ in /nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0...
+patching script interpreter paths in /nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0
+linking '/nix/store/2i9hnf1x6vzmmdwhjza0qmzr0p779zp0-lbt-plutus-nextest-0.1.0/target.tar.zst.prev' to '/nix/store/.links/11lp4ssg9a0a428jb7y6y75x48cysw2ivaq3vvigv0ap6a1ipsf1'
+
