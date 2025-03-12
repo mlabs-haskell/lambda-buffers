@@ -1,9 +1,11 @@
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [
     inputs.proto-nix.lib.preCommitModule
     inputs.flake-lang.flakeModules.rustMonorepoPreCommit
   ];
-  perSystem = { config, pkgs, ... }:
+  perSystem =
+    { config, pkgs, ... }:
     {
       devShells.default = pkgs.mkShell {
         name = "dev-default";
@@ -25,7 +27,7 @@
           ];
 
           hooks = {
-            nixpkgs-fmt.enable = true;
+            nixfmt-rfc-style.enable = true;
             deadnix.enable = true;
             statix.enable = true;
             statix.settings.ignore = [ "**spago-packages.nix" ];

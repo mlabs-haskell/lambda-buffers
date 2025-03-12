@@ -2,19 +2,19 @@
 {
   imports = [ ./api/lbf/build.nix ];
 
-  perSystem = { config, system, ... }:
+  perSystem =
+    { config, system, ... }:
     let
-      tsFlake =
-        inputs.flake-lang.lib.${system}.typescriptFlake {
-          name = "prelude-sample-project";
-          src = ./.;
-          npmExtraDependencies = [
-            config.packages.lbf-prelude-sample-project-typescript
-          ];
+      tsFlake = inputs.flake-lang.lib.${system}.typescriptFlake {
+        name = "prelude-sample-project";
+        src = ./.;
+        npmExtraDependencies = [
+          config.packages.lbf-prelude-sample-project-typescript
+        ];
 
-          devShellTools = config.settings.shell.tools;
-          devShellHook = config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
+      };
     in
     {
       packages = {

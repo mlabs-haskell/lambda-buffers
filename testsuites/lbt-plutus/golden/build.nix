@@ -1,6 +1,7 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, system, ... }:
+  perSystem =
+    { pkgs, system, ... }:
     let
       goldenData = pkgs.stdenv.mkDerivation {
         name = "lbt-plutus-golden-data";

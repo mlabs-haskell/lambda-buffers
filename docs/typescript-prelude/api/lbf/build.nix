@@ -1,13 +1,12 @@
-_:
-{
-  perSystem = { config, ... }:
+_: {
+  perSystem =
+    { config, ... }:
     let
-      lbf-prelude-sample-project-typescript =
-        config.lbf-nix.lbfPreludeTypescript {
-          name = "lbf-prelude-sample-project";
-          src = ./.;
-          files = [ "MySchema.lbf" ];
-        };
+      lbf-prelude-sample-project-typescript = config.lbf-nix.lbfPreludeTypescript {
+        name = "lbf-prelude-sample-project";
+        src = ./.;
+        files = [ "MySchema.lbf" ];
+      };
     in
     {
       packages = {

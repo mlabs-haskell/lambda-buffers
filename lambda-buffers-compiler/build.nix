@@ -1,6 +1,12 @@
 { inputs, ... }:
 {
-  perSystem = { config, pkgs, system, ... }:
+  perSystem =
+    {
+      config,
+      pkgs,
+      system,
+      ...
+    }:
     let
       hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
         src = ./.;
@@ -33,7 +39,8 @@
           installPhase = "ln -s $src $out";
         };
 
-        lambda-buffers-compiler-lib = hsFlake.packages."lambda-buffers-compiler:lib:lambda-buffers-compiler";
+        lambda-buffers-compiler-lib =
+          hsFlake.packages."lambda-buffers-compiler:lib:lambda-buffers-compiler";
         lambda-buffers-compiler-tests = hsFlake.packages."lambda-buffers-compiler:test:tests";
         lambda-buffers-compiler-cli = hsFlake.packages."lambda-buffers-compiler:exe:lbc";
         lbc = config.packages.lambda-buffers-compiler-cli;

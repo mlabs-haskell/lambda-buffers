@@ -1,28 +1,29 @@
-{ inputs, ... }: {
-  perSystem = { config, system, ... }:
+{ inputs, ... }:
+{
+  perSystem =
+    { config, system, ... }:
 
     let
-      rustFlake =
-        inputs.flake-lang.lib.${system}.rustFlake {
-          src = ./.;
-          crateName = "lbt-prelude";
+      rustFlake = inputs.flake-lang.lib.${system}.rustFlake {
+        src = ./.;
+        crateName = "lbt-prelude";
 
-          generateDocs = false;
-          extraSources = [
-            config.packages.lbf-prelude-golden-api-rust
-            config.packages.lbf-prelude-rust
-            config.packages.lbr-prelude-rust-src
-            config.packages.lbr-prelude-derive-rust-src
-          ];
-          data = [
-            {
-              name = "lbt-prelude-golden-data";
-              path = config.packages.lbt-prelude-golden-rust;
-            }
-          ];
-          devShellHook = config.settings.shell.hook;
+        generateDocs = false;
+        extraSources = [
+          config.packages.lbf-prelude-golden-api-rust
+          config.packages.lbf-prelude-rust
+          config.packages.lbr-prelude-rust-src
+          config.packages.lbr-prelude-derive-rust-src
+        ];
+        data = [
+          {
+            name = "lbt-prelude-golden-data";
+            path = config.packages.lbt-prelude-golden-rust;
+          }
+        ];
+        devShellHook = config.settings.shell.hook;
 
-        };
+      };
     in
     {
 

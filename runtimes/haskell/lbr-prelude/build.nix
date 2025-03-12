@@ -1,6 +1,13 @@
 { inputs, ... }:
 {
-  perSystem = { config, lib, pkgs, system, ... }:
+  perSystem =
+    {
+      config,
+      lib,
+      pkgs,
+      system,
+      ...
+    }:
     let
       hsFlake = inputs.flake-lang.lib.${system}.haskellFlake {
         src = ./.;

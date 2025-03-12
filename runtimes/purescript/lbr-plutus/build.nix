@@ -1,6 +1,12 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, system, ... }:
+  perSystem =
+    {
+      pkgs,
+      config,
+      system,
+      ...
+    }:
 
     let
       pursFlake = inputs.flake-lang.lib.${system}.purescriptFlake {

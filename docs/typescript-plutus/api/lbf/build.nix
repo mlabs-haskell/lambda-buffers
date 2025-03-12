@@ -1,13 +1,12 @@
-_:
-{
-  perSystem = { config, ... }:
+_: {
+  perSystem =
+    { config, ... }:
     let
-      lbf-plutus-sample-project-typescript =
-        config.lbf-nix.lbfPlutusTypescript {
-          name = "lbf-plutus-sample-project";
-          src = ./.;
-          files = [ "MySchema.lbf" ];
-        };
+      lbf-plutus-sample-project-typescript = config.lbf-nix.lbfPlutusTypescript {
+        name = "lbf-plutus-sample-project";
+        src = ./.;
+        files = [ "MySchema.lbf" ];
+      };
     in
     {
       packages = {

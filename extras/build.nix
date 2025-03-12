@@ -1,4 +1,10 @@
-{ config, flake-parts-lib, lib, ... }: {
+{
+  config,
+  flake-parts-lib,
+  lib,
+  ...
+}:
+{
 
   # Makes a system agnostic option (dunno why I needed this).
   options.lbf-nix = lib.mkOption {
@@ -22,8 +28,9 @@
   options = {
 
     # Makes a per system `lbf-nix` option.
-    perSystem = flake-parts-lib.mkPerSystemOption
-      ({ pkgs, config, ... }: {
+    perSystem = flake-parts-lib.mkPerSystemOption (
+      { pkgs, config, ... }:
+      {
 
         options.lbf-nix = lib.mkOption {
           type = lib.types.anything;
@@ -45,7 +52,8 @@
 
         };
 
-      });
+      }
+    );
 
   };
 }

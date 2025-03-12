@@ -2,20 +2,20 @@
 {
   imports = [ ./api/lbf/build.nix ];
 
-  perSystem = { config, system, ... }:
+  perSystem =
+    { config, system, ... }:
     let
-      tsFlake =
-        inputs.flake-lang.lib.${system}.typescriptFlake {
-          name = "plutus-sample-project";
-          src = ./.;
+      tsFlake = inputs.flake-lang.lib.${system}.typescriptFlake {
+        name = "plutus-sample-project";
+        src = ./.;
 
-          npmExtraDependencies = [
-            config.packages.lbf-plutus-sample-project-typescript
-          ];
+        npmExtraDependencies = [
+          config.packages.lbf-plutus-sample-project-typescript
+        ];
 
-          devShellTools = config.settings.shell.tools;
-          devShellHook = config.settings.shell.hook;
-        };
+        devShellTools = config.settings.shell.tools;
+        devShellHook = config.settings.shell.hook;
+      };
     in
     {
       packages = {
