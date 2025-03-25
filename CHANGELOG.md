@@ -117,7 +117,7 @@ Target: [plutus-ledger-api-typescript 1.2.1](https://github.com/mlabs-haskell/pl
 
 ##### Plutarch
 
-Target: [plutarch 1.5.0](https://github.com/Plutonomicon/plutarch-plutus/tree/e9e9df286768440733890b1260ad569a2f882890)
+Target: [plutarch 1.10.0](https://github.com/Plutonomicon/plutarch-plutus/releases/tag/v1.10.0)
 
 ##### PlutusTx
 
