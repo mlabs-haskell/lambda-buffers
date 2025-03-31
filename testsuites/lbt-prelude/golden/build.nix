@@ -1,6 +1,12 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, config, system, ... }:
+  perSystem =
+    {
+      pkgs,
+      config,
+      system,
+      ...
+    }:
     let
       goldenData = pkgs.stdenv.mkDerivation {
         name = "lbt-prelude-golden-data";

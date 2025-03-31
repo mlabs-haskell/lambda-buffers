@@ -1,4 +1,5 @@
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [
     inputs.hci-effects.flakeModule # Adds hercules-ci and herculesCI options
   ];
@@ -17,9 +18,11 @@
     };
   };
   hercules-ci.github-pages.branch = "main";
-  perSystem = { config, ... }: {
-    hercules-ci.github-pages.settings.contents = config.packages.lambda-buffers-book;
-  };
+  perSystem =
+    { config, ... }:
+    {
+      hercules-ci.github-pages.settings.contents = config.packages.lambda-buffers-book;
+    };
 
   herculesCI.ciSystems = [ "x86_64-linux" ];
 }

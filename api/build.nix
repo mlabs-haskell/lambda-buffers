@@ -1,6 +1,13 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, system, config, inputs', ... }:
+  perSystem =
+    {
+      pkgs,
+      system,
+      config,
+      inputs',
+      ...
+    }:
     let
       proto-nix = inputs.proto-nix.lib.${system};
     in
@@ -35,7 +42,11 @@
 
         lambda-buffers-api-docs = proto-nix.docProto {
           src = ./.;
-          protos = [ "lang.proto" "compiler.proto" "codegen.proto" ];
+          protos = [
+            "lang.proto"
+            "compiler.proto"
+            "codegen.proto"
+          ];
         };
       };
     };
