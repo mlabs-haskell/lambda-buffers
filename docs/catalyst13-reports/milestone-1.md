@@ -84,7 +84,10 @@ Implementation in repository:
       - PlutusData tests: [testsuites/lbt-plutus/lbt-plutus-typescript/src/PlutusData-test.ts](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-typescript/src/PlutusData-test.ts)
       - Json tests: [testsuites/lbt-plutus/lbt-plutus-typescript/src/Json-test.ts](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-typescript/src/Json-test.ts)
       - [CI test logs](ci-logs/xi4npf8jnag34a7kmblg8ilgmidvsqa9-lbt-plutus-typescript.drv.log)
+    - PureScript: Unfortunately the PureScript ledger API only partially supports V3 types. Furthermore, it does not have Json and PlutusData instances consistently,
+      thus golden testing was out of scope
 - Proof of Achievement 3: Plutus V3 roundtrip tests located at [https://github.com/mlabs-haskell/lambda-buffers](https://github.com/mlabs-haskell/lambda-buffers) repo and a link will be provided.
+
   - Roundtrip tests were implemented and can be found here:
     - Haskell
       - PlutusData: [https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-haskell/test/Test/LambdaBuffers/Runtime/Plutus/PlutusData.hs](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-haskell/test/Test/LambdaBuffers/Runtime/Plutus/PlutusData.hs)
@@ -99,6 +102,9 @@ Implementation in repository:
       - PlutusData: [testsuites/lbt-plutus/lbt-plutus-typescript/src/PlutusData-test.ts](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-typescript/src/PlutusData-test.ts)
       - Json: [testsuites/lbt-plutus/lbt-plutus-typescript/src/Json-test.ts](https://github.com/mlabs-haskell/lambda-buffers/tree/v2.0.0/testsuites/lbt-plutus/lbt-plutus-typescript/src/Json-test.ts)
       - Property based tests for PlutusData and Json: [https://github.com/mlabs-haskell/plutus-ledger-api-typescript/blob/v1.2.1/src/Tests/V3](https://github.com/mlabs-haskell/plutus-ledger-api-typescript/blob/v3.2.1/src/Tests/V3)
+    - PureScript: Unfortunately the PureScript ledger API only partially supports V3 types. Furthermore, it does not have Json and PlutusData instances consistently,
+      thus roundtrip testing was out of scope
+
 - Proof of Achievement 4: Plutus V3 types located at [https://github.com/mlabs-haskell/plutus-ledger-api-rust](https://github.com/mlabs-haskell/plutus-ledger-api-rust)
   [https://github.com/mlabs-haskell/plutus-ledger-api-typescript](https://github.com/mlabs-haskell/plutus-ledger-api-typescript) and links provided.
   - Plutus_Ledger API Rust implementation was implemented here: [mlabs-haskell/plutus-ledger-api-rust v3.0.2](https://github.com/mlabs-haskell/plutus-ledger-api-rust/tree/v3.0.2/plutus-ledger-api/src/v3)
