@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Catalyst 10 reports - Lambda Buffers documentation</title>
+        <title>Milestone 4: Project adoption - Lambda Buffers documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -152,24 +152,121 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="catalyst-10-reports"><a class="header" href="#catalyst-10-reports">Catalyst 10 reports</a></h1>
+                        <h1 id="catalyst-milestone-4-project-adoption"><a class="header" href="#catalyst-milestone-4-project-adoption">Catalyst milestone 4: Project adoption</a></h1>
+<h2 id="outputs"><a class="header" href="#outputs">Outputs</a></h2>
 <ul>
-<li><a href="milestone-1.html">Milestone 1: Rust support</a></li>
-<li><a href="milestone-2.html">Milestone 2: Javascript/Typescript support</a></li>
-<li><a href="milestone-3.html">Milestone 3: Aiken integration research and development</a></li>
-<li><a href="milestone-4.html">Milestone 4: Separate PlutusTx backend and improvements to existing LambdaBuffers facilities</a></li>
-<li><a href="milestone-5.html">Final Milestone: Project scaffold for Rust, JavaScript and Haskell</a></li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Integration tooling for the build environment (Cabal, Spago. Nix).</p>
+<ul>
+<li>LambdaBuffers team developed and provided their users with a set of Nix utility functions for building <code>.lbf</code> schemas into all the supported target language environments. Additionally, we extended the Nix support for working with Haskell and Purescript projects to allow for adding data and library dependencies which is crucial for adoption of any tool that leverages automated code generation.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the use of said Nix functions which results in a very concise and complete scaffold for any LambdaBuffers powered project.</li>
+</ul>
+<pre><code class="language-shell">lambdabuffers-cardano-demo $ nix repl
+nix-repl&gt; :lf .
+nix-repl&gt; inputs.lbf.lib.x86_64-linux.
+   inputs.lbf.lib.x86_64-linux.haskellData
+   inputs.lbf.lib.x86_64-linux.haskellFlake
+   inputs.lbf.lib.x86_64-linux.haskellPlutusFlake
+   inputs.lbf.lib.x86_64-linux.lbfBuild
+   inputs.lbf.lib.x86_64-linux.lbfHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPlutarch
+   inputs.lbf.lib.x86_64-linux.lbfPlutarch'
+   inputs.lbf.lib.x86_64-linux.lbfPlutusHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPlutusPurescript
+   inputs.lbf.lib.x86_64-linux.lbfPreludeHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPreludePurescript
+   inputs.lbf.lib.x86_64-linux.lbfPurescript
+   inputs.lbf.lib.x86_64-linux.purescriptFlake
+   inputs.lbf.lib.x86_64-linux.rustFlake
+</code></pre>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Continuous integration for regularly deploying toolkit packages to a package repository.</p>
+<ul>
+<li>Hercules CI has been operating on the LambdaBuffers repo since the very start, and all the packages are readily available using Nix.</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+A Cardano dApp project partnership to help integrate the toolkit in their development and build environments.</p>
+<ul>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the end to end Cardano dApp that uses LambdaBuffers and Plutus scripts written in both Plutarch and PlutusTx, whereas Cardano Transaction Library is used to construct transactions and test against the real network (using Plutip) that everything works as intended.</li>
+</ul>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Documentation for integrating the build environment.</p>
+<ul>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates how to use LambdaBuffers and users are recommended to refer to that repo's README to help them integrate LambdaBuffers in their project.</li>
+<li>Additionally, extensive LambdaBuffers documentation is made available at <a href="https://mlabs-haskell.github.io/lambda-buffers/introduction.html">https://mlabs-haskell.github.io/lambda-buffers/introduction.html</a> since the very start of the project.</li>
+</ul>
+</li>
+</ul>
+<h2 id="acceptance-criteria"><a class="header" href="#acceptance-criteria">Acceptance Criteria</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Toolkit packages are available in a package repository (eg. Nixpkgs, Hackage)</p>
+<ul>
+<li>Bash shell is available in the repo that users can simply use to try out and use the LambdaBuffers toolkit.</li>
+</ul>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf&lt;TAB&gt;
+  lbf                        lbf-plutus-to-haskell      lbf-plutus-to-purescript   lbf-prelude-to-haskell     lbf-prelude-to-purescript  
+</code></pre>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Cardano dApp project maintains all the Plutus domain types in the configuration file and has fully equipped type libraries made available automatically via build environment integration tooling.</p>
+<ul>
+<li>A demo project exists at <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">https://github.com/mlabs-haskell/lambdabuffers-cardano-demo</a> that showcase end to end use of the LambdaBuffers toolkit. The project defines the plutus and configuration API in <code>api</code> directory, the <code>validation</code> directory contains the same onchain script logic implemented using PlutusTx and Plutarch, the <code>transactions</code> directory contains transaction building logic using Cardano Transaction Library. All the devops is achieved using concise <code>build.nix</code> Nix based build recipes for each sub-project. Finally, the CI is also instructed to run the end to end test that tries out both Plutarch and PlutusTx scripts assuring it works as intended.</li>
+</ul>
+</li>
+</ul>
+<h2 id="evidence-of-milestone-completion"><a class="header" href="#evidence-of-milestone-completion">Evidence of Milestone Completion</a></h2>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+Completed and reviewed build environment integration tooling and source code are available in the project repository.
+<ul>
+<li>The <a href="./extras">extras</a> contains all the Nix libraries the LB team developed to facilitate and streamline Cardano dApp development using LambdaBuffers and supported language ecosystems (Haskell, Purescript, Cardano Transaction Library, PlutusTx and Plutarch).</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Toolkit packages are available in the package repository.
+<ul>
+<li>All LambdaBuffers tools are available using Nix.</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Proof of use is provided by the partner dApp.
+<ul>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the end to end Cardano dApp that uses LambdaBuffers and Plutus scripts written in both Plutarch and PlutusTx, whereas Cardano Transaction Library is used to construct transactions and test against the real network (using Plutip) that everything works as intended.</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Tooling use documentation is available in the project repository.
+<ul>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates how to use LambdaBuffers and users are recommended to refer to that repo's README to help them integrate LambdaBuffers in their project.</li>
+<li>Additionally, extensive LambdaBuffers documentation is made available at <a href="https://mlabs-haskell.github.io/lambda-buffers/introduction.html">https://mlabs-haskell.github.io/lambda-buffers/introduction.html</a> since the very start of the project.</li>
+</ul>
+</li>
+</ul>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ul>
+<li><a href="https://docs.google.com/spreadsheets/d/16dTxgGsxHvcMe5aCgFPDYEJKgX_VQiNAcwhp2RyA48o/edit#gid=1672366179">Catalyst project sheet</a></li>
 </ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../catalyst09-reports/milestone-4.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../catalyst09-reports/milestone-3.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../catalyst10-reports/milestone-1.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../catalyst10-reports/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -179,11 +276,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../catalyst09-reports/milestone-4.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../catalyst09-reports/milestone-3.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../catalyst10-reports/milestone-1.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../catalyst10-reports/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

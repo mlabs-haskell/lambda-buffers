@@ -4061,156 +4061,104 @@ deriving Json Foo
 </ol>
 </li>
 </ol>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="catalyst-milestone-3-testing-and-documentation-1"><a class="header" href="#catalyst-milestone-3-testing-and-documentation-1">Catalyst milestone 3: Testing and documentation</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="catalyst-milestone-4-project-adoption"><a class="header" href="#catalyst-milestone-4-project-adoption">Catalyst milestone 4: Project adoption</a></h1>
 <h2 id="outputs-3"><a class="header" href="#outputs-3">Outputs</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A test suite checking for correct mapping from schema data types to PlutusData encodings against a known-good corpus of such mappings (golden tests).</p>
+Integration tooling for the build environment (Cabal, Spago. Nix).</p>
 <ul>
-<li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus">lbt-plutus</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">Purescript</a> backends. They leverage both golden unit testing approach and randomized property based testing to assert the essential properties of the LambdaBuffers Plutus package:
-<ul>
-<li><code>Plutus.V1.PlutusData</code> derivation tests
-<ul>
-<li>Golden unit tests: <code>forall (golden : Days.Day.*.pd.json): (toJson . toPlutusData . fromPlutusData . fromJson) golden == golden</code></li>
-<li>Property tests: <code>forall (x : Foo.*): (fromPlutusData . toPlutusData) x == x</code></li>
+<li>LambdaBuffers team developed and provided their users with a set of Nix utility functions for building <code>.lbf</code> schemas into all the supported target language environments. Additionally, we extended the Nix support for working with Haskell and Purescript projects to allow for adding data and library dependencies which is crucial for adoption of any tool that leverages automated code generation.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the use of said Nix functions which results in a very concise and complete scaffold for any LambdaBuffers powered project.</li>
 </ul>
+<pre><code class="language-shell">lambdabuffers-cardano-demo $ nix repl
+nix-repl&gt; :lf .
+nix-repl&gt; inputs.lbf.lib.x86_64-linux.
+   inputs.lbf.lib.x86_64-linux.haskellData
+   inputs.lbf.lib.x86_64-linux.haskellFlake
+   inputs.lbf.lib.x86_64-linux.haskellPlutusFlake
+   inputs.lbf.lib.x86_64-linux.lbfBuild
+   inputs.lbf.lib.x86_64-linux.lbfHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPlutarch
+   inputs.lbf.lib.x86_64-linux.lbfPlutarch'
+   inputs.lbf.lib.x86_64-linux.lbfPlutusHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPlutusPurescript
+   inputs.lbf.lib.x86_64-linux.lbfPreludeHaskell
+   inputs.lbf.lib.x86_64-linux.lbfPreludePurescript
+   inputs.lbf.lib.x86_64-linux.lbfPurescript
+   inputs.lbf.lib.x86_64-linux.purescriptFlake
+   inputs.lbf.lib.x86_64-linux.rustFlake
+</code></pre>
 </li>
-<li><code>Plutus.V1.PlutusData</code> instance tests
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Continuous integration for regularly deploying toolkit packages to a package repository.</p>
 <ul>
-<li>Golden unit tests: <code>forall (golden : *.pd.json): (toJson . toPlutusData . fromPlutusData . fromJson) golden == golden</code></li>
-</ul>
-</li>
-</ul>
-</li>
+<li>Hercules CI has been operating on the LambdaBuffers repo since the very start, and all the packages are readily available using Nix.</li>
 </ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A test suite checking for roundtrip compatibility between codegened target environments.</p>
+A Cardano dApp project partnership to help integrate the toolkit in their development and build environments.</p>
 <ul>
-<li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus">lbt-plutus</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">Purescript</a> backends.</li>
-<li>A dedicated <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude">lbt-prelude</a> test suite was implemented for both <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell">Haskell</a> and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript">Purescript</a> backends.</li>
-<li>Both include golden unit tests that provide assurances that these backends implement the LambdaBuffers packages in a mutually compatible manner.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the end to end Cardano dApp that uses LambdaBuffers and Plutus scripts written in both Plutarch and PlutusTx, whereas Cardano Transaction Library is used to construct transactions and test against the real network (using Plutip) that everything works as intended.</li>
 </ul>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""/>
-A modular and contract-based test suite architecture streamlining codegen testing compliance for any of the supported typeclasses.</p>
+Documentation for integrating the build environment.</p>
 <ul>
-<li>A testing strategy was devised and <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites">implemented</a> where each supported backend must implement the <code>lbt</code> (ie. a LambdaBuffers test suite) for the corresponding LambdaBuffers package. A package is a collection of LambdaBuffers schemas and their associated runtime libraries.</li>
-<li>LambdaBuffers Prelude
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude">libs/lbf-prelude</a></li>
-<li>Haskell runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-prelude">runtimes/haskell/lbr-prelude</a></li>
-<li>Purescript runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-prelude">runtimes/purescript/lbr-prelude</a></li>
-<li>Haskell test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell">testsuites/lbt-prelude/lbt-prelude-haskell</a></li>
-<li>Purescript test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript">testsuites/lbt-prelude/lbt-prelude-purescript</a></li>
-</ul>
-</li>
-<li>LambdaBuffers Plutus
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus">libs/lbf-plutus</a></li>
-<li>Haskell runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus">runtimes/haskell/lbr-plutus</a></li>
-<li>Purescript runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-plutus">runtimes/purescript/lbr-plutus</a></li>
-<li>Haskell test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">testsuites/lbt-plutus/lbt-plutus-haskell</a></li>
-<li>Purescript test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">testsuites/lbt-plutus/lbt-plutus-purescript</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><input disabled="" type="checkbox" checked=""/>
-A document mapping the schema data types and typeclasses to their corresponding code-generated variants in the target environments.</p>
-<ul>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/haskell.html">LambdaBuffers to Haskell</a> documentation.</li>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/purescript.html">LambdaBuffers to Purescript</a> documentation.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates how to use LambdaBuffers and users are recommended to refer to that repo's README to help them integrate LambdaBuffers in their project.</li>
+<li>Additionally, extensive LambdaBuffers documentation is made available at <a href="https://mlabs-haskell.github.io/lambda-buffers/introduction.html">https://mlabs-haskell.github.io/lambda-buffers/introduction.html</a> since the very start of the project.</li>
 </ul>
 </li>
 </ul>
 <h2 id="acceptance-criteria-3"><a class="header" href="#acceptance-criteria-3">Acceptance Criteria</a></h2>
 <ul>
-<li><input disabled="" type="checkbox" checked=""/>
-The test suites are passing for the Haskell+PlutusTx codegen module.
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Toolkit packages are available in a package repository (eg. Nixpkgs, Hackage)</p>
 <ul>
-<li>CI targets:
-<ul>
-<li>checks.x86_64-linux."check-lbt-prelude-haskell:test:tests"</li>
-<li>checks.x86_64-linux."check-lbt-plutus-haskell:test:tests"</li>
+<li>Bash shell is available in the repo that users can simply use to try out and use the LambdaBuffers toolkit.</li>
 </ul>
+<pre><code class="language-shell">$ nix develop github:mlabs-haskell/lambda-buffers#lb
+$ lbf&lt;TAB&gt;
+  lbf                        lbf-plutus-to-haskell      lbf-plutus-to-purescript   lbf-prelude-to-haskell     lbf-prelude-to-purescript  
+</code></pre>
 </li>
-</ul>
-</li>
-<li><input disabled="" type="checkbox" checked=""/>
-The test suites are passing for the Purescript+CTL codegen module.
+<li>
+<p><input disabled="" type="checkbox" checked=""/>
+Cardano dApp project maintains all the Plutus domain types in the configuration file and has fully equipped type libraries made available automatically via build environment integration tooling.</p>
 <ul>
-<li>CI targets:
-<ul>
-<li>checks.x86_64-linux."purescript:lbt-plutus:check"</li>
-<li>checks.x86_64-linux."purescript:lbt-prelude:check"</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><input disabled="" type="checkbox" checked=""/>
-The “Mappings” document is made available in the project repository.
-<ul>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/haskell.html">LambdaBuffers to Haskell</a> documentation.</li>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/purescript.html">LambdaBuffers to Purescript</a> documentation.</li>
+<li>A demo project exists at <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">https://github.com/mlabs-haskell/lambdabuffers-cardano-demo</a> that showcase end to end use of the LambdaBuffers toolkit. The project defines the plutus and configuration API in <code>api</code> directory, the <code>validation</code> directory contains the same onchain script logic implemented using PlutusTx and Plutarch, the <code>transactions</code> directory contains transaction building logic using Cardano Transaction Library. All the devops is achieved using concise <code>build.nix</code> Nix based build recipes for each sub-project. Finally, the CI is also instructed to run the end to end test that tries out both Plutarch and PlutusTx scripts assuring it works as intended.</li>
 </ul>
 </li>
 </ul>
 <h2 id="evidence-of-milestone-completion-3"><a class="header" href="#evidence-of-milestone-completion-3">Evidence of Milestone Completion</a></h2>
 <ul>
 <li><input disabled="" type="checkbox" checked=""/>
-The completed and reviewed test suite implementation for Haskell+PlutusTx codegen module is made available in the project repository.
+Completed and reviewed build environment integration tooling and source code are available in the project repository.
 <ul>
-<li>LambdaBuffers Prelude
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude">libs/lbf-prelude</a></li>
-<li>Haskell runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-prelude">runtimes/haskell/lbr-prelude</a></li>
-<li>Haskell test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-haskell">testsuites/lbt-prelude/lbt-prelude-haskell</a></li>
-</ul>
-</li>
-<li>LambdaBuffers Plutus
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus">libs/lbf-plutus</a></li>
-<li>Haskell runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/haskell/lbr-plutus">runtimes/haskell/lbr-plutus</a></li>
-<li>Haskell test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-haskell">testsuites/lbt-plutus/lbt-plutus-haskell</a></li>
-</ul>
-</li>
+<li>The <a href="catalyst09-reports/./extras">extras</a> contains all the Nix libraries the LB team developed to facilitate and streamline Cardano dApp development using LambdaBuffers and supported language ecosystems (Haskell, Purescript, Cardano Transaction Library, PlutusTx and Plutarch).</li>
 </ul>
 </li>
 <li><input disabled="" type="checkbox" checked=""/>
-The completed and reviewed test suite implementation for Purescript+CTL codegen module is made available in the project repository.
+Toolkit packages are available in the package repository.
 <ul>
-<li>LambdaBuffers Prelude
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-prelude">libs/lbf-prelude</a></li>
-<li>Purescript runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-prelude">runtimes/purescript/lbr-prelude</a></li>
-<li>Purescript test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-prelude/lbt-prelude-purescript">testsuites/lbt-prelude/lbt-prelude-purescript</a></li>
-</ul>
-</li>
-<li>LambdaBuffers Plutus
-<ul>
-<li>Schemas are available at <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/libs/lbf-plutus">libs/lbf-plutus</a></li>
-<li>Purescript runtime library is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/runtimes/purescript/lbr-plutus">runtimes/purescript/lbr-plutus</a></li>
-<li>Purescript test suite is in <a href="https://github.com/mlabs-haskell/lambda-buffers/tree/e7813017bd1575fa9346ac4264deb68b50128b7c/testsuites/lbt-plutus/lbt-plutus-purescript">testsuites/lbt-plutus/lbt-plutus-purescript</a></li>
-</ul>
-</li>
+<li>All LambdaBuffers tools are available using Nix.</li>
 </ul>
 </li>
 <li><input disabled="" type="checkbox" checked=""/>
-The “Mappings” document is made available in the project repository.
+Proof of use is provided by the partner dApp.
 <ul>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/haskell.html">LambdaBuffers to Haskell</a> documentation.</li>
-<li><a href="https://mlabs-haskell.github.io/lambda-buffers/purescript.html">LambdaBuffers to Purescript</a> documentation.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates the end to end Cardano dApp that uses LambdaBuffers and Plutus scripts written in both Plutarch and PlutusTx, whereas Cardano Transaction Library is used to construct transactions and test against the real network (using Plutip) that everything works as intended.</li>
 </ul>
 </li>
 <li><input disabled="" type="checkbox" checked=""/>
-Test case: Robust Test cases to catch edge conditions are added against a wide variety of schemas, and output in all codegen backends.
+Tooling use documentation is available in the project repository.
 <ul>
-<li>Implemented as part of <code>lbf</code> (LambdaBuffers Frontend) test suite.</li>
+<li>The <a href="https://github.com/mlabs-haskell/lambdabuffers-cardano-demo">LB Cardano Demo project</a> demonstrates how to use LambdaBuffers and users are recommended to refer to that repo's README to help them integrate LambdaBuffers in their project.</li>
+<li>Additionally, extensive LambdaBuffers documentation is made available at <a href="https://mlabs-haskell.github.io/lambda-buffers/introduction.html">https://mlabs-haskell.github.io/lambda-buffers/introduction.html</a> since the very start of the project.</li>
 </ul>
 </li>
 </ul>
@@ -4218,94 +4166,6 @@ Test case: Robust Test cases to catch edge conditions are added against a wide v
 <ul>
 <li><a href="https://docs.google.com/spreadsheets/d/16dTxgGsxHvcMe5aCgFPDYEJKgX_VQiNAcwhp2RyA48o/edit#gid=1672366179">Catalyst project sheet</a></li>
 </ul>
-<h2 id="documentation-strategy-1"><a class="header" href="#documentation-strategy-1">Documentation strategy</a></h2>
-<p>Each typeclass receives a Specification document that closely explains the required semantics for LB types (sum/products/records).</p>
-<p>Each backend receives a User documentation that elaborates on how the generated code is used.</p>
-<h2 id="testing-strategy-1"><a class="header" href="#testing-strategy-1">Testing strategy</a></h2>
-<p>LambdaBuffers works with typeclasses, such as Eq, PlutusData and JSON. When a LB type has been declared with support for any of such typeclass, values of said types need to be handled in exactly the same manner as elaborated in the Specification for a given Typeclass in ALL support target language environments.</p>
-<p>Concretely, if a type <code>Foo</code> has been declared with support for <code>JSON</code>, and <code>toJson</code> and <code>fromJson</code> methods have been generated for target languages, they have to be in correspondence.</p>
-<pre><code class="language-lbf">module Foo
-
-import Prelude (Json)
-
-sum Foo = Bar Integer | Baz Text
-
-deriving Json Foo
-</code></pre>
-<p>In Haskell and Purescript values of <code>Foo</code> would be <code>Bar 1</code> and <code>Baz "baz"</code>, and their respective JSON mappings would be <code>{"constructor" : "Bar", "product" : [1]}</code> and <code>{"constructor" : "Baz", "product" : ["baz"]}</code>.</p>
-<h3 id="testing-encoding-typeclasses-from--to-goldens-1"><a class="header" href="#testing-encoding-typeclasses-from--to-goldens-1">Testing encoding typeclasses: <code>from . to</code> goldens</a></h3>
-<p>For each typeclass, we maintain a set of <code>golden' files of known good/bad that lift into the target language with</code>from<code>and write it back with</code>to` into a separate file. Then we provide an assertion that these files are semantically 'equal' (for example JSON spaces don't matter and such).</p>
-<p>Example test:</p>
-<ul>
-<li>test/foo/Foo.lbf</li>
-<li>test/foo/json/bar.1.json</li>
-<li>test/foo/json/bar.2.json</li>
-<li>test/foo/json/baz.1.json</li>
-<li>test/foo/json/baz.2.json</li>
-<li>test/foo/json/haskell/bar.1.json</li>
-<li>test/foo/json/haskell/bar.2.json</li>
-<li>test/foo/json/haskell/baz.1.json</li>
-<li>test/foo/json/haskell/baz.2.json</li>
-<li>test/foo/json/purescript/bar.1.json</li>
-<li>test/foo/json/purescript/bar.2.json</li>
-<li>test/foo/json/purescript/baz.1.json</li>
-<li>test/foo/json/purescript/baz.2.json</li>
-<li>test/foo/plutusdata/bar.1.json</li>
-<li>test/foo/plutusdata/bar.2.json</li>
-<li>test/foo/plutusdata/baz.1.json</li>
-<li>test/foo/plutusdata/baz.2.json</li>
-<li>test/foo/plutusdata/haskell/bar.1.json</li>
-<li>test/foo/plutusdata/haskell/bar.2.json</li>
-<li>test/foo/plutusdata/haskell/baz.1.json</li>
-<li>test/foo/plutusdata/haskell/baz.2.json</li>
-<li>test/foo/plutusdata/purescript/bar.1.json</li>
-<li>test/foo/plutusdata/purescript/bar.2.json</li>
-<li>test/foo/plutusdata/purescript/baz.1.json</li>
-<li>test/foo/plutusdata/purescript/baz.2.json</li>
-</ul>
-<h3 id="testing-equality-typeclasses-symmetry-and-transitivity-1"><a class="header" href="#testing-equality-typeclasses-symmetry-and-transitivity-1">Testing equality typeclasses: symmetry and transitivity</a></h3>
-<ul>
-<li><code>sym :: (a :~: b) -&gt; b :~: a</code></li>
-<li><code>trans :: (a :~: b) -&gt; (b :~: c) -&gt; a :~: c</code></li>
-</ul>
-<p>This could be done with goldens and randomized testing. However, <code>goldens</code> approach assumes a correct marshaling procedure while the <code>randomized</code> assumes generators. Perhaps having both makes sense.</p>
-<h2 id="todo-provide-time-estimates-1"><a class="header" href="#todo-provide-time-estimates-1">TODO (provide time estimates)</a></h2>
-<ol start="0">
-<li>Define the version 1 of <code>Prelude</code> and <code>Plutus</code> LBF libraries which MUST be supported</li>
-<li>Support the Json typeclass
-<ol>
-<li>Codegen</li>
-<li>Runtime support</li>
-</ol>
-</li>
-<li>Support the Plutarch backend</li>
-<li>Document typeclasses
-<ol>
-<li>Eq</li>
-<li>PlutusData</li>
-<li>Json</li>
-</ol>
-</li>
-<li>Document backends
-<ol>
-<li>Sum/Product/Record type construction and deconstruction (Haskell, Purescript, Plutarch)</li>
-<li>Eq/Json/PlutusData typeclass use (Haskell, Purescript, Plutarch minus Json)</li>
-</ol>
-</li>
-<li>Devise <code>goldens</code>
-<ol>
-<li>Eq</li>
-<li>PlutusData</li>
-<li>Json</li>
-</ol>
-</li>
-<li>Implement the test suite
-<ol>
-<li>Provide assertions</li>
-<li>Hook to the CI</li>
-</ol>
-</li>
-</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="catalyst-10-reports"><a class="header" href="#catalyst-10-reports">Catalyst 10 reports</a></h1>
 <ul>
 <li><a href="catalyst10-reports/milestone-1.html">Milestone 1: Rust support</a></li>
