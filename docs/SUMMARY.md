@@ -29,7 +29,7 @@
     - [Milestone 1: Research](catalyst09-reports/milestone-1.md)
     - [Milestone 2: End to end proof of concept](catalyst09-reports/milestone-2.md)
     - [Milestone 3: Testing and documentation](catalyst09-reports/milestone-3.md)
-    - [Milestone 4: Project adoption](catalyst09-reports/milestone-3.md)
+    - [Milestone 4: Project adoption](catalyst09-reports/milestone-4.md)
   - [Catalyst 10 reports](catalyst10-reports/README.md)
     - [Milestone 1: Rust support](catalyst10-reports/milestone-1.md)
     - [Milestone 2: Javascript/Typescript support](catalyst10-reports/milestone-2.md)
