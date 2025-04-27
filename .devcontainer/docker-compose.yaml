@@ -1,0 +1,16 @@
+services:
+  mlabs-devcontainer:
+    image: ghcr.io/mlabs-haskell/mlabs-devcontainer
+    platform: linux/x86_64
+    volumes:
+      - nix-store:/nix
+      - ..:/workspace:cached
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    cap_add:
+    - SYS_PTRACE
+    security_opt:
+    - seccomp:unconfined
+
+volumes:
+  nix-store:
+    external: true
