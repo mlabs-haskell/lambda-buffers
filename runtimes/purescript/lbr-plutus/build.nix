@@ -20,7 +20,7 @@
           withRuntime = false;
           packageLockOnly = true;
           packages = [
-            pkgs.nodejs-18_x
+            pkgs.nodejs
             pkgs.bashInteractive
             pkgs.fd
           ] ++ config.settings.shell.tools;

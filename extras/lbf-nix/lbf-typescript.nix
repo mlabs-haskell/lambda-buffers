@@ -48,8 +48,8 @@ lbfTypescriptOpts@{
     text = ''
       {
         "compilerOptions": {
-          "target": "es2020", 
-          "module": "node16", 
+          "target": "es2020",
+          "module": "node16",
           "moduleResolution": "node16",
           "rootDir": "./src",
           "declaration": true,
@@ -75,7 +75,7 @@ lbfTypescriptOpts@{
           "noPropertyAccessFromIndexSignature": true,
           "noImplicitReturns": true,
           "noFallthroughCasesInSwitch": true,
-          "noUnusedLocals": true, 
+          "noUnusedLocals": true,
           "noUnusedParameters": true,
         }
       }
@@ -201,7 +201,7 @@ let
       ];
       buildInputs = [
         pkgs.jq
-        pkgs.nodejs-18_x
+        pkgs.nodejs
       ];
       buildPhase = ''
         export HOME=$(mktemp -d)
@@ -218,7 +218,7 @@ let
         # characters. Probably should write a quick check for this..
 
         # Note(jaredponn):
-        # What is going on here? We create a JQ filter which 
+        # What is going on here? We create a JQ filter which
         # - For every `LambdaBuffers/Module/Generated.mts`,
         # - Add `exports."./LambdaBuffers/Module/Generated.mts": "./dist/LambdaBuffers/Module/Generated.mts"` to `package.json`
 
