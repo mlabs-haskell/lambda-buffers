@@ -34,7 +34,7 @@
     in
 
     {
-      devShells.dev-plutustx-example = hsFlake.devShell;
+      devShells.dev-plutustx-example = hsFlake.devShells.default;
 
       packages = {
         # Derivation for the .lbf schema file

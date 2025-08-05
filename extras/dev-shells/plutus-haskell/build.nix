@@ -44,7 +44,7 @@
     in
     {
       # Develop Plutus applications with Haskell, Plutarch and PlutusTx
-      devShells.dev-plutus-haskell = hsFlake.devShell;
+      devShells.dev-plutus-haskell = hsFlake.devShells.default;
       packages.play-plutus-haskell-lib = hsFlake.packages."plutus-haskell:lib:plutus-haskell";
     };
 }

@@ -22,7 +22,7 @@
 
     in
     {
-      devShells.dev-lbr-plutustx = hsFlake.devShell;
+      devShells.dev-lbr-plutustx = hsFlake.devShells.default;
 
       packages = {
 

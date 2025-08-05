@@ -23,7 +23,7 @@
     in
 
     {
-      devShells.dev-lbr-prelude-haskell = hsFlake.devShell;
+      devShells.dev-lbr-prelude-haskell = hsFlake.devShells.default;
 
       packages = {
 
@@ -34,7 +34,8 @@
           installPhase = "ln -s $src $out";
         };
 
-      } // hsFlake.packages;
+      }
+      // hsFlake.packages;
 
       inherit (hsFlake) checks;
 

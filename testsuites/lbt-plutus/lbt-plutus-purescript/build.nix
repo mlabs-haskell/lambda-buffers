@@ -37,7 +37,8 @@
             pkgs.nodejs-18_x
             pkgs.bashInteractive
             pkgs.fd
-          ] ++ config.settings.shell.tools;
+          ]
+          ++ config.settings.shell.tools;
           shellHook = config.settings.shell.hook;
         };
 

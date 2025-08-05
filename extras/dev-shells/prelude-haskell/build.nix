@@ -21,7 +21,7 @@
     in
     {
       # Develop Prelude applications with Haskell
-      devShells.dev-prelude-haskell = hsFlake.devShell;
+      devShells.dev-prelude-haskell = hsFlake.devShells.default;
       packages.play-prelude-haskell-lib = hsFlake.packages."prelude-haskell:lib:prelude-haskell";
     };
 }

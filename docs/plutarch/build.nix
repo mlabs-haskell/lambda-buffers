@@ -28,7 +28,7 @@
     in
 
     {
-      devShells.dev-plutarch-example = hsFlake.devShell;
+      devShells.dev-plutarch-example = hsFlake.devShells.default;
 
       packages = {
         plutarch-example-cli = hsFlake.packages."plutarch-example:exe:plutarch-example";

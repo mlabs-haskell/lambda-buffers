@@ -28,7 +28,7 @@
     in
 
     {
-      devShells.dev-lambda-buffers-compiler = hsFlake.devShell;
+      devShells.dev-lambda-buffers-compiler = hsFlake.devShells.default;
 
       packages = {
 

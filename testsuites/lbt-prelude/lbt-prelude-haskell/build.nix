@@ -23,7 +23,7 @@
 
     in
     {
-      devShells.dev-lbt-prelude-haskell = hsFlake.devShell;
+      devShells.dev-lbt-prelude-haskell = hsFlake.devShells.default;
 
       packages = {
         lbt-prelude-haskell-lib = hsFlake.packages."lbt-prelude-haskell:lib:lbt-prelude-haskell";

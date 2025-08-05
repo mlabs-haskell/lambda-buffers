@@ -29,7 +29,8 @@
           config.packages.lbg-haskell
           config.packages.lbg-purescript
           config.packages.lbg-rust
-        ] ++ config.settings.shell.tools;
+        ]
+        ++ config.settings.shell.tools;
         devShellHook = config.settings.shell.hook;
       };
 
@@ -37,7 +38,7 @@
 
     {
       devShells = {
-        dev-lambda-buffers-frontend = hsFlake.devShell;
+        dev-lambda-buffers-frontend = hsFlake.devShells.default;
 
         lb = pkgs.mkShell {
           name = "lambdabuffers-env";
