@@ -8459,21 +8459,6 @@
     },
     "nixpkgs_40": {
       "locked": {
-        "lastModified": 1707655008,
-        "narHash": "sha256-i+q9iUru4btzERodGCEExfZaPf0tBzerlwMKABfAB4U=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "0feb91600e5a909a0fceecc57b293322fe834088",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_41": {
-      "locked": {
         "lastModified": 1704842529,
         "narHash": "sha256-OTeQA+F8d/Evad33JMfuXC89VMetQbsU4qcaePchGr4=",
         "owner": "NixOS",
@@ -9137,7 +9122,7 @@
         "flake-compat": "flake-compat_23",
         "flake-utils": "flake-utils_12",
         "gitignore": "gitignore_7",
-        "nixpkgs": "nixpkgs_41",
+        "nixpkgs": "nixpkgs_40",
         "nixpkgs-stable": "nixpkgs-stable_2"
       },
       "locked": {
@@ -9189,7 +9174,9 @@
         "haskell-nix": "haskell-nix_4",
         "hci-effects": "hci-effects_5",
         "http2-grpc-native": "http2-grpc-native",
-        "nixpkgs": "nixpkgs_40",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "pre-commit-hooks": "pre-commit-hooks_4",
         "protobuf": "protobuf"
       },

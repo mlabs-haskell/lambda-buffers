@@ -16,7 +16,10 @@
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
 
     # Nix library for Google Protobufs
-    proto-nix.url = "github:mlabs-haskell/proto.nix";
+    proto-nix = {
+      url = "github:mlabs-haskell/proto.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Plutarch eDSL (LB Codegen target)
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=75c06ef1e77742916574414975f76ddac59cce4a";
