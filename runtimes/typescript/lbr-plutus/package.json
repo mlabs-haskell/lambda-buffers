@@ -22,9 +22,9 @@
     "./.extra-dependencies/**/*"
   ],
   "devDependencies": {
-    "@types/node": "^20.8.10",
-    "fast-check": "^3.14.0",
-    "typescript": "^5.2.2"
+    "@types/node": "^24.2.1",
+    "fast-check": "^4.2.0",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "lbr-prelude": "file:.extra-dependencies/lbr-prelude",

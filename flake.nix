@@ -24,7 +24,7 @@
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.1";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.2";
       inputs.flake-lang.follows = "flake-lang";
     };
   };
