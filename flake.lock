@@ -8953,16 +8953,16 @@
         "pre-commit-hooks": "pre-commit-hooks_2"
       },
       "locked": {
-        "lastModified": 1734631768,
-        "narHash": "sha256-p0Armf6zTHTGdtCQ1j4mdGW0RYyD0+qTCq1wAlfibsk=",
+        "lastModified": 1740014377,
+        "narHash": "sha256-TfiLW/MnLHSrFPLDc56Ejp8weoOaDfmHErmzLdB5SXI=",
         "owner": "Plutonomicon",
         "repo": "plutarch-plutus",
-        "rev": "e9e9df286768440733890b1260ad569a2f882890",
+        "rev": "75c06ef1e77742916574414975f76ddac59cce4a",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
-        "ref": "e9e9df286768440733890b1260ad569a2f882890",
+        "ref": "75c06ef1e77742916574414975f76ddac59cce4a",
         "repo": "plutarch-plutus",
         "type": "github"
       }

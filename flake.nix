@@ -19,7 +19,7 @@
     proto-nix.url = "github:mlabs-haskell/proto.nix";
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=e9e9df286768440733890b1260ad569a2f882890";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=75c06ef1e77742916574414975f76ddac59cce4a";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
