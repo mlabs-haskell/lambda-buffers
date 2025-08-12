@@ -201,7 +201,7 @@ let
       ];
       buildInputs = [
         pkgs.jq
-        pkgs.nodejs-18_x
+        pkgs.nodejs_24
       ];
       buildPhase = ''
         export HOME=$(mktemp -d)
