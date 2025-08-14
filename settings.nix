@@ -55,7 +55,7 @@
 
             haskell = {
               index-state = "2024-11-13T00:00:00Z";
-              compiler-nix-name = "ghc966";
+              compiler-nix-name = "ghc967";
             };
 
             shell = {

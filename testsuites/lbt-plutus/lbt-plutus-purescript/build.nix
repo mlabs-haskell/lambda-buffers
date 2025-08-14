@@ -34,7 +34,7 @@
           withRuntime = false;
           packageLockOnly = true;
           packages = [
-            pkgs.nodejs_24
+            pkgs.nodejs
             pkgs.bashInteractive
             pkgs.fd
           ]
