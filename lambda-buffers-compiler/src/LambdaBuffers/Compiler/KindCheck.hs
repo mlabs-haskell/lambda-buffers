@@ -130,12 +130,10 @@ runKindCheck = interpret $ \case
           QualifiedTyRef fr ->
             if (fr ^. #moduleName) == modName
               then -- We're looking at the local module.
-
                 throwError
                   . PC.CompKindCheckError
                   $ PC.UnboundTyRefError td (PC.LocalI $ fr ^. foreignRef2LocalRef) modName
               else -- We're looking at a foreign module.
-
                 throwError
                   . PC.CompKindCheckError
                   $ PC.UnboundTyRefError td (PC.ForeignI fr) modName
