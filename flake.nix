@@ -17,7 +17,7 @@
 
     # Nix library for Google Protobufs
     proto-nix = {
-      url = "github:mlabs-haskell/proto.nix";
+      url = "github:mlabs-haskell/proto.nix?ref=szg251/upstream-http2-grpc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
