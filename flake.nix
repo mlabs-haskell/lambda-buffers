@@ -22,7 +22,7 @@
     };
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=e9e9df286768440733890b1260ad569a2f882890";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=szg251/fix-missing-ptryfrom";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";

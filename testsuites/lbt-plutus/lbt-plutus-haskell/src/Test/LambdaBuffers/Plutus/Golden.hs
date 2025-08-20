@@ -81,9 +81,9 @@ import LambdaBuffers.Days (Day (Day'Friday, Day'Monday, Day'Saturday, Day'Sunday
 import LambdaBuffers.Foo (A (A), B (B), C (C), D (D), FInt (FInt), GInt (GInt))
 import LambdaBuffers.Foo.Bar (F (F'Nil, F'Rec), FooComplicated (FooComplicated), FooProd (FooProd), FooRec (FooRec), FooSum (FooSum'Bar, FooSum'Baz, FooSum'Faz, FooSum'Foo, FooSum'Qax), G (G'Nil, G'Rec))
 import PlutusLedgerApi.V1 qualified as PlutusV1
-import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusLedgerApi.V3 qualified as PlutusV3
+import PlutusLedgerApi.V3.MintValue qualified as PlutusV3
 import PlutusTx.AssocMap qualified as AssocMap
 import PlutusTx.Ratio (unsafeRatio)
 
@@ -191,6 +191,12 @@ valueGoldens :: [PlutusV1.Value]
 valueGoldens =
   mconcat
     [ PlutusV1.Value <$> mapGoldens
+    ]
+
+mintValueGoldens :: [PlutusV3.MintValue]
+mintValueGoldens =
+  mconcat
+    [ PlutusV3.UnsafeMintValue <$> mapGoldens
     ]
 
 mapGoldens :: [AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)]
@@ -445,7 +451,7 @@ txInfoGoldensV3 :: [PlutusV3.TxInfo]
 txInfoGoldensV3 =
   PlutusV3.TxInfo txInInfoGoldensV3 txInInfoGoldensV3 txOutGoldensV2
     <$> lovelaceGoldens
-    <*> valueGoldens
+    <*> mintValueGoldens
     <*> pure txCertGoldensV3
     <*> pure (AssocMap.unsafeFromList (map (,1234) credentialGoldens))
     <*> posixTimeRangeGoldens
