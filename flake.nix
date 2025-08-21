@@ -2,7 +2,7 @@
   description = "Lambda Buffers";
   inputs = {
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix?ref=szg251/extra-packages-index-state";
+    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
 
     nixpkgs.follows = "flake-lang/nixpkgs";
 
