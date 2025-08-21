@@ -7011,16 +7011,15 @@
         "pre-commit-hooks": "pre-commit-hooks_2"
       },
       "locked": {
-        "lastModified": 1755667462,
-        "narHash": "sha256-vSLFBM6/1pvrcEw+nyBPqDRL7qfEZSc/eAqX7U3md/U=",
+        "lastModified": 1755725290,
+        "narHash": "sha256-6ZB8eCb9B8hg0msfk+RIIdbX1OrfWIWGDLYftXjBS+E=",
         "owner": "Plutonomicon",
         "repo": "plutarch-plutus",
-        "rev": "a78e888fd2a7c6c29c7655dfeb76e153d1496fb9",
+        "rev": "427e49b0cbfd2ff97cdc91522a09e06edd7a7fa6",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
-        "ref": "szg251/fix-missing-ptryfrom",
         "repo": "plutarch-plutus",
         "type": "github"
       }
