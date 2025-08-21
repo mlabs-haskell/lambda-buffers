@@ -17,7 +17,6 @@
         packageJson = ./package.json;
         packageLock = ./package-lock.json;
         shell = {
-          withRuntime = false;
           packageLockOnly = true;
           packages = [
             pkgs.nodejs

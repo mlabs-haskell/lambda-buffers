@@ -29,7 +29,6 @@
         ];
 
         shell = {
-          withRuntime = false;
           packageLockOnly = true;
           packages = [
             pkgs.nodejs
