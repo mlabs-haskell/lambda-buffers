@@ -6,13 +6,6 @@ result
 *~
 *#*
 .pre-commit-config.yaml
-**/node_modules
-/.psc-package/
-**/.psc*
-**/.purs*
-**/.psa*
-**/.spago
-**/.spago2nix
 **/dist
 **/output
 .DS_Store

@@ -1,8 +1,0 @@
-{
-  "files": [],
-  "include": [],
-  "references": [
-    { "path": "./LambdaBuffers" },
-    { "path": "./Tests" }
-  ]
-}

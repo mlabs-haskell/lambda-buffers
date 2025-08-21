@@ -16,7 +16,6 @@
       pre-commit = {
         settings = {
           excludes = [
-            ".*spago-packages.nix$"
             "lambda-buffers-codegen/data/goldens/.*"
             "lambda-buffers-codegen/data/lamval-cases/.*"
             "experimental/archive/.*"
@@ -62,17 +61,6 @@
             };
 
             markdownlint.enable = true;
-            dhall-format.enable = true;
-            purty.enable = true;
-            rustfmt-monorepo.enable = true;
-            denofmt = {
-              enable = true;
-              files = "(\\.ts$)|(^tsconfig?(-base)\\.json$)";
-            };
-            denolint = {
-              enable = true;
-              files = "\\.m?ts$";
-            };
             protolint.enable = true;
             txtpbfmt.enable = true;
           };

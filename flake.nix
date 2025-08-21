@@ -21,15 +21,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus";
-
-    # Typescript runtimes
-    prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
-    plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.2";
-      inputs.flake-lang.follows = "flake-lang";
-    };
   };
 
   outputs =
@@ -40,8 +31,6 @@
         ./pre-commit.nix
         ./hercules-ci.nix
         ./docs/build.nix
-        ./docs/plutarch/build.nix
-        ./docs/plutustx/build.nix
         ./extras/build.nix
         ./extras/lbf-nix/build.nix
         ./extras/dev-shells/build.nix
@@ -52,32 +41,10 @@
         ./lambda-buffers-codegen/build.nix
         ./lambda-buffers-frontend/build.nix
         ./runtimes/haskell/lbr-prelude/build.nix
-        ./runtimes/haskell/lbr-plutus/build.nix
-        ./runtimes/haskell/lbr-plutustx/build.nix
-        ./runtimes/haskell/lbr-plutarch/build.nix
-        ./runtimes/purescript/lbr-prelude/build.nix
-        ./runtimes/purescript/lbr-plutus/build.nix
-        ./runtimes/rust/lbr-prelude/build.nix
-        ./runtimes/rust/lbr-prelude-derive/build.nix
-        ./runtimes/typescript/lbr-prelude/build.nix
-        ./runtimes/typescript/lbr-plutus/build.nix
         ./testsuites/lbt-prelude/api/build.nix
         ./testsuites/lbt-prelude/golden/build.nix
         ./testsuites/lbt-prelude/lbt-prelude-haskell/build.nix
-        ./testsuites/lbt-prelude/lbt-prelude-purescript/build.nix
-        ./testsuites/lbt-prelude/lbt-prelude-rust/build.nix
-        ./testsuites/lbt-prelude/lbt-prelude-typescript/build.nix
-        ./testsuites/lbt-plutus/api/build.nix
-        ./testsuites/lbt-plutus/golden/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-haskell/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-purescript/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-typescript/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-plutarch/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-plutustx/build.nix
-        ./testsuites/lbt-plutus/lbt-plutus-rust/build.nix
         ./experimental/build.nix
-        ./docs/typescript-prelude/build.nix
-        ./docs/typescript-plutus/build.nix
       ];
       debug = true;
       systems = [

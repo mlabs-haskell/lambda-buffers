@@ -1,1 +1,0 @@
-{"address":{"credential":{"fields":["0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c"],"name":"PubKeyCredential"},"staking_credential":{"fields":[],"name":"Nothing"}},"datum_hash":{"fields":["0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"],"name":"Just"},"value":[["",[["",1337]]]]}

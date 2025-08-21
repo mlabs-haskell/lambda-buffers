@@ -1,9 +1,0 @@
-packages: ./.
-
-tests: true
-
-allow-newer:
-  -- https://github.com/phadej/vec/issues/121
-  ral:QuickCheck,
-  fin:QuickCheck,
-  bin:QuickCheck,
