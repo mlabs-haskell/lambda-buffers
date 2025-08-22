@@ -1,3 +1,10 @@
 packages: ./.
 
 tests: true
+
+allow-newer:
+  -- TODO(szg251): Allow once the below issue is resolved
+  -- https://github.com/phadej/vec/issues/121
+  ral:QuickCheck,
+  fin:QuickCheck,
+  bin:QuickCheck,

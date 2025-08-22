@@ -24,10 +24,10 @@ import Plutarch.Internal.Term (
 import Plutarch.LedgerApi.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), pposixTime)
 import Plutarch.LedgerApi.Value (PAssetClass (PAssetClass))
 import Plutarch.Maybe qualified as Scott
-import Plutarch.Prelude (ClosedTerm, PAsData, PBool (PFalse, PTrue), PBuiltinList, PByteString, PDataNewtype (PDataNewtype), PEq ((#==)), PIsData, PlutusType, Term, pcon, pconstant, pdata, perror, pfind, pfromData, pif, plam, pletC, pmatch, pmatchC, ppairDataBuiltin, pshow, ptraceInfo, unTermCont, (#), (#&&), (:-->))
+import Plutarch.Prelude (ClosedTerm, PAsData, PBool (PFalse, PTrue), PBuiltinList, PByteString, PEq ((#==)), PIsData, PlutusType, Term, pcon, pconstant, pdata, perror, pfind, pfromData, pif, plam, pletC, pmatch, pmatchC, ppairDataBuiltin, pshow, ptraceInfo, unTermCont, (#), (#&&), (:-->))
 
 userRef :: Text -> Term s (Ref User)
-userRef userName = userRef' (pfromData $ name userName)
+userRef userName = userRef' (textToBytes userName)
 
 userRef' :: Term s Bytes -> Term s (Ref User)
 userRef' userName = pcon $ Ref (pdata (userRefAssetClass userName))
@@ -36,23 +36,16 @@ userRefAssetClass :: Term s Bytes -> Term s PAssetClass
 userRefAssetClass userName =
   pcon $
     PAssetClass
-      ( pcon $
-          PDataNewtype
-            ( pdata $
-                ppairDataBuiltin
-                  # pcon' (PCurrencySymbol $ pcon $ PDataNewtype $ name "users")
-                  # pcon' (PTokenName $ pcon $ PDataNewtype $ pdata userName)
-            )
+      ( ppairDataBuiltin
+          # pcon' (PCurrencySymbol $ textToBytes "users")
+          # pcon' (PTokenName userName)
       )
 
 activeUser :: Text -> [Term s (Ref User)] -> Integer -> Term s User
-activeUser n friends since = pcon $ User (name n) (pdata $ activeSince since) (pdata $ Lb.plistFrom friends)
+activeUser n friends since = pcon $ User (pdata $ textToBytes n) (pdata $ activeSince since) (pdata $ Lb.plistFrom friends)
 
 activeSince :: Integer -> Term s Status
 activeSince since = pcon (Status'Active (pdata (pposixTime (pconstantInteger since))))
-
-name :: Text -> Term s (PAsData PByteString)
-name = textToBytes
 
 message :: Term s POSIXTime -> Term s (Ref User) -> Term s (Ref User) -> Term s Content -> Term s Message
 message at from to content = pcon $ Message (pdata at) (pdata from) (pdata to) (pdata content)
@@ -68,7 +61,7 @@ isFriendly = plam $ \users msg -> unTermCont $ do
     pif
       ( (isFriend # fromFriends # toName)
           #== (isFriend # toFriends # fromName)
-          #&& (content #== pcon' (Content'Text (textToBytes "'sup")))
+          #&& (content #== pcon' (Content'Text (pdata $ textToBytes "'sup")))
       )
       (pcon PTrue)
       (ptraceInfo ("This wasn't a friendly message :(" <> pshow msg) perror)
@@ -102,8 +95,8 @@ isFriendly = plam $ \users msg -> unTermCont $ do
 pcon' :: PIsData a => PlutusType a => a s -> Term s (PAsData a)
 pcon' = pdata . pcon
 
-textToBytes :: Text -> Term s (PAsData PByteString)
-textToBytes = pdata . pconstant . Text.encodeUtf8
+textToBytes :: Text -> Term s PByteString
+textToBytes = pconstant . Text.encodeUtf8
 
 toBuiltinList :: Term s (Lb.PList a :--> PBuiltinList (PAsData a))
 toBuiltinList = plam $ \xs -> pmatch xs (\(Lb.PList xs') -> xs')
@@ -127,7 +120,7 @@ jared :: Term s User
 jared = activeUser "Jared Pon" [userRef "Gergely Szabó", userRef "Drazen Popovic"] 2
 
 supJaredSaidGergo :: Term s Message
-supJaredSaidGergo = message (pposixTime (pconstantInteger 10)) (userRef "Gergely Szabó") (userRef "Jared Pon") (pcon $ Content'Text (textToBytes "'sup"))
+supJaredSaidGergo = message (pposixTime (pconstantInteger 10)) (userRef "Gergely Szabó") (userRef "Jared Pon") (pcon $ Content'Text (pdata $ textToBytes "'sup"))
 
 main :: IO ()
 main = evalBool $ isFriendly # Lb.plistFrom [drazen, gergo, jared] # supJaredSaidGergo
