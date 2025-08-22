@@ -31,10 +31,8 @@ import Hedgehog qualified as H
 import Hedgehog.Gen qualified as H
 import Hedgehog.Range qualified as HR
 import PlutusLedgerApi.V1 qualified as PlutusV1
-import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusTx.AssocMap qualified as AssocMap
-import PlutusTx.Prelude qualified
 
 -- | Default constant range used in various generators
 defRange :: HR.Range Int
@@ -60,10 +58,10 @@ genValue =
       , genMap (return PlutusV1.adaSymbol) (genMap (return PlutusV1.adaToken) genAmount)
       ]
 
-genMap :: PlutusTx.Prelude.Eq k => H.Gen k -> H.Gen v -> H.Gen (AssocMap.Map k v)
+genMap :: H.Gen k -> H.Gen v -> H.Gen (AssocMap.Map k v)
 genMap gk gv =
   AssocMap.unsafeFromList <$> do
-    keys <- PlutusTx.Prelude.nub <$> H.list defRange gk
+    keys <- H.list defRange gk
     (\k -> (k,) <$> gv) `traverse` keys
 
 genPair :: H.Gen x -> H.Gen y -> H.Gen (x, y)

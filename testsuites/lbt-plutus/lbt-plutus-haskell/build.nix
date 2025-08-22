@@ -26,7 +26,7 @@
     in
 
     {
-      devShells.dev-lbt-plutus-haskell = hsFlake.devShell;
+      devShells.dev-lbt-plutus-haskell = hsFlake.devShells.default;
 
       packages = {
         lbt-plutus-haskell-lib = hsFlake.packages."lbt-plutus-haskell:lib:lbt-plutus-haskell";

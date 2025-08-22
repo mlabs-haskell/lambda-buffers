@@ -26,9 +26,6 @@ import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
 import LambdaBuffers.Runtime.Plutarch.LamVal (pfromPlutusDataPTryFrom)
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
-import Plutarch.Builtin (
-
- )
 import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
 import Plutarch.LedgerApi.AssocMap qualified as AssocMap

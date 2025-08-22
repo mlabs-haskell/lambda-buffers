@@ -17,9 +17,9 @@ import LambdaBuffers.Runtime.Plutus.Eq ()
 import LambdaBuffers.Runtime.Prelude (Json (fromJson, toJson), caseJsonConstructor, jsonConstructor, (.:), (.=))
 import PlutusLedgerApi.V1 (BuiltinByteString)
 import PlutusLedgerApi.V1 qualified as PlutusV1
-import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusLedgerApi.V2 qualified as PlutusV2
 import PlutusLedgerApi.V3 qualified as PlutusV3
+import PlutusLedgerApi.V3.MintValue qualified as PlutusV3
 import PlutusTx.AssocMap qualified as AssocMap
 import PlutusTx.Ratio qualified
 
@@ -601,6 +601,10 @@ instance Json PlutusV3.TxInInfo where
           out <- obj .: "output"
           return $ PlutusV3.TxInInfo outRef out
       )
+
+instance Json PlutusV3.MintValue where
+  toJson (PlutusV3.UnsafeMintValue currencyMap) = toJson currencyMap
+  fromJson v = prependFailure "Plutus.V1.Value" (PlutusV3.UnsafeMintValue <$> fromJson @(AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer)) v)
 
 instance Json PlutusV3.ColdCommitteeCredential where
   toJson (PlutusV3.ColdCommitteeCredential cred) = toJson cred

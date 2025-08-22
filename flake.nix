@@ -3,7 +3,6 @@
   inputs = {
     # flake-lang.nix used for monorepo setups
     flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
-    flake-lang.inputs.ctl.follows = "ctl";
 
     nixpkgs.follows = "flake-lang/nixpkgs";
 
@@ -17,18 +16,18 @@
     hci-effects.url = "github:hercules-ci/hercules-ci-effects";
 
     # Nix library for Google Protobufs
-    proto-nix.url = "github:mlabs-haskell/proto.nix";
-
-    # Cardano transaction library (leveraging CTL's Purescript Nix machinery)
-    ctl.url = "github:Plutonomicon/cardano-transaction-lib/5b0a18b5a79c1ee024ca2668af04fab42c444e8f";
+    proto-nix = {
+      url = "github:mlabs-haskell/proto.nix?ref=szg251/upstream-http2-grpc";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Plutarch eDSL (LB Codegen target)
-    plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=e9e9df286768440733890b1260ad569a2f882890";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {
-      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.1";
+      url = "github:mlabs-haskell/plutus-ledger-api-typescript/v1.2.2";
       inputs.flake-lang.follows = "flake-lang";
     };
   };

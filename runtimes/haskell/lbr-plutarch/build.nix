@@ -27,7 +27,7 @@
     in
 
     {
-      devShells.dev-lbr-plutarch = hsFlake.devShell;
+      devShells.dev-lbr-plutarch = hsFlake.devShells.default;
 
       packages = {
         lbr-plutarch-lib = hsFlake.packages."lbr-plutarch:lib:lbr-plutarch";

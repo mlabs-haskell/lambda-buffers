@@ -36,7 +36,7 @@
 
     in
     {
-      devShells.dev-lbt-plutus-plutarch = hsFlake.devShell;
+      devShells.dev-lbt-plutus-plutarch = hsFlake.devShells.default;
 
       packages = {
         lbt-plutus-plutarch-lib = hsFlake.packages."lbt-plutus-plutarch:lib:lbt-plutus-plutarch";

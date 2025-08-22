@@ -36,7 +36,7 @@
     in
 
     {
-      devShells.dev-lbt-plutus-plutustx = hsFlake.devShell;
+      devShells.dev-lbt-plutus-plutustx = hsFlake.devShells.default;
 
       packages = {
         lbt-plutus-plutustx-tests = hsFlake.packages."lbt-plutus-plutustx:test:tests";

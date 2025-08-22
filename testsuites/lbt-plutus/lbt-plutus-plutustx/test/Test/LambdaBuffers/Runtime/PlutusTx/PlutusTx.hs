@@ -87,7 +87,6 @@ import LambdaBuffers.Foo.PlutusTx (A, B, C, D, E, FInt, GInt)
 import LambdaBuffers.Plutus.V2.PlutusTx qualified as PlutusV2
 import LambdaBuffers.Plutus.V3.PlutusTx qualified as PlutusV3
 import PlutusLedgerApi.V1 qualified as PlutusV1
-import PlutusLedgerApi.V1.Value qualified as PlutusV1
 import PlutusTx (BuiltinData, CompiledCode, FromData (fromBuiltinData), ToData (toBuiltinData), compile)
 import PlutusTx.AssocMap qualified as AssocMap
 import PlutusTx.Maybe (Maybe (Just, Nothing))

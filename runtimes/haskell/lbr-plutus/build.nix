@@ -23,7 +23,7 @@
 
     in
     {
-      devShells.dev-lbr-plutus-haskell = hsFlake.devShell;
+      devShells.dev-lbr-plutus-haskell = hsFlake.devShells.default;
 
       packages = {
 

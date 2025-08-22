@@ -17,13 +17,13 @@
         packageJson = ./package.json;
         packageLock = ./package-lock.json;
         shell = {
-          withRuntime = false;
           packageLockOnly = true;
           packages = [
-            pkgs.nodejs-18_x
+            pkgs.nodejs
             pkgs.bashInteractive
             pkgs.fd
-          ] ++ config.settings.shell.tools;
+          ]
+          ++ config.settings.shell.tools;
           shellHook = config.settings.shell.hook;
         };
       };

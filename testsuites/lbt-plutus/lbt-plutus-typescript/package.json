@@ -1,5 +1,5 @@
 {
-  "name": "lbf-prelude-typescript",
+  "name": "lbt-plutus-typescript",
   "version": "1.0.0",
   "description": "Test suite project for LambdaBuffers",
   "type": "module",
@@ -18,8 +18,8 @@
     "./.extra-dependencies/**/*"
   ],
   "devDependencies": {
-    "@types/node": "^20.11.7",
-    "typescript": "^5.3.3"
+    "@types/node": "^24.2.1",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "lbf-plutus": "file:.extra-dependencies/lbf-plutus",

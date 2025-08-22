@@ -224,10 +224,6 @@ lvPlutusDataBuiltinsForPTryFrom (_ty, refName) =
 {- | PTryFrom instance implementation.
 
 ```haskell
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PMaybe a) where
-  type PTryFromExcess PData (PMaybe a) = Const ()
-  ptryFrom' = ptryFromPAsData
-
 instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PAsData (PMaybe a)) where
   type PTryFromExcess PData (PAsData (PMaybe a)) = Const ()
   ptryFrom' pd f = ...
@@ -248,8 +244,7 @@ printDerivePTryFrom mn iTyDefs _mkInstanceDoc ty = do
     Right (implDoc, imps) -> do
       instancePAsDataDoc <- printPTryFromPAsDataInstanceDef ty implDoc
       for_ imps Print.importValue
-      instanceDoc <- printPTryFromInstanceDef ty
-      return $ align $ vsep [instanceDoc, instancePAsDataDoc]
+      return $ align instancePAsDataDoc
 
 {- | PTryFrom (PAsData a)
 
@@ -280,69 +275,6 @@ printPTryFromPAsDataInstanceDef ty implDefDoc = do
           <+> "="
           <+> Haskell.printHsQTyName PlRefs.constQTyName
           <+> "()"
-   in case freeVars of
-        [] ->
-          return $
-            "instance"
-              <+> headDoc
-              <+> "where"
-              <> hardline
-              <> space
-              <> space
-              <> pinnerDefDoc
-              <> hardline
-              <> space
-              <> space
-              <> implDefDoc
-        _other -> do
-          ctxDoc <- printContext freeVars
-          return $
-            "instance"
-              <+> ctxDoc
-              <+> "=>"
-              <+> headDoc
-              <+> "where"
-              <> hardline
-              <> space
-              <> space
-              <> pinnerDefDoc
-              <> hardline
-              <> space
-              <> space
-              <> implDefDoc
-
-{- | PTryFrom instance implementation.
-
-```haskell
-instance (PTryFrom PData (PAsData a)) => PTryFrom PData (PMaybe a) where
-  type PTryFromExcess PData (PMaybe a) = Const ()
-  ptryFrom' = ptryFromPAsData
-```
--}
-printPTryFromInstanceDef :: MonadHaskellBackend t m => PC.Ty -> m (Doc ann)
-printPTryFromInstanceDef ty = do
-  ptryFromPAsDataDoc <- useVal PlRefs.ptryFromPAsDataQValName
-  Print.importClass PlRefs.ptryFromQClassName
-  Print.importClass PlRefs.pisDataQClassName
-  Print.importType PlRefs.pdataQTyName
-  Print.importType PlRefs.pasDataQTyName
-  Print.importType PlRefs.constQTyName
-  tyDoc <- Haskell.printTyInner ty
-  let headDoc =
-        Haskell.printHsQClassName PlRefs.ptryFromQClassName
-          <+> Haskell.printHsQTyName PlRefs.pdataQTyName
-          <+> tyDoc
-      freeVars = PC.collectTyVars ty
-
-      pinnerDefDoc =
-        "type PTryFromExcess"
-          <+> Haskell.printHsQTyName PlRefs.pdataQTyName
-          <+> tyDoc
-          <+> "="
-          <+> Haskell.printHsQTyName PlRefs.constQTyName
-          <+> "()"
-
-      implDefDoc = printValueDef PlRefs.ptryFromMethod ptryFromPAsDataDoc
    in case freeVars of
         [] ->
           return $
