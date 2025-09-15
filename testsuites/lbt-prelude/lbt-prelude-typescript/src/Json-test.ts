@@ -1,7 +1,7 @@
 // Unit tests for functionality in `src/Prelude/Runtime/Json.ts`
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
-import * as Goldens from "./Goldens.js";
+import * as Goldens from "./Goldens.ts";
 import * as Fs from "node:fs/promises";
 import * as Path from "node:path";
 import * as Prelude from "prelude";

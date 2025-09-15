@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 
-import * as Utils from "./Utils.js";
+import * as Utils from "./Utils.ts";
 
-import * as Goldens from "./Goldens.js";
+import * as Goldens from "./Goldens.ts";
 
 import * as LbrPrelude from "lbr-prelude";
 import * as PreludeJson from "prelude/Json.js";
