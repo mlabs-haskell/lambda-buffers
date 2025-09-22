@@ -37,28 +37,20 @@
             hlint.enable = true;
             typos.enable = true;
             typos.settings = {
-              configuration = ''
-                [default.extend-words]
-                substituters = "substituters"
-                hask = "hask"
-                lits = "lits"
-                Nd = "Nd"
-                anc = "anc"
-                eit = "eit"
-
-                [type.pdf]
-                extend-glob = ["*.pdf"]
-                check-file = false
-
-                [type.png]
-                extend-glob = ["*.png"]
-                check-file = false
-
-                [type.log]
-                extend-glob = ["*.log"]
-                check-file = false
-              '';
-              exclude = "fourmolu.yaml";
+              ignored-words = [
+                "substituters"
+                "hask"
+                "lits"
+                "Nd"
+                "anc"
+                "eit"
+              ];
+              exclude = [
+                "*.pdf"
+                "*.png"
+                "*.log"
+                "fourmolu.yaml"
+              ];
             };
 
             markdownlint.enable = true;
