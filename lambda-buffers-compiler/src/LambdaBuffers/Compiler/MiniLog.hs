@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}
+
 {- | MiniLog is a simple first order syntax encoding of a Prolog-like logic language without non-determinism and backtracking abilities.
  It is used to represent LambdaBuffers Type Class rules (`InstanceClause` and `Derive`) and to check for their logical consistency.
 -}

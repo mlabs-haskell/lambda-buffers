@@ -277,56 +277,48 @@ tyToTerm mn (LT.TyRecord fields _) = trec $ foldr (\(fn, fty) t -> tfield (ML.At
 {- | Solve/evaluate terms (goals) given some knowledge base (clauses).
  Tries each goal individually and collects all the errors.
 -}
-runSolve :: PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
-runSolve mn clauses goals =
-  let allErrs =
-        foldr
-          ( \goal errs -> case runSolve' mn clauses goal of
-              Left err -> err <> errs
-              Right _ -> errs
-          )
-          mempty
-          goals
-   in if allErrs == mempty then Right () else Left allErrs
+runSolve :: Bool -> PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
+runSolve = runSolve'
 
 -- | Tries to solve a single goal.
-runSolve' :: PC.ModuleName -> [Clause] -> Term -> Either P.Error ()
-runSolve' locMn clauses goal = do
-  let (errOrRes, mlTrace) = ML.solve clauses [goal]
+runSolve' :: Bool -> PC.ModuleName -> [Clause] -> [Term] -> Either P.Error ()
+runSolve' doTracing locMn clauses goals = do
+  let (errOrRes, mlTrace) = ML.solve doTracing clauses goals
   case errOrRes of
-    Left mlErr -> do
-      case goalToConstraint locMn goal of
-        Nothing -> Left $ internalError' locMn ("Failed translating the current goal into a Proto.Compiler.Constraint\n" <> show goal)
-        Just cstr -> Left $ fromMiniLogError locMn cstr mlTrace mlErr
+    Left mlErr -> case fromMiniLogError locMn mlTrace mlErr of
+      Left internalErr -> Left $ internalError locMn $ show ("Failed translating from a MiniLog error\n" :: String, internalErr)
+      Right convertedErr -> Left convertedErr
     Right _ -> return ()
 
 -- | Convert to API errors.
-fromMiniLogError :: PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> ML.MiniLogError Funct Atom -> P.Error
-fromMiniLogError locMn currentCstr _trace err@(ML.OverlappingClausesError clauses goal) =
+fromMiniLogError :: PC.ModuleName -> [ML.MiniLogTrace Funct Atom] -> ML.MiniLogError Funct Atom -> Either P.InternalError P.Error
+fromMiniLogError locMn _trace mlErr@(ML.OverlappingClausesError clauses goal) =
   case originalConstraint `traverse` clauses of
-    Nothing -> internalError locMn currentCstr ("Failed extracting the original `Constraint` when constructing a report for the `OverlappingRulesError`" <> show err)
-    Just overlaps -> case goalToConstraint locMn goal of
-      Nothing -> internalError locMn currentCstr ("Failed translating to `Constraint` when constructing a report for the `OverlappingRulesError`" <> show err)
-      Just subCstr -> overlappingRulesError locMn currentCstr subCstr overlaps
-fromMiniLogError locMn currentCstr trace err@(ML.MissingClauseError (ConstraintT _ OpaqueT)) =
-  deriveOpaqueError' locMn currentCstr trace err
-fromMiniLogError locMn currentCstr trace err@(ML.MissingClauseError (ConstraintT _ (AppT OpaqueT _args))) =
-  deriveOpaqueError' locMn currentCstr trace err
-fromMiniLogError locMn currentCstr _trace err@(ML.MissingClauseError forGoal) =
-  case goalToConstraint locMn forGoal of
-    Nothing -> internalError locMn currentCstr ("Failed translating to `Constraint` when constructing a report for the `MissingInstanceError`" <> show err)
-    Just forCstr -> missingRuleError locMn currentCstr forCstr
-fromMiniLogError locMn currentCstr _trace (ML.InternalError ierr) = internalError locMn currentCstr (show ierr)
+    Nothing -> Left $ internalError' locMn ("Failed extracting the original `Constraint` when constructing a report for the `OverlappingRulesError`" <> show mlErr)
+    Just overlaps -> do
+      cstr <- goalToConstraint' locMn goal mlErr
+      return $ overlappingRulesError locMn cstr cstr overlaps -- FIXME: cstr was currentCstr
+fromMiniLogError locMn trace err@(ML.MissingClauseError (ConstraintT _ OpaqueT)) = deriveOpaqueError' locMn trace err
+fromMiniLogError locMn trace err@(ML.MissingClauseError (ConstraintT _ (AppT OpaqueT _args))) = deriveOpaqueError' locMn trace err
+fromMiniLogError locMn _trace mlErr@(ML.MissingClauseError forGoal) = do
+  forCstr <- goalToConstraint' locMn forGoal mlErr
+  return $ missingRuleError locMn forCstr forCstr -- FIXME: cstr was currentCstr
+fromMiniLogError locMn _trace (ML.InternalError ierr) = Left $ internalError' locMn (show ierr)
+
+goalToConstraint' :: PC.ModuleName -> Term -> ML.MiniLogError Funct Atom -> Either P.InternalError PC.Constraint
+goalToConstraint' locMn goal mlErr = case goalToConstraint locMn goal of
+  Nothing -> Left $ internalError' locMn ("Failed translating to `Constraint` when constructing a report for the type class checking error. " <> show mlErr)
+  Just cstr -> Right cstr
 
 {- | Searches through the `ML.MiniLogTrace` finding the `Clause` within which an errouneous call occurred.
  WARN(bladyjoker): This is brittle, consider adding the clause head as part of the `ML.MiniLogError`.
 -}
-deriveOpaqueError' :: forall {a}. Show a => PC.ModuleName -> PC.Constraint -> [ML.MiniLogTrace Funct Atom] -> a -> P.Error
-deriveOpaqueError' locMn currentCstr trace err = case reverse $ filter (\case ML.CallClause _ _ -> True; _ -> False) trace of
+deriveOpaqueError' :: forall {a}. Show a => PC.ModuleName -> [ML.MiniLogTrace Funct Atom] -> a -> Either P.InternalError P.Error
+deriveOpaqueError' locMn trace err = case reverse $ filter (\case ML.CallClause _ _ -> True; _ -> False) trace of
   (ML.CallClause cl _ : _) -> case originalConstraint cl of
-    Nothing -> internalError locMn currentCstr ("Failed extracting the original constraint when constructing a report for the `DeriveOpaqueError`\n" <> show err)
-    Just (_, forCstr) -> deriveOpaqueError locMn currentCstr forCstr
-  _ -> internalError locMn currentCstr (show err)
+    Nothing -> Left $ internalError' locMn ("Failed extracting the original constraint when constructing a report for the `DeriveOpaqueError`\n" <> show err)
+    Just (_, forCstr) -> Right $ deriveOpaqueError locMn forCstr forCstr -- FIXME: It was currentCstr forCstr
+  _ -> Left $ internalError' locMn (show err)
 
 {- | Turn a `Term` into a `PC.Ty`.
  This is only used for reporting error and thus only necessary translations are
