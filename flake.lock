@@ -807,11 +807,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1764772330,
-        "narHash": "sha256-UyNsIDebB6EWfcfKXMjGTXgwX2ny5VUiHAaW9lyu+3E=",
+        "lastModified": 1771419107,
+        "narHash": "sha256-SkZBFrhEYjqorz5sBZU1PatfWkRM90pjJXY639f8NeA=",
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
-        "rev": "c75b862efd8987193d8a1ba08f70d81b56663c7a",
+        "rev": "6a2507a7ad3814773d05133ee99320885e0ca8f7",
         "type": "github"
       },
       "original": {
