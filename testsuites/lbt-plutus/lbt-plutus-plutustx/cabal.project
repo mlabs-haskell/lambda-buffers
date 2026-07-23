@@ -8,3 +8,11 @@ allow-newer:
   ral:QuickCheck,
   fin:QuickCheck,
   bin:QuickCheck,
+
+-- Uniform plutus version across all LambdaBuffers projects (van Rossem/PV11 compatible,
+-- newest supported by plutarch 1.14.0)
+constraints:
+  plutus-core ==1.65.0.0
+  , plutus-ledger-api ==1.65.0.0
+  , plutus-tx ==1.65.0.0
+  , plutus-tx-plugin ==1.65.0.0

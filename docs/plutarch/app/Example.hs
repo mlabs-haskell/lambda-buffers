@@ -18,13 +18,14 @@ import Plutarch.Evaluate (evalScript)
 import Plutarch.Internal.Term (
   Config (Tracing),
   LogLevel (LogInfo),
+  S,
   TracingMode (DoTracing),
   compile,
  )
 import Plutarch.LedgerApi.V1 (PCurrencySymbol (PCurrencySymbol), PTokenName (PTokenName), pposixTime)
 import Plutarch.LedgerApi.Value (PAssetClass (PAssetClass))
 import Plutarch.Maybe qualified as Scott
-import Plutarch.Prelude (ClosedTerm, PAsData, PBool (PFalse, PTrue), PBuiltinList, PByteString, PEq ((#==)), PIsData, PlutusType, Term, pcon, pconstant, pdata, perror, pfind, pfromData, pif, plam, pletC, pmatch, pmatchC, ppairDataBuiltin, pshow, ptraceInfo, unTermCont, (#), (#&&), (:-->))
+import Plutarch.Prelude (PAsData, PBool (PFalse, PTrue), PBuiltinList, PByteString, PEq ((#==)), PIsData, PlutusType, Term, pcon, pconstant, pdata, perror, pfind, pfromData, pif, plam, pletC, pmatch, pmatchC, ppairDataBuiltin, pshow, ptraceInfo, unTermCont, (#), (#&&), (:-->))
 
 userRef :: Text -> Term s (Ref User)
 userRef userName = userRef' (textToBytes userName)
@@ -101,7 +102,7 @@ textToBytes = pconstant . Text.encodeUtf8
 toBuiltinList :: Term s (Lb.PList a :--> PBuiltinList (PAsData a))
 toBuiltinList = plam $ \xs -> pmatch xs (\(Lb.PList xs') -> xs')
 
-evalBool :: ClosedTerm PBool -> IO ()
+evalBool :: (forall (s :: S). Term s PBool) -> IO ()
 evalBool t =
   case compile (Tracing LogInfo DoTracing) (pif t (pcon PTrue) (ptraceInfo "Term evaluated to False" perror)) of
     Left err -> print ("Error while compiling a Plutarch Term" :: String, err)

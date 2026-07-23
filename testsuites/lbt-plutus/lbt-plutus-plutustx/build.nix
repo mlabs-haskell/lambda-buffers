@@ -26,7 +26,7 @@
           "${config.packages.lbt-plutus-golden-haskell}"
 
           # Plutarch (just for script evaluation module)
-          "${inputs.plutarch}"
+          "${config.settings.haskell.plutarch-src}"
         ];
 
         devShellTools = config.settings.shell.tools;

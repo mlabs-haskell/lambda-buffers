@@ -105,7 +105,7 @@ let
       features = [ "arbitrary_precision" ];
     };
     plutus-ledger-api = {
-      version = "^3.0.1";
+      version = "^3.1.0";
       features = [ "lbf" ];
     };
     lbr-prelude = {

@@ -15,6 +15,8 @@
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
+        inherit (config.settings.haskell) modules;
+
         dependencies = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"

@@ -2,7 +2,13 @@
   description = "Lambda Buffers";
   inputs = {
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang = {
+      url = "github:mlabs-haskell/flake-lang.nix";
+      # Overridden so haskell.nix can resolve plutus 1.65.0.0 (van Rossem/PV11):
+      # flake-lang's own lock pins CHaP and hackage.nix snapshots that predate it.
+      inputs.cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages?ref=repo";
+      inputs.haskell-nix.inputs.hackage.url = "github:input-output-hk/hackage.nix";
+    };
 
     nixpkgs.follows = "flake-lang/nixpkgs";
 

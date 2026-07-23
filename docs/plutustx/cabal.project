@@ -1,6 +1,7 @@
 packages: ./.
 
 tests: true
+
 -- Uniform plutus version across all LambdaBuffers projects (van Rossem/PV11 compatible,
 -- newest supported by plutarch 1.14.0)
 constraints:
