@@ -363,8 +363,8 @@
       },
       "original": {
         "owner": "IntersectMBO",
-        "ref": "repo",
         "repo": "cardano-haskell-packages",
+        "rev": "f77658bfbf42886478e7a34a1522949cdfc639a3",
         "type": "github"
       }
     },
@@ -1418,6 +1418,7 @@
       "original": {
         "owner": "input-output-hk",
         "repo": "hackage.nix",
+        "rev": "c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc",
         "type": "github"
       }
     },

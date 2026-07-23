@@ -6,8 +6,11 @@
       url = "github:mlabs-haskell/flake-lang.nix";
       # Overridden so haskell.nix can resolve plutus 1.65.0.0 (van Rossem/PV11):
       # flake-lang's own lock pins CHaP and hackage.nix snapshots that predate it.
-      inputs.cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages?ref=repo";
-      inputs.haskell-nix.inputs.hackage.url = "github:input-output-hk/hackage.nix";
+      # Pinned to explicit revs (not mutable branch refs) so pure-mode CI
+      # evaluation never needs to update the lock.
+      inputs.cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages/f77658bfbf42886478e7a34a1522949cdfc639a3";
+      inputs.haskell-nix.inputs.hackage.url =
+        "github:input-output-hk/hackage.nix/c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc";
     };
 
     nixpkgs.follows = "flake-lang/nixpkgs";
