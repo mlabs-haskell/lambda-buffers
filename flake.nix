@@ -1,20 +1,30 @@
 {
   description = "Lambda Buffers";
   inputs = {
+    # hackage.nix pinned at the top level so haskell.nix's `hackage` input can
+    # `follows` it. Overriding it through a nested `flake-lang.inputs.haskell-nix.
+    # inputs.hackage.url` is a two-level-deep override that breaks Hercules'
+    # pure-mode lock evaluation ("cannot update unlocked flake input ... in pure
+    # mode"); a top-level input + `follows` locks cleanly. flake=false to match
+    # how haskell.nix consumes hackage.nix.
+    hackage = {
+      url = "github:input-output-hk/hackage.nix/c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc";
+      flake = false;
+    };
+
     # flake-lang.nix used for monorepo setups
     flake-lang = {
       url = "github:mlabs-haskell/flake-lang.nix";
       # Overridden so haskell.nix can resolve plutus 1.65.0.0 (van Rossem/PV11):
       # flake-lang's own lock pins CHaP and hackage.nix snapshots that predate it.
-      # Pinned to explicit revs (not mutable branch refs) so pure-mode CI
-      # evaluation never needs to update the lock. haskell-nix itself is pinned
-      # too: overriding its `hackage` child forces a re-lock of haskell-nix, which
-      # would otherwise fail in pure mode because its own ref is a mutable branch.
+      # CHaP and haskell-nix are pinned to explicit (immutable) revs so pure-mode
+      # CI evaluation never needs to update the lock; hackage is redirected to the
+      # top-level input above via `follows`.
       inputs = {
         cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages/f77658bfbf42886478e7a34a1522949cdfc639a3";
         haskell-nix = {
           url = "github:input-output-hk/haskell.nix/7ceff53efc1f6006f68fbfbb496af8720a598152";
-          inputs.hackage.url = "github:input-output-hk/hackage.nix/c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc";
+          inputs.hackage.follows = "hackage";
         };
       };
     };

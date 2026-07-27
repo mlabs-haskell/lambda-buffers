@@ -1462,7 +1462,9 @@
         "cabal-36": "cabal-36_2",
         "cardano-shell": "cardano-shell_2",
         "flake-compat": "flake-compat_4",
-        "hackage": "hackage_2",
+        "hackage": [
+          "hackage"
+        ],
         "hackage-for-stackage": "hackage-for-stackage",
         "hackage-internal": "hackage-internal",
         "hls": "hls",
@@ -4191,6 +4193,7 @@
       "inputs": {
         "flake-lang": "flake-lang",
         "flake-parts": "flake-parts_3",
+        "hackage": "hackage_2",
         "hci-effects": "hci-effects_2",
         "nixpkgs": [
           "flake-lang",
