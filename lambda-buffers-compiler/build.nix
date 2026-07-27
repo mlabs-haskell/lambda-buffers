@@ -22,7 +22,8 @@
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
           "${config.packages.lambda-buffers-utils-src}"
-        ];
+        ]
+        ++ config.settings.haskell.proto-lens-deps;
 
         devShellTools = config.settings.shell.tools;
         devShellHook = config.settings.shell.hook;

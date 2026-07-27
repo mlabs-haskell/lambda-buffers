@@ -80,15 +80,20 @@ required; all serialization formats remain backward compatible.
 
 Notable dependency and Nix environment changes:
 
-- Haskell Plutus projects now resolve against Cardano Haskell Packages (CHaP) at
-  index-state `2026-07-09T17:40:37Z`, with all projects pinned to a uniform
+- All Haskell Plutus projects are pinned to a uniform
   `plutus-core`/`plutus-ledger-api`/`plutus-tx`/`plutus-tx-plugin` `==1.65.0.0`
-  (the newest version supported by Plutarch; PV11-capable, which requires `>=1.63`).
+  (the newest version supported by Plutarch; PV11-capable, which requires `>=1.63`),
+  resolved from Cardano Haskell Packages (CHaP) at rev `f77658b` (2026-07).
 - The GHC compiler was bumped from 9.6.7 to **9.12.1**. This is required: Plutarch 1.14
   uses `TypeAbstractions` (GHC `>=9.8`), while `plutus-tx-plugin` 1.65 is only buildable
   on GHC 9.6.x or 9.12.x — GHC 9.12 is the only version that satisfies both.
-- The `flake-lang` input now overrides its `cardano-haskell-packages` and
-  `haskell-nix/hackage` inputs so haskell.nix can resolve the 2026 package sets.
+- The `flake-lang` input is pinned and its `cardano-haskell-packages` (CHaP) input is
+  overridden to the 2026-07 rev for plutus 1.65. haskell.nix and its bundled hackage.nix
+  are left at flake-lang's defaults (whose GHC 9.12.1 is cache-built), so the Hackage
+  index-state stays at `2025-09-27`. The few packages that only gained GHC 9.12 support
+  later than that — `proto-lens` 0.7.1.7 — are injected per-project as haskell.nix
+  extraHackage source dependencies (`settings.haskell.proto-lens-deps`) rather than via a
+  hackage input override, which keeps the flake evaluable by Hercules CI in pure mode.
 - Plutarch bumped to [1.14.0](https://github.com/Plutonomicon/plutarch-plutus/tree/c3b4771901b2bc5ba0c1e1fed66de3c0f5523069)
   (`ClosedTerm` removed, `PMap`/`PValue` replaced by `PSortedMap`/`PSortedValue`;
   the lbr-plutarch runtime was migrated accordingly).

@@ -50,6 +50,11 @@
               description = "Plutarch source tree (patched for the repo's GHC) to use as a haskell.nix dependency";
             };
 
+            proto-lens-deps = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              description = "proto-lens source package dirs (GHC 9.12-compatible 0.7.1.7) to inject as haskell.nix extraHackage dependencies";
+            };
+
             modules = lib.mkOption {
               type = lib.types.listOf lib.types.raw;
               description = "Extra haskell.nix modules applied to plain (non-plutus) haskell.nix projects";
@@ -64,7 +69,7 @@
           settings = {
 
             haskell = {
-              index-state = "2026-07-09T17:40:37Z";
+              index-state = "2025-09-27T21:56:19Z";
               # GHC 9.12 is the only compiler that builds both plutarch 1.14
               # (needs >=9.8 for TypeAbstractions) and plutus-tx-plugin 1.65
               # (buildable only on 9.6.x or 9.12.x) for van Rossem/PV11.
@@ -84,6 +89,31 @@
                 chmod -R +w $out
                 find $out -name '*.cabal' -exec sed -i 's/-Werror//g' {} +
               '';
+
+              # proto-lens only gained GHC 9.12 support in 0.7.1.7 (2026-04), newer
+              # than this repo's hackage index-state. Inject it (with git submodules,
+              # which carry proto-lens-runtime's bundled descriptor.proto) as an
+              # extraHackage dependency for the tool projects. Kept out of the
+              # hackage input override to stay Hercules-CI compatible.
+              proto-lens-deps =
+                let
+                  src = pkgs.fetchgit {
+                    url = "https://github.com/google/proto-lens.git";
+                    rev = "1b3bcd51f4f9236d6826f7f0a1c4387d90af04ce";
+                    fetchSubmodules = true;
+                    sha256 = "0wp2fk8s806aakhjr68i8zwvsl5w07ji4iwh3ms3ml48lx9a3bma";
+                  };
+                  # proto-lens' data-files reach the bundled protobuf .proto files via a
+                  # symlink (proto-lens-imports/google -> ../../google/protobuf/...) to a
+                  # sibling submodule dir. Extracting a single package subdir as an
+                  # extraHackage dep dangles that symlink, so copy with -L to inline the
+                  # real files and make each subdir self-contained.
+                  pkg = name: pkgs.runCommand name { } ''cp -rL ${src}/${name} $out'';
+                in
+                [
+                  "${pkg "proto-lens"}"
+                  "${pkg "proto-lens-runtime"}"
+                ];
 
               # freer-simple 1.2.1.2 (latest) has no GHC 9.12-compatible release;
               # its MonadBase instance is missing a `Monad b` constraint. Patch it.
