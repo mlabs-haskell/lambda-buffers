@@ -2,7 +2,19 @@
   description = "Lambda Buffers";
   inputs = {
     # flake-lang.nix used for monorepo setups
-    flake-lang.url = "github:mlabs-haskell/flake-lang.nix";
+    flake-lang = {
+      # Pinned to an immutable rev so CI keeps haskell.nix at flake-lang's tested
+      # 7ceff53 (whose GHC 9.12.1 is cache-built; newer haskell.nix pulls a gcc-15
+      # nixpkgs that can't build GHC 9.12.1).
+      url = "github:mlabs-haskell/flake-lang.nix/f8d33b23dd57cd04560afbdaac601be8c77bae7f";
+      # Only CHaP is overridden (a depth-1 input, immutable rev) so haskell.nix can
+      # resolve plutus 1.65.0.0 (van Rossem/PV11). We deliberately do NOT override
+      # haskell.nix's transitive `hackage` input: that depth-2 override breaks
+      # Hercules CI's pure-mode lock evaluation. The newer packages GHC 9.12 needs
+      # (e.g. proto-lens 0.7.1.7) are injected per-project via cabal.project's
+      # `source-repository-package` instead.
+      inputs.cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages/f77658bfbf42886478e7a34a1522949cdfc639a3";
+    };
 
     nixpkgs.follows = "flake-lang/nixpkgs";
 

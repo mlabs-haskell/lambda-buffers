@@ -26,7 +26,6 @@ import GHC.Generics (Generic)
 import GHC.TypeLits qualified as GHC
 import LambdaBuffers.Runtime.Plutarch.LamVal (pfromPlutusDataPTryFrom)
 import LambdaBuffers.Runtime.Plutarch.LamVal qualified as LamVal
-import Plutarch.DataRepr.Internal ()
 import Plutarch.Internal.PlutusType (PlutusType (pcon', pmatch'))
 import Plutarch.LedgerApi.AssocMap qualified as AssocMap
 import Plutarch.LedgerApi.Interval qualified
@@ -65,10 +64,10 @@ import Plutarch.Unsafe (punsafeCoerce)
 type PType = S -> Type
 
 -- | LB Plutus.Map maps to this, a sorted Plutus map.
-type PMap = AssocMap.PMap 'AssocMap.Sorted
+type PMap = AssocMap.PSortedMap
 
 -- | LB Plutus.V1.Value maps to this, a sorted Value with no value guarantees.
-type PValue = Plutarch.LedgerApi.V1.PValue 'Plutarch.LedgerApi.V1.Sorted 'Plutarch.LedgerApi.V1.NoGuarantees
+type PValue = Plutarch.LedgerApi.Value.PSortedValue
 
 type PPosixTimeRange = Plutarch.LedgerApi.Interval.PInterval Plutarch.LedgerApi.V1.PPosixTime
 
