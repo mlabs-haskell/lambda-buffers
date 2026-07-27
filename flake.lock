@@ -800,6 +800,7 @@
       "original": {
         "owner": "mlabs-haskell",
         "repo": "flake-lang.nix",
+        "rev": "f8d33b23dd57cd04560afbdaac601be8c77bae7f",
         "type": "github"
       }
     },
@@ -1462,9 +1463,7 @@
         "cabal-36": "cabal-36_2",
         "cardano-shell": "cardano-shell_2",
         "flake-compat": "flake-compat_4",
-        "hackage": [
-          "hackage"
-        ],
+        "hackage": "hackage_2",
         "hackage-for-stackage": "hackage-for-stackage",
         "hackage-internal": "hackage-internal",
         "hls": "hls",
@@ -4193,7 +4192,6 @@
       "inputs": {
         "flake-lang": "flake-lang",
         "flake-parts": "flake-parts_3",
-        "hackage": "hackage_2",
         "hci-effects": "hci-effects_2",
         "nixpkgs": [
           "flake-lang",

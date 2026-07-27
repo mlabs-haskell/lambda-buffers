@@ -1,30 +1,25 @@
 {
   description = "Lambda Buffers";
   inputs = {
-    # hackage.nix pinned at the top level so haskell.nix's `hackage` input can
-    # `follows` it. Overriding it through a nested `flake-lang.inputs.haskell-nix.
-    # inputs.hackage.url` is a two-level-deep override that breaks Hercules'
-    # pure-mode lock evaluation ("cannot update unlocked flake input ... in pure
-    # mode"); a top-level input + `follows` locks cleanly. flake=false to match
-    # how haskell.nix consumes hackage.nix.
-    hackage = {
-      url = "github:input-output-hk/hackage.nix/c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc";
-      flake = false;
-    };
-
     # flake-lang.nix used for monorepo setups
     flake-lang = {
-      url = "github:mlabs-haskell/flake-lang.nix";
+      # Pinned to an immutable rev (not the mutable default branch): Hercules CI
+      # re-fetches mutable inputs to their latest during its pure-mode lock update,
+      # which no longer matches this repo's lock and forces a re-lock of flake-lang's
+      # overridden subtree — that then fails on the (necessarily overridden) hackage
+      # input. Pinning flake-lang makes CI use exactly the rev the lock was built
+      # against, so no re-lock happens.
+      url = "github:mlabs-haskell/flake-lang.nix/f8d33b23dd57cd04560afbdaac601be8c77bae7f";
       # Overridden so haskell.nix can resolve plutus 1.65.0.0 (van Rossem/PV11):
-      # flake-lang's own lock pins CHaP and hackage.nix snapshots that predate it.
-      # CHaP and haskell-nix are pinned to explicit (immutable) revs so pure-mode
-      # CI evaluation never needs to update the lock; hackage is redirected to the
-      # top-level input above via `follows`.
+      # flake-lang's own lock pins CHaP and a hackage.nix that predate the 2026-07
+      # index-state GHC 9.12 needs (e.g. proto-lens 0.7.1.7). haskell.nix is held at
+      # a rev whose GHC 9.12.1 is cache-built (newer haskell.nix pulls a gcc-15
+      # nixpkgs that can't build GHC 9.12.1), so its bundled hackage is bumped here.
       inputs = {
         cardano-haskell-packages.url = "github:IntersectMBO/cardano-haskell-packages/f77658bfbf42886478e7a34a1522949cdfc639a3";
         haskell-nix = {
           url = "github:input-output-hk/haskell.nix/7ceff53efc1f6006f68fbfbb496af8720a598152";
-          inputs.hackage.follows = "hackage";
+          inputs.hackage.url = "github:input-output-hk/hackage.nix/c6c3e35282315c51d8c97c2af3be5cbd4dbc43bc";
         };
       };
     };
