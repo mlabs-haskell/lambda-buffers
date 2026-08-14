@@ -2,6 +2,11 @@ packages: ./.
 
 tests: true
 
+source-repository-package
+  type: git
+  location: https://github.com/mlabs-haskell/hbls-need-push-access.git
+  tag: 6b92e81481f5409c624e1b9b22eefc7d3abd81fb
+
 allow-newer:
   -- TODO(szg251): Allow once the below issue is resolved
   -- https://github.com/phadej/vec/issues/121

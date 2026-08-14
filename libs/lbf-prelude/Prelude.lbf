@@ -28,6 +28,16 @@ opaque Text
 instance Eq Text
 instance Json Text
 
+opaque G1Element
+
+instance Eq G1Element
+instance Json G1Element
+
+opaque G2Element
+
+instance Eq G2Element
+instance Json G2Element
+
 opaque Maybe a
 
 instance Eq (Maybe a) :- Eq a

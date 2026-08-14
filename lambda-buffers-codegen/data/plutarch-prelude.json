@@ -49,6 +49,16 @@
       "lbr-plutarch",
       "LambdaBuffers.Runtime.Plutarch",
       "PSet"
+    ],
+    "Prelude.G1Element": [
+      "plutarch",
+      "Plutarch.Builtin.BLS",
+      "PBuiltinBLS12_381_G1_Element"
+    ],
+    "Prelude.G2Element": [
+      "plutarch",
+      "Plutarch.Builtin.BLS",
+      "PBuiltinBLS12_381_G2_Element"
     ]
   },
   "classesConfig": {
