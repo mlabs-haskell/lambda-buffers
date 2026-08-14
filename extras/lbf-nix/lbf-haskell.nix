@@ -85,6 +85,21 @@ let
       '';
     };
 
+  cabalProject =
+    opts:
+    with (lbfHaskellOpts opts);
+    pkgs.writeTextFile {
+      name = "lambda-buffers-cabal-project";
+      text = ''
+        packages: ./${name}.cabal
+
+        source-repository-package
+          type: git
+          location: https://github.com/mlabs-haskell/hbls-need-push-access.git
+          tag: 6b92e81481f5409c624e1b9b22eefc7d3abd81fb
+      '';
+    };
+
   build =
     opts:
     with (lbfHaskellOpts opts);
@@ -116,12 +131,14 @@ let
         cat ${cabalTemplate opts} \
             | sed -r "s/<EXPOSED_MODULES>/$EXPOSED_MODULES/" \
             | sed -r "s/<DEPS>/$DEPS/" > ${name}.cabal;
+        cat ${cabalProject opts} > cabal.project;
       '';
 
       installPhase = ''
         mkdir -p $out;
-        cp -rL autogen $out
+        cp -rL autogen $out;
         cp ${name}.cabal $out/${name}.cabal;
+        cp cabal.project $out/cabal.project;
         find $out;
 
         cp build.json $buildjson;

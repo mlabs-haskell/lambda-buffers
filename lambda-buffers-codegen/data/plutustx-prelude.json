@@ -49,6 +49,16 @@
         "lbr-plutustx",
         "LambdaBuffers.Runtime.PlutusTx.NotImplemented",
         "Set"
+    ],
+    "Prelude.G1Element": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinBLS12_381_G1_Element"
+    ],
+    "Prelude.G2Element": [
+      "plutus-tx",
+      "PlutusTx.Builtins",
+      "BuiltinBLS12_381_G2_Element"
     ]
   },
   "classesConfig": {

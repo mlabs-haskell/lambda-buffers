@@ -90,8 +90,8 @@ library
   import:          common-language
   build-depends:
     , base
-    , plutarch
-    , plutarch-ledger-api
+    , plutarch             >=1.14.0
+    , plutarch-ledger-api  >=3.7.0
 
   hs-source-dirs:  src
   exposed-modules:
@@ -107,7 +107,7 @@ test-suite tests
     , base
     , hedgehog
     , lbr-plutarch
-    , plutarch
+    , plutarch        >=1.14.0
     , tasty
     , tasty-hedgehog
     , tasty-hunit

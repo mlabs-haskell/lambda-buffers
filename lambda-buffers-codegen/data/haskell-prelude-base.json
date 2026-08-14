@@ -49,6 +49,16 @@
       "base",
       "Prelude",
       "Bool"
+    ],
+    "Prelude.G1Element": [
+      "hbls-need-push-access",
+      "HBLS",
+      "G1Point"
+    ],
+    "Prelude.G2Element": [
+      "hbls-need-push-access",
+      "HBLS",
+      "G2Point"
     ]
   },
   "classesConfig": {
