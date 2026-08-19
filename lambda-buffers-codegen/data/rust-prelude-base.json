@@ -49,12 +49,10 @@
     ],
     "Prelude.G1Element": [
       "lbr-prelude",
-      "types",
       "Unsupported"
     ],
     "Prelude.G2Element": [
       "lbr-prelude",
-      "types",
       "Unsupported"
     ]
   },
