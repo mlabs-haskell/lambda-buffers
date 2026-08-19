@@ -1,4 +1,6 @@
-use lbf_prelude::prelude::{Bool, Bytes, Char, Either, Integer, List, Map, Maybe, Set, Text};
+use lbf_prelude::prelude::{
+    Bool, Bytes, Char, Either, Integer, List, Map, Maybe, Set, Text, Unsupported,
+};
 use lbf_prelude_golden_api::days::{Day, FreeDay, WorkDay};
 use lbf_prelude_golden_api::foo::bar::{FooComplicated, FooProd, FooRec, FooSum, F, G};
 use lbf_prelude_golden_api::foo::{FInt, GInt, A, B, C, D};
