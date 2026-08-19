@@ -50,6 +50,11 @@
               description = "Plutarch source tree (patched for the repo's GHC) to use as a haskell.nix dependency";
             };
 
+            hbls-src = lib.mkOption {
+              type = lib.types.package;
+              description = "HBLS source";
+            };
+
             proto-lens-deps = lib.mkOption {
               type = lib.types.listOf lib.types.str;
               description = "proto-lens source package dirs (GHC 9.12-compatible 0.7.1.7) to inject as haskell.nix extraHackage dependencies";
@@ -89,6 +94,19 @@
                 chmod -R +w $out
                 find $out -name '*.cabal' -exec sed -i 's/-Werror//g' {} +
               '';
+
+              hbls-src =
+                let
+                  src = pkgs.fetchgit {
+                    url = "https://github.com/mlabs-haskell/hbls.git";
+                    rev = "ecef8c65a74e5388b9e3e1f8c47892040967cad9";
+                    fetchSubmodules = true;
+                    sha256 = "sha256-8h6n1QO1ixpqxStSBI3Z2Fcgo9wiuPdaeN5cKVSl2Ow=";
+                  };
+                in
+                pkgs.runCommand "hbls-src" { } ''
+                  cp -rL ${src} $out
+                '';
 
               # proto-lens only gained GHC 9.12 support in 0.7.1.7 (2026-04), newer
               # than this repo's hackage index-state. Inject it (with git submodules,

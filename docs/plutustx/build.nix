@@ -25,6 +25,9 @@
           # Api
           "${config.packages.lbf-plutustx-example-api}"
 
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
+
         ];
 
         devShellTools = config.settings.shell.tools;

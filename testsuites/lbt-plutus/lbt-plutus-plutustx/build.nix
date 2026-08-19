@@ -27,6 +27,9 @@
 
           # Plutarch (just for script evaluation module)
           "${config.settings.haskell.plutarch-src}"
+
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools;

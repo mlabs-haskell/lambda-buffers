@@ -28,6 +28,9 @@
           # Plutarch itself
           "${config.settings.haskell.plutarch-src}"
           "${config.settings.haskell.plutarch-src}/plutarch-ledger-api"
+
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools;

@@ -33,6 +33,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # BLS Crypto Primitives (extracted from cardano-node)
+    hbls.url = "github://mlabs-haskell/hbls";
+    hbls.flake = false;
+
     # Plutarch eDSL (LB Codegen target)
     plutarch.url = "github:Plutonomicon/plutarch-plutus";
 

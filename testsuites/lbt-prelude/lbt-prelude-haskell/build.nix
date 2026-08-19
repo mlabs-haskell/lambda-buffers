@@ -15,6 +15,8 @@
           "${config.packages.lbf-prelude-haskell}"
           "${config.packages.lbf-prelude-golden-api-haskell}"
           "${config.packages.lbt-prelude-golden-haskell}"
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools;
