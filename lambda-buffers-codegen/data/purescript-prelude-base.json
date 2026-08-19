@@ -49,6 +49,16 @@
       "prelude",
       "Prim",
       "Boolean"
+    ],
+    "Prelude.G1Element": [
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "Unsupported"
+    ],
+    "Prelude.G2Element": [
+      "lbr-prelude",
+      "LambdaBuffers.Runtime.Prelude",
+      "Unsupported"
     ]
   },
   "classesConfig": {

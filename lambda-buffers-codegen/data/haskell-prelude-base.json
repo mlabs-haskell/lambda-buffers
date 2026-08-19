@@ -51,12 +51,12 @@
       "Bool"
     ],
     "Prelude.G1Element": [
-      "hbls-need-push-access",
+      "hbls",
       "HBLS",
       "G1Point"
     ],
     "Prelude.G2Element": [
-      "hbls-need-push-access",
+      "hbls",
       "HBLS",
       "G2Point"
     ]

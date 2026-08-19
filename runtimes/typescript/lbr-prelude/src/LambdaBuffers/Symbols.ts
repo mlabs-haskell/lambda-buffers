@@ -11,6 +11,8 @@ export type Map<K, V> = Prelude.Map<K, V>;
 export type Maybe<A> = Prelude.Maybe<A>;
 export type Set<A> = Prelude.Set<A>;
 export type Text = Prelude.Text;
+// hack for testing TODO replace w/ the real BLS types if possible
+export type Unsupported = Prelude.Integer;
 
 export const Bool: unique symbol = Symbol("Bool");
 export const Integer: unique symbol = Symbol("Integer");
@@ -22,3 +24,5 @@ export const Either: unique symbol = Symbol("Either");
 export const Map: unique symbol = Symbol("Map");
 export const Set: unique symbol = Symbol("Set");
 export const List: unique symbol = Symbol("List");
+// hack for testing
+export const Unsupported: unique symbol = Symbol("Unsupported");

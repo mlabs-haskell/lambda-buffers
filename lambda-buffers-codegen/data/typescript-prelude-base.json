@@ -49,6 +49,16 @@
       "lbr-prelude",
       "LbrPrelude",
       "Bool"
+    ],
+    "Prelude.G1Element": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Unsupported"
+    ],
+    "Prelude.G2Element": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Unsupported"
     ]
   },
   "classesConfig": {
