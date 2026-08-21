@@ -109,7 +109,7 @@ let
       features = [ "lbf" ];
     };
     lbr-prelude = {
-      version = "0.1.3";
+      version = "0.1.4";
     };
   };
 

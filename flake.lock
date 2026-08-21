@@ -1662,6 +1662,18 @@
         "type": "github"
       }
     },
+    "hbls": {
+      "flake": false,
+      "locked": {
+        "path": "github:/mlabs-haskell/hbls",
+        "type": "path"
+      },
+      "original": {
+        "path": "github:/mlabs-haskell/hbls",
+        "type": "path"
+      },
+      "parent": []
+    },
     "hci-effects": {
       "inputs": {
         "flake-parts": "flake-parts_2",
@@ -4190,6 +4202,7 @@
       "inputs": {
         "flake-lang": "flake-lang",
         "flake-parts": "flake-parts_3",
+        "hbls": "hbls",
         "hci-effects": "hci-effects_2",
         "nixpkgs": [
           "flake-lang",

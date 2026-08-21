@@ -12,6 +12,7 @@ let
         libs
         // {
           lbf-plutus = ../../libs/lbf-plutus;
+          lbr-prelude = ../../runtimes/rust/lbr-prelude;
         };
     };
     classes = {

@@ -7,7 +7,12 @@ let
   lbfRustOptsForPrelude = utils.overrideAttrs {
     imports = {
       default = { };
-      override = libs: libs // { lbf-prelude = ../../libs/lbf-prelude; };
+      override =
+        libs:
+        libs
+        // {
+          lbf-prelude = ../../libs/lbf-prelude;
+        };
     };
     classes = {
       default = [ ];
