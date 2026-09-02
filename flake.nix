@@ -36,6 +36,15 @@
     # Plutarch eDSL (LB Codegen target)
     plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
+    # Rust runtime for LB Plutus. Points at a local checkout so `plutus-ledger-api`
+    # can be developed in-tree without a crates.io release round-trip. `path:` inputs
+    # copy the working directory, so uncommitted edits there are picked up.
+    # LOCAL DEV ONLY -- do not push this line; CI wants the github: URL.
+    plutus-ledger-api-rust = {
+      url = "path:/home/ben/projects/lambda-buffers/plutus-ledger-api-rust";
+      inputs.flake-lang.follows = "flake-lang";
+    };
+
     # Typescript runtimes
     prelude-typescript.follows = "plutus-ledger-api-typescript/prelude-typescript";
     plutus-ledger-api-typescript = {

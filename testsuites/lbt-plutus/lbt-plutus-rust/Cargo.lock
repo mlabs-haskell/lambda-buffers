@@ -321,8 +321,6 @@ checksum = "90f97a5f38dd3ccfbe7aa80f4a0c00930f21b922c74195be0201c51028f22dcf"
 [[package]]
 name = "is-plutus-data-derive"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8833aaa98fd02a031afb0640e7d6259ac29fd22c646299114793ddea5795639"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -570,8 +568,6 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 [[package]]
 name = "plutus-ledger-api"
 version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b1e082eae586833f73a2a43336b45403c0700b78e3c0881c90fb827b8af8a65"
 dependencies = [
  "anyhow",
  "cardano-serialization-lib",

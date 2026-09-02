@@ -824,6 +824,27 @@
     },
     "flake-parts_10": {
       "inputs": {
+        "nixpkgs-lib": [
+          "plutus-ledger-api-typescript",
+          "hci-effects",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1751413152,
+        "narHash": "sha256-Tyw1RjYEsp5scoigs1384gIg6e0GoBVjms4aXFfRssQ=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "77826244401ea9de6e3bac47c2db46005e1f30b5",
+        "type": "github"
+      },
+      "original": {
+        "id": "flake-parts",
+        "type": "indirect"
+      }
+    },
+    "flake-parts_11": {
+      "inputs": {
         "nixpkgs-lib": "nixpkgs-lib_6"
       },
       "locked": {
@@ -840,7 +861,7 @@
         "type": "github"
       }
     },
-    "flake-parts_11": {
+    "flake-parts_12": {
       "inputs": {
         "nixpkgs-lib": [
           "plutus-ledger-api-typescript",
@@ -862,7 +883,7 @@
         "type": "indirect"
       }
     },
-    "flake-parts_12": {
+    "flake-parts_13": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib_7"
       },
@@ -880,7 +901,7 @@
         "type": "github"
       }
     },
-    "flake-parts_13": {
+    "flake-parts_14": {
       "inputs": {
         "nixpkgs-lib": [
           "proto-nix",
@@ -1019,6 +1040,27 @@
     },
     "flake-parts_8": {
       "inputs": {
+        "nixpkgs-lib": [
+          "plutus-ledger-api-rust",
+          "hci-effects",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772408722,
+        "narHash": "sha256-rHuJtdcOjK7rAHpHphUb1iCvgkU3GpfvicLMwwnfMT0=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f20dc5d9b8027381c474144ecabc9034d6a839a3",
+        "type": "github"
+      },
+      "original": {
+        "id": "flake-parts",
+        "type": "indirect"
+      }
+    },
+    "flake-parts_9": {
+      "inputs": {
         "nixpkgs-lib": "nixpkgs-lib_5"
       },
       "locked": {
@@ -1033,27 +1075,6 @@
         "owner": "hercules-ci",
         "repo": "flake-parts",
         "type": "github"
-      }
-    },
-    "flake-parts_9": {
-      "inputs": {
-        "nixpkgs-lib": [
-          "plutus-ledger-api-typescript",
-          "hci-effects",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1751413152,
-        "narHash": "sha256-Tyw1RjYEsp5scoigs1384gIg6e0GoBVjms4aXFfRssQ=",
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "rev": "77826244401ea9de6e3bac47c2db46005e1f30b5",
-        "type": "github"
-      },
-      "original": {
-        "id": "flake-parts",
-        "type": "indirect"
       }
     },
     "flake-utils": {
@@ -1702,15 +1723,15 @@
     },
     "hci-effects_3": {
       "inputs": {
-        "flake-parts": "flake-parts_9",
+        "flake-parts": "flake-parts_8",
         "nixpkgs": "nixpkgs_17"
       },
       "locked": {
-        "lastModified": 1752595130,
-        "narHash": "sha256-CNBgr4OZSuklGtNOa9CnTNo9+Xceqn/EDAC1Tc43fH8=",
+        "lastModified": 1773550609,
+        "narHash": "sha256-neu7ixXHjV3LobVjOndkL97u+6UF6Yoh+CUnzX7kUBQ=",
         "owner": "hercules-ci",
         "repo": "hercules-ci-effects",
-        "rev": "5f2e09654b2e70ba643e41609d9f9b6640f22113",
+        "rev": "554f6ed448ca74c00aa2371cde901ae1e73005b9",
         "type": "github"
       },
       "original": {
@@ -1721,8 +1742,8 @@
     },
     "hci-effects_4": {
       "inputs": {
-        "flake-parts": "flake-parts_11",
-        "nixpkgs": "nixpkgs_19"
+        "flake-parts": "flake-parts_10",
+        "nixpkgs": "nixpkgs_18"
       },
       "locked": {
         "lastModified": 1752595130,
@@ -1740,8 +1761,27 @@
     },
     "hci-effects_5": {
       "inputs": {
-        "flake-parts": "flake-parts_13",
-        "nixpkgs": "nixpkgs_21"
+        "flake-parts": "flake-parts_12",
+        "nixpkgs": "nixpkgs_20"
+      },
+      "locked": {
+        "lastModified": 1752595130,
+        "narHash": "sha256-CNBgr4OZSuklGtNOa9CnTNo9+Xceqn/EDAC1Tc43fH8=",
+        "owner": "hercules-ci",
+        "repo": "hercules-ci-effects",
+        "rev": "5f2e09654b2e70ba643e41609d9f9b6640f22113",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "hercules-ci-effects",
+        "type": "github"
+      }
+    },
+    "hci-effects_6": {
+      "inputs": {
+        "flake-parts": "flake-parts_14",
+        "nixpkgs": "nixpkgs_22"
       },
       "locked": {
         "lastModified": 1752595130,
@@ -3616,11 +3656,11 @@
     },
     "nixpkgs_17": {
       "locked": {
-        "lastModified": 1751984180,
-        "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
+        "lastModified": 1773389992,
+        "narHash": "sha256-wvfdLLWJ2I9oEpDd9PfMA8osfIZicoQ5MT1jIwNs9Tk=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9807714d6944a957c2e036f84b0ff8caf9930bc0",
+        "rev": "c06b4ae3d6599a672a6210b7021d699c351eebda",
         "type": "github"
       },
       "original": {
@@ -3632,22 +3672,6 @@
     },
     "nixpkgs_18": {
       "locked": {
-        "lastModified": 1754895929,
-        "narHash": "sha256-cHSg9CMqEx0e06UkWJLRuLlolRCgPE8zwdEp3JwYRGI=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "9585e9192aadc13ec3e49f33f8333bd3cda524df",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_19": {
-      "locked": {
         "lastModified": 1751984180,
         "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
         "owner": "NixOS",
@@ -3658,6 +3682,22 @@
       "original": {
         "owner": "NixOS",
         "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_19": {
+      "locked": {
+        "lastModified": 1754895929,
+        "narHash": "sha256-cHSg9CMqEx0e06UkWJLRuLlolRCgPE8zwdEp3JwYRGI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9585e9192aadc13ec3e49f33f8333bd3cda524df",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -3680,6 +3720,22 @@
     },
     "nixpkgs_20": {
       "locked": {
+        "lastModified": 1751984180,
+        "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9807714d6944a957c2e036f84b0ff8caf9930bc0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_21": {
+      "locked": {
         "lastModified": 1759070547,
         "narHash": "sha256-JVZl8NaVRYb0+381nl7LvPE+A774/dRpif01FKLrYFQ=",
         "owner": "NixOS",
@@ -3694,7 +3750,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_21": {
+    "nixpkgs_22": {
       "locked": {
         "lastModified": 1751984180,
         "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
@@ -3710,7 +3766,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_22": {
+    "nixpkgs_23": {
       "locked": {
         "lastModified": 1754340878,
         "narHash": "sha256-lgmUyVQL9tSnvvIvBp7x1euhkkCho7n3TMzgjdvgPoU=",
@@ -3962,14 +4018,46 @@
         "type": "github"
       }
     },
+    "plutus-ledger-api-rust": {
+      "inputs": {
+        "flake-lang": [
+          "flake-lang"
+        ],
+        "flake-parts": [
+          "plutus-ledger-api-rust",
+          "flake-lang",
+          "flake-parts"
+        ],
+        "hci-effects": "hci-effects_3",
+        "nixpkgs": [
+          "plutus-ledger-api-rust",
+          "flake-lang",
+          "nixpkgs"
+        ],
+        "pre-commit-hooks": [
+          "plutus-ledger-api-rust",
+          "flake-lang",
+          "pre-commit-hooks"
+        ]
+      },
+      "locked": {
+        "narHash": "sha256-EjISb9FYeI9b10Ot3XV6liFxHy8WmVEyxU16Ho9aY1M=",
+        "path": "/home/ben/projects/lambda-buffers/plutus-ledger-api-rust",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/ben/projects/lambda-buffers/plutus-ledger-api-rust",
+        "type": "path"
+      }
+    },
     "plutus-ledger-api-typescript": {
       "inputs": {
         "flake-lang": [
           "flake-lang"
         ],
-        "flake-parts": "flake-parts_8",
-        "hci-effects": "hci-effects_3",
-        "nixpkgs": "nixpkgs_18",
+        "flake-parts": "flake-parts_9",
+        "hci-effects": "hci-effects_4",
+        "nixpkgs": "nixpkgs_19",
         "pre-commit-hooks-nix": "pre-commit-hooks-nix",
         "prelude-typescript": "prelude-typescript"
       },
@@ -4079,7 +4167,7 @@
       "inputs": {
         "flake-compat": "flake-compat_11",
         "gitignore": "gitignore_5",
-        "nixpkgs": "nixpkgs_20"
+        "nixpkgs": "nixpkgs_21"
       },
       "locked": {
         "lastModified": 1759523803,
@@ -4099,7 +4187,7 @@
       "inputs": {
         "flake-compat": "flake-compat_12",
         "gitignore": "gitignore_6",
-        "nixpkgs": "nixpkgs_22"
+        "nixpkgs": "nixpkgs_23"
       },
       "locked": {
         "lastModified": 1754416808,
@@ -4121,8 +4209,8 @@
           "plutus-ledger-api-typescript",
           "flake-lang"
         ],
-        "flake-parts": "flake-parts_10",
-        "hci-effects": "hci-effects_4",
+        "flake-parts": "flake-parts_11",
+        "hci-effects": "hci-effects_5",
         "nixpkgs": [
           "plutus-ledger-api-typescript",
           "nixpkgs"
@@ -4146,8 +4234,8 @@
     },
     "proto-nix": {
       "inputs": {
-        "flake-parts": "flake-parts_12",
-        "hci-effects": "hci-effects_5",
+        "flake-parts": "flake-parts_13",
+        "hci-effects": "hci-effects_6",
         "http2-grpc-native": "http2-grpc-native",
         "nixpkgs": [
           "nixpkgs"
@@ -4196,6 +4284,7 @@
           "nixpkgs"
         ],
         "plutarch": "plutarch_2",
+        "plutus-ledger-api-rust": "plutus-ledger-api-rust",
         "plutus-ledger-api-typescript": "plutus-ledger-api-typescript",
         "pre-commit-hooks": "pre-commit-hooks_3",
         "prelude-typescript": [
