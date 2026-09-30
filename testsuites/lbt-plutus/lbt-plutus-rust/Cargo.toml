@@ -13,3 +13,6 @@ lbf-prelude = { path = ".extras/lbf-prelude-0.1.0" }
 serde_json = "1.0.108"
 num-bigint = "0.4.4"
 pretty_assertions = "1.4.1"
+
+[patch.crates-io]
+lbr-prelude = { path = ".extras/lbr-prelude-v0" }

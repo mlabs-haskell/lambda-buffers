@@ -2,6 +2,7 @@ module LambdaBuffers.Runtime.Prelude
   ( module Json
   , module Bytes
   , caseInt
+  , Unsupported
   ) where
 
 import Data.Array (filter, uncons)
