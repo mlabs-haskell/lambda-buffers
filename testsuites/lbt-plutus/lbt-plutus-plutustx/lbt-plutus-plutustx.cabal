@@ -111,6 +111,7 @@ test-suite tests
     , tasty                           >=1.4
     , tasty-expected-failure
     , tasty-hunit
+    , hbls
 
   other-modules:
     Test.LambdaBuffers.Runtime.PlutusTx.Evaluate

@@ -105,12 +105,12 @@ let
       features = [ "arbitrary_precision" ];
     };
     plutus-ledger-api = {
-      version = "^3.1.0";
+      version = "3";
       features = [ "lbf" ];
     };
-    lbr-prelude = {
-      version = "0.1.4";
-    };
+  #   lbr-prelude = {
+  #     version = "0.1.0";
+  #   };
   };
 
   crateVersions =
@@ -152,7 +152,8 @@ let
           if [ $DEP != "std" ]; then
             VER=$(cat ${crateVersions opts} | jq ".\"$DEP\"" -c);
             if [ $VER == "null" ]; then
-              VER="{\"path\": \"../$DEP-0.1.0\"}"
+             # VER="{\"path\": \"../$DEP-0.1.0\"}"
+             VER="{\"path\": \"../$DEP-v0\"}"
             fi
             cat Cargo.json | jq ".dependencies+={\"$DEP\":$VER}" > tmp.json;
             mv tmp.json Cargo.json

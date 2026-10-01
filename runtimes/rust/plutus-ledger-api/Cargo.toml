@@ -1,0 +1,38 @@
+[package]
+name = "plutus-ledger-api"
+version = "3.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Plutus Ledger types and utilities implemented in Rust"
+repository = "https://github.com/mlabs-haskell/plutus-ledger-api-rust"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+proptest = "^1.8.0"
+lbr-prelude = { path = ".extras/lbr-prelude-v0", default-features = false }
+serde_json = { version = "1.0.145", optional = true }
+num-bigint = "~0.4"
+serde = { version = "^1.0.228", features = ["derive"], optional = true }
+data-encoding = "^2.9.0"
+thiserror = "^1.0.69"
+linked-hash-map = "~0.5.6"
+num-traits = "~0.2.19"
+impl_ops = "0.1.1"
+chrono = { version = "0.4.42", optional = true }
+cardano-serialization-lib = "15.0.1"
+is-plutus-data-derive = { version = "1.0.0", path = ".extras/is-plutus-data-derive-0" }
+anyhow = "1.0.100"
+nom = "7.1.3"
+
+[features]
+default = []
+serde = ["dep:serde", "num-bigint/serde", "dep:serde_json"]
+# lbf = ["dep:lbr-prelude", "dep:serde_json"]
+chrono = ["dep:chrono"]
+
+[dev-dependencies]
+goldie = "0.5.0"
+
+[patch.crates-io]
+lbr-prelude = { path = ".extras/lbr-prelude-v0" }

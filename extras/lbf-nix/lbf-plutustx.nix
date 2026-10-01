@@ -23,6 +23,7 @@ let
         ++ [
           "lbf-prelude-plutustx"
           "lbf-plutus-plutustx"
+          "hbls"
         ];
     };
     classes = {

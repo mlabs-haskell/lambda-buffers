@@ -75,6 +75,8 @@
         ./runtimes/purescript/lbr-plutus/build.nix
         ./runtimes/rust/lbr-prelude/build.nix
         ./runtimes/rust/lbr-prelude-derive/build.nix
+        ./runtimes/rust/plutus-ledger-api/build.nix
+        ./runtimes/rust/is-plutus-data-derive/build.nix
         ./runtimes/typescript/lbr-prelude/build.nix
         ./runtimes/typescript/lbr-plutus/build.nix
         ./testsuites/lbt-prelude/api/build.nix

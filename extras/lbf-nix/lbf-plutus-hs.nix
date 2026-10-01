@@ -11,7 +11,7 @@ let
     };
     dependencies = {
       default = [ ];
-      override = deps: deps ++ [ "lbf-plutus" ];
+      override = deps: deps ++ [ "lbf-plutus" "hbls" ];
     };
     classes = {
       default = [ ];
