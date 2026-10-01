@@ -32,6 +32,11 @@
             };
           };
 
+          rust.localCrates = lib.mkOption {
+            type = lib.types.attrs;
+            description = "lbf-nix `extraVersions` pointing generated Rust crates at this repo's runtimes (siblings in `.extras`) instead of crates.io";
+          };
+
           haskell = {
 
             index-state = lib.mkOption {
@@ -99,9 +104,9 @@
                 let
                   src = pkgs.fetchgit {
                     url = "https://github.com/mlabs-haskell/hbls.git";
-                    rev = "ecef8c65a74e5388b9e3e1f8c47892040967cad9";
+                    rev = "b9aafc77184cc341eede350a3756a939f5f20794";
                     fetchSubmodules = true;
-                    sha256 = "sha256-8h6n1QO1ixpqxStSBI3Z2Fcgo9wiuPdaeN5cKVSl2Ow=";
+                    sha256 = "sha256-TkUpeALePs1nHGXxeyU2jn1EFhKNPBxPliPoxMter1U=";
                   };
                 in
                 pkgs.runCommand "hbls-src" { } ''
@@ -144,6 +149,14 @@
                   ];
                 }
               ];
+            };
+
+            rust.localCrates = {
+              lbr-prelude.path = "../lbr-prelude-v0";
+              plutus-ledger-api = {
+                path = "../plutus-ledger-api-3";
+                features = [ "lbf" ];
+              };
             };
 
             shell = {

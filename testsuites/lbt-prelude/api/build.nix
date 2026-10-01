@@ -24,6 +24,7 @@ _: {
         };
 
         lbf-prelude-golden-api-rust = config.lbf-nix.lbfPreludeRust {
+          extraVersions = config.settings.rust.localCrates;
           name = "lbf-prelude-golden-api";
           src = ./.;
           files = [

@@ -33,10 +33,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # BLS Crypto Primitives (extracted from cardano-node)
-    hbls.url = "github://mlabs-haskell/hbls";
-    hbls.flake = false;
-
     # Plutarch eDSL (LB Codegen target)
     plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
@@ -76,7 +72,6 @@
         ./runtimes/rust/lbr-prelude/build.nix
         ./runtimes/rust/lbr-prelude-derive/build.nix
         ./runtimes/rust/plutus-ledger-api/build.nix
-        ./runtimes/rust/is-plutus-data-derive/build.nix
         ./runtimes/typescript/lbr-prelude/build.nix
         ./runtimes/typescript/lbr-plutus/build.nix
         ./testsuites/lbt-prelude/api/build.nix
