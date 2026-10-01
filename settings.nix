@@ -104,30 +104,13 @@
                 let
                   src = pkgs.fetchgit {
                     url = "https://github.com/mlabs-haskell/hbls.git";
-                    rev = "ecef8c65a74e5388b9e3e1f8c47892040967cad9";
+                    rev = "b9aafc77184cc341eede350a3756a939f5f20794";
                     fetchSubmodules = true;
-                    sha256 = "sha256-8h6n1QO1ixpqxStSBI3Z2Fcgo9wiuPdaeN5cKVSl2Ow=";
-                  };
-                  # Must match the blst release hbls vendored (its cbits are v0.3.17's src/).
-                  blst = pkgs.fetchFromGitHub {
-                    owner = "supranational";
-                    repo = "blst";
-                    rev = "v0.3.17";
-                    hash = "sha256-ROBlbVCiXgZsP694YjjzHzoFiGY+gtfz9fP5exzxEDA=";
+                    sha256 = "sha256-TkUpeALePs1nHGXxeyU2jn1EFhKNPBxPliPoxMter1U=";
                   };
                 in
-                # hbls vendors blst v0.3.17's C sources but not its assembly, and its
-                # .cabal never compiles either, so loading hbls (e.g. the PlutusTx plugin)
-                # hits undefined blst_* symbols. blst has no portable C path on
-                # x86_64/aarch64, so add v0.3.17's build/ (asm) next to the vendored C
-                # and compile both, as blst's own build.sh does. Nothing from the system.
-                # ponytail: drop once hbls vendors build/ and declares these sources upstream.
                 pkgs.runCommand "hbls-src" { } ''
                   cp -rL ${src} $out
-                  chmod -R u+w $out
-                  cp -r ${blst}/build $out/cbits/build
-                  sed -i 's|^  cc-options: -O2$|&\n  c-sources: cbits/server.c\n  asm-sources: cbits/build/assembly.S|' $out/hbls.cabal
-                  grep -q 'asm-sources: cbits/build/assembly.S' $out/hbls.cabal
                 '';
 
               # proto-lens only gained GHC 9.12 support in 0.7.1.7 (2026-04), newer
