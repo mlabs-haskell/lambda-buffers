@@ -109,8 +109,15 @@
                     sha256 = "sha256-8h6n1QO1ixpqxStSBI3Z2Fcgo9wiuPdaeN5cKVSl2Ow=";
                   };
                 in
+                # hbls.cabal at this rev never links blst, so anything that loads the .so
+                # (e.g. the PlutusTx plugin) hits undefined blst_* symbols. Link the same
+                # libblst cardano-crypto-class already uses here.
+                # ponytail: drop once hbls declares its blst dependency upstream.
                 pkgs.runCommand "hbls-src" { } ''
                   cp -rL ${src} $out
+                  chmod -R u+w $out
+                  sed -i 's|^  cc-options: -O2$|&\n  pkgconfig-depends: libblst|' $out/hbls.cabal
+                  grep -q 'pkgconfig-depends: libblst' $out/hbls.cabal
                 '';
 
               # proto-lens only gained GHC 9.12 support in 0.7.1.7 (2026-04), newer

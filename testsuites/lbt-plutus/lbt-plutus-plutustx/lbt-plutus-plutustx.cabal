@@ -93,6 +93,7 @@ test-suite tests
     , base                            >=4.16
     , bytestring                      >=0.11
     , filepath                        >=1.4
+    , hbls
     , lbf-plutus                      >=0.1
     , lbf-plutus-golden-api
     , lbf-plutus-golden-api-plutustx
@@ -111,7 +112,6 @@ test-suite tests
     , tasty                           >=1.4
     , tasty-expected-failure
     , tasty-hunit
-    , hbls
 
   other-modules:
     Test.LambdaBuffers.Runtime.PlutusTx.Evaluate
