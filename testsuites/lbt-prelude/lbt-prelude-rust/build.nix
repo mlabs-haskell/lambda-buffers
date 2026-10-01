@@ -12,7 +12,6 @@
         extraSources = [
           config.packages.lbf-prelude-golden-api-rust
           config.packages.lbf-prelude-rust
-          # config.packages.lbr-prelude-rust
           config.packages.lbr-prelude-rust-src
           config.packages.lbr-prelude-derive-rust-src
         ];

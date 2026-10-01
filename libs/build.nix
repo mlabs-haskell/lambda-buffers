@@ -67,6 +67,7 @@
         };
 
         lbf-prelude-rust = config.lbf-nix.lbfRust {
+          extraVersions = config.settings.rust.localCrates;
           name = "lbf-prelude";
           src = ./lbf-prelude;
           files = [ "Prelude.lbf" ];
@@ -199,6 +200,7 @@
         };
 
         lbf-plutus-rust = config.lbf-nix.lbfRust {
+          extraVersions = config.settings.rust.localCrates;
           name = "lbf-plutus";
           src = ./lbf-plutus;
           imports = {

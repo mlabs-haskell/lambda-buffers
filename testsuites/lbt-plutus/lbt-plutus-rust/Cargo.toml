@@ -6,14 +6,10 @@ edition = "2021"
 [lib]
 
 [dependencies]
-lbr-prelude = { path = ".extras/lbr-prelude-v0", default-features = false }
-plutus-ledger-api = { path = ".extras/plutus-ledger-api-3", default-features = false }
+plutus-ledger-api = { path = ".extras/plutus-ledger-api-3", features = ["lbf"] }
 lbf-plutus-golden-api = { path = ".extras/lbf-plutus-golden-api-0.1.0" }
 lbf-prelude = { path = ".extras/lbf-prelude-0.1.0" }
+lbr-prelude = { path = ".extras/lbr-prelude-v0" }
 serde_json = "1.0.108"
 num-bigint = "0.4.4"
 pretty_assertions = "1.4.1"
-
-[patch.crates-io]
-lbr-prelude = { path = ".extras/lbr-prelude-v0" }
-plutus-ledger-api = { path = ".extras/plutus-ledger-api-3" }

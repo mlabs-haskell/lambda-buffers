@@ -32,6 +32,11 @@
             };
           };
 
+          rust.localCrates = lib.mkOption {
+            type = lib.types.attrs;
+            description = "lbf-nix `extraVersions` pointing generated Rust crates at this repo's runtimes (siblings in `.extras`) instead of crates.io";
+          };
+
           haskell = {
 
             index-state = lib.mkOption {
@@ -144,6 +149,14 @@
                   ];
                 }
               ];
+            };
+
+            rust.localCrates = {
+              lbr-prelude.path = "../lbr-prelude-v0";
+              plutus-ledger-api = {
+                path = "../plutus-ledger-api-3";
+                features = [ "lbf" ];
+              };
             };
 
             shell = {

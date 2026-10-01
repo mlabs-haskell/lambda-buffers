@@ -1,6 +1,6 @@
 [package]
 name = "lbr-prelude-derive"
-version = "0.1.0"
+version = "1.0.2"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://mlabs-haskell.github.io/lambda-buffers/"
@@ -17,6 +17,6 @@ syn = { version = "^2.0.104", features = ["extra-traits"] }
 trybuild = { version = "^1.0.110", features = ["diff"] }
 
 [dev-dependencies]
-lbr-prelude =  { path = ".extras/lbr-prelude-v0", default-features = false }
+lbr-prelude = { path = ".extras/lbr-prelude-v0", default-features = false }
 num-bigint = "~0.4"
 serde_json = "^1.0"
