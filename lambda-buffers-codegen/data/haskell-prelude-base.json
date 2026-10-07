@@ -15,6 +15,11 @@
       "LambdaBuffers.Runtime.Prelude",
       "List"
     ],
+    "Prelude.Array": [
+        "vector",
+        "Data.Vector",
+        "Vector"
+    ],
     "Prelude.Either": [
       "base",
       "Prelude",

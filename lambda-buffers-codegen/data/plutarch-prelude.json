@@ -10,6 +10,12 @@
       "LambdaBuffers.Runtime.Plutarch",
       "PList"
     ],
+    "Prelude.Array": [
+      "plutarch",
+      "Plutarch.Builtin.Array",
+      "PArray"
+    ],
+      
     "Prelude.Either": [
       "lbr-plutarch",
       "LambdaBuffers.Runtime.Plutarch",

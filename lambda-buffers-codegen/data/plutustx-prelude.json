@@ -59,6 +59,11 @@
       "plutus-tx",
       "PlutusTx.Builtins",
       "BuiltinBLS12_381_G2_Element"
+    ],
+    "Prelude.Array": [
+        "plutus-tx",
+        "PlutusTx.Builtins",
+        "BuiltinArray"
     ]
   },
   "classesConfig": {

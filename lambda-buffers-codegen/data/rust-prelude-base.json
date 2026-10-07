@@ -15,6 +15,11 @@
       "vec",
       "Vec"
     ],
+    "Prelude.Array": [
+      "std",
+      "vec",
+      "Vec"
+    ],
     "Prelude.Either": [
       "lbr-prelude",
       "types",

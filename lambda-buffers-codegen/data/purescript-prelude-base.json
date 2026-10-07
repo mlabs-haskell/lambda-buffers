@@ -59,6 +59,11 @@
       "lbr-prelude",
       "LambdaBuffers.Runtime.Prelude",
       "Unsupported"
+    ],
+    "Prelude.Array": [
+      "prelude",
+      "Prim",
+      "Array"
     ]
   },
   "classesConfig": {

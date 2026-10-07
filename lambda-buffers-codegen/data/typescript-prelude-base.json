@@ -59,6 +59,11 @@
       "lbr-prelude",
       "LbrPrelude",
       "Unsupported"
+    ],
+    "Prelude.Array": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "List"
     ]
   },
   "classesConfig": {
