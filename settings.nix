@@ -80,13 +80,9 @@
 
             haskell = {
               index-state = "2025-09-27T21:56:19Z";
-              # GHC 9.12 is the only compiler that builds both plutarch 1.14
-              # (needs >=9.8 for TypeAbstractions) and plutus-tx-plugin 1.65
-              # (buildable only on 9.6.x or 9.12.x) for van Rossem/PV11.
-              # Pinned to 9.12.1 specifically: 9.12.2's RTS crashes
-              # (SRT_1 object entered!) when the Plinth plugin compiles on-chain
-              # PlutusTx in the lbt-plutus-plutustx testsuite.
-              compiler-nix-name = "ghc9121";
+              # GHC 9.6: plutus-tx-plugin (Plinth) 1.65 builds only on 9.6.x or 9.12.x,
+              # and 9.6 is plutus' primary GHC. Plutarch 1.14 is tested with 9.6 too.
+              compiler-nix-name = "ghc967";
 
               # Plutarch 1.14 is warning-clean only on its tested GHC (9.8); its
               # -Weverything -Werror trips new warnings on GHC 9.12. We can't inject
@@ -104,13 +100,16 @@
                 let
                   src = pkgs.fetchgit {
                     url = "https://github.com/mlabs-haskell/hbls.git";
-                    rev = "b9aafc77184cc341eede350a3756a939f5f20794";
+                    rev = "6541474f8231a8cb62cc21724e949634a2cabcaa";
                     fetchSubmodules = true;
-                    sha256 = "sha256-TkUpeALePs1nHGXxeyU2jn1EFhKNPBxPliPoxMter1U=";
+                    sha256 = "sha256-6OPe+ZLpb1a7bvyZENefyk8dgujk7l9/ReTytSIoQ6U=";
                   };
                 in
                 pkgs.runCommand "hbls-src" { } ''
                   cp -rL ${src} $out
+                  # TODO: hbls pins base ^>=4.21 (GHC 9.12 only); drop this sed once hbls
+                  # widens the bound upstream. It builds and passes on 9.6 as-is.
+                  chmod -R u+w $out && sed -i 's/base ^>=4.21/base >=4.18/' $out/hbls.cabal
                 '';
 
               # proto-lens only gained GHC 9.12 support in 0.7.1.7 (2026-04), newer

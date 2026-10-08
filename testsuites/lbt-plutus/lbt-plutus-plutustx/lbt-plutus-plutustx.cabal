@@ -16,8 +16,7 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
-    -Wno-missing-kind-signatures -Wno-missing-role-annotations
-    -Wno-missing-poly-kind-signatures -Wno-unused-packages
+    -Wno-missing-kind-signatures -Wno-unused-packages
     -Wno-all-missed-specializations
 
   if !flag(dev)
@@ -117,3 +116,10 @@ test-suite tests
     Test.LambdaBuffers.Runtime.PlutusTx.Evaluate
     Test.LambdaBuffers.Runtime.PlutusTx.PlutusData
     Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.Common
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.Prelude
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.V1
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.V1Tx
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.V2
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.V3
+    Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx.V3Tx
