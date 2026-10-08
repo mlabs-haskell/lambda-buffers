@@ -66,4 +66,3 @@ instance Json (Set a) :- Json a
 opaque Array a
 
 instance Eq (Array a) :- Eq a
-instance Json (Array a) :- Json a 

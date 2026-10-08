@@ -61,9 +61,9 @@
       "BuiltinBLS12_381_G2_Element"
     ],
     "Prelude.Array": [
-        "plutus-tx",
-        "PlutusTx.Builtins",
-        "BuiltinArray"
+      "lbr-plutustx",
+      "LambdaBuffers.Runtime.PlutusTx.List",
+      "Array"
     ]
   },
   "classesConfig": {
