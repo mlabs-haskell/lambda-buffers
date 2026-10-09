@@ -84,6 +84,55 @@ common common-language
 
   default-language:   Haskell2010
 
+-- Plinth keeps a few GB of each compiled splice live until its GHC process
+-- exits, so ~70 splices in one component peak at ~20 GB. Each sublibrary is a
+-- separate GHC process (~9 GB peak each), and each depends on the previous so
+-- they build one after another instead of stacking.
+library splices-a
+  import:          common-language
+  hs-source-dirs:  splices/a
+  exposed-modules: Test.LambdaBuffers.Runtime.PlutusTx.Splices.A
+  build-depends:
+    , base                            >=4.16
+    , lbf-plutus-golden-api-plutustx
+    , lbf-plutus-plutustx
+    , lbf-prelude-plutustx
+    , lbr-plutustx
+    , plutus-ledger-api               >=1.20
+    , plutus-tx
+    , plutus-tx-plugin
+
+library splices-b
+  import:          common-language
+  hs-source-dirs:  splices/b
+  exposed-modules: Test.LambdaBuffers.Runtime.PlutusTx.Splices.B
+  build-depends:
+    , base                            >=4.16
+    , lbf-plutus-golden-api-plutustx
+    , lbf-plutus-plutustx
+    , lbf-prelude-plutustx
+    , lbr-plutustx
+    , lbt-plutus-plutustx:splices-a
+    , plutus-ledger-api               >=1.20
+    , plutus-tx
+    , plutus-tx-plugin
+
+library splices-c
+  import:          common-language
+  hs-source-dirs:  splices/c
+  exposed-modules: Test.LambdaBuffers.Runtime.PlutusTx.Splices.C
+  build-depends:
+    , base                            >=4.16
+    , lbf-plutus-golden-api-plutustx
+    , lbf-plutus-plutustx
+    , lbf-prelude-plutustx
+    , lbr-plutustx
+    , lbt-plutus-plutustx:splices-a
+    , lbt-plutus-plutustx:splices-b
+    , plutus-ledger-api               >=1.20
+    , plutus-tx
+    , plutus-tx-plugin
+
 test-suite tests
   import:         common-language
   type:           exitcode-stdio-1.0
@@ -104,6 +153,9 @@ test-suite tests
     , lbr-plutustx
     , lbr-prelude
     , lbt-plutus-golden-data
+    , lbt-plutus-plutustx:splices-a
+    , lbt-plutus-plutustx:splices-b
+    , lbt-plutus-plutustx:splices-c
     , plutarch
     , plutus-core                     >=1.20
     , plutus-ledger-api               >=1.20
