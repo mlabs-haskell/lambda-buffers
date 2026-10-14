@@ -64,6 +64,11 @@
       "lbr-prelude",
       "LbrPrelude",
       "List"
+    ],
+    "Prelude.BuiltinValue": [
+      "lbr-prelude",
+      "LbrPrelude",
+      "Unsupported"
     ]
   },
   "classesConfig": {

@@ -65,6 +65,11 @@
       "plutarch",
       "Plutarch.Builtin.BLS",
       "PBuiltinBLS12_381_G2_Element"
+    ],
+    "Prelude.BuiltinValue": [
+      "plutarch",
+      "Plutarch.Builtin.Value",
+      "PBuiltinValue"
     ]
   },
   "classesConfig": {

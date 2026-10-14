@@ -65,4 +65,4 @@ instance Json (Set a) :- Json a
 
 opaque Array a
 
-instance Eq (Array a) :- Eq a
+opaque BuiltinValue 

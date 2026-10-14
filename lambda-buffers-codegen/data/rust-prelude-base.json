@@ -61,6 +61,11 @@
       "lbr-prelude",
       "types",
       "Unsupported"
+    ],
+    "Prelude.BuiltinValue": [
+      "lbr-prelude",
+      "types",
+      "Unsupported"
     ]
   },
   "classesConfig": {

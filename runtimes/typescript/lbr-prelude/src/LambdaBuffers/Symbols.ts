@@ -12,7 +12,7 @@ export type Maybe<A> = Prelude.Maybe<A>;
 export type Set<A> = Prelude.Set<A>;
 export type Text = Prelude.Text;
 // hack for testing TODO replace w/ the real BLS types if possible
-export type Unsupported = Prelude.Integer;
+export type Unsupported = never;
 
 export const Bool: unique symbol = Symbol("Bool");
 export const Integer: unique symbol = Symbol("Integer");

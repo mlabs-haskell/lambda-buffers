@@ -64,6 +64,11 @@
       "hbls",
       "HBLS",
       "G2Point"
+    ],
+    "Prelude.BuiltinValue": [
+        "lbr-prelude",
+        "LambdaBuffers.Runtime.Prelude",
+        "Unsupported"
     ]
   },
   "classesConfig": {

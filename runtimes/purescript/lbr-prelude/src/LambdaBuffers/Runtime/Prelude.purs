@@ -19,5 +19,4 @@ caseInt cases otherCase i = case uncons (filter (\(Tuple i' _) -> i' == i) cases
   Just { head: Tuple _ res, tail: _ } -> res
   Nothing -> otherCase i
 
-type Unsupported
-  = BigInt
+data Unsupported
