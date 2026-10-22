@@ -104,9 +104,9 @@
                 let
                   src = pkgs.fetchgit {
                     url = "https://github.com/mlabs-haskell/hbls.git";
-                    rev = "b9aafc77184cc341eede350a3756a939f5f20794";
+                    rev = "aa992242f8c10057fbbbc7289c4099df48822ab3";
                     fetchSubmodules = true;
-                    sha256 = "sha256-TkUpeALePs1nHGXxeyU2jn1EFhKNPBxPliPoxMter1U=";
+                    sha256 = "sha256-zN5fR2OvP3VruIJSzRnvEPrwsiozIV+PUQ6I6ANL1X0=";
                   };
                 in
                 pkgs.runCommand "hbls-src" { } ''

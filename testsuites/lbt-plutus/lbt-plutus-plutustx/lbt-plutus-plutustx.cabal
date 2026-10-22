@@ -166,6 +166,7 @@ test-suite tests
     , tasty-hunit
 
   other-modules:
+    Test.LambdaBuffers.Runtime.PlutusTx.Eq
     Test.LambdaBuffers.Runtime.PlutusTx.Evaluate
     Test.LambdaBuffers.Runtime.PlutusTx.PlutusData
     Test.LambdaBuffers.Runtime.PlutusTx.PlutusTx

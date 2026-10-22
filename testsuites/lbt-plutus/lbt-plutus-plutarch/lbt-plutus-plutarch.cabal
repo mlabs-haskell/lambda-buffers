@@ -122,4 +122,6 @@ test-suite tests
     , tasty-expected-failure
     , tasty-hunit
 
-  other-modules:  Test.LambdaBuffers.Runtime.Plutarch.PlutusData
+  other-modules:
+    Test.LambdaBuffers.Runtime.Plutarch.Eq
+    Test.LambdaBuffers.Runtime.Plutarch.PlutusData

@@ -121,12 +121,14 @@ test-suite tests
   build-depends:
     , base                     >=4.16
     , hedgehog                 >=1.2
+    , lbf-prelude
     , lbf-prelude-golden-api   >=0.1
     , lbr-prelude
     , lbt-prelude-golden-data
     , lbt-prelude-haskell
     , tasty                    >=1.4
     , tasty-hedgehog           >=1.4
+    , tasty-hunit
 
   other-modules:
     Test.LambdaBuffers.Runtime.Prelude.Eq
