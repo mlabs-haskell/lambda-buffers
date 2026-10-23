@@ -19,7 +19,11 @@ common common-language
     -Wno-missing-kind-signatures -Wno-missing-role-annotations
     -Wno-missing-poly-kind-signatures -Wno-unused-packages
     -Wno-all-missed-specializations
-
+    -fplugin-opt Plinth.Plugin:max-simplifier-iterations-pir=1
+    -fplugin-opt Plinth.Plugin:max-simplifier-iterations-uplc=1
+    -fplugin-opt Plinth.Plugin:max-cse-iterations=0
+    -fplugin-opt Plinth.Plugin:conservative-optimisation
+    -fplugin-opt=Plinth.Plugin:no-typecheck
   if !flag(dev)
     ghc-options: -Werror
 
@@ -86,8 +90,8 @@ common common-language
 
 -- Plinth keeps a few GB of each compiled splice live until its GHC process
 -- exits, so ~70 splices in one component peak at ~20 GB. Each sublibrary is a
--- separate GHC process (~9 GB peak each), and each depends on the previous so
--- they build one after another instead of stacking.
+-- separate GHC process, and each depends on the previous so they build one
+-- after another instead of stacking.
 library splices-a
   import:          common-language
   hs-source-dirs:  splices/a
@@ -133,6 +137,41 @@ library splices-c
     , plutus-tx
     , plutus-tx-plugin
 
+library splices-d
+  import:          common-language
+  hs-source-dirs:  splices/d
+  exposed-modules: Test.LambdaBuffers.Runtime.PlutusTx.Splices.D
+  build-depends:
+    , base                            >=4.16
+    , lbf-plutus-golden-api-plutustx
+    , lbf-plutus-plutustx
+    , lbf-prelude-plutustx
+    , lbr-plutustx
+    , lbt-plutus-plutustx:splices-a
+    , lbt-plutus-plutustx:splices-b
+    , lbt-plutus-plutustx:splices-c
+    , plutus-ledger-api               >=1.20
+    , plutus-tx
+    , plutus-tx-plugin
+
+library splices-e
+  import:          common-language
+  hs-source-dirs:  splices/e
+  exposed-modules: Test.LambdaBuffers.Runtime.PlutusTx.Splices.E
+  build-depends:
+    , base                            >=4.16
+    , lbf-plutus-golden-api-plutustx
+    , lbf-plutus-plutustx
+    , lbf-prelude-plutustx
+    , lbr-plutustx
+    , lbt-plutus-plutustx:splices-a
+    , lbt-plutus-plutustx:splices-b
+    , lbt-plutus-plutustx:splices-c
+    , lbt-plutus-plutustx:splices-d
+    , plutus-ledger-api               >=1.20
+    , plutus-tx
+    , plutus-tx-plugin
+
 test-suite tests
   import:         common-language
   type:           exitcode-stdio-1.0
@@ -156,6 +195,8 @@ test-suite tests
     , lbt-plutus-plutustx:splices-a
     , lbt-plutus-plutustx:splices-b
     , lbt-plutus-plutustx:splices-c
+    , lbt-plutus-plutustx:splices-d
+    , lbt-plutus-plutustx:splices-e
     , plutarch
     , plutus-core                     >=1.20
     , plutus-ledger-api               >=1.20

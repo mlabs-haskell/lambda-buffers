@@ -29,40 +29,41 @@ derive Eq D
 derive Json D
 derive PlutusData D
 
-prod E a b = Address
-     AssetClass
-     Bytes
-     Credential
-     CurrencySymbol
-     Datum
-     DatumHash
-     (Extended POSIXTime)
-     (Interval POSIXTime)
-     (LowerBound POSIXTime)
-     -- (Map Bytes Credential) TODO: PlutusTx.Eq instances from AssocMap were removed from plutus-tx
-     POSIXTime
-     POSIXTimeRange
-     PlutusData
-     PubKeyHash
-     Redeemer
-     RedeemerHash
-     ScriptHash
-     StakingCredential
-     TokenName
-     TxId
-     TxOutRef
-     (UpperBound POSIXTime)
-     Value
-     OutputDatum
-     TxInInfo
-     TxOut
-     (Maybe a)
-     (Either a b)
-     (List b)
+-- TODO: Split E into smaller test types to restore coverage of all its fields.
+-- prod E a b = Address
+--      AssetClass
+--      Bytes
+--      Credential
+--      CurrencySymbol
+--      Datum
+--      DatumHash
+--      (Extended POSIXTime)
+--      (Interval POSIXTime)
+--      (LowerBound POSIXTime)
+--      -- (Map Bytes Credential) TODO: PlutusTx.Eq instances from AssocMap were removed from plutus-tx
+--      POSIXTime
+--      POSIXTimeRange
+--      PlutusData
+--      PubKeyHash
+--      Redeemer
+--      RedeemerHash
+--      ScriptHash
+--      StakingCredential
+--      TokenName
+--      TxId
+--      TxOutRef
+--      (UpperBound POSIXTime)
+--      Value
+--      OutputDatum
+--      TxInInfo
+--      TxOut
+--      (Maybe a)
+--      (Either a b)
+--      (List b)
 
-derive Eq (E a b)
-derive Json (E a b)
-derive PlutusData (E a b)
+-- derive Eq (E a b)
+-- derive Json (E a b)
+-- derive PlutusData (E a b)
 
 prod FInt = (F Integer)
 

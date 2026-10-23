@@ -12,11 +12,20 @@
 -- Plinth splices, split across sublibraries (see lbt-plutus-plutustx.cabal).
 
 module Test.LambdaBuffers.Runtime.PlutusTx.Splices.C (
-  scriptPurposeV3Compiled,
-  scriptInfoV3Compiled,
-  txInInfoV3Compiled,
-  txInfoV3Compiled,
-  scriptContextV3Compiled,
+  redeemerCompiled,
+  redeemerHashCompiled,
+  scriptHashCompiled,
+  stakingCredentialCompiled,
+  tokenNameCompiled,
+  txIdCompiled,
+  txOutRefCompiled,
+  upperBoundCompiled,
+  valueCompiled,
+  txIdV3Compiled,
+  txOutRefV3Compiled,
+  coldCommitteeCredentialV3Compiled,
+  hotCommitteeCredentialV3Compiled,
+  drepCredentialV3Compiled,
 )
 where
 
@@ -31,19 +40,46 @@ import PlutusTx.AssocMap qualified as AssocMap
 import PlutusTx.Maybe (Maybe (Just, Nothing))
 import PlutusTx.Prelude (Bool, Either, Eq ((==)), Integer, error, trace, (&&))
 import PlutusTx.Ratio qualified
-import Test.LambdaBuffers.Runtime.PlutusTx.Splices.A (fromToData, fromToDataAndEq)
+import Test.LambdaBuffers.Runtime.PlutusTx.Splices.A (fromToDataAndEq)
 
-scriptPurposeV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptPurposeV3Compiled = $$(PlutusTx.compile [||fromToData @PlutusV3.ScriptPurpose||])
+redeemerCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+redeemerCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.Redeemer||])
 
-scriptInfoV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptInfoV3Compiled = $$(PlutusTx.compile [||fromToData @PlutusV3.ScriptInfo||])
+redeemerHashCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+redeemerHashCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.RedeemerHash||])
 
-txInInfoV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInInfoV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.TxInInfo||])
+scriptHashCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+scriptHashCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.ScriptHash||])
 
-txInfoV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInfoV3Compiled = $$(PlutusTx.compile [||fromToData @PlutusV3.TxInfo||])
+stakingCredentialCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+stakingCredentialCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.StakingCredential||])
 
-scriptContextV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptContextV3Compiled = $$(PlutusTx.compile [||fromToData @PlutusV3.ScriptContext||])
+tokenNameCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+tokenNameCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TokenName||])
+
+txIdCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+txIdCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TxId||])
+
+txOutRefCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+txOutRefCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TxOutRef||])
+
+upperBoundCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+upperBoundCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.UpperBound PlutusV1.POSIXTime)||])
+
+valueCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+valueCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.Value||])
+
+txIdV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+txIdV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.TxId||])
+
+txOutRefV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+txOutRefV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.TxOutRef||])
+
+coldCommitteeCredentialV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+coldCommitteeCredentialV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.ColdCommitteeCredential||])
+
+hotCommitteeCredentialV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+hotCommitteeCredentialV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.HotCommitteeCredential||])
+
+drepCredentialV3Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+drepCredentialV3Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV3.DRepCredential||])

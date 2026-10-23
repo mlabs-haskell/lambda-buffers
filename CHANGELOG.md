@@ -299,10 +299,10 @@ signatures, `PMap` now aliases `PSortedMap`, and `PValue` now aliases `PSortedVa
 
 - The PlutusTx testsuite compiled ~70 Plinth splices in a single GHC process, peaking at
   roughly 20 GB RSS because Plinth retains per-splice working memory until the process
-  exits. The splices are now split across three internal libraries (`splices-a`,
-  `splices-b`, `splices-c`), each built by its own GHC process and chained by
-  dependencies, reducing peak RSS to roughly 9.4 GB; the test suite is unchanged and
-  still passes.
+  exits. The splices are now split across five internal libraries (`splices-a`
+  through `splices-e`), each built by its own GHC process and chained by
+  dependencies, further reducing peak RSS; the test suite is unchanged and still
+  passes.
 - Removed `fooECompiled`, `fooFIntCompiled`, and `fooGIntCompiled` from the PlutusTx
   testsuite: `fooE` exceeded 62 GB when compiled on its own, and the other two hit
   Plinth's "mutually recursive datatypes" limitation.

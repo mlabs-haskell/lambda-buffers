@@ -4,9 +4,9 @@ import Hedgehog qualified as H
 import LambdaBuffers.Prelude qualified as Lb
 import Test.LambdaBuffers.Runtime.Prelude.Generators.Correct qualified as Correct
 import Test.Tasty (TestName, TestTree, adjustOption, testGroup)
+import Test.Tasty.HUnit (assertBool, testCase)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Hedgehog qualified as H
-import Test.Tasty.HUnit (assertBool, testCase)
 
 tests :: TestTree
 tests =

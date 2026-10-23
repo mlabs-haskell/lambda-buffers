@@ -12,17 +12,20 @@
 -- Plinth splices, split across sublibraries (see lbt-plutus-plutustx.cabal).
 
 module Test.LambdaBuffers.Runtime.PlutusTx.Splices.B (
-  dcertCompiled,
-  scriptPurposeCompiled,
-  txInInfoCompiled,
-  txOutCompiled,
-  txInfoCompiled,
-  scriptContextCompiled,
-  outputDatumCompiled,
-  txInInfo2Compiled,
-  txOut2Compiled,
-  txInfo2Compiled,
-  scriptContext2Compiled,
+  addressCompiled,
+  assetClassCompiled,
+  ledgerBytesCompiled,
+  credentialCompiled,
+  currencySymbolCompiled,
+  datumCompiled,
+  datumHashCompiled,
+  extendedCompiled,
+  intervalCompiled,
+  lowerBoundCompiled,
+  mapCompiled,
+  posixTimeCompiled,
+  posixTimeRangeCompiled,
+  plutusDataCompiled,
 )
 where
 
@@ -39,35 +42,44 @@ import PlutusTx.Prelude (Bool, Either, Eq ((==)), Integer, error, trace, (&&))
 import PlutusTx.Ratio qualified
 import Test.LambdaBuffers.Runtime.PlutusTx.Splices.A (fromToData, fromToDataAndEq)
 
-dcertCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-dcertCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.DCert||])
+addressCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+addressCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.Address||])
 
-scriptPurposeCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptPurposeCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.ScriptPurpose||])
+assetClassCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+assetClassCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.AssetClass||])
 
-txInInfoCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInInfoCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TxInInfo||])
+ledgerBytesCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+ledgerBytesCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.LedgerBytes||])
 
-txOutCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txOutCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TxOut||])
+credentialCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+credentialCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.Credential||])
 
-txInfoCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInfoCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.TxInfo||])
+currencySymbolCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+currencySymbolCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.CurrencySymbol||])
 
-scriptContextCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptContextCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.ScriptContext||])
+datumCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+datumCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.Datum||])
 
-outputDatumCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-outputDatumCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.OutputDatum||])
+datumHashCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+datumHashCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.DatumHash||])
 
-txInInfo2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInInfo2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxInInfo||])
+extendedCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+extendedCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.Extended PlutusV1.POSIXTime)||])
 
-txOut2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txOut2Compiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV2.TxOut||])
+intervalCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+intervalCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.Interval PlutusV1.POSIXTime)||])
 
-txInfo2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-txInfo2Compiled = $$(PlutusTx.compile [||fromToData @PlutusV2.TxInfo||])
+lowerBoundCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+lowerBoundCompiled = $$(PlutusTx.compile [||fromToDataAndEq @(PlutusV1.LowerBound PlutusV1.POSIXTime)||])
 
-scriptContext2Compiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
-scriptContext2Compiled = $$(PlutusTx.compile [||fromToData @PlutusV2.ScriptContext||])
+mapCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+mapCompiled = $$(PlutusTx.compile [||fromToData @(AssocMap.Map PlutusV1.CurrencySymbol (AssocMap.Map PlutusV1.TokenName Integer))||])
+
+posixTimeCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+posixTimeCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.POSIXTime||])
+
+posixTimeRangeCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+posixTimeRangeCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.POSIXTimeRange||])
+
+plutusDataCompiled :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> Bool)
+plutusDataCompiled = $$(PlutusTx.compile [||fromToDataAndEq @PlutusV1.BuiltinData||])
