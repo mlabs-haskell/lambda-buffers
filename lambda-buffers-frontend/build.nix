@@ -15,13 +15,16 @@
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
+        inherit (config.settings.haskell) modules;
+
         dependencies = [
           "${config.packages.lambda-buffers-lang-hs-pb}"
           "${config.packages.lambda-buffers-compiler-hs-pb}"
           "${config.packages.lambda-buffers-codegen-hs-pb}"
           "${config.packages.lambda-buffers-compiler-src}"
           "${config.packages.lambda-buffers-utils-src}"
-        ];
+        ]
+        ++ config.settings.haskell.proto-lens-deps;
 
         devShellTools = [
           config.packages.lbc

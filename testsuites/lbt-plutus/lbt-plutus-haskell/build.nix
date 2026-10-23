@@ -17,6 +17,8 @@
           "${config.packages.lbf-plutus-haskell}"
           "${config.packages.lbf-plutus-golden-api-haskell}"
           "${config.packages.lbt-plutus-golden-haskell}"
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools;

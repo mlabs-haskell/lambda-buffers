@@ -16,7 +16,9 @@ common common-language
     -Wall -Wcompat -fprint-explicit-foralls -fprint-explicit-kinds
     -fwarn-missing-import-lists -Weverything -Wno-unsafe
     -Wno-missing-safe-haskell-mode -Wno-implicit-prelude
-    -Wno-missing-kind-signatures -Wno-all-missed-specializations
+    -Wno-missing-kind-signatures -Wno-missing-role-annotations
+    -Wno-missing-poly-kind-signatures -Wno-unused-packages
+    -Wno-all-missed-specializations
 
   if !flag(dev)
     ghc-options: -Werror
@@ -119,12 +121,14 @@ test-suite tests
   build-depends:
     , base                     >=4.16
     , hedgehog                 >=1.2
+    , lbf-prelude
     , lbf-prelude-golden-api   >=0.1
     , lbr-prelude
     , lbt-prelude-golden-data
     , lbt-prelude-haskell
     , tasty                    >=1.4
     , tasty-hedgehog           >=1.4
+    , tasty-hunit
 
   other-modules:
     Test.LambdaBuffers.Runtime.Prelude.Eq

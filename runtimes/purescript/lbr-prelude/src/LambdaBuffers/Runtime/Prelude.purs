@@ -2,6 +2,7 @@ module LambdaBuffers.Runtime.Prelude
   ( module Json
   , module Bytes
   , caseInt
+  , Unsupported
   ) where
 
 import Data.Array (filter, uncons)
@@ -17,3 +18,5 @@ caseInt :: forall a. Array (Tuple BigInt a) -> (BigInt -> a) -> BigInt -> a
 caseInt cases otherCase i = case uncons (filter (\(Tuple i' _) -> i' == i) cases) of
   Just { head: Tuple _ res, tail: _ } -> res
   Nothing -> otherCase i
+
+data Unsupported

@@ -13,6 +13,7 @@
         dependencies = [
           "${config.packages.lbr-prelude-haskell-src}"
           "${config.packages.lbf-prelude-haskell}"
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools ++ [ config.packages.lbf-prelude-to-haskell ];

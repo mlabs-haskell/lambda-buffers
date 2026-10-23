@@ -10,6 +10,12 @@
       "LambdaBuffers.Runtime.Plutarch",
       "PList"
     ],
+    "Prelude.Array": [
+      "plutarch",
+      "Plutarch.Builtin.Array",
+      "PArray"
+    ],
+      
     "Prelude.Either": [
       "lbr-plutarch",
       "LambdaBuffers.Runtime.Plutarch",
@@ -49,6 +55,21 @@
       "lbr-plutarch",
       "LambdaBuffers.Runtime.Plutarch",
       "PSet"
+    ],
+    "Prelude.G1Element": [
+      "plutarch",
+      "Plutarch.Builtin.BLS",
+      "PBuiltinBLS12_381_G1_Element"
+    ],
+    "Prelude.G2Element": [
+      "plutarch",
+      "Plutarch.Builtin.BLS",
+      "PBuiltinBLS12_381_G2_Element"
+    ],
+    "Prelude.BuiltinValue": [
+      "plutarch",
+      "Plutarch.Builtin.Value",
+      "PBuiltinValue"
     ]
   },
   "classesConfig": {
