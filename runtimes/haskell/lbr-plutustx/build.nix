@@ -16,6 +16,10 @@
 
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
+        dependencies = [
+          "${config.settings.haskell.hbls-src}"
+        ];
+
         devShellTools = config.settings.shell.tools;
         devShellHook = config.settings.shell.hook;
       };

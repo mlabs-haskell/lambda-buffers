@@ -16,8 +16,8 @@
         inherit (config.settings.haskell) index-state compiler-nix-name;
 
         dependencies = [
-          "${inputs.plutarch}"
-          "${inputs.plutarch}/plutarch-ledger-api"
+          "${config.settings.haskell.plutarch-src}"
+          "${config.settings.haskell.plutarch-src}/plutarch-ledger-api"
         ];
 
         devShellTools = config.settings.shell.tools;

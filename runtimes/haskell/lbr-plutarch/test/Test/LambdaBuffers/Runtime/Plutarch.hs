@@ -11,11 +11,12 @@ import Plutarch.Evaluate (evalScript)
 import Plutarch.Internal.Term (
   Config (Tracing),
   LogLevel (LogInfo),
+  S,
+  Term,
   TracingMode (DoTracing),
   compile,
  )
 import Plutarch.Prelude (
-  ClosedTerm,
   PBool (PTrue),
   PEq ((#==)),
   PListLike (pcons, pelimList, pnil),
@@ -61,10 +62,10 @@ test =
     genInts :: H.Gen [Integer]
     genInts = Gen.list (Range.linear 0 55) (Gen.integral (Range.linear 0 100))
 
-evalBool :: ClosedTerm PBool -> IO Bool
+evalBool :: (forall (s :: S). Term s PBool) -> IO Bool
 evalBool t =
   let
-    t' :: ClosedTerm PBool
+    t' :: forall (s :: S). Term s PBool
     t' = pif t (pcon PTrue) (ptraceInfo "Got False" perror)
    in
     case compile (Tracing LogInfo DoTracing) t' of

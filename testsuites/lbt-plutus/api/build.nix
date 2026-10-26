@@ -44,6 +44,7 @@ _: {
         };
 
         lbf-plutus-golden-api-rust = config.lbf-nix.lbfPlutusRust {
+          extraVersions = config.settings.rust.localCrates;
           name = "lbf-plutus-golden-api";
           src = ./.;
           files = [

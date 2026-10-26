@@ -28,8 +28,11 @@
           "${config.packages.lbf-plutus-plutarch}"
 
           # Plutarch itself
-          "${inputs.plutarch}"
-          "${inputs.plutarch}/plutarch-ledger-api"
+          "${config.settings.haskell.plutarch-src}"
+          "${config.settings.haskell.plutarch-src}/plutarch-ledger-api"
+
+          # HBLS
+          "${config.settings.haskell.hbls-src}"
         ];
 
         devShellTools = config.settings.shell.tools ++ [

@@ -9,6 +9,7 @@ export {
   Maybe,
   Set,
   Text,
+  Unsupported,
 } from "./Symbols.js";
 export { Eq } from "./Eq.js";
 export type { EqInstances } from "./Eq.js";
