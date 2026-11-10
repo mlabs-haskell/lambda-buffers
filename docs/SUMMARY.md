@@ -23,6 +23,7 @@
 - [Codegen](codegen.md)
 - [Command line interface](command-line-interface.md)
 - [Comparison matrix](comparison-matrix.md)
+- [Backend support](backend-support.md)
 - [Aiken Research Document](aiken-integration.md)
 - [Catalyst reports](catalyst-reports.md)
   - [Catalyst 9 reports](catalyst09-reports/README.md)
