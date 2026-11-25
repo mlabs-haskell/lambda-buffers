@@ -8,6 +8,7 @@ module LambdaBuffers.Compiler.TypeClassCheck.Errors (
   internalError,
   internalError',
   overlappingRulesError,
+  internalErrorWithCstr,
 ) where
 
 import Control.Lens ((&), (.~))
@@ -77,21 +78,27 @@ overlappingRulesError locMn cstr subCstr qheads =
            | (mn, hcstr) <- qheads
            ]
 
-internalError' :: PC.ModuleName -> String -> P.Error
+internalError' :: PC.ModuleName -> String -> P.InternalError
 internalError' mn msg =
   defMessage
-    & P.internalErrors
-      .~ [ defMessage
-            & P.msg
-              .~ Text.pack
-                ( "Something went unexpectedly wrong when performing type class checks in module"
-                    <> "\n"
-                    <> (show . PC.prettyModuleName $ mn)
-                    <> "\nSince I can't show you a more informative error message I'll show you the raw error you can report at https://github.com/mlabs-haskell/lambda-buffers/issues"
-                    <> "\n"
-                    <> msg
-                )
-         ]
+    & P.msg
+      .~ Text.pack
+        ( "Something went unexpectedly wrong when performing type class checks in module"
+            <> "\n"
+            <> (show . PC.prettyModuleName $ mn)
+            <> "\nSince I can't show you a more informative error message I'll show you the raw error you can report at https://github.com/mlabs-haskell/lambda-buffers/issues"
+            <> "\n"
+            <> msg
+        )
 
-internalError :: PC.ModuleName -> PC.Constraint -> String -> P.Error
-internalError mn cstr msg = internalError' mn ("I was trying to solve" <> "\n" <> show cstr <> "\nbut the following error occurred\n" <> msg)
+internalErrorWithCstr :: PC.ModuleName -> PC.Constraint -> String -> P.Error
+internalErrorWithCstr mn cstr msg =
+  defMessage
+    & P.internalErrors
+      .~ [internalError' mn ("I was trying to solve" <> "\n" <> show cstr <> "\nbut the following error occurred\n" <> msg)]
+
+internalError :: PC.ModuleName -> String -> P.Error
+internalError mn msg =
+  defMessage
+    & P.internalErrors
+      .~ [internalError' mn ("Type class checking in module" <> "\n" <> show mn <> "\nfaile, with the following error message\n" <> msg)]
