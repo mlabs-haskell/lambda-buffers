@@ -265,14 +265,11 @@ toJsonRecord :: QRecord -> ValueE
 toJsonRecord (qtyN, recTy) =
   LamE
     ( \recVal ->
-        case OMap.assocs recTy of
-          [] -> ErrorE "Got an empty Record type to print in `toJsonRecord`"
-          _ ->
-            jsonObjRef
-              @ ListE
-                [ TupleE (fieldNameVal fieldName) (toJsonRef fieldTy @ FieldE (qtyN, fieldName) recVal)
-                | (fieldName, fieldTy) <- sortOn fst $ OMap.assocs recTy
-                ]
+        jsonObjRef
+          @ ListE
+            [ TupleE (fieldNameVal fieldName) (toJsonRef fieldTy @ FieldE (qtyN, fieldName) recVal)
+            | (fieldName, fieldTy) <- sortOn fst $ OMap.assocs recTy
+            ]
     )
 
 {- | `fromJsonRecord ty qrec` makes a `LamVal` function for decoding record type values from their JSON representation `fromJson :: Json -> Parser <ty>`.
